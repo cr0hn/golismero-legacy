@@ -26,13 +26,17 @@ from Data import *
 from checks import *
 from sys import exit
 from net_io import *
+from updater import *
+
+__version__ = "0.2"
+__prog__ = "GoLISMERO"
 
 # Parameters
 PARAMETERS=cParams()
 
 def Credits():
 	print ""
-	print "GoLismero - Simple Web Site Scanner and discover"
+	print "%s- Simple Web Site Scanner and discover" % (__prog__)
 	print ""
 	print "Daniel Garcia Garcia - dani@estotengoqueprobarlo.es"
 	print "http://www.estotengoqueprobarlo.es"
@@ -49,23 +53,24 @@ if __name__ == '__main__':
 	#En caso de que se haya introducido una pagina, navegamos a esta URL e iniciamos el proceso de investigacion
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-R', action='store', dest='recursivity', help='recursivity level of spider.', default = 0)
-	parser.add_argument('-t', action='store', dest='target', help='Sitio web a analizar.', required = True)
-	parser.add_argument('-o', action='store', dest='output', help='Fichero de salida de resultados.', default = None)
-	parser.add_argument('-F', action='store', dest='format', help='output format. Raw is perfecto to combine with awk,cut,grep...', choices = ['text','html','csv','raw','wfuzz'], default = 'text')
+	parser.add_argument('-t', action='store', dest='target', help='target web site.', required = True)
+	parser.add_argument('-o', action='store', dest='output', help='output file.', default = None)
+	parser.add_argument('-F', action='store', dest='format', help='output format. "scripting" is perfect to combine with awk,cut,grep...', choices = ['text','html','csv','xml','scripting','wfuzz'], default = 'text')
 	parser.add_argument('-A', action='store', dest='scan', help='Scan only forms, only links or both.', choices = ['all','forms','links'], default = 'all')
 	parser.add_argument('-V', action='store_true', help='Show version.')
 	parser.add_argument('-c', action='store_true', help='colorize output')
 	parser.add_argument('--no-css', action='store_true', help='don\'t get css links.')
 	parser.add_argument('--no-script', action='store_true', help='don\'t get script links.')
 	parser.add_argument('--no-images', action='store_true', help='don\'t get script links.')
-	parser.add_argument('--no-mail', action='store_true', help='don\'t get mails.')
+	parser.add_argument('--no-mail', action='store_true', help='don\'t get mails (mailto: tags).')
+	parser.add_argument('--no-unparam-links', action='store_true', help='don\'t get links that have not parameters.')
 	parser.add_argument('--long-summary', action='store_true',  help='detailed summary of process.')
 	parser.add_argument('--http-auth-user', action='store', dest='http_auth_user', help='set http authenticacion user.', default =  None)
 	parser.add_argument('--http-auth-pass', action='store', dest='http_auth_pass', help='set http authenticacion pass.', default =  None)
 	parser.add_argument('--cookie', action='store', dest='cookie', help='set custom cookie.', default =  None)
-	parser.add_argument('--proxy', action='store', dest='proxy', help='set proxy as formas: IP:PORT.', default =  None)
-	parser.add_argument('--update', action='store_true', help='update databases and check for new soft version.')
-	#parser.add_argument('--finger', action='store', dest='finger', help='fingerprint aplication.', default =  None)
+	parser.add_argument('--proxy', action='store', dest='proxy', help='set proxy, as format: IP:PORT.', default =  None)
+	parser.add_argument('--update', action='store_true', help='update Golismero.')
+	parser.add_argument('--finger', action='store', dest='finger', help='fingerprint web aplication (not implemented yet).', default =  None)
 	
 	P = parser.parse_args()
 	
@@ -88,7 +93,21 @@ if __name__ == '__main__':
 	PARAMETERS.COOKIE = P.cookie
 	PARAMETERS.AUTH_USER = P.http_auth_user
 	PARAMETERS.AUTH_PASS = P.http_auth_pass
-
+	PARAMETERS.IS_N_PARAMS_LINKS = P.no_unparam_links
+	
+	
+	# Mostrar version
+	if P.V is True:
+		print "%s version is '%s'" % (__prog__, __version__)
+		print ""
+		exit(0)
+		
+	if P.update is True:
+		print "[i] Updating..."
+		update()
+		print ""
+		exit(0)
+	
 	# Comprobamos opciones de autenticacion
 	if (PARAMETERS.AUTH_USER is not None and PARAMETERS.AUTH_PASS is None) or (PARAMETERS.AUTH_USER is None and PARAMETERS.AUTH_PASS is not None):
 		print ""

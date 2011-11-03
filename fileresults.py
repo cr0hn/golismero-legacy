@@ -20,9 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from Data import *
 
-
 #
-# Guarda resultados en modo texto
+# Guarda resultados en HTML
 #
 def SaveHTMLResults(PARAMETERS):
 	
@@ -184,6 +183,82 @@ def SaveHTMLResults(PARAMETERS):
 			</html>
 		
 			"""
+
+	return WR
+
+
+
+#
+# Guarda los resultados en XML
+#
+def SaveXMLResults(PARAMETERS):
+	
+	Resultados=PARAMETERS.RESULTS
+	show_type=PARAMETERS.SHOW_TYPE
+	target = PARAMETERS.TARGET
+	domain = PARAMETERS.DOMAIN
+	protocol = PARAMETERS.PROTOCOL
+	
+	WR = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+	WR = "<golismero>\n"
+	
+	
+	
+	if Resultados is None and Resultados is not cResults:
+		WR += "   <error>No results to save.</error>"
+		return
+	
+		
+	# Para cada objeto del tipo cResults
+	for l_r in Resultados:
+
+		WR +=  "   <site url='" + l_r.URL + "' />\n"
+		
+		# Links
+		if show_type == "links" or show_type == "all":
+			WR +=  "   <links>\n"
+			
+			# Para cada link
+			for l_l in l_r.Links:
+				if l_l is None:
+					continue
+				
+				WR += "      <link url='" + target + l_l.URL + "'>\n"
+
+				for l_d in l_l.Params:
+					WR +=  "	     <param name='" + l_d[0] + "' value='" + l_d[1] + "' />\n"
+				
+				WR += "      </link>\n"
+			WR +=  "   </links>\n"
+		
+		# Forms
+		if show_type == "forms" or show_type == "all":
+
+			WR +=  "   <forms>\n"
+			
+			# Para cada formulario
+			for l_f in l_r.Forms:
+				
+				# Creacion del URL completa
+				long_action = ""
+				if l_f.Target.replace(protocol + "://","").find(domain) != 0: # Si el action/target y el dominio es diferente
+					long_action = protocol + "://" + l_f.Target # URL completa
+				else:
+					long_action = protocol + "://" + domain + l_f.Target # URL completa
+				
+				WR += "      <form name='%s' action='%s' method='%s' >\n" % (l_f.Name, long_action, l_f.Method) 
+
+				
+				# Form params
+				for l_d in l_f.Params:
+					WR +=  "         <param name='%s' value='%s' type='%s' />\n" %  (l_d[0], l_d[2], l_d[2])
+				WR += "      </form>\n"
+
+			WR +=  "   </forms>\n"
+	
+	
+	WR += "   <fingerprint probability="" framework="">" # por implementar 
+	WR += "</golismero>\n"
 
 	return WR
 
@@ -429,7 +504,7 @@ def SaveWFUZZResults(PARAMETERS):
 				if l_l is None:
 					continue
 			
-				WR += "# Link" + str(links) + "\n"
+				WR += "# Link " + str(links) + "\n"
 			
 				pre_url = protocol + "://" + domain + l_l.URL + "?"
 			
@@ -444,7 +519,7 @@ def SaveWFUZZResults(PARAMETERS):
 					tmp += "FUZZ"
 	
 				# Creacion del comando
-				WR += "wfuzz -c -o html -z file,wordlist/WORD_LIST --hc 404,500,302,XXX,401 " + pre_url + tmp + "\n"
+				WR += "wfuzz -c -o html -z file,wordlist/WORD_LIST --hc 302,400,401,404,500,XXX " + pre_url + tmp + "\n"
 				
 				links += 1
 		
@@ -456,41 +531,49 @@ def SaveWFUZZResults(PARAMETERS):
 
 			for l_f in l_r.Forms:
 				
-				if l_f.Target.lower().find("no action") > 0:
-					continue
-				
-				print l_f.Target.lower() #####################################################3
-				#############################################
-				####################################################
+				#if l_f.Target.lower().find("no action") > 0:
+				#	continue
 				
 				# Name
-				WR += "# Form"+ l_f.Name + "\n"
+				WR += "# Form "+ l_f.Name + "\n"
 				
-				# Target
+				# Action
 				pre_url = ""
 				if l_f.Method.lower() == "get":
-					pre_url = protocol + "://" + domain + l_f.Target
 					
-					if l_f.Target.find("?") == -1: # Si no contiene el simbolo se agrega, sino el resto son parametros nuevos
+					# Creacion del URL completa
+					if l_f.Target.replace(protocol + "://","").find(domain) != 0: # Si el action/target y el dominio es diferente
+						pre_url = protocol + "://" + l_f.Target # URL completa
+					else:
+						pre_url = protocol + "://" + domain + l_f.Target # URL completa
+						
+					# Si no contiene el simbolo "?" se agrega, sino solo el resto son parametros nuevos
+					if l_f.Target.find("?") == -1: 
 						pre_url += "?"
 					else:
 						pre_url +="&"
 				
+				else: # Tipo post
+					pre_url = protocol + "://" + domain 
+				
 				# Extraccion de parametros
-				param= ""
-				for l_d in l_l.Params:
-					param += l_d[0] + "=FUZZ" + "&" 
-				# Eliminar el ultimo ":"
+				param = ""
+				for l_d in l_f.Params:
+					param += l_d[0] + "=FUZZ&" 
+				# Eliminar el ultimo "&"
 				param=param[0:len(param)-1]				 
 				
+				# Creacion de los comandos
 				if l_f.Method.lower() == "get":
-					WR += "wfuzz -c -o html -z file,wordlist/WORD_LIST --hc 404,500,302,XXX,401 " + pre_url + param + "\n"
+					WR += "wfuzz -c -o html -z file,wordlist/WORD_LIST --hc 302,400,401,404,500,XXX " + pre_url + param + "\n"
 				else:
-					WR += "wfuzz -c -o html -z file,wordlist/WORD_LIST -d \"" + param + "\" --hc 404,500,302,XXX,401 " + pre_url + "\n"
+					WR += "wfuzz -c -o html -z file,wordlist/WORD_LIST -d \"" + param + "\" --hc 302,400,401,404,500,XXX " + pre_url + "\n"
 	return WR
 
-
-def SaveRAWResults(PARAMETERS):
+#
+# Genera salida que facilitar el scripting
+#
+def SaveSCRIPTINGResults(PARAMETERS):
 	
 	Resultados=PARAMETERS.RESULTS
 	show_type=PARAMETERS.SHOW_TYPE

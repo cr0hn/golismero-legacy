@@ -86,10 +86,12 @@ def writeToFile(PARAMETERS):
 			f_handle.writelines(SaveHTMLResults(PARAMETERS))
 		elif FORMAT == "csv":
 			f_handle.writelines(SaveCSVResults(PARAMETERS))
-		elif FORMAT == "raw":
-			f_handle.writelines(SaveRAWResults(PARAMETERS))
+		elif FORMAT == "scripting":
+			f_handle.writelines(SaveSCRIPTINGResults(PARAMETERS))
 		elif FORMAT == "wfuzz":
 			f_handle.writelines(SaveWFUZZResults(PARAMETERS))
+		elif FORMAT == "xml":
+			f_handle.writelines(SaveXMLResults(PARAMETERS))
 		else:
 			print "Format not correct!"
 		

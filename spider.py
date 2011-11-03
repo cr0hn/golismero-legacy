@@ -89,12 +89,25 @@ def _spider(page,level):
 					# Store link
 					linksAlreadyStored.append(l_l)
 					
-					# Extraccion de los enlaces
-					c_l = cLink()
-					c_l.URL = l_l
-					c_l.Params = FormatGETLinks(l_l)
-					# Agregamos a los resultados
-					R_T.Links.append(c_l)
+					# Extraccion de los enlaces 
+					# Comprobamos si el enlace tiene parametros
+					Params = FormatGETLinks(l_l)
+					
+					# Esta marcada la opcion de no almacenar los enlaces sin parametros?
+					if gParameters.IS_N_PARAMS_LINKS is True:
+						if len(Params) > 0:
+							c_l = cLink()
+							c_l.URL = l_l
+							c_l.Params = Params
+							# Agregamos a los resultados
+							R_T.Links.append(c_l)
+					else: # sino lo almacenamos todo
+						c_l = cLink()
+						c_l.URL = l_l
+						c_l.Params = Params
+						# Agregamos a los resultados
+						R_T.Links.append(c_l)
+						
 	
 	RESULTADOS.append(R_T)
 	

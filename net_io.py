@@ -246,7 +246,7 @@ def downloadURL(page, PARAMETERS):
 	try:
 		f = opener.open(page, timeout=20) # 30 segundos
 	except IOError, e:
-		print str(e)
+		print "Error: " + str(e)
 		#if not hasattr(e, 'code') or e.code != 200:
 		#	return None, e.code
 		

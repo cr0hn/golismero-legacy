@@ -41,7 +41,7 @@ class cParams:
 		self.IS_NJS=None
 		self.IS_NIMG=None
 		self.IS_NMAIL=None
-		
+		self.IS_N_PARAMS_LINKS=None
 		
 		self.RESULTS = ""
 		self.SUMMARY=None
