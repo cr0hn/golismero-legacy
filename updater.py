@@ -61,7 +61,7 @@ def update():
 	# Recuperamos el fichero de cambios remoto
 	r_changes = None
 	try:
-		tmp = urllib2.urlopen(URL + "changes.dat").read()
+		tmp = urllib2.urlopen(URL + "Admin/changes.dat").read()
 		
 		#r_changes = csv.reader(tmp)
 		
