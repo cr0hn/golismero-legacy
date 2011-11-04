@@ -210,6 +210,7 @@ def makeAuth(url, proxy, user, password):
 def downloadURL(page, PARAMETERS):
 	
 	web_content=None
+	code = 200
 	auth = PARAMETERS.AUTH_USER
 
 	opener = urllib2.build_opener()
@@ -246,11 +247,16 @@ def downloadURL(page, PARAMETERS):
 	try:
 		f = opener.open(page, timeout=20) # 30 segundos
 	except IOError, e:
-		print "Error: " + str(e)
-		#if not hasattr(e, 'code') or e.code != 200:
-		#	return None, e.code
-		
-	# Lee el contenido de la web
+		if not hasattr(e, 'code') or e.code != 200:
+			return None, e.code
+		if f == None:
+			return None, 500
+	
+	# Control de errores
+	if f == None:
+		return None, 500
+	
+	# Lee el contenido de la web	
 	web_content = f.read()
 	
 	# Cierre de las conexion

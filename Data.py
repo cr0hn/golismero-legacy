@@ -42,6 +42,7 @@ class cParams:
 		self.IS_NIMG=None
 		self.IS_NMAIL=None
 		self.IS_N_PARAMS_LINKS=None
+		self.COMPACT = None 
 		
 		self.RESULTS = ""
 		self.SUMMARY=None

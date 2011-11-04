@@ -107,6 +107,7 @@ def ShowScreenResults(PARAMETERS):
 	
 	Resultados=PARAMETERS.RESULTS
 	show_type=PARAMETERS.SHOW_TYPE
+	isCompact=PARAMETERS.COMPACT
 	
 	if Resultados is None and Resultados is not cResults:
 		print "No results to print."
@@ -142,13 +143,28 @@ def ShowScreenResults(PARAMETERS):
 				if l_l is None:
 					continue
 				
-				print "  [L" + str(lnk_num) + "] " + l_l.URL
+				print "  [L" + str(lnk_num) + "] " + LINKS + l_l.URL + END_COLOR
 				
+				# Sino se ha pedido el modo compato
+				if isCompact is False:
+					for l_d in l_l.Params:
+						if l_d[0] == "password" or l_d[0].lower().find("pass") > 0 or l_d[0].lower().find("user") > 0 or l_d[0].lower().find("name") > 0:
+							print "        | " + TYPE + l_d[0] + END_COLOR + " = " + l_d[1]
+						else:
+							print "        | " + l_d[0] + " = " + l_d[1]
+				
+				print "        | Raw:"
+				
+				# Modo Raw
+				params = ""
 				for l_d in l_l.Params:
-					if l_d[0] == "password" or l_d[0].lower().find("pass") > 0 or l_d[0].lower().find("user") > 0 or l_d[0].lower().find("name") > 0:
-						print "        | " + TYPE + l_d[0] + END_COLOR + " = " + l_d[1]
-					else:
-						print "        | " + l_d[0] + " = " + l_d[1]
+					params +=l_d[0] + "=" + l_d[1] + "&"
+				
+				# Eliminamos el ultimo "&"
+				params=params[0:len(params)-1]
+				
+				# resultados
+				print "        | " + params
 	
 				lnk_num += 1
 				total_links += 1
@@ -167,7 +183,7 @@ def ShowScreenResults(PARAMETERS):
 				print "      | Target: "  + LINKS + l_f.Target  + END_COLOR
 				print "      |",
 				print "-" * (len(l_f.Target) + len(l_f.Method.upper()) + 5)
-							
+				
 				# Form params
 				war_params = 0
 				
@@ -175,16 +191,24 @@ def ShowScreenResults(PARAMETERS):
 					#	[type] Name | value  
 					if l_d[2].lower() == "password":
 						war_params +=1
-						print "      | ["+ TYPE + l_d[2] + END_COLOR + "] " + l_d[0] + " = " + l_d[1]
+						# Sino se ha pedido el modo compato
+						if isCompact is False:
+							print "      | ["+ TYPE + l_d[2] + END_COLOR + "] " + l_d[0] + " = " + l_d[1]
 					elif  l_d[2].lower() == "text" and  (l_d[0].lower().find("usuario") > 0 or l_d[0].lower().find("user") > 0 or l_d[0].lower().find("name") > 0 ):
 						war_params +=1
-						print "      | ["+ l_d[2] + "] " + TYPE + l_d[0] + END_COLOR + " = " + l_d[1]
+						# Sino se ha pedido el modo compato
+						if isCompact is False:
+							print "      | ["+ l_d[2] + "] " + TYPE + l_d[0] + END_COLOR + " = " + l_d[1]
 					else:
-						print "      | ["+ l_d[2] + "] " + l_d[0] + " = " + l_d[1]
+						# Sino se ha pedido el modo compato
+						if isCompact is False:
+							print "      | ["+ l_d[2] + "] " + l_d[0] + " = " + l_d[1]
 
 				# Parametros en crudo
-				print "      |",
-				print "-" * (len(l_f.Target) + len(l_f.Method.upper()) + 5)
+				if isCompact is False:
+					print "      |",
+					print "-" * (len(l_f.Target) + len(l_f.Method.upper()) + 5)
+					
 				print "      | Raw:"
 				print "       ",
 				raw_params = ""

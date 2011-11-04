@@ -222,7 +222,7 @@ def getLinks(pageText,PARAMETERS):
 	# Tipo src
 	links.extend(_getLinks(pageText, 'src="(.*?)[\'"]', 'src=', PARAMETERS))
 	# Tipo data
-	links.extend(_getLinks(pageText, 'src="(.*?)[\'"]', 'data=', PARAMETERS))
+	links.extend(_getLinks(pageText, 'data="(.*?)[\'"]', 'data=', PARAMETERS))
 	return links
 
 
