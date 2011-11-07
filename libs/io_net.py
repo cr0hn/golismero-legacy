@@ -190,6 +190,7 @@ def downloadURL(page, PARAMETERS, MAX_FOLLOW = 3):
 		opener.addheaders.append(('Cookie', PARAMETERS.COOKIE))	
 	
 	# Lanza la peticion y comprobamos si es valida
+	f = None
 	try:
 		f = opener.open(page, timeout=20) # 30 segundos
 
@@ -200,7 +201,12 @@ def downloadURL(page, PARAMETERS, MAX_FOLLOW = 3):
 				return downloadURL(f.headers['Location'], PARAMETERS,MAX_FOLLOW - 1)
 	
 	except urllib2.HTTPError, e:
-		print str(e)	
+		if not hasattr(e, 'code') or e.code != 200:
+			print "[!] Error fetching URL: " + str(e)
+			return None, None
+		if f == None:
+			print "[!] Error fetching URL: " + str(e)
+			return None, None	
 	
 	except IOError, e:
 		if not hasattr(e, 'code') or e.code != 200:
