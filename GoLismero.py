@@ -31,24 +31,15 @@ import textwrap
 __version__ = "0.2"
 __prog__ = "GoLISMERO"
 __examples__ = '''
-Examples:
-  1) Getting all links and forms from website:	 
-     GoLISMERO.py -t site.com -c 
-	 
-  2) Getting only links and search posible vulns:
-     GoLISMERO.py -t site.com -c -A links -x
-	 
-  3) Getting only links with compact format, colorize output and save results a html and search vulns:
-     GoLISMERO.py -t site.com -m -c -A links -o results.html -F html -x
-	 
-  4) Getting links info a prepare results for execute wfuzz based script:
-     GoLISMERO.py -t site.com -c -A links -o wfuzz_script.sh -F wfuzz 
-	 	 
-  5) Getting only links, not displaying css, script, images and mails:
-     GoLISMERO.py -t site.com -A links --no-css --no-script --no-images --no-mail -c -x
-     or GoLISMERO.py -t site.com -A links -nc -ns -ni -nm  
-     or GoLISMERO.py -t site.com -A links --no-all
-     or GoLISMERO.py -t site.com -A links -na	 
+Examples:	 
+- GoLISMERO.py -t site.com -c 
+- GoLISMERO.py -t site.com -c -A links -x 
+- GoLISMERO.py -t site.com -m -c -A links -o results.html -F html -x	 
+- GoLISMERO.py -t site.com -c -A links -o wfuzz_script.sh -F wfuzz 
+- GoLISMERO.py -t site.com -A links --no-css --no-script --no-images --no-mail -c -x
+  or GoLISMERO.py -t site.com -A links -nc -ns -ni -nm  
+  or GoLISMERO.py -t site.com -A links --no-all
+  or GoLISMERO.py -t site.com -A links -na	 
 	 
   For more examples you can see EXAMPLES.txt 
 	 ''' 
