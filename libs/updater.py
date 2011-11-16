@@ -30,15 +30,16 @@ _l_file = "Admin/changes.dat"
 
 
 #
-# Actualiza la aplicacion
+# Application updater
 #
 def update():
 
 	
 	# Comprueba si ya existe un fichero de cambios
+	# T: Check if changelog file already exits.
 	l_changes = None
 	try:
-		tmp = open(_l_file,"r") # lectura
+		tmp = open(_l_file,"r") # Read
 		text = str(tmp.readlines())
 		l_changes = mmap.mmap(-1,len(text))
 		l_changes.write(text)
@@ -47,6 +48,7 @@ def update():
 		tmp.close()
 	except IOError:
 		# Creamos el fichero
+		# T: Create the file
 		generate()
 		tmp = open(_l_file,"r") # lectura
 		text = str(tmp.readlines())
@@ -56,14 +58,13 @@ def update():
 		l_changes.seek(0)
 		tmp.close()
 	
-	news_changes = open(_l_file,"w") # sobrescribira los cambios
+	news_changes = open(_l_file,"w") # Overwrite changes
 	
 	# Recuperamos el fichero de cambios remoto
+	# T: Recover remote changelog file
 	r_changes = None
 	try:
 		tmp = urllib2.urlopen(URL + "Admin/changes.dat").read()
-		
-		#r_changes = csv.reader(tmp)
 		
 		r_changes = mmap.mmap(-1,len(tmp))
 		r_changes.write(tmp)
@@ -76,6 +77,7 @@ def update():
 		sys.exit(1)
 		
 	# Comprobamos versiones
+	# T: Check versions
 	already_procesed = []
 	m_md5 = md5.new()
 	try:
@@ -86,7 +88,8 @@ def update():
 				break
 						
 			# Formato del CSV:
-			#
+			# T: CSV Format
+			# 
 			# (Filename, md5sum)
 			#			
 			t = r_f.split(",")
@@ -95,6 +98,7 @@ def update():
 			r_md5 = t[1]
 			
 			# Buscamos el fichero que conincida con el remoto
+			# T: Looking for remote file matches
 			encontrado = False
 			for l_f in l_changes:
 
@@ -102,43 +106,57 @@ def update():
 				l_md5 = t[1]
 				
 				# Comprobamos si ya ha sido procesado
+				# T: Check if already processed
 				if not l_filename in already_procesed:
 					
 					# Si los nombres coinciden
+					# T: If names matches
 					if l_filename == r_filename:
 						# Lo agregamos como procesado
+						# T: Add as processed
 						already_procesed.append(l_filename)
 
 						# Marcamos como encontrado
+						# T: Marked as read.
 						encontrado = True
 						
 						# Comprobamos firmas, si son diferentes hay que actualizar
+						# T: Check signatures. If different update.
 						if r_md5 != l_md5:
 							# Actualizamos firmas
+							# T: Update signatures
 							news_changes.write(unicode(r_filename + "," + r_md5))
 							
 							# Descargamos el nuevo fichero
+							# T: Download new file
 							f = urllib2.urlopen(URL + r_filename)
 							# Copiamos el contenido al directorio local
+							# T: Copy the content to local directory.
 							local_file = open(os.curdir + "/" + r_filename, "w")
 							local_file.write(f.read())
 							local_file.close()
 							
 						else:
 							# Conservamos las firmas
+							# T: Keep signatures.
 							news_changes.write(unicode(l_filename + "," + l_md5))
 			
 			# Si el fichero no esta en los fichero locales es que es nuevo y hay que crearlo
+			# T: If file aren't in local files, they are new and we create it.
 			if encontrado == False:
 				# Lo agregamos como procesado
+				# T: Add as processed.
 				already_procesed.append(r_filename)
 				
 				# Actualizamos el fichero de cambios
+				# T: Update changelog file
 				news_changes.write(unicode(r_filename + "," + r_md5))
 				
 				# Descargamos el nuevo fichero
+				# T: Upload the new file
 				f = urllib2.urlopen(URL + r_filename)
 				# Copiamos el contenido al directorio local
+				# T: copy content to local directory.
 				local_file = open(os.curdir + "/" + r_filename, "w")
 				local_file.write(f.read())
 				local_file.close()
