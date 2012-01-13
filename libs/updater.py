@@ -1,14 +1,9 @@
-import sys
-from io import *
-import csv
-import urllib2
-import md5
-import mmap
-from Admin.ChangesGenerator import *
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-'''
-GoLISMERO - Simple web analisis
-Copyright (C) 2011  Daniel Garcia | dani@estotengoqueprobarlo.es
+"""GoLISMERO - Simple web analisis
+Copyright (C) 2011-2012 Daniel Garcia dani@estotengoqueprobarlo.es
+Written by: Henri Salo <henri@nerv.fi>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,151 +18,56 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-'''
+"""
 
-URL = "http://golismero.googlecode.com/git/"
-_l_file = "Admin/changes.dat"
+# For golismero / garcia daniel as a first step to get rid of symlink-problems
+
+try:
+    import sys
+    import git
+    import httplib
+except ImportError, e:
+    sys.exit(e)
 
 
-#
-# Application updater
-#
+# FQDN of SCM
+scm_url = 'code.google.com'
+# Location of project in FQDN
+scm_url_location = '/p/golismero/'
+
+
+def check_scm_url_aliveness(scm_url, scm_url_location):
+    """Does a verification if URL is alive. Please note that HTTPS certification is not validated. Returns True if alive and False if not."""
+    if not scm_url and scm_url_location:
+        print 'Error. Not all parameters defined in check_scm_url_aliveness.'
+        return
+    print('Testing for URL aliveness: %s' % 'https://' + scm_url + scm_url_location)
+    conn = httplib.HTTPSConnection(scm_url)
+    conn.request('GET', scm_url_location)
+    res = conn.getresponse()
+    if res.status == int('200'):
+        print('URL alive: %s' % 'https://' + scm_url + scm_url_location)
+        return True
+    else:
+        """HTTP-error codes that at least should be checked here: 4xx, 5xx
+        http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+        """
+        print('URL not alive: %s' % 'https://' + scm_url + scm_url_location)
+        return False
+
+
+def update_git_repo(scm_url, scm_url_location):
+    """Calls URL verification and updates a GIT-repo."""
+    if not scm_url and scm_url_location:
+        print 'Error. Not all parameters defined in check_scm_url_aliveness.'
+        return
+    if not check_scm_url_aliveness(scm_url, scm_url_location):
+        print 'Update failed as URL did not return error code 200.'
+        return
+    full_url = scm_url + scm_url_location
+    print 'Updating from URL: %s' % 'https://' + full_url
+    git.Git().checkout(force=True)
+
+
 def update():
-
-	
-	# Comprueba si ya existe un fichero de cambios
-	# T: Check if changelog file already exits.
-	l_changes = None
-	try:
-		tmp = open(_l_file,"r") # Read
-		text = str(tmp.readlines())
-		l_changes = mmap.mmap(-1,len(text))
-		l_changes.write(text)
-		l_changes.flush()
-		l_changes.seek(0)
-		tmp.close()
-	except IOError:
-		# Creamos el fichero
-		# T: Create the file
-		generate()
-		tmp = open(_l_file,"r") # lectura
-		text = str(tmp.readlines())
-		l_changes = mmap.mmap(-1,len(text))
-		l_changes.write(text)
-		l_changes.flush()
-		l_changes.seek(0)
-		tmp.close()
-	
-	news_changes = open(_l_file,"w") # Overwrite changes
-	
-	# Recuperamos el fichero de cambios remoto
-	# T: Recover remote changelog file
-	r_changes = None
-	try:
-		tmp = urllib2.urlopen(URL + "Admin/changes.dat").read()
-		
-		r_changes = mmap.mmap(-1,len(tmp))
-		r_changes.write(tmp)
-		r_changes.flush()
-		r_changes.seek(0)
-		
-	except IOError,e:
-		print "[!] Error while geting changes file from remote site: " + str(e)
-		print ""
-		sys.exit(1)
-		
-	# Comprobamos versiones
-	# T: Check versions
-	already_procesed = []
-	m_md5 = md5.new()
-	try:
-		while True:
-			r_f = r_changes.readline()
-			
-			if r_f == "":
-				break
-						
-			# Formato del CSV:
-			# T: CSV Format
-			# 
-			# (Filename, md5sum)
-			#			
-			t = r_f.split(",")
-			
-			r_filename = t[0]
-			r_md5 = t[1]
-			
-			# Buscamos el fichero que conincida con el remoto
-			# T: Looking for remote file matches
-			encontrado = False
-			for l_f in l_changes:
-
-				l_filename = t[0]
-				l_md5 = t[1]
-				
-				# Comprobamos si ya ha sido procesado
-				# T: Check if already processed
-				if not l_filename in already_procesed:
-					
-					# Si los nombres coinciden
-					# T: If names matches
-					if l_filename == r_filename:
-						# Lo agregamos como procesado
-						# T: Add as processed
-						already_procesed.append(l_filename)
-
-						# Marcamos como encontrado
-						# T: Marked as read.
-						encontrado = True
-						
-						# Comprobamos firmas, si son diferentes hay que actualizar
-						# T: Check signatures. If different update.
-						if r_md5 != l_md5:
-							# Actualizamos firmas
-							# T: Update signatures
-							news_changes.write(unicode(r_filename + "," + r_md5))
-							
-							# Descargamos el nuevo fichero
-							# T: Download new file
-							f = urllib2.urlopen(URL + r_filename)
-							# Copiamos el contenido al directorio local
-							# T: Copy the content to local directory.
-							local_file = open(os.curdir + "/" + r_filename, "w")
-							local_file.write(f.read())
-							local_file.close()
-							
-						else:
-							# Conservamos las firmas
-							# T: Keep signatures.
-							news_changes.write(unicode(l_filename + "," + l_md5))
-			
-			# Si el fichero no esta en los fichero locales es que es nuevo y hay que crearlo
-			# T: If file aren't in local files, they are new and we create it.
-			if encontrado == False:
-				# Lo agregamos como procesado
-				# T: Add as processed.
-				already_procesed.append(r_filename)
-				
-				# Actualizamos el fichero de cambios
-				# T: Update changelog file
-				news_changes.write(unicode(r_filename + "," + r_md5))
-				
-				# Descargamos el nuevo fichero
-				# T: Upload the new file
-				f = urllib2.urlopen(URL + r_filename)
-				# Copiamos el contenido al directorio local
-				# T: copy content to local directory.
-				local_file = open(os.curdir + "/" + r_filename, "w")
-				local_file.write(f.read())
-				local_file.close()
-		
-		news_changes.flush()
-		news_changes.close()
-			
-			
-	except IOError,e:
-		print "Error was caught while update: " + str(e)
-		print ""  
-		sys.exit(1)
-
-	
+    update_git_repo(scm_url, scm_url_location)

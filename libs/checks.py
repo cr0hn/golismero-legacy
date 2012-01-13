@@ -32,14 +32,14 @@ def PrepareURL(url):
 # TODO: getDomain and getProtocol could one function, which returns tuple
 def getDomain(url):
     """Returns domain"""
-	if url is not None:
-		return urlparse(url)[1].lower()
+    if url is not None:
+        return urlparse(url)[1].lower()
 
 
 def getProtocol(url):
     """Returns protocol"""
-	if url is not None:
-		return urlparse(url)[0].lower()
+    if url is not None:
+        return urlparse(url)[0].lower()
 
 
 def isCheckProxy(proxy):

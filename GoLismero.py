@@ -45,12 +45,10 @@ Examples:
 	 ''' 
 
 
-
 # Parameters
 PARAMETERS=cParams()
 
 def Credits():
-
 	print ""
 	print "%s - The Web Knife." % (__prog__)
 	print ""
@@ -58,13 +56,9 @@ def Credits():
 	print ""
 
 
-#
 # Comienzo del programa
-#
 if __name__ == '__main__':
-	
 	Credits()
-	
 	#En caso de que se haya introducido una pagina, navegamos a esta URL e iniciamos el proceso de investigacion
 	parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__examples__)
 	parser.add_argument('-R', action='store', dest='recursivity', help='recursivity level of spider. Default=0', default = 0)
@@ -90,16 +84,13 @@ if __name__ == '__main__':
 	parser.add_argument('-U','--update', action='store_true', help='update Golismero.')
 	parser.add_argument('-f','--finger', action='store', dest='finger', help='fingerprint web aplication. As default not selected. (not implemented yet) ', default =  None)
 	parser.add_argument('--follow', action='store_true', help='follow redirect. As default not redirect.')
-	
 	P = parser.parse_args()
 	
-			
 	if P.update is True:
 		print "[i] Updating..."
 		update()
 		print ""
 		exit(0)
-	
 	
 	# Asociamos variable globales
 	PARAMETERS.RECURSIVITY = P.recursivity
@@ -124,7 +115,6 @@ if __name__ == '__main__':
 	PARAMETERS.VERSION = P.V
 	PARAMETERS.VULNS = P.search_vulns
 	
-	
 	# Mostrar version
 	if PARAMETERS.VERSION is True:
 		print "%s version is '%s'" % (__prog__, __version__)
@@ -137,7 +127,6 @@ if __name__ == '__main__':
 		PARAMETERS.IS_NJS = True
 		PARAMETERS.IS_NIMG = True
 		PARAMETERS.IS_NMAIL = True
-		
 	
 	try:
 		GoLISMERO_Main(PARAMETERS)
