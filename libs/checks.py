@@ -19,9 +19,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from urlparse import urlparse
 
-#
-# Comprueba si la URL tiene el formato correcto y la corrige
-#
+
+# TODO: Why HTTPS is switched to HTTP?
 def PrepareURL(url):
 	"""Comprueba y correo el formato de una URL"""	
 	if url.lower().find("http") < 0 and url.lower().find("https") < 0:
@@ -29,25 +28,23 @@ def PrepareURL(url):
 	else:
 		return url
 
-#
-# Extra el dominio de una url
-#
+
+# TODO: getDomain and getProtocol could one function, which returns tuple
 def getDomain(url):
+    """Returns domain"""
 	if url is not None:
 		return urlparse(url)[1].lower()
-	
-#
-# Extra el dominio de una url
-#
+
+
 def getProtocol(url):
+    """Returns protocol"""
 	if url is not None:
 		return urlparse(url)[0].lower()
-	
-#
-# Comprobar configuracion de proxy
-#
+
+
 def isCheckProxy(proxy):
-	if proxy is not None:
+    """TODO: Tries to check if argument is valid proxy, but this definately doesn't tell the real situation. Needs reimplementation. Scope depends how widely this function has been used and for what exactly."""
+    if proxy is not None:
 		p = proxy.split(":")
 
 		if len(p) <> 2:

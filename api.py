@@ -278,7 +278,7 @@ def GoLISMERO_Main(PARAMETERS):
 	# Check proxy
 	if PARAMETERS.PROXY is not None:
 		if isCheckProxy(PARAMETERS.PROXY) is False:
-			raise IOError("[!] Proxy format are not correct.")
+			raise IOError("[!] Proxy format is not correct.")
 		
 	# Si se tienen que buscar vulnerabilidades se cargan los ficheros
 	if PARAMETERS.VULNS is not None:
