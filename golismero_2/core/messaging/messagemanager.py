@@ -2,7 +2,7 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web kniffe.
+GoLismero 2.0 - The web knife.
 
 Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 
@@ -39,8 +39,9 @@ class MessageManager:
         :param runMode: Enum type that specify run mode to start Message system
         :type runMode: enum
         """
-        self.__observers = [] # List of observer will be notified
-        # Start notification system depend of run mode
+        self.__observers = [] # List of observers to be notified
+
+        # Start notification system
         if GlobalParams.RUN_MODE.standalone == runMode:
             self.__observers.append(AuditManager())
         elif GlobalParams.RUN_MODE.cloudclient == runMode:
@@ -48,7 +49,7 @@ class MessageManager:
         elif GlobalParams.RUN_MODE.cloudserver == runMode:
             pass
         else:
-            raise ValueError("worng runMode")
+            raise ValueError("Invalid run mode: %r" % runMode)
 
     #----------------------------------------------------------------------
     def send_message(self, Message):

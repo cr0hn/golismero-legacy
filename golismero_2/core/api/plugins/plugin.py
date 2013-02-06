@@ -2,7 +2,7 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web kniffe.
+GoLismero 2.0 - The web knife.
 
 Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 
@@ -39,17 +39,19 @@ from core.main.audit import Audit
 
 class Plugin(object):
     """
-    Plugin abstract class. Contain facilities for plugins and methods that
-    will be implemented by subclasses
+    Plugin abstract class.
 
-    All plugins will inherit directly from this class.
+    Contains helper methods for plugins, and defines an interface that
+    will be implemented by subclasses.
+
+    All plugins must derive from this class.
     """
 
 
     #----------------------------------------------------------------------
     def run(self):
-        """Execution code for a plugin must be write here"""
-        pass
+        """Plugin entry point. Your code goes here!"""
+        raise NotImplementedError("All plugins must implement this method!")
 
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
@@ -69,25 +71,27 @@ class Plugin(object):
 
     #----------------------------------------------------------------------
     def display_help(self):
-        """This method display help for a plugin"""
-        pass
+        """Get the help message for this plugin."""
+        # TODO: this could default to the description found in the metadata.
+        raise NotImplementedError("All plugins must implement this method!")
 
     #----------------------------------------------------------------------
     def recv_info(self):
-        """Method for receive messages. All plugin will overrite it."""
-        pass
+        """Callback method to receive information to be processed."""
+        raise NotImplementedError("All plugins must implement this method!")
 
     #----------------------------------------------------------------------
     def send_info(self, message):
-        """Method for send messages. Plugins can't override it."""
+        """Method to send results. Do not override it!"""
         pass
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
         """
-        Return messages accepted by plugin, as a list of constants.
+        Return a list of constants describing
+        which messages are accepted by this plugin.
 
-        Messages types can be found at Message class.
+        Messages types can be found at the Message class.
 
         :returns: list -- list with constants
         """
@@ -99,27 +103,26 @@ class Plugin(object):
         Set observer for the plugins
         """
         if not isinstance(observer, Audit):
-            raise ValueError("observer parameter must be an instance of Observer")
+            raise ValueError("Expected Orchestrator, got %r instead" % type(observer))
 
         self.__observer_ref = observer
 
     #----------------------------------------------------------------------
     def send_info(self, message):
-        """Send a message to observer"""
+        """Send a message to the observer"""
         self.__observer_ref.recv_msg(message)
 
 
 #------------------------------------------------------------------------------
 class TestingPlugin (Plugin):
     """
-    All testing plugins must inherit from it.
+    Testing plugins are the ones that perform the security tests.
 
-    Testing plugins will do security tests
+    This is the base class for all Testing plugins.
     """
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """"""
         pass
 
 
@@ -127,41 +130,38 @@ class TestingPlugin (Plugin):
 #------------------------------------------------------------------------------
 class UIPlugin (Plugin):
     """
-    All User Interface plugins must inherit from it.
+    User Interface plugins control the way in which the user interacts with GoLismero.
 
-    User Interface plugins must manage how user interact with GoLismero
+    This is the base class for all UI plugins.
     """
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """"""
         pass
 
 
 #------------------------------------------------------------------------------
 class GlobalPLugin (Plugin):
     """
-    All global plugins must inherit from it.
+    Global plugins can control all stages of an audit.
 
-    Global plugins are special case. It's will executed all time.
+    Tipically users don't code their own Global plugins.
 
+    This is the base class for all Global plugins.
     """
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """"""
         pass
 
 #------------------------------------------------------------------------------
 class ResultsPlugin (Plugin):
     """
-    All testing plugins must inherit from it.
+    Result plugins control how results will be exported.
 
-    Results plugins must manage how results will be exported.
-
+    This is the base class for all Result plugins.
     """
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """"""
         pass

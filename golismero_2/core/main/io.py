@@ -2,7 +2,7 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web kniffe.
+GoLismero 2.0 - The web knife.
 
 Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 
@@ -89,19 +89,6 @@ class IO():
 
     #----------------------------------------------------------------------
     @staticmethod
-    def log_more_verbose(self, message):
-        """
-        Write a message into log with even more verbosity
-
-        :param message: message to write
-        :type message: str
-        """
-        if IO.__loglevel == IO.MORE_VERBOSE:
-            IO.__log(message)
-
-
-    #----------------------------------------------------------------------
-    @staticmethod
     def log_verbose(self, message):
         """
         Write a message into log with more verbosity
@@ -110,6 +97,18 @@ class IO():
         :type message: str
         """
         if IO.__loglevel == IO.VERBOSE:
+            IO.__log(message)
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def log_more_verbose(self, message):
+        """
+        Write a message into log with even more verbosity
+
+        :param message: message to write
+        :type message: str
+        """
+        if IO.__loglevel == IO.MORE_VERBOSE:
             IO.__log(message)
 
 

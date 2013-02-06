@@ -2,7 +2,7 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web kniffe.
+GoLismero 2.0 - The web knife.
 
 Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 
@@ -48,24 +48,23 @@ class Audit(IReceiver):
 
 
         if not isinstance(auditParams, GlobalParams):
-            raise("Parameter type of params are not correct.")
+            raise TypeError("Expected GlobalParams, got %s instead" % type(auditParams))
 
         self.__audit_params = auditParams
 
         # set Receiver
         self.__receiver = receiver
 
-        # name
-        self.__auditname = self.__audit_params.AuditName
-        if self.__auditname == "":
-            self.__auditname = self.__getAuditName()
-
+        # set audit name
+        self.name = self.__execParams.audit_name
 
 
     def get_name(self):
         return self.__auditname
 
     def set_name(self, name):
+        if not name:
+            name = self.__getAuditName()
         self.__auditname = name
 
     name = property(get_name, set_name)
@@ -99,8 +98,8 @@ class Audit(IReceiver):
         """
         # 1 - Carga los plugins necesarios
         # 2 - Configura los plugins para ser la receptora de los msg
-        # 3 - Crea y configura el notificator.
-        # 4 - Asocia los plugins al notificator
+        # 3 - Crea y configura el notifier.
+        # 4 - Asocia los plugins al notifier
         # 5 - Ejecuta los plugins
 
 

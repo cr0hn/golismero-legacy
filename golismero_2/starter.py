@@ -2,7 +2,7 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web kniffe.
+GoLismero 2.0 - The web knife.
 
 Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 
@@ -32,17 +32,25 @@ from core.main.orchestrator import Orchestrator
 def launcher(options):
 
     if not isinstance(options, GlobalParams):
-        raise TypeError()
+        raise TypeError("Expected GlobalParams, got %s instead" % type(options))
 
 
-    if options.RunMode == GlobalParams.RUN_MODE.standalone:
-        # Run Orchester
+    if options.run_mode == GlobalParams.RUN_MODE.standalone:
+        # Run Orchestrator
         orchester = Orchestrator(options)
         orchester.add_audit(options)
 
 
+    elif options.run_mode == GlobalParams.RUN_MODE.cloudclient:
+        raise NotImplementedError("Cloud client mode not yet implemented!")
 
 
+    elif options.run_mode == GlobalParams.RUN_MODE.cloudserver:
+        raise NotImplementedError("Cloud server mode not yet implemented!")
+
+
+    else:
+        raise ValueError("Invalid run mode: %r" % options.run_mode)
 
 
 
