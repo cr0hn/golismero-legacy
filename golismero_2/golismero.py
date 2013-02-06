@@ -35,7 +35,7 @@ __version__ = "2.0.0"
 
 
 import argparse
-from sys import version_info,exit
+from sys import version_info, exit
 from starter import launcher
 from core.main.commonstructures import GlobalParams
 from core.plugins.priscillapluginmanager import PriscillaPluginManager

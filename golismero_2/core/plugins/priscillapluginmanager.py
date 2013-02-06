@@ -28,10 +28,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from thirdparty_libs.yapsy.PluginManager import PluginManager
 from os import path, getcwd
+from core.main.commonstructures import Singleton
 from core.api.plugins.plugin import TestingPlugin,GlobalPLugin,UIPlugin,ResultsPlugin
 
-class PriscillaPluginManager(object):
-    """"""
+class PriscillaPluginManager(Singleton):
+    """Priscilla Plugin Manager"""
 
 
     #----------------------------------------------------------------------
@@ -39,30 +40,26 @@ class PriscillaPluginManager(object):
     # Private methods
     #
     #----------------------------------------------------------------------
-    __instance = None
-    def __new__(cls, *args, **kargs):
-        """Structure for Singleton pattern"""
-        if cls.__instance is not None:
-            return cls.__instance
-        else:
-            cls.__instance = super(PriscillaPluginManager, cls).__new__(cls, *args, **kargs)
-            return cls.__instance
 
 
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
+
         # Load plugins
         self.__load_plugins()
 
 
     #----------------------------------------------------------------------
     def __load_plugins(self):
-        # start manager
+
+        # Start the plugin manager
         self.__pluginManager = PluginManager()
-        # Set directories where plugins are
+
+        # Set directories where the plugins are
         self.__pluginManager.setPluginPlaces(self.__prepare_plugins_dirs())
-        # Configure categories
+
+        # Configure the categories
         self.__pluginManager.setCategoriesFilter(
             {
                 "global" : GlobalPLugin,
@@ -71,7 +68,8 @@ class PriscillaPluginManager(object):
                 "result" : ResultsPlugin
             }
         )
-        # Load plugins
+
+        # Locate and load the plugins
         self.__pluginManager.locatePlugins()
         self.__pluginManager.loadPlugins()
 
@@ -79,15 +77,14 @@ class PriscillaPluginManager(object):
     #----------------------------------------------------------------------
     def __prepare_plugins_dirs(self):
         """
-        Collect al path with plugins and return an array with them.
+        Collect all paths with plugins.
 
-        :returns: list -- dict as format (plugin_type, path)
+        :returns: list -- List of tuples (plugin_type, path)
         """
+        m_paths = list()
 
         # Path to this file
-
         m_relative_path = path.join(getcwd(), "plugins")
-        m_paths = list()
 
         # Absolute paths to plugins
         m_paths.append(path.join(m_relative_path, "ui"))
@@ -102,6 +99,8 @@ class PriscillaPluginManager(object):
     # Public methods
     #
     #----------------------------------------------------------------------
+
+
     def get_plugins(self, plugin_list):
         """
         Get a plugin list from a list of names.
@@ -109,13 +108,14 @@ class PriscillaPluginManager(object):
         :param plugin_list: List with names of plugins you want.
         :type plugin_list: list
 
-        :returns: list -- list of plugin instances
+        :returns: list -- List of plugin instances
         """
 
         # Check for keyword "all"
-        if "all" in plugin_list or "All" in plugin_list:
+        if "all" in map(str.lower, plugin_list):
             return self.get_all_plugins().values()
 
+        # Collect the requested plugins
         return_plugin = list()
         if plugin_list:
             for name, plugin_obj in self.get_all_plugins():
@@ -130,36 +130,36 @@ class PriscillaPluginManager(object):
         """
         Get all available plugins
 
-        :returns: dict -- List with all plugins as format (name, plugin_instance)
+        :returns: dict -- Mapping of plugin names to instances
         """
+        m_plugins = dict()
         for i in self.__pluginManager.getAllPlugins():
             m_plugins[i.name] = i.plugin_object
-
         return m_plugins
-
 
     #----------------------------------------------------------------------
     def get_all_plugins_descriptions(self):
         """Get all descriptions available plugins
 
-        :returns: dict -- List with all plugins as (name, description)
+        :returns: dict -- Mapping of plugin names to descriptions
         """
-
+        m_plugins = dict()
         for i in self.__pluginManager.getAllPlugins():
             m_plugins[i.name] = i.description
-
         return m_plugins
 
     #----------------------------------------------------------------------
     def get_plugin_by_name(self, pluginName):
         """
-        Return an instance os IPlugin
+        Return a plugin instance
 
         :param pluginName: plugin name
         :type pluginName: str
-        :returns: IPlugin
+        :returns: Plugin
         :raises: ValueError
         """
+        # XXX FIXME
+        # mario: this will be a problem, duplicated plugin names go undetected here!
         plugin_name = list()
         plugin_name.append(self.__pluginManager.getPluginByName(pluginName, "global"))
         plugin_name.append(self.__pluginManager.getPluginByName(pluginName, "testing"))

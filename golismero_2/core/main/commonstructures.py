@@ -74,6 +74,18 @@ class Interface (object):
 
 
 
+class Singleton (object):
+    "Implementation of the Singleton pattern"
+
+    __instance = None
+    def __new__(cls, *args, **kargs):
+        if cls.__instance is not None:
+            return cls.__instance
+        cls.__instance = super(Singleton, cls).__new__(cls, *args, **kargs)
+        return cls.__instance
+
+
+
 #--------------------------------------------------------------------------
 class GlobalParams:
     """
