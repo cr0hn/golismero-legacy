@@ -24,9 +24,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__author__ = "Daniel Garcia Garcia a.k.a cr0hn - dani@iniqua.com"
+__author__ = "Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel) - dani@iniqua.com"
 __copyright__ = "Copyright 2011-2013 - GoLismero project"
-__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn"]
+__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel)", "Mario Vilas (@Mario_Vilas"]
 __maintainer__ = "cr0hn"
 __email__ = "golismero.project@gmail.com"
 __license__ = "GPL"
@@ -39,7 +39,7 @@ from sys import version_info,exit
 from starter import launcher
 from core.main.commonstructures import GlobalParams
 from core.plugins.priscillapluginmanager import PriscillaPluginManager
-from core.main.ioconsole import IOConsole
+from core.main.ioconsole import IO
 
 
 #----------------------------------------------------------------------

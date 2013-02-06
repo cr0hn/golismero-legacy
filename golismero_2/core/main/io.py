@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from sys import stdout, stderr
 
-class IOConsole():
+class IO():
     """"""
 
     __logout = stdout
@@ -50,13 +50,13 @@ class IOConsole():
     def configure(LogOut = None, LogError = None, logLevel = 0):
 
         if LogOut:
-            IOConsole.__logout = LogOut
+            IO.__logout = LogOut
 
         if LogError:
-            IOConsole.__logerror = LogError
+            IO.__logerror = LogError
 
         if logLevel >= 0 and logLevel <= 3:
-            IOConsole.__loglevel = logLevel
+            IO.__loglevel = logLevel
 
 
 
@@ -71,7 +71,7 @@ class IOConsole():
         """
         try:
             if message:
-                IOConsole.__logout.writelines(message)
+                IO.__logout.writelines(message)
         except Exception,e:
             print "[!] Error while writen into log file or console: %s" % e.message
 
@@ -84,8 +84,8 @@ class IOConsole():
         :param message: message to write
         :type message: str
         """
-        if IOConsole.__loglevel == IOConsole.STANDARD:
-            IOConsole.__log(message)
+        if IO.__loglevel == IO.STANDARD:
+            IO.__log(message)
 
     #----------------------------------------------------------------------
     @staticmethod
@@ -96,8 +96,8 @@ class IOConsole():
         :param message: message to write
         :type message: str
         """
-        if IOConsole.__loglevel == IOConsole.MORE_VERBOSE:
-            IOConsole.__log(message)
+        if IO.__loglevel == IO.MORE_VERBOSE:
+            IO.__log(message)
 
 
     #----------------------------------------------------------------------
@@ -109,8 +109,8 @@ class IOConsole():
         :param message: message to write
         :type message: str
         """
-        if IOConsole.__loglevel == IOConsole.VERBOSE:
-            IOConsole.__log(message)
+        if IO.__loglevel == IO.VERBOSE:
+            IO.__log(message)
 
 
 
@@ -126,7 +126,7 @@ class IOConsole():
         :type message: str"""
         try:
             if message:
-                IOConsole.__logerror.writelines(message)
+                IO.__logerror.writelines(message)
         except Exception,e:
             print "[!] Error while writen into log file or console: %s" % e.message
 
@@ -139,8 +139,8 @@ class IOConsole():
 
         :param message: message to write
         :type message: str"""
-        if IOConsole.__logerror == IOConsole.STANDARD:
-            IOConsole.__logerror(message)
+        if IO.__logerror == IO.STANDARD:
+            IO.__logerror(message)
 
     #----------------------------------------------------------------------
     @staticmethod
@@ -151,8 +151,8 @@ class IOConsole():
         :param message: message to write
         :type message: str
         """
-        if IOConsole.__logerror == IOConsole.VERBOSE:
-            IOConsole.__logerror(message)
+        if IO.__logerror == IO.VERBOSE:
+            IO.__logerror(message)
 
 
     #----------------------------------------------------------------------
@@ -164,5 +164,5 @@ class IOConsole():
         :param message: message to write
         :type message: str
         """
-        if IOConsole.__logerror == IOConsole.MORE_VERBOSE:
-            IOConsole.__logerror(message)
+        if IO.__logerror == IO.MORE_VERBOSE:
+            IO.__logerror(message)

@@ -82,7 +82,7 @@ class Audit(IReceiver):
 
 
     #----------------------------------------------------------------------
-    def getAuditName(self):
+    def get_audit_name(self):
         """
         Return the audit name
 
@@ -147,13 +147,13 @@ class AuditManager:
         # Create the audit
         m_audit = Audit(globalParams, self)
         # Store it
-        self.__audits[m_audit.getAuditName()] = Audit
+        self.__audits[m_audit.get_audit_name()] = Audit
         # Run!
         m_audit.run()
 
 
     #----------------------------------------------------------------------
-    def getAllAudits(self):
+    def get_all_audits(self):
         """
         Get the list of audits running at the momento of calling.
 
@@ -162,7 +162,7 @@ class AuditManager:
         return self.__audits
 
     #----------------------------------------------------------------------
-    def getAudit(self, auditName):
+    def get_audit(self, auditName):
         """
         Get an instance of audit by their name.
 
