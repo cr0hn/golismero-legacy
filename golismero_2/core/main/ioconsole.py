@@ -24,14 +24,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__author__ = "Daniel Garcia Garcia a.k.a cr0hn - dani@iniqua.com"
-__copyright__ = "Copyright 2011-2013 - GoLismero project"
-__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn"]
-__maintainer__ = "cr0hn"
-__email__ = "golismero.project@gmail.com"
-__status__ = "Develop"
-__license__ = "GPL"
-__version__ = "0.0.1"
 
 from sys import stdout, stderr
 
@@ -40,24 +32,39 @@ class IOConsole():
 
     __logout = stdout
     __logerror = stderr
+    __loglevel = 1 # standard
 
-        
+    #----------------------------------------------------------------------
+    #
+    # Log levels
+    #
+    #----------------------------------------------------------------------
+    DISABLED = 0
+    STANDARD = 1
+    VERBOSE = 2
+    MORE_VERBOSE = 3
+
+
     #----------------------------------------------------------------------
     @staticmethod
-    def configure(LogOut = None, LogError = None):
+    def configure(LogOut = None, LogError = None, logLevel = 0):
 
         if LogOut:
             IOConsole.__logout = LogOut
-            
+
         if LogError:
             IOConsole.__logerror = LogError
-            
-            
-        
+
+        if logLevel >= 0 and logLevel <= 3:
+            IOConsole.__loglevel = logLevel
+
+
+
     #----------------------------------------------------------------------
-    @staticmethod    
-    def write(message):
-        """Write a message into console
+    @staticmethod
+    def __log(message):
+        """
+        Write a message into log
 
         :param message: message to write
         :type message: str
@@ -67,11 +74,53 @@ class IOConsole():
                 IOConsole.__logout.writelines(message)
         except Exception,e:
             print "[!] Error while writen into log file or console: %s" % e.message
-            
+
     #----------------------------------------------------------------------
     @staticmethod
-    def write_error(message):
-        """Write a error message into console
+    def log(message):
+        """
+        Write a message into log
+
+        :param message: message to write
+        :type message: str
+        """
+        if IOConsole.__loglevel == IOConsole.STANDARD:
+            IOConsole.__log(message)
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def log_more_verbose(self, message):
+        """
+        Write a message into log with even more verbosity
+
+        :param message: message to write
+        :type message: str
+        """
+        if IOConsole.__loglevel == IOConsole.MORE_VERBOSE:
+            IOConsole.__log(message)
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def log_verbose(self, message):
+        """
+        Write a message into log with more verbosity
+
+        :param message: message to write
+        :type message: str
+        """
+        if IOConsole.__loglevel == IOConsole.VERBOSE:
+            IOConsole.__log(message)
+
+
+
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def __log_error(message):
+        """
+        Write a error message into log
 
         :param message: message to write
         :type message: str"""
@@ -80,8 +129,40 @@ class IOConsole():
                 IOConsole.__logerror.writelines(message)
         except Exception,e:
             print "[!] Error while writen into log file or console: %s" % e.message
-          
-        
-        
-    
-    
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def log_error(message):
+        """
+        Write a error message into log
+
+        :param message: message to write
+        :type message: str"""
+        if IOConsole.__logerror == IOConsole.STANDARD:
+            IOConsole.__logerror(message)
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def log_error_verbose(message):
+        """
+        Write a error message into log with more verbosity
+
+        :param message: message to write
+        :type message: str
+        """
+        if IOConsole.__logerror == IOConsole.VERBOSE:
+            IOConsole.__logerror(message)
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def log_error_more_verbose(message):
+        """
+        Write a error message into log with even more verbosity
+
+        :param message: message to write
+        :type message: str
+        """
+        if IOConsole.__logerror == IOConsole.MORE_VERBOSE:
+            IOConsole.__logerror(message)

@@ -24,18 +24,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__author__ = "Daniel Garcia Garcia a.k.a cr0hn - dani@iniqua.com"
-__copyright__ = "Copyright 2011-2013 - GoLismero project"
-__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn"]
-__maintainer__ = "cr0hn"
-__email__ = "golismero.project@gmail.com"
-__status__ = "Develop"
-__license__ = "GPL"
-__version__ = "0.0.1"
 
 
-from core.data.globalparams import GlobalParams
-from core.messaging.ireceiver import IReceiver
+from core.main.commonstructures import GlobalParams
+from core.messaging.interfaces import IReceiver
 
 #--------------------------------------------------------------------------
 class Audit(IReceiver):
@@ -48,36 +40,36 @@ class Audit(IReceiver):
         """
         :param receiver: Orchester instance that will recives messages sent by audit.
         :type reciber: Orchester
-        
+
         :param auditParams: global params for an audit execution
         :type auditParams: GlobalParams
         """
-        
-        
+
+
         if not isinstance(auditParams, GlobalParams):
-            raise("Parameter type of params are not correct.")        
-        
+            raise("Parameter type of params are not correct.")
+
         self.__execParams = auditParams
 
         # set Receiver
         self.__receiver = receiver
-        
+
         # name
         self.__auditname = self.__execParams.AuditName
         if self.__auditname == "":
             self.__auditname = self.__getAuditName()
 
-    
-    
+
+
     def get_name(self):
         return self.__auditname
-    
+
     def set_name(self, name):
         self.__auditname = name
 
     name = property(get_name, set_name)
 
-    #----------------------------------------------------------------------        
+    #----------------------------------------------------------------------
     def __generateAuditName(self):
         """
         Get a random name for audit
@@ -85,19 +77,19 @@ class Audit(IReceiver):
         :returns: str -- generated name for the audit.
         """
         import datetime
-        
+
         return "golismero-".join(datetime.datetime.now().strftime("%Y-%m-%d-%H_%M"))
-    
-        
-    #----------------------------------------------------------------------    
+
+
+    #----------------------------------------------------------------------
     def getAuditName(self):
         """
         Return the audit name
-        
+
         :returns: str -- the audit name
         """
         return self.__auditname
-    
+
 
     #----------------------------------------------------------------------
     def run(self):
@@ -110,21 +102,21 @@ class Audit(IReceiver):
         # 4 - Asocia los plugins al notificator
         # 5 - Ejecuta los plugins
         pass
-    
+
     #----------------------------------------------------------------------
     def recv_msg(self, message):
         """
         Send message to the core system
-        
+
         :param message: message to send
-        :type message: 
+        :type message:
         """
-        self.__receiver.recv_msg(message)
-        
-        
-        
-        
-        
+        self.__receiver.recv_info(message)
+
+
+
+
+
 #--------------------------------------------------------------------------
 class AuditManager:
     """
@@ -137,53 +129,52 @@ class AuditManager:
 
         # Audits list
         self.__audits = dict()
-    
 
-    #----------------------------------------------------------------------        
+
+    #----------------------------------------------------------------------
     def new_audit(self, globalParams):
         """
         Creates a new audit with params passed as parameter
-        
+
         :param globalParams: Params of audit
         :type globalParams: GlobalParams
-        
+
         :raises: TypeError
         """
         if not isinstance(globalParams, GlobalParams):
             raise TypeError("globalParams must be an instance of GlobalParams")
-        
+
         # Create the audit
         m_audit = Audit(globalParams, self)
         # Store it
         self.__audits[m_audit.getAuditName()] = Audit
         # Run!
         m_audit.run()
-        
-        
+
+
     #----------------------------------------------------------------------
     def getAllAudits(self):
         """
         Get the list of audits running at the momento of calling.
-        
+
         :returns: dicts(str, Audit) -- Return a dict with touples (auditName, Audit instance)
         """
         return self.__audits
-    
+
     #----------------------------------------------------------------------
     def getAudit(self, auditName):
         """
         Get an instance of audit by their name.
-        
+
         :param auditName: audit name
         :type auditName: str
-        
+
         :returns: Audit -- instance of audit
         :raises: TypeError, KeyError
         """
         if not isinstance(auditName, basestring):
             raise TypeError("Audit name must be a string")
-        
+
         return self.__audits[auditName]
-        
-    
-    
+
+

@@ -24,18 +24,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__author__ = "Daniel Garcia Garcia a.k.a cr0hn - dani@iniqua.com"
-__copyright__ = "Copyright 2011-2013 - GoLismero project"
-__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn"]
-__maintainer__ = "cr0hn"
-__email__ = "golismero.project@gmail.com"
-__status__ = "Develop"
-__license__ = "GPL"
-__version__ = "0.0.1"
 
-from core.main.auditmanager import AuditManager
-from core.data.globalparams import GlobalParams
 
+from core.main.commonstructures import GlobalParams
+from core.main.audit import AuditManager
+
+#--------------------------------------------------------------------------
 class MessageManager:
     """"""
 
@@ -55,11 +49,10 @@ class MessageManager:
             pass
         else:
             raise ValueError("worng runMode")
-    
+
     #----------------------------------------------------------------------
     def send_message(self, Message):
         """Send a message to all listeners"""
         for i in self.__observers:
             i.send_msg(Message)
-    
-    
+

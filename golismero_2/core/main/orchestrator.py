@@ -24,22 +24,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__author__ = "Daniel Garcia Garcia a.k.a cr0hn - dani@iniqua.com"
-__copyright__ = "Copyright 2011-2013 - GoLismero project"
-__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn"]
-__maintainer__ = "cr0hn"
-__email__ = "golismero.project@gmail.com"
-__status__ = "Develop"
-__license__ = "GPL"
-__version__ = "0.0.1"
 
-from core.messaging.ireceiver import IReceiver
-from core.data.globalparams import GlobalParams
+from core.messaging.interfaces import IReceiver
+from core.main.commonstructures import GlobalParams
 from core.messaging.messagemanager import MessageManager
 from core.main.audit import AuditManager
 
 class Orchestrator(IReceiver):
-    """"""    
+    """"""
 
     #----------------------------------------------------------------------
     def __init__(self, options):
@@ -49,22 +41,22 @@ class Orchestrator(IReceiver):
 
         # Run mode
         self.__runMode = options.RunMode
-        
+
         # Message manager
         self.__messageManager = MessageManager(self.__runMode)
         self.__auditManager = AuditManager()
-    
+
     #----------------------------------------------------------------------
     def add_audit(self, globalParams):
         """
         Add new audit to the pool
-        
+
         :param globalParams: parameter for and audit
         :type globalParams: GlobalParams
         """
         self.__auditManager.new_audit(globalParams)
-        
-    
+
+
     #----------------------------------------------------------------------
     def recv_msg(self, message):
         """

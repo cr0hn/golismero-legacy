@@ -24,18 +24,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__author__ = "Daniel Garcia Garcia a.k.a cr0hn - dani@iniqua.com"
-__copyright__ = "Copyright 2011-2013 - GoLismero project"
-__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn"]
-__maintainer__ = "cr0hn"
-__email__ = "golismero.project@gmail.com"
-__status__ = "Develop"
-__license__ = "GPL"
-__version__ = "0.0.1"
+
 
 from thirdparty_libs.yapsy.PluginManager import PluginManager
 from os import path, getcwd
-from core.plugins.iplugin import IPlugin
+from core.api.plugins.plugin import TestingPlugin,GlobalPLugin,UIPlugin,ResultsPlugin
 
 class PriscillaPluginManager(object):
     """"""
@@ -46,22 +39,22 @@ class PriscillaPluginManager(object):
     # Private methods
     #
     #----------------------------------------------------------------------
-    __instance = None       
-    def __new__(cls, *args, **kargs): 
+    __instance = None
+    def __new__(cls, *args, **kargs):
         """Structure for Singleton pattern"""
         if cls.__instance is not None:
             return cls.__instance
         else:
-            cls.__instance = super(PriscillaPluginManager, cls).__new__(cls, *args, **kargs)            
-            return cls.__instance    
+            cls.__instance = super(PriscillaPluginManager, cls).__new__(cls, *args, **kargs)
+            return cls.__instance
 
-        
-    #----------------------------------------------------------------------    
+
+    #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
         # Load plugins
         self.__loadplugins()
-        
+
 
     #----------------------------------------------------------------------
     def __loadplugins(self):
@@ -72,15 +65,17 @@ class PriscillaPluginManager(object):
         # Configure categories
         self.__pluginManager.setCategoriesFilter(
             {
-                "IPlugins" : IPlugin,
-                
+                "global" : GlobalPLugin,
+                "testing" : TestingPlugin,
+                "ui" : UIPlugin,
+                "result" : ResultsPlugin
             }
         )
         # Load plugins
         self.__pluginManager.locatePlugins()
         self.__pluginManager.loadPlugins()
 
-    
+
     #----------------------------------------------------------------------
     def __preparePluginsDirs(self):
         """
@@ -109,26 +104,31 @@ class PriscillaPluginManager(object):
     #----------------------------------------------------------------------
     def get_enabled_plugins(self):
         pass
-    
+    #----------------------------------------------------------------------
     def get_all_plugins(self):
+        """Get all available plugins
+
+        :returns: list -- List with all plugins
+        """
         m_plugins = list()
-        
+
         for i in self.__pluginManager.getAllPlugins():
             m_plugins.append([i.name, i.description])
-            
+
         return m_plugins
-    
+
     #----------------------------------------------------------------------
-    def get_plugin(self, pluginName):
+    def get_plugin_by_name(self, pluginName):
         """
         Return an instance os IPlugin
-        
+
         :param pluginName: plugin name
         :type pluginName: str
         :returns: IPlugin
         :raises: ValueError
         """
         return self.__pluginManager.getPluginByName(pluginName, "IPlugins")
+
 
     #----------------------------------------------------------------------
     #
@@ -138,10 +138,9 @@ class PriscillaPluginManager(object):
     def test_all_plugins(self):
         """Function for testing purposes. Run all plugins"""
         pass
-    
-    #----------------------------------------------------------------------    
+
+    #----------------------------------------------------------------------
     def rest_run_testPlugin(self):
         """Run test plugin. For testing purposes"""
         for i in self.__pluginManager.getAllPlugins():
             i.plugin_object.run()
-        

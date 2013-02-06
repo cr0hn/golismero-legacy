@@ -24,14 +24,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__author__ = "Daniel Garcia Garcia a.k.a cr0hn - dani@iniqua.com"
-__copyright__ = "Copyright 2011-2013 - GoLismero project"
-__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn"]
-__maintainer__ = "cr0hn"
-__email__ = "golismero.project@gmail.com"
-__status__ = "Develop"
-__license__ = "GPL"
-__version__ = "0.0.1"
 
 
 
@@ -72,7 +64,7 @@ class _interface(type):
         metodos.difference_update(current)
 
         # Si falta alguno...
-        if metodos:      
+        if metodos:
             # Lanzamos excepcion.
             raise TypeError("Missing methods: %s" % ", ".join(sorted(metodos)))
 
@@ -86,23 +78,23 @@ class GlobalParams:
     """
     Global parameters fro program
     """
-    
-        
+
+
     # Run modes enumerators
-    RUN_MODE = enum('standalone', 'cloudclient', 'cloudserver')         
+    RUN_MODE = enum('standalone', 'cloudclient', 'cloudserver')
     # User interface
-    USER_INTERFACE = enum('console')          
+    USER_INTERFACE = enum('console')
 
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
-        
+
         self.Target = ""
         self.RunMode = GlobalParams.RUN_MODE.standalone
         self.UserInterface = GlobalParams.USER_INTERFACE.console
-        
+
         # Audit name
         self.AuditName = ""
-        
+
         # Enabled plugins
         self.Plugins = ["all"]

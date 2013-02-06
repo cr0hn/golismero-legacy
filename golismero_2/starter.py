@@ -24,30 +24,25 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__author__ = "Daniel Garcia Garcia a.k.a cr0hn - dani@iniqua.com"
-__copyright__ = "Copyright 2011-2013 - GoLismero project"
-__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn"]
-__maintainer__ = "cr0hn"
-__email__ = "golismero.project@gmail.com"
-__status__ = "Develop"
-__license__ = "GPL"
-__version__ = "0.0.1"
 
-from core.data.globalparams import GlobalParams
-from core.main.orchester import Orchestrator
+from core.main.commonstructures import GlobalParams
+from core.main.orchestrator import Orchestrator
 
 
-def api(options):
+def launcher(options):
 
     if not isinstance(options, GlobalParams):
         raise TypeError()
-    
-    
+
+
     if options.RunMode == GlobalParams.RUN_MODE.standalone:
         # Run Orchester
         orchester = Orchestrator(options)
         orchester.add_audit(options)
-    
 
-    
-        
+
+
+
+
+
+
