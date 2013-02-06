@@ -24,9 +24,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__author__ = "Daniel Garcia Garcia a.k.a cr0hn - dani@iniqua.com"
+__author__ = "Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel) - dani@iniqua.com"
 __copyright__ = "Copyright 2011-2013 - GoLismero project"
-__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn"]
+__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel)", "Mario Vilas (@Mario_Vilas"]
 __maintainer__ = "cr0hn"
 __email__ = "golismero.project@gmail.com"
 __license__ = "GPL"
@@ -39,7 +39,7 @@ from sys import version_info,exit
 from starter import launcher
 from core.main.commonstructures import GlobalParams
 from core.plugins.priscillapluginmanager import PriscillaPluginManager
-from core.main.ioconsole import IOConsole
+from core.main.ioconsole import IO
 
 
 #----------------------------------------------------------------------
@@ -111,10 +111,10 @@ if __name__ == '__main__':
 	#------------------------------------------------------------
 	# List plugins?
 	if P.plugin_list:
-		IOConsole.log("Plugin list\n-----------\n")
+		IO.log("Plugin list\n-----------\n")
 		for i in PriscillaPluginManager().get_all_plugins():
-			IOConsole.log("- %s: %s\n" % (i[0], i[1]))
-		IOConsole.log("\n")
+			IO.log("- %s: %s\n" % (i[0], i[1]))
+		IO.log("\n")
 		exit(0)
 
 
@@ -125,17 +125,17 @@ if __name__ == '__main__':
 		try:
 			m_plugin_info = PriscillaPluginManager().get_plugin(P.plugin_name)
 			if m_plugin_info:
-				IOConsole.log("Information of plugin: '%s'\n------------\n" % m_plugin_info.name)
-				IOConsole.log(m_plugin_info.plugin_object.display_help())
-				IOConsole.log("\n")
+				IO.log("Information of plugin: '%s'\n------------\n" % m_plugin_info.name)
+				IO.log(m_plugin_info.plugin_object.display_help())
+				IO.log("\n")
 			else:
-				IOConsole.log("[!] Plugin name not found\n")
+				IO.log("[!] Plugin name not found\n")
 			exit(0)
 		except ValueError:
-			IOConsole.log("[!] Plugin name not found\n")
+			IO.log("[!] Plugin name not found\n")
 			exit(1)
 		except Exception,e:
-			IOConsole.log("[!] Error recovering plugin info: %s\n" % e.message)
+			IO.log("[!] Error recovering plugin info: %s\n" % e.message)
 			exit(1)
 
 

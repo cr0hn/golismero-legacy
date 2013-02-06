@@ -53,15 +53,15 @@ class PriscillaPluginManager(object):
     def __init__(self):
         """Constructor"""
         # Load plugins
-        self.__loadplugins()
+        self.__load_plugins()
 
 
     #----------------------------------------------------------------------
-    def __loadplugins(self):
+    def __load_plugins(self):
         # start manager
         self.__pluginManager = PluginManager()
         # Set directories where plugins are
-        self.__pluginManager.setPluginPlaces(self.__preparePluginsDirs())
+        self.__pluginManager.setPluginPlaces(self.__prepare_plugins_dirs())
         # Configure categories
         self.__pluginManager.setCategoriesFilter(
             {
@@ -77,7 +77,7 @@ class PriscillaPluginManager(object):
 
 
     #----------------------------------------------------------------------
-    def __preparePluginsDirs(self):
+    def __prepare_plugins_dirs(self):
         """
         Collect al path with plugins and return an array with them.
 
