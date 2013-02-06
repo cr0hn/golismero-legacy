@@ -98,8 +98,8 @@ class Audit(IReceiver):
         """
         # 1 - Carga los plugins necesarios
         # 2 - Configura los plugins para ser la receptora de los msg
-        # 3 - Crea y configura el notificator.
-        # 4 - Asocia los plugins al notificator
+        # 3 - Crea y configura el notifier.
+        # 4 - Asocia los plugins al notifier
         # 5 - Ejecuta los plugins
         self.__execParams.Plugins
         pass
