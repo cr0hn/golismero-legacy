@@ -47,17 +47,15 @@ class Audit(IReceiver):
 
 
         if not isinstance(auditParams, GlobalParams):
-            raise("Parameter type of params are not correct.")
+            raise TypeError("Expected GlobalParams, got %s instead" % type(auditParams))
 
         self.__execParams = auditParams
 
         # set Receiver
         self.__receiver = receiver
 
-        # name
-        self.__auditname = self.__execParams.audit_name
-        if self.__auditname == "":
-            self.__auditname = self.__getAuditName()
+        # set audit name
+        self.name = self.__execParams.audit_name
 
 
 
@@ -65,6 +63,8 @@ class Audit(IReceiver):
         return self.__auditname
 
     def set_name(self, name):
+        if not name:
+            name = self.__getAuditName()
         self.__auditname = name
 
     name = property(get_name, set_name)

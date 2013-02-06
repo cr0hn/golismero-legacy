@@ -45,14 +45,16 @@ class Orchestrator(IReceiver):
 
         # Message manager
         self.__messageManager = MessageManager(self.__runMode)
+
+        # Audit manager
         self.__auditManager = AuditManager()
 
     #----------------------------------------------------------------------
     def add_audit(self, globalParams):
         """
-        Add new audit to the pool
+        Start a new audit
 
-        :param globalParams: parameter for and audit
+        :param globalParams: Audit settings
         :type globalParams: GlobalParams
         """
         self.__auditManager.new_audit(globalParams)

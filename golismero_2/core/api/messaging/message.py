@@ -32,7 +32,11 @@ from core.main.commonstructures import GlobalParams
 #------------------------------------------------------------------------------
 class Message (object):
     """
-    This class contain information for message system
+    Messages send information, results and internal control events between the
+    different components of GoLismero.
+
+    They may be shared locally (console run mode) or serialized and sent across
+    the network (cloud run modes).
     """
 
 
@@ -102,13 +106,13 @@ class Message (object):
     #----------------------------------------------------------------------
     def __init__(self, message_info, message_info_type, message_type = Message.MSG_TYPE_INFO):
         """
-        :param message_info: information of message.
+        :param message_info: the payload of the message.
         :type message_info: object -- type must be resolved at run time.
 
-        :param message_info_type: determinates the info that contain the message.
+        :param message_info_type: specifies the data type of the payload.
         :type message_info_type: int -- specified in a constant of Message class.
 
-        :param message_type: determinates the type of message
+        :param message_type: specifies the type of message.
         :type mesage_type: int -- specified in a constant of Message class.
         """
         self.__message_info = message_info
@@ -128,7 +132,7 @@ class Message (object):
     #----------------------------------------------------------------------
     def get_message_type(self):
         """
-        Get message type
+        Get message type.
 
         :returns: int -- Constant
         """
@@ -139,7 +143,7 @@ class Message (object):
     #----------------------------------------------------------------------
     def get_message_info_type(self):
         """
-        Get message type
+        Get message info type.
 
         :returns: int -- Constant
         """
@@ -157,8 +161,7 @@ class Message (object):
     #----------------------------------------------------------------------
     def set_audit_name(self, name):
         """
-        Set audit name to which message belongs. Only instance of Audit can
-        be call it.
+        Set the audit name to which message belongs.
 
         :param name: audit name
         :type name: str
@@ -168,14 +171,10 @@ class Message (object):
     #----------------------------------------------------------------------
     def get_audit_name(self):
         """
-        Get audit name to which message belongs
+        Get the audit name to which message belongs.
 
-        :returns: str --audit name for this message.
+        :returns: str -- audit name
         """
         return self.__audit_name
 
     audit_name = property(get_audit_name, set_audit_name)
-
-
-
-
