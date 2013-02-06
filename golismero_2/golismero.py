@@ -2,7 +2,7 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web kniffe.
+GoLismero 2.0 - The web knife.
 
 Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 
@@ -43,103 +43,78 @@ from core.main.ioconsole import IOConsole
 
 
 #----------------------------------------------------------------------
-def Credits():
-
-	print ""
-	print "|--------------------------------------------------|"
-	print "| GoLismero - The Web Knife.                       |"
-	print "|                                                  |"
-	print "| Daniel Garcia a.k.a cr0hn - dani@iniqua.com)     |"
-	print "|--------------------------------------------------|"
-	print ""
-
-#
 # Start of program
-#
 if __name__ == '__main__':
 
-	# Check for python version
-	if version_info < (2, 7):
-		print "\n[!] you must use python 2.7 or greater\n"
-		sys.exit(1)
+    # Show program banner
+    print ""
+    print "|--------------------------------------------------|"
+    print "| GoLismero - The Web Knife.                       |"
+    print "|                                                  |"
+    print "| Daniel Garcia a.k.a cr0hn - dani@iniqua.com)     |"
+    print "|--------------------------------------------------|"
+    print ""
 
-	# Load plugin engine
-	Credits()
+    # Check for python version
+    if version_info < (2, 7):
+        print "\n[!] you must use python 2.7 or greater\n"
+        sys.exit(1)
 
-	#------------------------------------------------------------
-	# Configure command line parser
-	parser = argparse.ArgumentParser()
-	gr1 = parser.add_argument_group("Main options")
-	gr1.add_argument('-t', action='append', dest='target', help='target web site.')
-	gr1.add_argument('-M', action='store', dest='runmode', help='run mode. Default=StandAlone ', default= "StandAlone", choices= ["standAlone", "cloudServer", "cloudClient" ])
-	gr1.add_argument('-I', action='store', dest='interface', help='user interface mode', default= "console", choices= ["console"])
-	gr1.add_argument('-a', action='store', dest='auditname', help='customize the audit name')
+    # Configure command line parser
+    parser = argparse.ArgumentParser()
 
-	gr_plugins = parser.add_argument_group("Plugins")
-	gr_plugins.add_argument('-P', '--plugin-enabled', action='store', dest='enabledplugins', help="list of plugins to run. Default=all", )
-	gr_plugins.add_argument('--plugin-list', action='store_true', help="list available plugins")
-	gr_plugins.add_argument('--plugin-info', action='store', dest="plugin_name", help="list available plugins")
+    gr_main = parser.add_argument_group("Main options")
+    gr_main.add_argument('-t', action='append', dest='targets', help='target web site, use multiple times for many targets')
+    gr_main.add_argument('-M', action='store', dest='run_mode', help='run mode [default: Standalone]', default="Standalone", choices=[x.title() for x in GlobalParams.RUN_MODE._values.keys()])
+    gr_main.add_argument('-I', action='store', dest='user_interface', help='user interface mode [default: Console]', default="console", choices=[x.title() for x in GlobalParams.USER_INTERFACE._values.keys()])
+    gr_main.add_argument('-a', action='store', dest='audit_name', help='customize the audit name')
+
+    gr_plugins = parser.add_argument_group("Plugins")
+    gr_plugins.add_argument('-P', '--plugin-enabled', action='store', dest='plugins', help="list of plugins to run [default: all]", )
+    gr_plugins.add_argument('--plugin-list', action='store_true', help="list available plugins")
+    gr_plugins.add_argument('--plugin-info', action='store', dest="plugin_name", help="show plugin info")
 
 
-
-	P = parser.parse_args()
-
-	#
-	# store command line options
-	#
-	cmdParams = GlobalParams()
-	cmdParams.Target = P.target
-	cmdParams.AuditName = P.auditname
-
-	#------------------------------------------------------------
-	# Prepare run mode
-	m_runMode = P.runmode.lower()
-	getattr(GlobalParams.RUN_MODE, m_runMode)
-	if m_runMode == "standalone":
-		cmdParams.RunMode = GlobalParams.RUN_MODE.standalone
-	elif m_runMode == "cloudclient":
-		cmdParams.RunMode = GlobalParams.RUN_MODE.cloudclient
-	elif m_runMode == "cloudserver":
-		cmdParams.RunMode = GlobalParams.RUN_MODE.cloudserver
-
-	#------------------------------------------------------------
-	# Prepare user interface
-	m_userInterface = P.interface
-	if m_userInterface == "console":
-		cmdParams.UserInterface = GlobalParams.USER_INTERFACE.console
-
-	#------------------------------------------------------------
-	# List plugins?
-	if P.plugin_list:
-		IOConsole.log("Plugin list\n-----------\n")
-		for i in PriscillaPluginManager().get_all_plugins():
-			IOConsole.log("- %s: %s\n" % (i[0], i[1]))
-		IOConsole.log("\n")
-		exit(0)
+    # Parse command line options
+    try:
+        cmdParams = GlobalParams.from_cmdline( parser.parse_args() )
+    except Exception, e:
+        parser.error(str(e))
 
 
 
-	#------------------------------------------------------------
-	# Display plugin info
-	if P.plugin_name:
-		try:
-			m_plugin_info = PriscillaPluginManager().get_plugin(P.plugin_name)
-			if m_plugin_info:
-				IOConsole.log("Information of plugin: '%s'\n------------\n" % m_plugin_info.name)
-				IOConsole.log(m_plugin_info.plugin_object.display_help())
-				IOConsole.log("\n")
-			else:
-				IOConsole.log("[!] Plugin name not found\n")
-			exit(0)
-		except ValueError:
-			IOConsole.log("[!] Plugin name not found\n")
-			exit(1)
-		except Exception,e:
-			IOConsole.log("[!] Error recovering plugin info: %s\n" % e.message)
-			exit(1)
+    #------------------------------------------------------------
+    # List plugins
+    if P.plugin_list:
+        IOConsole.log("Plugin list\n-----------\n")
+        for i in PriscillaPluginManager().get_all_plugins():
+            IOConsole.log("- %s: %s\n" % (i[0], i[1]))
+        IOConsole.log("\n")
+        exit(0)
 
 
-	#------------------------------------------------------------
-	# Call to API
-	launcher(cmdParams)
 
+    #------------------------------------------------------------
+    # Display plugin info
+    if P.plugin_name:
+        try:
+            m_plugin_info = PriscillaPluginManager().get_plugin(P.plugin_name)
+            if m_plugin_info:
+                IOConsole.log("Information of plugin: '%s'\n------------\n" % m_plugin_info.name)
+                IOConsole.log(m_plugin_info.plugin_object.display_help())
+                IOConsole.log("\n")
+            else:
+                IOConsole.log("[!] Plugin name not found\n")
+            exit(0)
+        except ValueError:
+            IOConsole.log("[!] Plugin name not found\n")
+            exit(1)
+        except Exception,e:
+            IOConsole.log("[!] Error recovering plugin info: %s\n" % e.message)
+            exit(1)
+
+
+
+    #------------------------------------------------------------
+    # Launch GoLismero
+    launcher(cmdParams)

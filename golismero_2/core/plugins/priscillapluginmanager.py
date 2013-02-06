@@ -2,7 +2,7 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web kniffe.
+GoLismero 2.0 - The web knife.
 
 Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 

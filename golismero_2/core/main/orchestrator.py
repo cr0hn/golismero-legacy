@@ -2,7 +2,7 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web kniffe.
+GoLismero 2.0 - The web knife.
 
 Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 
@@ -37,10 +37,11 @@ class Orchestrator(IReceiver):
     def __init__(self, options):
         """Constructor"""
         if not isinstance(options, GlobalParams):
-            raise TypeError()
+            raise TypeError("Expected GlobalParams, got %s instead" % type(options))
+
 
         # Run mode
-        self.__runMode = options.RunMode
+        self.__runMode = options.run_mode
 
         # Message manager
         self.__messageManager = MessageManager(self.__runMode)

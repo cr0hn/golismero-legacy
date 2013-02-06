@@ -2,7 +2,7 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web kniffe.
+GoLismero 2.0 - The web knife.
 
 Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 
@@ -28,9 +28,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 def enum(*sequential, **named):
-    """Virtual enumeration"""
-    enums = dict(zip(sequential, range(len(sequential))), **named)
-    return type('Enum', (), enums)
+    "Enumerated type"
+    values = dict(zip(sequential, range(len(sequential))), **named)
+    values['_values'] = values
+    return type('Enum', (), values)
 
 
 
@@ -89,12 +90,36 @@ class GlobalParams:
     def __init__(self):
         """Constructor"""
 
-        self.Target = ""
-        self.RunMode = GlobalParams.RUN_MODE.standalone
-        self.UserInterface = GlobalParams.USER_INTERFACE.console
+        self.targets = []
+        self.run_mode = GlobalParams.RUN_MODE.standalone
+        self.user_interface = GlobalParams.USER_INTERFACE.console
 
         # Audit name
-        self.AuditName = ""
+        self.audit_name = ""
 
         # Enabled plugins
-        self.Plugins = ["all"]
+        self.plugins = ["all"]
+
+    @classmethod
+    def from_cmdline(cls, args):
+        "Get the settings from the command line arguments."
+
+        # Instance a settings object.
+        cmdParams = cls()
+
+        # Get the run mode
+        cmdParams.run_mode = getattr(GlobalParams.RUN_MODE,
+                                     args.run_mode.lower())
+
+        # Get the user interface mode
+        cmdParams.user_interface = getattr(GlobalParams.USER_INTERFACE,
+                                           args.user_interface.lower())
+
+        # Get the list of targets
+        cmdParams.targets = args.targets
+
+        # Get the list of enabled plugins
+        cmdParams.plugins = args.plugins
+
+        # Get the name of the audit
+        cmdParams.audit_name = args.audit_name
