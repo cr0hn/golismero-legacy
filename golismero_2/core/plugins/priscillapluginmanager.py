@@ -102,18 +102,51 @@ class PriscillaPluginManager(object):
     # Public methods
     #
     #----------------------------------------------------------------------
-    def get_enabled_plugins(self):
-        pass
+    def get_plugins(self, plugin_list):
+        """
+        Get a plugin list from a list of names.
+
+        :param plugin_list: List with names of plugins you want.
+        :type plugin_list: list
+
+        :returns: list -- list of plugin instances
+        """
+
+        # Check for keyword "all"
+        if "all" in plugin_list or "All" in plugin_list:
+            return self.get_all_plugins().values()
+
+        return_plugin = list()
+        if plugin_list:
+            for name, plugin_obj in self.get_all_plugins():
+                for p in plugin_list:
+                    if name is p:
+                        return_plugin.append(plugin_obj)
+
+        return return_plugin
+
     #----------------------------------------------------------------------
     def get_all_plugins(self):
-        """Get all available plugins
-
-        :returns: list -- List with all plugins
         """
-        m_plugins = list()
+        Get all available plugins
+
+        :returns: dict -- List with all plugins as format (name, plugin_instance)
+        """
+        for i in self.__pluginManager.getAllPlugins():
+            m_plugins[i.name] = i.plugin_object
+
+        return m_plugins
+
+
+    #----------------------------------------------------------------------
+    def get_all_plugins_descriptions(self):
+        """Get all descriptions available plugins
+
+        :returns: dict -- List with all plugins as (name, description)
+        """
 
         for i in self.__pluginManager.getAllPlugins():
-            m_plugins.append([i.name, i.description])
+            m_plugins[i.name] = i.description
 
         return m_plugins
 
@@ -127,8 +160,12 @@ class PriscillaPluginManager(object):
         :returns: IPlugin
         :raises: ValueError
         """
-        return self.__pluginManager.getPluginByName(pluginName, "IPlugins")
-
+        plugin_name = list()
+        plugin_name.append(self.__pluginManager.getPluginByName(pluginName, "global"))
+        plugin_name.append(self.__pluginManager.getPluginByName(pluginName, "testing"))
+        plugin_name.append(self.__pluginManager.getPluginByName(pluginName, "ui"))
+        plugin_name.append(self.__pluginManager.getPluginByName(pluginName, "results"))
+        return plugin_name.pop()
 
     #----------------------------------------------------------------------
     #

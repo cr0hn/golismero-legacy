@@ -101,6 +101,7 @@ class Audit(IReceiver):
         # 3 - Crea y configura el notificator.
         # 4 - Asocia los plugins al notificator
         # 5 - Ejecuta los plugins
+        self.__execParams.Plugins
         pass
 
     #----------------------------------------------------------------------
