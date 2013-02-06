@@ -112,7 +112,7 @@ if __name__ == '__main__':
 	# List plugins?
 	if P.plugin_list:
 		IO.log("Plugin list\n-----------\n")
-		for i in PriscillaPluginManager().get_all_plugins():
+		for i in PriscillaPluginManager().get_all_plugins_descriptions():
 			IO.log("- %s: %s\n" % (i[0], i[1]))
 		IO.log("\n")
 		exit(0)
