@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #-----------------------------------------------------------------------
 
 
-from core.main.orchestrator import Orchestrator
+from core.main.audit import Audit
 
 class Plugin(object):
     """
@@ -94,11 +94,11 @@ class Plugin(object):
         pass
 
     #----------------------------------------------------------------------
-    def __init__(self, observer):
+    def set_observer(self, observer):
         """
-        Prepare common structures
+        Set observer for the plugins
         """
-        if not isinstance(observer, Orchestrator):
+        if not isinstance(observer, Audit):
             raise ValueError("observer parameter must be an instance of Observer")
 
         self.__observer_ref = observer

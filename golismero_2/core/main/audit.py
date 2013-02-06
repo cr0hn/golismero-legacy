@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.main.commonstructures import GlobalParams
 from core.messaging.interfaces import IReceiver
+from core.plugins.priscillapluginmanager import PriscillaPluginManager
 
 #--------------------------------------------------------------------------
 class Audit(IReceiver):
@@ -49,13 +50,13 @@ class Audit(IReceiver):
         if not isinstance(auditParams, GlobalParams):
             raise("Parameter type of params are not correct.")
 
-        self.__execParams = auditParams
+        self.__audit_params = auditParams
 
         # set Receiver
         self.__receiver = receiver
 
         # name
-        self.__auditname = self.__execParams.AuditName
+        self.__auditname = self.__audit_params.AuditName
         if self.__auditname == "":
             self.__auditname = self.__getAuditName()
 
@@ -101,7 +102,16 @@ class Audit(IReceiver):
         # 3 - Crea y configura el notificator.
         # 4 - Asocia los plugins al notificator
         # 5 - Ejecuta los plugins
-        self.__execParams.Plugins
+
+
+        # 1 - Load neccesary plugins
+        audit_plugins = PriscillaPluginManager().get_all_plugins(self.__audit_params.Plugins)
+
+        # 2 - Configure plugins to be it own the target of messages
+        for l in audit_plugins:
+            l.set_observer(self)
+
+        # 3 - Creates
         pass
 
     #----------------------------------------------------------------------
