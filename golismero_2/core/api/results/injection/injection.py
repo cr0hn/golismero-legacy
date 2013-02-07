@@ -73,6 +73,6 @@ class Injection(injection):
         if injection_type is not None and injection_type >= 0 and injection_type <= 10:
             self.__injection_type = injection_type
 
-    injection_type = property(get_information_type, set_information_type)
+    result_subtype = property(get_information_type, set_information_type)
 
 

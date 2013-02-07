@@ -77,6 +77,6 @@ class Information(Result):
         if information_type is not None and information_type >= 0 and information_type <= 10:
             self.__information_type = information_type
 
-    information_type = property(get_information_type, set_information_type)
+    result_subtype = property(get_information_type, set_information_type)
 
 

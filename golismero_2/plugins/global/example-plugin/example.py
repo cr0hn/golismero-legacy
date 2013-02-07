@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from core.api.plugins.plugin import GlobalPLugin
+from core.api.results.information.information import Information
 from core.api.io import IO
 
 class ExamplePlugin(GlobalPLugin):
@@ -70,4 +71,4 @@ class ExamplePlugin(GlobalPLugin):
 
         :returns: list -- list with constants
         """
-        raise NotImplementedError("All plugins must implement this method!")
+        return list(Information.INFORMATION_URL)

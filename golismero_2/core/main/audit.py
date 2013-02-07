@@ -31,7 +31,7 @@ from core.messaging.notifier import Notifier
 from core.messaging.message import Message
 from core.api.results.information.url import Url
 from core.plugins.priscillapluginmanager import PriscillaPluginManager
-
+from threading import Thread
 
 
 #--------------------------------------------------------------------------
@@ -104,8 +104,8 @@ class Audit(IReceiver):
         Start execution of audit
         """
 
-        # 1 - Load neccesary plugins
-        m_audit_plugins = PriscillaPluginManager().get_plugins(self.__audit_params.plugins)
+        # 1 - Load neccesary plugins. Only testing plugins
+        m_audit_plugins = PriscillaPluginManager().get_plugins(self.__audit_params.plugins, "testing")
 
         # 2 - Configure plugins to be it own the target of messages
         for p in m_audit_plugins:
@@ -115,7 +115,8 @@ class Audit(IReceiver):
         self.__notifier = Notifier()
 
         # 4 - Asociate plugins to nofitier
-        map(self.__notifier.add_plugin, m_audit_plugins)
+        for l_plugin in m_audit_plugins:
+            self.__notifier.add_plugin(l_plugin)
 
         # 5 - Generate firsts messages with targets URLs
         for l_url in self.__audit_params.targets:
@@ -171,6 +172,8 @@ class AuditManager:
         :param globalParams: Params of audit
         :type globalParams: GlobalParams
 
+        :returns: Audit -- return just created audit
+
         :raises: TypeError
         """
         if not isinstance(globalParams, GlobalParams):
@@ -182,6 +185,9 @@ class AuditManager:
         self.__audits[m_audit.get_audit_name()] = Audit
         # Run!
         m_audit.run()
+
+        # return it
+        return m_audit
 
 
     #----------------------------------------------------------------------
@@ -210,3 +216,8 @@ class AuditManager:
         return self.__audits[auditName]
 
 
+    #----------------------------------------------------------------------
+    def all_finished(self):
+        """
+
+        """

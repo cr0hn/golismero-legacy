@@ -24,6 +24,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from core.api.plugins.plugin import TestingPlugin
+from core.messaging.message import Message
 
 
 class Notifier(object):
@@ -35,21 +37,42 @@ class Notifier(object):
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
-        self.__plugins = list()
+
+        # Message notification pool for plugins.
+        self.__message_pool = dict()
+
+
 
     #----------------------------------------------------------------------
     def add_plugin(self, plugin):
         """
         Plugin to manage
         """
-        self.__plugins.append(plugin)
+        if not isinstance(plugin, TestingPlugin):
+            raise TypeError("Expected TestingPlugin, got %s instead" % type(auditParams))
+
+        # Create lists as necessary, dependens of type of messages accepted
+        # by plugins
+        m_message_types = plugin.get_accepted_info()
+        if m_message_types:
+            for l_type in m_message_types:
+                # Check if notification list exits
+                if not l_type in self.__message_pool:
+                    self.__message_pool[l_type] = list()
+
+                # Add plugin to notification list
+                self.__message_pool[l_type] = plugin
 
     #----------------------------------------------------------------------
     def nofity(self, message):
         """
         Notify messages to the plugins
         """
-        for p in self.__plugins:
-            p.recv_info(message)
+        if isinstance(message, Message):
+            if message.message_info.result_subtype in self.__message_pool.keys():
+                m_notifications = self.__message_pool[message.message_info.result_subtype]
+
+                for l_plugin in m_notifications:
+                    l_plugin.recv_info(message)
 
 

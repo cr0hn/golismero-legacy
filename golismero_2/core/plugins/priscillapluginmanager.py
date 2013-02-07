@@ -100,25 +100,28 @@ class PriscillaPluginManager(Singleton):
     #
     #----------------------------------------------------------------------
 
-
-    def get_plugins(self, plugin_list):
+    #----------------------------------------------------------------------
+    def get_plugins(self, plugin_list, category = "all"):
         """
         Get a plugin list from a list of names.
 
         :param plugin_list: List with names of plugins you want.
         :type plugin_list: list
 
+        :param category: get plugin list from category specified. Valid values: all, ui, global, results, testing.
+        :type category: str
+
         :returns: list -- List of plugin instances
         """
 
         # Check for keyword "all"
         if "all" in map(str.lower, plugin_list):
-            return self.get_all_plugins().values()
+            return self.get_all_plugins(category.lower()).values()
 
         # Collect the requested plugins
         return_plugin = list()
         if plugin_list:
-            for name, plugin_obj in self.get_all_plugins():
+            for name, plugin_obj in self.get_all_plugins(category.lower()):
                 for p in plugin_list:
                     if name is p:
                         return_plugin.append(plugin_obj)
@@ -126,15 +129,23 @@ class PriscillaPluginManager(Singleton):
         return return_plugin
 
     #----------------------------------------------------------------------
-    def get_all_plugins(self):
+    def get_all_plugins(self, category = "all"):
         """
         Get all available plugins
+
+        :param category: the category of plugin to return. Valid values: all, ui, global, results, testing.
+        :type category: str
 
         :returns: dict -- Mapping of plugin names to instances
         """
         m_plugins = dict()
-        for i in self.__pluginManager.getAllPlugins():
-            m_plugins[i.name] = i.plugin_object
+        if category.lower() is "all":
+            for i in self.__pluginManager.getAllPlugins():
+                m_plugins[i.name] = i.plugin_object
+        else:
+            for i in self.__pluginManager.getPluginsOfCategory(category.lower()):
+                m_plugins[i.name] = i.plugin_object
+
         return m_plugins
 
     #----------------------------------------------------------------------
