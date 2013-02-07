@@ -27,12 +27,12 @@ a plugin should contain the following elements:
 
 For a  *Standard* plugin:
 
-  ``myplugin.yapsy-plugin`` 
- 
+  ``myplugin.golismero``
+
       A *plugin info file* identical to the one previously described.
- 
+
   ``myplugin``
- 
+
       A directory ontaining an actual Python plugin (ie with a
       ``__init__.py`` file that makes it importable). The upper
       namespace of the plugin should present a class inheriting the
@@ -42,19 +42,19 @@ For a  *Standard* plugin:
 
 For a *Single file* plugin:
 
-  ``myplugin.yapsy-plugin`` 
-       
+  ``myplugin.golismero``
+
     A *plugin info file* which is identified thanks to its extension,
     see the `Plugin Info File Format`_ to see what should be in this
     file.
-    
-  
+
+
     The extension is customisable at the ``PluginManager``'s
     instanciation, since one may usually prefer the extension to bear
     the application name.
-  
+
   ``myplugin.py``
-  
+
      The source of the plugin. This file should at least define a class
      inheriting the ``IPlugin`` interface. This class will be
      instanciated at plugin loading and it will be notified the
@@ -77,15 +77,15 @@ Here is an example of what such a file should contain::
 	  [Core]
 	  Name = My plugin Name
 	  Module = the_name_of_the_pluginto_load_with_no_py_ending
-         
+
 	  [Documentation]
 	  Description = What my plugin broadly does
 	  Author = My very own name
 	  Version = 0.1
 	  Website = My very own website
 	  Version = the_version_number_of_the_plugin
-	  
-	 
+
+
 .. note:: From such plugin descriptions, the ``PluginManager`` will
           built its own representations of the plugins as instances of
           the :doc:`PluginInfo` class.
@@ -137,26 +137,26 @@ PLUGIN_NAME_FORBIDEN_STRING=";;"
 class PluginManager(object):
 	"""
 	Manage several plugins by ordering them in categories.
-	
+
 	The mechanism for searching and loading the plugins is already
 	implemented in this class so that it can be used directly (hence
 	it can be considered as a bit more than a mere interface)
-	
+
 	The file describing a plugin must be written in the syntax
 	compatible with Python's ConfigParser module as in the
-	`Plugin Info File Format`_  
+	`Plugin Info File Format`_
 	"""
-	
 
-	def __init__(self, 
-				 categories_filter={"Default":IPlugin}, 
-				 directories_list=None, 
-				 plugin_info_ext="yapsy-plugin"):
+
+	def __init__(self,
+				 categories_filter={"Default":IPlugin},
+				 directories_list=None,
+				 plugin_info_ext="golismero"):
 		"""
 		Initialize the mapping of the categories and set the list of
 		directories where plugins may be. This can also be set by
-		direct call the methods: 
-		
+		direct call the methods:
+
 		- ``setCategoriesFilter`` for ``categories_filter``
 		- ``setPluginPlaces`` for ``directories_list``
 		- ``setPluginInfoExtension`` for ``plugin_info_ext``
@@ -165,7 +165,7 @@ class PluginManager(object):
 		of each corresponding arguments.
 		"""
 		self.setPluginInfoClass(PluginInfo)
-		self.setCategoriesFilter(categories_filter)		
+		self.setCategoriesFilter(categories_filter)
 		self.setPluginPlaces(directories_list)
 		self.setPluginInfoExtension(plugin_info_ext)
 
@@ -173,7 +173,7 @@ class PluginManager(object):
 		"""
 		Set the categories of plugins to be looked for as well as the
 		way to recognise them.
-		
+
 		The ``categories_filter`` first defines the various categories
 		in which the plugins will be stored via its keys and it also
 		defines the interface tha has to be inherited by the actual
@@ -188,7 +188,7 @@ class PluginManager(object):
 		for categ in categories_filter:
 			self.category_mapping[categ] = []
 			self._category_file_mapping[categ] = []
-			
+
 
 	def setPluginInfoClass(self,picls):
 		"""
@@ -228,27 +228,27 @@ class PluginManager(object):
 		Return the list of all categories.
 		"""
 		return self.category_mapping.keys()
-	
+
 	def removePluginFromCategory(self,plugin,category_name):
 		"""
 		Remove a plugin from the category where it's assumed to belong.
 		"""
 		self.category_mapping[category_name].remove(plugin)
-		
-		
+
+
 	def appendPluginToCategory(self,plugin,category_name):
 		"""
 		Append a new plugin to the given category.
 		"""
 		self.category_mapping[category_name].append(plugin)
 
-	
+
 	def getPluginsOfCategory(self,category_name):
 		"""
 		Return the list of all plugins belonging to a category.
 		"""
 		return self.category_mapping[category_name][:]
-	
+
 	def getAllPlugins(self):
 		"""
 		Return the list of all plugins (belonging to all categories).
@@ -257,7 +257,7 @@ class PluginManager(object):
 		for pluginsOfOneCategory in self.category_mapping.itervalues():
 				allPlugins.extend(pluginsOfOneCategory)
 		return allPlugins
-	
+
 	def _getPluginNameAndModuleFromStream(self, infoFileObject, candidate_infofile="<buffered info>"):
 		"""
 		Extract the name and module of a plugin from the
@@ -266,7 +266,7 @@ class PluginManager(object):
 
 		.. note:: Prefer using ``_gatherCorePluginInfo``
 		instead, whenever possible...
-                
+
                 .. warning:: ``infoFileObject`` must be a file-like
                 object: either an opened file for instance or a string
                 buffer wrapped in a StringIO instance as another
@@ -274,12 +274,12 @@ class PluginManager(object):
 
                 .. note:: ``candidate_infofile`` must be provided
                 whenever possible to get better error messages.
-                
+
 		Return a 3-uple with the name of the plugin, its
 		module and the config_parser used to gather the core
 		data *in a tuple*, if the required info could be
 		localised, else return ``(None,None,None)``.
-		
+
 		.. note:: This is supposed to be used internally by subclasses
 		    and decorators.
                 """
@@ -292,7 +292,7 @@ class PluginManager(object):
 			return (None, None, None)
 		# check if the basic info is available
 		if not config_parser.has_section("Core"):
-			logging.debug("Plugin info file has no 'Core' section (in '%s')" % candidate_infofile)					
+			logging.debug("Plugin info file has no 'Core' section (in '%s')" % candidate_infofile)
 			return (None, None, None)
 		if not config_parser.has_option("Core","Name") or not config_parser.has_option("Core","Module"):
 			logging.debug("Plugin info file has no 'Name' or 'Module' section (in '%s')" % candidate_infofile)
@@ -305,7 +305,7 @@ class PluginManager(object):
 																				   candidate_infofile))
 			return (None, None, None)
 		return (name,config_parser.get("Core", "Module"), config_parser)
-        
+
 	def _gatherCorePluginInfo(self, directory, filename):
 		"""
 		Gather the core information (name, and module to be loaded)
@@ -315,10 +315,10 @@ class PluginManager(object):
 		Return an instance of ``self.plugin_info_cls`` and the
 		config_parser used to gather the core data *in a tuple*, if the
 		required info could be localised, else return ``(None,None)``.
-		
+
 		.. note:: This is supposed to be used internally by subclasses
 		    and decorators.
-		
+
 		"""
 		# now we can consider the file as a serious candidate
 		candidate_infofile = os.path.join(directory,filename)
@@ -340,7 +340,7 @@ class PluginManager(object):
 		required informations.
 
 		See also:
-		
+
 		  ``self._gatherCorePluginInfo``
 		"""
 		plugin_info,config_parser = self._gatherCorePluginInfo(directory, filename)
@@ -352,7 +352,7 @@ class PluginManager(object):
 				plugin_info.author	= config_parser.get("Documentation", "Author")
 			if config_parser.has_option("Documentation","Version"):
 				plugin_info.setVersion(config_parser.get("Documentation", "Version"))
-			if config_parser.has_option("Documentation","Website"): 
+			if config_parser.has_option("Documentation","Website"):
 				plugin_info.website	= config_parser.get("Documentation", "Website")
 			if config_parser.has_option("Documentation","Copyright"):
 				plugin_info.copyright	= config_parser.get("Documentation", "Copyright")
@@ -363,7 +363,7 @@ class PluginManager(object):
 
 
 
-	
+
 	def getPluginCandidates(self):
 		"""
 		Return the list of possible plugins.
@@ -383,7 +383,7 @@ class PluginManager(object):
 
 		The candidate must be represented by the same tuple described
 		in ``getPluginCandidates``.
-		
+
 		.. warning: locatePlugins must be called before !
 		"""
 		if not hasattr(self, '_candidates'):
@@ -393,17 +393,17 @@ class PluginManager(object):
 	def appendPluginCandidate(self,candidateTuple):
 		"""
 		Append a new candidate to the list of plugins that should be loaded.
-		
+
 		The candidate must be represented by the same tuple described
 		in ``getPluginCandidates``.
-		
+
 		.. warning: locatePlugins must be called before !
 		"""
 		if not hasattr(self, '_candidates'):
 			raise ValueError("locatePlugins must be called before removePluginCandidate")
 		self._candidates.append(candidateTuple)
-		
-		
+
+
 	def locatePlugins(self):
 		"""
 		Walk through the plugins' places and look for plugins.
@@ -426,7 +426,7 @@ class PluginManager(object):
 					if not filename.endswith(".%s" % self.plugin_info_ext):
 						continue
 					candidate_infofile = os.path.join(dirpath,filename)
-					logging.debug("""%s found a candidate: 
+					logging.debug("""%s found a candidate:
 	%s""" % (self.__class__.__name__, candidate_infofile))
 #					print candidate_infofile
 					plugin_info = self.gatherBasicPluginInfo(dirpath,filename)
@@ -442,7 +442,7 @@ class PluginManager(object):
 					elif os.path.isfile(plugin_info.path+".py"):
 						candidate_filepath = plugin_info.path
 					else:
-						logging.info("Plugin candidate rejected: '%s'" % candidate_infofile) 
+						logging.info("Plugin candidate rejected: '%s'" % candidate_infofile)
 						continue
 #					print candidate_filepath
 					self._candidates.append((candidate_infofile, candidate_filepath, plugin_info))
@@ -459,7 +459,7 @@ class PluginManager(object):
 		attempt.  The ``plugin_info`` instance is passed as an argument to
 		the callback.
 		"""
-# 		print "%s.loadPlugins" % self.__class__		
+# 		print "%s.loadPlugins" % self.__class__
 		if not hasattr(self, '_candidates'):
 			raise ValueError("locatePlugins must be called before loadPlugins")
 
@@ -473,18 +473,18 @@ class PluginManager(object):
 			# specific dictionnary
 			candidate_globals = {"__file__":candidate_filepath+".py"}
 			if "__init__" in  os.path.basename(candidate_filepath):
-				sys.path.append(plugin_info.path)				
+				sys.path.append(plugin_info.path)
 			try:
-				candidateMainFile = open(candidate_filepath+".py","r")	
+				candidateMainFile = open(candidate_filepath+".py","r")
 				exec(candidateMainFile,candidate_globals)
 			except Exception,e:
-				print "Warning: unable to execute the code in plugin: %s: %s" % (candidate_filepath, e.message)				                                                        
+				print "Warning: unable to execute the code in plugin: %s: %s" % (candidate_filepath, e.message)
 				logging.debug("Unable to execute the code in plugin: %s" % candidate_filepath)
 				logging.debug("\t The following problem occured: %s %s " % (os.linesep, e))
 				if "__init__" in  os.path.basename(candidate_filepath):
 					sys.path.remove(plugin_info.path)
 				continue
-			
+
 			if "__init__" in  os.path.basename(candidate_filepath):
 				sys.path.remove(plugin_info.path)
 			# now try to find and initialise the first subclass of the correct plugin interface
@@ -500,7 +500,7 @@ class PluginManager(object):
 							current_category = category_name
 							break
 				if current_category is not None:
-					if not (candidate_infofile in self._category_file_mapping[current_category]): 
+					if not (candidate_infofile in self._category_file_mapping[current_category]):
 						# we found a new plugin: initialise it and search for the next one
 						plugin_info.plugin_object = element()
 						plugin_info.category = current_category
@@ -519,7 +519,7 @@ class PluginManager(object):
 		for each plugin candidate look for its category, load it and
 		stores it in the appropriate slot of the category_mapping.
 		"""
-# 		print "%s.collectPlugins" % self.__class__		
+# 		print "%s.collectPlugins" % self.__class__
 		self.locatePlugins()
 		self.loadPlugins()
 
@@ -545,7 +545,7 @@ class PluginManager(object):
 			if plugin_to_activate is not None:
 				logging.debug("Activating plugin: %s.%s"% (category,name))
 				plugin_to_activate.activate()
-				return plugin_to_activate			
+				return plugin_to_activate
 		return None
 
 
@@ -562,7 +562,7 @@ class PluginManager(object):
 			if plugin_to_deactivate is not None:
 				logging.debug("Deactivating plugin: %s.%s"% (category,name))
 				plugin_to_deactivate.deactivate()
-				return plugin_to_deactivate			
+				return plugin_to_deactivate
 		return None
 
 
@@ -585,9 +585,9 @@ class PluginManagerSingleton(object):
 	  - ``setPluginPlaces`` for ``directories_list``
 	  - ``setPluginInfoExtension`` for ``plugin_info_ext``
 	"""
-	
+
 	__instance = None
-	
+
 	__decoration_chain = None
 
 	def __init__(self):
@@ -605,12 +605,12 @@ class PluginManagerSingleton(object):
 		"""
 		if self.__instance is not None:
 			raise Exception("Singleton can't be created twice !")
-				
+
 	def setBehaviour(self,list_of_pmd):
 		"""
 		Set the functionalities handled by the plugin manager by
 		giving a list of ``PluginManager`` decorators.
-		
+
 		This function shouldn't be called several time in a same
 		process, but if it is only the first call will have an effect.
 
@@ -647,7 +647,7 @@ class PluginManagerSingleton(object):
 				self.__instance = pm
 			else:
 				# initialise the 'inner' PluginManagerDecorator
-				self.__instance = PluginManager()			
+				self.__instance = PluginManager()
 			logging.debug("PluginManagerSingleton initialised")
 		return self.__instance
 	get = classmethod(get)

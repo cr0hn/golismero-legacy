@@ -2,9 +2,9 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web knife.
+GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
-Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
+Author: Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 
 Golismero project site: http://code.google.com/p/golismero/
 Golismero project mail: golismero.project@gmail.com
@@ -24,25 +24,23 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.plugins.plugin import Testing
+from core.api.results.information.information import Information
 
-class TestPlugin(Testing):
-    """"""
+#------------------------------------------------------------------------------
+class Url(Information):
+    """
+    This class contain URL information
+    """
 
     #----------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, url):
         """Constructor"""
-        pass
+        super(Url, self).__init__(Information.INFORMATION_URL)
 
-    #----------------------------------------------------------------------
-    def Run(self):
-        """"""
-        print "It'w works!"
+        self.__url = url
 
-
-    def CheckInputParams(self, inputParams):
-        print "parameters check"
-
-    def displayHelp(self):
-        print "Help por test plugin"
-
+    def get_url_raw(self):
+        """
+        Get raw info of URL
+        """
+    url_raw = property(get_url_raw)

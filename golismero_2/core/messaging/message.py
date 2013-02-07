@@ -2,9 +2,9 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web knife.
+GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
-Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
+Author: Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 
 Golismero project site: http://code.google.com/p/golismero/
 Golismero project mail: golismero.project@gmail.com
@@ -24,9 +24,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
-
-from core.main.auditmanager import AuditManager
 from core.main.commonstructures import GlobalParams
 
 #------------------------------------------------------------------------------
@@ -96,28 +93,18 @@ class Message (object):
     MSG_STATUS_AUDIT_RESPONSE = 45
 
 
-    #----------------------------------------------------------------------
-    # Content messages
-    #----------------------------------------------------------------------
-    MSG_DATA_TEST = 160
-
-
 
     #----------------------------------------------------------------------
-    def __init__(self, message_info, message_info_type, message_type = Message.MSG_TYPE_INFO):
+    def __init__(self, message_info, message_type = 1): # By default, message type is Info message
         """
         :param message_info: the payload of the message.
         :type message_info: object -- type must be resolved at run time.
-
-        :param message_info_type: specifies the data type of the payload.
-        :type message_info_type: int -- specified in a constant of Message class.
 
         :param message_type: specifies the type of message.
         :type mesage_type: int -- specified in a constant of Message class.
         """
         self.__message_info = message_info
         self.__message_type = message_type
-        self.__message_info_type = message_info_type
         self.__audit_name = ""
 
     #----------------------------------------------------------------------
@@ -139,19 +126,6 @@ class Message (object):
         return self.__message_type
 
     message_type = property(get_message_type)
-
-    #----------------------------------------------------------------------
-    def get_message_info_type(self):
-        """
-        Get message info type.
-
-        :returns: int -- Constant
-        """
-        return self.__message_info_type
-
-    message_info_type = property(get_message_info_type)
-
-
 
 
     #----------------------------------------------------------------------

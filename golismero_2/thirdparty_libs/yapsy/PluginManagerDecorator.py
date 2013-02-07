@@ -37,8 +37,8 @@ class PluginManagerDecorator(object):
 	Add several responsibilities to a plugin manager object in a
 	more flexible way than by mere subclassing. This is indeed an
 	implementation of the Decorator Design Patterns.
-        
-	
+
+
 	There is also an additional mechanism that allows for the
 	automatic creation of the object to be decorated when this object
 	is an instance of PluginManager (and not an instance of its
@@ -46,17 +46,17 @@ class PluginManagerDecorator(object):
 	simple when the user don't want to mix a lot of 'enhancements' on
 	the base class.
 	"""
-        
+
 	def __init__(self, decorated_object=None,
 				 # The following args will only be used if we need to
 				 # create a default PluginManager
-				 categories_filter={"Default":IPlugin}, 
-				 directories_list=[os.path.dirname(__file__)], 
-				 plugin_info_ext="yapsy-plugin"):
+				 categories_filter={"Default":IPlugin},
+				 directories_list=[os.path.dirname(__file__)],
+				 plugin_info_ext="golismero"):
 		"""
 		Mimics the PluginManager's __init__ method and wraps an
 		instance of this class into this decorator class.
-		
+
 		  - *If the decorated_object is not specified*, then we use the
 		    PluginManager class to create the 'base' manager, and to do
 		    so we will use the arguments: ``categories_filter``,
@@ -71,11 +71,11 @@ class PluginManagerDecorator(object):
 		object passed to the init function under the exact keyword
 		``decorated_object``.
 		"""
-		
+
 		if decorated_object is None:
 			logging.debug("Creating a default PluginManager instance to be decorated.")
 			from yapsy.PluginManager import PluginManager
-			decorated_object = PluginManager(categories_filter, 
+			decorated_object = PluginManager(categories_filter,
 											 directories_list,
 											 plugin_info_ext)
 		self._component = decorated_object
@@ -87,8 +87,8 @@ class PluginManagerDecorator(object):
 		"""
 # 		print "looking for %s in %s" % (name, self.__class__)
 		return getattr(self._component,name)
-		
-		
+
+
 	def collectPlugins(self):
 		"""
 		This function will usually be a shortcut to successively call

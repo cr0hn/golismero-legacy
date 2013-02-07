@@ -25,7 +25,7 @@ class VersionedPluginInfo(PluginInfo):
 	Gather some info about a plugin such as its name, author,
 	description...
 	"""
-	
+
 	def __init__(self, plugin_name, plugin_path):
 		"""
 		Set the name and path of the plugin as well as the default
@@ -45,25 +45,25 @@ class VersionedPluginManager(PluginManagerDecorator):
 	versions are present for a same plugin, only the latest version is
 	manipulated via the standard methods (eg for activation and
 	deactivation)
-	
+
 	More precisely, for operations that must be applied on a single
 	named plugin at a time (``getPluginByName``,
 	``activatePluginByName``, ``deactivatePluginByName`` etc) the
 	targetted plugin will always be the one with the latest version.
-	
+
 	.. note:: The older versions of a given plugin are still reachable
 	          via the ``getPluginsOfCategoryFromAttic`` method.
 	"""
-	
-	def __init__(self, 
+
+	def __init__(self,
 				 decorated_manager=None,
-				 categories_filter={"Default":IPlugin}, 
-				 directories_list=None, 
-				 plugin_info_ext="yapsy-plugin"):
+				 categories_filter={"Default":IPlugin},
+				 directories_list=None,
+				 plugin_info_ext="golismero"):
 		"""
 		Create the plugin manager and record the ConfigParser instance
 		that will be used afterwards.
-		
+
 		The ``config_change_trigger`` argument can be used to set a
 		specific method to call when the configuration is
 		altered. This will let the client application manage the way
@@ -89,7 +89,7 @@ class VersionedPluginManager(PluginManagerDecorator):
 		self._attic = {}
 		for categ in self.getCategories():
 			self._attic[categ] = []
-		
+
 
 	def getLatestPluginsOfCategory(self,category_name):
 		"""
@@ -134,4 +134,4 @@ class VersionedPluginManager(PluginManagerDecorator):
 		version is available through standard methods.
 		"""
 		return self._attic[categ]
-			
+

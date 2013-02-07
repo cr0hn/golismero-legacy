@@ -24,32 +24,21 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
-
-class Notifier(object):
+#------------------------------------------------------------------------------
+class ResultManager:
     """
-    This class manage the pools of messages for each plugin, and notify them
-    when a message is received.
+    This interface manage the results. Shorten, organizing and storing it.
     """
 
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
-        self.__plugins = list()
+        self.__results = list()
 
     #----------------------------------------------------------------------
-    def add_plugin(self, plugin):
+    def add_result(self, result):
         """
-        Plugin to manage
+        Add new result to store
         """
-        self.__plugins.append(plugin)
-
-    #----------------------------------------------------------------------
-    def nofity(self, message):
-        """
-        Notify messages to the plugins
-        """
-        for p in self.__plugins:
-            p.recv_info(message)
-
+        self.__results.append(result)
 

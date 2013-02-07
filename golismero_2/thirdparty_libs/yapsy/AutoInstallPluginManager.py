@@ -38,22 +38,22 @@ class AutoInstallPluginManager(PluginManagerDecorator):
 				 decorated_manager=None,
 				 # The following args will only be used if we need to
 				 # create a default PluginManager
-				 categories_filter={"Default":IPlugin}, 
-				 directories_list=None, 
-				 plugin_info_ext="yapsy-plugin"):
+				 categories_filter={"Default":IPlugin},
+				 directories_list=None,
+				 plugin_info_ext="golismero"):
 		"""
 		Create the plugin manager and set up the directory where to
 		install new plugins.
 
 		Arguments
-		
+
 		  ``plugin_install_dir``
 		    The directory where new plugins to be installed will be copied.
 
 		.. warning:: If ``plugin_install_dir`` does not correspond to
 		    an element of the ``directories_list``, it is appended to
 		    the later.
-		    
+
 		"""
 		# Create the base decorator class
 		PluginManagerDecorator.__init__(self,
@@ -81,10 +81,10 @@ class AutoInstallPluginManager(PluginManagerDecorator):
 
 	def install(self, directory, plugin_info_filename):
 		"""
-		Giving the plugin's info file (e.g. ``myplugin.yapsy-plugin``),
+		Giving the plugin's info file (e.g. ``myplugin.golismero``),
 		and the directory where it is located, get all the files that
 		define the plugin and copy them into the correct directory.
-		
+
 		Return ``True`` if the installation is a success, ``False`` if
 		it is a failure.
 		"""
@@ -120,14 +120,14 @@ class AutoInstallPluginManager(PluginManagerDecorator):
 				return True
 		else:
 			return False
-		
-		
+
+
 	def installFromZIP(self, plugin_ZIP_filename):
 		"""
 		Giving the plugin's zip file (e.g. ``myplugin.zip``), check
 		that their is a valid info file in it and correct all the
 		plugin files into the correct directory.
-		
+
 		Return ``True`` if the installation is a success, ``False`` if
 		it is a failure.
 		"""
@@ -142,7 +142,7 @@ class AutoInstallPluginManager(PluginManagerDecorator):
 			return False
 		zipContent = candidateZipFile.namelist()
 		logging.info("Investigating the content of a zip file containing: '%s'" % zipContent)
-		logging.info("Sanity checks on zip's contained files (looking for hazardous path symbols).")	
+		logging.info("Sanity checks on zip's contained files (looking for hazardous path symbols).")
 		# check absence of root path and ".." shortcut that would
 		# send the file oustide the desired directory
 		for containedFileName in zipContent:
@@ -164,10 +164,10 @@ class AutoInstallPluginManager(PluginManagerDecorator):
 				return False
 			pathComponent = os.path.split(containedFileName)
 			if ".." in pathComponent:
-				logging.warning("Unsecure zip file, rejected because one of its file paths ('%s') contains '..'" % containedFileName)	
+				logging.warning("Unsecure zip file, rejected because one of its file paths ('%s') contains '..'" % containedFileName)
 				return False
 			if "~" in pathComponent:
-				logging.warning("Unsecure zip file, rejected because one of its file paths ('%s') contains '~'" % containedFileName)	
+				logging.warning("Unsecure zip file, rejected because one of its file paths ('%s') contains '~'" % containedFileName)
 				return False
 		infoFileCandidates = [filename for filename in zipContent if os.path.dirname(filename)==""]
 		if not infoFileCandidates:
@@ -196,4 +196,4 @@ class AutoInstallPluginManager(PluginManagerDecorator):
 			except:
 				logging.error("Could not install plugin '%s' from zip file '%s'." % (pluginName,plugin_ZIP_filename))
 				return False
-		
+

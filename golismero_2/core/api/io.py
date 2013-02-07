@@ -2,9 +2,9 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web knife.
+GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
-Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
+Author: Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 
 Golismero project site: http://code.google.com/p/golismero/
 Golismero project mail: golismero.project@gmail.com
@@ -23,7 +23,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
-
 
 from sys import stdout, stderr
 
@@ -72,6 +71,7 @@ class IO():
         try:
             if message:
                 IO.__logout.writelines(message)
+                IO.__logout.flush()
         except Exception,e:
             print "[!] Error while writen into log file or console: %s" % e.message
 
@@ -126,6 +126,7 @@ class IO():
         try:
             if message:
                 IO.__logerror.writelines(message)
+                IO.__logerror.flush()
         except Exception,e:
             print "[!] Error while writen into log file or console: %s" % e.message
 

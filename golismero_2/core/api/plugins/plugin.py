@@ -2,9 +2,9 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web knife.
+GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
-Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
+Author: Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 
 Golismero project site: http://code.google.com/p/golismero/
 Golismero project mail: golismero.project@gmail.com
@@ -34,12 +34,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 #-----------------------------------------------------------------------
 
+from core.api.results.result import Result
 
-from core.main.audit import Audit
 
-class Plugin(object):
+class Plugin():
     """
-    Plugin abstract class.
+    Abstract class for plugins
 
     Contains helper methods for plugins, and defines an interface that
     will be implemented by subclasses.
@@ -56,18 +56,17 @@ class Plugin(object):
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
         """
-        Comprueba las comprobaciones de los parametros introducidos por el
-        usuario.
+        Check input user parameters
 
-        Los parametros seran pasados en la instancia del tipo 'GlobalParams'.
+        Parameters will be passed as instance of 'GlobalParams"
 
-        Si algun parametro no es correcto o hay algun error, sera lanzada
-        una excepcion del tipo 'ValueError'.
+        If any parameter is not correct o there is any error, 'ValueError'
+        a exception must be raised.
 
-        :param inputParams: Parametros de entrada a comprobar
-        :type inputParams: GlobalParam
+        :param inputParams: input parameters to check
+        :type inputParams: GlobalParams
         """
-        pass
+        raise NotImplementedError("All plugins must implement this method!")
 
     #----------------------------------------------------------------------
     def display_help(self):
@@ -76,14 +75,14 @@ class Plugin(object):
         raise NotImplementedError("All plugins must implement this method!")
 
     #----------------------------------------------------------------------
-    def recv_info(self):
-        """Callback method to receive information to be processed."""
-        raise NotImplementedError("All plugins must implement this method!")
+    def recv_info(self, info):
+        """
+        Callback method to receive information to be processed.
 
-    #----------------------------------------------------------------------
-    def send_info(self, message):
-        """Method to send results. Do not override it!"""
-        pass
+        :param info: input info to process
+        :type info: some subclass of Result
+        """
+        raise NotImplementedError("All plugins must implement this method!")
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
@@ -95,23 +94,25 @@ class Plugin(object):
 
         :returns: list -- list with constants
         """
-        pass
+        raise NotImplementedError("All plugins must implement this method!")
 
     #----------------------------------------------------------------------
     def set_observer(self, observer):
         """
         Set observer for the plugins
         """
-        if not isinstance(observer, Audit):
-            raise ValueError("Expected Orchestrator, got %r instead" % type(observer))
+        #if not isinstance(observer, Audit):
+        #    raise ValueError("Expected Orchestrator, got %r instead" % type(observer))
 
         self.__observer_ref = observer
 
     #----------------------------------------------------------------------
-    def send_info(self, message):
-        """Send a message to the observer"""
-        self.__observer_ref.recv_msg(message)
+    def send_info(self, information):
+        """Send information to the Audit"""
+        if not isinstance(information, Result):
+            raise ValueError("Expected Orchestrator, got %r instead" % type(information))
 
+        self.__observer_ref.recv_msg(information)
 
 #------------------------------------------------------------------------------
 class TestingPlugin (Plugin):

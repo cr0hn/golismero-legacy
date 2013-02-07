@@ -24,32 +24,55 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from core.api.injections.injection import injection
+
+#------------------------------------------------------------------------------
+class Injection(injection):
+    """
+    Abstract class for informational injections
+    """
+
+    #--------------------------------------------------------------------------
+    #
+    # Types of Infomation injections
+    #
+    #--------------------------------------------------------------------------
+    XSS_REFLECTED = 0
 
 
-class Notifier(object):
-    """
-    This class manage the pools of messages for each plugin, and notify them
-    when a message is received.
-    """
 
     #----------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, injection_type = None):
         """Constructor"""
-        self.__plugins = list()
+        super(Injection, self).__init__(injection.TYPE_INJECTION)
+
+        self.__injection_type = injection_type
+
+
 
     #----------------------------------------------------------------------
-    def add_plugin(self, plugin):
+    def get_injection_type(self):
         """
-        Plugin to manage
+        Get the injection type
+
+        :returns: int -- The injection type.
         """
-        self.__plugins.append(plugin)
+        if self.__injection_type is None:
+            return Injection.XSS_REFLECTED
+        else:
+            return self.__injection_type
 
     #----------------------------------------------------------------------
-    def nofity(self, message):
+    def set_injection_type(self, injection_type):
         """
-        Notify messages to the plugins
+        Set the injection type.
+
+        :param injection_type: The type of injection
+        :type injection_type: int
         """
-        for p in self.__plugins:
-            p.recv_info(message)
+        if injection_type is not None and injection_type >= 0 and injection_type <= 10:
+            self.__injection_type = injection_type
+
+    injection_type = property(get_information_type, set_information_type)
 
 

@@ -2,9 +2,9 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web knife.
+GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
-Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
+Author: Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 
 Golismero project site: http://code.google.com/p/golismero/
 Golismero project mail: golismero.project@gmail.com
@@ -25,10 +25,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-
 from core.main.commonstructures import GlobalParams
 from core.messaging.interfaces import IReceiver
+from core.messaging.notifier import Notifier
+from core.messaging.message import Message
+from core.api.results.information.url import Url
 from core.plugins.priscillapluginmanager import PriscillaPluginManager
+
+
 
 #--------------------------------------------------------------------------
 class Audit(IReceiver):
@@ -56,7 +60,10 @@ class Audit(IReceiver):
         self.__receiver = receiver
 
         # set audit name
-        self.name = self.__execParams.audit_name
+        self.name = self.__audit_params.audit_name
+
+        # set audit as running
+        self.__is_alive = True
 
 
     def get_name(self):
@@ -64,7 +71,7 @@ class Audit(IReceiver):
 
     def set_name(self, name):
         if not name:
-            name = self.__getAuditName()
+            name = self.__generateAuditName()
         self.__auditname = name
 
     name = property(get_name, set_name)
@@ -96,22 +103,37 @@ class Audit(IReceiver):
         """
         Start execution of audit
         """
-        # 1 - Carga los plugins necesarios
-        # 2 - Configura los plugins para ser la receptora de los msg
-        # 3 - Crea y configura el notifier.
-        # 4 - Asocia los plugins al notifier
-        # 5 - Ejecuta los plugins
-
 
         # 1 - Load neccesary plugins
-        audit_plugins = PriscillaPluginManager().get_all_plugins(self.__audit_params.Plugins)
+        m_audit_plugins = PriscillaPluginManager().get_plugins(self.__audit_params.plugins)
 
         # 2 - Configure plugins to be it own the target of messages
-        for l in audit_plugins:
-            l.set_observer(self)
+        for p in m_audit_plugins:
+            p.set_observer(self)
 
-        # 3 - Creates
-        pass
+        # 3 - Creates the notifier
+        self.__notifier = Notifier()
+
+        # 4 - Asociate plugins to nofitier
+        map(self.__notifier.add_plugin, m_audit_plugins)
+
+        # 5 - Generate firsts messages with targets URLs
+        for l_url in self.__audit_params.targets:
+            self.__notifier.nofity(Message(Url(l_url), Message.MSG_TYPE_INFO))
+
+
+    #----------------------------------------------------------------------
+    def get_is_alive(self):
+        """
+        Get info about the state of audit. If audit was not end, return True.
+        False otherwise.
+
+        :returns: bool -- True is audit is still running. False otherwise
+        """
+        return self.__is_alive
+
+    is_alive = property(get_is_alive)
+
 
     #----------------------------------------------------------------------
     def recv_msg(self, message):

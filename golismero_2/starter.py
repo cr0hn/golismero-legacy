@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.main.commonstructures import GlobalParams
 from core.main.orchestrator import Orchestrator
+from time import sleep
 
 
 def launcher(options):
@@ -39,6 +40,7 @@ def launcher(options):
         # Run Orchestrator
         orchester = Orchestrator(options)
         orchester.add_audit(options)
+        sleep(5)
 
 
     elif options.run_mode == GlobalParams.RUN_MODE.cloudclient:

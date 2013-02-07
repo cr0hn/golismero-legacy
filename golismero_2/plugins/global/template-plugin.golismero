@@ -1,9 +1,9 @@
 [Core]
-Name = Test-plugin
-Module = testplugin/test
+Name = Template-plugin
+Module = template-plugin/template
 
 [Documentation]
-Description = Plugin for testing purposes
+Description = Template plugin for use as base
 Author = Daniel Garcia Garcia (cr0hn)
 Version = 0.1
 Website = http://code.google.com/p/golismero/

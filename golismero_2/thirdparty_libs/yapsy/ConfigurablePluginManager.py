@@ -36,7 +36,7 @@ class ConfigurablePluginManager(PluginManagerDecorator):
 	    default, there must not be any space in the list (neither in the
 	    names nor in between)
 	"""
-	
+
 	CONFIG_SECTION_NAME = "Plugin Management"
 
 
@@ -46,13 +46,13 @@ class ConfigurablePluginManager(PluginManagerDecorator):
 				 decorated_manager=None,
 				 # The following args will only be used if we need to
 				 # create a default PluginManager
-				 categories_filter={"Default":IPlugin}, 
-				 directories_list=None, 
-				 plugin_info_ext="yapsy-plugin"):
+				 categories_filter={"Default":IPlugin},
+				 directories_list=None,
+				 plugin_info_ext="golismero"):
 		"""
 		Create the plugin manager and record the ConfigParser instance
 		that will be used afterwards.
-		
+
 		The ``config_change_trigger`` argument can be used to set a
 		specific method to call when the configuration is
 		altered. This will let the client application manage the way
@@ -75,7 +75,7 @@ class ConfigurablePluginManager(PluginManagerDecorator):
 		# set the (optional) fucntion to be called when the
 		# configuration is changed:
 		self.config_has_changed = config_change_trigger
-		
+
 	def __getCategoryPluginsListFromConfig(self, plugin_list_str):
 		"""
 		Parse the string describing the list of plugins to activate,
@@ -88,7 +88,7 @@ class ConfigurablePluginManager(PluginManagerDecorator):
 		Compose a string describing the list of plugins to activate
 		"""
 		return PLUGIN_NAME_FORBIDEN_STRING.join(plugin_list)
-		
+
 	def __getCategoryOptionsName(self,category_name):
 		"""
 		Return the appropirately formated version of the category's
@@ -116,7 +116,7 @@ class ConfigurablePluginManager(PluginManagerDecorator):
 			past_list_str = self.config_parser.get(self.CONFIG_SECTION_NAME,option_name)
 			past_list = self.__getCategoryPluginsListFromConfig(past_list_str)
 			# make sure we don't add it twice
-			if plugin_name not in past_list: 
+			if plugin_name not in past_list:
 				past_list.append(plugin_name)
 				new_list_str = self.__getCategoryPluginsConfigFromList(past_list)
 				self.config_parser.set(self.CONFIG_SECTION_NAME,option_name,new_list_str)
@@ -130,7 +130,7 @@ class ConfigurablePluginManager(PluginManagerDecorator):
 		# check that the section is here
 		if not self.config_parser.has_section(self.CONFIG_SECTION_NAME):
 			# then nothing to remove :)
-			return 
+			return
 		# check that the category's list of activated plugins is here too
 		option_name = self.__getCategoryOptionsName(category_name)
 		if not self.config_parser.has_option(self.CONFIG_SECTION_NAME, option_name):
@@ -144,12 +144,12 @@ class ConfigurablePluginManager(PluginManagerDecorator):
 				past_list.remove(plugin_name)
 				new_list_str = self.__getCategoryPluginsConfigFromList(past_list)
 				self.config_parser.set(self.CONFIG_SECTION_NAME,option_name,new_list_str)
-				self.config_has_changed()		
-			
+				self.config_has_changed()
 
 
-	def registerOptionFromPlugin(self, 
-								 category_name, plugin_name, 
+
+	def registerOptionFromPlugin(self,
+								 category_name, plugin_name,
 								 option_name, option_value):
 		"""
 		To be called from a plugin object, register a given option in
@@ -163,7 +163,7 @@ class ConfigurablePluginManager(PluginManagerDecorator):
 		self.config_parser.set(section_name,option_name,option_value)
 		self.config_has_changed()
 
-	def hasOptionFromPlugin(self, 
+	def hasOptionFromPlugin(self,
 							category_name, plugin_name, option_name):
 		"""
 		To be called from a plugin object, return True if the option
@@ -172,7 +172,7 @@ class ConfigurablePluginManager(PluginManagerDecorator):
 		section_name = "%s Plugin: %s" % (category_name,plugin_name)
 		return self.config_parser.has_section(section_name) and self.config_parser.has_option(section_name,option_name)
 
-	def readOptionFromPlugin(self, 
+	def readOptionFromPlugin(self,
 							 category_name, plugin_name, option_name):
 		"""
 		To be called from a plugin object, read a given option in
@@ -211,7 +211,7 @@ class ConfigurablePluginManager(PluginManagerDecorator):
 		``activate`` method. In fact, this method will also "decorate"
 		the plugin object so that it can use this class's methods to
 		register its own options.
-		
+
 		By default, the plugin's activation is registered in the
 		config file but if you d'ont want this set the 'save_state'
 		argument to False.
@@ -220,7 +220,7 @@ class ConfigurablePluginManager(PluginManagerDecorator):
 		pta = self._component.getPluginByName(plugin_name,category_name)
 		if pta is None:
 			return None
-		self.__decoratePluginObject(category_name,plugin_name,pta.plugin_object)		
+		self.__decoratePluginObject(category_name,plugin_name,pta.plugin_object)
 		# activate the plugin
 		plugin_object = self._component.activatePluginByName(plugin_name,category_name)
 		# check the activation and then optionally set the config option
@@ -273,6 +273,6 @@ class ConfigurablePluginManager(PluginManagerDecorator):
 					for plugin_name in plugin_list:
 						self.activatePluginByName(plugin_name,category_name)
 
-				
 
-		
+
+

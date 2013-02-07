@@ -2,9 +2,9 @@
 
 # -*- coding: utf-8 -*-
 """
-GoLismero 2.0 - The web knife.
+GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
-Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
+Author: Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
 
 Golismero project site: http://code.google.com/p/golismero/
 Golismero project mail: golismero.project@gmail.com
@@ -25,8 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-
-
+#--------------------------------------------------------------------------
 def enum(*sequential, **named):
     "Enumerated type"
     values = dict(zip(sequential, range(len(sequential))), **named)
@@ -35,7 +34,7 @@ def enum(*sequential, **named):
 
 
 
-
+#--------------------------------------------------------------------------
 # Metaclase que verifica que las interfases se cumplan.
 class _interface(type):
     def __init__(cls, name, bases, namespace):
@@ -68,12 +67,11 @@ class _interface(type):
         if metodos:
             # Lanzamos excepcion.
             raise TypeError("Missing methods: %s" % ", ".join(sorted(metodos)))
-
+#--------------------------------------------------------------------------
 class Interface (object):
     __metaclass__ = _interface
 
-
-
+#--------------------------------------------------------------------------
 class Singleton (object):
     "Implementation of the Singleton pattern"
 
@@ -135,3 +133,5 @@ class GlobalParams:
 
         # Get the name of the audit
         cmdParams.audit_name = args.audit_name
+
+        return cmdParams

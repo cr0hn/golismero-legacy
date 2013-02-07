@@ -12,7 +12,7 @@ One use fo this would be to prevent untrusted plugins from entering the system
 API
 ===
 """
- 
+
 
 from IPlugin import IPlugin
 from PluginManagerDecorator import  PluginManagerDecorator
@@ -24,11 +24,11 @@ class FilteredPluginManager(PluginManagerDecorator):
 	before they are loaded.
 	"""
 
-	def __init__(self, 
+	def __init__(self,
 				 decorated_manager=None,
-				 categories_filter={"Default":IPlugin}, 
-				 directories_list=None, 
-				 plugin_info_ext="yapsy-plugin"):
+				 categories_filter={"Default":IPlugin},
+				 directories_list=None,
+				 plugin_info_ext="golismero"):
 		"""
 		"""
 		# Create the base decorator class
@@ -37,7 +37,7 @@ class FilteredPluginManager(PluginManagerDecorator):
 										directories_list,
 										plugin_info_ext)
 		# prepare the mapping of the latest version of each plugin
-		self.rejectedPlugins =  [ ] 
+		self.rejectedPlugins =  [ ]
 
 
 
@@ -45,7 +45,7 @@ class FilteredPluginManager(PluginManagerDecorator):
 		"""
 		This method goes through the currently available candidates, and
 		and either leaves them, or moves them into the list of rejected Plugins.
-		
+
 		This method can be overridden if the isPluginOk() sentinel is not
 		powerful enough.
 		"""
@@ -107,7 +107,7 @@ class FilteredPluginManager(PluginManagerDecorator):
 		#Reread and filter.
 		self._component.locatePlugins()
 		self.filterPlugins()
-		return len(self._component.getPluginCandidates()) 
+		return len(self._component.getPluginCandidates())
 
 	def getRejectedPlugins(self):
 		return self.rejectedPlugins[:]
