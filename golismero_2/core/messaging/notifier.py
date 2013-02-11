@@ -24,11 +24,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.plugins.plugin import TestingPlugin
+from core.api.plugins.plugin import TestingPlugin, Plugin
 from core.messaging.message import Message
+from threading import Thread
+from time import sleep
 
 
-class Notifier(object):
+class Notifier(Thread):
     """
     This class manage the pools of messages for each plugin, and notify them
     when a message is received.
@@ -37,42 +39,133 @@ class Notifier(object):
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
+        # Call super class constructor
+        super(Notifier, self).__init__()
+
 
         # Message notification pool for plugins.
-        self.__message_pool = dict()
+        # (message_type, list(Plugin_instance))
+        self.__notification_pool = dict()
+
+        # Pool list for each plugin:
+        #   Each plugin has they own message list, that act as a buffer. Message will
+        #   add to it, and will be sent as plugin as needed.
+        #   (plugin_class_name, [plugin_instance. list(messages)]
+        self.__plugins_buffer_pool = dict()
+
+        # Total messages pendants
+        self.__non_dispached_msg = 0
+
+        # Stop attemps: when no message in pool of any plugin, will be wail these number of times
+        # before stop the process
+        self.__stop_attemps = 5
+
+        # Finish all plugins?
+        self.__finished_plugins = False
+
 
 
 
     #----------------------------------------------------------------------
     def add_plugin(self, plugin):
         """
-        Plugin to manage
+        Add a plugin or list of plugins
+
+        :param plugin: a plugin or plugin list to add
+        :type plugin: TestPlugin | list(TestPlugin)
         """
-        if not isinstance(plugin, TestingPlugin):
-            raise TypeError("Expected TestingPlugin, got %s instead" % type(auditParams))
+        if isinstance(plugin, list):
+            map(self.__add_plugin, plugin)
+        else:
+            self.__add_plugin(plugin)
+
+
+    #----------------------------------------------------------------------
+    def __add_plugin(self, plugin):
+        """
+        Add a plugin to manage
+
+        :param plugin: a TestPlugin type to manage
+        :type plugin: TestPlugin
+        """
+        if not isinstance(plugin, Plugin):
+            raise TypeError("Expected TestingPlugin, got %s instead" % type(plugin))
 
         # Create lists as necessary, dependens of type of messages accepted
         # by plugins
-        m_message_types = plugin.get_accepted_info()
+        m_message_types = set(plugin.get_accepted_info()) # delete duplicates
         if m_message_types:
             for l_type in m_message_types:
-                # Check if notification list exits
-                if not l_type in self.__message_pool:
-                    self.__message_pool[l_type] = list()
-
+                #
+                # Check if notification list exits at the pool
+                if not l_type in self.__notification_pool.keys():
+                    self.__notification_pool[l_type] = list()
                 # Add plugin to notification list
-                self.__message_pool[l_type] = plugin
+                self.__notification_pool[l_type].append(plugin)
+
+                # Add message buffer for the plugin
+                if not plugin.__class__ in self.__plugins_buffer_pool.keys():
+                    self.__plugins_buffer_pool[plugin.__class__] = [plugin, list()]
+
 
     #----------------------------------------------------------------------
     def nofity(self, message):
         """
         Notify messages to the plugins
+
+        :param message: A message to send to plugins
+        :type message: Message
         """
         if isinstance(message, Message):
-            if message.message_info.result_subtype in self.__message_pool.keys():
-                m_notifications = self.__message_pool[message.message_info.result_subtype]
+            # Get pool of plugins to send this message
+            if message.message_info.result_subtype in self.__notification_pool.keys():
+                m_plugins_to_notify = self.__notification_pool[message.message_info.result_subtype]
 
-                for l_plugin in m_notifications:
-                    l_plugin.recv_info(message)
+                # Add as pendant msg as notify process listen to
+                self.__non_dispached_msg += len(m_plugins_to_notify)
+
+                # Add message to their buffer list
+                for l_plugin in m_plugins_to_notify:
+                    self.__plugins_buffer_pool[l_plugin.__class__][1].append(message)
 
 
+    #----------------------------------------------------------------------
+    def run(self):
+        """
+        Start notifier process
+        """
+
+        # Wait for plugins receive first message with target
+        sleep(0.050)
+
+        # Run until stop attemps are 0
+        while self.__stop_attemps > 0:
+            # Dispatch messages.
+            while self.__non_dispached_msg > 0:
+                for l_notificator in self.__plugins_buffer_pool.values():
+                    l_plugin_instance = l_notificator[0]
+                    for l_msg in l_notificator[1]:
+                        # Send message to plugin
+                        l_plugin_instance.recv_info(l_msg.message_info)
+                        # When messsage is processed, remove it from non dispached list
+                        self.__non_dispached_msg -= 1
+                # Wait 250 ms
+                sleep(0.250)
+
+            # Decrease attemps
+            self.__stop_attemps -= 1
+
+        # Set finished to true
+        self.__finished_plugins = True
+
+
+    #----------------------------------------------------------------------
+    def __get_is_finished(self):
+        """
+        Retrun true if all plugins are finished. False otherwise.
+
+        :returns: bool -- True is finished. False otherwise.
+        """
+        return self.__finished_plugins
+
+    is_finished = property(__get_is_finished)

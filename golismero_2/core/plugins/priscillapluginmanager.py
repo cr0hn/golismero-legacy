@@ -167,7 +167,6 @@ class PriscillaPluginManager(Singleton):
         :param pluginName: plugin name
         :type pluginName: str
         :returns: Plugin
-        :raises: ValueError
         """
         # XXX FIXME
         # mario: this will be a problem, duplicated plugin names go undetected here!

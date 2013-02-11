@@ -31,6 +31,8 @@ from core.messaging.notifier import Notifier
 from core.messaging.message import Message
 from core.api.results.information.url import Url
 from core.plugins.priscillapluginmanager import PriscillaPluginManager
+from core.api.results.result import Result
+from core.main.commonstructures import Singleton
 from threading import Thread
 
 
@@ -71,8 +73,9 @@ class Audit(IReceiver):
 
     def set_name(self, name):
         if not name:
-            name = self.__generateAuditName()
-        self.__auditname = name
+            self.__auditname = self.__generateAuditName()
+        else:
+            self.__auditname = name
 
     name = property(get_name, set_name)
 
@@ -111,8 +114,10 @@ class Audit(IReceiver):
         for p in m_audit_plugins:
             p.set_observer(self)
 
-        # 3 - Creates the notifier
+        # 3 - Creates and start the notifier
         self.__notifier = Notifier()
+        self.__notifier.start()
+
 
         # 4 - Asociate plugins to nofitier
         for l_plugin in m_audit_plugins:
@@ -121,6 +126,7 @@ class Audit(IReceiver):
         # 5 - Generate firsts messages with targets URLs
         for l_url in self.__audit_params.targets:
             self.__notifier.nofity(Message(Url(l_url), Message.MSG_TYPE_INFO))
+
 
 
     #----------------------------------------------------------------------
@@ -135,33 +141,71 @@ class Audit(IReceiver):
 
     is_alive = property(get_is_alive)
 
+    #----------------------------------------------------------------------
+    def recv_msg(self, result_info):
+        """
+        Send a resulto to core system
+
+        :param result_info: Resulto to receive
+        :type result_info: Result
+        """
+        # Encapsulate Result information into a Message
+        if isinstance(result_info, Result):
+            # Build the message
+            m_message = Message(result_info, Message.MSG_TYPE_INFO)
+            # Send message to the core
+            self.__receiver.recv_msg(m_message)
 
     #----------------------------------------------------------------------
-    def recv_msg(self, message):
+    def send_msg(self, message):
         """
-        Send message to the core system
+        Send message info to the plugins of this audit
 
-        :param message: message to send
-        :type message:
+        :param message: The message unencapsulate to get info.
+        :type message: Message
         """
-        self.__receiver.recv_info(message)
+        if isinstance(message, Message):
+            # Only resend to the plugins if information is info type
+            if message.message_type is Message.MSG_TYPE_INFO:
+                self.__notifier.nofity(message)
 
+    #----------------------------------------------------------------------
+    def __get_is_finished(self):
+        """
+        Retrun true if all plugins are finished. False otherwise.
 
+        :returns: bool -- True is finished. False otherwise.
+        """
+        return self.__notifier.is_finished
+
+    is_finished = property(__get_is_finished)
 
 
 
 #--------------------------------------------------------------------------
-class AuditManager:
+class AuditManager(Singleton, IReceiver):
     """
     Manage and control audits
     """
 
     #----------------------------------------------------------------------
-    def __init__(self):
-        """Constructor"""
+    def __vinit__(self):
+        """
+        Virtual constructor
+        """
 
         # Audits list
         self.__audits = dict()
+
+    #----------------------------------------------------------------------
+    def set_orchestrator(self, orchestrator):
+        """
+        Set the core object, manager of global messages.
+
+        :param orchestrator: global manager. Instace of Orchestrator
+        :type orchestrator: Orchestrator
+        """
+        self.__orchestrator = orchestrator
 
 
     #----------------------------------------------------------------------
@@ -180,9 +224,9 @@ class AuditManager:
             raise TypeError("globalParams must be an instance of GlobalParams")
 
         # Create the audit
-        m_audit = Audit(globalParams, self)
+        m_audit = Audit(globalParams, self.__orchestrator)
         # Store it
-        self.__audits[m_audit.get_audit_name()] = Audit
+        self.__audits[m_audit.get_audit_name()] = m_audit
         # Run!
         m_audit.run()
 
@@ -215,9 +259,28 @@ class AuditManager:
 
         return self.__audits[auditName]
 
+    #----------------------------------------------------------------------
+    def recv_msg(self, message):
+        """
+        Receive a message a resend it to all audits
+
+        :param message: inbound message
+        :type message: Message
+        """
+        if isinstance(message, Message):
+            for p in self.__audits.values():
+                p.send_msg(message)
 
     #----------------------------------------------------------------------
-    def all_finished(self):
+    def __get_is_finished(self):
         """
+        Retrun true if all plugins are finished. False otherwise.
 
+        :returns: bool -- True is finished. False otherwise.
         """
+        for i in self.__audits.values():
+            if i.is_finished is False:
+                return False
+        return True
+
+    is_finished = property(__get_is_finished)

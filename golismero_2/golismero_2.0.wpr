@@ -23,6 +23,7 @@ proj.directory-list = [{'dirloc': loc('plugins'),
                         'recursive': True,
                         'watch_for_changes': True}]
 proj.file-list = [loc('golismero.py'),
-                  loc('starter.py')]
+                  loc('starter.py'),
+                  loc('TODO.txt')]
 proj.file-type = 'shared'
 proj.main-file = loc('golismero.py')

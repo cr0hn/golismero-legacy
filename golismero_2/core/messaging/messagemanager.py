@@ -28,32 +28,31 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.main.commonstructures import GlobalParams
 from core.main.audit import AuditManager
+from core.main.commonstructures import Singleton
+from core.messaging.interfaces import IReceiver
 
 #--------------------------------------------------------------------------
-class MessageManager:
+class MessageManager(Singleton):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, runMode):
-        """
-        :param runMode: Enum type that specify run mode to start Message system
-        :type runMode: enum
-        """
+    def __vinit__(self):
+        """Virtual contructor"""
         self.__observers = [] # List of observers to be notified
 
-        # Start notification system
-        if GlobalParams.RUN_MODE.standalone == runMode:
-            self.__observers.append(AuditManager())
-        elif GlobalParams.RUN_MODE.cloudclient == runMode:
-            pass
-        elif GlobalParams.RUN_MODE.cloudserver == runMode:
-            pass
-        else:
-            raise ValueError("Invalid run mode: %r" % runMode)
+    #----------------------------------------------------------------------
+    def add_listener(self, listener):
+        """
+        Add some object to be notified
+        """
+        if isinstance(listener, IReceiver):
+            MessageManager.__observers.append(listener)
+
+
 
     #----------------------------------------------------------------------
     def send_message(self, Message):
         """Send a message to all listeners"""
         for i in self.__observers:
-            i.send_msg(Message)
+            i.recv_msg(Message)
 

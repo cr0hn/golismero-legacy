@@ -24,21 +24,49 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from core.main.commonstructures import Singleton
+from core.api.results.result import Result
+
 #------------------------------------------------------------------------------
-class ResultManager:
+class ResultManager(Singleton):
     """
     This interface manage the results. Shorten, organizing and storing it.
     """
 
+
     #----------------------------------------------------------------------
-    def __init__(self):
+    def __vinit__(self):
         """Constructor"""
-        self.__results = list()
+
+        self.__results = dict()
 
     #----------------------------------------------------------------------
     def add_result(self, result):
         """
-        Add new result to store
+        Add new result to store, if no already in store.
         """
-        self.__results.append(result)
+        if isinstance(result, Result):
+            if result.hash_sum not in self.__results.keys():
+                self.__results[result.hash_sum] = result
+
+    #----------------------------------------------------------------------
+    def contains(self, result):
+        """
+        Check if a result is already stored or not.
+
+        :param result: the result to check.
+        :type result: Result
+
+        :returns: bool -- True if is already store. False otherwise
+        """
+        return result.hash_sum in self.__results.keys()
+
+    #----------------------------------------------------------------------
+    def get_results(self):
+        """
+        Get stored results
+        """
+        return self.__results
+
+    results = property(get_results)
 

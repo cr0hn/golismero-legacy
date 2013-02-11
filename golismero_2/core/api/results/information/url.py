@@ -34,7 +34,12 @@ class Url(Information):
 
     #----------------------------------------------------------------------
     def __init__(self, url):
-        """Constructor"""
+        """
+        Construct a Url result, that contain an URL.
+
+        :param url: URL to manage
+        :type url: str
+        """
         super(Url, self).__init__(Information.INFORMATION_URL)
 
         self.__url = url
@@ -43,4 +48,5 @@ class Url(Information):
         """
         Get raw info of URL
         """
+        return self.__url
     url_raw = property(get_url_raw)

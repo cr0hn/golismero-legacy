@@ -73,13 +73,24 @@ class Interface (object):
 
 #--------------------------------------------------------------------------
 class Singleton (object):
-    "Implementation of the Singleton pattern"
+    """
+    Implementation of the Singleton pattern
+
+    This class can call a virtual init, only one time, when
+    object is created. For this, you must to create a method called
+    "__vinit__", with out parameters.
+    """
 
     __instance = None
     def __new__(cls, *args, **kargs):
         if cls.__instance is not None:
             return cls.__instance
         cls.__instance = super(Singleton, cls).__new__(cls, *args, **kargs)
+
+        # Call a virtual init, if exits
+        if "__vinit__" in cls.__dict__.keys():
+            cls.__instance.__vinit__()
+
         return cls.__instance
 
 

@@ -27,7 +27,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.main.commonstructures import GlobalParams
 from core.main.orchestrator import Orchestrator
+from core.api.io import IO
+from core.results.resultmanager import ResultManager
 from time import sleep
+
 
 
 def launcher(options):
@@ -36,23 +39,29 @@ def launcher(options):
         raise TypeError("Expected GlobalParams, got %s instead" % type(options))
 
 
-    if options.run_mode == GlobalParams.RUN_MODE.standalone:
-        # Run Orchestrator
-        orchester = Orchestrator(options)
-        orchester.add_audit(options)
-        sleep(5)
+    try:
+        if options.run_mode == GlobalParams.RUN_MODE.standalone:
+            # Run Orchestrator
+            orchester = Orchestrator()
+            orchester.set_config(options)
+            orchester.add_audit(options)
+            orchester.wait()
 
 
-    elif options.run_mode == GlobalParams.RUN_MODE.cloudclient:
-        raise NotImplementedError("Cloud client mode not yet implemented!")
+        elif options.run_mode == GlobalParams.RUN_MODE.cloudclient:
+            raise NotImplementedError("Cloud client mode not yet implemented!")
 
 
-    elif options.run_mode == GlobalParams.RUN_MODE.cloudserver:
-        raise NotImplementedError("Cloud server mode not yet implemented!")
+        elif options.run_mode == GlobalParams.RUN_MODE.cloudserver:
+            raise NotImplementedError("Cloud server mode not yet implemented!")
 
 
-    else:
-        raise ValueError("Invalid run mode: %r" % options.run_mode)
+        else:
+            raise ValueError("Invalid run mode: %r" % options.run_mode)
 
+    except KeyboardInterrupt:
+        IO.log("\n[i] Stoping. Please wait.\n")
+        # Print results
 
+    print ResultManager().results
 
