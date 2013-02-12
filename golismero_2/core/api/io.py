@@ -58,7 +58,6 @@ class IO():
             IO.__loglevel = logLevel
 
 
-
     #----------------------------------------------------------------------
     @staticmethod
     def __log(message):
@@ -73,7 +72,8 @@ class IO():
                 IO.__logout.writelines(message)
                 IO.__logout.flush()
         except Exception,e:
-            print "[!] Error while writen into log file or console: %s" % e.message
+            print "[!] Error while writing into log file or console: %s" % e.message
+
 
     #----------------------------------------------------------------------
     @staticmethod
@@ -87,6 +87,7 @@ class IO():
         if IO.__loglevel == IO.STANDARD:
             IO.__log(message)
 
+
     #----------------------------------------------------------------------
     @staticmethod
     def log_verbose(self, message):
@@ -99,6 +100,7 @@ class IO():
         if IO.__loglevel == IO.VERBOSE:
             IO.__log(message)
 
+
     #----------------------------------------------------------------------
     @staticmethod
     def log_more_verbose(self, message):
@@ -110,9 +112,6 @@ class IO():
         """
         if IO.__loglevel == IO.MORE_VERBOSE:
             IO.__log(message)
-
-
-
 
 
     #----------------------------------------------------------------------

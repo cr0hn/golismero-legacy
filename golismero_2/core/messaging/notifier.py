@@ -38,7 +38,7 @@ class Notifier(Thread):
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """Constructor"""
+        """Constructor."""
         # Call super class constructor
         super(Notifier, self).__init__()
 
@@ -67,29 +67,26 @@ class Notifier(Thread):
 
 
     #----------------------------------------------------------------------
-    def add_plugin(self, plugin):
+    def add_multiple_plugins(self, plugin_list):
         """
-        Add a plugin or list of plugins
+        Add a list of plugins.
 
-        :param plugin: a plugin or plugin list to add
-        :type plugin: TestPlugin | list(TestPlugin)
+        :param plugin: list of plugins to add
+        :type plugin: list(Plugin)
         """
-        if isinstance(plugin, list):
-            map(self.__add_plugin, plugin)
-        else:
-            self.__add_plugin(plugin)
+        map(self.add_plugin, plugin)
 
 
     #----------------------------------------------------------------------
-    def __add_plugin(self, plugin):
+    def add_plugin(self, plugin):
         """
-        Add a plugin to manage
+        Add a plugin to manage.
 
-        :param plugin: a TestPlugin type to manage
-        :type plugin: TestPlugin
+        :param plugin: a Plugin type to manage
+        :type plugin: Plugin
         """
         if not isinstance(plugin, Plugin):
-            raise TypeError("Expected TestingPlugin, got %s instead" % type(plugin))
+            raise TypeError("Expected Plugin, got %s instead" % type(plugin))
 
         # Create lists as necessary, dependens of type of messages accepted
         # by plugins
@@ -109,9 +106,9 @@ class Notifier(Thread):
 
 
     #----------------------------------------------------------------------
-    def nofity(self, message):
+    def notify(self, message):
         """
-        Notify messages to the plugins
+        Notify messages to the plugins.
 
         :param message: A message to send to plugins
         :type message: Message
@@ -132,7 +129,7 @@ class Notifier(Thread):
     #----------------------------------------------------------------------
     def run(self):
         """
-        Start notifier process
+        Start notifier process.
         """
 
         # Wait for plugins receive first message with target
@@ -164,7 +161,7 @@ class Notifier(Thread):
         """
         Retrun true if all plugins are finished. False otherwise.
 
-        :returns: bool -- True is finished. False otherwise.
+        :returns: bool -- True if finished. False otherwise.
         """
         return self.__finished_plugins
 

@@ -45,8 +45,8 @@ class Audit(IReceiver):
     #----------------------------------------------------------------------
     def __init__(self, auditParams, receiver):
         """
-        :param receiver: Orchester instance that will recives messages sent by audit.
-        :type reciber: Orchester
+        :param receiver: Orchestrator instance that will recives messages sent by audit.
+        :type reciber: Orchestrator
 
         :param auditParams: global params for an audit execution
         :type auditParams: GlobalParams
@@ -82,7 +82,7 @@ class Audit(IReceiver):
     #----------------------------------------------------------------------
     def __generateAuditName(self):
         """
-        Get a random name for audit
+        Get a random name for an audit.
 
         :returns: str -- generated name for the audit.
         """
@@ -94,7 +94,7 @@ class Audit(IReceiver):
     #----------------------------------------------------------------------
     def get_audit_name(self):
         """
-        Return the audit name
+        Return the audit name.
 
         :returns: str -- the audit name
         """
@@ -104,7 +104,7 @@ class Audit(IReceiver):
     #----------------------------------------------------------------------
     def run(self):
         """
-        Start execution of audit
+        Start execution of an audit.
         """
 
         # 1 - Load neccesary plugins. Only testing plugins
@@ -125,17 +125,17 @@ class Audit(IReceiver):
 
         # 5 - Generate firsts messages with targets URLs
         for l_url in self.__audit_params.targets:
-            self.__notifier.nofity(Message(Url(l_url), Message.MSG_TYPE_INFO))
+            self.__notifier.notify(Message(Url(l_url), Message.MSG_TYPE_INFO))
 
 
 
     #----------------------------------------------------------------------
     def get_is_alive(self):
         """
-        Get info about the state of audit. If audit was not end, return True.
-        False otherwise.
+        Get info about the state of the audit. If the audit is not yet finished,
+        returns True. False otherwise.
 
-        :returns: bool -- True is audit is still running. False otherwise
+        :returns: bool -- True is audit is still running. False otherwise.
         """
         return self.__is_alive
 
@@ -144,9 +144,9 @@ class Audit(IReceiver):
     #----------------------------------------------------------------------
     def recv_msg(self, result_info):
         """
-        Send a resulto to core system
+        Send a result to the core system.
 
-        :param result_info: Resulto to receive
+        :param result_info: Result to receive
         :type result_info: Result
         """
         # Encapsulate Result information into a Message
@@ -159,22 +159,22 @@ class Audit(IReceiver):
     #----------------------------------------------------------------------
     def send_msg(self, message):
         """
-        Send message info to the plugins of this audit
+        Send message info to the plugins for this audit.
 
-        :param message: The message unencapsulate to get info.
+        :param message: The message to send.
         :type message: Message
         """
         if isinstance(message, Message):
             # Only resend to the plugins if information is info type
             if message.message_type is Message.MSG_TYPE_INFO:
-                self.__notifier.nofity(message)
+                self.__notifier.notify(message)
 
     #----------------------------------------------------------------------
     def __get_is_finished(self):
         """
-        Retrun true if all plugins are finished. False otherwise.
+        Returns True if all plugins are finished. False otherwise.
 
-        :returns: bool -- True is finished. False otherwise.
+        :returns: bool -- True if finished. False otherwise.
         """
         return self.__notifier.is_finished
 
@@ -185,13 +185,13 @@ class Audit(IReceiver):
 #--------------------------------------------------------------------------
 class AuditManager(Singleton, IReceiver):
     """
-    Manage and control audits
+    Manage and control audits.
     """
 
     #----------------------------------------------------------------------
     def __vinit__(self):
         """
-        Virtual constructor
+        Virtual constructor.
         """
 
         # Audits list
@@ -205,6 +205,8 @@ class AuditManager(Singleton, IReceiver):
         :param orchestrator: global manager. Instace of Orchestrator
         :type orchestrator: Orchestrator
         """
+        if not isinstance(orchestrator, Orchestrator):
+            raise TypeError("Expected Orchestrator, got %s instead" % type(orchestrator))
         self.__orchestrator = orchestrator
 
 
@@ -221,7 +223,7 @@ class AuditManager(Singleton, IReceiver):
         :raises: TypeError
         """
         if not isinstance(globalParams, GlobalParams):
-            raise TypeError("globalParams must be an instance of GlobalParams")
+            raise TypeError("Expected GlobalParams, got %s instead" % type(globalParams))
 
         # Create the audit
         m_audit = Audit(globalParams, self.__orchestrator)
@@ -237,16 +239,16 @@ class AuditManager(Singleton, IReceiver):
     #----------------------------------------------------------------------
     def get_all_audits(self):
         """
-        Get the list of audits running at the momento of calling.
+        Get the list of audits currently running.
 
-        :returns: dicts(str, Audit) -- Return a dict with touples (auditName, Audit instance)
+        :returns: dicts(str, Audit) -- Return a dict with tuples (auditName, Audit instance)
         """
         return self.__audits
 
     #----------------------------------------------------------------------
     def get_audit(self, auditName):
         """
-        Get an instance of audit by their name.
+        Get an instance of Audit by its name.
 
         :param auditName: audit name
         :type auditName: str
@@ -262,7 +264,7 @@ class AuditManager(Singleton, IReceiver):
     #----------------------------------------------------------------------
     def recv_msg(self, message):
         """
-        Receive a message a resend it to all audits
+        Receive a message and resend it to all audits.
 
         :param message: inbound message
         :type message: Message
@@ -274,9 +276,9 @@ class AuditManager(Singleton, IReceiver):
     #----------------------------------------------------------------------
     def __get_is_finished(self):
         """
-        Retrun true if all plugins are finished. False otherwise.
+        Returns True if all plugins are finished. False otherwise.
 
-        :returns: bool -- True is finished. False otherwise.
+        :returns: bool -- True if finished. False otherwise.
         """
         for i in self.__audits.values():
             if i.is_finished is False:

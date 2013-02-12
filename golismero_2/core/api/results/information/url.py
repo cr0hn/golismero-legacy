@@ -29,13 +29,13 @@ from core.api.results.information.information import Information
 #------------------------------------------------------------------------------
 class Url(Information):
     """
-    This class contain URL information
+    This class contain URL information.
     """
 
     #----------------------------------------------------------------------
     def __init__(self, url):
         """
-        Construct a Url result, that contain an URL.
+        Construct a URL result.
 
         :param url: URL to manage
         :type url: str
@@ -46,7 +46,7 @@ class Url(Information):
 
     def get_url_raw(self):
         """
-        Get raw info of URL
+        Get raw info of URL.
         """
         return self.__url
     url_raw = property(get_url_raw)

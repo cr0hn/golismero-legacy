@@ -76,7 +76,7 @@ class Orchestrator(IReceiver, Singleton):
     #----------------------------------------------------------------------
     def add_audit(self, params):
         """
-        Start a new audit
+        Start a new audit.
 
         :param params: Audit settings
         :type params: GlobalParams
@@ -87,18 +87,24 @@ class Orchestrator(IReceiver, Singleton):
     #----------------------------------------------------------------------
     def recv_msg(self, message):
         """
-        Receive messages from audits and external receivers. Store de info, if
-        is a result, and resend.
+        Receive messages from audits and external receivers.
+        If it's a result, store the info and resend the messages.
+        Otherwise just ignore the messages.
         """
-        if isinstance(message, Message):
-            # If message contain a result type
-            if message.message_info.result_subtype is Message.MSG_TYPE_INFO:
-                # Check if not in store yet. Then store and resend it
-                if not self.__store_manager.contains(message.message_info):
-                    #  Store it
-                    self.__store_manager.add_result(message.message_info)
-                    # Resend the message
-                    self.__messageManager.send_message(message)
+        if not isinstance(message, Message):
+            raise TypeError("Expected Message, got %s instead" % type(message))
+
+        # If the message contains a result type...
+        if message.message_info.result_subtype is Message.MSG_TYPE_INFO:
+
+            # Check if it's not in store yet. Then store and resend it.
+            if not self.__store_manager.contains(message.message_info):
+
+                #  Store it.
+                self.__store_manager.add_result(message.message_info)
+
+                # Resend the message.
+                self.__messageManager.send_message(message)
 
     #----------------------------------------------------------------------
     def wait(self):
@@ -113,7 +119,7 @@ class Orchestrator(IReceiver, Singleton):
 
     #----------------------------------------------------------------------
     def start_ui(self, params):
-        """Start UI"""
+        """Start UI."""
         pass
 
 

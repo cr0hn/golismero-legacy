@@ -24,8 +24,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
-
 #-----------------------------------------------------------------------
 #
 #
@@ -39,14 +37,13 @@ from core.api.results.result import Result
 
 class Plugin():
     """
-    Abstract class for plugins
+    Abstract class for plugins.
 
     Contains helper methods for plugins, and defines an interface that
     will be implemented by subclasses.
 
     All plugins must derive from this class.
     """
-
 
     #----------------------------------------------------------------------
     def run(self):
@@ -56,12 +53,12 @@ class Plugin():
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
         """
-        Check input user parameters
+        Check input user parameters.
 
-        Parameters will be passed as instance of 'GlobalParams"
+        Parameters will be passed as instance of 'GlobalParams".
 
-        If any parameter is not correct o there is any error, 'ValueError'
-        a exception must be raised.
+        If any parameter is not correct o there is any error, a 'ValueError'
+        exception must be raised.
 
         :param inputParams: input parameters to check
         :type inputParams: GlobalParams
@@ -99,7 +96,7 @@ class Plugin():
     #----------------------------------------------------------------------
     def set_observer(self, observer):
         """
-        Set observer for the plugins
+        Set observer for the plugins.
         """
         #if not isinstance(observer, Audit):
         #    raise ValueError("Expected Orchestrator, got %r instead" % type(observer))
@@ -108,11 +105,12 @@ class Plugin():
 
     #----------------------------------------------------------------------
     def send_info(self, information):
-        """Send information to the Audit"""
+        """Send information to the Audit."""
         if not isinstance(information, Result):
-            raise ValueError("Expected Orchestrator, got %r instead" % type(information))
+            raise ValueError("Expected Result, got %r instead" % type(information))
 
         self.__observer_ref.recv_msg(information)
+
 
 #------------------------------------------------------------------------------
 class TestingPlugin (Plugin):
@@ -125,7 +123,6 @@ class TestingPlugin (Plugin):
     #----------------------------------------------------------------------
     def __init__(self):
         pass
-
 
 
 #------------------------------------------------------------------------------
@@ -154,6 +151,7 @@ class GlobalPLugin (Plugin):
     #----------------------------------------------------------------------
     def __init__(self):
         pass
+
 
 #------------------------------------------------------------------------------
 class ResultsPlugin (Plugin):

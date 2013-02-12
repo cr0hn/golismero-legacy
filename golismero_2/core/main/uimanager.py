@@ -40,7 +40,7 @@ class UIManager(Singleton, Thread, IReceiver):
 
     #----------------------------------------------------------------------
     def __vinit__(self):
-        """Virtual contructor. Initializate common vars"""
+        """Virtual contructor. Initialize common vars."""
         self.__receiver = None
         self.__notifier = None
 
@@ -52,19 +52,21 @@ class UIManager(Singleton, Thread, IReceiver):
         :param params: global params for UI manager.
         :type params: GlobalParams
         """
+
+        if not isinstance(params, GlobalParams):
+            raise TypeError("Expected GlobalParams, got %s instead" % type(params))
+        #if not isinstance(orchestrator, Orchestrator):
+            #raise TypeError("Expected Orchestrator, got %s instead" % type(orchestrator))
+
         self.__params = params
         self.__receiver = orchestrator
 
-
     #----------------------------------------------------------------------
     def start(self):
-        """Start UI specified by params"""
-        if not self.__receiver:
-            raise ValueError("Orchestrator not initialized")
+        """Start UI specified by params."""
 
-        if not isinstance(self.__params, GlobalParams):
-            raise TypeError("Expected GlobalParams, got %s instead" % type(self.__params))
-
+        if not self.__receiver or not self.__params:
+            raise RuntimeError("Orchestrator not initialized")
 
         m_plugins = None
 
@@ -89,7 +91,7 @@ class UIManager(Singleton, Thread, IReceiver):
 
     #----------------------------------------------------------------------
     def stop_ui(self):
-        """Stop or break UI"""
+        """Stop or break UI."""
         if self.__notifier.is_finished:
             #self.shutdown()
             sleep(0.005)
@@ -103,4 +105,4 @@ class UIManager(Singleton, Thread, IReceiver):
         :type message: Message
         """
         if isinstance(message, Message):
-            self.__notifier.nofity(message)
+            self.__notifier.notify(message)

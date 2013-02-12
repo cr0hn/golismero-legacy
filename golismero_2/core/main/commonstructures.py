@@ -35,38 +35,37 @@ def enum(*sequential, **named):
 
 
 #--------------------------------------------------------------------------
-# Metaclase que verifica que las interfases se cumplan.
+# Metaclass to define abstract interfaces in Python.
 class _interface(type):
     def __init__(cls, name, bases, namespace):
 
-        # Llama a la superclase.
+        # Call the superclass.
         type.__init__(cls, name, bases, namespace)
 
-        # Los metodos definidos en esta clase.
+        # Get the methods defined in this class, rather than inherited.
         current = set( [x for x in cls.__dict__.keys() if not x.startswith("_")] )
 
-        # Buscamos las interfases.
-        interfases = []
+        # Look for the interfaces implemented by this class.
+        # That is, the base classes that derive *directly* from Interface.
+        interfaces = []
         for clazz in bases:
-
-            # Si la clase base a su vez deriva *directamente* de Interface...
             if len(clazz.__bases__) and clazz.__bases__[0] == Interface:
+                interfaces.append(clazz)
 
-                # Entonces la guardo para la comprobacion posterior.
-                interfases.append(clazz)
+        # Find out which methods are required by the interfaces.
+        methods = set()
+        for clazz in interfaces:
+            methods.update( [x for x in clazz.__dict__.keys() if not x.startswith("_")] )
 
-        # Averiguamos que metodos deben implementar estas interfases.
-        metodos = set()
-        for clazz in interfases:
-            metodos.update( [x for x in clazz.__dict__.keys() if not x.startswith("_")] )
+        # Check none of them are missing.
+        methods.difference_update(current)
 
-        # Verificamos que no falte ninguno.
-        metodos.difference_update(current)
+        # If one or more are missing...
+        if methods:
 
-        # Si falta alguno...
-        if metodos:
-            # Lanzamos excepcion.
-            raise TypeError("Missing methods: %s" % ", ".join(sorted(metodos)))
+            # Raise an exception.
+            raise TypeError("Missing methods: %s" % ", ".join(sorted(methods)))
+
 #--------------------------------------------------------------------------
 class Interface (object):
     __metaclass__ = _interface
@@ -74,42 +73,45 @@ class Interface (object):
 #--------------------------------------------------------------------------
 class Singleton (object):
     """
-    Implementation of the Singleton pattern
+    Implementation of the Singleton pattern.
 
     This class can call a virtual init, only one time, when
     object is created. For this, you must to create a method called
-    "__vinit__", with out parameters.
+    "__vinit__".
     """
 
     __instance = None
     def __new__(cls, *args, **kargs):
+
+        # If the singleton has already been instanced, return it.
         if cls.__instance is not None:
             return cls.__instance
+
+        # Instance the singleton for the first (and only) time.
         cls.__instance = super(Singleton, cls).__new__(cls, *args, **kargs)
 
-        # Call a virtual init, if exits
-        if "__vinit__" in cls.__dict__.keys():
-            cls.__instance.__vinit__()
+        # Call a virtual init, if it exists.
+        if "__vinit__" in cls.__dict__:
+            cls.__instance.__vinit__(*args, **kargs)
 
+        # Return the singleton instance.
         return cls.__instance
-
-
 
 #--------------------------------------------------------------------------
 class GlobalParams:
     """
-    Global parameters fro program
+    Global parameters for the program.
     """
 
-
-    # Run modes enumerators
+    # Run modes
     RUN_MODE = enum('standalone', 'cloudclient', 'cloudserver')
+
     # User interface
     USER_INTERFACE = enum('console')
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """Constructor"""
+        """Constructor."""
 
         self.targets = []
         self.run_mode = GlobalParams.RUN_MODE.standalone
@@ -123,7 +125,7 @@ class GlobalParams:
 
     @classmethod
     def from_cmdline(cls, args):
-        "Get the settings from the command line arguments."
+        """Get the settings from the command line arguments."""
 
         # Instance a settings object.
         cmdParams = cls()

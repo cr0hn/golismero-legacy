@@ -29,7 +29,7 @@ import hashlib
 #------------------------------------------------------------------------------
 class Result(object):
     """
-    Interface for results structures. Initializate some vars
+    Interface for result structures.
     """
 
     #--------------------------------------------------------------------------
@@ -53,10 +53,11 @@ class Result(object):
     TYPE_INFORMATION_GATHERING = 14
     TYPE_AUTHORIZATION = 15
 
+
     #----------------------------------------------------------------------
     def __init__(self, result_type = None):
         """
-        Constructor
+        Constructor.
         """
         self.__result_type = result_type
         self.__hash_sum = None
@@ -65,7 +66,7 @@ class Result(object):
     #----------------------------------------------------------------------
     def get_result_type(self):
         """
-        Get the message type
+        Get the message type.
 
         :returns: int -- The message type.
         """
@@ -91,16 +92,17 @@ class Result(object):
     #----------------------------------------------------------------------
     def __get_sum(self):
         """
-        Get the hash of this object
+        Get the hash of this object.
         """
         if not self.__hash_sum:
             m_tmp_values = ""
+
             # Concatenate values of all properties of class
             m_tmp_values = ''.join(map(str, self.__dict__.values()))
             #for v in self.__dict__.values():
             #    m_tmp_values.join(str(v))
 
-            # Do a MD4 hash
+            # Calculate an MD4 hash.
             self.__hash_sum = hashlib.md5(m_tmp_values).hexdigest()
 
         return self.__hash_sum
