@@ -26,6 +26,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #--------------------------------------------------------------------------
+#
+# INTERNAL DEVELOP STRUCTURES
+#
+#--------------------------------------------------------------------------
 def enum(*sequential, **named):
     "Enumerated type"
     values = dict(zip(sequential, range(len(sequential))), **named)
@@ -70,7 +74,6 @@ class _interface(type):
 #--------------------------------------------------------------------------
 class Interface (object):
     __metaclass__ = _interface
-
 #--------------------------------------------------------------------------
 class Singleton (object):
     """
@@ -81,20 +84,25 @@ class Singleton (object):
     "__vinit__", with out parameters.
     """
 
-    __instance = None
-    def __new__(cls, *args, **kargs):
-        if cls.__instance is not None:
-            return cls.__instance
-        cls.__instance = super(Singleton, cls).__new__(cls, *args, **kargs)
+    _instance = None
+    _is_instanced = False
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is not None:
+            cls._instanced = True
+            return cls._instance
 
-        # Call a virtual init, if exits
-        if "__vinit__" in cls.__dict__.keys():
-            cls.__instance.__vinit__()
+        # Create new instance
+        cls._instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
 
-        return cls.__instance
-
+        return cls._instance
 
 
+
+
+#--------------------------------------------------------------------------
+#
+# GLOBAL CONFIGURATION PARAMETER
+#
 #--------------------------------------------------------------------------
 class GlobalParams:
     """
@@ -145,4 +153,54 @@ class GlobalParams:
         # Get the name of the audit
         cmdParams.audit_name = args.audit_name
 
+        # Set verbose mode
+        cmdParams.verbose = args.verbose
+
+        # Set more verbose mode
+        cmdParams.verbose = args.verbose_more
+
         return cmdParams
+
+
+
+
+#--------------------------------------------------------------------------
+#
+# MESSAGING STRUCTURES
+#
+#--------------------------------------------------------------------------
+#--------------------------------------------------------------------------
+class IReceiver(Interface):
+    """
+    This class acts as an interface.
+
+    It must be imported for al classes that wants receive messages from
+    the messaging system.
+
+    """
+    #----------------------------------------------------------------------
+    def recv_msg(self, message):
+        """Receive method for messages"""
+        pass
+
+
+
+#--------------------------------------------------------------------------
+class IObserver(Interface):
+    """
+    This class acts as an interface.
+
+    It must be imported for al classes that wants send messages to the
+    messaging system.
+
+    """
+
+
+    #----------------------------------------------------------------------
+    def send(self, Message):
+        """Send method for messages"""
+        pass
+
+
+
+

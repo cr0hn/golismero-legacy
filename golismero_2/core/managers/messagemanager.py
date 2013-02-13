@@ -26,33 +26,63 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 
-from core.main.commonstructures import GlobalParams
-from core.main.audit import AuditManager
-from core.main.commonstructures import Singleton
-from core.messaging.interfaces import IReceiver
+
+from core.main.commonstructures import Singleton, IReceiver
+from core.managers.uimanager import UIManager
+from core.managers.auditmanager import AuditManager
+
 
 #--------------------------------------------------------------------------
 class MessageManager(Singleton):
-    """"""
+    """
+    Manager for messages.
+    """
 
     #----------------------------------------------------------------------
-    def __vinit__(self):
+    def __init__(self):
         """Virtual contructor"""
-        self.__observers = [] # List of observers to be notified
+
+        # For singleton pattern
+        if self._is_instanced:
+            return
+
+        self.__observers = list() # List of observers to be notified
 
     #----------------------------------------------------------------------
     def add_listener(self, listener):
         """
-        Add some object to be notified
-        """
-        if isinstance(listener, IReceiver):
-            MessageManager.__observers.append(listener)
+        Add some object to be notified, and the category of pool to add.
 
+        :param listener: IReceiver type to add to listeners.
+        :type listener: IReceiver
+
+        :param category: Category to add the object.
+        :type category: str -- valid values: ["all", "testing", "ui", "report"]
+
+        """
+
+        # Select pool to add
+        if isinstance(listener, list):
+            for i in listener:
+                self.__observers.extend(listener)
+        else:
+            self.__observers.append(listener)
 
 
     #----------------------------------------------------------------------
-    def send_message(self, Message):
-        """Send a message to all listeners"""
+    def send_message(self, message):
+        """
+        Send a message to all listeners
+
+        :param message: message to send.
+        :type message: Message
+
+        :param category: The category to send messages.
+        :type category: str -- available categories:  ["all", "testing", "ui", "report"]
+
+        """
+        # Send message to category
         for i in self.__observers:
-            i.recv_msg(Message)
+            i.recv_msg(message)
+
 

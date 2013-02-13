@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from core.api.plugins.plugin import GlobalPLugin
-from core.api.io import IO
+from core.api.logger import Logger
 
 class TemplatePlugin(GlobalPLugin):
     """
@@ -92,19 +92,19 @@ class TemplatePlugin(GlobalPLugin):
         #
         # 1 - Include log library, at top of this file:
         #
-        #     from core.api.io import IO
+        #     from core.api.logger import IO
         #
         # 2 - Write into log system
         #
-        #     IO.log("New message received!")
-        #     IO.log_verbose("This message will be displayed when verbose mode is enabled")
+        #     Logger.log("New message received!")
+        #     Logger.log_verbose("This message will be displayed when verbose mode is enabled")
         #
         #     VERY IMPORTANT
         #     ==============
         #     NEVER USE 'print' function to display information. Use
         #     IO library instead.
         #
-        IO.log("Template plugin: It's works!\n")
+        Logger.log("Template plugin: It's works!\n")
 
 
     #----------------------------------------------------------------------

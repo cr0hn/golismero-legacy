@@ -25,11 +25,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
+
 from core.main.commonstructures import GlobalParams
 from core.main.orchestrator import Orchestrator
-from core.api.io import IO
-from core.results.resultmanager import ResultManager
-from time import sleep
+from core.api.logger import Logger
 
 
 
@@ -38,14 +37,18 @@ def launcher(options):
     if not isinstance(options, GlobalParams):
         raise TypeError("Expected GlobalParams, got %s instead" % type(options))
 
+    m_orchester = None
 
     try:
         if options.run_mode == GlobalParams.RUN_MODE.standalone:
             # Run Orchestrator
-            orchester = Orchestrator()
-            orchester.set_config(options)
-            orchester.add_audit(options)
-            orchester.wait()
+            m_orchester = Orchestrator(options)
+            # Start UI before to init autis
+            m_orchester.start_ui()
+            # New audit with command line options
+            m_orchester.add_audit(options)
+            # Wait to end
+            m_orchester.wait()
 
 
         elif options.run_mode == GlobalParams.RUN_MODE.cloudclient:
@@ -60,8 +63,9 @@ def launcher(options):
             raise ValueError("Invalid run mode: %r" % options.run_mode)
 
     except KeyboardInterrupt:
-        IO.log("\n[i] Stoping. Please wait.\n")
-        # Print results
+        Logger.log("\n[i] Stoping. Please wait.\n")
 
-    print ResultManager().results
+    # Generate reports
+    if not m_orchester:
+        m_orchester.start_report()
 

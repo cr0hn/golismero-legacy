@@ -35,7 +35,7 @@ class ResultManager(Singleton):
 
 
     #----------------------------------------------------------------------
-    def __vinit__(self):
+    def __init__(self):
         """Constructor"""
 
         self.__results = dict()
@@ -62,11 +62,11 @@ class ResultManager(Singleton):
         return result.hash_sum in self.__results.keys()
 
     #----------------------------------------------------------------------
-    def get_results(self):
+    def __get_results(self):
         """
         Get stored results
         """
         return self.__results
 
-    results = property(get_results)
+    results = property(__get_results)
 

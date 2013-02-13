@@ -63,7 +63,7 @@ class Result(object):
 
 
     #----------------------------------------------------------------------
-    def get_result_type(self):
+    def __get_result_type(self):
         """
         Get the message type
 
@@ -75,7 +75,7 @@ class Result(object):
             return self.__result_type
 
     #----------------------------------------------------------------------
-    def set_result_type(self, result_type):
+    def __set_result_type(self, result_type):
         """
         Set the message type.
 
@@ -85,7 +85,7 @@ class Result(object):
         if result_type is not None and result_type >= 0 and result_type <= 15:
             self.__result_type = result_type
 
-    result_type = property(get_result_type, set_result_type)
+    result_type = property(__get_result_type, __set_result_type)
 
 
     #----------------------------------------------------------------------

@@ -55,7 +55,7 @@ class Information(Result):
 
 
     #----------------------------------------------------------------------
-    def get_information_type(self):
+    def __get_information_type(self):
         """
         Get the message type
 
@@ -67,7 +67,7 @@ class Information(Result):
             return self.__information_type
 
     #----------------------------------------------------------------------
-    def set_information_type(self, information_type):
+    def __set_information_type(self, information_type):
         """
         Set the message type.
 
@@ -77,6 +77,6 @@ class Information(Result):
         if information_type is not None and information_type >= 0 and information_type <= 10:
             self.__information_type = information_type
 
-    result_subtype = property(get_information_type, set_information_type)
+    result_subtype = property(__get_information_type, __set_information_type)
 
 

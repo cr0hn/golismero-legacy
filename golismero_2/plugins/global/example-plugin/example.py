@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.api.plugins.plugin import GlobalPLugin
 from core.api.results.information.information import Information
-from core.api.io import IO
+from core.api.logger import Logger
 
 class ExamplePlugin(GlobalPLugin):
     """
@@ -37,7 +37,7 @@ class ExamplePlugin(GlobalPLugin):
     def check_input_params(self, inputParams):
         """
         Comprueba las comprobaciones de los parametros introducidos por el
-        usuario.
+        usuarLogger.
 
         Los parametros seran pasados en la instancia del tipo 'GlobalParams'.
 
@@ -58,7 +58,7 @@ class ExamplePlugin(GlobalPLugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
         """Callback method to receive information to be processed."""
-        IO.log("Example plugin: It's works!\n")
+        Logger.log("Example plugin: It's works!\n")
 
 
     #----------------------------------------------------------------------

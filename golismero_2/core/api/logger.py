@@ -26,12 +26,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from sys import stdout, stderr
 
-class IO():
+class Logger():
     """"""
 
     __logout = stdout
     __logerror = stderr
-    __loglevel = 1 # standard
+    __loglevel = 0 # standard
 
     #----------------------------------------------------------------------
     #
@@ -49,13 +49,13 @@ class IO():
     def configure(LogOut = None, LogError = None, logLevel = 0):
 
         if LogOut:
-            IO.__logout = LogOut
+            Logger.__logout = LogOut
 
         if LogError:
-            IO.__logerror = LogError
+            Logger.__logerror = LogError
 
         if logLevel >= 0 and logLevel <= 3:
-            IO.__loglevel = logLevel
+            Logger.__loglevel = logLevel
 
 
 
@@ -70,8 +70,8 @@ class IO():
         """
         try:
             if message:
-                IO.__logout.writelines(message)
-                IO.__logout.flush()
+                Logger.__logout.writelines("%s\n" % message)
+                Logger.__logout.flush()
         except Exception,e:
             print "[!] Error while writen into log file or console: %s" % e.message
 
@@ -84,8 +84,8 @@ class IO():
         :param message: message to write
         :type message: str
         """
-        if IO.__loglevel == IO.STANDARD:
-            IO.__log(message)
+        if Logger.__loglevel == Logger.MORE_VERBOSE or Logger.__loglevel == Logger.VERBOSE or Logger.__loglevel == Logger.STANDARD:
+            Logger.__log(message)
 
     #----------------------------------------------------------------------
     @staticmethod
@@ -96,8 +96,8 @@ class IO():
         :param message: message to write
         :type message: str
         """
-        if IO.__loglevel == IO.VERBOSE:
-            IO.__log(message)
+        if Logger.__loglevel == Logger.MORE_VERBOSE or Logger.__loglevel == Logger.VERBOSE:
+            Logger.__log(message)
 
     #----------------------------------------------------------------------
     @staticmethod
@@ -108,11 +108,8 @@ class IO():
         :param message: message to write
         :type message: str
         """
-        if IO.__loglevel == IO.MORE_VERBOSE:
-            IO.__log(message)
-
-
-
+        if Logger.__loglevel == Logger.MORE_VERBOSE:
+            Logger.__log(message)
 
 
     #----------------------------------------------------------------------
@@ -125,8 +122,8 @@ class IO():
         :type message: str"""
         try:
             if message:
-                IO.__logerror.writelines(message)
-                IO.__logerror.flush()
+                Logger.__logerror.writelines("%s\n" % message)
+                Logger.__logerror.flush()
         except Exception,e:
             print "[!] Error while writen into log file or console: %s" % e.message
 
@@ -139,8 +136,8 @@ class IO():
 
         :param message: message to write
         :type message: str"""
-        if IO.__logerror == IO.STANDARD:
-            IO.__logerror(message)
+        if Logger.__loglevel == Logger.MORE_VERBOSE or Logger.__loglevel == Logger.VERBOSE or Logger.__loglevel == Logger.STANDARD:
+            Logger.__logerror(message)
 
     #----------------------------------------------------------------------
     @staticmethod
@@ -151,8 +148,8 @@ class IO():
         :param message: message to write
         :type message: str
         """
-        if IO.__logerror == IO.VERBOSE:
-            IO.__logerror(message)
+        if Logger.__loglevel == Logger.VERBOSE or Logger.__loglevel == Logger.STANDARD:
+            Logger.__logerror(message)
 
 
     #----------------------------------------------------------------------
@@ -164,5 +161,5 @@ class IO():
         :param message: message to write
         :type message: str
         """
-        if IO.__logerror == IO.MORE_VERBOSE:
-            IO.__logerror(message)
+        if Logger.__logerror == Logger.MORE_VERBOSE:
+            Logger.__logerror(message)

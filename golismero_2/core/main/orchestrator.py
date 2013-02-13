@@ -24,59 +24,68 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.messaging.interfaces import IReceiver
-from core.main.commonstructures import GlobalParams
-from core.messaging.messagemanager import MessageManager
-from core.main.audit import AuditManager
-from core.main.commonstructures import Singleton
-from core.results.resultmanager import ResultManager
+from core.managers.auditmanager import AuditManager
+from core.managers.messagemanager import MessageManager
+from core.managers.priscillapluginmanager import PriscillaPluginManager
+from core.managers.reportmanager import ReportManager
+from core.managers.resultmanager import ResultManager
+from core.managers.uimanager import UIManager
+from core.managers.reportmanager import ReportManager
+from core.managers.processmanager import ProcessManager
+
+from core.main.commonstructures import IReceiver, Singleton
 from core.messaging.message import Message
 from time import sleep
-from core.main.uimanager import UIManager
-from multiprocessing import Process
-
-class Orchestrator(IReceiver, Singleton):
-    """Orchestrator is the core or kernel."""
 
 
-    #----------------------------------------------------------------------
-    def __vinit__(self):
-        """Initialize self. MANDATORY"""
 
-        # Set and configure the Audit manager
-        self.__auditManager = AuditManager()
-        self.__auditManager.set_orchestrator(self)
+class Orchestrator(Singleton, IReceiver):
+    """
+    Orchestrator is the core or kernel.
 
-        # Message manager
-        self.__messageManager = MessageManager()
+    """
 
-        # Initiazliate store manager
-        self.__store_manager = ResultManager()
-
-        # Create UI, add to message managers, and start it
-        self.__ui = UIManager()
 
     #----------------------------------------------------------------------
-    def set_config(self, config):
+    def __init__(self, config):
         """
-        Set orchestator configuration
+        Constructor.
 
-        :param config: configuration for orchestator
+        :param config: configuration of orchestrator.
         :type config: GlobalParams
         """
-        if not isinstance(config, GlobalParams):
-            raise TypeError("Expected GlobalParams, got %s instead" % type(config))
 
-        # init UI Manager
-        self.__ui.config(config, self)
-        self.__ui.start()
+        # For singleton instances
+        if self._is_instanced:
+            return
+
+        # Init configuration
+        self.__config = config
+
+        # Init process manager
+        ProcessManager().start()
+
+        # 1 - Set and configure the Audit manager
+        self.__auditManager = AuditManager(self)
+
+        # 2 - Create and configure UI
+        self.__ui = UIManager(self.__config, self)
+
+        # 3 - Message manager
+        self.__messageManager = MessageManager()
+
+        # 4 - Initiazliate store manager
+        self.__result_manager = ResultManager()
+
+        # 5 - Add managers to message pools
         self.__messageManager.add_listener(self.__ui)
+        self.__messageManager.add_listener(self.__auditManager)
 
 
     #----------------------------------------------------------------------
     def add_audit(self, params):
         """
-        Start a new audit
+        Start a new audit. It start immediately after add.
 
         :param params: Audit settings
         :type params: GlobalParams
@@ -89,48 +98,80 @@ class Orchestrator(IReceiver, Singleton):
         """
         Receive messages from audits and external receivers. Store de info, if
         is a result, and resend.
+
+        :param message: a mesage to send
+        :type message: Message
         """
         if isinstance(message, Message):
-            # If message contain a result type
-            if message.message_info.result_subtype is Message.MSG_TYPE_INFO:
-                # Check if not in store yet. Then store and resend it
-                if not self.__store_manager.contains(message.message_info):
-                    #  Store it
-                    self.__store_manager.add_result(message.message_info)
-                    # Resend the message
-                    self.__messageManager.send_message(message)
+            # Check if not in store yet. Then store and resend it.
+            if not self.__result_manager.contains(message.message_info):
+                #  Store it
+                self.__result_manager.add_result(message.message_info)
+
+                # Send
+                self.__messageManager.send_message(message)
+
 
     #----------------------------------------------------------------------
     def wait(self):
         """
         Wait for the end of all audits.
         """
-        while self.__auditManager.is_finished is False:
-            sleep(0.250)
 
-        # Stop UI
-        self.__ui.stop_ui()
+        # Wait for audits
+        while not self.__auditManager.is_finished:
+            sleep(0.050)
 
-    #----------------------------------------------------------------------
-    def start_ui(self, params):
-        """Start UI"""
-        pass
+        # Stop UI and wait
+        self.__ui.stop()
+        while not self.__ui.is_finished:
+            sleep(0.020)
+
+        # Stop process manager
+        ProcessManager().stop()
 
 
-    #----------------------------------------------------------------------
-    def __set_run_mode(self, run_mode):
-        """Set and configure execution, as of run_mode config.
+    #--------------------------------------------------------------------------
+    #
+    # START METHODS
+    #
+    #--------------------------------------------------------------------------
+    def start(self):
+        """
+        Configure and start execution, as of run_mode config.
 
         :param run_mode: Constant contains run_mode.
         :type run_mode: int
         """
+        #
         # Configure messagen as for run mode
+        #
         if GlobalParams.RUN_MODE.standalone is runMode:
+            # Console mode
             self.__messageManager.add_listener(AuditManager())
+
         elif GlobalParams.RUN_MODE.cloudclient is runMode:
             pass
+
         elif GlobalParams.RUN_MODE.cloudserver is runMode:
             pass
+
         else:
             raise ValueError("Invalid run mode: %r" % runMode)
+
+
+    #----------------------------------------------------------------------
+    def start_ui(self):
+        """Start UI"""
+
+        # init UI Manager
+        self.__ui.run()
+
+
+    #----------------------------------------------------------------------
+    def start_report(self):
+        """Start report generation"""
+        ReportManager(self.__result_manager.get_results()).generate_report()
+
+
 

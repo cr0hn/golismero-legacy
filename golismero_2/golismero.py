@@ -38,8 +38,8 @@ import argparse
 from sys import version_info, exit
 from starter import launcher
 from core.main.commonstructures import GlobalParams
-from core.plugins.priscillapluginmanager import PriscillaPluginManager
-from core.api.io import IO
+from core.managers.priscillapluginmanager import PriscillaPluginManager
+from core.api.logger import Logger
 
 
 #----------------------------------------------------------------------
@@ -68,6 +68,8 @@ if __name__ == '__main__':
     gr_main.add_argument('-M', action='store', dest='run_mode', help='run mode [default: Standalone]', default="Standalone", choices=[x.title() for x in GlobalParams.RUN_MODE._values.keys()])
     gr_main.add_argument('-I', action='store', dest='user_interface', help='user interface mode [default: Console]', default="console", choices=[x.title() for x in GlobalParams.USER_INTERFACE._values.keys()])
     gr_main.add_argument('-a', action='store', dest='audit_name', help='customize the audit name')
+    gr_main.add_argument('-v', action='store_true', dest='verbose', help='set verbose mode')
+    gr_main.add_argument('-vv', action='store_true', dest='verbose_more', help='increase verbosity')
 
     gr_plugins = parser.add_argument_group("Plugins")
     gr_plugins.add_argument('-P', '--plugin-enabled', action='store', dest='plugins', help="list of plugins to run [default: all]", default = ["all"] )
@@ -87,13 +89,18 @@ if __name__ == '__main__':
     #------------------------------------------------------------
     # List plugins
     if P.plugin_list:
-        IOConsole.log("Plugin list\n-----------\n")
+        Logger.log("Plugin list\n-----------\n")
         for i in PriscillaPluginManager().get_all_plugins():
-            IOConsole.log("- %s: %s\n" % (i[0], i[1]))
-        IOConsole.log("\n")
+            Logger.log("- %s: %s\n" % (i[0], i[1]))
+        Logger.log("\n")
         exit(0)
 
-
+    #------------------------------------------------------------
+    # Configure logger
+    if P.verbose:
+        Logger.configure(logLevel=Logger.STANDARD)
+    if P.verbose_more:
+        Logger.configure(logLevel=Logger.MORE_VERBOSE)
 
     #------------------------------------------------------------
     # Display plugin info
@@ -101,17 +108,17 @@ if __name__ == '__main__':
         try:
             m_plugin_info = PriscillaPluginManager().get_plugin(P.plugin_name)
             if m_plugin_info:
-                IOConsole.log("Information of plugin: '%s'\n------------\n" % m_plugin_info.name)
-                IOConsole.log(m_plugin_info.plugin_object.display_help())
-                IOConsole.log("\n")
+                Logger.log("Information of plugin: '%s'\n------------\n" % m_plugin_info.name)
+                Logger.log(m_plugin_info.plugin_object.display_help())
+                Logger.log("\n")
             else:
-                IOConsole.log("[!] Plugin name not found\n")
+                Logger.log("[!] Plugin name not found\n")
             exit(0)
         except ValueError:
-            IOConsole.log("[!] Plugin name not found\n")
+            Logger.log("[!] Plugin name not found\n")
             exit(1)
         except Exception,e:
-            IOConsole.log("[!] Error recovering plugin info: %s\n" % e.message)
+            Logger.log("[!] Error recovering plugin info: %s\n" % e.message)
             exit(1)
 
 

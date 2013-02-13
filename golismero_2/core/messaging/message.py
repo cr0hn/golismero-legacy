@@ -116,7 +116,7 @@ class Message (object):
     message_info = property(__get_message_info)
 
     #----------------------------------------------------------------------
-    def get_message_type(self):
+    def __get_message_type(self):
         """
         Get message type.
 
@@ -124,7 +124,7 @@ class Message (object):
         """
         return self.__message_type
 
-    message_type = property(get_message_type)
+    message_type = property(__get_message_type)
 
 
     #----------------------------------------------------------------------
@@ -132,7 +132,7 @@ class Message (object):
     # This methods must be called only for Audit instance
     #
     #----------------------------------------------------------------------
-    def set_audit_name(self, name):
+    def __set_audit_name(self, name):
         """
         Set the audit name to which message belongs.
 
@@ -142,7 +142,7 @@ class Message (object):
         self.__audit_name = name
 
     #----------------------------------------------------------------------
-    def get_audit_name(self):
+    def __get_audit_name(self):
         """
         Get the audit name to which message belongs.
 
@@ -150,4 +150,4 @@ class Message (object):
         """
         return self.__audit_name
 
-    audit_name = property(get_audit_name, set_audit_name)
+    audit_name = property(__get_audit_name, __set_audit_name)

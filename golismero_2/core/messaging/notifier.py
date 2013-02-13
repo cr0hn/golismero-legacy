@@ -24,46 +24,56 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.plugins.plugin import TestingPlugin, Plugin
+from core.api.plugins.plugin import TestingPlugin, UIPlugin, Plugin
 from core.messaging.message import Message
-from threading import Thread
+from threading import Thread, Semaphore
+from core.main.commonstructures import Interface
 from time import sleep
+from core.managers.processmanager import ProcessManager
 
 
-class Notifier(Thread):
+class Notifier(Thread, Interface):
     """
-    This class manage the pools of messages for each plugin, and notify them
+    This is an abstract class for manage the pools of messages, and notify them
     when a message is received.
     """
 
+    #----------------------------------------------------------------------
+    #
+    # Abstract methods
+    #
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
         # Call super class constructor
         super(Notifier, self).__init__()
 
-
         # Message notification pool for plugins.
         # (message_type, list(Plugin_instance))
-        self.__notification_pool = dict()
+        self._notification_pool = dict()
+        # Add special type "all"
+        self._notification_pool["all"] = list()
+
+        # Total messages pendants
+        self._waiting_messages = Semaphore(1)
+
+        # Controle executio adding a stop condition
+        self._continue = True
+
+        # Finish all plugins?
+        self._is_finished = False
+
+        # Plugins are running
+        self._is_plugins_runnging = False
 
         # Pool list for each plugin:
         #   Each plugin has they own message list, that act as a buffer. Message will
         #   add to it, and will be sent as plugin as needed.
         #   (plugin_class_name, [plugin_instance. list(messages)]
-        self.__plugins_buffer_pool = dict()
+        self._plugins_buffer_pool = dict()
 
-        # Total messages pendants
-        self.__non_dispached_msg = 0
-
-        # Stop attemps: when no message in pool of any plugin, will be wail these number of times
-        # before stop the process
-        self.__stop_attemps = 5
-
-        # Finish all plugins?
-        self.__finished_plugins = False
-
-
+        # Running pool
+        self.__runner = ProcessManager()
 
 
     #----------------------------------------------------------------------
@@ -77,11 +87,111 @@ class Notifier(Thread):
         if isinstance(plugin, list):
             map(self.__add_plugin, plugin)
         else:
-            self.__add_plugin(plugin)
+            self._add_plugin(plugin)
 
 
     #----------------------------------------------------------------------
-    def __add_plugin(self, plugin):
+    #
+    # Methods to implement
+    #
+    #----------------------------------------------------------------------
+    def _add_plugin(self, plugin):
+        """
+        Add a plugin to manage
+
+        :param plugin: a TestPlugin type to manage
+        :type plugin: TestPlugin
+        """
+        pass
+
+    #----------------------------------------------------------------------
+    def nofity(self, message):
+        """
+        Notify messages to the plugins
+
+        :param message: A message to send to plugins
+        :type message: Message
+        """
+        pass
+    #----------------------------------------------------------------------
+    def stop(self):
+        """
+        Send a stop signal to notifier
+        """
+        self._continue = False
+        self._waiting_messages.release()
+        self._is_finished = True
+
+
+    #----------------------------------------------------------------------
+    def run(self):
+        """
+        Start notifier process
+        """
+        # Run until not stop signal received
+        while self._continue:
+            # Dispatch messages:
+            #
+            # For each plugin, send messages in their buffer
+            self._is_plugins_runnging = True
+            for l_notificator in self._plugins_buffer_pool.values():
+                l_plugin_instance = l_notificator[0]
+                for l_msg in l_notificator[1]:
+                    # Send message to plugin.
+                    #
+                    # Run plugin in running pool
+                    #l_plugin_instance.recv_info(l_msg.message_info)
+                    self.__runner.execute(l_plugin_instance, "recv_info", (l_msg.message_info,))
+
+            self._is_plugins_runnging = False
+            self._waiting_messages.acquire()
+
+        # Set finished to true
+        self._is_finished = True
+
+
+    #----------------------------------------------------------------------
+    #
+    # Properties
+    #
+    #----------------------------------------------------------------------
+    def _get_is_finished(self):
+        """
+        Retrun true if all plugins are finished. False otherwise.
+
+        :returns: bool -- True is finished. False otherwise.
+        """
+        return self._is_finished
+
+    is_finished = property(_get_is_finished)
+
+    #----------------------------------------------------------------------
+    def _get_plugins_running(self):
+        """Are any plugin running?"""
+        return self._plugins_running
+    is_plugins_running = property(_get_plugins_running)
+
+
+#------------------------------------------------------------------------------
+#
+# Notificator for Audit manager
+#
+#------------------------------------------------------------------------------
+class AuditNofitier(Notifier):
+    """
+    This class manage the pools of messages for -Testing- plugins, and notify them
+    when a message is received.
+    """
+
+    #----------------------------------------------------------------------
+    def __init__(self):
+        """Constructor"""
+        # Call super class constructor
+        super(AuditNofitier, self).__init__()
+
+
+    #----------------------------------------------------------------------
+    def _add_plugin(self, plugin):
         """
         Add a plugin to manage
 
@@ -91,22 +201,26 @@ class Notifier(Thread):
         if not isinstance(plugin, Plugin):
             raise TypeError("Expected TestingPlugin, got %s instead" % type(plugin))
 
-        # Create lists as necessary, dependens of type of messages accepted
-        # by plugins
-        m_message_types = set(plugin.get_accepted_info()) # delete duplicates
-        if m_message_types:
-            for l_type in m_message_types:
-                #
-                # Check if notification list exits at the pool
-                if not l_type in self.__notification_pool.keys():
-                    self.__notification_pool[l_type] = list()
-                # Add plugin to notification list
-                self.__notification_pool[l_type].append(plugin)
+        # For testing plugins only
+        if isinstance(plugin, TestingPlugin):
+            # Create lists as necessary, dependens of type of messages accepted
+            # by plugins
+            m_message_types = set(plugin.get_accepted_info()) # delete duplicates
 
-                # Add message buffer for the plugin
-                if not plugin.__class__ in self.__plugins_buffer_pool.keys():
-                    self.__plugins_buffer_pool[plugin.__class__] = [plugin, list()]
+            #
+            if m_message_types:
+                for l_type in m_message_types:
+                    #
+                    # Check if notification list exits at the pool. If not create them
+                    if not l_type in self._notification_pool.keys():
+                        self._notification_pool[l_type] = list()
 
+                    # Add plugin to notification list, by their type.
+                    self._notification_pool[l_type].append(plugin)
+
+                    # Add message buffer for the plugin
+                    if not plugin.__class__ in self._plugins_buffer_pool.keys():
+                        self._plugins_buffer_pool[plugin.__class__] = [plugin, list()]
 
     #----------------------------------------------------------------------
     def nofity(self, message):
@@ -117,55 +231,94 @@ class Notifier(Thread):
         :type message: Message
         """
         if isinstance(message, Message):
-            # Get pool of plugins to send this message
-            if message.message_info.result_subtype in self.__notification_pool.keys():
-                m_plugins_to_notify = self.__notification_pool[message.message_info.result_subtype]
+            m_plugins_to_notify = []
 
-                # Add as pendant msg as notify process listen to
-                self.__non_dispached_msg += len(m_plugins_to_notify)
+            # Plugin that expect all types of messages
+            m_plugins_to_notify.extend(self._notification_pool["all"])
 
-                # Add message to their buffer list
-                for l_plugin in m_plugins_to_notify:
-                    self.__plugins_buffer_pool[l_plugin.__class__][1].append(message)
+            # Plugins that expects this type of message
+            if message.message_info.result_subtype in self._notification_pool.keys():
+                m_plugins_to_notify.extend(self._notification_pool[message.message_info.result_subtype])
+
+            # Remove duplicates
+            m_plugins_to_notify = set(m_plugins_to_notify)
+
+            # Notify message to buffer list of each plugin
+            for l_plugin in m_plugins_to_notify:
+                self._plugins_buffer_pool[l_plugin.__class__][1].append(message)
+
+            # Release the dispath
+            self._waiting_messages.release()
+
+
+
+#------------------------------------------------------------------------------
+#
+# Notificator for User Interface manager
+#
+#------------------------------------------------------------------------------
+class UINotifier(Notifier):
+    """
+    This class manage the pools of messages for -UI- plugins, and notify them
+    when a message is received.
+    """
+
+    #----------------------------------------------------------------------
+    def __init__(self):
+        """Constructor"""
+        # Call super class constructor
+        super(UINotifier, self).__init__()
+
 
 
     #----------------------------------------------------------------------
-    def run(self):
+    def _add_plugin(self, plugin):
         """
-        Start notifier process
+        Add a plugin to manage
+
+        :param plugin: a TestPlugin type to manage
+        :type plugin: TestPlugin
         """
 
-        # Wait for plugins receive first message with target
-        sleep(0.050)
+        # For testing plugins only
+        if isinstance(plugin, UIPlugin):
+            # Add plugin to notification pool
+            self._notification_pool["all"].append(plugin)
 
-        # Run until stop attemps are 0
-        while self.__stop_attemps > 0:
-            # Dispatch messages.
-            while self.__non_dispached_msg > 0:
-                for l_notificator in self.__plugins_buffer_pool.values():
-                    l_plugin_instance = l_notificator[0]
-                    for l_msg in l_notificator[1]:
-                        # Send message to plugin
-                        l_plugin_instance.recv_info(l_msg.message_info)
-                        # When messsage is processed, remove it from non dispached list
-                        self.__non_dispached_msg -= 1
-                # Wait 250 ms
-                sleep(0.250)
-
-            # Decrease attemps
-            self.__stop_attemps -= 1
-
-        # Set finished to true
-        self.__finished_plugins = True
-
+            # Create buffer for plugin
+            if not plugin.__class__ in self._plugins_buffer_pool.keys():
+                self._plugins_buffer_pool[plugin.__class__] = [plugin, list()]
 
     #----------------------------------------------------------------------
-    def __get_is_finished(self):
+    def nofity(self, message):
         """
-        Retrun true if all plugins are finished. False otherwise.
+        Notify messages to the plugins
 
-        :returns: bool -- True is finished. False otherwise.
+        :param message: A message to send to plugins
+        :type message: Message
         """
-        return self.__finished_plugins
+        if isinstance(message, Message):
+            m_plugins_to_notify = []
 
-    is_finished = property(__get_is_finished)
+            # Plugin that expect all types of messages
+            m_plugins_to_notify.extend(self._notification_pool["all"])
+
+            # Remove duplicates
+            m_plugins_to_notify = set(m_plugins_to_notify)
+
+            # Notify message to buffer list of each plugin
+            for l_plugin in m_plugins_to_notify:
+                self._plugins_buffer_pool[l_plugin.__class__][1].append(message)
+
+            # Release the dispath
+            self._waiting_messages.release()
+
+
+
+
+
+
+
+
+
+

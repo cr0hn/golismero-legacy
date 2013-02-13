@@ -178,7 +178,7 @@ class AutoInstallPluginManager(PluginManagerDecorator):
 		for infoFileName in infoFileCandidates:
 			infoFile = candidateZipFile.read(infoFileName)
 			logging.info("Assuming the zipped plugin info file to be '%s'" % infoFileName)
-			pluginName,moduleName,_ = self._getPluginNameAndModuleFromStream(StringIO.StringIO(infoFile))
+			pluginName,moduleName,_ = self._getPluginNameAndModuleFromStream(StringLogger.StringIO(infoFile))
 			if moduleName is None:
 					continue
 			logging.info("Checking existence of the expected module '%s' in the zip file" % moduleName)

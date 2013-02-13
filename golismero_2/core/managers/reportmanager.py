@@ -24,34 +24,31 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.results.information.information import Information
+from core.main.commonstructures import Singleton
+
+
 
 #------------------------------------------------------------------------------
-class Url(Information):
-    """
-    This class contain URL information
-    """
+class ReportManager(Singleton):
+    """This class manager the reports and generate them."""
 
     #----------------------------------------------------------------------
-    def __init__(self, url):
-        """
-        Construct a Url result, that contain an URL.
+    def __init__(self, results):
+        """Constructor"""
 
-        :param url: URL to manage
-        :type url: str
-        """
-        super(Url, self).__init__(Information.INFORMATION_URL)
+        # For singleton pattern
+        if self._is_instanced:
+            return
 
-        self.__url = url
+        # Init structures
+        self.__results = results
 
-    def __get_url_raw(self):
-        """
-        Get raw info of URL
-        """
-        return self.__url
-    url_raw = property(__get_url_raw)
+
 
     #----------------------------------------------------------------------
-    def __str__(self):
+    def generate_report(self):
         """"""
-        return self.url_raw
+        print "report"
+
+
+

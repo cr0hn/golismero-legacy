@@ -51,7 +51,7 @@ class Injection(injection):
 
 
     #----------------------------------------------------------------------
-    def get_injection_type(self):
+    def __get_injection_type(self):
         """
         Get the injection type
 
@@ -63,7 +63,7 @@ class Injection(injection):
             return self.__injection_type
 
     #----------------------------------------------------------------------
-    def set_injection_type(self, injection_type):
+    def __set_injection_type(self, injection_type):
         """
         Set the injection type.
 
@@ -73,6 +73,6 @@ class Injection(injection):
         if injection_type is not None and injection_type >= 0 and injection_type <= 10:
             self.__injection_type = injection_type
 
-    result_subtype = property(get_information_type, set_information_type)
+    result_subtype = property(__get_information_type, __set_information_type)
 
 
