@@ -40,7 +40,7 @@ class MessageManager(Singleton):
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """Virtual contructor"""
+        """Virtual contructor."""
 
         # For singleton pattern
         if self._is_instanced:
@@ -73,7 +73,7 @@ class MessageManager(Singleton):
     #----------------------------------------------------------------------
     def send_message(self, message):
         """
-        Send a message to all listeners
+        Send a message to all listeners.
 
         :param message: message to send.
         :type message: Message

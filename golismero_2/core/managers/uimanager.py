@@ -95,16 +95,16 @@ class UIManager(Singleton, Thread, IReceiver):
         """
         Send message info to UI plugins.
 
-        :param message: The message unencapsulate to get info.
+        :param message: The message to send.
         :type message: Message
         """
         if isinstance(message, Message):
-            self.__notifier.nofity(message)
+            self.__notifier.notify(message)
 
     #----------------------------------------------------------------------
     def __get_is_finished(self):
         """
-        If UI has finished return True. False otherwise.
+        If UI has finished returns True. False otherwise.
 
         :returns: True, if finished. False otherwise.
         """

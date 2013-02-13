@@ -44,7 +44,7 @@ class PriscillaPluginManager(Singleton):
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """Constructor"""
+        """Constructor."""
 
         # Load plugins
         self.__load_plugins()

@@ -94,7 +94,7 @@ class Notifier(Thread, Interface):
     #----------------------------------------------------------------------
     def add_plugin(self, plugin):
         """
-        Add a plugin to manage
+        Add a plugin to manage.
 
         :param plugin: a TestPlugin type to manage
         :type plugin: TestPlugin
@@ -102,7 +102,7 @@ class Notifier(Thread, Interface):
         pass
 
     #----------------------------------------------------------------------
-    def nofity(self, message):
+    def notify(self, message):
         """
         Notify messages to the plugins.
 
@@ -113,7 +113,7 @@ class Notifier(Thread, Interface):
     #----------------------------------------------------------------------
     def stop(self):
         """
-        Send a stop signal to notifier
+        Send a stop signal to notifier.
         """
         self._continue = False
         self._waiting_messages.release()
@@ -123,7 +123,7 @@ class Notifier(Thread, Interface):
     #----------------------------------------------------------------------
     def run(self):
         """
-        Start notifier process
+        Start notifier process.
         """
         # Run until not stop signal received
         while self._continue:
@@ -154,7 +154,7 @@ class Notifier(Thread, Interface):
     #----------------------------------------------------------------------
     def _get_is_finished(self):
         """
-        Retrun true if all plugins are finished. False otherwise.
+        Return true if all plugins are finished. False otherwise.
 
         :returns: bool -- True is finished. False otherwise.
         """
@@ -286,7 +286,7 @@ class UINotifier(Notifier):
                 self._plugins_buffer_pool[plugin.__class__] = [plugin, list()]
 
     #----------------------------------------------------------------------
-    def nofity(self, message):
+    def notify(self, message):
         """
         Notify messages to the plugins.
 

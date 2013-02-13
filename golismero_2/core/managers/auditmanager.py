@@ -43,7 +43,7 @@ class AuditManager(Singleton, IReceiver):
     #----------------------------------------------------------------------
     def __init__(self, orchestrator):
         """
-        Constructor
+        Constructor.
 
         :param orchestrator: core to send messages.
         :type orchestrator: Orchestrator
@@ -61,7 +61,7 @@ class AuditManager(Singleton, IReceiver):
     #----------------------------------------------------------------------
     def new_audit(self, globalParams):
         """
-        Creates a new audit with params passed as parameter
+        Creates a new audit.
 
         :param globalParams: Params of audit
         :type globalParams: GlobalParams
@@ -87,7 +87,7 @@ class AuditManager(Singleton, IReceiver):
     #----------------------------------------------------------------------
     def get_all_audits(self):
         """
-        Get the list of audits running at the momento of calling.
+        Get the list of audits currently running.
 
         :returns: dicts(str, Audit) -- Return a dict with touples (auditName, Audit instance)
         """
@@ -96,7 +96,7 @@ class AuditManager(Singleton, IReceiver):
     #----------------------------------------------------------------------
     def get_audit(self, auditName):
         """
-        Get an instance of audit by their name.
+        Get an instance of an audit by its name.
 
         :param auditName: audit name
         :type auditName: str
@@ -112,7 +112,7 @@ class AuditManager(Singleton, IReceiver):
     #----------------------------------------------------------------------
     def recv_msg(self, message):
         """
-        Receive a message a resend it to all audits
+        Receive a message and resend it to all audits.
 
         :param message: inbound message
         :type message: Message
@@ -124,9 +124,9 @@ class AuditManager(Singleton, IReceiver):
     #----------------------------------------------------------------------
     def __get_is_finished(self):
         """
-        Retrun true if all plugins are finished. False otherwise.
+        Return true if all plugins are finished. False otherwise.
 
-        :returns: bool -- True is finished. False otherwise.
+        :returns: bool -- True if finished. False otherwise.
         """
         for i in self.__audits.values():
             if i.is_finished is False:
@@ -138,7 +138,7 @@ class AuditManager(Singleton, IReceiver):
     #----------------------------------------------------------------------
     def stop(self):
         """
-        Stop all audits
+        Stop all audits.
         """
         for a in self.__audits.values():
             a.stop()
@@ -195,7 +195,7 @@ class Audit(IReceiver):
     #----------------------------------------------------------------------
     def __generateAuditName(self):
         """
-        Get a random name for audit
+        Get a random name for an audit.
 
         :returns: str -- generated name for the audit.
         """
@@ -207,7 +207,7 @@ class Audit(IReceiver):
     #----------------------------------------------------------------------
     def get_audit_name(self):
         """
-        Return the audit name
+        Return the audit name.
 
         :returns: str -- the audit name
         """
@@ -217,7 +217,7 @@ class Audit(IReceiver):
     #----------------------------------------------------------------------
     def run(self):
         """
-        Start execution of audit
+        Start execution of an audit.
         """
 
         # 1 - Load neccesary plugins. Only testing plugins
@@ -245,19 +245,21 @@ class Audit(IReceiver):
     #----------------------------------------------------------------------
     def recv_msg(self, result_info):
         """
-        Send a resulto to core system
+        Send a result to the core system.
 
-        :param result_info: Resulto to receive
+        :param result_info: Result to receive
         :type result_info: Result
         """
         # Encapsulate Result information into a Message
         if isinstance(result_info, Result):
+
             # Build the message
             m_message = Message(result_info, Message.MSG_TYPE_INFO)
+
             # Send message to the core
             self.__receiver.recv_msg(m_message)
 
-            # Message recived!
+            # Message received!
             self.__messages_received += 1
 
     #----------------------------------------------------------------------
@@ -271,7 +273,7 @@ class Audit(IReceiver):
         if isinstance(message, Message):
             # Only resend to the plugins if information is info type
             if message.message_type is Message.MSG_TYPE_INFO:
-                self.__notifier.nofity(message)
+                self.__notifier.notify(message)
 
     #----------------------------------------------------------------------
     def __get_is_finished(self):

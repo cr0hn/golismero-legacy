@@ -36,9 +36,9 @@ semaphore_process = Semaphore(0)
 #------------------------------------------------------------------------------
 class ProcessManager(Thread, Singleton):
     """
-    This class manage processes.
+    This class manages processes.
 
-    To run a function you must do:
+    To run a function you must do the following:
 
     # Definitions
     class A():
@@ -54,7 +54,7 @@ class ProcessManager(Thread, Singleton):
 
     #----------------------------------------------------------------------
     def __init__(self, max_process = 2):
-        """Constructor
+        """Constructor.
 
         :param max_process: maximun number of processes to create
         :type max_process: int
@@ -94,8 +94,9 @@ class ProcessManager(Thread, Singleton):
 
     #----------------------------------------------------------------------
     def run(self):
-        """Execute pooled processes"""
+        """Execute pooled processes."""
         while not self.__stop:
+
             # Wait calls
             if len(self.__wait_pool) < 1:
                 semaphore_input_work.acquire()
@@ -120,7 +121,7 @@ class ProcessManager(Thread, Singleton):
     #----------------------------------------------------------------------
     def execute(self, obj, func, func_params):
         """
-        Add a function to be executed, with their params, into process.
+        Add a function to be executed, with its params, in a pooled process.
 
         :param obj: object that contain method to execute.
         :type obj: object
@@ -141,7 +142,7 @@ class ProcessManager(Thread, Singleton):
         semaphore_input_work.release()
 
     def call_back(self, process_id):
-        """Notifier when a process was finished to run a function"""
+        """Notifier when a process has finished running a function"""
         # Update the state of process, identified by 'process_id' to "available"
 
         self.__mutex_available_worker.acquire()
@@ -154,7 +155,7 @@ class ProcessManager(Thread, Singleton):
     #----------------------------------------------------------------------
     def stop(self):
         """
-        Stop rocess manager
+        Stop process manager.
         """
         for i in self.__exec_pool:
             i.stop()
@@ -167,14 +168,14 @@ class ProcessManager(Thread, Singleton):
 #------------------------------------------------------------------------------
 class CustomProcess(Process):
     """
-    This class execute a function with ther params.
+    This class executes a function with its params.
     """
 
     __stop = Value("i", 0) # With value for shared memory between processes
 
     #----------------------------------------------------------------------
     def __init__(self, process_id, call_back):
-        """Constructor"""
+        """Constructor."""
         super(CustomProcess, self).__init__()
 
         self.__id = process_id
@@ -182,20 +183,20 @@ class CustomProcess(Process):
 
     #----------------------------------------------------------------------
     def stop(self):
-        """Stop the process"""
+        """Stop the process."""
         CustomProcess.__stop.value = 1
 
 
     #----------------------------------------------------------------------
     def run(self):
-        """Run and wait process"""
+        """Run and wait for process."""
         while not CustomProcess.__stop.value:
             sleep(0.05)
 
     #----------------------------------------------------------------------
     def execute(self, obj, func, args):
         """
-        Execute a function, with their params, into process.
+        Execute a function, with its params, in a pooled process.
 
         :param obj: object that contain method to execute.
         :type obj: object
@@ -203,8 +204,8 @@ class CustomProcess(Process):
         :param func: function to execute
         :type func: function
 
-        :param func_params: parameters of function. Tupple, as: (param1, param2,)
-        :type func_params: tupple
+        :param func_params: parameters of function. Tuple, as: (param1, param2,)
+        :type func_params: tuple
         """
         getattr(obj, func)(args[0])
 
