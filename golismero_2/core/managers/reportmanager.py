@@ -30,11 +30,11 @@ from core.main.commonstructures import Singleton
 
 #------------------------------------------------------------------------------
 class ReportManager(Singleton):
-    """This class manager the reports and generate them."""
+    """This class manages the generation of reports."""
 
     #----------------------------------------------------------------------
     def __init__(self, results):
-        """Constructor"""
+        """Constructor."""
 
         # For singleton pattern
         if self._is_instanced:

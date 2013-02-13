@@ -36,7 +36,7 @@ class ResultManager(Singleton):
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """Constructor"""
+        """Constructor."""
 
         self.__results = dict()
 
@@ -57,7 +57,7 @@ class ResultManager(Singleton):
         :param result: the result to check.
         :type result: Result
 
-        :returns: bool -- True if is already stored, False otherwise
+        :returns: bool -- True if already stored, False otherwise
         """
         return result.hash_sum in self.__results.keys()
 
