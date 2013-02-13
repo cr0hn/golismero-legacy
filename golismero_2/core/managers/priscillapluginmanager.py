@@ -131,7 +131,7 @@ class PriscillaPluginManager(Singleton):
     #----------------------------------------------------------------------
     def get_all_plugins(self, category = "all"):
         """
-        Get all available plugins
+        Get all available plugins.
 
         :param category: the category of plugin to return. Valid values: all, ui, global, results, testing.
         :type category: str
@@ -150,7 +150,7 @@ class PriscillaPluginManager(Singleton):
 
     #----------------------------------------------------------------------
     def get_all_plugins_descriptions(self):
-        """Get all descriptions available plugins
+        """Get the descriptions of all available plugins.
 
         :returns: dict -- Mapping of plugin names to descriptions
         """
@@ -162,7 +162,7 @@ class PriscillaPluginManager(Singleton):
     #----------------------------------------------------------------------
     def get_plugin_by_name(self, pluginName):
         """
-        Return a plugin instance
+        Return a plugin instance.
 
         :param pluginName: plugin name
         :type pluginName: str

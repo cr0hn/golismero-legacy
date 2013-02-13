@@ -30,7 +30,7 @@ from core.api.results.result import Result
 #------------------------------------------------------------------------------
 class ResultManager(Singleton):
     """
-    This interface manage the results. Shorten, organizing and storing it.
+    This class manages the results, shortening, organizing and storing them.
     """
 
 
@@ -43,7 +43,7 @@ class ResultManager(Singleton):
     #----------------------------------------------------------------------
     def add_result(self, result):
         """
-        Add new result to store, if no already in store.
+        Add new result to store, if not already in store.
         """
         if isinstance(result, Result):
             if result.hash_sum not in self.__results.keys():
@@ -52,19 +52,19 @@ class ResultManager(Singleton):
     #----------------------------------------------------------------------
     def contains(self, result):
         """
-        Check if a result is already stored or not.
+        Check if a result is already stored.
 
         :param result: the result to check.
         :type result: Result
 
-        :returns: bool -- True if is already store. False otherwise
+        :returns: bool -- True if is already stored, False otherwise
         """
         return result.hash_sum in self.__results.keys()
 
     #----------------------------------------------------------------------
     def __get_results(self):
         """
-        Get stored results
+        Get stored results.
         """
         return self.__results
 

@@ -44,7 +44,7 @@ class Notifier(Thread, Interface):
     #
     #----------------------------------------------------------------------
     def __init__(self):
-        """Constructor"""
+        """Constructor."""
         # Call super class constructor
         super(Notifier, self).__init__()
 
@@ -77,13 +77,14 @@ class Notifier(Thread, Interface):
 
 
     #----------------------------------------------------------------------
-    def add_plugin(self, plugin):
+    def add_multiple_plugins(self, plugin_list):
         """
-        Add a plugin or list of plugins
+        Add a list of plugins.
 
-        :param plugin: a plugin or plugin list to add
-        :type plugin: TestPlugin | list(TestPlugin)
+        :param plugin: list of plugins to add
+        :type plugin: list(Plugin)
         """
+<<<<<<< HEAD
         if isinstance(plugin, list):
             map(self.__add_plugin, plugin)
         else:
@@ -192,14 +193,21 @@ class AuditNofitier(Notifier):
 
     #----------------------------------------------------------------------
     def _add_plugin(self, plugin):
-        """
-        Add a plugin to manage
+=======
+        map(self.add_plugin, plugin)
 
-        :param plugin: a TestPlugin type to manage
-        :type plugin: TestPlugin
+
+    #----------------------------------------------------------------------
+    def add_plugin(self, plugin):
+>>>>>>> d246c4c20dab744ef5b779e54446f25d6709dda7
+        """
+        Add a plugin to manage.
+
+        :param plugin: a Plugin type to manage
+        :type plugin: Plugin
         """
         if not isinstance(plugin, Plugin):
-            raise TypeError("Expected TestingPlugin, got %s instead" % type(plugin))
+            raise TypeError("Expected Plugin, got %s instead" % type(plugin))
 
         # For testing plugins only
         if isinstance(plugin, TestingPlugin):
@@ -223,9 +231,9 @@ class AuditNofitier(Notifier):
                         self._plugins_buffer_pool[plugin.__class__] = [plugin, list()]
 
     #----------------------------------------------------------------------
-    def nofity(self, message):
+    def notify(self, message):
         """
-        Notify messages to the plugins
+        Notify messages to the plugins.
 
         :param message: A message to send to plugins
         :type message: Message
@@ -264,10 +272,17 @@ class UINotifier(Notifier):
     """
 
     #----------------------------------------------------------------------
+<<<<<<< HEAD
     def __init__(self):
         """Constructor"""
         # Call super class constructor
         super(UINotifier, self).__init__()
+=======
+    def run(self):
+        """
+        Start notifier process.
+        """
+>>>>>>> d246c4c20dab744ef5b779e54446f25d6709dda7
 
 
 
@@ -294,8 +309,12 @@ class UINotifier(Notifier):
         """
         Notify messages to the plugins
 
+<<<<<<< HEAD
         :param message: A message to send to plugins
         :type message: Message
+=======
+        :returns: bool -- True if finished. False otherwise.
+>>>>>>> d246c4c20dab744ef5b779e54446f25d6709dda7
         """
         if isinstance(message, Message):
             m_plugins_to_notify = []

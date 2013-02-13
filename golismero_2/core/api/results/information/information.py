@@ -53,7 +53,6 @@ class Information(Result):
         self.__information_type = information_type
 
 
-
     #----------------------------------------------------------------------
     def __get_information_type(self):
         """

@@ -58,7 +58,6 @@ class Logger():
             Logger.__loglevel = logLevel
 
 
-
     #----------------------------------------------------------------------
     @staticmethod
     def __log(message):
@@ -73,7 +72,8 @@ class Logger():
                 Logger.__logout.writelines("%s\n" % message)
                 Logger.__logout.flush()
         except Exception,e:
-            print "[!] Error while writen into log file or console: %s" % e.message
+            print "[!] Error while writing into log file or console: %s" % e.message
+
 
     #----------------------------------------------------------------------
     @staticmethod
@@ -87,6 +87,7 @@ class Logger():
         if Logger.__loglevel == Logger.MORE_VERBOSE or Logger.__loglevel == Logger.VERBOSE or Logger.__loglevel == Logger.STANDARD:
             Logger.__log(message)
 
+
     #----------------------------------------------------------------------
     @staticmethod
     def log_verbose(self, message):
@@ -98,6 +99,7 @@ class Logger():
         """
         if Logger.__loglevel == Logger.MORE_VERBOSE or Logger.__loglevel == Logger.VERBOSE:
             Logger.__log(message)
+
 
     #----------------------------------------------------------------------
     @staticmethod
