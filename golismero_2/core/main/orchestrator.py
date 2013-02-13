@@ -85,11 +85,7 @@ class Orchestrator(Singleton, IReceiver):
     #----------------------------------------------------------------------
     def add_audit(self, params):
         """
-<<<<<<< HEAD
-        Start a new audit. It start immediately after add.
-=======
         Start a new audit.
->>>>>>> d246c4c20dab744ef5b779e54446f25d6709dda7
 
         :param params: Audit settings
         :type params: GlobalParams
@@ -100,9 +96,9 @@ class Orchestrator(Singleton, IReceiver):
     #----------------------------------------------------------------------
     def recv_msg(self, message):
         """
-<<<<<<< HEAD
-        Receive messages from audits and external receivers. Store de info, if
-        is a result, and resend.
+        Receive messages from audits and external receivers.
+        If it's a result, store the info and resend the messages.
+        Otherwise just ignore the messages.
 
         :param message: a mesage to send
         :type message: Message
@@ -116,26 +112,6 @@ class Orchestrator(Singleton, IReceiver):
                 # Send
                 self.__messageManager.send_message(message)
 
-=======
-        Receive messages from audits and external receivers.
-        If it's a result, store the info and resend the messages.
-        Otherwise just ignore the messages.
-        """
-        if not isinstance(message, Message):
-            raise TypeError("Expected Message, got %s instead" % type(message))
-
-        # If the message contains a result type...
-        if message.message_info.result_subtype is Message.MSG_TYPE_INFO:
-
-            # Check if it's not in store yet. Then store and resend it.
-            if not self.__store_manager.contains(message.message_info):
-
-                #  Store it.
-                self.__store_manager.add_result(message.message_info)
-
-                # Resend the message.
-                self.__messageManager.send_message(message)
->>>>>>> d246c4c20dab744ef5b779e54446f25d6709dda7
 
     #----------------------------------------------------------------------
     def wait(self):
@@ -147,17 +123,10 @@ class Orchestrator(Singleton, IReceiver):
         while not self.__auditManager.is_finished:
             sleep(0.050)
 
-<<<<<<< HEAD
-        # Stop UI and wait
+        # Stop UI and wait it.
         self.__ui.stop()
         while not self.__ui.is_finished:
             sleep(0.020)
-=======
-    #----------------------------------------------------------------------
-    def start_ui(self, params):
-        """Start UI."""
-        pass
->>>>>>> d246c4c20dab744ef5b779e54446f25d6709dda7
 
         # Stop process manager
         ProcessManager().stop()

@@ -82,38 +82,18 @@ class Singleton (object):
     object is created. For this, you must to create a method called
     "__vinit__".
     """
-
-<<<<<<< HEAD
     _instance = None
     _is_instanced = False
     def __new__(cls, *args, **kwargs):
+        # If the singleton has already been instanced, return it.
         if cls._instance is not None:
             cls._instanced = True
             return cls._instance
 
-        # Create new instance
+        # Instance the singleton for the first (and only) time.
         cls._instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
 
         return cls._instance
-
-=======
-    __instance = None
-    def __new__(cls, *args, **kargs):
-
-        # If the singleton has already been instanced, return it.
-        if cls.__instance is not None:
-            return cls.__instance
-
-        # Instance the singleton for the first (and only) time.
-        cls.__instance = super(Singleton, cls).__new__(cls, *args, **kargs)
-
-        # Call a virtual init, if it exists.
-        if "__vinit__" in cls.__dict__:
-            cls.__instance.__vinit__(*args, **kargs)
-
-        # Return the singleton instance.
-        return cls.__instance
->>>>>>> d246c4c20dab744ef5b779e54446f25d6709dda7
 
 #--------------------------------------------------------------------------
 #

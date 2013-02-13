@@ -36,8 +36,7 @@ from core.main.commonstructures import Singleton
 from threading import Thread
 
 
-<<<<<<< HEAD
-=======
+
 #--------------------------------------------------------------------------
 class Audit(IReceiver):
     """

@@ -84,11 +84,7 @@ class Notifier(Thread, Interface):
         :param plugin: list of plugins to add
         :type plugin: list(Plugin)
         """
-<<<<<<< HEAD
-        if isinstance(plugin, list):
-            map(self.__add_plugin, plugin)
-        else:
-            self._add_plugin(plugin)
+        map(self.add_plugin, plugin)
 
 
     #----------------------------------------------------------------------
@@ -96,7 +92,7 @@ class Notifier(Thread, Interface):
     # Methods to implement
     #
     #----------------------------------------------------------------------
-    def _add_plugin(self, plugin):
+    def add_plugin(self, plugin):
         """
         Add a plugin to manage
 
@@ -108,7 +104,7 @@ class Notifier(Thread, Interface):
     #----------------------------------------------------------------------
     def nofity(self, message):
         """
-        Notify messages to the plugins
+        Notify messages to the plugins.
 
         :param message: A message to send to plugins
         :type message: Message
@@ -192,14 +188,7 @@ class AuditNofitier(Notifier):
 
 
     #----------------------------------------------------------------------
-    def _add_plugin(self, plugin):
-=======
-        map(self.add_plugin, plugin)
-
-
-    #----------------------------------------------------------------------
     def add_plugin(self, plugin):
->>>>>>> d246c4c20dab744ef5b779e54446f25d6709dda7
         """
         Add a plugin to manage.
 
@@ -272,22 +261,14 @@ class UINotifier(Notifier):
     """
 
     #----------------------------------------------------------------------
-<<<<<<< HEAD
     def __init__(self):
         """Constructor"""
         # Call super class constructor
         super(UINotifier, self).__init__()
-=======
-    def run(self):
-        """
-        Start notifier process.
-        """
->>>>>>> d246c4c20dab744ef5b779e54446f25d6709dda7
-
 
 
     #----------------------------------------------------------------------
-    def _add_plugin(self, plugin):
+    def add_plugin(self, plugin):
         """
         Add a plugin to manage
 
@@ -307,14 +288,10 @@ class UINotifier(Notifier):
     #----------------------------------------------------------------------
     def nofity(self, message):
         """
-        Notify messages to the plugins
+        Notify messages to the plugins.
 
-<<<<<<< HEAD
         :param message: A message to send to plugins
         :type message: Message
-=======
-        :returns: bool -- True if finished. False otherwise.
->>>>>>> d246c4c20dab744ef5b779e54446f25d6709dda7
         """
         if isinstance(message, Message):
             m_plugins_to_notify = []

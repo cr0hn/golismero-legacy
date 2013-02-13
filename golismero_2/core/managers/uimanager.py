@@ -38,17 +38,7 @@ class UIManager(Singleton, Thread, IReceiver):
     """
 
     #----------------------------------------------------------------------
-<<<<<<< HEAD:golismero_2/core/managers/uimanager.py
     def __init__(self, config, orchestrator):
-=======
-    def __vinit__(self):
-        """Virtual contructor. Initialize common vars."""
-        self.__receiver = None
-        self.__notifier = None
-
-    #----------------------------------------------------------------------
-    def set_config(self, params, orchestrator):
->>>>>>> d246c4c20dab744ef5b779e54446f25d6709dda7:golismero_2/core/main/uimanager.py
         """
         Constructor
 
@@ -58,7 +48,6 @@ class UIManager(Singleton, Thread, IReceiver):
         :param orchestrator: orchestrator instance
         :type orchestrator: Orchestrator
         """
-<<<<<<< HEAD:golismero_2/core/managers/uimanager.py
 
         # For singleton pattern
         if self._is_instanced:
@@ -72,15 +61,6 @@ class UIManager(Singleton, Thread, IReceiver):
         # Set configs
         self.__receiver = orchestrator
         self.__params = config
-=======
-
-        if not isinstance(params, GlobalParams):
-            raise TypeError("Expected GlobalParams, got %s instead" % type(params))
-        #if not isinstance(orchestrator, Orchestrator):
-            #raise TypeError("Expected Orchestrator, got %s instead" % type(orchestrator))
-
-        self.__params = params
-        self.__receiver = orchestrator
 
     #----------------------------------------------------------------------
     def start(self):
@@ -88,7 +68,6 @@ class UIManager(Singleton, Thread, IReceiver):
 
         if not self.__receiver or not self.__params:
             raise RuntimeError("Orchestrator not initialized")
->>>>>>> d246c4c20dab744ef5b779e54446f25d6709dda7:golismero_2/core/main/uimanager.py
 
         #
         # Start UI system
@@ -110,15 +89,12 @@ class UIManager(Singleton, Thread, IReceiver):
 
 
     #----------------------------------------------------------------------
-<<<<<<< HEAD:golismero_2/core/managers/uimanager.py
     def run(self):
-        """Stop or break UI"""
-=======
-    def stop_ui(self):
-        """Stop or break UI."""
->>>>>>> d246c4c20dab744ef5b779e54446f25d6709dda7:golismero_2/core/main/uimanager.py
+        """Start or break UI"""
+        if not self.__receiver or not self.__params:
+            raise RuntimeError("Orchestrator not initialized")
+
         if self.__notifier.is_finished:
-            #self.shutdown()
             sleep(0.025)
 
     #----------------------------------------------------------------------
@@ -130,7 +106,6 @@ class UIManager(Singleton, Thread, IReceiver):
         :type message: Message
         """
         if isinstance(message, Message):
-<<<<<<< HEAD:golismero_2/core/managers/uimanager.py
             self.__notifier.nofity(message)
 
     #----------------------------------------------------------------------
@@ -149,6 +124,3 @@ class UIManager(Singleton, Thread, IReceiver):
         Stop UI plugins
         """
         self.__notifier.stop()
-=======
-            self.__notifier.notify(message)
->>>>>>> d246c4c20dab744ef5b779e54446f25d6709dda7:golismero_2/core/main/uimanager.py
