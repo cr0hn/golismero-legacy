@@ -44,8 +44,6 @@ class Orchestrator(Singleton, IReceiver):
     Orchestrator is the core or kernel.
 
     """
-
-
     #----------------------------------------------------------------------
     def __init__(self, config):
         """
@@ -78,8 +76,7 @@ class Orchestrator(Singleton, IReceiver):
         self.__result_manager = ResultManager()
 
         # 5 - Add managers to message pools
-        self.__messageManager.add_listener(self.__ui)
-        self.__messageManager.add_listener(self.__auditManager)
+        self.__messageManager.add_multiple_listeners([self.__ui, self.__auditManager])
 
 
     #----------------------------------------------------------------------

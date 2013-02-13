@@ -161,7 +161,6 @@ class Audit(IReceiver):
         :type auditParams: GlobalParams
         """
 
-
         if not isinstance(auditParams, GlobalParams):
             raise TypeError("Expected GlobalParams, got %s instead" % type(auditParams))
 
@@ -239,7 +238,7 @@ class Audit(IReceiver):
 
         # 5 - Generate firsts messages with targets URLs
         for l_url in self.__audit_params.targets:
-            self.__notifier.nofity(Message(Url(l_url), Message.MSG_TYPE_INFO))
+            self.__receiver.recv_msg(Message(Url(l_url), Message.MSG_TYPE_INFO))
 
         # 6 - Start timer
         self.__timer.start()
@@ -306,7 +305,7 @@ class Audit(IReceiver):
             self.__run_attemps = 5
 
         # Wait 50 ms to next check
-        sleep(0.4)
+        sleep(0.1)
         self.__check_plugins_working()
 
 

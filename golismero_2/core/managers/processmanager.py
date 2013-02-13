@@ -96,7 +96,6 @@ class ProcessManager(Thread, Singleton):
     def run(self):
         """Execute pooled processes"""
         while not self.__stop:
-
             # Wait calls
             if len(self.__wait_pool) < 1:
                 semaphore_input_work.acquire()
@@ -160,9 +159,6 @@ class ProcessManager(Thread, Singleton):
         for i in self.__exec_pool:
             i.stop()
 
-
-        print "Stop"
-
         # Mark thread to stop
         self.__stop = True
 
@@ -175,7 +171,6 @@ class CustomProcess(Process):
     """
 
     __stop = Value("i", 0) # With value for shared memory between processes
-#    __id = Value("i", 0) # To identify the process
 
     #----------------------------------------------------------------------
     def __init__(self, process_id, call_back):

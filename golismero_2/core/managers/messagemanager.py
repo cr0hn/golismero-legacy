@@ -51,23 +51,24 @@ class MessageManager(Singleton):
     #----------------------------------------------------------------------
     def add_listener(self, listener):
         """
-        Add some object to be notified, and the category of pool to add.
+        Add an object to be notified, and the category of pool to add.
 
         :param listener: IReceiver type to add to listeners.
         :type listener: IReceiver
-
-        :param category: Category to add the object.
-        :type category: str -- valid values: ["all", "testing", "ui", "report"]
-
         """
 
         # Select pool to add
-        if isinstance(listener, list):
-            for i in listener:
-                self.__observers.extend(listener)
-        else:
-            self.__observers.append(listener)
+        self.__observers.append(listener)
 
+    #----------------------------------------------------------------------
+    def add_multiple_listeners(self, listeners):
+        """
+        Add some multiple objects to be notified, and the category of pool to add.
+
+        :param listener: IReceiver type to add to listeners.
+        :type listener: IReceiver
+        """
+        map(self.add_listener, listeners)
 
     #----------------------------------------------------------------------
     def send_message(self, message):

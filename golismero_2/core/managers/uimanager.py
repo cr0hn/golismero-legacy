@@ -62,13 +62,6 @@ class UIManager(Singleton, Thread, IReceiver):
         self.__receiver = orchestrator
         self.__params = config
 
-    #----------------------------------------------------------------------
-    def start(self):
-        """Start UI specified by params."""
-
-        if not self.__receiver or not self.__params:
-            raise RuntimeError("Orchestrator not initialized")
-
         #
         # Start UI system
         #
@@ -94,7 +87,7 @@ class UIManager(Singleton, Thread, IReceiver):
         if not self.__receiver or not self.__params:
             raise RuntimeError("Orchestrator not initialized")
 
-        if self.__notifier.is_finished:
+        while self.__notifier.is_finished:
             sleep(0.025)
 
     #----------------------------------------------------------------------
