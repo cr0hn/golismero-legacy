@@ -28,9 +28,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["NetManager", "Web", "HTTP_Response"]
 
 import hashlib
-from core.main.commonstructures import Singleton
+from core.main.commonstructures import Singleton, HashSum
 from thirdparty_libs.urllib3.util import parse_url
 from thirdparty_libs.urllib3 import connection_from_url, HTTPResponse
+from time import time
 
 
 #------------------------------------------------------------------------------
@@ -85,7 +86,7 @@ class Protocol(object):
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """Constructor"""
+        """Constructor."""
 
         # Init the cache
         self.__cache = dict()
@@ -103,8 +104,19 @@ class Protocol(object):
 
 
     #----------------------------------------------------------------------
-    def get(self, URL, method = None):
-        """"""
+    def get(self, URL, method = None, cache = True):
+        """
+        This method obtain the URL passed as parameter with method specified.
+
+        :param URL: URL to get.
+        :type URL: str
+
+        :param method: method to get URL
+        :type method: str
+
+        :param method: indicates if response must be cached.
+        :type cache: bool
+        """
         pass
 
     #----------------------------------------------------------------------
@@ -136,6 +148,17 @@ class Protocol(object):
 
         return m_return
 
+    #----------------------------------------------------------------------
+    def is_cached(self, URL):
+        """
+        Indicates if URL is cached
+
+        :returns: bool -- True if URL has cached. False otherwise.
+        """
+        # get key
+        m_key = hashlib.md5(URL).hexdigest()
+
+        return m_key in self.__cache
 
     #----------------------------------------------------------------------
     def set_cache(self, URL, data):
@@ -155,6 +178,10 @@ class Protocol(object):
 
 
 
+#------------------------------------------------------------------------------
+#
+# Web methods and data structures
+#
 #------------------------------------------------------------------------------
 class Web(Protocol):
     """
@@ -185,7 +212,7 @@ class Web(Protocol):
 
 
     #----------------------------------------------------------------------
-    def get(self, URL, method= "GET"):
+    def get(self, URL, method= "GET", cache = True):
         """
         Get response for an input URL.
 
@@ -204,12 +231,21 @@ class Web(Protocol):
         m_response = None
 
         # URL is cached?
-        if self.get_cache(URL):
-            m_response = ""
+        if cache and self.is_cached(URL):
+            m_response = self.get_cache(URL)
         else:
             # Get URL
             try:
+                # timing init
+                t1 = time()
+                # Get resquest
                 m_response = self.__http_pool_manager.request(method, URL)
+                # timin end
+                t2 = time()
+
+                # Cache are enabled?
+                if cache:
+                    self.set_cache(URL, t1 - t2)
             except Exception, e:
                 print e.message
 
@@ -248,17 +284,17 @@ class HTTP_Request:
 
 
 #------------------------------------------------------------------------------
-class HTTP_Response:
+class HTTP_Response(object):
     """
     This class contain all info fo HTTP response
     """
 
     #----------------------------------------------------------------------
-    def __init__(self, response):
+    def __init__(self, response, request_time):
         """Constructor"""
 
         # HTML code of response
-        self.__body = response.data
+        self.__raw_data = response.data
         # HTTP response code
         self.__http_response_code = response.status
         # HTTP response reason
@@ -269,12 +305,17 @@ class HTTP_Response:
         self.__http_headers_raw = ""
         for k, v in self.__http_headers.items():
             self.__http_headers_raw.join("%s\t%s\n" % (k, v))
+        # Request time
+        self.__request_time = request_time
+        # Generate information object
+        self.__information = None
+
 
     #----------------------------------------------------------------------
     def __get_html_body(self):
         """"""
         return self.__body
-    html_body = property(__get_html_body)
+    raw_data = property(__get_html_body)
 
     #----------------------------------------------------------------------
     def __get_http_response_code(self):
@@ -299,3 +340,17 @@ class HTTP_Response:
         """"""
         return self.__body
     http_headers_raw = property(__get_http_raw_headers)
+
+    #----------------------------------------------------------------------
+    def __get_request_time(self):
+        """"""
+        return self.__request_time
+    request_time = property(__get_request_time)
+
+    #----------------------------------------------------------------------
+    def __get_information(self):
+        """"""
+        self.__information
+
+    information = property(__get_information)
+

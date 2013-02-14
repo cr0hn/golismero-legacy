@@ -272,5 +272,3 @@ class IObserver(Interface):
         pass
 
 
-
-
