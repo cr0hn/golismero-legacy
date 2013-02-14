@@ -56,7 +56,7 @@ class Notifier(Thread, Interface):
         # Add special type "all"
         self._notification_pool["all"] = list()
 
-        # Total messages pendants
+        # Total pending messages
         self._waiting_messages = Semaphore(1)
 
         # Control execution by adding a stop condition
