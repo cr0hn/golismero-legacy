@@ -53,10 +53,6 @@ class Orchestrator(Singleton, IReceiver):
         :type config: GlobalParams
         """
 
-        # For singleton instances
-        if self._is_instanced:
-            return
-
         # Init configuration
         self.__config = config
 

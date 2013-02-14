@@ -51,7 +51,7 @@ if __name__ == '__main__':
     print "|--------------------------------------------------|"
     print "| GoLismero - The Web Knife.                       |"
     print "|                                                  |"
-    print "| Daniel Garcia a.k.a cr0hn - dani@iniqua.com)     |"
+    print "| Daniel Garcia a.k.a cr0hn - dani@iniqua.com      |"
     print "|--------------------------------------------------|"
     print ""
 
@@ -62,23 +62,22 @@ if __name__ == '__main__':
 
     # Configure command line parser
     parser = argparse.ArgumentParser()
-
-    gr_main = parser.add_argument_group("Main options")
-    gr_main.add_argument('-u', action='store', dest='target', help='target web site, use multiple times for many targets', required = True)
+    gr_main = parser.add_argument_group("main options")
+    parser.add_argument('targets', metavar='TARGET', help='one or more target web sites', nargs='+')
     gr_main.add_argument('-M', action='store', dest='run_mode', help='run mode [default: Standalone]', default="Standalone", choices=[x.title() for x in GlobalParams.RUN_MODE._values.keys()])
     gr_main.add_argument('-I', action='store', dest='user_interface', help='user interface mode [default: Console]', default="console", choices=[x.title() for x in GlobalParams.USER_INTERFACE._values.keys()])
     gr_main.add_argument('-v', action='store_true', dest='verbose', help='set verbose mode')
     gr_main.add_argument('-vv', action='store_true', dest='verbose_more', help='increase verbosity')
 
-    gr_net = parser.add_argument_group("Network")
+    gr_net = parser.add_argument_group("network")
     gr_net.add_argument("-t", action="store", dest="max_connections", help="maximun number of simultaneous connections by host.", default=3)
     gr_net.add_argument("--no-subdomains", action="store_false", dest="include_subdomains", help="no include subdomains of selected host", default=True)
 
-    gr_audit = parser.add_argument_group("Audit")
+    gr_audit = parser.add_argument_group("audit")
     gr_audit.add_argument('--audit-name', action='store', dest='audit_name', help='customize the audit name')
     gr_audit.add_argument('--max-process', action='store', dest='max_process', help='maximun number of plugins to run concurrently.', default="4")
 
-    gr_plugins = parser.add_argument_group("Plugins")
+    gr_plugins = parser.add_argument_group("plugins")
     gr_plugins.add_argument('-P', '--plugin-enabled', action='append', dest='plugins', help="list of plugins to run [default: all]", default = ["all"] )
     gr_plugins.add_argument('--plugin-list', action='store_true', help="list available plugins")
     gr_plugins.add_argument('--plugin-info', action='store', dest="plugin_name", help="show plugin info")

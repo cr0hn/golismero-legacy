@@ -57,10 +57,8 @@ class NetManager():
 
         # Set pool manager
         m_add_subdomains = '*' if NetManager.__config.include_subdomains else ''
-        m_hosts = "%s%s" % (m_add_subdomains, NetManager.__config.target)
+        m_hosts = "%s%s" % (m_add_subdomains, NetManager.__config.target[0])
         NetManager.__http_pool_manager = connection_from_url(m_hosts, maxsize = NetManager.__config.max_connections, block = True)
-
-
 
     #----------------------------------------------------------------------
     @staticmethod

@@ -49,11 +49,6 @@ class UIManager(Singleton, Thread, IReceiver):
         :type orchestrator: Orchestrator
         """
 
-        # For singleton pattern
-        if self._is_instanced:
-            return
-
-
         # Init and start notifier
         self.__notifier = UINotifier()
         self.__notifier.start()

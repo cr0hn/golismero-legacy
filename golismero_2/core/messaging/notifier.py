@@ -30,7 +30,7 @@ from threading import Thread, Semaphore
 from core.main.commonstructures import Interface
 from time import sleep
 from core.managers.processmanager import ProcessManager
-
+from collections import defaultdict
 
 class Notifier(Thread, Interface):
     """
@@ -45,26 +45,28 @@ class Notifier(Thread, Interface):
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor."""
-        # Call super class constructor
+
+        # Call superclass constructor
         super(Notifier, self).__init__()
 
         # Message notification pool for plugins.
         # (message_type, list(Plugin_instance))
-        self._notification_pool = dict()
+        self._notification_pool = defaultdict(list)
+
         # Add special type "all"
         self._notification_pool["all"] = list()
 
-        # Total messages pendants
+        # Total pending messages
         self._waiting_messages = Semaphore(1)
 
-        # Controle executio adding a stop condition
+        # Control execution by adding a stop condition
         self._continue = True
 
         # Finish all plugins?
         self._is_finished = False
 
         # Plugins are running
-        self._is_plugins_runnging = False
+        self._are_plugins_running = False
 
         # Pool list for each plugin:
         #   Each plugin has they own message list, that act as a buffer. Message will
@@ -110,6 +112,7 @@ class Notifier(Thread, Interface):
         :type message: Message
         """
         pass
+
     #----------------------------------------------------------------------
     def stop(self):
         """
@@ -125,22 +128,28 @@ class Notifier(Thread, Interface):
         """
         Start notifier process.
         """
+
         # Run until not stop signal received
         while self._continue:
+
             # Dispatch messages:
             #
+
             # For each plugin, send messages in their buffer
-            self._is_plugins_runnging = True
-            for l_notificator in self._plugins_buffer_pool.values():
-                l_plugin_instance = l_notificator[0]
-                for l_msg in l_notificator[1]:
+            self._are_plugins_running = True
+            for l_plugin_instance, l_msg_list in self._plugins_buffer_pool.itervalues():
+                for l_msg in l_msg_list:
+
                     # Send message to plugin.
                     #
+
                     # Run plugin in running pool
                     #l_plugin_instance.recv_info(l_msg.message_info)
-                    self.__runner.execute(l_plugin_instance, "recv_info", (l_msg.message_info,))
+                    clazz = l_plugin_instance.__class__.__name__
+                    module = l_plugin_instance.__class__.__module__
+                    self.__runner.execute(module, clazz, "recv_info", (l_msg.message_info,))
 
-            self._is_plugins_runnging = False
+            self._are_plugins_running = False
             self._waiting_messages.acquire()
 
         # Set finished to true
@@ -174,7 +183,7 @@ class Notifier(Thread, Interface):
 # Notificator for Audit manager
 #
 #------------------------------------------------------------------------------
-class AuditNofitier(Notifier):
+class AuditNotifier(Notifier):
     """
     This class manage the pools of messages for -Testing- plugins, and notify them
     when a message is received.
@@ -183,8 +192,9 @@ class AuditNofitier(Notifier):
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
-        # Call super class constructor
-        super(AuditNofitier, self).__init__()
+
+        # Call superclass constructor
+        super(AuditNotifier, self).__init__()
 
 
     #----------------------------------------------------------------------
@@ -192,32 +202,30 @@ class AuditNofitier(Notifier):
         """
         Add a plugin to manage.
 
-        :param plugin: a Plugin type to manage
-        :type plugin: Plugin
+        :param plugin: a TestingPlugin to manage
+        :type plugin: TestingPlugin
         """
-        if not isinstance(plugin, Plugin):
-            raise TypeError("Expected Plugin, got %s instead" % type(plugin))
+        if not isinstance(plugin, TestingPlugin):
+            raise TypeError("Expected TestingPlugin, got %s instead" % type(plugin))
 
         # For testing plugins only
         if isinstance(plugin, TestingPlugin):
+
             # Create lists as necessary, dependens of type of messages accepted
             # by plugins
             m_message_types = set(plugin.get_accepted_info()) # delete duplicates
 
-            #
-            if m_message_types:
-                for l_type in m_message_types:
-                    #
-                    # Check if notification list exits at the pool. If not create them
-                    if not l_type in self._notification_pool.keys():
-                        self._notification_pool[l_type] = list()
+            if not m_message_types:
+                raise ValueError("Testing plugins must accept info!")
 
-                    # Add plugin to notification list, by their type.
-                    self._notification_pool[l_type].append(plugin)
+            for l_type in m_message_types:
 
-                    # Add message buffer for the plugin
-                    if not plugin.__class__ in self._plugins_buffer_pool.keys():
-                        self._plugins_buffer_pool[plugin.__class__] = [plugin, list()]
+                # Add plugin to notification list, by their type.
+                self._notification_pool[l_type].append(plugin)
+
+                # Add message buffer for the plugin
+                if not plugin.__class__ in self._plugins_buffer_pool:
+                    self._plugins_buffer_pool[plugin.__class__] = [plugin, list()]
 
     #----------------------------------------------------------------------
     def notify(self, message):
@@ -228,23 +236,20 @@ class AuditNofitier(Notifier):
         :type message: Message
         """
         if isinstance(message, Message):
-            m_plugins_to_notify = []
+            m_plugins_to_notify = set()
 
-            # Plugin that expect all types of messages
-            m_plugins_to_notify.extend(self._notification_pool["all"])
+            # Plugins that expect all types of messages
+            m_plugins_to_notify.update(self._notification_pool["all"])
 
-            # Plugins that expects this type of message
-            if message.message_info.result_subtype in self._notification_pool.keys():
-                m_plugins_to_notify.extend(self._notification_pool[message.message_info.result_subtype])
-
-            # Remove duplicates
-            m_plugins_to_notify = set(m_plugins_to_notify)
+            # Plugins that expect this type of messages
+            if message.message_info.result_subtype in self._notification_pool:
+                m_plugins_to_notify.update(self._notification_pool[message.message_info.result_subtype])
 
             # Notify message to buffer list of each plugin
             for l_plugin in m_plugins_to_notify:
                 self._plugins_buffer_pool[l_plugin.__class__][1].append(message)
 
-            # Release the dispath
+            # Release the dispatch
             self._waiting_messages.release()
 
 
@@ -263,7 +268,8 @@ class UINotifier(Notifier):
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
-        # Call super class constructor
+
+        # Call superclass constructor
         super(UINotifier, self).__init__()
 
 
@@ -272,17 +278,18 @@ class UINotifier(Notifier):
         """
         Add a plugin to manage
 
-        :param plugin: a TestPlugin type to manage
-        :type plugin: TestPlugin
+        :param plugin: a UIPlugin type to manage
+        :type plugin: UIPlugin
         """
 
         # For testing plugins only
         if isinstance(plugin, UIPlugin):
+
             # Add plugin to notification pool
             self._notification_pool["all"].append(plugin)
 
             # Create buffer for plugin
-            if not plugin.__class__ in self._plugins_buffer_pool.keys():
+            if not plugin.__class__ in self._plugins_buffer_pool:
                 self._plugins_buffer_pool[plugin.__class__] = [plugin, list()]
 
     #----------------------------------------------------------------------
@@ -294,27 +301,12 @@ class UINotifier(Notifier):
         :type message: Message
         """
         if isinstance(message, Message):
-            m_plugins_to_notify = []
-
-            # Plugin that expect all types of messages
-            m_plugins_to_notify.extend(self._notification_pool["all"])
-
-            # Remove duplicates
-            m_plugins_to_notify = set(m_plugins_to_notify)
 
             # Notify message to buffer list of each plugin
-            for l_plugin in m_plugins_to_notify:
+            for l_plugin in self._notification_pool["all"]:
                 self._plugins_buffer_pool[l_plugin.__class__][1].append(message)
 
-            # Release the dispath
+            # Release the dispatch
             self._waiting_messages.release()
-
-
-
-
-
-
-
-
 
 
