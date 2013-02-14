@@ -24,10 +24,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.injections.injection import injection
+from core.api.results.result import Result
 
 #------------------------------------------------------------------------------
-class Injection(injection):
+class Injection(Result):
     """
     Abstract class for control channel injections.
     """
@@ -43,7 +43,7 @@ class Injection(injection):
     #----------------------------------------------------------------------
     def __init__(self, injection_type = XSS_REFLECTED):
         """Constructor"""
-        super(Injection, self).__init__(injection.TYPE_INJECTION)
+        super(Injection, self).__init__(Result.TYPE_INJECTION)
 
         self.__injection_type = injection_type
 

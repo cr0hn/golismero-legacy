@@ -24,28 +24,280 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+
+__all__ = ["NetManager", "Web", "HTTP_Response"]
+
+import hashlib
 from core.main.commonstructures import Singleton
+from thirdparty_libs.urllib3.util import parse_url
+from thirdparty_libs.urllib3 import connection_from_url, HTTPResponse
+
 
 #------------------------------------------------------------------------------
-class NetManager(Singleton):
+class NetManager():
     """"""
 
     TYPE_WEB = 0
-    TYPE_FTP = 0
+    TYPE_FTP = 1
+
+    # init?
+    __is_initialized = None
+
+    # Pool manager. A pool for target
+    __http_pool_manager = None
+
+    # Config
+    __config = None
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def config(config):
+        """Constructor"""
+        NetManager.__config = config
+
+        # Set pool manager
+        m_add_subdomains = '*' if NetManager.__config.include_subdomains else ''
+        m_hosts = "%s%s" % (m_add_subdomains, NetManager.__config.target)
+        NetManager.__http_pool_manager = connection_from_url(m_hosts, maxsize = NetManager.__config.max_connections, block = True)
+
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def get_connection(protocol = TYPE_WEB):
+        """
+        Get a connection of for an specific protocol.
+
+        :param protocol: Connection to receive: HTTP, FTP...
+        :type protocol: int
+
+        :raises: ValueError
+        """
+        if protocol is NetManager.TYPE_WEB:
+            return Web(NetManager.__http_pool_manager)
+
+        else:
+            raise ValueError("Unknown protocol type, value: %d" % protocol)
+
+#------------------------------------------------------------------------------
+class Protocol(object):
+    """
+    Super class for networks protocols.
+    """
 
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
 
-        # For Singleton pattern
-        if self._is_instanced:
-            return
+        # Init the cache
+        self.__cache = dict()
+
+
+    #----------------------------------------------------------------------
+    def state(self):
+        """"""
+        pass
+
+    #----------------------------------------------------------------------
+    def close(self):
+        """"""
+        pass
+
+
+    #----------------------------------------------------------------------
+    def get(self, URL, method = None):
+        """"""
+        pass
+
+    #----------------------------------------------------------------------
+    def custom_request(self, request):
+        """"""
+
+
+    #----------------------------------------------------------------------
+    def get_cache(self, URL):
+        """
+        Get URL from cache
+
+        :returns: object cached | None
+        """
+        # None or empty?
+        if not URL:
+            return None
+
+        # get key
+        m_key = hashlib.md5(URL).hexdigest()
+
+        m_return = None
+        try:
+            # if cached
+            m_return = self.__cache[URL]
+        except KeyError:
+            # Not cached
+            m_return = None
+
+        return m_return
+
+
+    #----------------------------------------------------------------------
+    def set_cache(self, URL, data):
+        """
+        Include and URL, and their data, into cache.
+
+        :param URL: String with URL
+        :type URL: str
+
+        :param data: data with information
+        :type data: object
+        """
+        # None or empty?
+        if URL and data:
+            m_key = hashlib.md5(m_tmp_values).hexdigest()
+            self.__cache[m_key] = data
+
+
+
+#------------------------------------------------------------------------------
+class Web(Protocol):
+    """
+    Class for manager web protocols, like HTTP or HTTPs
+    """
+
+    #----------------------------------------------------------------------
+    def __init__(self, http_pool):
+        """Constructor"""
+        super(Web, self).__init__()
+
+        self.__http_pool_manager = http_pool
+
+    #----------------------------------------------------------------------
+    def state(self):
+        """"""
+        pass
+
+    #----------------------------------------------------------------------
+    def close(self):
+        """"""
+        self.__http_pool_manager.clear()
+
+    #----------------------------------------------------------------------
+    def get_custom(self, request):
+        """"""
+        pass
+
+
+    #----------------------------------------------------------------------
+    def get(self, URL, method= "GET"):
+        """
+        Get response for an input URL.
+
+        :param URL: string with URL.
+        :type URL: str
+
+        :returns: HTTPResponse instance.
+
+        :raises: TypeError
+        """
+
+        # None or not str?
+        if not isinstance(URL, basestring):
+            raise TypeError("Expected string, got %s instead" % type(URL))
+
+        m_response = None
+
+        # URL is cached?
+        if self.get_cache(URL):
+            m_response = ""
+        else:
+            # Get URL
+            try:
+                m_response = self.__http_pool_manager.request(method, URL)
+            except Exception, e:
+                print e.message
+
+
+        return HTTP_Response(m_response)
 
 
 
     #----------------------------------------------------------------------
-    def get_connection(self, protocol = TYPE_WEB):
+    #
+    # Static methods
+    #
+    #----------------------------------------------------------------------
+    @staticmethod
+    def get_url_id(url):
         """
-        Get a connection of for an specific protocol.
+        Makes an identifier for a URL.
+
+        :returns: str -- Identifier, using: URL.scheme + URL.host + URL.port
         """
-        pass
+        m_url = parse_url(url)
+        return "%s%s%s" % (m_url.scheme, m_url.host, m_url.port)
+
+
+
+#------------------------------------------------------------------------------
+class HTTP_Request:
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self):
+        """Constructor"""
+
+
+
+
+
+#------------------------------------------------------------------------------
+class HTTP_Response:
+    """
+    This class contain all info fo HTTP response
+    """
+
+    #----------------------------------------------------------------------
+    def __init__(self, response):
+        """Constructor"""
+
+        # HTML code of response
+        self.__body = response.data
+        # HTTP response code
+        self.__http_response_code = response.status
+        # HTTP response reason
+        self.__http_response_code_reason = response.reason
+        # HTTP headers
+        self.__http_headers = dict(response.headers)
+        # HTTP headers in raw format
+        self.__http_headers_raw = ""
+        for k, v in self.__http_headers.items():
+            self.__http_headers_raw.join("%s\t%s\n" % (k, v))
+
+    #----------------------------------------------------------------------
+    def __get_html_body(self):
+        """"""
+        return self.__body
+    html_body = property(__get_html_body)
+
+    #----------------------------------------------------------------------
+    def __get_http_response_code(self):
+        """"""
+        return self.__http_response_code
+    http_code = property(__get_http_response_code)
+
+    #----------------------------------------------------------------------
+    def __get_http_response_reason(self):
+        """"""
+        return self.__body
+    http_reason = property(__get_http_response_reason)
+
+    #----------------------------------------------------------------------
+    def __get_http_headers(self):
+        """"""
+        return self.__http_headers
+    http_headers = property(__get_http_headers)
+
+    #----------------------------------------------------------------------
+    def __get_http_raw_headers(self):
+        """"""
+        return self.__body
+    http_headers_raw = property(__get_http_raw_headers)

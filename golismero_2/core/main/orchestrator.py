@@ -60,6 +60,9 @@ class Orchestrator(Singleton, IReceiver):
         # Init configuration
         self.__config = config
 
+        # Init API managers
+        self.__init_api()
+
         # Init process manager
         ProcessManager().start()
 
@@ -77,6 +80,17 @@ class Orchestrator(Singleton, IReceiver):
 
         # 5 - Add managers to message pools
         self.__messageManager.add_multiple_listeners([self.__ui, self.__auditManager])
+
+    #----------------------------------------------------------------------
+    def __init_api(self):
+        """
+        Init API managers.
+        """
+        from core.api.net.netmanager import NetManager
+
+
+        # Configure networking
+        NetManager.config(self.__config)
 
 
     #----------------------------------------------------------------------

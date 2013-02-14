@@ -125,7 +125,7 @@ class Audit(IReceiver):
             self.__notifier.add_plugin(l_plugin)
 
         # 5 - Generate firsts messages with targets URLs
-        for l_url in self.__audit_params.targets:
+        for l_url in self.__audit_params.target:
             self.__notifier.notify(Message(Url(l_url), Message.MSG_TYPE_INFO))
 
 

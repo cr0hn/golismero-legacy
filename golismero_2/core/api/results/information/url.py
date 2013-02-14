@@ -54,4 +54,4 @@ class Url(Information):
     #----------------------------------------------------------------------
     def __str__(self):
         """"""
-        return self.url_raw
+        return self.__url

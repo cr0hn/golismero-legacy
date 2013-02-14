@@ -77,10 +77,6 @@ class Interface (object):
 class Singleton (object):
     """
     Implementation of the Singleton pattern.
-
-    This class can call a virtual init, only one time, when
-    object is created. For this, you must to create a method called
-    "__vinit__".
     """
     _instance = None
     _is_instanced = False
@@ -115,15 +111,41 @@ class GlobalParams:
     def __init__(self):
         """Constructor."""
 
-        self.targets = []
+        #
+        # Main options
+        #
+        # Targets
+        self.target = ""
+        # Run mode
         self.run_mode = GlobalParams.RUN_MODE.standalone
+        # UI mode
         self.user_interface = GlobalParams.USER_INTERFACE.console
+        # Set verbose mode
+        self.verbose = False
+        # Set more verbose mode
+        self.verbose = False
 
+        #
+        # Audit options
+        #
         # Audit name
         self.audit_name = ""
+        # Maximum number of processes for execute plugins
+        self.max_process = 4
 
+        #
+        # Plugins options
+        #
         # Enabled plugins
         self.plugins = ["all"]
+
+        #
+        # Networks options
+        #
+        # Maximum number of connection, by host
+        self.max_connections = 3
+        # Include subdomains?
+        self.include_subdomains = True
 
     @classmethod
     def from_cmdline(cls, args):
@@ -131,32 +153,73 @@ class GlobalParams:
 
         # Instance a settings object.
         cmdParams = cls()
-
+        #
+        # Main options
+        #
         # Get the run mode
         cmdParams.run_mode = getattr(GlobalParams.RUN_MODE,
                                      args.run_mode.lower())
-
         # Get the user interface mode
         cmdParams.user_interface = getattr(GlobalParams.USER_INTERFACE,
                                            args.user_interface.lower())
-
         # Get the list of targets
-        cmdParams.targets = args.targets
-
-        # Get the list of enabled plugins
-        cmdParams.plugins = args.plugins
-
-        # Get the name of the audit
-        cmdParams.audit_name = args.audit_name
-
+        cmdParams.target = args.target
         # Set verbose mode
         cmdParams.verbose = args.verbose
-
         # Set more verbose mode
         cmdParams.verbose = args.verbose_more
 
+        #
+        # Plugins options
+        #
+        # Get the list of enabled plugins
+        cmdParams.plugins = args.plugins
+
+        #
+        # Audit options
+        #
+        # Get the name of the audit
+        cmdParams.audit_name = args.audit_name
+        # Maximum number of processes for execute plugins
+        cmdParams.max_process = args.max_process
+
+        #
+        # Network options
+        #
+        # Maximum number of connection, by host
+        cmdParams.max_connections = args.max_connections
+        # Include subdomains?
+        cmdParams.include_subdomains = args.include_subdomains
+
+        # Check params
+
+        GlobalParams.check_params(cmdParams)
+
         return cmdParams
 
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def check_params(params):
+        """
+        Check if parameters are valid. Raises an exception otherwise.
+
+        :raises: ValueError
+        """
+        if not isinstance(params, GlobalParams):
+            return
+
+        # Check max connections
+        if params.max_connections < 1:
+            raise ValueError("Number of connections must be greater than 0, got %s." % params.max_connections)
+
+        # Check max process
+        if params.max_process< 1:
+            raise ValueError("Number of process must be greater than 0, got %s." % params.max_process)
+
+        # Check plugins selected
+        if not params.plugins and "all" not in map(str.lower, params.plugins):
+            raise ValueError("Some plugin must be selected.")
 
 
 

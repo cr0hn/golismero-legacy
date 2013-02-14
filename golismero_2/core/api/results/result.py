@@ -97,10 +97,12 @@ class Result(object):
         if not self.__hash_sum:
             m_tmp_values = ""
 
-            # Concatenate values of all properties of class
-            m_tmp_values = ''.join(map(str, self.__dict__.values()))
-            #for v in self.__dict__.values():
-            #    m_tmp_values.join(str(v))
+            # Concatenate values of all properties of class, less hash_sum
+            m_tmp_dict = dict(self.__dict__)
+            # Delete sum check
+            del(m_tmp_dict["_Result__hash_sum"])
+            # Create string to calculate
+            m_tmp_values = ''.join(map(str, m_tmp_dict.values()))
 
             # Calculate an MD4 hash.
             self.__hash_sum = hashlib.md5(m_tmp_values).hexdigest()

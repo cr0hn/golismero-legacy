@@ -68,7 +68,7 @@ class MessageManager(Singleton):
         :param listener: IReceiver type to add to listeners.
         :type listener: IReceiver
         """
-        map(self.add_listener, listeners)
+        self.__observers.extend(listeners)
 
     #----------------------------------------------------------------------
     def send_message(self, message):
@@ -85,5 +85,3 @@ class MessageManager(Singleton):
         # Send message to category
         for i in self.__observers:
             i.recv_msg(message)
-
-
