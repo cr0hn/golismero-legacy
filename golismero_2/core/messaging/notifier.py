@@ -145,7 +145,9 @@ class Notifier(Thread, Interface):
 
                     # Run plugin in running pool
                     #l_plugin_instance.recv_info(l_msg.message_info)
-                    self.__runner.execute(l_plugin_instance, "recv_info", (l_msg.message_info,))
+                    clazz = l_plugin_instance.__class__.__name__
+                    module = l_plugin_instance.__class__.__module__
+                    self.__runner.execute(module, clazz, "recv_info", (l_msg.message_info,))
 
             self._are_plugins_running = False
             self._waiting_messages.acquire()
