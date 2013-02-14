@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.main.commonstructures import Singleton
 from multiprocessing import Pool, Process, Value
-from threading import Thread, Lock, Semaphore
+from threading import Thread, RLock, Semaphore
 from time import sleep
 
 #semaphore_input_work = Semaphore(0)
@@ -56,7 +56,7 @@ class ProcessManager(Thread, Singleton):
     def __init__(self, max_process = 2):
         """Constructor.
 
-        :param max_process: maximun number of processes to create
+        :param max_process: maximum number of processes to create
         :type max_process: int
         """
 
@@ -64,6 +64,7 @@ class ProcessManager(Thread, Singleton):
 
         # Create the pool of processors
         self.__exec_pool = list(CustomProcess(x, self.call_back) for x in xrange(max_process))
+
         # List with the availability process. Fill the list with id of process
         self.__availability_workers = list(x for x in xrange(max_process))
 
@@ -71,9 +72,10 @@ class ProcessManager(Thread, Singleton):
         self.__wait_pool = list()
 
         # Mutex for waiting pool
-        self.__mutex_waiting_process_pool = Lock()
+        self.__mutex_waiting_process_pool = RLock()
+
         # Mutex for available workers
-        self.__mutex_available_worker = Lock()
+        self.__mutex_available_worker = RLock()
 
         # Semaphores:
         # 1 - Control for work inputs
@@ -81,12 +83,12 @@ class ProcessManager(Thread, Singleton):
         # 2 - Control for process availability
         #semaphore_process = Semaphore(max_process)
 
+        # Controls stop of thread
+        self.__stop = False
+
         # Start process
         for p in self.__exec_pool:
             p.start()
-
-        # For controle stop of thread
-        self.__stop = False
 
 
     #----------------------------------------------------------------------
@@ -99,18 +101,16 @@ class ProcessManager(Thread, Singleton):
                 semaphore_input_work.acquire()
 
             # extract the process to run
-            self.__mutex_waiting_process_pool.acquire()
-            e = self.__wait_pool.pop()
-            self.__mutex_waiting_process_pool.release()
+            with self.__mutex_waiting_process_pool:
+                e = self.__wait_pool.pop()
 
             # looking for an available process
             if not len(self.__availability_workers):
                 semaphore_process.acquire()
 
             # Get a worker
-            self.__mutex_available_worker.acquire()
-            m_worker = self.__availability_workers.pop()
-            self.__mutex_available_worker.release()
+            with self.__mutex_available_worker:
+                m_worker = self.__availability_workers.pop()
 
             # Run process
             self.__exec_pool[m_worker].execute(e[0], e[1], e[2])
@@ -131,9 +131,8 @@ class ProcessManager(Thread, Singleton):
         """
 
         # Add the process
-        self.__mutex_waiting_process_pool.acquire()
-        self.__wait_pool.append([obj, func, func_params])
-        self.__mutex_waiting_process_pool.release()
+        with self.__mutex_waiting_process_pool:
+            self.__wait_pool.append([obj, func, func_params])
 
         # Notify for new message
         semaphore_input_work.release()
@@ -142,9 +141,8 @@ class ProcessManager(Thread, Singleton):
         """Notifier when a process has finished running a function"""
         # Update the state of process, identified by 'process_id' to "available"
 
-        self.__mutex_available_worker.acquire()
-        self.__availability_workers.append(process_id)
-        self.__mutex_available_worker.release()
+        with self.__mutex_available_worker:
+            self.__availability_workers.append(process_id)
 
         # Notify for new process availabe
         semaphore_process.release()
