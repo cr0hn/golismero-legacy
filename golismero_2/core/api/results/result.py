@@ -24,12 +24,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
-import hashlib
+from core.main.commonstructures import get_unique_id
 
 #------------------------------------------------------------------------------
 class Result(object):
@@ -110,15 +105,6 @@ class Result(object):
         # NOTE:
         #   This can't be cached, because we have no way of knowing if
         #   the internal state of the object has changed.
-
-        # Pickle the object with the compatibility protocol.
-        # This produces always the same result for the same input data.
-        data = pickle.dumps(self, protocol=0)
-
-        # Calculate the MD5 hash of the pickled data.
-        hash_sum = hashlib.md5(data)
-
-        # Return the hexadecimal digest of the hash.
-        return hash_sum.hexdigest()
+        return get_unique_id(self)
 
     hash_sum = property(__get_sum)

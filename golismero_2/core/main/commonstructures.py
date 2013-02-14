@@ -24,6 +24,34 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
+import hashlib
+
+#--------------------------------------------------------------------------
+#
+# INTERNAL HELPER METHODS
+#
+#--------------------------------------------------------------------------
+
+def get_unique_id(obj):
+    """
+    Get a unique ID for this object.
+    """
+
+    # Pickle the object with the compatibility protocol.
+    # This produces always the same result for the same input data.
+    data = pickle.dumps(obj, protocol=0)
+
+    # Calculate the MD5 hash of the pickled data.
+    hash_sum = hashlib.md5(data)
+
+    # Return the hexadecimal digest of the hash.
+    return hash_sum.hexdigest()
+
 
 #--------------------------------------------------------------------------
 #
