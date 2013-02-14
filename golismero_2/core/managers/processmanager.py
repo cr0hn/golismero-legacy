@@ -59,9 +59,6 @@ class ProcessManager(Thread, Singleton):
         :param max_process: maximun number of processes to create
         :type max_process: int
         """
-        # For singleton pattern
-        if self._is_instanced:
-            return
 
         super(ProcessManager, self).__init__()
 

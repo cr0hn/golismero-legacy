@@ -73,26 +73,33 @@ class _interface(type):
 #--------------------------------------------------------------------------
 class Interface (object):
     __metaclass__ = _interface
+
 #--------------------------------------------------------------------------
 class Singleton (object):
     """
     Implementation of the Singleton pattern.
-
-    This class can call a virtual init, only one time, when
-    object is created. For this, you must to create a method called
-    "__vinit__".
     """
+
+    # Variable where we keep the instance.
     _instance = None
-    _is_instanced = False
+
     def __new__(cls, *args, **kwargs):
+
         # If the singleton has already been instanced, return it.
         if cls._instance is not None:
-            cls._instanced = True
             return cls._instance
 
-        # Instance the singleton for the first (and only) time.
-        cls._instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
+        # Create the singleton's instance.
+        cls._instance = super(Singleton, cls).__new__(cls)
 
+        # Call the constructor.
+        cls._instance.__init__(*args, **kwargs)
+
+        # Delete the constructor so it won't be called again.
+        cls._instance.__init__ = object.__init__
+        cls.__init__ = object.__init__
+
+        # Return the instance.
         return cls._instance
 
 #--------------------------------------------------------------------------

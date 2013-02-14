@@ -40,11 +40,7 @@ class MessageManager(Singleton):
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """Virtual contructor."""
-
-        # For singleton pattern
-        if self._is_instanced:
-            return
+        """Constructor."""
 
         self.__observers = list() # List of observers to be notified
 

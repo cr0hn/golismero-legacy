@@ -36,10 +36,6 @@ class ReportManager(Singleton):
     def __init__(self, results):
         """Constructor."""
 
-        # For singleton pattern
-        if self._is_instanced:
-            return
-
         # Init structures
         self.__results = results
 

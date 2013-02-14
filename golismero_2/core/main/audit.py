@@ -190,9 +190,9 @@ class AuditManager(Singleton, IReceiver):
     """
 
     #----------------------------------------------------------------------
-    def __vinit__(self):
+    def __init__(self):
         """
-        Virtual constructor.
+        Constructor.
         """
 
         # Audits list

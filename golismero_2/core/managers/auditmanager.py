@@ -48,9 +48,6 @@ class AuditManager(Singleton, IReceiver):
         :param orchestrator: core to send messages.
         :type orchestrator: Orchestrator
         """
-        # For singleton pattern
-        if self._is_instanced:
-            return
 
         # Init audits dicts
         self.__audits = dict()

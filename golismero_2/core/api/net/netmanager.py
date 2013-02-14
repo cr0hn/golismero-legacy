@@ -37,10 +37,6 @@ class NetManager(Singleton):
     def __init__(self):
         """Constructor"""
 
-        # For Singleton pattern
-        if self._is_instanced:
-            return
-
 
 
     #----------------------------------------------------------------------
