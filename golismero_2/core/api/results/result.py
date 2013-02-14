@@ -24,7 +24,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import hashlib
+from core.main.commonstructures import get_unique_id
 
 #------------------------------------------------------------------------------
 class Result(object):
@@ -37,6 +37,9 @@ class Result(object):
     # Types of results
     #
     #--------------------------------------------------------------------------
+
+    TYPE_ANY = 0      # not a real type! only used in get_accepted_info()
+
     TYPE_INFORMATION = 1
     TYPE_COOKIE = 2
     TYPE_DOS = 3
@@ -53,14 +56,17 @@ class Result(object):
     TYPE_INFORMATION_GATHERING = 14
     TYPE_AUTHORIZATION = 15
 
+    TYPE_DEFAULT = TYPE_INFORMATION    # constant for the default type
+    TYPE_FIRST   = TYPE_INFORMATION    # constant for the first valid type
+    TYPE_LAST    = TYPE_AUTHORIZATION  # constant for the last valid type
+
 
     #----------------------------------------------------------------------
     def __init__(self, result_type = None):
         """
         Constructor.
         """
-        self.__result_type = result_type
-        self.__hash_sum = None
+        self.result_type = result_type
 
 
     #----------------------------------------------------------------------
@@ -70,12 +76,8 @@ class Result(object):
 
         :returns: int -- The message type.
         """
-        if self.__result_type is None:
-            return Result.TYPE_INFORMATION
-        else:
-            return self.__result_type
+        return self.__result_type
 
-    #----------------------------------------------------------------------
     def __set_result_type(self, result_type):
         """
         Set the message type.
@@ -83,8 +85,14 @@ class Result(object):
         :param result_type: The type of result
         :type result_type: int
         """
-        if result_type is not None and result_type >= 0 and result_type <= 15:
-            self.__result_type = result_type
+        if result_type is None:
+            result_type = Result.TYPE_INFORMATION
+        else:
+            if result_type == self.TYPE_ANY:
+                raise ValueError("Results can't be of the TYPE_ANY type")
+            if not self.TYPE_FIRST <= result_type <= self.TYPE_LAST:
+                raise ValueError("Unknown result type: %d" % result_type)
+        self.__result_type = result_type
 
     result_type = property(__get_result_type, __set_result_type)
 
@@ -94,22 +102,9 @@ class Result(object):
         """
         Get the hash of this object.
         """
-        if not self.__hash_sum:
-            m_tmp_values = ""
-
-            # Concatenate values of all properties of class, less hash_sum
-            m_tmp_dict = dict(self.__dict__)
-            # Delete sum check
-            del(m_tmp_dict["_Result__hash_sum"])
-            # Create string to calculate
-            m_tmp_values = ''.join(map(str, m_tmp_dict.values()))
-
-            # Calculate an MD4 hash.
-            self.__hash_sum = hashlib.md5(m_tmp_values).hexdigest()
-
-        return self.__hash_sum
+        # NOTE:
+        #   This can't be cached, because we have no way of knowing if
+        #   the internal state of the object has changed.
+        return get_unique_id(self)
 
     hash_sum = property(__get_sum)
-
-
-
