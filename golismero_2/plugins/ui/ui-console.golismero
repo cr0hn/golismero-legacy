@@ -1,0 +1,9 @@
+[Core]
+Name = UI console
+Module = ui-console/console
+
+[Documentation]
+Description = Console interface
+Author = Daniel Garcia Garcia (cr0hn)
+Version = 0.1
+Website = http://code.google.com/p/golismero/
