@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.main.commonstructures import Singleton, IReceiver, GlobalParams
 from core.managers.priscillapluginmanager import PriscillaPluginManager
-from core.messaging.notifier import AuditNofitier
+from core.messaging.notifier import AuditNotifier
 from core.messaging.message import Message
 from core.api.results.information.url import Url
 from core.api.results.result import Result
@@ -225,7 +225,7 @@ class Audit(IReceiver):
             p.set_observer(self)
 
         # 3 - Creates and start the notifier
-        self.__notifier = AuditNofitier()
+        self.__notifier = AuditNotifier()
         self.__notifier.start()
 
 
@@ -290,7 +290,7 @@ class Audit(IReceiver):
 
         If a message was send and no message received, then, plugins are finish.
         """
-        if self.__messages_received is 0 and not self.__notifier._is_plugins_runnging:
+        if self.__messages_received is 0 and not self.__notifier._are_plugins_running:
             # Increassing attemps
             self.__run_attemps -= 1
 
