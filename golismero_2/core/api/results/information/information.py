@@ -26,10 +26,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.api.results.result import Result
 
+
 #------------------------------------------------------------------------------
 class Information(Result):
     """
-    Abstract class for informational messages
+    Base class for informational results.
     """
 
     #--------------------------------------------------------------------------
@@ -48,7 +49,7 @@ class Information(Result):
 
     #----------------------------------------------------------------------
     def __init__(self, information_type = None):
-        """Constructor"""
+        """Constructor."""
         super(Information, self).__init__(Result.TYPE_INFORMATION)
 
         self.__information_type = information_type
@@ -57,19 +58,18 @@ class Information(Result):
     #----------------------------------------------------------------------
     def __get_information_type(self):
         """
-        Get the message type
+        Get the result type.
 
-        :returns: int -- The message type.
+        :returns: int -- The result type.
         """
         if self.__information_type is None:
             return Information.INFORMATION_URL
         else:
             return self.__information_type
 
-    #----------------------------------------------------------------------
     def __set_information_type(self, information_type):
         """
-        Set the message type.
+        Set the result type.
 
         :param result_type: The type of result
         :type result_type: int
@@ -78,5 +78,3 @@ class Information(Result):
             self.__information_type = information_type
 
     result_subtype = property(__get_information_type, __set_information_type)
-
-

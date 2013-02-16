@@ -185,9 +185,3 @@ class PriscillaPluginManager(Singleton):
     def test_all_plugins(self):
         """Function for testing purposes. Run all plugins"""
         pass
-
-    #----------------------------------------------------------------------
-    def rest_run_testPlugin(self):
-        """Run test plugin. For testing purposes"""
-        for i in self.__pluginManager.getAllPlugins():
-            i.plugin_object.run()

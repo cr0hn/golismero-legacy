@@ -26,11 +26,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.api.results.information.information import Information
 
+
 #------------------------------------------------------------------------------
 class Url(Information):
     """
-    This class contain URL information.
+    URL results.
     """
+
 
     #----------------------------------------------------------------------
     def __init__(self, url):
@@ -44,14 +46,16 @@ class Url(Information):
 
         self.__url = url
 
+
+    #----------------------------------------------------------------------
+    def __str__(self):
+        return self.__url
+
+
+    #----------------------------------------------------------------------
     def __get_url_raw(self):
         """
         Get raw info of URL.
         """
         return self.__url
     url_raw = property(__get_url_raw)
-
-    #----------------------------------------------------------------------
-    def __str__(self):
-        """"""
-        return self.__url

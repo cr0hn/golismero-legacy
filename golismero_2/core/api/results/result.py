@@ -29,7 +29,7 @@ from core.main.commonstructures import get_unique_id
 #------------------------------------------------------------------------------
 class Result(object):
     """
-    Interface for result structures.
+    Base class for plugin results.
     """
 
     #--------------------------------------------------------------------------
@@ -40,21 +40,21 @@ class Result(object):
 
     TYPE_ANY = 0      # not a real type! only used in get_accepted_info()
 
-    TYPE_INFORMATION = 1
-    TYPE_COOKIE = 2
-    TYPE_DOS = 3
-    TYPE_INJECTION = 4
-    TYPE_SESSION = 5
-    TYPE_AUTHENTICATION = 6
-    TYPE_CRYPTOGRAPHY = 7
-    TYPE_INPUT_VALIDATION = 8
-    TYPE_SSL_TLS = 9
-    TYPE_CPE = 10
-    TYPE_MALWARE = 11
-    TYPE_HTTP_MANIPULATION = 12
-    TYPE_FILE_INCLUSION = 13
+    TYPE_INFORMATION           = 1
+    TYPE_COOKIE                = 2
+    TYPE_DOS                   = 3
+    TYPE_INJECTION             = 4
+    TYPE_SESSION               = 5
+    TYPE_AUTHENTICATION        = 6
+    TYPE_CRYPTOGRAPHY          = 7
+    TYPE_INPUT_VALIDATION      = 8
+    TYPE_SSL_TLS               = 9
+    TYPE_CPE                   = 10
+    TYPE_MALWARE               = 11
+    TYPE_HTTP_MANIPULATION     = 12
+    TYPE_FILE_INCLUSION        = 13
     TYPE_INFORMATION_GATHERING = 14
-    TYPE_AUTHORIZATION = 15
+    TYPE_AUTHORIZATION         = 15
 
     TYPE_DEFAULT = TYPE_INFORMATION    # constant for the default type
     TYPE_FIRST   = TYPE_INFORMATION    # constant for the first valid type

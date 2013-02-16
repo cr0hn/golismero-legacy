@@ -35,7 +35,7 @@ from time import time
 
 
 #------------------------------------------------------------------------------
-class NetManager():
+class NetManager (object):
     """"""
 
     TYPE_WEB = 0
@@ -80,7 +80,7 @@ class NetManager():
             raise ValueError("Unknown protocol type, value: %d" % protocol)
 
 #------------------------------------------------------------------------------
-class Protocol(object):
+class Protocol (object):
     """
     Super class for networks protocols.
     """
@@ -184,7 +184,7 @@ class Protocol(object):
 # Web methods and data structures
 #
 #------------------------------------------------------------------------------
-class Web(Protocol):
+class Web (Protocol):
     """
     Class for manager web protocols, like HTTP or HTTPs
     """
@@ -278,7 +278,7 @@ class Web(Protocol):
 
 
 #------------------------------------------------------------------------------
-class HTTP_Request:
+class HTTP_Request (object):
     """"""
 
     #----------------------------------------------------------------------
@@ -290,7 +290,7 @@ class HTTP_Request:
 
 
 #------------------------------------------------------------------------------
-class HTTP_Response(object):
+class HTTP_Response (object):
     """
     This class contain all info fo HTTP response
     """

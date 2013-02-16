@@ -26,11 +26,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.api.results.result import Result
 
+
 #------------------------------------------------------------------------------
 class Injection(Result):
     """
-    Abstract class for control channel injections.
+    Base class for control channel injections.
     """
+
 
     #--------------------------------------------------------------------------
     #
@@ -42,7 +44,7 @@ class Injection(Result):
 
     #----------------------------------------------------------------------
     def __init__(self, injection_type = XSS_REFLECTED):
-        """Constructor"""
+        """Constructor."""
         super(Injection, self).__init__(Result.TYPE_INJECTION)
 
         self.__injection_type = injection_type
@@ -57,7 +59,6 @@ class Injection(Result):
         """
         return self.__injection_type
 
-    #----------------------------------------------------------------------
     def __set_injection_type(self, injection_type = XSS_REFLECTED):
         """
         Set the injection type.
@@ -71,6 +72,4 @@ class Injection(Result):
             raise ValueError("Unknown injection type, value: %d" % injection_type)
         self.__injection_type = injection_type
 
-    result_subtype = property(__get_information_type, __set_information_type)
-
-
+    result_subtype = property(__get_injection_type, __set_injection_type)

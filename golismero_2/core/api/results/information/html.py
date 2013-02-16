@@ -30,59 +30,59 @@ from core.api.results.information.information import Information
 __all__ = ["HTML", "HTMLElement"]
 
 #------------------------------------------------------------------------------
-class HTMLElement(object):
+class HTMLElement (object):
     """"""
+
 
     #----------------------------------------------------------------------
     def __init__(self, tag_name, attrs, content):
- 	"""
-	Constructor
+        """
+        Constructor.
 
-	:param attr: dict with parameters of HTML element.
-	:type attr: dict
+        :param attr: dict with parameters of HTML element.
+        :type attr: dict
 
-	:param childrens: raw HTML with sub elements of this HTML element
-	:type childrens: str
-	"""
-	self.__tag_name = tag_name
-	self.__attrs = attrs
-	self.__content = HTML(content)
+        :param childrens: raw HTML with sub elements of this HTML element
+        :type childrens: str
+        """
+        self.__tag_name = tag_name
+        self.__attrs = attrs
+        self.__content = HTML(content)
+
 
     #----------------------------------------------------------------------
     def __get_tag_name(self):
-	return self.__tag_name
+        return self.__tag_name
     tag_name = property(__get_tag_name)
 
 
     #----------------------------------------------------------------------
     def __get_attrs(self):
-	return self.__attrs
+        return self.__attrs
     attrs = property(__get_attrs)
+
 
     #----------------------------------------------------------------------
     def __get_content(self):
-	"""Return HTML an object nested into this HTML element.
+        """Returns an HTML object nested into this HTML element.
 
-	:returns: and HTML object
-	"""
-	return self.__content
+        :returns: and HTML object
+        """
+        return self.__content
     content = property(__get_content)
 
 
     #----------------------------------------------------------------------
     def __str__(self):
-	""""""
-	return str(self.__attrs)
-
-
+        """"""
+        return str(self.__attrs)
 
 
 #------------------------------------------------------------------------------
 class HTML(Information):
     """"""
 
-
-    __PARSER_BEAUTYFULL_SOAP = 0
+    __PARSER_BEAUTIFULSOUP = 0
 
 
     #----------------------------------------------------------------------
@@ -94,333 +94,322 @@ class HTML(Information):
         """
         super(Information, self).__init__(Information.INFORMATION_HTML)
 
-	# Init and store type of HTML parser
-	self.__html_parser_type, self.__html_parser = self.__init_parser(data)
+        # Init and store type of HTML parser
+        self.__html_parser_type, self.__html_parser = self.__init_parser(data)
 
 
     def __get_raw(self):
-	"""Get raw HTML code"""
-	return self.__html_parser.raw_data
+        """Get raw HTML code"""
+        return self.__html_parser.raw_data
     raw_data = property(__get_raw)
+
 
     #----------------------------------------------------------------------
     def __get_forms(self):
-        """Get forms of HTML"""
-	return self.__html_parser.forms
+        """Get forms from HTML"""
+        return self.__html_parser.forms
     forms = property(__get_forms)
-    """Forms in HTML"""
+
 
     #----------------------------------------------------------------------
     def __get_images(self):
-        """Get forms of HTML"""
-	return self.__html_parser.images
-
+        """Get images from HTML"""
+        return self.__html_parser.images
     images = property(__get_images)
-    """Images in HTML"""
+
 
     #----------------------------------------------------------------------
     def __get_links(self):
-        """Get forms of HTML"""
-	return self.__html_parser.links
-
+        """Get links of HTML"""
+        return self.__html_parser.links
     links = property(__get_links)
-    """Links in HTML"""
+
 
     #----------------------------------------------------------------------
     def __get_css(self):
-        """Get forms of HTML"""
-	return self.__html_parser.css_links
-
+        """Get CSS links from HTML"""
+        return self.__html_parser.css_links
     css_links = property(__get_css)
-    """CSS links in HTML"""
+
 
     #----------------------------------------------------------------------
     def __get_javascript(self):
-        """Get forms of HTML"""
-	return self.__html_parser.javascripts_links
-
+        """Get JavaScript links from HTML"""
+        return self.__html_parser.javascripts_links
     javascript_links = property(__get_javascript)
-    """Javascript links in HTML"""
+
 
     #----------------------------------------------------------------------
-    def __get_css_embeded(self):
-	""""""
-	return self.__html_parser.css_embeded
+    def __get_css_embedded(self):
+        """Get embedded CSS from HTML"""
+        return self.__html_parser.css_embedded
+    css_embedded = property(__get_css_embedded)
 
-    css_embeded = property(__get_css_embeded)
-    """Get css embeded in HTML"""
-
-    #----------------------------------------------------------------------
-    def __get_javascript_embeded(self):
-	""""""
-	return self.__html_parser.javascript_embeded
-
-    javascript_embeded = property(__get_javascript_embeded)
-    """Get javascripts embeded in HTML"""
 
     #----------------------------------------------------------------------
-    def __get_object_embeded(self):
-	""""""
-	return self.__html_parser.objects
+    def __get_javascript_embedded(self):
+        """Get embedded JavaScript from HTML"""
+        return self.__html_parser.javascript_embedded
+    javascript_embedded = property(__get_javascript_embedded)
 
-    objects = property(__get_object_embeded)
-    """Get objects tags in HTML"""
+
+    #----------------------------------------------------------------------
+    def __get_object_embedded(self):
+        """Get object tags from HTML"""
+        return self.__html_parser.objects
+    objects = property(__get_object_embedded)
+
 
     #----------------------------------------------------------------------
     def __get_metas(self):
-	""""""
-	return self.__html_parser.metas
-
+        """Get meta tags from HTML"""
+        return self.__html_parser.metas
     metas = property(__get_metas)
-    """Get metas tags in HTML"""
+
 
     #----------------------------------------------------------------------
     def __get_title(self):
-	""""""
-	return self.__html_parser.title
-
+        """Get title from HTML"""
+        return self.__html_parser.title
     title = property(__get_title)
-    """Get title of HTML"""
 
 
     #----------------------------------------------------------------------
     def __init_parser(self, data):
-        """Initializes the HTML parser
+        """Initializes the HTML parser.
 
-	:return: Type and instance of parser, as tupple: (type, instance)
-	"""
+        :return: Type and instance of parser, as tuple: (type, instance)
+        """
 
-	m_return_parser = HTMLBeautifullSoap(data)
-	m_return_type = HTML.__PARSER_BEAUTYFULL_SOAP
+        m_return_parser = HTMLBeautifulSoup(data)
+        m_return_type = HTML.__PARSER_BEAUTIFULSOUP
 
-	return m_return_type, m_return_parser
-
-
-
+        return m_return_type, m_return_parser
 
 
 #------------------------------------------------------------------------------
-class HTMLBeautifullSoap(object):
+class HTMLBeautifulSoup(object):
     """
-    Specify paser for Beautifull Soap parser
+    Wrapper for the BeautifulSoup HTML parser.
     """
 
 
     #----------------------------------------------------------------------
     def __init__(self, data):
-	"""Constructor
+        """Constructor.
 
-	:param data: raw HTML info
-	:type data: str
-	"""
+        :param data: raw HTML info
+        :type data: str
+        """
 
-	# Raw HTML content
-	self.__raw_data = data
-	# Init parser
-	self.__html_parser = self.__init_parser(data)
+        # Raw HTML content
+        self.__raw_data = data
 
-	#
-	# Parsed HTML elementes
-	#
+        # Init parser
+        self.__html_parser = self.__init_parser(data)
 
-	# HTML forms
-	self.__html_forms = []
-	# Images in HTML
-	self.__html_images = []
-	# Links in HTML
-	self.__html_links = []
-	# CSS links
-	self.__html_css = []
-	# CSS embeded
-	self.__html_css_embeded = []
-	# Javascript
-	self.__html_javascript = []
-	# Javascript embeded
-	self.__html_javascript_embeded = []
-	# Objects
-	self.__html_objects = []
-	# Metas
-	self.__html_metas = []
-	# Title
-	self.__html_title = ""
+        #
+        # Parsed HTML elementes
+        #
+
+        # HTML forms
+        self.__html_forms = []
+        # Images in HTML
+        self.__html_images = []
+        # Links in HTML
+        self.__html_links = []
+        # CSS links
+        self.__html_css = []
+        # CSS embedded
+        self.__html_css_embedded = []
+        # Javascript
+        self.__html_javascript = []
+        # Javascript embedded
+        self.__html_javascript_embedded = []
+        # Objects
+        self.__html_objects = []
+        # Metas
+        self.__html_metas = []
+        # Title
+        self.__html_title = ""
 
 
-
+    #----------------------------------------------------------------------
     def __get_raw(self):
-	"""Get raw HTML code"""
-	return self.__raw_data
+        """Get raw HTML code"""
+        return self.__raw_data
     raw_data = property(__get_raw)
     """Raw HTML content"""
 
+
     #----------------------------------------------------------------------
     def __get_forms(self):
-	"""Get forms of HTML"""
-	if not self.__html_forms:
-	    m_elem = self.__html_parser.findAll("form")
-	    # Get, and parte to UTF, info
-	    self.__html_forms.extend(self.__converto_to_HTMLElements(m_elem))
-	return self.__html_forms
+        """Get forms rom HTML"""
+        if not self.__html_forms:
+            m_elem = self.__html_parser.findAll("form")
+            # Get, and parte to UTF, info
+            self.__html_forms.extend(self.__converto_to_HTMLElements(m_elem))
+        return self.__html_forms
 
     forms = property(__get_forms)
-    """Forms in HTML"""
+
 
     #----------------------------------------------------------------------
     def __get_images(self):
-	"""Get forms of HTML"""
-	if not self.__html_images:
-	    m_elem = self.__html_parser.findAll("img")
-	    # Get the list of dicts
-	    self.__html_images.extend(self.__converto_to_HTMLElements(m_elem))
+        """Get images from HTML"""
+        if not self.__html_images:
+            m_elem = self.__html_parser.findAll("img")
+            # Get the list of dicts
+            self.__html_images.extend(self.__converto_to_HTMLElements(m_elem))
 
-	return self.__html_images
+        return self.__html_images
 
     images = property(__get_images)
-    """Images in HTML"""
+
 
     #----------------------------------------------------------------------
     def __get_links(self):
-	"""Get forms of HTML"""
-	if not self.__html_links:
-	    m_elem = self.__html_parser.findAll("form")
-	    # Get the list of dicts
-	    self.__html_links.extend(self.__converto_to_HTMLElements(m_elem))
+        """Get links from HTML"""
+        if not self.__html_links:
+            m_elem = self.__html_parser.findAll("form")
+            # Get the list of dicts
+            self.__html_links.extend(self.__converto_to_HTMLElements(m_elem))
 
-	return self.__html_links
+        return self.__html_links
 
     links = property(__get_links)
-    """Links in HTML"""
 
+
+    #----------------------------------------------------------------------
     def __get_css(self):
-	"""Get forms of HTML"""
-	if not self.__html_css:
-	    m_elem = self.__html_parser.findAll(name="link", attrs={"rel":"stylesheet"})
-	    # Get the list of dicts
-	    self.__html_css.extend(self.__converto_to_HTMLElements(m_elem))
+        """Get CSS links from HTML"""
+        if not self.__html_css:
+            m_elem = self.__html_parser.findAll(name="link", attrs={"rel":"stylesheet"})
+            # Get the list of dicts
+            self.__html_css.extend(self.__converto_to_HTMLElements(m_elem))
 
-	return self.__html_css
+        return self.__html_css
 
     css_links = property(__get_css)
-    """CSS links in HTML"""
 
+
+    #----------------------------------------------------------------------
     def __get_javascript(self):
-	"""Get forms of HTML"""
-	if not self.__html_javascript:
-	    m_elem = self.__html_parser.findAll(name="script", attrs={"src": True})
-	    # Get the list of dicts
-	    self.__html_javascript.extend(self.__converto_to_HTMLElements(m_elem))
+        """Get JavaScript links from HTML"""
+        if not self.__html_javascript:
+            m_elem = self.__html_parser.findAll(name="script", attrs={"src": True})
+            # Get the list of dicts
+            self.__html_javascript.extend(self.__converto_to_HTMLElements(m_elem))
 
-	return self.__html_javascript
+        return self.__html_javascript
 
     javascripts_links = property(__get_javascript)
-    """Javascripts links in HTML"""
+
 
     #----------------------------------------------------------------------
-    def __get_css_embeded(self):
-	""""""
-	if not self.__html_css_embeded:
-	    m_elem = self.__html_parser.findAll("style")
-	    # Get the list of dicts
-	    self.__html_css_embeded.extend(self.__converto_to_HTMLElements(m_elem))
+    def __get_css_embedded(self):
+        """Get embedded CSS from HTML"""
+        if not self.__html_css_embedded:
+            m_elem = self.__html_parser.findAll("style")
+            # Get the list of dicts
+            self.__html_css_embedded.extend(self.__converto_to_HTMLElements(m_elem))
 
-	return self.__html_css_embeded
+        return self.__html_css_embedded
 
-    css_embeded = property(__get_css_embeded)
-    """Get css embeded in HTML"""
+    css_embedded = property(__get_css_embedded)
+
 
     #----------------------------------------------------------------------
-    def __get_javascript_embeded(self):
-	""""""
-	if not self.__html_javascript_embeded:
-	    m_elem = self.__html_parser.findAll(name="script", attrs={"src": False})
-	    # Get the list of dicts
-	    self.__html_javascript_embeded.extend(self.__converto_to_HTMLElements(m_elem))
+    def __get_javascript_embedded(self):
+        """Get embedded JavaScript from HTML"""
+        if not self.__html_javascript_embedded:
+            m_elem = self.__html_parser.findAll(name="script", attrs={"src": False})
+            # Get the list of dicts
+            self.__html_javascript_embedded.extend(self.__converto_to_HTMLElements(m_elem))
 
-	return self.__html_javascript_embeded
+        return self.__html_javascript_embedded
 
-    javascript_embeded = property(__get_javascript_embeded)
-    """Get javascript embeded in HTML"""
+    javascript_embedded = property(__get_javascript_embedded)
+
 
     #----------------------------------------------------------------------
     def __get_metas(self):
-	""""""
-	if not self.__html_metas:
-	    m_elem = self.__html_parser.findAll(name="meta")
-	    # Get the list of dicts
-	    self.__html_metas.extend(self.__converto_to_HTMLElements(m_elem))
+        """Get meta tags from HTML"""
+        if not self.__html_metas:
+            m_elem = self.__html_parser.findAll(name="meta")
+            # Get the list of dicts
+            self.__html_metas.extend(self.__converto_to_HTMLElements(m_elem))
 
-	return self.__html_metas
+        return self.__html_metas
 
     metas = property(__get_metas)
-    """Get javascript embeded in HTML"""
+
 
     #----------------------------------------------------------------------
     def __get_title(self):
-	""""""
-	if not self.__html_title:
-	    m_elem = self.__html_parser.findAll(name="title", recursive=False, limit=1)
-	    # Get the list of dicts
-	    self.__html_title = m_elem.name.encode("utf-8") if len(m_elem) > 0 else ""
+        """Get title from HTML"""
+        if not self.__html_title:
+            m_elem = self.__html_parser.findAll(name="title", recursive=False, limit=1)
+            # Get the list of dicts
+            self.__html_title = m_elem.name.encode("utf-8") if len(m_elem) > 0 else ""
 
-	return self.__html_title
+        return self.__html_title
 
     title = property(__get_title)
-    """Get title of HTML"""
+
 
     #----------------------------------------------------------------------
-    def __get_object_embeded(self):
-	""""""
-	if not self.__html_objects:
-	    m_elem = self.__html_parser.findAll(name="object")
+    def __get_object_embedded(self):
+        """Get object tags from HTML"""
+        if not self.__html_objects:
+            m_elem = self.__html_parser.findAll(name="object")
 
-	    m_result = list()
+            m_result = list()
 
-	    for obj in m_elem:
-		# Get attrs
-		m_ojb_attr = { k.encode("utf-8"): v.encode("utf-8") for k,v in obj.attrs.items()}
+            for obj in m_elem:
+                # Get attrs
+                m_ojb_attr = { k.encode("utf-8"): v.encode("utf-8") for k,v in obj.attrs.items()}
 
-		# Add param attr
-		m_ojb_attr["param"] = dict()
+                # Add param attr
+                m_ojb_attr["param"] = dict()
 
-		# Add value for params
-		for param in obj.findAllNext("param"):
-		    m_ojb_attr["param"].update({ k.encode("utf-8"): v.encode("utf-8") for k,v in param.attrs.items()})
+                # Add value for params
+                for param in obj.findAllNext("param"):
+                    m_ojb_attr["param"].update({ k.encode("utf-8"): v.encode("utf-8") for k,v in param.attrs.items()})
 
-		m_raw_content = "".join([str(item.encode("utf-8")) for item in obj.contents if item != "\n"])
+                m_raw_content = "".join([str(item.encode("utf-8")) for item in obj.contents if item != "\n"])
 
-		m_result.append(HTMLElement(obj.name.encode("utf-8"), m_ojb_attr, m_raw_content))
+                m_result.append(HTMLElement(obj.name.encode("utf-8"), m_ojb_attr, m_raw_content))
 
-	    self.__html_objects = m_result
+            self.__html_objects = m_result
 
-	return self.__html_objects
+        return self.__html_objects
 
-    objects = property(__get_object_embeded)
-    """Get objects embeded in HTML"""
-
-
+    objects = property(__get_object_embedded)
 
 
     #----------------------------------------------------------------------
     def __converto_to_HTMLElements(self, data):
-	"""
-	Convert parser format to list of HTML Elements
+        """
+        Convert parser format to list of HTML Elements.
 
-	:return: list of HTMLElements
-	"""
-	return [
-	    HTMLElement(
-	        x.name.encode("utf-8"),
-	        { k.encode("utf-8"): v.encode("utf-8") for k,v in x.attrs.items()},
-	        "".join([str(item.encode("utf-8")) for item in x.contents if item != "\n"])
-	        ) for x in data
-	]
+        :return: list of HTMLElements
+        """
+        return [
+            HTMLElement(
+                x.name.encode("utf-8"),
+                { k.encode("utf-8"): v.encode("utf-8") for k,v in x.attrs.items()},
+                "".join([str(item.encode("utf-8")) for item in x.contents if item != "\n"])
+                ) for x in data
+        ]
 
 
     #----------------------------------------------------------------------
     def __init_parser(self, data):
-        """Initializes the HTML parser
+        """Initializes the HTML parser.
 
-	:return: Type and instance of parser
-	"""
-	from thirdparty_libs.bs4 import BeautifulSoup
+        :return: Type and instance of parser
+        """
+        from thirdparty_libs.bs4 import BeautifulSoup
 
-	return BeautifulSoup(data)
+        return BeautifulSoup(data)
