@@ -27,10 +27,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["NetManager", "Web", "HTTP_Response"]
 
-import hashlib
-from core.main.commonstructures import Singleton, HashSum
+from core.main.commonstructures import get_unique_id
 from thirdparty_libs.urllib3.util import parse_url
 from thirdparty_libs.urllib3 import connection_from_url, HTTPResponse
+from core.api.results.information.html import *
 from time import time
 
 
@@ -56,10 +56,11 @@ class NetManager():
         """Constructor"""
         NetManager.__config = config
 
+        m_pattern = ".*%s" % NetManager.__config.target[0] if NetManager.__config.include_subdomains else None
+
         # Set pool manager
-        m_add_subdomains = '*' if NetManager.__config.include_subdomains else ''
-        m_hosts = "%s%s" % (m_add_subdomains, NetManager.__config.target[0])
-        NetManager.__http_pool_manager = connection_from_url(m_hosts, maxsize = NetManager.__config.max_connections, block = True)
+        NetManager.__http_pool_manager = connection_from_url(NetManager.__config.target[0], host_pattern=m_pattern, maxsize = NetManager.__config.max_connections, block = True)
+
 
     #----------------------------------------------------------------------
     @staticmethod
@@ -136,7 +137,7 @@ class Protocol(object):
             return None
 
         # get key
-        m_key = hashlib.md5(URL).hexdigest()
+        m_key = get_unique_id(URL)
 
         m_return = None
         try:
@@ -156,7 +157,7 @@ class Protocol(object):
         :returns: bool -- True if URL has cached. False otherwise.
         """
         # get key
-        m_key = hashlib.md5(URL).hexdigest()
+        m_key = get_unique_id(URL)
 
         return m_key in self.__cache
 
@@ -173,7 +174,7 @@ class Protocol(object):
         """
         # None or empty?
         if URL and data:
-            m_key = hashlib.md5(m_tmp_values).hexdigest()
+            m_key = get_unique_id(URL)
             self.__cache[m_key] = data
 
 
@@ -229,6 +230,7 @@ class Web(Protocol):
             raise TypeError("Expected string, got %s instead" % type(URL))
 
         m_response = None
+        m_time = None
 
         # URL is cached?
         if cache and self.is_cached(URL):
@@ -243,14 +245,18 @@ class Web(Protocol):
                 # timin end
                 t2 = time()
 
+                m_time = t2 - t1
+
+                m_response = HTTP_Response(m_response, m_time)
+
                 # Cache are enabled?
                 if cache:
-                    self.set_cache(URL, t1 - t2)
+                    self.set_cache(URL, m_response)
             except Exception, e:
                 print e.message
 
 
-        return HTTP_Response(m_response)
+        return m_response
 
 
 
@@ -308,14 +314,14 @@ class HTTP_Response(object):
         # Request time
         self.__request_time = request_time
         # Generate information object
-        self.__information = None
+        self.__information = self.__get_type_by_raw(self.__http_headers, self.__raw_data)
 
 
     #----------------------------------------------------------------------
-    def __get_html_body(self):
+    def __get_raw(self):
         """"""
-        return self.__body
-    raw_data = property(__get_html_body)
+        return self.__raw_data
+    raw_data = property(__get_raw)
 
     #----------------------------------------------------------------------
     def __get_http_response_code(self):
@@ -350,7 +356,22 @@ class HTTP_Response(object):
     #----------------------------------------------------------------------
     def __get_information(self):
         """"""
-        self.__information
-
+        return self.__information
     information = property(__get_information)
+
+    #----------------------------------------------------------------------
+    def __get_type_by_raw(self, headers, data):
+        """
+        Get an information type from a raw object
+        """
+        m_return_content = None
+        if headers:
+            if "content-type" in headers.keys():
+                m_content_type = headers["content-type"]
+
+                # Select the type
+                if m_content_type == 'text/html':
+                    m_return_content = HTML(data)
+
+        return m_return_content
 
