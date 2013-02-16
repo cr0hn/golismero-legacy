@@ -231,22 +231,18 @@ class GlobalParams:
         cmdParams.include_subdomains = args.include_subdomains
 
         # Check params
-
-        GlobalParams.check_params(cmdParams)
+        cmdParams.check_params()
 
         return cmdParams
 
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def check_params(params):
+    def check_params(self):
         """
         Check if parameters are valid. Raises an exception otherwise.
 
         :raises: ValueError
         """
-        if not isinstance(params, GlobalParams):
-            return
 
         # Check max connections
         if params.max_connections < 1:
