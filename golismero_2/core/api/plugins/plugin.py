@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #-----------------------------------------------------------------------
 #
 #
-# This file contain interfaces an abstract classes for plugins
+# This file contains interfaces and base classes for plugins
 #
 #
 #-----------------------------------------------------------------------
@@ -37,27 +37,34 @@ from core.api.results.result import Result
 
 class Plugin():
     """
-    Abstract class for plugins.
+    Base class for plugins.
 
     Contains helper methods for plugins, and defines an interface that
     will be implemented by subclasses.
 
-    All plugins must derive from this class.
+    All plugins must derive from this class, or one if its subclasses.
     """
 
-    #----------------------------------------------------------------------
-    def run(self):
-        """Plugin entry point. Your code goes here!"""
-        raise NotImplementedError("All plugins must implement this method!")
+    PLUGIN_TYPE_ABSTRACT = 0    # Not a real plugin type!
+    PLUGIN_TYPE_TESTING  = 1
+    PLUGIN_TYPE_RESULTS  = 2
+    PLUGIN_TYPE_UI       = 3
+    PLUGIN_TYPE_GLOBAL   = 4
+
+    PLUGIN_TYPE_FIRST = PLUGIN_TYPE_TESTING
+    PLUGIN_TYPE_LAST  = PLUGIN_TYPE_GLOBAL
+
+    PLUGIN_TYPE = PLUGIN_TYPE_ABSTRACT
+
 
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
         """
-        Check input user parameters.
+        Check input parameters passed by the user.
 
-        Parameters will be passed as instance of 'GlobalParams'.
+        Parameters will be passed as an instance of 'GlobalParams'.
 
-        If any parameter is not correct o there is any error, a 'ValueError'
+        If any parameter is not correct o there is an error, an
         exception must be raised.
 
         :param inputParams: input parameters to check
@@ -65,11 +72,13 @@ class Plugin():
         """
         raise NotImplementedError("All plugins must implement this method!")
 
+
     #----------------------------------------------------------------------
     def display_help(self):
         """Get the help message for this plugin."""
         # TODO: this could default to the description found in the metadata.
         raise NotImplementedError("All plugins must implement this method!")
+
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
@@ -80,6 +89,7 @@ class Plugin():
         :type info: some subclass of Result
         """
         raise NotImplementedError("All plugins must implement this method!")
+
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
@@ -93,19 +103,25 @@ class Plugin():
         """
         raise NotImplementedError("All plugins must implement this method!")
 
+
     #----------------------------------------------------------------------
-    def set_observer(self, observer):
+    def _set_observer(self, observer):
         """
-        Set observer for the plugins.
+        Called internally by GoLismero. Do not call or override!
         """
         #if not isinstance(observer, Audit):
         #    raise ValueError("Expected Orchestrator, got %r instead" % type(observer))
 
         self.__observer_ref = observer
 
+
     #----------------------------------------------------------------------
     def send_info(self, information):
-        """Send information to the Audit."""
+        """
+        Plugins call this method to send information back to GoLismero.
+
+        Do not override this method!
+        """
         if not isinstance(information, Result):
             raise ValueError("Expected Result, got %r instead" % type(information))
 
@@ -120,6 +136,8 @@ class TestingPlugin (Plugin):
     This is the base class for all Testing plugins.
     """
 
+    PLUGIN_TYPE = PLUGIN_TYPE_TESTING
+
     #----------------------------------------------------------------------
     def __init__(self):
         pass
@@ -132,6 +150,8 @@ class UIPlugin (Plugin):
 
     This is the base class for all UI plugins.
     """
+
+    PLUGIN_TYPE = PLUGIN_TYPE_UI
 
     #----------------------------------------------------------------------
     def __init__(self):
@@ -148,6 +168,8 @@ class GlobalPLugin (Plugin):
     This is the base class for all Global plugins.
     """
 
+    PLUGIN_TYPE = PLUGIN_TYPE_GLOBAL
+
     #----------------------------------------------------------------------
     def __init__(self):
         pass
@@ -160,6 +182,8 @@ class ResultsPlugin (Plugin):
 
     This is the base class for all Result plugins.
     """
+
+    PLUGIN_TYPE = PLUGIN_TYPE_RESULTS
 
     #----------------------------------------------------------------------
     def __init__(self):

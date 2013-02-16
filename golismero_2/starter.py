@@ -37,19 +37,29 @@ def launcher(options):
     if not isinstance(options, GlobalParams):
         raise TypeError("Expected GlobalParams, got %s instead" % type(options))
 
-    m_orchester = None
+    m_orchestrator = None
 
     try:
         if options.run_mode == GlobalParams.RUN_MODE.standalone:
-            # Run Orchestrator
-            m_orchester = Orchestrator(options)
-            # Start UI before to init autis
-            m_orchester.start_ui()
-            # New audit with command line options
-            m_orchester.add_audit(options)
-            # Wait to end
-            m_orchester.wait()
+            try:
 
+                # Run Orchestrator
+                m_orchestrator = Orchestrator(options)
+
+                # Start UI
+                m_orchestrator.start_ui()
+
+                # New audit with command line options
+                m_orchestrator.add_audit(options)
+
+                # Wait for it to end
+                m_orchestrator.wait()
+
+            finally:
+                if m_orchestrator is not None:
+
+                    # Generate reports
+                    m_orchestrator.start_report()
 
         elif options.run_mode == GlobalParams.RUN_MODE.cloudclient:
             raise NotImplementedError("Cloud client mode not yet implemented!")
@@ -58,14 +68,8 @@ def launcher(options):
         elif options.run_mode == GlobalParams.RUN_MODE.cloudserver:
             raise NotImplementedError("Cloud server mode not yet implemented!")
 
-
         else:
             raise ValueError("Invalid run mode: %r" % options.run_mode)
 
     except KeyboardInterrupt:
-        Logger.log("\n[i] Stoping. Please wait.\n")
-
-    # Generate reports
-    if not m_orchester:
-        m_orchester.start_report()
-
+        Logger.log("\n[i] Stopping. Please wait...\n")
