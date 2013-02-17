@@ -24,144 +24,162 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["Logger"]
+
 from sys import stdout, stderr
 
-class Logger():
-    """"""
+class Logger (object):
+    """
+    Simple logging mechanism.
+    """
 
-    __logout = stdout
-    __logerror = stderr
-    __loglevel = 0 # standard
 
     #----------------------------------------------------------------------
     #
-    # Log levels
+    # Verbose levels
     #
     #----------------------------------------------------------------------
-    DISABLED = 0
-    STANDARD = 1
-    VERBOSE = 2
+    DISABLED     = 0
+    STANDARD     = 1
+    VERBOSE      = 2
     MORE_VERBOSE = 3
 
-
-    #----------------------------------------------------------------------
-    @staticmethod
-    def configure(LogOut = None, LogError = None, logLevel = 0):
-
-        if LogOut:
-            Logger.__logout = LogOut
-
-        if LogError:
-            Logger.__logerror = LogError
-
-        if logLevel >= 0 and logLevel <= 3:
-            Logger.__loglevel = logLevel
+    _f_out   = stdout
+    _f_error = stderr
+    _level   = STANDARD
 
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def __log(message):
+    def __new__(cls, *argv, **argd):
         """
-        Write a message into log
+        This is a static class!
+        """
+        raise NotImplementedError("This is a static class!")
+
+
+    #----------------------------------------------------------------------
+    @classmethod
+    def configure(cls, stdout   = None,
+                       stderror = None,
+                       level    = None):
+
+        if ConsoleOut is not None:
+            cls._f_out   = stdout
+
+        if ConsoleError is not None:
+            cls._f_error = stderror
+
+        if ConsoleLevel is not None:
+            cls._level   = level
+
+
+    #----------------------------------------------------------------------
+    @classmethod
+    def _log(cls, message):
+        """
+        Write a message into output
 
         :param message: message to write
         :type message: str
         """
         try:
             if message:
-                Logger.__logout.writelines("%s\n" % message)
-                Logger.__logout.flush()
+                cls._f_out.write("%s\n" % message)
+                cls._f_out.flush()
         except Exception,e:
-            print "[!] Error while writing into log file or console: %s" % e.message
+            print "[!] Error while writing to output onsole: %s" % e.message
 
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def log(message):
+    @classmethod
+    def log(cls, message):
         """
-        Write a message into log
+        Write a message into output
 
         :param message: message to write
         :type message: str
         """
-        if Logger.__loglevel == Logger.MORE_VERBOSE or Logger.__loglevel == Logger.VERBOSE or Logger.__loglevel == Logger.STANDARD:
-            Logger.__log(message)
+        if  cls._level != cls.DISABLED:
+            cls._log(message)
 
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def log_verbose(self, message):
+    @classmethod
+    def log_verbose(cls, message):
         """
-        Write a message into log with more verbosity
+        Write a message into output with more verbosity
 
         :param message: message to write
         :type message: str
         """
-        if Logger.__loglevel == Logger.MORE_VERBOSE or Logger.__loglevel == Logger.VERBOSE:
-            Logger.__log(message)
+        if cls._level >= cls.VERBOSE:
+            cls._log(message)
 
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def log_more_verbose(self, message):
+    @classmethod
+    def log_more_verbose(cls, message):
         """
-        Write a message into log with even more verbosity
+        Write a message into output with even more verbosity
 
         :param message: message to write
         :type message: str
         """
-        if Logger.__loglevel == Logger.MORE_VERBOSE:
-            Logger.__log(message)
+        if cls._level >= cls.MORE_VERBOSE:
+            cls._log(message)
 
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def __log_error(message):
+    @classmethod
+    def _log_error(cls, message):
         """
-        Write a error message into log
+        Write a error message into output
 
         :param message: message to write
-        :type message: str"""
+        :type message: str
+        """
         try:
             if message:
-                Logger.__logerror.writelines("%s\n" % message)
-                Logger.__logerror.flush()
+                cls._f_error.write("%s\n" % message)
+                cls._f_error.flush()
         except Exception,e:
-            print "[!] Error while writen into log file or console: %s" % e.message
+            print "[!] Error while writing to error console: %s" % e.message
 
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def log_error(message):
+    @classmethod
+    def log_error(cls, message):
         """
-        Write a error message into log
-
-        :param message: message to write
-        :type message: str"""
-        if Logger.__loglevel == Logger.MORE_VERBOSE or Logger.__loglevel == Logger.VERBOSE or Logger.__loglevel == Logger.STANDARD:
-            Logger.__logerror(message)
-
-    #----------------------------------------------------------------------
-    @staticmethod
-    def log_error_verbose(message):
-        """
-        Write a error message into log with more verbosity
+        Write a error message into output
 
         :param message: message to write
         :type message: str
         """
-        if Logger.__loglevel == Logger.VERBOSE or Logger.__loglevel == Logger.STANDARD:
-            Logger.__logerror(message)
+        if cls._level != cls.DISABLED:
+            cls._log_error(message)
 
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def log_error_more_verbose(message):
+    @classmethod
+    def log_error_verbose(cls, message):
         """
-        Write a error message into log with even more verbosity
+        Write a error message into output with more verbosity
 
         :param message: message to write
         :type message: str
         """
-        if Logger.__logerror == Logger.MORE_VERBOSE:
-            Logger.__logerror(message)
+        if cls._level >= cls.VERBOSE:
+            cls._log_error(message)
+
+
+    #----------------------------------------------------------------------
+    @classmethod
+    def log_error_more_verbose(cls, message):
+        """
+        Write a error message into output with more verbosity
+
+        :param message: message to write
+        :type message: str
+        """
+        if cls._level >= cls.MORE_VERBOSE:
+            cls._log_error(message)
