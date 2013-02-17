@@ -35,6 +35,7 @@ __version__ = "2.0.0"
 
 
 import argparse
+import textwrap
 from sys import version_info, exit
 from starter import launcher
 from core.main.commonstructures import GlobalParams
@@ -113,12 +114,17 @@ if __name__ == '__main__':
         try:
             m_plugin_info = PriscillaPluginManager().get_plugin(P.plugin_name)
             if m_plugin_info:
+                message = m_plugin_info.plugin_object.display_help()
+                message = textwrap.dedent(message)
                 Logger.log("Information of plugin: '%s'\n------------\n" % m_plugin_info.name)
-                Logger.log(m_plugin_info.plugin_object.display_help())
+                Logger.log(message)
                 Logger.log("\n")
             else:
                 Logger.log("[!] Plugin name not found\n")
             exit(0)
+        except KeyError:
+            Logger.log("[!] Plugin name not found\n")
+            exit(1)
         except ValueError:
             Logger.log("[!] Plugin name not found\n")
             exit(1)
