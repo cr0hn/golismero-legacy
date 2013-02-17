@@ -26,42 +26,46 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from sys import stdout, stderr
 
-class Console():
-    """"""
+class Console (object):
+    """
+    Console I/O wrapper.
+    """
 
-    __display_out = stdout
-    __display_error = stderr
-    __display_level = 0 # standard
 
     #----------------------------------------------------------------------
     #
     # Verbose levels
     #
     #----------------------------------------------------------------------
-    DISABLED = 0
-    STANDARD = 1
-    VERBOSE = 2
+    DISABLED     = 0
+    STANDARD     = 1
+    VERBOSE      = 2
     MORE_VERBOSE = 3
 
-
-    #----------------------------------------------------------------------
-    @staticmethod
-    def configure(ConsoleOut = None, ConsoleError = None, ConsoleLevel = 0):
-
-        if ConsoleOut:
-            Consoleger.__displayout = ConsoleOut
-
-        if ConsoleError:
-            Consoleger.__displayerror = ConsoleError
-
-        if ConsoleLevel >= 0 and ConsoleLevel <= 3:
-            Consoleger.__displaylevel = ConsoleLevel
-
+    _f_out   = stdout
+    _f_error = stderr
+    _level   = STANDARD
 
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def __display(message):
+    @classmethod
+    def configure(cls, ConsoleOut   = None,
+                       ConsoleError = None,
+                       ConsoleLevel = None):
+
+        if ConsoleOut is not None:
+            cls._f_out   = ConsoleOut
+
+        if ConsoleError is not None:
+            cls._f_error = ConsoleError
+
+        if ConsoleLevel is not None:
+            cls._level   = ConsoleLevel
+
+
+    #----------------------------------------------------------------------
+    @classmethod
+    def _display(cls, message):
         """
         Write a message into output
 
@@ -70,84 +74,102 @@ class Console():
         """
         try:
             if message:
-                Console.__displayout.writelines("%s\n" % message)
-                Console.__displayout.flush()
+                cls._f_out.write("%s\n" % message)
+                cls._f_out.flush()
         except Exception,e:
-            print "[!] Error while writen into output file or console: %s" % e.message
+            print "[!] Error while writing to output onsole: %s" % e.message
+
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def display(message):
+    @classmethod
+    def display(cls, message):
         """
         Write a message into output
 
         :param message: message to write
         :type message: str
         """
-        if Console.__displaylevel == Console.MORE_VERBOSE or Console.__displaylevel == Console.VERBOSE or Console.__displaylevel == Console.STANDARD:
-            Console.__display(message)
+        if  cls._level != cls.DISABLED:
+            cls._display(message)
+
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def display_verbose(self, message):
+    @classmethod
+    def display_verbose(cls, message):
         """
         Write a message into output with more verbosity
 
         :param message: message to write
         :type message: str
         """
-        if Console.__displaylevel == Console.MORE_VERBOSE or Console.__displaylevel == Console.VERBOSE:
-            Console.__display(message)
+        if cls._level >= cls.VERBOSE:
+            cls._display(message)
+
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def display_more_verbose(self, message):
+    @classmethod
+    def display_more_verbose(cls, message):
         """
         Write a message into output with even more verbosity
 
         :param message: message to write
         :type message: str
         """
-        if Console.__displaylevel == Console.MORE_VERBOSE:
-            Console.__display(message)
+        if cls._level >= cls.MORE_VERBOSE:
+            cls._display(message)
 
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def __display_error(message):
+    @classmethod
+    def _display_error(cls, message):
         """
         Write a error message into output
 
         :param message: message to write
-        :type message: str"""
+        :type message: str
+        """
         try:
             if message:
-                Console.__displayerror.writelines("%s\n" % message)
-                Console.__displayerror.flush()
+                cls._f_error.write("%s\n" % message)
+                cls._f_error.flush()
         except Exception,e:
-            print "[!] Error while writen into output file or console: %s" % e.message
+            print "[!] Error while writing to error console: %s" % e.message
 
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def display_error(message):
+    @classmethod
+    def display_error(cls, message):
         """
         Write a error message into output
 
         :param message: message to write
-        :type message: str"""
-        if Console.__displaylevel == Console.MORE_VERBOSE or Console.__displaylevel == Console.VERBOSE or Console.__displaylevel == Console.STANDARD:
-            Console.__displayerror(message)
+        :type message: str
+        """
+        if cls._level != cls.DISABLED:
+            cls._display_error(message)
+
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def display_error_verbose(message):
+    @classmethod
+    def display_error_verbose(cls, message):
         """
         Write a error message into output with more verbosity
 
         :param message: message to write
         :type message: str
         """
-        if Console.__displaylevel == Console.VERBOSE or Console.__displaylevel == Console.STANDARD:
-            Console.__displayerror(message)
+        if cls._level >= cls.VERBOSE:
+            cls._display_error(message)
 
+
+    #----------------------------------------------------------------------
+    @classmethod
+    def display_error_more_verbose(cls, message):
+        """
+        Write a error message into output with more verbosity
+
+        :param message: message to write
+        :type message: str
+        """
+        if cls._level >= cls.MORE_VERBOSE:
+            cls._display_error(message)
