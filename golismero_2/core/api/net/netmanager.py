@@ -56,10 +56,10 @@ class NetManager (object):
         """Constructor"""
         NetManager.__config = config
 
-        m_pattern = ".*%s" % NetManager.__config.target[0] if NetManager.__config.include_subdomains else None
+        m_pattern = ".*%s" % NetManager.__config.targets[0] if NetManager.__config.include_subdomains else None
 
         # Set pool manager
-        NetManager.__http_pool_manager = connection_from_url(NetManager.__config.target[0], host_pattern=m_pattern, maxsize = NetManager.__config.max_connections, block = True)
+        NetManager.__http_pool_manager = connection_from_url(NetManager.__config.targets[0], host_pattern=m_pattern, maxsize = NetManager.__config.max_connections, block = True)
 
 
     #----------------------------------------------------------------------

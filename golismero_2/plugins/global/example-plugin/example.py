@@ -24,41 +24,49 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.plugins.plugin import GlobalPLugin
+from core.api.plugins.plugin import GlobalPlugin
 from core.api.results.information.information import Information
 from core.api.logger import Logger
 
-class ExamplePlugin(GlobalPLugin):
+class ExamplePlugin(GlobalPlugin):
     """
-    This plugin is used por testing purposes and as example of use of plugins
+    This plugin is used por testing purposes and as example of the use of plugins.
     """
+
 
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
         """
-        Comprueba las comprobaciones de los parametros introducidos por el
-        usuarLogger.
+        Check input parameters passed by the user.
 
-        Los parametros seran pasados en la instancia del tipo 'GlobalParams'.
+        Parameters will be passed as an instance of 'GlobalParams'.
 
-        Si algun parametro no es correcto o hay algun error, sera lanzada
-        una excepcion del tipo 'ValueError'.
+        If any parameter is not correct o there is an error, an
+        exception must be raised.
 
-        :param inputParams: Parametros de entrada a comprobar
-        :type inputParams: GlobalParam
+        :param inputParams: input parameters to check
+        :type inputParams: GlobalParams
         """
-        raise NotImplementedError("All plugins must implement this method!")
+        pass
+
 
     #----------------------------------------------------------------------
     def display_help(self):
         """Get the help message for this plugin."""
         # TODO: this could default to the description found in the metadata.
-        raise NotImplementedError("All plugins must implement this method!")
+        return "This is an example plugin."
+
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
         """Callback method to receive information to be processed."""
-        Logger.log("Example plugin: It's works!\n")
+        Logger.log("Example plugin: It's works!")
+
+
+    #----------------------------------------------------------------------
+    def recv_msg(self, info):
+        """Callback method to receive information to be processed."""
+        Logger.log("Example plugin: It's works!")
 
 
     #----------------------------------------------------------------------

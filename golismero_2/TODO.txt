@@ -7,7 +7,7 @@ de resultado ya contiene el tipo y subtipo que es.
 - Implementar un método "break" en el notifier.
 - Los plugins no pueden escribir en la consola, para eso está el UI plugin. Hay que hacer algo para que los plugins todo lo que escriban sea solo de log.
 - Modificar el notifier para que sea reutilizable por uimanager y las audit.
-- Modificar el orchester para comprobar que se llama al init
+- Modificar el orchestrator para comprobar que se llama al init
 - Los plugins tipo UI no reciben los mensajes (problema)
 - Los plugins de UI tiene una método de entrada/salida por consola diferente, con un método add_output, para poder añadir en std o un fichero de texto.
 
@@ -15,23 +15,4 @@ de resultado ya contiene el tipo y subtipo que es.
 + Modificar el singleton para que se llame al __init__ solo 1 vez
 
 
-El messaje manager no debe de saber nada del runmode, es el orchester quien tiene que configurarlo.
-
-
-- Cambiar el singleton a esto:
-
-class _singleton(type):
-    "Implementation of the Singleton pattern"
-
-    def __init__(cls, name, bases, dict):
-        super(Singleton, cls).__init__(name, bases, dict)
-        cls.instance = None
-
-    def __call__(cls,*args,**kw):
-        if cls.instance is None:
-            cls.instance = super(Singleton, cls).__call__(*args, **kw)
-        return cls.instance
-
-class Singleton(type):
-    "Implementation of the Singleton pattern"
-    __metaclass__ = _singleton
+El messaje manager no debe de saber nada del runmode, es el orchestrator quien tiene que configurarlo.

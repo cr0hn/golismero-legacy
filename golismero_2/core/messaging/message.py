@@ -38,16 +38,19 @@ class Message (object):
 
     #----------------------------------------------------------------------
     #
-    # Constants for messages types
+    # Constants for message types
     #
     #----------------------------------------------------------------------
     MSG_TYPE_CONTROL = 0
     MSG_TYPE_INFO = 1
     MSG_TYPE_STATE = 2
 
+    MSG_TYPE_FIRST = MSG_TYPE_CONTROL
+    MSG_TYPE_LAST  = MSG_TYPE_STATE
+
     #----------------------------------------------------------------------
     #
-    # Constants for messages info
+    # Constants for message codes
     #
     #----------------------------------------------------------------------
 
@@ -79,75 +82,64 @@ class Message (object):
     MSG_CONTROL_SYSTEM_STATUS_RESPONSE = 27
     # Internal cache
     MSG_CONTROL_CACHE = 30
-    MSG_CONTROL_RESPONSE_RESPONSE = 31
+    MSG_CONTROL_CACHE_RESPONSE = 31
+    # UI subsystem
+    MSG_CONTROL_START_UI = 40
+    MSG_CONTROL_STOP_UI = 41
+
+    MSG_CONTROL_FIRST = MSG_CONTROL_OK
+    MSG_CONTROL_LAST  = MSG_CONTROL_STOP_UI
 
     #----------------------------------------------------------------------
     # Status messages
     #----------------------------------------------------------------------
-    MSG_STATUS_ALIVE = 40
-    MSG_STATUS_OK = 41
-    MSG_STATUS_SYSTEM = 42
-    MSG_STATUS_SYSTEM_RESPONSE = 43
-    MSG_STATUS_AUDIT = 44
-    MSG_STATUS_AUDIT_RESPONSE = 45
+    MSG_STATUS_ALIVE = 0
+    MSG_STATUS_OK = 1
+    MSG_STATUS_SYSTEM = 2
+    MSG_STATUS_SYSTEM_RESPONSE = 3
+    MSG_STATUS_AUDIT = 4
+    MSG_STATUS_AUDIT_RESPONSE = 5
 
+    MSG_STATUS_FIRST = MSG_STATUS_ALIVE
+    MSG_STATUS_LAST  = MSG_STATUS_AUDIT_RESPONSE
 
 
     #----------------------------------------------------------------------
-    def __init__(self, message_info, message_type = 1): # By default, message type is Info message
+    def __init__(self, message_type = MSG_TYPE_INFO,
+                       message_code = 0,
+                       audit_name   = None,
+                       message_info = None):
         """
-        :param message_info: the payload of the message.
-        :type message_info: object -- type must be resolved at run time.
-
         :param message_type: specifies the type of message.
         :type mesage_type: int -- specified in a constant of Message class.
+
+        :param message_code: specifies the code of message.
+        :type message_code: int -- specified in a constant of Message class.
+
+        :param audit_name: the name of the audit this message belongs to.
+        :type audit_name: str
+
+        :param message_info: the payload of the message.
+        :type message_info: object -- type must be resolved at run time.
         """
-        self.__message_info = message_info
         self.__message_type = message_type
-        self.__audit_name = ""
+        self.__message_code = message_code
+        self.__audit_name   = audit_name
+        self.__message_info = message_info
 
-    #----------------------------------------------------------------------
-    def __get_message_info(self):
-        """
-        Get message info.
-        """
-        return self.__message_info
 
-    message_info = property(__get_message_info)
-
-    #----------------------------------------------------------------------
-    def __get_message_type(self):
-        """
-        Get message type.
-
-        :returns: int -- Constant
-        """
+    @property
+    def message_type(self):
         return self.__message_type
 
-    message_type = property(__get_message_type)
+    @property
+    def message_code(self):
+        return self.__message_code
 
-
-    #----------------------------------------------------------------------
-    #
-    # This methods must be called only for Audit instance
-    #
-    #----------------------------------------------------------------------
-    def __set_audit_name(self, name):
-        """
-        Set the audit name to which message belongs.
-
-        :param name: audit name
-        :type name: str
-        """
-        self.__audit_name = name
-
-    #----------------------------------------------------------------------
-    def __get_audit_name(self):
-        """
-        Get the audit name to which message belongs.
-
-        :returns: str -- audit name
-        """
+    @property
+    def audit_name(self):
         return self.__audit_name
 
-    audit_name = property(__get_audit_name, __set_audit_name)
+    @property
+    def message_info(self):
+        return self.__message_info

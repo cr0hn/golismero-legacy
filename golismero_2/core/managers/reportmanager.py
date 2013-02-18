@@ -24,27 +24,22 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.main.commonstructures import Singleton
-
+__all__ = ["ReportManager"]
 
 
 #------------------------------------------------------------------------------
-class ReportManager(Singleton):
+class ReportManager (object):
     """This class manages the generation of reports."""
+
 
     #----------------------------------------------------------------------
     def __init__(self, results):
-        """Constructor."""
 
         # Init structures
         self.__results = results
-
 
 
     #----------------------------------------------------------------------
     def generate_report(self):
         """"""
         print "report"
-
-
-

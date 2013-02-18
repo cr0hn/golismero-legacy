@@ -62,15 +62,9 @@ class Logger (object):
     def configure(cls, stdout   = None,
                        stderror = None,
                        level    = None):
-
-        if ConsoleOut is not None:
-            cls._f_out   = stdout
-
-        if ConsoleError is not None:
-            cls._f_error = stderror
-
-        if ConsoleLevel is not None:
-            cls._level   = level
+        if stdout   is not None: cls._f_out   = stdout
+        if stderror is not None: cls._f_error = stderror
+        if level    is not None: cls._level   = level
 
 
     #----------------------------------------------------------------------

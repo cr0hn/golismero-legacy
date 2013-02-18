@@ -27,84 +27,78 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from core.managers.priscillapluginmanager import PriscillaPluginManager
 from core.messaging.notifier import UINotifier
 from core.messaging.message import Message
-from core.main.commonstructures import Singleton, GlobalParams, IReceiver
+from core.main.commonstructures import GlobalParams
 from threading import Thread
 from time import sleep
 
+
 #------------------------------------------------------------------------------
-class UIManager(Singleton, Thread, IReceiver):
+class UIManager (object):
     """
-    This class manage the UI managers.
+    Dispatcher of messages for the UI plugins.
     """
+
 
     #----------------------------------------------------------------------
-    def __init__(self, config, orchestrator):
+    def __init__(self, orchestrator, config):
         """
-        Constructor
+        Constructor.
 
-        :param config: Configuration for module
-        :type config: GlobalParams
-
-        :param orchestrator: orchestrator instance
+        :param orchestrator: Orchestrator
         :type orchestrator: Orchestrator
+
+        :param config: Configuration for audit
+        :type config: GlobalParams
         """
+
+        # Keep a reference to the orchestrator
+        self.__orchestrator = orchestrator
 
         # Init and start notifier
         self.__notifier = UINotifier()
-        self.__notifier.start()
 
-        # Set configs
-        self.__receiver = orchestrator
-        self.__params = config
+        # Load UI plugins
+        m_plugins = PriscillaPluginManager().get_plugins_by_category(config.plugins, "ui")
 
-        #
-        # Start UI system
-        #
-        m_plugins = None
-
-        # 1 - Get UI plugin, by params
-        if self.__params.USER_INTERFACE.console is GlobalParams.USER_INTERFACE.console:
-            # Add console UI plugins to nofitier
-            m_plugins =  PriscillaPluginManager().get_all_plugins("ui")
-        else:
-            m_plugins =  PriscillaPluginManager().get_all_plugins("ui")
-
-        # 2 - Configure plugins to be it own the target of messages and add
-        #     to notifier
-        for p in m_plugins.values():
-            p.set_observer(self)
+        # Configure plugins to be it own the target of messages and add to notifier
+        for p in m_plugins:
+            p._set_observer(self)
             self.__notifier.add_plugin(p)
 
 
     #----------------------------------------------------------------------
     def run(self):
-        """Start or break UI"""
-        if not self.__receiver or not self.__params:
-            raise RuntimeError("Orchestrator not initialized")
+        """
+        Launch the UI.
+        """
+        message = Message(message_type = Message.MSG_TYPE_CONTROL,
+                          message_code = Message.MSG_CONTROL_START_UI)
+        self.__orchestrator.dispatch_msg(message)
 
-        while self.__notifier.is_finished:
-            sleep(0.025)
 
     #----------------------------------------------------------------------
-    def recv_msg(self, message):
+    def dispatch_msg(self, message):
         """
-        Send message info to UI plugins.
+        Dispatch incoming messages to all UI plugins.
 
         :param message: The message to send.
         :type message: Message
         """
-        if isinstance(message, Message):
-            self.__notifier.notify(message)
+        self.__notifier.notify(message)
+
 
     #----------------------------------------------------------------------
-    def __get_is_finished(self):
+    def send_info(self, information):
         """
-        If UI has finished returns True. False otherwise.
+        Send information from the plugins back to the Orchestrator.
 
-        :returns: True, if finished. False otherwise.
+        :param information: The information to send.
+        :type information: Result
         """
-        return self.__notifier.is_finished
-    is_finished = property(__get_is_finished)
+        message = Message(message_type = Message.MSG_TYPE_INFO,
+                          message_info = information)
+        self.__orchestrator.dispatch_msg(message)
+
 
     #----------------------------------------------------------------------
     def stop(self):

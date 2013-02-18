@@ -24,29 +24,33 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.main.commonstructures import Singleton, IReceiver, GlobalParams
+from core.main.commonstructures import GlobalParams
 from core.managers.priscillapluginmanager import PriscillaPluginManager
 from core.messaging.notifier import AuditNotifier
 from core.messaging.message import Message
+from core.database.resultdb import ResultMemoryDB
 from core.api.results.information.url import Url
 from core.api.results.result import Result
-from threading import Timer
-from time import sleep
+from multiprocessing import Queue
+from datetime import datetime
 
 
 #--------------------------------------------------------------------------
-class AuditManager(Singleton, IReceiver):
+class AuditManager (object):
     """
     Manage and control audits.
     """
 
     #----------------------------------------------------------------------
-    def __init__(self, orchestrator):
+    def __init__(self, orchestrator, config):
         """
         Constructor.
 
-        :param orchestrator: core to send messages.
+        :param orchestrator: Core to send messages to
         :type orchestrator: Orchestrator
+
+        :param config: Configuration object
+        :type config: GlobalParams
         """
 
         # Init audits dicts
@@ -54,6 +58,12 @@ class AuditManager(Singleton, IReceiver):
 
         # Init params
         self.__orchestrator = orchestrator
+
+
+    @property
+    def orchestrator(self):
+        return self.__orchestrator
+
 
     #----------------------------------------------------------------------
     def new_audit(self, globalParams):
@@ -72,12 +82,14 @@ class AuditManager(Singleton, IReceiver):
 
         # Create the audit
         m_audit = Audit(globalParams, self.__orchestrator)
+
         # Store it
-        self.__audits[m_audit.get_audit_name()] = m_audit
+        self.__audits[m_audit.name] = m_audit
+
         # Run!
         m_audit.run()
 
-        # return it
+        # Return it
         return m_audit
 
 
@@ -86,9 +98,10 @@ class AuditManager(Singleton, IReceiver):
         """
         Get the list of audits currently running.
 
-        :returns: dicts(str, Audit) -- Return a dict with touples (auditName, Audit instance)
+        :returns: dicts(str, Audit) -- Mapping of audit names to instances
         """
         return self.__audits
+
 
     #----------------------------------------------------------------------
     def get_audit(self, auditName):
@@ -106,53 +119,65 @@ class AuditManager(Singleton, IReceiver):
 
         return self.__audits[auditName]
 
-    #----------------------------------------------------------------------
-    def recv_msg(self, message):
-        """
-        Receive a message and resend it to all audits.
 
-        :param message: inbound message
+    #----------------------------------------------------------------------
+    def dispatch_msg(self, message):
+        """
+        Process an incoming message from the orchestrator.
+
+        :param message: incoming message
         :type message: Message
-        """
-        if isinstance(message, Message):
-            for p in self.__audits.values():
-                p.send_msg(message)
 
-    #----------------------------------------------------------------------
-    def __get_is_finished(self):
+        :raises: TypeError, ValueError, KeyError
         """
-        Return true if all plugins are finished. False otherwise.
+        if not isinstance(message, Message):
+            raise TypeError("Expected Message, got %s instead" % type(message))
 
-        :returns: bool -- True if finished. False otherwise.
-        """
-        for i in self.__audits.values():
-            if i.is_finished is False:
-                return False
-        return True
+        # Send info messages to their target audit
+        if message.message_type == Message.MSG_TYPE_INFO:
+            if not message.audit_name:
+                raise ValueError("Info message with no target audit!")
+            self.get_audit(message.audit_name).send_msg(message)
 
-    is_finished = property(__get_is_finished)
+        # Process control messages
+        elif message.message_type == Message.MSG_TYPE_CONTROL:
+
+            # Send ACKs to their target audit
+            if message.message_code == Message.MSG_CONTROL_ACK:
+                if message.audit_name:
+                    self.get_audit(message.audit_name).acknowledge()
+
+            # Stop an audit if requested
+            elif message.message_code == Message.MSG_CONTROL_STOP_AUDIT:
+                if not message.audit_name:
+                    raise ValueError("I don't know which audit to stop...")
+                self.get_audit(message.audit_name).stop()
+
+            # TODO: pause and resume audits, start new audits
+
 
     #----------------------------------------------------------------------
     def stop(self):
         """
         Stop all audits.
         """
-        for a in self.__audits.values():
+        for a in self.__audits.values(): # not itervalues, may be modified
             a.stop()
 
 
 
 #--------------------------------------------------------------------------
-class Audit(IReceiver):
+class Audit (object):
     """
-    Instance of an audit, with their custom parameters, scope, target, plugins, etc.
+    Instance of an audit, with its custom parameters, scope, target, plugins, etc.
     """
 
+
     #----------------------------------------------------------------------
-    def __init__(self, auditParams, receiver):
+    def __init__(self, auditParams, orchestrator):
         """
-        :param receiver: Orchester instance that will recives messages sent by audit.
-        :type reciber: Orchester
+        :param orchestrator: Orchestrator instance that will receive messages sent by this audit.
+        :type orchestrator: Orchestrator
 
         :param auditParams: global params for an audit execution
         :type auditParams: GlobalParams
@@ -161,33 +186,36 @@ class Audit(IReceiver):
         if not isinstance(auditParams, GlobalParams):
             raise TypeError("Expected GlobalParams, got %s instead" % type(auditParams))
 
+        # set audit params
         self.__audit_params = auditParams
 
         # set Receiver
-        self.__receiver = receiver
+        self.__orchestrator = orchestrator
 
         # set audit name
-        self.name = self.__audit_params.audit_name
+        self.__auditname = self.__audit_params.audit_name
+        if not self.__auditname:
+            self.__auditname = self.__generateAuditName()
 
-        # Check if messages are recived
-        self.__messages_received = 0
+        # Create the notifier
+        self.__notifier = AuditNotifier(self)
 
-        # Attemps to stop process without receive any message
-        self.__run_attemps = 5
+        # create result db
+        self.__db = ResultMemoryDB(self)
 
-        # Set a timer to check state of audit
-        self.__timer = Timer(0.2, self.__check_plugins_working)
 
-    def __get_name(self):
+    @property
+    def name(self):
         return self.__auditname
 
-    def __set_name(self, name):
-        if not name:
-            self.__auditname = self.__generateAuditName()
-        else:
-            self.__auditname = name
+    @property
+    def orchestrator(self):
+        return self.__orchestrator
 
-    name = property(__get_name, __set_name)
+    @property
+    def params(self):
+        return self.__audit_params
+
 
     #----------------------------------------------------------------------
     def __generateAuditName(self):
@@ -196,19 +224,7 @@ class Audit(IReceiver):
 
         :returns: str -- generated name for the audit.
         """
-        import datetime
-
-        return "golismero-".join(datetime.datetime.now().strftime("%Y-%m-%d-%H_%M"))
-
-
-    #----------------------------------------------------------------------
-    def get_audit_name(self):
-        """
-        Return the audit name.
-
-        :returns: str -- the audit name
-        """
-        return self.__auditname
+        return "golismero-".join(datetime.now().strftime("%Y-%m-%d-%H_%M"))
 
 
     #----------------------------------------------------------------------
@@ -217,100 +233,49 @@ class Audit(IReceiver):
         Start execution of an audit.
         """
 
-        # 1 - Load neccesary plugins. Only testing plugins
-        m_audit_plugins = PriscillaPluginManager().get_plugins(self.__audit_params.plugins, "testing")
+        # Reset the number of unacknowledged messages
+        self.__expecting_ack = 0
 
-        # 2 - Configure plugins to be it own the target of messages
-        for p in m_audit_plugins:
-            p.set_observer(self)
+        # Load testing plugins
+        m_audit_plugins = PriscillaPluginManager().get_plugins_by_category(self.__audit_params.plugins, "testing")
 
-        # 3 - Creates and start the notifier
-        self.__notifier = AuditNotifier()
-        self.__notifier.start()
-
-
-        # 4 - Asociate plugins to nofitier
+        # Register plugins with the notifier
         for l_plugin in m_audit_plugins:
             self.__notifier.add_plugin(l_plugin)
 
-        # 5 - Generate firsts messages with targets URLs
-        self.__receiver.recv_msg(Message(Url(self.__audit_params.target), Message.MSG_TYPE_INFO))
+        # Send a message to the orchestrator for each target URL
+        for url in self.__audit_params.targets:
+            message = Message(message_info = Url(url),
+                              message_type = Message.MSG_TYPE_INFO,
+                              audit_name   = self.name)
+            self.orchestrator.dispatch_msg(message)
 
-        # 6 - Start timer
-        self.__timer.start()
+
     #----------------------------------------------------------------------
-    def recv_msg(self, result_info):
+    def acknowledge(self):
         """
-        Send a result to the core system.
-
-        :param result_info: Result to receive
-        :type result_info: Result
+        Got an ACK for a message sent from this audit to the plugins.
         """
-        # Encapsulate Result information into a Message
-        if isinstance(result_info, Result):
+        self.__expecting_ack -= 1
 
-            # Build the message
-            m_message = Message(result_info, Message.MSG_TYPE_INFO)
-
-            # Send message to the core
-            self.__receiver.recv_msg(m_message)
-
-            # Message received!
-            self.__messages_received += 1
 
     #----------------------------------------------------------------------
     def send_msg(self, message):
         """
-        Send message info to the plugins of this audit
+        Send message info to the plugins of this audit.
 
         :param message: The message unencapsulate to get info.
         :type message: Message
         """
-        if isinstance(message, Message):
-            # Only resend to the plugins if information is info type
-            if message.message_type is Message.MSG_TYPE_INFO:
-                self.__notifier.notify(message)
-
-    #----------------------------------------------------------------------
-    def __get_is_finished(self):
-        """
-        Retrun true if all plugins are finished. False otherwise.
-
-        :returns: bool -- True is finished. False otherwise.
-        """
-        return self.__notifier.is_finished
-
-    is_finished = property(__get_is_finished)
-
-    #----------------------------------------------------------------------
-    def __check_plugins_working(self):
-        """
-        Check if plugins are working each X time. The method is:
-
-        If a message was send and no message received, then, plugins are finish.
-        """
-        if self.__messages_received is 0 and not self.__notifier._are_plugins_running:
-            # Increassing attemps
-            self.__run_attemps -= 1
-
-            if self.__run_attemps < 1:
-                # Exit
-                self.stop()
-                return
-        else:
-            # Reset values
-            self.__messages_received = 0
-            self.__run_attemps = 5
-
-        # Wait 50 ms to next check
-        sleep(0.1)
-        self.__check_plugins_working()
+        if not isinstance(message, Message):
+            raise TypeError("Expected Message, got %s instead" % type(message))
+        self.__expecting_ack += self.__notifier.notify(message)
 
 
     #----------------------------------------------------------------------
     def stop(self):
         """
-        Stop audit
+        Stop audit.
         """
         self.__notifier.stop()
 

@@ -47,7 +47,7 @@ class Plugin (object):
 
     PLUGIN_TYPE_ABSTRACT = 0    # Not a real plugin type!
     PLUGIN_TYPE_TESTING  = 1
-    PLUGIN_TYPE_RESULTS  = 2
+    PLUGIN_TYPE_REPORT   = 2
     PLUGIN_TYPE_UI       = 3
     PLUGIN_TYPE_GLOBAL   = 4
 
@@ -86,7 +86,7 @@ class Plugin (object):
         Callback method to receive information to be processed.
 
         :param info: input info to process
-        :type info: some subclass of Result
+        :type info: Result
         """
         raise NotImplementedError("All plugins must implement this method!")
 
@@ -109,9 +109,6 @@ class Plugin (object):
         """
         Called internally by GoLismero. Do not call or override!
         """
-        #if not isinstance(observer, Audit):
-        #    raise ValueError("Expected Orchestrator, got %r instead" % type(observer))
-
         self.__observer_ref = observer
 
 
@@ -125,7 +122,7 @@ class Plugin (object):
         if not isinstance(information, Result):
             raise ValueError("Expected Result, got %r instead" % type(information))
 
-        self.__observer_ref.recv_msg(information)
+        self.__observer_ref.send_info(information)
 
 
 #------------------------------------------------------------------------------
@@ -136,11 +133,18 @@ class TestingPlugin (Plugin):
     This is the base class for all Testing plugins.
     """
 
-    PLUGIN_TYPE = PLUGIN_TYPE_TESTING
+    PLUGIN_TYPE = Plugin.PLUGIN_TYPE_TESTING
 
-    #----------------------------------------------------------------------
-    def __init__(self):
-        pass
+
+#------------------------------------------------------------------------------
+class ReportPlugin (Plugin):
+    """
+    Report plugins control how results will be exported.
+
+    This is the base class for all Report plugins.
+    """
+
+    PLUGIN_TYPE = Plugin.PLUGIN_TYPE_REPORT
 
 
 #------------------------------------------------------------------------------
@@ -151,15 +155,22 @@ class UIPlugin (Plugin):
     This is the base class for all UI plugins.
     """
 
-    PLUGIN_TYPE = PLUGIN_TYPE_UI
+    PLUGIN_TYPE = Plugin.PLUGIN_TYPE_UI
+
 
     #----------------------------------------------------------------------
-    def __init__(self):
-        pass
+    def recv_msg(self, message):
+        """
+        Callback method to receive control messages to be processed.
+
+        :param message: incoming message to process
+        :type message: Message
+        """
+        raise NotImplementedError("All UI plugins must implement this method!")
 
 
 #------------------------------------------------------------------------------
-class GlobalPLugin (Plugin):
+class GlobalPlugin (Plugin):
     """
     Global plugins can control all stages of an audit.
 
@@ -168,23 +179,15 @@ class GlobalPLugin (Plugin):
     This is the base class for all Global plugins.
     """
 
-    PLUGIN_TYPE = PLUGIN_TYPE_GLOBAL
+    PLUGIN_TYPE = Plugin.PLUGIN_TYPE_GLOBAL
+
 
     #----------------------------------------------------------------------
-    def __init__(self):
-        pass
+    def recv_msg(self, message):
+        """
+        Callback method to receive control messages to be processed.
 
-
-#------------------------------------------------------------------------------
-class ResultsPlugin (Plugin):
-    """
-    Result plugins control how results will be exported.
-
-    This is the base class for all Result plugins.
-    """
-
-    PLUGIN_TYPE = PLUGIN_TYPE_RESULTS
-
-    #----------------------------------------------------------------------
-    def __init__(self):
-        self.__information_type = information_type
+        :param message: incoming message to process
+        :type message: Message
+        """
+        raise NotImplementedError("All Global plugins must implement this method!")

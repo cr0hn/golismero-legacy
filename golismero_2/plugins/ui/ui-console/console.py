@@ -28,36 +28,17 @@ from core.api.plugins.plugin import UIPlugin
 from core.api.logger import Logger
 from core.messaging.message import Message
 from core.api.results.result import Result
+from core.api.results.information.information import Information
 from time import sleep
 
 class ConsoleUIPlugin(UIPlugin):
     """
-    This is a plugin that you can use as template.
+    Console UI plugin.
     """
 
-    #----------------------------------------------------------------------
-    def check_input_params(self, inputParams):
-        """
-        Check input user parameters
-
-        Parameters will be passed as instance of 'GlobalParams"
-
-        If any parameter is not correct o there is any error, 'ValueError'
-        a exception must be raised.
-
-        :param inputParams: input parameters to check
-        :type inputParams: GlobalParams
-        """
-        #
-        #
-        # Put here your check code
-        #
-        #
-        pass
 
     #----------------------------------------------------------------------
     def display_help(self):
-        """Get the help message for this plugin."""
         #
         # Put here extended information, and usage details, to display when
         # a user run progan with "--plugin-info" option.
@@ -73,16 +54,21 @@ class ConsoleUIPlugin(UIPlugin):
         # """
         # return info
         #
-        raise NotImplementedError("All plugins must implement this method!")
+        return """
+            This is the console UI plugin. It provides a simple interface
+            to work with GoLismero from the command line.
+
+            This plugin has no options.
+        """
+
+
+    #----------------------------------------------------------------------
+    def check_input_params(self, inputParams):
+        pass
+
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-        """
-        Callback method to receive information to be processed.
-
-        :param info: input info to process
-        :type info: some subclass of Result
-        """
         #
         # Put here the code you want to execute when a info is received.
         #
@@ -110,34 +96,29 @@ class ConsoleUIPlugin(UIPlugin):
 
         print "UIUIUIUI"
         Logger.log("aaaa")
-        if isinstance(info, Message):
-            if info.message_type == Message.MSG_TYPE_INFO:
-                m_result = info.message_info
 
-                # Filter how to display the info
-                if isinstance(m_result, Result):
-                    # URL type
-                    if m_results.result_type is Result.TYPE_INFORMATION:
-                        Logger.log("+ New url found: %s." % str(m_result))
+        # URL type
+        if info.result_type is Result.TYPE_INFORMATION and info.result_subtype == Information.INFORMATION_URL:
+            Logger.log("+ New url found: %s." % str(m_result))
 
 
+    #----------------------------------------------------------------------
+    def recv_msg(self, message):
+        #
+        # Put here the code you want to execute when a control message is received.
+        #
+
+        print "CONTROL"
+        Logger.log("bbb")
 
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
-        """
-        Return a list of constants describing
-        which messages are accepted by this plugin.
-
-        Messages types can be found at the Message class.
-
-        :returns: list -- list with constants
-        """
         #
-        # Put here the list of type of info you want to receive.
+        # Put here the list of the type of info you want to receive.
         #
-        # To do the list, you will need to use the constants of
-        # Result class.
+        # To build the list, you will need to use the constants of
+        # the results package.
         #
         # Example:
         #
@@ -152,4 +133,4 @@ class ConsoleUIPlugin(UIPlugin):
         #
         #     return list(Information.INFORMATION_URL, Injection.XSS_REFLECTED)
         #
-        return "aaa"
+        return None
