@@ -1,3 +1,10 @@
+- Usar un user-agent aleatorio para cada petición o el mismo.
+- Poner como parámetro de red que se pueda explorar un sitio con un regex, subdominos.
+- No funciona bien el método de obtener información cuando se requiere terra.es sin user-agent. Devuelve
+un script para redireccionar, pero desde linea de comandos no.
+- Poner el contador de palabras en cada response.
+
+
 - Implementar el método toString en cada tipo de Result.
 - En el results manager activas una comprobación por la que un mismo resultado no es enviado 2 veces, para no entrar en barrena y que los plugins no acaben nunca. MD5 con la info?
 - Añadir un método de parar (interrumpir). Bien sean hilos o procesos.

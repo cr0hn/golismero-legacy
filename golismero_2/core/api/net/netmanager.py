@@ -32,6 +32,7 @@ from thirdparty_libs.urllib3.util import parse_url
 from thirdparty_libs.urllib3 import connection_from_url, HTTPResponse
 from core.api.results.information.html import *
 from time import time
+from core.api.results.information.url import Url
 
 
 #------------------------------------------------------------------------------
@@ -213,12 +214,18 @@ class Web (Protocol):
 
 
     #----------------------------------------------------------------------
-    def get(self, URL, method= "GET", cache = True):
+    def get(self, URL, method= "GET", cache = True, redirect=False):
         """
         Get response for an input URL.
 
-        :param URL: string with URL.
-        :type URL: str
+        :param URL: string with URL or Url instance
+        :type URL: str or Url
+
+        :param cache: cache response?
+        :type cache: bool
+
+        :param redirect: If you want to follow HTTP redirect.
+        :type redirect: bool
 
         :returns: HTTPResponse instance.
 
@@ -226,22 +233,27 @@ class Web (Protocol):
         """
 
         # None or not str?
-        if not isinstance(URL, basestring):
-            raise TypeError("Expected string, got %s instead" % type(URL))
+        m_url = None
+        if isinstance(URL, basestring):
+            m_url = URL
+        elif isinstance(URL, Url):
+            m_url = URL.raw_url
+        else:
+            raise TypeError("Expected string or Url, got %s instead" % type(URL))
 
         m_response = None
         m_time = None
 
         # URL is cached?
-        if cache and self.is_cached(URL):
-            m_response = self.get_cache(URL)
+        if cache and self.is_cached(m_url):
+            m_response = self.get_cache(m_url)
         else:
             # Get URL
             try:
                 # timing init
                 t1 = time()
                 # Get resquest
-                m_response = self.__http_pool_manager.request(method, URL)
+                m_response = self.__http_pool_manager.request(method, m_url, redirect=False)
                 # timin end
                 t2 = time()
 
@@ -308,9 +320,7 @@ class HTTP_Response (object):
         # HTTP headers
         self.__http_headers = dict(response.headers)
         # HTTP headers in raw format
-        self.__http_headers_raw = ""
-        for k, v in self.__http_headers.items():
-            self.__http_headers_raw.join("%s\t%s\n" % (k, v))
+        self.__http_headers_raw = ''.join(["%s: %s\n" % (k,v) for k,v in response.headers.items()])
         # Request time
         self.__request_time = request_time
         # Generate information object
@@ -332,7 +342,7 @@ class HTTP_Response (object):
     #----------------------------------------------------------------------
     def __get_http_response_reason(self):
         """"""
-        return self.__body
+        return self.__http_response_code_reason
     http_reason = property(__get_http_response_reason)
 
     #----------------------------------------------------------------------
@@ -344,7 +354,7 @@ class HTTP_Response (object):
     #----------------------------------------------------------------------
     def __get_http_raw_headers(self):
         """"""
-        return self.__body
+        return self.__http_headers_raw
     http_headers_raw = property(__get_http_raw_headers)
 
     #----------------------------------------------------------------------
@@ -370,7 +380,7 @@ class HTTP_Response (object):
                 m_content_type = headers["content-type"]
 
                 # Select the type
-                if m_content_type == 'text/html':
+                if m_content_type.startswith('text/html'):
                     m_return_content = HTML(data)
 
         return m_return_content

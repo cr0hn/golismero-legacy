@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from core.api.results.information.html import HTML, HTMLElement
 from core.api.net.netmanager import *
 from core.main.commonstructures import GlobalParams
+from core.managers.priscillapluginmanager import PriscillaPluginManager
 
 if __name__=='__main__':
     a="""
@@ -678,12 +679,13 @@ auto directive</li>
 
     h = HTML(a)
 
+    # Config
     p = GlobalParams()
-    p.target = ["terra.es"]
-
+    p.target = ["www.terra.es"]
     NetManager.config(p)
-    con = NetManager.get_connection()
-    #r = con.get("http://www.terra.es")
-    r = con.get("/")
 
-    print r.information.raw
+    # Plugins
+    m_plugins = PriscillaPluginManager().get_plugins(["spider"])
+
+    print "a"
+

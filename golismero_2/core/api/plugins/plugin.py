@@ -136,7 +136,7 @@ class TestingPlugin (Plugin):
     This is the base class for all Testing plugins.
     """
 
-    PLUGIN_TYPE = PLUGIN_TYPE_TESTING
+    PLUGIN_TYPE = Plugin.PLUGIN_TYPE_TESTING
 
     #----------------------------------------------------------------------
     def __init__(self):
@@ -151,7 +151,7 @@ class UIPlugin (Plugin):
     This is the base class for all UI plugins.
     """
 
-    PLUGIN_TYPE = PLUGIN_TYPE_UI
+    PLUGIN_TYPE = Plugin.PLUGIN_TYPE_UI
 
     #----------------------------------------------------------------------
     def __init__(self):
@@ -168,7 +168,7 @@ class GlobalPLugin (Plugin):
     This is the base class for all Global plugins.
     """
 
-    PLUGIN_TYPE = PLUGIN_TYPE_GLOBAL
+    PLUGIN_TYPE = Plugin.PLUGIN_TYPE_GLOBAL
 
     #----------------------------------------------------------------------
     def __init__(self):
@@ -183,7 +183,7 @@ class ResultsPlugin (Plugin):
     This is the base class for all Result plugins.
     """
 
-    PLUGIN_TYPE = PLUGIN_TYPE_RESULTS
+    PLUGIN_TYPE = Plugin.PLUGIN_TYPE_RESULTS
 
     #----------------------------------------------------------------------
     def __init__(self):

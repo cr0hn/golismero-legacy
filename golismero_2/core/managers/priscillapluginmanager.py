@@ -114,17 +114,10 @@ class PriscillaPluginManager(Singleton):
         :returns: list -- List of plugin instances
         """
 
-        # Check for keyword "all"
-        if "all" in map(str.lower, plugin_list):
-            return self.get_all_plugins(category.lower()).values()
-
         # Collect the requested plugins
         return_plugin = list()
         if plugin_list:
-            for name, plugin_obj in self.get_all_plugins(category.lower()):
-                for p in plugin_list:
-                    if name is p:
-                        return_plugin.append(plugin_obj)
+            return_plugin.extend([plugin_obj for name, plugin_obj in self.get_all_plugins(category).items() if name.lower() in map(str.lower, plugin_list) ])
 
         return return_plugin
 
@@ -139,12 +132,13 @@ class PriscillaPluginManager(Singleton):
         :returns: dict -- Mapping of plugin names to instances
         """
         m_plugins = dict()
-        if category.lower() is "all":
+        if category.lower() == "all":
             for i in self.__pluginManager.getAllPlugins():
                 m_plugins[i.name] = i.plugin_object
         else:
-            for i in self.__pluginManager.getPluginsOfCategory(category.lower()):
-                m_plugins[i.name] = i.plugin_object
+            if category in self.__pluginManager.getCategories():
+                for i in self.__pluginManager.getPluginsOfCategory(category.lower()):
+                    m_plugins[i.name] = i.plugin_object
 
         return m_plugins
 

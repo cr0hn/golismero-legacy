@@ -271,7 +271,7 @@ class HTMLBeautifulSoup(object):
     def __get_links(self):
         """Get links from HTML"""
         if not self.__html_links:
-            m_elem = self.__html_parser.findAll("form")
+            m_elem = self.__html_parser.findAll("a")
             # Get the list of dicts
             self.__html_links.extend(self.__converto_to_HTMLElements(m_elem))
 
