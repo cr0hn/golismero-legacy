@@ -1,0 +1,9 @@
+[Core]
+Name = Spider
+Module = spider-plugin/spider
+
+[Documentation]
+Description = Spider plugin
+Author = Daniel Garcia Garcia (cr0hn)
+Version = 0.1
+Website = http://code.google.com/p/golismero/

@@ -131,22 +131,18 @@ class PriscillaPluginManager (Singleton):
         :returns: list -- List of plugin instances
         """
 
+        plugin_list = map(str.lower, plugin_list)
+
         # Get all plugins for the requested category
         all_plugins = self.get_all_plugins(category.lower())
+        all_plugins = dict([(name.lower(), plugin) for (name, plugin) in all_plugins.iteritems()])
 
         # Check for keyword "all"
-        if "all" in map(str.lower, plugin_list):
+        if "all" in plugin_list:
             return all_plugins.values()
 
-        # Collect the requested plugins
-        return_plugin = list()
-        for p in plugin_list:
-            if p in all_plugins:
-                return_plugin.append(all_plugins[p])
-            else:
-                raise KeyError()
-
-        return return_plugin
+        # Collect the requested plugins, raise exception on error
+        return [all_plugins[name] for name in plugin_list]
 
 
     #----------------------------------------------------------------------
@@ -164,8 +160,9 @@ class PriscillaPluginManager (Singleton):
             for i in self.__pluginManager.getAllPlugins():
                 m_plugins[i.name] = i.plugin_object
         else:
-            for i in self.__pluginManager.getPluginsOfCategory(category.lower()):
-                m_plugins[i.name] = i.plugin_object
+            if category in self.__pluginManager.getCategories():
+                for i in self.__pluginManager.getPluginsOfCategory(category.lower()):
+                    m_plugins[i.name] = i.plugin_object
 
         return m_plugins
 

@@ -190,4 +190,4 @@ class GlobalPlugin (Plugin):
         :param message: incoming message to process
         :type message: Message
         """
-        raise NotImplementedError("All Global plugins must implement this method!")
+        raise NotImplementedError("All UI plugins must implement this method!")
