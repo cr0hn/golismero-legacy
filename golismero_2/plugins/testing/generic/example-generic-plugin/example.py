@@ -33,52 +33,31 @@ from core.api.net.netmanager import *
 
 class ExamplePlugin(TestingPlugin):
     """
-    This plugin is used por testing purposes and as example of use of plugins
+    This plugin is used por testing purposes and as example of the use of plugins.
     """
+
 
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
         """
-        Comprueba las comprobaciones de los parametros introducidos por el
-        usuarLogger.
+        Check input parameters passed by the user.
 
-        Los parametros seran pasados en la instancia del tipo 'GlobalParams'.
+        Parameters will be passed as an instance of 'GlobalParams'.
 
-        Si algun parametro no es correcto o hay algun error, sera lanzada
-        una excepcion del tipo 'ValueError'.
+        If any parameter is not correct o there is an error, an
+        exception must be raised.
 
-        :param inputParams: Parametros de entrada a comprobar
-        :type inputParams: GlobalParam
+        :param inputParams: input parameters to check
+        :type inputParams: GlobalParams
         """
-        raise NotImplementedError("All plugins must implement this method!")
+        pass
+
 
     #----------------------------------------------------------------------
     def display_help(self):
         """Get the help message for this plugin."""
         # TODO: this could default to the description found in the metadata.
-        raise NotImplementedError("All plugins must implement this method!")
-
-    #----------------------------------------------------------------------
-    def recv_info(self, info):
-        """Callback method to receive information to be processed."""
-        Logger.log("Example plugin. Received: %s\n" % info.url_raw)
-
-        r = NetManager.get_connection()
-        p = r.get("/")
-
-        print str(info)
-
-        if isinstance(p, HTTP_Response):
-            print "aaaa" + str(p.http_code)
-
-
-        # Send a test message
-        for i in xrange(3):
-            #self.send_info(Url("www.google.com"))
-            Logger.log("Enviando")
-
-
-
+        return "This is an example plugin."
 
 
     #----------------------------------------------------------------------
@@ -92,3 +71,22 @@ class ExamplePlugin(TestingPlugin):
         :returns: list -- list with constants
         """
         return [Information.INFORMATION_URL]
+
+    #----------------------------------------------------------------------
+    def recv_info(self, info):
+        """Callback method to receive information to be processed."""
+        Logger.log("Example plugin. Received: %s\n" % info.url_raw)
+
+        #r = NetManager.get_connection()
+        #p = r.get("/")
+
+        #print str(info)
+
+        #if isinstance(p, HTTP_Response):
+            #print "aaaa" + str(p.http_code)
+
+
+        # Send a test message
+        for i in xrange(3):
+            Logger.log("Enviando")
+            self.send_info(Url("http://www.google.com"))

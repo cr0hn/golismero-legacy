@@ -24,25 +24,20 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
-
-
-from core.main.commonstructures import Singleton, IReceiver
-from core.managers.uimanager import UIManager
-from core.managers.auditmanager import AuditManager
+__all__ = ["MessageManager"]
 
 
 #--------------------------------------------------------------------------
-class MessageManager(Singleton):
+class MessageManager (object):
     """
     Manager for messages.
     """
 
-    #----------------------------------------------------------------------
-    def __init__(self):
-        """Constructor."""
 
+    #----------------------------------------------------------------------
+    def __init__(self, config):
         self.__observers = list() # List of observers to be notified
+
 
     #----------------------------------------------------------------------
     def add_listener(self, listener):
@@ -56,6 +51,7 @@ class MessageManager(Singleton):
         # Select pool to add
         self.__observers.append(listener)
 
+
     #----------------------------------------------------------------------
     def add_multiple_listeners(self, listeners):
         """
@@ -66,6 +62,7 @@ class MessageManager(Singleton):
         """
         self.__observers.extend(listeners)
 
+
     #----------------------------------------------------------------------
     def send_message(self, message):
         """
@@ -73,11 +70,7 @@ class MessageManager(Singleton):
 
         :param message: message to send.
         :type message: Message
-
-        :param category: The category to send messages.
-        :type category: str -- available categories:  ["all", "testing", "ui", "report"]
-
         """
         # Send message to category
         for i in self.__observers:
-            i.recv_msg(message)
+            i.dispatch_msg(message)

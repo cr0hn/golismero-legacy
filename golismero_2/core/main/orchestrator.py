@@ -24,58 +24,71 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from core.api.logger import Logger
 from core.managers.auditmanager import AuditManager
 from core.managers.messagemanager import MessageManager
 from core.managers.priscillapluginmanager import PriscillaPluginManager
-from core.managers.reportmanager import ReportManager
-from core.managers.resultmanager import ResultManager
 from core.managers.uimanager import UIManager
-from core.managers.reportmanager import ReportManager
-from core.managers.processmanager import ProcessManager
-
-from core.main.commonstructures import IReceiver, Singleton
+from core.managers.processmanager import ProcessManager, Context
+from core.main.commonstructures import GlobalParams
 from core.messaging.message import Message
+
+from multiprocessing import Queue
 from time import sleep
+from traceback import format_exc
 
 
 
-class Orchestrator(Singleton, IReceiver):
+class Orchestrator (object):
     """
-    Orchestrator is the core or kernel.
-
+    Orchestrator is the core (or kernel) of GoLismero.
     """
+
+
     #----------------------------------------------------------------------
     def __init__(self, config):
         """
-        Constructor.
+        Start the orchestrator.
 
         :param config: configuration of orchestrator.
         :type config: GlobalParams
         """
 
-        # Init configuration
+        # Configuration
         self.__config = config
 
-        # Init API managers
+        # Incoming message queue
+        self.__queue = Queue()
+
+        # Message manager
+        self.__messageManager = MessageManager(self.__config)
+
+        # API managers
         self.__init_api()
 
-        # Init process manager
-        ProcessManager().start()
+        # Load the plugins
+        self.__pluginManager = PriscillaPluginManager()
+        self.__pluginManager.find_plugins(self.__config.plugins_folder)
+        self.__pluginManager.load_plugins(self.__config.plugins)
 
-        # 1 - Set and configure the Audit manager
-        self.__auditManager = AuditManager(self)
+        # Process manager
+        self.__processManager = ProcessManager(self.__config)
+        self.__processManager.start()
 
-        # 2 - Create and configure UI
-        self.__ui = UIManager(self.__config, self)
+        # Audit manager
+        self.__auditManager = AuditManager(self, self.__config)
+        self.__messageManager.add_listener(self.__auditManager)
 
-        # 3 - Message manager
-        self.__messageManager = MessageManager()
+        # UI manager
+        if config.run_mode == GlobalParams.RUN_MODE.standalone:
+            self.__ui = UIManager(self, self.__config)
+            self.__messageManager.add_listener(self.__ui)
 
-        # 4 - Initiazliate store manager
-        self.__result_manager = ResultManager()
 
-        # 5 - Add managers to message pools
-        self.__messageManager.add_multiple_listeners([self.__ui, self.__auditManager])
+    @property
+    def processManager(self):
+        return self.__processManager
+
 
     #----------------------------------------------------------------------
     def __init_api(self):
@@ -101,71 +114,127 @@ class Orchestrator(Singleton, IReceiver):
 
 
     #----------------------------------------------------------------------
-    def recv_msg(self, message):
+    def dispatch_msg(self, message):
         """
-        Receive messages from audits and external receivers.
-        If it's a result, store the info and resend the messages.
-        Otherwise just ignore the messages.
+        Process messages from audits or from the message queue, and send them
+        forward to the plugins through the Message Manager when appropriate.
 
-        :param message: a mesage to send
+        :param message: incoming message
         :type message: Message
         """
-        if isinstance(message, Message):
-            # Check if not in store yet. Then store and resend it.
-            if not self.__result_manager.contains(message.message_info):
-                #  Store it
-                self.__result_manager.add_result(message.message_info)
+        if not isinstance(message, Message):
+            raise TypeError("Expected Message, got %s instead" % type(message))
 
-                # Send
-                self.__messageManager.send_message(message)
+        # Drop duplicated results from audits
+        # XXX FIXME there should be a more elegant way to do this
+        if  message.message_type == Message.MSG_TYPE_INFO:
+            audit = self.__auditManager.get_audit(message.audit_name)
+            if message.message_info in audit.database:
+                return
+
+        # Dispatch the message
+        self.__messageManager.send_message(message)
+
+        # If it's a quit message...
+        if  message.message_type == Message.MSG_TYPE_CONTROL and \
+            message.message_code == Message.MSG_CONTROL_STOP:
+
+            # Stop the program execution
+            if message.message_info:
+                exit(0)                   # Planned shutdown
+            else:
+                raise KeyboardInterrupt() # User cancel
 
 
     #----------------------------------------------------------------------
-    def wait(self):
+    def get_context(self, audit_name, plugin):
         """
-        Wait for the end of all audits.
+        Prepare a Context object to pass to the plugins.
+
+        :param audit_name: Name of the audit.
+        :type audit_name: str
+
+        :param plugin: Plugin instance.
+        :type plugin: Plugin
+
+        :returns: Context -- OOP plugin execution context
         """
 
-        # Wait for audits
-        while not self.__auditManager.is_finished:
-            sleep(0.050)
+        # FIXME:
+        # The only reason this method is here is because we need self.__queue.
+        # Otherwise, by design it should belong to the ProcessManager.
 
-        # Stop UI and wait it.
-        self.__ui.stop()
-        while not self.__ui.is_finished:
-            sleep(0.020)
+        # Get the plugin information
+        info = self.__pluginManager.get_plugin_info_from_instance(plugin)[1]
 
-        # Stop process manager
-        ProcessManager().stop()
+        # Get the plugin module and class
+        module = info.plugin_module
+        clazz  = info.plugin_class
+
+        # Return the context instance
+        return Context(module, clazz, audit_name, self.__queue)
 
 
-    #--------------------------------------------------------------------------
-    #
-    # START METHODS
-    #
-    #--------------------------------------------------------------------------
-    def start(self):
+    #----------------------------------------------------------------------
+    def msg_loop(self):
         """
-        Configure and start execution, as of run_mode config.
-
-        :param run_mode: Constant contains run_mode.
-        :type run_mode: int
+        Message loop.
         """
-        #
-        # Configure messagen as for run mode
-        #
-        if GlobalParams.RUN_MODE.standalone is runMode:
-            # Console mode
-            self.__messageManager.add_listener(AuditManager())
 
-        elif GlobalParams.RUN_MODE.cloudclient is runMode:
-            pass
+        try:
 
-        elif GlobalParams.RUN_MODE.cloudserver is runMode:
-            pass
+            # Message loop.
+            while True:
 
-        else:
-            raise ValueError("Invalid run mode: %r" % runMode)
+                # Wait for a message to arrive.
+                message = self.__queue.get()
+
+                try:
+                    if not isinstance(message, Message):
+                        raise TypeError("Expected Message, got %s" % type(message))
+
+                    # Dispatch the message.
+                    self.dispatch_msg(message)
+
+                    # Check for audit termination.
+                    #
+                    # NOTE: This code assumes messages always arrive in order,
+                    #       and ACKs are always sent AFTER responses from plugins.
+                    #
+                    if  message.message_type == Message.MSG_TYPE_CONTROL and \
+                        message.message_code == Message.MSG_CONTROL_ACK:
+                            if not self.__auditManager.get_audit(message.audit_name).expecting_ack:
+                                m = Message(message_type = Message.MSG_TYPE_CONTROL,
+                                            message_code = Message.MSG_CONTROL_STOP_AUDIT,
+                                            message_info = True,   # True for finished, False for user cancel
+                                            audit_name   = message.audit_name)
+                                self.dispatch_msg(m)
+                                #
+                                # XXX TODO add an "audit stop response" message instead!
+                                # today it's just a method call but tomorrow it'll be asynchronous
+                                #
+                                if  self.__config.run_mode == GlobalParams.RUN_MODE.standalone and \
+                                    not self.__auditManager.has_audits():
+                                        m = Message(message_type = Message.MSG_TYPE_CONTROL,
+                                                    message_code = Message.MSG_CONTROL_STOP,
+                                                    message_info = True)  # True for finished, False for user cancel
+                                        self.dispatch_msg(m)
+
+                # If an exception is raised during message processing,
+                # just log the exception and continue.
+                except Exception:
+                    Logger.log_error("Error processing message!\n%s" % format_exc())
+
+        finally:
+            try:
+
+                # Stop the UI.
+                self.__ui.stop()
+
+            finally:
+
+                # Stop the process manager.
+                self.__processManager.stop()
 
 
     #----------------------------------------------------------------------
@@ -174,12 +243,3 @@ class Orchestrator(Singleton, IReceiver):
 
         # init UI Manager
         self.__ui.run()
-
-
-    #----------------------------------------------------------------------
-    def start_report(self):
-        """Start report generation"""
-        ReportManager(self.__result_manager.get_results()).generate_report()
-
-
-

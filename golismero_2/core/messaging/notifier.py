@@ -24,24 +24,24 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.plugins.plugin import TestingPlugin, UIPlugin, Plugin
+
+__all__ = ["AuditNotifier", "UINotifier"]
+
+
+from core.api.logger import Logger
+from core.api.plugins.plugin import Plugin
 from core.messaging.message import Message
-from threading import Thread, Semaphore
-from core.main.commonstructures import Interface
-from time import sleep
-from core.managers.processmanager import ProcessManager
+from core.managers.priscillapluginmanager import PriscillaPluginManager
 from collections import defaultdict
+from traceback import format_exc
 
-class Notifier(Thread, Interface):
+
+class Notifier (object):
     """
-    This is an abstract class for manage the pools of messages, and notify them
-    when a message is received.
+    Abstract class for message dispatchers.
     """
 
-    #----------------------------------------------------------------------
-    #
-    # Abstract methods
-    #
+
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor."""
@@ -49,33 +49,18 @@ class Notifier(Thread, Interface):
         # Call superclass constructor
         super(Notifier, self).__init__()
 
-        # Message notification pool for plugins.
-        # (message_type, list(Plugin_instance))
-        self._notification_pool = defaultdict(list)
+        # Info message notification list for plugins
+        # that receive all information types
+        # list(Plugin_instance)
+        self._notification_info_all = list()
 
-        # Add special type "all"
-        self._notification_pool["all"] = list()
+        # Info message notification mapping for plugins
+        # (info_type, list(Plugin_instance))
+        self._notification_info_map = defaultdict(list)
 
-        # Total pending messages
-        self._waiting_messages = Semaphore(1)
-
-        # Control execution by adding a stop condition
-        self._continue = True
-
-        # Finish all plugins?
-        self._is_finished = False
-
-        # Plugins are running
-        self._are_plugins_running = False
-
-        # Pool list for each plugin:
-        #   Each plugin has they own message list, that act as a buffer. Message will
-        #   add to it, and will be sent as plugin as needed.
-        #   (plugin_class_name, [plugin_instance. list(messages)]
-        self._plugins_buffer_pool = dict()
-
-        # Running pool
-        self.__runner = ProcessManager()
+        # Control message notification mapping for plugins
+        # list(Plugin_instance)
+        self._notification_msg_list = list()
 
 
     #----------------------------------------------------------------------
@@ -90,223 +75,247 @@ class Notifier(Thread, Interface):
 
 
     #----------------------------------------------------------------------
-    #
-    # Methods to implement
-    #
-    #----------------------------------------------------------------------
     def add_plugin(self, plugin):
         """
         Add a plugin to manage.
 
-        :param plugin: a TestPlugin type to manage
-        :type plugin: TestPlugin
+        :param plugin: a Plugin type to manage
+        :type plugin: Plugin
         """
-        pass
+        if not isinstance(plugin, Plugin):
+            raise TypeError("Expected Plugin, got %s instead" % type(plugin))
+
+        # Get the info types accepted by this plugin.
+        m_message_types = plugin.get_accepted_info()
+
+        # Special value 'None' means all information types.
+        if m_message_types is None:
+            self._notification_info_all.append(plugin)
+
+        # Otherwise, it's a list of information types.
+        else:
+
+            # Remove duplicates.
+            m_message_types = set(m_message_types)
+
+            # Register the plugin for each accepted info type.
+            for l_type in m_message_types:
+                self._notification_info_map[l_type].append(plugin)
+
+        # UI and Global plugins can receive control messages.
+        if plugin.PLUGIN_TYPE in (Plugin.PLUGIN_TYPE_UI, Plugin.PLUGIN_TYPE_UI):
+            self._notification_msg_list.append(plugin)
+
 
     #----------------------------------------------------------------------
     def notify(self, message):
         """
-        Notify messages to the plugins.
+        Dispatch message information to the plugins. Ignore other message types.
 
         :param message: A message to send to plugins
         :type message: Message
         """
-        pass
+        if not isinstance(message, Message):
+            raise TypeError("Expected Message, got %s instead" % type(message))
 
-    #----------------------------------------------------------------------
-    def stop(self):
-        """
-        Send a stop signal to notifier.
-        """
-        self._continue = False
-        self._waiting_messages.release()
-        self._is_finished = True
+        # Keep count of how many messages are sent
+        count = 0
 
+        try:
 
-    #----------------------------------------------------------------------
-    def run(self):
-        """
-        Start notifier process.
-        """
+            # Info messages are sent to the send_info() method
+            if message.message_type == Message.MSG_TYPE_INFO:
+                m_plugins_to_notify = set()
 
-        # Run until not stop signal received
-        while self._continue:
+                # Plugins that expect all types of info
+                m_plugins_to_notify.update(self._notification_info_all)
 
-            # Dispatch messages:
-            #
+                # Plugins that expect this type of info
+                result_subtype = message.message_info.result_subtype
+                if result_subtype in self._notification_info_map:
+                    m_plugins_to_notify.update(self._notification_info_map[result_subtype])
 
-            # For each plugin, send messages in their buffer
-            self._are_plugins_running = True
-            for l_plugin_instance, l_msg_list in self._plugins_buffer_pool.itervalues():
-                for l_msg in l_msg_list:
+                # Dispatch message info to each plugin
+                for plugin in m_plugins_to_notify:
+                    self.send_info(plugin, message.message_info)
+                    count += 1
 
-                    # Send message to plugin.
-                    #
+            # Control messages are sent to the send_msg() method
+            else:
+                for plugin in self._notification_msg_list:
+                    self.send_msg(plugin, message)
+                    count += 1
 
-                    # Run plugin in running pool
-                    #l_plugin_instance.recv_info(l_msg.message_info)
-                    clazz = l_plugin_instance.__class__.__name__
-                    module = l_plugin_instance.__class__.__module__
-                    self.__runner.execute(module, clazz, "recv_info", (l_msg.message_info,))
+        # On error log the traceback
+        except Exception:
+            Logger.log_error("Error sending message to plugins: %s" % format_exc())
 
-            self._are_plugins_running = False
-            self._waiting_messages.acquire()
-
-        # Set finished to true
-        self._is_finished = True
+        # Return the count of messages sent
+        return count
 
 
     #----------------------------------------------------------------------
-    #
-    # Properties
-    #
-    #----------------------------------------------------------------------
-    def _get_is_finished(self):
+    def send_info(self, module, clazz, message_info):
         """
-        Return true if all plugins are finished. False otherwise.
+        Send information to the plugins.
 
-        :returns: bool -- True is finished. False otherwise.
+        :param module: Module where the target plugin lives
+        :type module: str
+
+        :param clazz: Class there the target plugin is defined
+        :type clazz: str
+
+        :param message_info: Information to send to plugins
+        :type message_info: Information
         """
-        return self._is_finished
+        raise NotImplementedError()
 
-    is_finished = property(_get_is_finished)
 
     #----------------------------------------------------------------------
-    def _get_plugins_running(self):
-        """Are any plugin running?"""
-        return self._plugins_running
-    is_plugins_running = property(_get_plugins_running)
+    def send_msg(self, plugin, message):
+        """
+        Send messages to the plugins.
+
+        :param plugin: Target plugin
+        :type plugin: Plugin
+
+        :param message: Message to send to plugins
+        :type message: Message
+        """
+        raise NotImplementedError()
 
 
 #------------------------------------------------------------------------------
 #
-# Notificator for Audit manager
+# Notifier for Audit manager
 #
 #------------------------------------------------------------------------------
 class AuditNotifier(Notifier):
     """
-    This class manage the pools of messages for -Testing- plugins, and notify them
-    when a message is received.
+    Audit message dispatcher. Sends messages to Testing plugins.
     """
 
-    #----------------------------------------------------------------------
-    def __init__(self):
-        """Constructor"""
 
-        # Call superclass constructor
+    #----------------------------------------------------------------------
+    def __init__(self, audit):
+        """
+        Constructor.
+
+        :param audit: Audit
+        :type audit: Audit
+        """
         super(AuditNotifier, self).__init__()
+        self.__audit = audit
 
 
     #----------------------------------------------------------------------
-    def add_plugin(self, plugin):
+    def __run_plugin(self, plugin, method, payload):
         """
-        Add a plugin to manage.
+        Send messages or information to the plugins.
 
-        :param plugin: a TestingPlugin to manage
-        :type plugin: TestingPlugin
+        :param plugin: Target plugin
+        :type plugin: Plugin
+
+        :param method: Callback method name
+        :type method: str
+
+        :param payload: Message or information to send to plugins
+        :type payload: Message or Result
         """
-        if not isinstance(plugin, TestingPlugin):
-            raise TypeError("Expected TestingPlugin, got %s instead" % type(plugin))
 
-        # For testing plugins only
-        if isinstance(plugin, TestingPlugin):
+        # If the plugin doesn't support the callback method, drop the message
+        # XXX FIXME: maybe we want to raise an exception here instead
+        if not hasattr(plugin, method):
+            return
 
-            # Create lists as necessary, dependens of type of messages accepted
-            # by plugins
-            m_message_types = set(plugin.get_accepted_info()) # delete duplicates
+        # Get the Audit and Orchestrator instances
+        audit        = self.__audit
+        orchestrator = audit.orchestrator
 
-            if not m_message_types:
-                raise ValueError("Testing plugins must accept info!")
+        # Prepare the context for the OOP observer
+        context = orchestrator.get_context(audit.name, plugin)
 
-            for l_type in m_message_types:
+        # Run the callback in a pooled process
+        orchestrator.processManager.run_plugin(
+            context, method, (payload,), {})
 
-                # Add plugin to notification list, by their type.
-                self._notification_pool[l_type].append(plugin)
-
-                # Add message buffer for the plugin
-                if not plugin.__class__ in self._plugins_buffer_pool:
-                    self._plugins_buffer_pool[plugin.__class__] = [plugin, list()]
 
     #----------------------------------------------------------------------
-    def notify(self, message):
+    def send_info(self, plugin, message_info):
         """
-        Notify messages to the plugins.
+        Send information to the plugins.
 
-        :param message: A message to send to plugins
+        :param plugin: Target plugin
+        :type plugin: Plugin
+
+        :param message_info: Information to send to plugins
+        :type message_info: Information
+        """
+        self.__run_plugin(plugin, "recv_info", message_info)
+
+
+    #----------------------------------------------------------------------
+    def send_msg(self, plugin, message):
+        """
+        Send messages to the plugins.
+
+        :param plugin: Target plugin
+        :type plugin: Plugin
+
+        :param message: Message to send to plugins
         :type message: Message
         """
-        if isinstance(message, Message):
-            m_plugins_to_notify = set()
-
-            # Plugins that expect all types of messages
-            m_plugins_to_notify.update(self._notification_pool["all"])
-
-            # Plugins that expect this type of messages
-            if message.message_info.result_subtype in self._notification_pool:
-                m_plugins_to_notify.update(self._notification_pool[message.message_info.result_subtype])
-
-            # Notify message to buffer list of each plugin
-            for l_plugin in m_plugins_to_notify:
-                self._plugins_buffer_pool[l_plugin.__class__][1].append(message)
-
-            # Release the dispatch
-            self._waiting_messages.release()
-
+        self.__run_plugin(plugin, "recv_msg", message)
 
 
 #------------------------------------------------------------------------------
 #
-# Notificator for User Interface manager
+# Notifier for User Interface manager
 #
 #------------------------------------------------------------------------------
 class UINotifier(Notifier):
     """
-    This class manage the pools of messages for -UI- plugins, and notify them
-    when a message is received.
+    Dispatcher of messages for UI plugins.
     """
 
-    #----------------------------------------------------------------------
-    def __init__(self):
-        """Constructor"""
-
-        # Call superclass constructor
-        super(UINotifier, self).__init__()
-
 
     #----------------------------------------------------------------------
-    def add_plugin(self, plugin):
+    def send_info(self, plugin, message_info):
         """
-        Add a plugin to manage
+        Send information to the plugins.
 
-        :param plugin: a UIPlugin type to manage
-        :type plugin: UIPlugin
+        :param plugin: Target plugin
+        :type plugin: Plugin
+
+        :param message_info: Information to send to plugins
+        :type message_info: Information
         """
+        # XXX this allows UI plugins to have state, do we really want this?
+        if hasattr(plugin, "recv_info"):
+            try:
+                plugin.recv_info(message_info)
+            except Exception, e:
+                msg = "Plugin %s raised an exception:\n%s"
+                msg = msg % (plugin.__class__.__name__, format_exception(e))
+                Logger.log_error(msg)
 
-        # For testing plugins only
-        if isinstance(plugin, UIPlugin):
-
-            # Add plugin to notification pool
-            self._notification_pool["all"].append(plugin)
-
-            # Create buffer for plugin
-            if not plugin.__class__ in self._plugins_buffer_pool:
-                self._plugins_buffer_pool[plugin.__class__] = [plugin, list()]
 
     #----------------------------------------------------------------------
-    def notify(self, message):
+    def send_msg(self, plugin, message):
         """
-        Notify messages to the plugins.
+        Send messages to the plugins.
 
-        :param message: A message to send to plugins
+        :param plugin: Target plugin
+        :type plugin: Plugin
+
+        :param message: Message to send to plugins
         :type message: Message
         """
-        if isinstance(message, Message):
-
-            # Notify message to buffer list of each plugin
-            for l_plugin in self._notification_pool["all"]:
-                self._plugins_buffer_pool[l_plugin.__class__][1].append(message)
-
-            # Release the dispatch
-            self._waiting_messages.release()
-
-
+        # XXX this allows UI plugins to have state, do we really want this?
+        if hasattr(plugin, "recv_msg"):
+            try:
+                plugin.recv_msg(message)
+            except Exception, e:
+                msg = "Plugin %s raised an exception:\n%s"
+                msg = msg % (plugin.__class__.__name__, format_exception(e))
+                Logger.log_error(msg)

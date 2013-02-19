@@ -24,66 +24,80 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.plugins.plugin import GlobalPLugin
+from core.api.plugins.plugin import GlobalPlugin
 from core.api.logger import Logger
 
-class TemplatePlugin(GlobalPLugin):
+class TemplatePlugin(GlobalPlugin):
     """
     This is a plugin that you can use as template.
     """
 
-    #----------------------------------------------------------------------
-    def check_input_params(self, inputParams):
-        """
-        Check input user parameters
-
-        Parameters will be passed as instance of 'GlobalParams"
-
-        If any parameter is not correct o there is any error, 'ValueError'
-        a exception must be raised.
-
-        :param inputParams: input parameters to check
-        :type inputParams: GlobalParams
-        """
-        #
-        #
-        # Put here your check code
-        #
-        #
-        raise NotImplementedError("All plugins must implement this method!")
 
     #----------------------------------------------------------------------
     def display_help(self):
-        """Get the help message for this plugin."""
         #
-        # Put here extended information, and usage details, to display when
-        # a user run progan with "--plugin-info" option.
+        #
+        # Return here the help message to be shown when the user runs the
+        # program with the "--plugin-info" switch.
         #
         # Example:
         #
-        # info =
-        # """
-        #    This text is will displayed when user need to see additional
-        #    information about the plugin, and usage details.
+        return """
+           This text is will displayed when user need to see additional
+           information about the plugin, and usage details.
+
+           Usage: This plugin need 'x' parameter to run... etc
+        """
+
+
+    #----------------------------------------------------------------------
+    def check_input_params(self, inputParams):
         #
-        #    Usage: This plugin need 'x' parameter to run... etc
-        # """
-        # return info
         #
-        raise NotImplementedError("All plugins must implement this method!")
+        # Put here your check code. The inputParams variable is an instance
+        # of GlobalParams. Raise an exception if there's an error.
+        #
+        #
+        pass
+
+
+    #----------------------------------------------------------------------
+    def get_accepted_info(self):
+        #
+        #
+        # Return here the list of the types of info you want to receive.
+        #
+        # To build the list, you will need to use the constants of
+        # the core.api.results package.
+        #
+        # An empty list means you don't get any info at all!
+        #
+        # To get all possible types of information, return None.
+        #
+        # Example:
+        #
+        # To receive XSS results and URLs, write this:
+        #
+        # 1 - Include libraries, at top of this file:
+        #
+        #     from core.api.results.information.information import Information
+        #     from core.api.results.injection.injection import Injection
+        #
+        # 2 - Make the list with the info we want receive:
+        #
+        #     return list(Information.INFORMATION_URL, Injection.XSS_REFLECTED)
+        #
+        #
+        return None
+
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-        """
-        Callback method to receive information to be processed.
-
-        :param info: input info to process
-        :type info: some subclass of Result
-        """
         #
-        # Put here the code you want to execute when a info is received.
         #
-        # This method act as a "main" function. All the functionality
+        # Put here the code you want to execute when info is received.
+        #
+        # This method acts as a "main" function. All the functionality
         # must be put here.
         #
         # Example:
@@ -101,39 +115,7 @@ class TemplatePlugin(GlobalPLugin):
         #
         #     VERY IMPORTANT
         #     ==============
-        #     NEVER USE 'print' function to display information. Use
-        #     IO library instead.
+        #     NEVER USE 'print' function to display information.
+        #     Use the logger instead.
         #
-        Logger.log("Template plugin: It's works!\n")
-
-
-    #----------------------------------------------------------------------
-    def get_accepted_info(self):
-        """
-        Return a list of constants describing
-        which messages are accepted by this plugin.
-
-        Messages types can be found at the Message class.
-
-        :returns: list -- list with constants
-        """
-        #
-        # Put here the list of type of info you want to receive.
-        #
-        # To do the list, you will need to use the constants of
-        # Result class.
-        #
-        # Example:
-        #
-        # Receive XSS results and URLs, write this:
-        #
-        # 1 - Include libraries, at top of this file:
-        #
-        #     from core.api.results.information.information import Information
-        #     from core.api.results.injection.injection import Injection
-        #
-        # 2 - Make the list with the info we want receive:
-        #
-        #     return list(Information.INFORMATION_URL, Injection.XSS_REFLECTED)
-        #
-        raise NotImplementedError("All plugins must implement this method!")
+        Logger.log("Template plugin: It's works!")
