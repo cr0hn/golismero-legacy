@@ -233,18 +233,11 @@ class AuditNotifier(Notifier):
         orchestrator = audit.orchestrator
 
         # Prepare the context for the OOP observer
-        context = orchestrator.get_context(audit.name)
-
-        # Get the plugin information
-        info = PriscillaPluginManager().get_plugin_info_from_instance(plugin)[1]
-
-        # Get the plugin module and class
-        module = info.plugin_module
-        clazz  = info.plugin_class
+        context = orchestrator.get_context(audit.name, plugin)
 
         # Run the callback in a pooled process
         orchestrator.processManager.run_plugin(
-            context, module, clazz, method, (payload,), {})
+            context, method, (payload,), {})
 
 
     #----------------------------------------------------------------------

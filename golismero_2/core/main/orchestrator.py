@@ -67,9 +67,9 @@ class Orchestrator (object):
         self.__init_api()
 
         # Load the plugins
-        pluginManager = PriscillaPluginManager()
-        pluginManager.find_plugins(self.__config.plugins_folder)
-        pluginManager.load_plugins(self.__config.plugins)
+        self.__pluginManager = PriscillaPluginManager()
+        self.__pluginManager.find_plugins(self.__config.plugins_folder)
+        self.__pluginManager.load_plugins(self.__config.plugins)
 
         # Process manager
         self.__processManager = ProcessManager(self.__config)
@@ -141,18 +141,38 @@ class Orchestrator (object):
 
             # Stop the program execution
             if message.message_info:
-                ##raise SystemExit(0)       # Planned shutdown
                 exit(0)                   # Planned shutdown
             else:
                 raise KeyboardInterrupt() # User cancel
 
 
     #----------------------------------------------------------------------
-    def get_context(self, audit_name):
+    def get_context(self, audit_name, plugin):
         """
         Prepare a Context object to pass to the plugins.
+
+        :param audit_name: Name of the audit.
+        :type audit_name: str
+
+        :param plugin: Plugin instance.
+        :type plugin: Plugin
+
+        :returns: Context -- OOP plugin execution context
         """
-        return Context(audit_name, self.__queue)
+
+        # FIXME:
+        # The only reason this method is here is because we need self.__queue.
+        # Otherwise, by design it should belong to the ProcessManager.
+
+        # Get the plugin information
+        info = self.__pluginManager.get_plugin_info_from_instance(plugin)[1]
+
+        # Get the plugin module and class
+        module = info.plugin_module
+        clazz  = info.plugin_class
+
+        # Return the context instance
+        return Context(module, clazz, audit_name, self.__queue)
 
 
     #----------------------------------------------------------------------

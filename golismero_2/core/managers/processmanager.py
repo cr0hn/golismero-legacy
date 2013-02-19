@@ -35,7 +35,7 @@ from imp import load_source
 # Serializable bootstrap function to run plugins in subprocesses.
 # This is required for Windows support, since we don't have os.fork() there.
 # See: http://docs.python.org/2/library/multiprocessing.html#windows
-def bootstrap(context, module, clazz, func, argv, argd):
+def bootstrap(context, func, argv, argd):
     observer = None
     try:
         try:
@@ -47,7 +47,8 @@ def bootstrap(context, module, clazz, func, argv, argd):
             # TODO: hook stdout and stderr to catch print statements
 
             # Load the plugin module
-            mod = load_source("_plugin_tmp_" + clazz.lower(), module)
+            mod = load_source("_plugin_tmp_" + context.plugin_class.lower(),
+                              context.plugin_module)
 
             # Get the plugin class
             cls = getattr(mod, clazz)
@@ -108,18 +109,12 @@ class ProcessManager (object):
 
 
     #----------------------------------------------------------------------
-    def run_plugin(self, context, module, clazz, func, argv, argd):
+    def run_plugin(self, context, func, argv, argd):
         """
         Run a plugin in a pooled process.
 
-        :param context: context for the OOP observer
+        :param context: context for the OOP plugin execution
         :type context: Context
-
-        :param module: module where the plugin class is defined
-        :type module: str
-
-        :param clazz: class of the plugin to run
-        :type clazz: str
 
         :param func: name of the method to execute
         :type func: str
@@ -134,10 +129,10 @@ class ProcessManager (object):
         # If we have a process pool, run the plugin asynchronously
         if self.__pool is not None:
             return self.__pool.apply_async(bootstrap,
-                    (context, module, clazz, func, argv, argd))
+                    (context, func, argv, argd))
 
         # Otherwise just call the plugin directly
-        return bootstrap(context, module, clazz, func, argv, argd)
+        return bootstrap(context, func, argv, argd)
 
 
     #----------------------------------------------------------------------
@@ -189,19 +184,48 @@ class ProcessManager (object):
 #------------------------------------------------------------------------------
 class Context (object):
     """
-    Serializable execution context for the OOP Observer.
+    Serializable execution context for the plugins.
     """
 
-    def __init__(self, audit_name, msg_queue):
-        self.__audit_name = audit_name
-        self.__msg_queue  = msg_queue
+    def __init__(self, plugin_module, plugin_class, audit_name, msg_queue):
+        """
+        Serializable execution context for the plugins.
+
+        :param plugin_module: Module where the plugin is to be loaded from.
+        :type plugin_module: str
+
+        :param plugin_class: Class name of the plugin.
+        :type plugin_class: str
+
+        :param audit_name: Name of the audit.
+        :type audit_name: str
+
+        :param msg_queue: Message queue where to send the responses.
+        :type msg_queue: Queue
+        """
+        self.__plugin_module = plugin_module
+        self.__plugin_class  = plugin_class
+        self.__audit_name    = audit_name
+        self.__msg_queue     = msg_queue
+
+    @property
+    def plugin_module(self):
+        "str -- Module where the plugin is to be loaded from."
+        return self.__plugin_module
+
+    @property
+    def plugin_class(self):
+        "str -- Class name of the plugin."
+        return self.__plugin_class
 
     @property
     def audit_name(self):
+        "str -- Name of the audit."
         return self.__audit_name
 
     @property
     def msg_queue(self):
+        "str -- Message queue where to send the responses."
         return self.__msg_queue
 
 

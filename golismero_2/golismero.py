@@ -36,6 +36,7 @@ __version__ = "2.0.0"
 
 import argparse
 import textwrap
+import datetime
 from os import path
 from sys import version_info, exit
 from starter import launcher
@@ -178,4 +179,12 @@ if __name__ == '__main__':
 
     #------------------------------------------------------------
     # Launch GoLismero
-    launcher(cmdParams)
+    Logger.log("GoLismero started at %s" % datetime.datetime.now())
+    try:
+        launcher(cmdParams)
+    except KeyboardInterrupt:
+        Logger.log("GoLismero cancelled by the user at %s" % datetime.datetime.now())
+        exit(1)
+    except SystemExit:
+        Logger.log("GoLismero stopped at %s" % datetime.datetime.now())
+        raise
