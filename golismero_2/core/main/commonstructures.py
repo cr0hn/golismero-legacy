@@ -130,6 +130,9 @@ class GlobalParams (object):
         # Audit name
         self.audit_name = ""
 
+        # Audit database
+        self.audit_db = "memory://"
+
         # Maximum number of processes for execute plugins
         ##self.max_process = 4
         self.max_process = 0
@@ -197,6 +200,9 @@ class GlobalParams (object):
 
         # Get the name of the audit
         cmdParams.audit_name = args.audit_name
+
+        # Audit database
+        cmdParams.audit_db = args.audit_db
 
         # Maximum number of processes for execute plugins
         ##cmdParams.max_process = args.max_process

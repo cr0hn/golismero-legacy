@@ -28,7 +28,7 @@ from core.main.commonstructures import GlobalParams
 from core.managers.priscillapluginmanager import PriscillaPluginManager
 from core.messaging.notifier import AuditNotifier
 from core.messaging.message import Message
-from core.database.resultdb import ResultMemoryDB
+from core.database.resultdb import ResultDB
 from core.api.results.information.url import Url
 from core.api.results.result import Result
 from multiprocessing import Queue
@@ -148,6 +148,8 @@ class AuditManager (object):
         :param message: incoming message
         :type message: Message
 
+        :returns: bool - True if the message was sent, False if it was dropped
+
         :raises: TypeError, ValueError, KeyError
         """
         if not isinstance(message, Message):
@@ -157,7 +159,7 @@ class AuditManager (object):
         if message.message_type == Message.MSG_TYPE_INFO:
             if not message.audit_name:
                 raise ValueError("Info message with no target audit!")
-            self.get_audit(message.audit_name).send_msg(message)
+            return self.get_audit(message.audit_name).send_msg(message)
 
         # Process control messages
         elif message.message_type == Message.MSG_TYPE_CONTROL:
@@ -165,7 +167,20 @@ class AuditManager (object):
             # Send ACKs to their target audit
             if message.message_code == Message.MSG_CONTROL_ACK:
                 if message.audit_name:
-                    self.get_audit(message.audit_name).acknowledge()
+                    audit = self.get_audit(message.audit_name)
+                    audit.acknowledge()
+
+                    # Check for audit termination.
+                    #
+                    # NOTE: This code assumes messages always arrive in order,
+                    #       and ACKs are always sent AFTER responses from plugins.
+                    #
+                    if not audit.expecting_ack:
+                        m = Message(message_type = Message.MSG_TYPE_CONTROL,
+                                    message_code = Message.MSG_CONTROL_STOP_AUDIT,
+                                    message_info = True,   # True for finished, False for user cancel
+                                    audit_name   = message.audit_name)
+                        self.__orchestrator.dispatch_msg(m)
 
             # Stop an audit if requested
             elif message.message_code == Message.MSG_CONTROL_STOP_AUDIT:
@@ -175,6 +190,8 @@ class AuditManager (object):
                 self.remove_audit(message.audit_name)
 
             # TODO: pause and resume audits, start new audits
+
+        return True
 
 
     #----------------------------------------------------------------------
@@ -222,7 +239,7 @@ class Audit (object):
         self.__notifier = AuditNotifier(self)
 
         # create result db
-        self.__database = ResultMemoryDB(self)
+        self.__database = ResultDB(self.__auditname, auditParams.audit_db)
 
 
     @property
@@ -297,10 +314,12 @@ class Audit (object):
     #----------------------------------------------------------------------
     def send_msg(self, message):
         """
-        Send message info to the plugins of this audit.
+        Send messages to the plugins of this audit.
 
-        :param message: The message unencapsulate to get info.
+        :param message: The message to send.
         :type message: Message
+
+        :returns: bool - True if the message was sent, False if it was dropped
         """
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
@@ -310,13 +329,19 @@ class Audit (object):
 
             # Drop duplicate results
             if message.message_info in self.__database:
-                return
+                self.__expecting_ack += 1
+                m = Message(message_type = Message.MSG_TYPE_CONTROL,
+                            message_code = Message.MSG_CONTROL_ACK,
+                            audit_name   = self.name)
+                self.orchestrator.dispatch_msg(m)
+                return False
 
             # Add new results to the database
             self.__database.add(message.message_info)
 
         # Send the message to the plugins
         self.__expecting_ack += self.__notifier.notify(message)
+        return True
 
 
     #----------------------------------------------------------------------
@@ -329,4 +354,4 @@ class Audit (object):
         # XXX TODO
         #
         #
-        pass
+        self.__database.close()
