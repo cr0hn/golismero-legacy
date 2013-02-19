@@ -24,6 +24,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from core.api.logger import Logger
 from core.managers.auditmanager import AuditManager
 from core.managers.messagemanager import MessageManager
 from core.managers.priscillapluginmanager import PriscillaPluginManager
@@ -34,6 +35,7 @@ from core.messaging.message import Message
 
 from multiprocessing import Queue
 from time import sleep
+from traceback import format_exc
 
 
 
@@ -138,7 +140,11 @@ class Orchestrator (object):
             message.message_code == Message.MSG_CONTROL_STOP:
 
             # Stop the program execution
-            raise KeyboardInterrupt()
+            if message.message_info:
+                ##raise SystemExit(0)       # Planned shutdown
+                exit(0)                   # Planned shutdown
+            else:
+                raise KeyboardInterrupt() # User cancel
 
 
     #----------------------------------------------------------------------
@@ -162,21 +168,52 @@ class Orchestrator (object):
 
                 # Wait for a message to arrive.
                 message = self.__queue.get()
-                if not isinstance(message, Message):
-                    raise TypeError("Expected Message, got %s" % type(message))
 
-                # Dispatch the message.
-                self.dispatch_msg(message)
+                try:
+                    if not isinstance(message, Message):
+                        raise TypeError("Expected Message, got %s" % type(message))
+
+                    # Dispatch the message.
+                    self.dispatch_msg(message)
+
+                    # Check for audit termination.
+                    #
+                    # NOTE: This code assumes messages always arrive in order,
+                    #       and ACKs are always sent AFTER responses from plugins.
+                    #
+                    if  message.message_type == Message.MSG_TYPE_CONTROL and \
+                        message.message_code == Message.MSG_CONTROL_ACK:
+                            if not self.__auditManager.get_audit(message.audit_name).expecting_ack:
+                                m = Message(message_type = Message.MSG_TYPE_CONTROL,
+                                            message_code = Message.MSG_CONTROL_STOP_AUDIT,
+                                            message_info = True,   # True for finished, False for user cancel
+                                            audit_name   = message.audit_name)
+                                self.dispatch_msg(m)
+                                #
+                                # XXX TODO add an "audit stop response" message instead!
+                                # today it's just a method call but tomorrow it'll be asynchronous
+                                #
+                                if  self.__config.run_mode == GlobalParams.RUN_MODE.standalone and \
+                                    not self.__auditManager.has_audits():
+                                        m = Message(message_type = Message.MSG_TYPE_CONTROL,
+                                                    message_code = Message.MSG_CONTROL_STOP,
+                                                    message_info = True)  # True for finished, False for user cancel
+                                        self.dispatch_msg(m)
+
+                # If an exception is raised during message processing,
+                # just log the exception and continue.
+                except Exception:
+                    Logger.log_error("Error processing message!\n%s" % format_exc())
 
         finally:
             try:
 
-                # Stop the UI
+                # Stop the UI.
                 self.__ui.stop()
 
             finally:
 
-                # Stop the process manager
+                # Stop the process manager.
                 self.__processManager.stop()
 
 

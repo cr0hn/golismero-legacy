@@ -105,4 +105,4 @@ class UIManager (object):
         """
         Stop UI plugins
         """
-        self.__notifier.stop()
+        pass

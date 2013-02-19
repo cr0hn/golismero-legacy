@@ -94,6 +94,16 @@ class AuditManager (object):
 
 
     #----------------------------------------------------------------------
+    def has_audits(self):
+        """
+        Determine if there are audits currently runnning.
+
+        :returns: True if there are audits in progress, False otherwise.
+        """
+        return bool(self.__audits)
+
+
+    #----------------------------------------------------------------------
     def get_all_audits(self):
         """
         Get the list of audits currently running.
@@ -112,9 +122,22 @@ class AuditManager (object):
         :type auditName: str
 
         :returns: Audit -- instance of audit
-        :raises: TypeError, KeyError
+        :raises: KeyError
         """
         return self.__audits[auditName]
+
+
+    #----------------------------------------------------------------------
+    def remove_audit(self, auditName):
+        """
+        Delete an instance of an audit by its name.
+
+        :param auditName: audit name
+        :type auditName: str
+
+        :raises: KeyError
+        """
+        del self.__audits[auditName]
 
 
     #----------------------------------------------------------------------
@@ -149,6 +172,7 @@ class AuditManager (object):
                 if not message.audit_name:
                     raise ValueError("I don't know which audit to stop...")
                 self.get_audit(message.audit_name).stop()
+                self.remove_audit(message.audit_name)
 
             # TODO: pause and resume audits, start new audits
 
@@ -262,6 +286,15 @@ class Audit (object):
 
 
     #----------------------------------------------------------------------
+    @property
+    def expecting_ack(self):
+        """
+        Return the number of ACKs expected by this audit.
+        """
+        return self.__expecting_ack
+
+
+    #----------------------------------------------------------------------
     def send_msg(self, message):
         """
         Send message info to the plugins of this audit.
@@ -291,7 +324,9 @@ class Audit (object):
         """
         Stop audit.
         """
-        self.__notifier.stop()
-
-
-
+        #
+        #
+        # XXX TODO
+        #
+        #
+        pass
