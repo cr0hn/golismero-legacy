@@ -157,6 +157,9 @@ class GlobalParams (object):
         # Include subdomains?
         self.include_subdomains = True
 
+        # Subdomains as regex expresion
+        self.subdomain_regex = ""
+
 
     #----------------------------------------------------------------------
     @classmethod
@@ -183,6 +186,7 @@ class GlobalParams (object):
 
         # Set verbosity level
         cmdParams.verbose = args.verbose
+
 
         #
         # Plugins options
@@ -217,8 +221,12 @@ class GlobalParams (object):
         # Include subdomains?
         cmdParams.include_subdomains = args.include_subdomains
 
+        # Subdomains as regex expresion
+        cmdParams.subdomain_regex = args.subdomain_regex
+
         # Check params
         cmdParams.check_params()
+
 
         return cmdParams
 
@@ -242,3 +250,13 @@ class GlobalParams (object):
         # Check plugins selected
         if self.plugins is not None and not self.plugins:
             raise ValueError("No plugins selected for execution.")
+
+        # Check regular expresion
+        if self.subdomain_regex:
+            from re import compile, error
+
+            try:
+                compile(self.subdomain_regex)
+            except error, e:
+                raise ValueError("regex expresion no valid: %s." % e.message)
+

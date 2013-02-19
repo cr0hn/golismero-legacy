@@ -37,28 +37,6 @@ from core.api.logger import Logger
 from re import match, compile
 
 #------------------------------------------------------------------------------
-class CustomPoolManager(object):
-    """"""
-
-    #----------------------------------------------------------------------
-    def __init__(self, config):
-        """Constructor"""
-        self.__pools = {}
-        self.__config = config
-
-
-    #----------------------------------------------------------------------
-    def get_pool(self, host):
-        """Get a pool for a host"""
-        if host not in self.__pools:
-            m_pattern = ".*%s" % host if self.__config.include_subdomains else None
-            self.__pools[host] = connection_from_url(host, host_pattern=m_pattern, maxsize = self.__config.max_connections, block = True)
-
-        return self.__pools[host]
-
-
-
-#------------------------------------------------------------------------------
 class NetManager (object):
     """"""
 
@@ -221,7 +199,11 @@ class Web (Protocol):
         self.__config = config
 
         # re object with pattern for domain and/or subdomains
-        self.matcher = compile(".*%s" % self.__config.target[0] if self.__config.include_subdomains else None)
+        self.macher = None
+        if self.__config.subdomain_regex:
+            self.matcher = compile("%s%s" % (self.__config.suddomains_regex, self.__config.target[0]))
+        else:
+            self.matcher = compile(".*%s" % self.__config.target[0] if self.__config.include_subdomains else None)
 
 
     #----------------------------------------------------------------------

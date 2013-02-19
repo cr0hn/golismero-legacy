@@ -77,6 +77,7 @@ if __name__ == '__main__':
     gr_net = parser.add_argument_group("network")
     gr_net.add_argument("-t", "--max-connections", action="store", dest="max_connections", help="maximum number of simultaneous connections by host.", default=3)
     gr_net.add_argument("--no-subdomains", action="store_false", dest="include_subdomains", help="no include subdomains of selected host", default=True)
+    gr_net.add_argument("--regex", action="store", dest="subdomain_regex", help="include subdomains as regex exprexion", default="")
 
     gr_audit = parser.add_argument_group("audit")
     gr_audit.add_argument('--audit-name', action='store', dest='audit_name', help='customize the audit name')
