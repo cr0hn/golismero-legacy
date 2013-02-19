@@ -7,10 +7,9 @@
 import logging
 import socket
 import errno
-import re
 
 from socket import error as SocketError, timeout as SocketTimeout
-from .util import resolve_cert_reqs, resolve_ssl_version
+from .util import resolve_cert_reqs, resolve_ssl_version, parse_url
 
 try: # Python 3
     from http.client import HTTPConnection, HTTPException
@@ -170,7 +169,7 @@ class HTTPConnectionPool(ConnectionPool, RequestMethods):
     scheme = 'http'
 
     def __init__(self, host, port=None, strict=False, timeout=None, maxsize=1,
-                 block=False, headers=None, host_pattern=None):
+                 block=False, headers=None):
         ConnectionPool.__init__(self, host, port)
         RequestMethods.__init__(self, headers)
 
@@ -178,11 +177,6 @@ class HTTPConnectionPool(ConnectionPool, RequestMethods):
         self.timeout = timeout
         self.pool = self.QueueCls(maxsize)
         self.block = block
-
-        # re object
-        self.host_pattern = host_pattern
-        if host_pattern:
-            self.matcher = re.compile(host_pattern)
 
 
         # Fill the queue up so that doing get() on it will block properly
@@ -327,14 +321,7 @@ class HTTPConnectionPool(ConnectionPool, RequestMethods):
             # Use explicit default port for comparison when none is given.
             port = port_by_scheme.get(scheme)
 
-        # Check if host match
-        if self.host_pattern:
-            if not self.matcher.match(host):
-                return False
-            else:
-                return (scheme, port) == (self.scheme, self.port)
-        else:
-            return (scheme, host, port) == (self.scheme, self.host, self.port)
+        return (scheme, host, port) == (self.scheme, self.host, self.port)
 
 
     def urlopen(self, method, url, body=None, headers=None, retries=3,
@@ -423,6 +410,11 @@ class HTTPConnectionPool(ConnectionPool, RequestMethods):
                 host = "%s:%d" % (host, self.port)
 
             raise HostChangedError(self, url, retries - 1)
+
+        # Filter URL, deleting hostname and schema from URL
+        #parsed_url = parse_url(url)
+        #m_url = "%s%s" % (parsed_url.path if parsed_url.path else "/", parsed_url.query if parsed_url.query else "")
+
 
         conn = None
 

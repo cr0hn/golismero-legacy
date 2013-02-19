@@ -29,10 +29,33 @@ __all__ = ["NetManager", "Web", "HTTP_Response"]
 
 from core.main.commonstructures import get_unique_id
 from thirdparty_libs.urllib3.util import parse_url
-from thirdparty_libs.urllib3 import connection_from_url, HTTPResponse
+from thirdparty_libs.urllib3 import PoolManager
 from core.api.results.information.html import *
 from time import time
 from core.api.results.information.url import Url
+from core.api.logger import Logger
+from re import match, compile
+
+#------------------------------------------------------------------------------
+class CustomPoolManager(object):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, config):
+        """Constructor"""
+        self.__pools = {}
+        self.__config = config
+
+
+    #----------------------------------------------------------------------
+    def get_pool(self, host):
+        """Get a pool for a host"""
+        if host not in self.__pools:
+            m_pattern = ".*%s" % host if self.__config.include_subdomains else None
+            self.__pools[host] = connection_from_url(host, host_pattern=m_pattern, maxsize = self.__config.max_connections, block = True)
+
+        return self.__pools[host]
+
 
 
 #------------------------------------------------------------------------------
@@ -47,8 +70,6 @@ class NetManager (object):
 
     # Pool manager. A pool for target
     __http_pool_manager = None
-
-    # Config
     __config = None
 
     #----------------------------------------------------------------------
@@ -57,10 +78,8 @@ class NetManager (object):
         """Constructor"""
         NetManager.__config = config
 
-        m_pattern = ".*%s" % NetManager.__config.targets[0] if NetManager.__config.include_subdomains else None
-
         # Set pool manager
-        NetManager.__http_pool_manager = connection_from_url(NetManager.__config.targets[0], host_pattern=m_pattern, maxsize = NetManager.__config.max_connections, block = True)
+        NetManager.__http_pool_manager = PoolManager(NetManager.__config.max_connections)
 
 
     #----------------------------------------------------------------------
@@ -75,10 +94,13 @@ class NetManager (object):
         :raises: ValueError
         """
         if protocol is NetManager.TYPE_WEB:
-            return Web(NetManager.__http_pool_manager)
+            return Web(NetManager.__http_pool_manager, NetManager.__config)
 
         else:
             raise ValueError("Unknown protocol type, value: %d" % protocol)
+
+
+
 
 #------------------------------------------------------------------------------
 class Protocol (object):
@@ -191,11 +213,16 @@ class Web (Protocol):
     """
 
     #----------------------------------------------------------------------
-    def __init__(self, http_pool):
+    def __init__(self, http_pool, config):
         """Constructor"""
         super(Web, self).__init__()
 
         self.__http_pool_manager = http_pool
+        self.__config = config
+
+        # re object with pattern for domain and/or subdomains
+        self.matcher = compile(".*%s" % self.__config.target[0] if self.__config.include_subdomains else None)
+
 
     #----------------------------------------------------------------------
     def state(self):
@@ -227,7 +254,7 @@ class Web (Protocol):
         :param redirect: If you want to follow HTTP redirect.
         :type redirect: bool
 
-        :returns: HTTPResponse instance.
+        :returns: HTTPResponse instance or None if any error or URL out of scope.
 
         :raises: TypeError
         """
@@ -237,9 +264,15 @@ class Web (Protocol):
         if isinstance(URL, basestring):
             m_url = URL
         elif isinstance(URL, Url):
-            m_url = URL.raw_url
+            m_url = URL.url_raw
         else:
             raise TypeError("Expected string or Url, got %s instead" % type(URL))
+
+        # Check for host matching
+        m_parser = parse_url(m_url)
+        if m_parser.hostname and not self.matcher.match(m_parser.hostname):
+            Logger.log_verbose("[!] Url '%s' out of scope. Skiping it." % m_url)
+            return None
 
         m_response = None
         m_time = None
@@ -265,7 +298,7 @@ class Web (Protocol):
                 if cache:
                     self.set_cache(URL, m_response)
             except Exception, e:
-                print e.message
+                Logger.log_error_verbose("[!] Unknown error: '%s'." % e.message)
 
 
         return m_response

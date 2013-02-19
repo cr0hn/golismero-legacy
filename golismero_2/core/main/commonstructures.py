@@ -152,7 +152,7 @@ class GlobalParams (object):
         #
 
         # Maximum number of connection, by host
-        self.max_connections = 3
+        self.max_connections = 15
 
         # Include subdomains?
         self.include_subdomains = True
