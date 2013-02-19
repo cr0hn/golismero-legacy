@@ -50,13 +50,13 @@ class Spider(TestingPlugin):
         :param inputParams: Parametros de entrada a comprobar
         :type inputParams: GlobalParam
         """
-        raise NotImplementedError("All plugins must implement this method!")
+        pass
 
     #----------------------------------------------------------------------
     def display_help(self):
         """Get the help message for this plugin."""
         # TODO: this could default to the description found in the metadata.
-        raise NotImplementedError("All plugins must implement this method!")
+        return self.__doc__
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
@@ -67,7 +67,7 @@ class Spider(TestingPlugin):
 
             # Request this URL
             m_manager = NetManager.get_connection()
-            p = m_manager.get(Url)
+            p = m_manager.get(info)
 
             # Get links
             m_links = p.links

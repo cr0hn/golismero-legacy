@@ -26,25 +26,60 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["ProcessManager", "OOPObserver"]
 
-from core.main.commonstructures import  GlobalParams
+from core.main.commonstructures import GlobalParams
 from core.messaging.message import Message
 from multiprocessing import Pool, Queue
+from imp import load_source
 
 
 # Serializable bootstrap function to run plugins in subprocesses.
 # This is required for Windows support, since we don't have os.fork() there.
 # See: http://docs.python.org/2/library/multiprocessing.html#windows
-def bootstrap(context, module, clazz, init_argv, init_argd, func, argv, argd):
+def bootstrap(context, module, clazz, func, argv, argd):
+    observer = None
     try:
-        cls = __import__(module, fromlist=[clazz])
-        instance = cls(*init_argv, **init_argd)
-        if context is not None and hasattr(instance, "_set_observer"):
-            instance._set_observer( OOPObserver(context) )
-        return getattr(instance, func)(*argv, **argd)
+        try:
+            # Create the OOP observer so the plugin can talk back
+            observer = OOPObserver(context)
+
+            # From now on we can talk back to the Orchestrator :)
+
+            # TODO: hook stdout and stderr to catch print statements
+
+            # Load the plugin module
+            mod = load_source("_plugin_tmp_" + clazz.lower(), module)
+
+            # Get the plugin class
+            cls = getattr(mod, clazz)
+
+            # Instance the plugin
+            instance = cls()
+
+            # Set the OOP observer for the plugin
+            instance._set_observer(observer)
+
+            # Call the callback method
+            getattr(instance, func)(*argv, **argd)
+
+        # No matter what happens, send back an ACK
+        finally:
+            observer.send_ack()
+
+    # Tell the Orchestrator there's been an error
     except:
-        # XXX DEBUG
-        import traceback
-        traceback.print_exc()
+        if observer is not None:
+            import traceback
+            message = Message(message_type = Message.MSG_TYPE_CONTROL,
+                              message_code = Message.MSG_CONTROL_ERROR,
+                              message_info = traceback.format_exc())
+            observer.send_msg(message)
+        else:
+
+            # We can't tell the Orchestrator about this error! :(
+
+            # XXX DEBUG
+            import traceback
+            traceback.print_exc()
 
 
 #------------------------------------------------------------------------------
@@ -73,26 +108,20 @@ class ProcessManager (object):
 
 
     #----------------------------------------------------------------------
-    def execute(self, context, module, clazz, init_argv, init_argd, func, argv, argd):
+    def run_plugin(self, context, module, clazz, func, argv, argd):
         """
         Run a plugin in a pooled process.
 
-        :param context: context for the bootstrap function
+        :param context: context for the OOP observer
         :type context: Context
 
-        :param module: module where the class is defined
+        :param module: module where the plugin class is defined
         :type module: str
 
-        :param clazz: class of the plugin to run, must be serializable
+        :param clazz: class of the plugin to run
         :type clazz: str
 
-        :param init_argv: positional arguments to the constructor
-        :type init_argv: tuple
-
-        :param init_argd: keyword arguments to the constructor
-        :type init_argd: dict
-
-        :param func: name of the method to execute, all extra arguments to this function will be passed to it
+        :param func: name of the method to execute
         :type func: str
 
         :param argv: positional arguments to the function call
@@ -105,14 +134,10 @@ class ProcessManager (object):
         # If we have a process pool, run the plugin asynchronously
         if self.__pool is not None:
             return self.__pool.apply_async(bootstrap,
-                    (context,
-                     module, clazz, init_argv, init_argd,
-                     func, argv, argd))
+                    (context, module, clazz, func, argv, argd))
 
         # Otherwise just call the plugin directly
-        return bootstrap(context,
-                         module, clazz, init_argv, init_argd,
-                         func, argv, argd)
+        return bootstrap(context, module, clazz, func, argv, argd)
 
 
     #----------------------------------------------------------------------
@@ -191,16 +216,35 @@ class OOPObserver (object):
         :param context: Execution context for the OOP observer.
         :type context: Context
         """
-        super(OOPObserver, self).__init__(self)
+        super(OOPObserver, self).__init__()
         self.__context = context
+
+    def send_ack(self):
+        """
+        Send ACK messages from the plugins to the orchestrator.
+        """
+        message = Message(message_type = Message.MSG_TYPE_CONTROL,
+                          message_code = Message.MSG_CONTROL_ACK,
+                          audit_name   = self.__context.audit_name)
+        self.send_msg(message)
 
     def send_info(self, result):
         """
         Send results from the plugins to the orchestrator.
 
-        :param result:
+        :param result: Results to send
+        :type result: Result
         """
         message = Message(message_info = result,
                           message_type = Message.MSG_TYPE_INFO,
                           audit_name   = self.__context.audit_name)
+        self.send_msg(message)
+
+    def send_msg(self, message):
+        """
+        Send control messages from the plugins to the orchestrator.
+
+        :param message: Message to send
+        :type message: Message
+        """
         self.__context.msg_queue.put_nowait(message)

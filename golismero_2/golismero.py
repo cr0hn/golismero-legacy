@@ -36,6 +36,7 @@ __version__ = "2.0.0"
 
 import argparse
 import textwrap
+from os import path
 from sys import version_info, exit
 from starter import launcher
 from core.main.commonstructures import GlobalParams
@@ -70,6 +71,7 @@ if __name__ == '__main__':
     gr_main.add_argument('-I', "--user-interface", action='store', dest='user_interface', help='user interface mode [default: Console]', default="console", choices=[x.title() for x in GlobalParams.USER_INTERFACE._values.keys()])
     gr_main.add_argument("-v", "--verbose", action="count", default="0", help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", const="0", help="suppress text output")
+    ##gr_audit.add_argument('--max-process', action='store', dest='max_process', help='maximum number of plugins to run concurrently.', default="0")
 
     gr_net = parser.add_argument_group("network")
     gr_net.add_argument("-t", "--max-connections", action="store", dest="max_connections", help="maximum number of simultaneous connections by host.", default=3)
@@ -77,10 +79,10 @@ if __name__ == '__main__':
 
     gr_audit = parser.add_argument_group("audit")
     gr_audit.add_argument('--audit-name', action='store', dest='audit_name', help='customize the audit name')
-    gr_audit.add_argument('--max-process', action='store', dest='max_process', help='maximum number of plugins to run concurrently.', default="4")
 
     gr_plugins = parser.add_argument_group("plugins")
-    gr_plugins.add_argument('-P', '--plugin-enabled', action='append', dest='plugins', help="list of plugins to run [default: all]", default = ["all"] )
+    gr_plugins.add_argument('-P', '--enable-plugin', action='append', dest='plugins', help="customize which plugins to load" )
+    gr_plugins.add_argument('--plugins-folder', action='store', dest="plugins_folder", help="customize the location of the plugins" )
     gr_plugins.add_argument('--plugin-list', action='store_true', help="list available plugins")
     gr_plugins.add_argument('--plugin-info', action='store', dest="plugin_name", help="show plugin info")
 
@@ -94,28 +96,74 @@ if __name__ == '__main__':
         parser.error(str(e))
 
 
+    # Get the plugins folder from the parameters
+    # TODO: allow more than one plugin location!
+    plugins_folder = cmdParams.plugins_folder
+
+    # If no plugins folder is given, use the default
+    if not plugins_folder:
+        plugins_folder = path.abspath(__file__)
+        plugins_folder = path.split(plugins_folder)[0]
+        plugins_folder = path.join(plugins_folder, "plugins")
+        cmdParams.plugins_folder = plugins_folder
+
+
     #------------------------------------------------------------
     # List plugins
     if P.plugin_list:
+
+        # Load the plugins list
+        try:
+            manager = PriscillaPluginManager()
+            manager.find_plugins(plugins_folder)
+        except Exception, e:
+            Logger.log("[!] Error loading plugins list: %s" % e.message)
+            exit(1)
+
+        # Show the list of plugins
         Logger.configure(level=Logger.VERBOSE)
-        Logger.log("Plugin list\n-----------")
-        for i in PriscillaPluginManager().get_all_plugins():
-            Logger.log("- %s: %s" % (i[0], i[1]))
+        Logger.log("Plugin list")
+        Logger.log("-----------")
+        for name, info in manager.get_plugins().iteritems():
+            Logger.log("- %s: %s" % (name, info.display_name))
         exit(0)
+
 
     #------------------------------------------------------------
     # Display plugin info
     if P.plugin_name:
+
+        # Load the plugins list
+        try:
+            manager = PriscillaPluginManager()
+            manager.find_plugins(plugins_folder)
+        except Exception, e:
+            Logger.log("[!] Error loading plugins list: %s" % e.message)
+            exit(1)
+
+        # Show the plugin information
         Logger.configure(level=Logger.VERBOSE)
         try:
-            m_plugin_info = PriscillaPluginManager().get_plugin(P.plugin_name)
-            if m_plugin_info:
-                message = m_plugin_info.plugin_object.display_help()
+            m_plugin_info = manager.get_plugin_by_name(P.plugin_name)
+            m_plugin_obj  = manager.load_plugin_by_name(P.plugin_name)
+            if m_plugin_info and m_plugin_obj:
+                message = m_plugin_obj.display_help()
                 message = textwrap.dedent(message)
-                Logger.log("Information of plugin: '%s'\n------------" % m_plugin_info.name)
-                Logger.log(message)
+                Logger.log("Information for plugin: %s" % m_plugin_info.display_name)
+                Logger.log("----------------------")
+                Logger.log("Location: %s" % m_plugin_info.descriptor_file)
+                Logger.log("Source code: %s" % m_plugin_info.plugin_module)
+                if m_plugin_info.plugin_class:
+                    Logger.log("Class name: %s" % m_plugin_info.plugin_class)
+                if m_plugin_info.description != m_plugin_info.display_name:
+                    Logger.log("")
+                    Logger.log(m_plugin_info.description)
+                if message != m_plugin_info.description:
+                    Logger.log("")
+                    Logger.log(message)
             else:
                 Logger.log("[!] Plugin name not found")
+                exit(1)
             exit(0)
         except KeyError:
             Logger.log("[!] Plugin name not found")
@@ -126,6 +174,7 @@ if __name__ == '__main__':
         except Exception,e:
             Logger.log("[!] Error recovering plugin info: %s" % e.message)
             exit(1)
+
 
     #------------------------------------------------------------
     # Launch GoLismero

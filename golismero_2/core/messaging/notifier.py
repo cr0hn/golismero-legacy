@@ -31,9 +31,9 @@ __all__ = ["AuditNotifier", "UINotifier"]
 from core.api.logger import Logger
 from core.api.plugins.plugin import Plugin
 from core.messaging.message import Message
-from core.managers.processmanager import ProcessManager
+from core.managers.priscillapluginmanager import PriscillaPluginManager
 from collections import defaultdict
-from traceback import format_exception
+from traceback import format_exc
 
 
 class Notifier (object):
@@ -147,11 +147,12 @@ class Notifier (object):
                     count += 1
 
         # On error log the traceback
-        except Exception, e:
-            Logger.log_error("Error sending message to plugins: %s" % format_exception(e))
+        except Exception:
+            Logger.log_error("Error sending message to plugins: %s" % format_exc())
 
         # Return the count of messages sent
         return count
+
 
     #----------------------------------------------------------------------
     def send_info(self, module, clazz, message_info):
@@ -208,6 +209,45 @@ class AuditNotifier(Notifier):
 
 
     #----------------------------------------------------------------------
+    def __run_plugin(self, plugin, method, payload):
+        """
+        Send messages or information to the plugins.
+
+        :param plugin: Target plugin
+        :type plugin: Plugin
+
+        :param method: Callback method name
+        :type method: str
+
+        :param payload: Message or information to send to plugins
+        :type payload: Message or Result
+        """
+
+        # If the plugin doesn't support the callback method, drop the message
+        # XXX FIXME: maybe we want to raise an exception here instead
+        if not hasattr(plugin, method):
+            return
+
+        # Get the Audit and Orchestrator instances
+        audit        = self.__audit
+        orchestrator = audit.orchestrator
+
+        # Prepare the context for the OOP observer
+        context = orchestrator.get_context(audit.name)
+
+        # Get the plugin information
+        info = PriscillaPluginManager().get_plugin_info_from_instance(plugin)[1]
+
+        # Get the plugin module and class
+        module = info.plugin_module
+        clazz  = info.plugin_class
+
+        # Run the callback in a pooled process
+        orchestrator.processManager.run_plugin(
+            context, module, clazz, method, (payload,), {})
+
+
+    #----------------------------------------------------------------------
     def send_info(self, plugin, message_info):
         """
         Send information to the plugins.
@@ -218,29 +258,7 @@ class AuditNotifier(Notifier):
         :param message_info: Information to send to plugins
         :type message_info: Information
         """
-        #if not isinstance(plugin, Plugin):
-            #raise TypeError("Expected Plugin, got %s instead" % type(plugin))
-        #if not isinstance(message_info, Result):
-            #raise TypeError("Expected Result, got %s instead" % type(message_info))
-
-        if not hasattr(plugin, "recv_info"):
-            return
-
-        #
-        # TODO this is way too implementation dependent,
-        # some redesigning is needed here...
-        #
-
-        audit        = self.__audit
-        orchestrator = audit.orchestrator
-
-        context = orchestrator.get_context(audit.name)
-
-        module  = plugin.__module__
-        clazz   = plugin.__class__.__name__
-
-        orchestrator.processManager.execute(
-            context, module, clazz, (), {}, "recv_info", (message_info,), {})
+        self.__run_plugin(plugin, "recv_info", message_info)
 
 
     #----------------------------------------------------------------------
@@ -254,19 +272,7 @@ class AuditNotifier(Notifier):
         :param message: Message to send to plugins
         :type message: Message
         """
-        #if not isinstance(audit, Audit):
-            #raise TypeError("Expected Plugin, got %s instead" % type(plugin))
-        #if not isinstance(plugin, Plugin):
-            #raise TypeError("Expected Plugin, got %s instead" % type(plugin))
-
-        if hasattr(plugin, "recv_msg"):
-
-            module = plugin.__module__
-            clazz  = plugin.__class__.__name__
-            audit  = self.__audit
-
-            ProcessManager().execute(module, clazz, (audit.name, audit.params),
-                                     "recv_msg", (message,))
+        self.__run_plugin(plugin, "recv_msg", message)
 
 
 #------------------------------------------------------------------------------

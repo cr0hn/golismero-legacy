@@ -131,14 +131,18 @@ class GlobalParams (object):
         self.audit_name = ""
 
         # Maximum number of processes for execute plugins
-        self.max_process = 4
+        ##self.max_process = 4
+        self.max_process = 0
 
         #
         # Plugins options
         #
 
         # Enabled plugins
-        self.plugins = ["all"]
+        self.plugins = None
+
+        # Plugins folder
+        self.plugins_folder = None
 
         #
         # Networks options
@@ -184,6 +188,9 @@ class GlobalParams (object):
         # Get the list of enabled plugins
         cmdParams.plugins = args.plugins
 
+        # Get the plugins folder
+        cmdParams.plugins_folder = args.plugins_folder
+
         #
         # Audit options
         #
@@ -192,7 +199,7 @@ class GlobalParams (object):
         cmdParams.audit_name = args.audit_name
 
         # Maximum number of processes for execute plugins
-        cmdParams.max_process = args.max_process
+        ##cmdParams.max_process = args.max_process
 
         #
         # Network options
@@ -223,9 +230,9 @@ class GlobalParams (object):
             raise ValueError("Number of connections must be greater than 0, got %s." % params.max_connections)
 
         # Check max process
-        if self.max_process< 1:
-            raise ValueError("Number of process must be greater than 0, got %s." % params.max_process)
+        if self.max_process < 0:
+            raise ValueError("Number of process cannot be a negative number, got %s." % params.max_process)
 
         # Check plugins selected
-        if not self.plugins and "all" not in map(str.lower, params.plugins):
+        if self.plugins is not None and not self.plugins:
             raise ValueError("No plugins selected for execution.")

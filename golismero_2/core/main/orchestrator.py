@@ -58,14 +58,20 @@ class Orchestrator (object):
         # Incoming message queue
         self.__queue = Queue()
 
-        # Process manager
-        self.__processManager = ProcessManager(self.__config)
+        # Message manager
+        self.__messageManager = MessageManager(self.__config)
 
         # API managers
         self.__init_api()
 
-        # Message manager
-        self.__messageManager = MessageManager(self.__config)
+        # Load the plugins
+        pluginManager = PriscillaPluginManager()
+        pluginManager.find_plugins(self.__config.plugins_folder)
+        pluginManager.load_plugins(self.__config.plugins)
+
+        # Process manager
+        self.__processManager = ProcessManager(self.__config)
+        self.__processManager.start()
 
         # Audit manager
         self.__auditManager = AuditManager(self, self.__config)
@@ -116,6 +122,13 @@ class Orchestrator (object):
         """
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
+
+        # Drop duplicated results from audits
+        # XXX FIXME there should be a more elegant way to do this
+        if  message.message_type == Message.MSG_TYPE_INFO:
+            audit = self.__auditManager.get_audit(message.audit_name)
+            if message.message_info in audit.database:
+                return
 
         # Dispatch the message
         self.__messageManager.send_message(message)

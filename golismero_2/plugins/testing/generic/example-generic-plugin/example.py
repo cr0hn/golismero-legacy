@@ -70,7 +70,7 @@ class ExamplePlugin(TestingPlugin):
 
         :returns: list -- list with constants
         """
-        return list(Information.INFORMATION_URL)
+        return [Information.INFORMATION_URL]
 
     #----------------------------------------------------------------------
     def recv_info(self, info):

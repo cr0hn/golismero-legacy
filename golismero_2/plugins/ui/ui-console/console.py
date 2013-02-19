@@ -99,7 +99,7 @@ class ConsoleUIPlugin(UIPlugin):
 
         # URL type
         if info.result_type is Result.TYPE_INFORMATION and info.result_subtype == Information.INFORMATION_URL:
-            Logger.log("+ New url found: %s." % str(m_result))
+            Logger.log("+ New url found: %s." % str(info))
 
 
     #----------------------------------------------------------------------

@@ -114,9 +114,6 @@ class AuditManager (object):
         :returns: Audit -- instance of audit
         :raises: TypeError, KeyError
         """
-        if not isinstance(auditName, basestring):
-            raise TypeError("Audit name must be a string")
-
         return self.__audits[auditName]
 
 
@@ -201,7 +198,7 @@ class Audit (object):
         self.__notifier = AuditNotifier(self)
 
         # create result db
-        self.__db = ResultMemoryDB(self)
+        self.__database = ResultMemoryDB(self)
 
 
     @property
@@ -216,6 +213,10 @@ class Audit (object):
     def params(self):
         return self.__audit_params
 
+    @property
+    def database(self):
+        return self.__database
+
 
     #----------------------------------------------------------------------
     def __generateAuditName(self):
@@ -224,7 +225,7 @@ class Audit (object):
 
         :returns: str -- generated name for the audit.
         """
-        return "golismero-".join(datetime.now().strftime("%Y-%m-%d-%H_%M"))
+        return "golismero-" + datetime.now().strftime("%Y-%m-%d-%H_%M")
 
 
     #----------------------------------------------------------------------
@@ -237,13 +238,14 @@ class Audit (object):
         self.__expecting_ack = 0
 
         # Load testing plugins
-        m_audit_plugins = PriscillaPluginManager().get_plugins_by_category(self.__audit_params.plugins, "testing")
+        m_audit_plugins = PriscillaPluginManager().load_plugins(self.__audit_params.plugins, "testing")
 
         # Register plugins with the notifier
-        for l_plugin in m_audit_plugins:
+        for l_plugin in m_audit_plugins.itervalues():
             self.__notifier.add_plugin(l_plugin)
 
         # Send a message to the orchestrator for each target URL
+        # FIXME: this should not be done here!
         for url in self.__audit_params.targets:
             message = Message(message_info = Url(url),
                               message_type = Message.MSG_TYPE_INFO,
@@ -269,6 +271,18 @@ class Audit (object):
         """
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
+
+        # Is it a result?
+        if message.message_type == Message.MSG_TYPE_INFO:
+
+            # Drop duplicate results
+            if message.message_info in self.__database:
+                return
+
+            # Add new results to the database
+            self.__database.add(message.message_info)
+
+        # Send the message to the plugins
         self.__expecting_ack += self.__notifier.notify(message)
 
 
