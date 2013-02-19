@@ -368,16 +368,16 @@ class HTMLBeautifulSoup(object):
 
             for obj in m_elem:
                 # Get attrs
-                m_ojb_attr = { k.encode("utf-8"): v.encode("utf-8") for k,v in obj.attrs.items()}
+                m_ojb_attr = { v[0].encode("utf-8"): v[1].encode("utf-8") for v in obj.attrs }
 
                 # Add param attr
                 m_ojb_attr["param"] = dict()
 
                 # Add value for params
                 for param in obj.findAllNext("param"):
-                    m_ojb_attr["param"].update({ k.encode("utf-8"): v.encode("utf-8") for k,v in param.attrs.items()})
+                    m_ojb_attr["param"].update({ k[0].encode("utf-8"): k[1].encode("utf-8") for k in param.attrs})
 
-                m_raw_content = "".join([str(item.encode("utf-8")) for item in obj.contents if item != "\n"])
+                m_raw_content = "".join([str(item) for item in obj.contents if item != "\n"])
 
                 m_result.append(HTMLElement(obj.name.encode("utf-8"), m_ojb_attr, m_raw_content))
 
@@ -398,8 +398,8 @@ class HTMLBeautifulSoup(object):
         return [
             HTMLElement(
                 x.name.encode("utf-8"),
-                { k.encode("utf-8"): v.encode("utf-8") for k,v in x.attrs.items()},
-                "".join([str(item.encode("utf-8")) for item in x.contents if item != "\n"])
+                { v[0].encode("utf-8"): v[1].encode("utf-8") for v in x.attrs},
+                "".join([ str(item) for item in x.contents if item != "\n"])
                 ) for x in data
         ]
 
@@ -410,6 +410,6 @@ class HTMLBeautifulSoup(object):
 
         :return: Type and instance of parser
         """
-        from thirdparty_libs.bs4 import BeautifulSoup
+        from thirdparty_libs.bs3.BeautifulSoup import BeautifulSoup
 
         return BeautifulSoup(data)

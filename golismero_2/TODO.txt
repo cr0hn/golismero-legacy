@@ -3,6 +3,9 @@
 - No funciona bien el método de obtener información cuando se requiere terra.es sin user-agent. Devuelve
 un script para redireccionar, pero desde linea de comandos no.
 - Poner el contador de palabras en cada response.
+-- AÑADIR EL CONTADOR DE PALABRAS AL HTTP RESPONSE
+-- CREAR EL MÉTODO PARA HACER PETICIONES CON HTTP REQUEST
+
 
 
 - Implementar el método toString en cada tipo de Result.
