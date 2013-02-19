@@ -80,6 +80,7 @@ if __name__ == '__main__':
 
     gr_audit = parser.add_argument_group("audit")
     gr_audit.add_argument('--audit-name', action='store', dest='audit_name', help='customize the audit name')
+    gr_audit.add_argument('--audit-database', action='store', dest='audit_db', default="memory://", help='specify a database connection string')
 
     gr_plugins = parser.add_argument_group("plugins")
     gr_plugins.add_argument('-P', '--enable-plugin', action='append', dest='plugins', help="customize which plugins to load" )
