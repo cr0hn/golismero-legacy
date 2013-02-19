@@ -1,3 +1,4 @@
 *.py[cod]
 *.wpu
+*.wpr
 *.dbm
