@@ -77,7 +77,6 @@ class Orchestrator (object):
 
         # Audit manager
         self.__auditManager = AuditManager(self, self.__config)
-        self.__messageManager.add_listener(self.__auditManager)
 
         # UI manager
         if config.run_mode == GlobalParams.RUN_MODE.standalone:
@@ -121,29 +120,37 @@ class Orchestrator (object):
 
         :param message: incoming message
         :type message: Message
+
+        :returns: bool - True if the message was sent, False if it was dropped
         """
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
-        # Drop duplicated results from audits
-        # XXX FIXME there should be a more elegant way to do this
-        if  message.message_type == Message.MSG_TYPE_INFO:
-            audit = self.__auditManager.get_audit(message.audit_name)
-            if message.message_info in audit.database:
-                return
+        try:
 
-        # Dispatch the message
-        self.__messageManager.send_message(message)
+            # Dispatch the message to the audits.
+            if self.__auditManager.dispatch_msg(message):
 
-        # If it's a quit message...
-        if  message.message_type == Message.MSG_TYPE_CONTROL and \
-            message.message_code == Message.MSG_CONTROL_STOP:
+                # If it wasn't dropped, send it to the rest of the plugins.
+                self.__messageManager.send_message(message)
 
-            # Stop the program execution
-            if message.message_info:
-                exit(0)                   # Planned shutdown
-            else:
-                raise KeyboardInterrupt() # User cancel
+                # The method now must return True because the message was sent.
+                return True
+
+            # The method now must return False because the message was dropped.
+            return False
+
+        finally:
+
+            # If it's a quit message...
+            if  message.message_type == Message.MSG_TYPE_CONTROL and \
+                message.message_code == Message.MSG_CONTROL_STOP:
+
+                # Stop the program execution
+                if message.message_info:
+                    exit(0)                   # Planned shutdown
+                else:
+                    raise KeyboardInterrupt() # User cancel
 
 
     #----------------------------------------------------------------------
@@ -185,40 +192,23 @@ class Orchestrator (object):
 
             # Message loop.
             while True:
-
-                # Wait for a message to arrive.
-                message = self.__queue.get()
-
                 try:
+
+                    # In standalone mode, if all audits have finished we have to stop.
+                    if  self.__config.run_mode == GlobalParams.RUN_MODE.standalone and \
+                        not self.__auditManager.has_audits():
+                            m = Message(message_type = Message.MSG_TYPE_CONTROL,
+                                        message_code = Message.MSG_CONTROL_STOP,
+                                        message_info = True)  # True for finished, False for user cancel
+                            self.dispatch_msg(m)
+
+                    # Wait for a message to arrive.
+                    message = self.__queue.get()
                     if not isinstance(message, Message):
                         raise TypeError("Expected Message, got %s" % type(message))
 
                     # Dispatch the message.
                     self.dispatch_msg(message)
-
-                    # Check for audit termination.
-                    #
-                    # NOTE: This code assumes messages always arrive in order,
-                    #       and ACKs are always sent AFTER responses from plugins.
-                    #
-                    if  message.message_type == Message.MSG_TYPE_CONTROL and \
-                        message.message_code == Message.MSG_CONTROL_ACK:
-                            if not self.__auditManager.get_audit(message.audit_name).expecting_ack:
-                                m = Message(message_type = Message.MSG_TYPE_CONTROL,
-                                            message_code = Message.MSG_CONTROL_STOP_AUDIT,
-                                            message_info = True,   # True for finished, False for user cancel
-                                            audit_name   = message.audit_name)
-                                self.dispatch_msg(m)
-                                #
-                                # XXX TODO add an "audit stop response" message instead!
-                                # today it's just a method call but tomorrow it'll be asynchronous
-                                #
-                                if  self.__config.run_mode == GlobalParams.RUN_MODE.standalone and \
-                                    not self.__auditManager.has_audits():
-                                        m = Message(message_type = Message.MSG_TYPE_CONTROL,
-                                                    message_code = Message.MSG_CONTROL_STOP,
-                                                    message_info = True)  # True for finished, False for user cancel
-                                        self.dispatch_msg(m)
 
                 # If an exception is raised during message processing,
                 # just log the exception and continue.
