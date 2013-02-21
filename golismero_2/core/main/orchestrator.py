@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 # -*- coding: utf-8 -*-
+
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -63,9 +63,6 @@ class Orchestrator (object):
         # Message manager
         self.__messageManager = MessageManager(self.__config)
 
-        # API managers
-        self.__init_api()
-
         # Load the plugins
         self.__pluginManager = PriscillaPluginManager()
         self.__pluginManager.find_plugins(self.__config.plugins_folder)
@@ -87,18 +84,6 @@ class Orchestrator (object):
     @property
     def processManager(self):
         return self.__processManager
-
-
-    #----------------------------------------------------------------------
-    def __init_api(self):
-        """
-        Init API managers.
-        """
-        from core.api.net.netmanager import NetManager
-
-
-        # Configure networking
-        NetManager.config(self.__config)
 
 
     #----------------------------------------------------------------------
@@ -174,12 +159,15 @@ class Orchestrator (object):
         # Get the plugin information
         info = self.__pluginManager.get_plugin_info_from_instance(plugin)[1]
 
+        # Get the audit configuration
+        audit_config = self.__auditManager.get_audit(audit_name).params
+
         # Get the plugin module and class
         module = info.plugin_module
         clazz  = info.plugin_class
 
         # Return the context instance
-        return Context(module, clazz, audit_name, self.__queue)
+        return Context(module, clazz, audit_name, audit_config, self.__queue)
 
 
     #----------------------------------------------------------------------

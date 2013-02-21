@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 # -*- coding: utf-8 -*-
+
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -24,41 +24,20 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["Config"]
 
-# Testing file
+from core.main.commonstructures import Singleton
 
-from core.api.results.information.html import HTML, HTMLElement
-from core.api.net.netmanager import *
-from core.main.commonstructures import GlobalParams
-from core.managers.priscillapluginmanager import PriscillaPluginManager
-from core.api.results.information.url import Url
+class Config (Singleton):
 
-if __name__=='__main__':
+    @property
+    def audit_name(self):
+        return self.__audit_name
 
-    # Config
-    p = GlobalParams()
-    p.target = ["terra.es"]
-    NetManager.config(p)
+    @property
+    def audit_config(self):
+        return self.__audit_config
 
-    # Plugins
-    m_plugins = PriscillaPluginManager().get_plugins(["spider"])
-
-    # Processed URL
-    m_processed = []
-    m_pendant = [Url("http://www.terra.es/portada/")]
-
-    for a in m_plugins:
-        while m_pendant:
-            l_url = m_pendant.pop()
-            ri = a.recv_info(l_url) # Set for delete duplicates
-
-            if ri:
-                m_pendant.extend([x for x in ri if x.url_raw not in m_processed])
-
-            m_processed.append(l_url.url_raw)
-
-
-
-
-    print "a"
-
+    def _set_config(self, audit_name, audit_config):
+        self.__audit_name   = audit_name
+        self.__audit_config = audit_config

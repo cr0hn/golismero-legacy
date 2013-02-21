@@ -1,4 +1,6 @@
 *.py[cod]
 *.wpu
 *.wpr
+*.wpr2
 *.dbm
+*.back

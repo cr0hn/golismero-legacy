@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 # -*- coding: utf-8 -*-
+
 """
 GoLismero 2.0 - The web knife.
 
@@ -29,6 +29,7 @@ from core.api.logger import Logger
 from core.messaging.message import Message
 from core.api.results.result import Result
 from core.api.results.information.information import Information
+from thirdparty_libs.colorizer import *
 from time import sleep
 
 class ConsoleUIPlugin(UIPlugin):
@@ -70,35 +71,13 @@ class ConsoleUIPlugin(UIPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
         #
-        # Put here the code you want to execute when a info is received.
-        #
-        # This method act as a "main" function. All the functionality
-        # must be put here.
-        #
-        # Example:
-        #
-        # Write a line in the log, for each message received.
-        #
-        # 1 - Include log library, at top of this file:
-        #
-        #     from core.api.logger import IO
-        #
-        # 2 - Write into log system
-        #
-        #     Logger.log("New message received!")
-        #     Logger.log_verbose("This message will be displayed when verbose mode is enabled")
-        #
-        #     VERY IMPORTANT
-        #     ==============
-        #     NEVER USE 'print' function to display information. Use
-        #     IO library instead.
+        # Display in console
         #
 
-        print "UIUIUIUI"
-        Logger.log("aaaa")
+        print colored("hola", color='red')
 
-        # URL type
-        if info.result_type is Result.TYPE_INFORMATION and info.result_subtype == Information.INFORMATION_URL:
+        # TYPE: Url
+        if all([info.result_type == Result.TYPE_INFORMATION, info.result_subtype == Information.INFORMATION_URL]):
             Logger.log("+ New url found: %s." % str(info))
 
 
@@ -108,8 +87,8 @@ class ConsoleUIPlugin(UIPlugin):
         # Put here the code you want to execute when a control message is received.
         #
 
-        print "CONTROL"
-        Logger.log("bbb")
+        #print "CONTROL"
+        pass
 
 
     #----------------------------------------------------------------------

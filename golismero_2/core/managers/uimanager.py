@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 # -*- coding: utf-8 -*-
+
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -84,7 +84,13 @@ class UIManager (object):
         :param message: The message to send.
         :type message: Message
         """
-        self.__notifier.notify(message)
+        if not isinstance(message, Message):
+            raise TypeError("Expected Message, got %s instead" % type(message))
+
+        # Filter out ACKs but send all other messages.
+        if  message.message_type != Message.MSG_TYPE_CONTROL or \
+            message.message_code != Message.MSG_CONTROL_ACK:
+                self.__notifier.notify(message)
 
 
     #----------------------------------------------------------------------

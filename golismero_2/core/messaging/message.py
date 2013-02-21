@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 # -*- coding: utf-8 -*-
+
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 

@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 # -*- coding: utf-8 -*-
+
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.api.results.result import Result
 
+__all__=["Information"]
 
 #------------------------------------------------------------------------------
 class Information(Result):
@@ -38,13 +39,15 @@ class Information(Result):
     # Types of Infomation results
     #
     #--------------------------------------------------------------------------
-    INFORMATION_IMAGE = 0
-    INFORMATION_URL = 1
-    INFORMATION_DOCUMENT = 2
-    INFORMATION_BINARY = 3
-    INFORMATION_MAIL = 4
-    INFORMATION_HTML = 5
-    INFORMATION_UNKNOWN = 10
+    INFORMATION_IMAGE         = 0
+    INFORMATION_URL           = 1
+    INFORMATION_DOCUMENT      = 2
+    INFORMATION_BINARY        = 3
+    INFORMATION_MAIL          = 4
+    INFORMATION_HTML          = 5
+    INFORMATION_HTTP_REQUEST  = 6
+    INFORMATION_HTTP_RESPONSE = 7
+    INFORMATION_UNKNOWN       = 10
 
 
     #----------------------------------------------------------------------

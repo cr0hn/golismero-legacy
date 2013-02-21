@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 # -*- coding: utf-8 -*-
+
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -25,16 +25,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-__all__ = ["NetManager", "Web", "HTTP_Response"]
 
-from core.main.commonstructures import get_unique_id
+from time import time
+from re import match, compile
+
+from core.api.config import Config
+from core.api.results.information.url import Url
+from core.api.results.information.http import *
+from core.api.logger import Logger
 from thirdparty_libs.urllib3.util import parse_url
 from thirdparty_libs.urllib3 import PoolManager
-from core.api.results.information.html import *
-from time import time
-from core.api.results.information.url import Url
-from core.api.logger import Logger
-from re import match, compile
+
+__all__ = ['NetManager', 'Web']
 
 #------------------------------------------------------------------------------
 class NetManager (object):
@@ -48,16 +50,6 @@ class NetManager (object):
 
     # Pool manager. A pool for target
     __http_pool_manager = None
-    __config = None
-
-    #----------------------------------------------------------------------
-    @staticmethod
-    def config(config):
-        """Constructor"""
-        NetManager.__config = config
-
-        # Set pool manager
-        NetManager.__http_pool_manager = PoolManager(NetManager.__config.max_connections)
 
 
     #----------------------------------------------------------------------
@@ -71,8 +63,10 @@ class NetManager (object):
 
         :raises: ValueError
         """
+        if NetManager.__http_pool_manager is None:
+            NetManager.__http_pool_manager = PoolManager(Config().audit_config.max_connections)
         if protocol is NetManager.TYPE_WEB:
-            return Web(NetManager.__http_pool_manager, NetManager.__config)
+            return Web(NetManager.__http_pool_manager, Config().audit_config)
 
         else:
             raise ValueError("Unknown protocol type, value: %d" % protocol)
@@ -127,23 +121,20 @@ class Protocol (object):
 
 
     #----------------------------------------------------------------------
-    def get_cache(self, URL):
+    def get_cache(self, data):
         """
         Get URL from cache
 
         :returns: object cached | None
         """
         # None or empty?
-        if not URL:
+        if not data:
             return None
-
-        # get key
-        m_key = get_unique_id(URL)
 
         m_return = None
         try:
             # if cached
-            m_return = self.__cache[URL]
+            m_return = self.__cache[data.hash_sum]
         except KeyError:
             # Not cached
             m_return = None
@@ -151,19 +142,17 @@ class Protocol (object):
         return m_return
 
     #----------------------------------------------------------------------
-    def is_cached(self, URL):
+    def is_cached(self, data):
         """
         Indicates if URL is cached
 
         :returns: bool -- True if URL has cached. False otherwise.
         """
-        # get key
-        m_key = get_unique_id(URL)
 
-        return m_key in self.__cache
+        return data.hash_sum in self.__cache.keys()
 
     #----------------------------------------------------------------------
-    def set_cache(self, URL, data):
+    def set_cache(self, data):
         """
         Include and URL, and their data, into cache.
 
@@ -174,9 +163,8 @@ class Protocol (object):
         :type data: object
         """
         # None or empty?
-        if URL and data:
-            m_key = get_unique_id(URL)
-            self.__cache[m_key] = data
+        if data.hash_sum:
+            self.__cache[data.hash_sum] = data
 
 
 
@@ -201,9 +189,9 @@ class Web (Protocol):
         # re object with pattern for domain and/or subdomains
         self.macher = None
         if self.__config.subdomain_regex:
-            self.matcher = compile("%s%s" % (self.__config.suddomains_regex, self.__config.target[0]))
+            self.matcher = compile("%s%s" % (self.__config.suddomains_regex, self.__config.targets[0]))
         else:
-            self.matcher = compile(".*%s" % self.__config.target[0] if self.__config.include_subdomains else None)
+            self.matcher = compile(".*%s" % self.__config.targets[0] if self.__config.include_subdomains else None)
 
 
     #----------------------------------------------------------------------
@@ -213,17 +201,86 @@ class Web (Protocol):
 
     #----------------------------------------------------------------------
     def close(self):
-        """"""
+        """Close and clear pool connections"""
         self.__http_pool_manager.clear()
 
     #----------------------------------------------------------------------
     def get_custom(self, request):
-        """"""
-        pass
+        """Get an HTTP response from a custom HTTP Request object
+
+        :param request: An instance of HTTP_Request.
+        :type request: HTTP_request
+
+        :returns: HTTPResponse instance or None if any error or URL out of scope.
+
+        :raises: TypeError
+        """
+        if not  isinstance(request, HTTP_Request):
+            raise TypeError("Expected HTTP_Request, got %s instead" % type(URL))
+
+        # Check for host matching
+        m_parser = parse_url(request.url)
+        if all([ m_parser.hostname, not self.matcher.match(m_parser.hostname)]):
+            Logger.log_verbose("Url '%s' out of scope. Skiping it." % request.url)
+            return None
+
+        m_response = None
+        m_time = None
+
+        # URL is cached?
+        if request.is_cacheable and self.is_cached(request):
+            m_response = self.get_cache(request)
+        else:
+            # Get URL
+            try:
+                # timing init
+                t1 = time()
+                # Select request type
+                m_response = None
+                if "POST" == request.method or "PUT" == request.method:
+                    m_response = self.__http_pool_manager.request(
+                        method = request.method,
+                        url = request.url,
+                        redirect = request.follow_redirects,
+                        headers = request.raw_headers,
+                        fields = request.post_data,
+                        encode_multipart = request.files_attached
+                    )
+                elif "GET" == request.method:
+                    m_response = self.__http_pool_manager.request(
+                        method = request.method,
+                        url = request.url,
+                        redirect = request.follow_redirects,
+                        headers = request.raw_headers,
+                    )
+                else:
+                    m_response = self.__http_pool_manager.request(
+                        method = request.method,
+                        url = request.url,
+                        redirect = request.follow_redirects,
+                        headers = request.raw_headers,
+                        fields = request.post_data,
+                    )
+
+                # timin end
+                t2 = time()
+
+                # Calculate response time
+                m_time = t2 - t1
+
+                m_response = HTTP_Response(m_response, m_time, request)
+
+                # Cache are enabled?
+                if request.is_cacheable:
+                    self.set_cache(m_response)
+            except Exception, e:
+                Logger.log_error_verbose("Unknown error: '%s'." % e.message)
+
+        return m_response
 
 
     #----------------------------------------------------------------------
-    def get(self, URL, method= "GET", cache = True, redirect=False):
+    def get(self, URL, method= "GET", post_data = None, follow_redirect=False, cache = True):
         """
         Get response for an input URL.
 
@@ -242,48 +299,25 @@ class Web (Protocol):
         """
 
         # None or not str?
-        m_url = None
-        if isinstance(URL, basestring):
-            m_url = URL
-        elif isinstance(URL, Url):
-            m_url = URL.url_raw
-        else:
-            raise TypeError("Expected string or Url, got %s instead" % type(URL))
+        if not isinstance(URL, basestring):
+            raise TypeError("Expected str, got %s instead" % type(URL))
 
         # Check for host matching
-        m_parser = parse_url(m_url)
+        m_parser = parse_url(URL)
         if m_parser.hostname and not self.matcher.match(m_parser.hostname):
-            Logger.log_verbose("[!] Url '%s' out of scope. Skiping it." % m_url)
+            Logger.log_verbose("[!] Url '%s' out of scope. Skiping it." % URL)
             return None
 
-        m_response = None
-        m_time = None
+        # Make HTTP_Request object
+        m_request = HTTP_Request(
+            url = URL,
+            method = method,
+            post_data = post_data,
+            follow_redirects = follow_redirect,
+            cache = cache
+        )
 
-        # URL is cached?
-        if cache and self.is_cached(m_url):
-            m_response = self.get_cache(m_url)
-        else:
-            # Get URL
-            try:
-                # timing init
-                t1 = time()
-                # Get resquest
-                m_response = self.__http_pool_manager.request(method, m_url, redirect=False)
-                # timin end
-                t2 = time()
-
-                m_time = t2 - t1
-
-                m_response = HTTP_Response(m_response, m_time)
-
-                # Cache are enabled?
-                if cache:
-                    self.set_cache(URL, m_response)
-            except Exception, e:
-                Logger.log_error_verbose("[!] Unknown error: '%s'." % e.message)
-
-
-        return m_response
+        return  self.get_custom(m_request)
 
 
 
@@ -303,100 +337,4 @@ class Web (Protocol):
         return "%s%s%s" % (m_url.scheme, m_url.host, m_url.port)
 
 
-
-#------------------------------------------------------------------------------
-class HTTP_Request (object):
-    """"""
-
-    #----------------------------------------------------------------------
-    def __init__(self):
-        """Constructor"""
-
-
-
-
-
-#------------------------------------------------------------------------------
-class HTTP_Response (object):
-    """
-    This class contain all info fo HTTP response
-    """
-
-    #----------------------------------------------------------------------
-    def __init__(self, response, request_time):
-        """Constructor"""
-
-        # HTML code of response
-        self.__raw_data = response.data
-        # HTTP response code
-        self.__http_response_code = response.status
-        # HTTP response reason
-        self.__http_response_code_reason = response.reason
-        # HTTP headers
-        self.__http_headers = dict(response.headers)
-        # HTTP headers in raw format
-        self.__http_headers_raw = ''.join(["%s: %s\n" % (k,v) for k,v in response.headers.items()])
-        # Request time
-        self.__request_time = request_time
-        # Generate information object
-        self.__information = self.__get_type_by_raw(self.__http_headers, self.__raw_data)
-
-
-    #----------------------------------------------------------------------
-    def __get_raw(self):
-        """"""
-        return self.__raw_data
-    raw_data = property(__get_raw)
-
-    #----------------------------------------------------------------------
-    def __get_http_response_code(self):
-        """"""
-        return self.__http_response_code
-    http_code = property(__get_http_response_code)
-
-    #----------------------------------------------------------------------
-    def __get_http_response_reason(self):
-        """"""
-        return self.__http_response_code_reason
-    http_reason = property(__get_http_response_reason)
-
-    #----------------------------------------------------------------------
-    def __get_http_headers(self):
-        """"""
-        return self.__http_headers
-    http_headers = property(__get_http_headers)
-
-    #----------------------------------------------------------------------
-    def __get_http_raw_headers(self):
-        """"""
-        return self.__http_headers_raw
-    http_headers_raw = property(__get_http_raw_headers)
-
-    #----------------------------------------------------------------------
-    def __get_request_time(self):
-        """"""
-        return self.__request_time
-    request_time = property(__get_request_time)
-
-    #----------------------------------------------------------------------
-    def __get_information(self):
-        """"""
-        return self.__information
-    information = property(__get_information)
-
-    #----------------------------------------------------------------------
-    def __get_type_by_raw(self, headers, data):
-        """
-        Get an information type from a raw object
-        """
-        m_return_content = None
-        if headers:
-            if "content-type" in headers.keys():
-                m_content_type = headers["content-type"]
-
-                # Select the type
-                if m_content_type.startswith('text/html'):
-                    m_return_content = HTML(data)
-
-        return m_return_content
 

@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 # -*- coding: utf-8 -*-
+
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["ProcessManager", "OOPObserver"]
 
+from core.api.config import Config
 from core.main.commonstructures import GlobalParams
 from core.messaging.message import Message
 from multiprocessing import Pool, Queue
@@ -46,12 +47,15 @@ def bootstrap(context, func, argv, argd):
 
             # TODO: hook stdout and stderr to catch print statements
 
+            # Configure the plugin
+            Config()._set_config(audit_name, audit_config)
+
             # Load the plugin module
             mod = load_source("_plugin_tmp_" + context.plugin_class.lower(),
                               context.plugin_module)
 
             # Get the plugin class
-            cls = getattr(mod, clazz)
+            cls = getattr(mod, context.plugin_class)
 
             # Instance the plugin
             instance = cls()
@@ -187,7 +191,7 @@ class Context (object):
     Serializable execution context for the plugins.
     """
 
-    def __init__(self, plugin_module, plugin_class, audit_name, msg_queue):
+    def __init__(self, plugin_module, plugin_class, audit_name, audit_config, msg_queue):
         """
         Serializable execution context for the plugins.
 
@@ -200,12 +204,16 @@ class Context (object):
         :param audit_name: Name of the audit.
         :type audit_name: str
 
+        :param audit_config: Name of the audit.
+        :type audit_config: str
+
         :param msg_queue: Message queue where to send the responses.
         :type msg_queue: Queue
         """
         self.__plugin_module = plugin_module
         self.__plugin_class  = plugin_class
         self.__audit_name    = audit_name
+        self.__audit_config  = audit_config
         self.__msg_queue     = msg_queue
 
     @property

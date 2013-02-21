@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 # -*- coding: utf-8 -*-
+
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -25,9 +25,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-from core.api.results.information.information import Information
 
 __all__ = ["HTML", "HTMLElement"]
+
+from core.api.results.information.information import Information
+from thirdparty_libs.bs3.BeautifulSoup import BeautifulSoup
+
+
 
 #------------------------------------------------------------------------------
 class HTMLElement (object):
@@ -75,7 +79,7 @@ class HTMLElement (object):
     #----------------------------------------------------------------------
     def __str__(self):
         """"""
-        return str(self.__attrs)
+        return "%s:%s" % (self.__tag_name, str(self.__attrs))
 
 
 #------------------------------------------------------------------------------
@@ -96,6 +100,13 @@ class HTML(Information):
 
         # Init and store type of HTML parser
         self.__html_parser_type, self.__html_parser = self.__init_parser(data)
+
+
+    def find_all(self, name=None, attrs={}, recursive=True, text=None, limit=None):
+        """
+        Looking for in HTML code by patter.
+        """
+        return self.__html_parser.find_all(name=None, attrs={}, recursive=True, text=None, limit=None)
 
 
     def __get_raw(self):
@@ -235,12 +246,15 @@ class HTMLBeautifulSoup(object):
 
 
     #----------------------------------------------------------------------
+    #
+    # GETTERS
+    #
+    #----------------------------------------------------------------------
     def __get_raw(self):
         """Get raw HTML code"""
         return self.__raw_data
     raw_data = property(__get_raw)
     """Raw HTML content"""
-
 
     #----------------------------------------------------------------------
     def __get_forms(self):
@@ -389,6 +403,34 @@ class HTMLBeautifulSoup(object):
 
 
     #----------------------------------------------------------------------
+    #
+    # PUBLIC FUNCTIONS
+    #
+    #----------------------------------------------------------------------
+    #----------------------------------------------------------------------
+    def find_all(self, name=None, attrs={}, recursive=True, text=None, limit=None):
+        """
+        Looking for in HTML code by patter.
+        """
+        m_result = self.__html_parser.findAll(
+            name = name,
+            attrs = attrs,
+            recursive = recursive,
+            text = text,
+            limit = limit
+        )
+
+        # Get the list of HTML Elements
+        return self.__converto_to_HTMLElements(m_result)
+
+
+
+
+    #----------------------------------------------------------------------
+    #
+    # PRIVATE FUNCTIONS
+    #
+    #----------------------------------------------------------------------
     def __converto_to_HTMLElements(self, data):
         """
         Convert parser format to list of HTML Elements.
@@ -410,6 +452,4 @@ class HTMLBeautifulSoup(object):
 
         :return: Type and instance of parser
         """
-        from thirdparty_libs.bs3.BeautifulSoup import BeautifulSoup
-
         return BeautifulSoup(data)

@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 # -*- coding: utf-8 -*-
+
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -296,7 +296,7 @@ class UINotifier(Notifier):
                 plugin.recv_info(message_info)
             except Exception, e:
                 msg = "Plugin %s raised an exception:\n%s"
-                msg = msg % (plugin.__class__.__name__, format_exception(e))
+                msg = msg % (plugin.__class__.__name__, format_exc())
                 Logger.log_error(msg)
 
 
@@ -317,5 +317,5 @@ class UINotifier(Notifier):
                 plugin.recv_msg(message)
             except Exception, e:
                 msg = "Plugin %s raised an exception:\n%s"
-                msg = msg % (plugin.__class__.__name__, format_exception(e))
+                msg = msg % (plugin.__class__.__name__, format_exc())
                 Logger.log_error(msg)

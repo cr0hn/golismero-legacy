@@ -1,6 +1,7 @@
 #!/usr/bin/python
-
 # -*- coding: utf-8 -*-
+
+
 """
 GoLismero 2.0 - The web knife.
 
@@ -70,8 +71,8 @@ if __name__ == '__main__':
     gr_main = parser.add_argument_group("main options")
     gr_main.add_argument('-M', "--run-mode", action='store', dest='run_mode', help='run mode [default: Standalone]', default="Standalone", choices=[x.title() for x in GlobalParams.RUN_MODE._values.keys()])
     gr_main.add_argument('-I', "--user-interface", action='store', dest='user_interface', help='user interface mode [default: Console]', default="console", choices=[x.title() for x in GlobalParams.USER_INTERFACE._values.keys()])
-    gr_main.add_argument("-v", "--verbose", action="count", default="0", help="increase output verbosity")
-    gr_main.add_argument("-q", "--quiet", action="store_const", const="0", help="suppress text output")
+    gr_main.add_argument("-v", "--verbose", action="count", default=0, help="increase output verbosity")
+    gr_main.add_argument("-q", "--quiet", action="store_const", const=0, help="suppress text output")
     ##gr_audit.add_argument('--max-process', action='store', dest='max_process', help='maximum number of plugins to run concurrently.', default="0")
 
     gr_net = parser.add_argument_group("network")

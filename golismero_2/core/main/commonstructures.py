@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 # -*- coding: utf-8 -*-
+
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -121,7 +121,7 @@ class GlobalParams (object):
         self.user_interface = GlobalParams.USER_INTERFACE.console
 
         # Set verbosity level
-        self.verbose = 0
+        self.verbose = 1
 
         #
         # Audit options

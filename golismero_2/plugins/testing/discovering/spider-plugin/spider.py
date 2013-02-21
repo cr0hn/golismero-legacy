@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 # -*- coding: utf-8 -*-
+
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -40,16 +40,15 @@ class Spider(TestingPlugin):
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
         """
-        Comprueba las comprobaciones de los parametros introducidos por el
-        usuarLogger.
+        Check input parameters passed by the user.
 
-        Los parametros seran pasados en la instancia del tipo 'GlobalParams'.
+        Parameters will be passed as an instance of 'GlobalParams'.
 
-        Si algun parametro no es correcto o hay algun error, sera lanzada
-        una excepcion del tipo 'ValueError'.
+        If any parameter is not correct o there is an error, an
+        exception must be raised.
 
-        :param inputParams: Parametros de entrada a comprobar
-        :type inputParams: GlobalParam
+        :param inputParams: input parameters to check
+        :type inputParams: GlobalParams
         """
         pass
 
@@ -63,7 +62,10 @@ class Spider(TestingPlugin):
     def recv_info(self, info):
         """Receive URLs."""
 
+        print "Spider run"
         m_return = []
+
+        self.send_info(Url("google.com"))
 
         if isinstance(info, Url):
 
@@ -77,12 +79,12 @@ class Spider(TestingPlugin):
 
             # Get hostname and schema to fix URL
             try:
-                m_parsed_url = parse_url(info.url_raw)
+                m_parsed_url = parse_url(info.url)
             except LocationParseError:
                 # Error while parsing URL
                 return None
 
-            Logger.log_more_verbose("Spidering URL '%s'\n" % info.url_raw)
+            Logger.log_more_verbose("Spidering URL '%s'\n" % info.url)
 
 
             m_links = []
@@ -156,6 +158,8 @@ class Spider(TestingPlugin):
 
             # Create instances of Url, and delete duplicates
             m_return = [Url(u) for u in set(m_tmp)]
+
+
 
 
         return m_return

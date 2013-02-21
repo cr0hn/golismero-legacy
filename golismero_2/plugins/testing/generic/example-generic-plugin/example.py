@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
 # -*- coding: utf-8 -*-
+
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -75,7 +75,7 @@ class ExamplePlugin(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
         """Callback method to receive information to be processed."""
-        Logger.log("Example plugin. Received: %s\n" % info.url_raw)
+        Logger.log("Example plugin. Received: %s\n" % info.url)
 
         #r = NetManager.get_connection()
         #p = r.get("/")
