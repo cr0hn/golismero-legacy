@@ -34,7 +34,7 @@ from keyword import iskeyword
 
 from ConfigParser import RawConfigParser
 from core.main.commonstructures import Singleton
-from core.api.plugins.plugin import *
+from core.api.plugin import *
 
 
 #----------------------------------------------------------------------

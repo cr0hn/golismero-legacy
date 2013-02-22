@@ -29,7 +29,7 @@ __all__ = ["AuditNotifier", "UINotifier"]
 
 
 from core.api.logger import Logger
-from core.api.plugins.plugin import Plugin
+from core.api.plugin import Plugin
 from core.messaging.message import Message
 from core.managers.priscillapluginmanager import PriscillaPluginManager
 from collections import defaultdict

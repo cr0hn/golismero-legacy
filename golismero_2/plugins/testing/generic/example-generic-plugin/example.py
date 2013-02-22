@@ -24,7 +24,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.plugins.plugin import TestingPlugin
+from core.api.plugin import TestingPlugin
 from core.api.results.information.information import Information
 from core.api.logger import Logger
 from core.api.results.information.url import Url

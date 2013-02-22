@@ -50,7 +50,7 @@ def bootstrap(context, func, argv, argd):
             # Configure the plugin
             Config()._set_config(context.audit_name,
                                  context.audit_config,
-                                 context.plugin_config)
+                                 context.plugin_info)
 
             # Load the plugin module
             mod = load_source("_plugin_tmp_" + context.plugin_class.lower(),
@@ -75,16 +75,19 @@ def bootstrap(context, func, argv, argd):
     # Tell the Orchestrator there's been an error
     except:
         if observer is not None:
+
+            # Send a message to the Orchestrator to tell about this error
+
             import traceback
             message = Message(message_type = Message.MSG_TYPE_CONTROL,
                               message_code = Message.MSG_CONTROL_ERROR,
                               message_info = traceback.format_exc())
             observer.send_msg(message)
+
         else:
 
             # We can't tell the Orchestrator about this error! :(
 
-            # XXX DEBUG
             import traceback
             traceback.print_exc()
 
