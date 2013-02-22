@@ -60,6 +60,11 @@ class PluginInfo (object):
         return self.__plugin_class
 
     @property
+    def plugin_config(self):
+        "Plugin configuration."
+        return self.__plugin_config
+
+    @property
     def display_name(self):
         "Display name to be shown to the user."
         return self.__display_name
@@ -152,6 +157,9 @@ class PluginInfo (object):
             self.__website     = parser.get("Documentation", "Website")
         except Exception:
             self.__website     = "http://code.google.com/p/golismero/"
+
+        # Load the plugin configuration
+        self.__plugin_config = dict( parser.items("Configuration") )
 
         # Sanitize the plugin module pathname
         if not plugin_module.endswith(".py"):

@@ -162,12 +162,8 @@ class Orchestrator (object):
         # Get the audit configuration
         audit_config = self.__auditManager.get_audit(audit_name).params
 
-        # Get the plugin module and class
-        module = info.plugin_module
-        clazz  = info.plugin_class
-
         # Return the context instance
-        return Context(module, clazz, audit_name, audit_config, self.__queue)
+        return Context(info, audit_name, audit_config, self.__queue)
 
 
     #----------------------------------------------------------------------

@@ -38,6 +38,11 @@ class Config (Singleton):
     def audit_config(self):
         return self.__audit_config
 
-    def _set_config(self, audit_name, audit_config):
-        self.__audit_name   = audit_name
-        self.__audit_config = audit_config
+    @property
+    def plugin_config(self):
+        return self.__plugin_config
+
+    def _set_config(self, audit_name, audit_config, plugin_config):
+        self.__audit_name    = audit_name
+        self.__audit_config  = audit_config
+        self.__plugin_config = plugin_config
