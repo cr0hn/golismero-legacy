@@ -28,8 +28,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["HTTP_Request", "HTTP_Response"]
 
-from core.api.results.information.information import *
-from core.api.results.information.html import *
+from .information import *
+from .html import *
+
 from thirdparty_libs.urllib3.util import parse_url
 from core.main.commonstructures import get_unique_id
 from os.path import basename

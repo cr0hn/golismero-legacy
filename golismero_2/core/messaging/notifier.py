@@ -24,14 +24,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
 __all__ = ["AuditNotifier", "UINotifier"]
 
+from ..api.logger import Logger
+from ..api.plugin import Plugin
+from .message import Message
+from ..managers.priscillapluginmanager import PriscillaPluginManager
 
-from core.api.logger import Logger
-from core.api.plugin import Plugin
-from core.messaging.message import Message
-from core.managers.priscillapluginmanager import PriscillaPluginManager
 from collections import defaultdict
 from traceback import format_exc
 

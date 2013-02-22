@@ -24,15 +24,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
+from ..config import Config
+from ..results.information.url import Url
+from ..results.information.http import *
+from ..logger import Logger
 
 from time import time
 from re import match, compile
 
-from core.api.config import Config
-from core.api.results.information.url import Url
-from core.api.results.information.http import *
-from core.api.logger import Logger
 from thirdparty_libs.urllib3.util import parse_url
 from thirdparty_libs.urllib3 import PoolManager
 

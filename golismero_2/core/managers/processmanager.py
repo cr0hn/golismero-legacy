@@ -24,11 +24,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["ProcessManager", "OOPObserver"]
+__all__ = ["ProcessManager", "OOPObserver", "Context"]
 
-from core.api.config import Config
-from core.main.commonstructures import GlobalParams
-from core.messaging.message import Message
+from ..api.config import Config
+from ..main.commonstructures import GlobalParams
+from ..messaging.message import Message
+
 from multiprocessing import Pool, Queue
 from imp import load_source
 

@@ -24,19 +24,20 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.logger import Logger
-from core.managers.auditmanager import AuditManager
-from core.managers.messagemanager import MessageManager
-from core.managers.priscillapluginmanager import PriscillaPluginManager
-from core.managers.uimanager import UIManager
-from core.managers.processmanager import ProcessManager, Context
-from core.main.commonstructures import GlobalParams
-from core.messaging.message import Message
+from .commonstructures import GlobalParams
+from ..api.logger import Logger
+from ..managers.auditmanager import AuditManager
+from ..managers.messagemanager import MessageManager
+from ..managers.priscillapluginmanager import PriscillaPluginManager
+from ..managers.uimanager import UIManager
+from ..managers.processmanager import ProcessManager, Context
+from ..messaging.message import Message
 
 from multiprocessing import Queue
 from time import sleep
 from traceback import format_exc
 
+__all__ = ["Orchestrator"]
 
 
 class Orchestrator (object):

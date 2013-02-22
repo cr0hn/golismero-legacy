@@ -28,7 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["HTML", "HTMLElement"]
 
-from core.api.results.information.information import Information
+from .information import Information
+
 from thirdparty_libs.bs3.BeautifulSoup import BeautifulSoup
 
 

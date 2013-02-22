@@ -31,10 +31,10 @@ import imp
 
 from os import path, walk
 from keyword import iskeyword
-
 from ConfigParser import RawConfigParser
-from core.main.commonstructures import Singleton
-from core.api.plugin import *
+
+from ..api.plugin import *
+from ..main.commonstructures import Singleton
 
 
 #----------------------------------------------------------------------
