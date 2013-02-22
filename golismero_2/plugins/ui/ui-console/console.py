@@ -95,7 +95,7 @@ class ConsoleUIPlugin(UIPlugin):
         # Show plugin errors
         if  message.message_type == Message.MSG_TYPE_CONTROL and \
             message.message_code == Message.MSG_CONTROL_ERROR:
-                Logger.error(message.message_info)
+                Logger.log_error(message.message_info)
                 return
 
 

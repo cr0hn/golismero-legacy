@@ -146,6 +146,11 @@ class Context (object):
         return self.__audit_name
 
     @property
+    def audit_config(self):
+        "str -- Name of the audit."
+        return self.__audit_config
+
+    @property
     def msg_queue(self):
         "str -- Message queue where to send the responses."
         return self.__msg_queue

@@ -69,6 +69,28 @@ class Logger (object):
 
     #----------------------------------------------------------------------
     @classmethod
+    def get_level(cls):
+        """
+        Get the current log level.
+
+        :returns: int -- Current log level.
+        """
+        return cls._level
+
+
+    #----------------------------------------------------------------------
+    @classmethod
+    def is_level(cls, level):
+        """
+        Determine if the current log level is at least the one given.
+
+        :returns: bool - True if the log level is at least the one given.
+        """
+        return cls._level >= level
+
+
+    #----------------------------------------------------------------------
+    @classmethod
     def _log(cls, message):
         """
         Write a message into output

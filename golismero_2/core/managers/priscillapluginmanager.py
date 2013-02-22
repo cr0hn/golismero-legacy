@@ -159,7 +159,10 @@ class PluginInfo (object):
             self.__website     = "http://code.google.com/p/golismero/"
 
         # Load the plugin configuration
-        self.__plugin_config = dict( parser.items("Configuration") )
+        try:
+            self.__plugin_config = dict( parser.items("Configuration") )
+        except Exception:
+            self.__plugin_config = dict()
 
         # Sanitize the plugin module pathname
         if not plugin_module.endswith(".py"):
@@ -298,6 +301,8 @@ class PriscillaPluginManager (Singleton):
                     # On error add the plugin name to the list of failures
                     except Exception:
                         failure.append(plugin_name)
+
+        return success, failure
 
 
     #----------------------------------------------------------------------
