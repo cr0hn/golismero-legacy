@@ -88,7 +88,15 @@ class ConsoleUIPlugin(UIPlugin):
         #
 
         #print "CONTROL"
-        pass
+
+        if not isinstance(message, Message):
+            raise TypeError("Expected Message, got %s instead" % type(message))
+
+        # Show plugin errors
+        if  message.message_type == Message.MSG_TYPE_CONTROL and \
+            message.message_code == Message.MSG_CONTROL_ERROR:
+                Logger.error(message.message_info)
+                return
 
 
     #----------------------------------------------------------------------
