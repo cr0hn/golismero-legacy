@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 #-----------------------------------------------------------------------
 
+from .config import Config
 from .results.result import Result
 
 
@@ -76,8 +77,10 @@ class Plugin (object):
     #----------------------------------------------------------------------
     def display_help(self):
         """Get the help message for this plugin."""
-        # TODO: this could default to the description found in the metadata.
-        raise NotImplementedError("All plugins must implement this method!")
+        text = Config().plugin_info.description
+        if not text:
+            raise NotImplementedError("All plugins must implement this method!")
+        return text
 
 
     #----------------------------------------------------------------------
