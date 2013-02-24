@@ -34,6 +34,11 @@ from multiprocessing import Pool, Queue
 from imp import load_source
 
 
+#------------------------------------------------------------------------------
+
+# Plugin instance per-process cache. Used by the bootstrap function.
+plugin_instance_cache = dict()   # tuple(class, module) -> plugin instance
+
 # Serializable bootstrap function to run plugins in subprocesses.
 # This is required for Windows support, since we don't have os.fork() there.
 # See: http://docs.python.org/2/library/multiprocessing.html#windows
@@ -53,15 +58,27 @@ def bootstrap(context, func, argv, argd):
                                  context.audit_config,
                                  context.plugin_info)
 
-            # Load the plugin module
-            mod = load_source("_plugin_tmp_" + context.plugin_class.lower(),
-                              context.plugin_module)
+            # Try to get the plugin from the cache
+            cache_key = (context.plugin_module, context.plugin_class)
+            try:
+                instance = plugin_instance_cache[cache_key]
 
-            # Get the plugin class
-            cls = getattr(mod, context.plugin_class)
+            # If not in the cache, load a new instance
+            except KeyError:
 
-            # Instance the plugin
-            instance = cls()
+                # Load the plugin module
+                mod = load_source(
+                    "_plugin_tmp_" + context.plugin_class.replace(".", "_"),
+                    context.plugin_module)
+
+                # Get the plugin class
+                cls = getattr(mod, context.plugin_class)
+
+                # Instance the plugin
+                instance = cls()
+
+                # Cache the plugin instance
+                plugin_instance_cache[cache_key] = instance
 
             # Set the OOP observer for the plugin
             instance._set_observer(observer)
@@ -297,3 +314,6 @@ class ProcessManager (object):
 
             # Destroy the process pool
             self.__pool = None
+
+        # Clear the plugin instance cache
+        plugin_instance_cache.clear()
