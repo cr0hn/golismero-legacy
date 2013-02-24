@@ -251,49 +251,48 @@ class Web (Protocol):
             m_response = self.get_cache(request)
         else:
             # Get URL
-            try:
-                # timing init
-                t1 = time()
-                # Select request type
-                m_response = None
-                if "POST" == request.method or "PUT" == request.method:
-                    m_response = self.__http_pool_manager.request(
-                        method = request.method,
-                        url = request.url,
-                        redirect = request.follow_redirects,
-                        headers = request.raw_headers,
-                        fields = request.post_data,
-                        encode_multipart = request.files_attached
-                    )
-                elif "GET" == request.method:
-                    m_response = self.__http_pool_manager.request(
-                        method = request.method,
-                        url = request.url,
-                        redirect = request.follow_redirects,
-                        headers = request.raw_headers,
-                    )
-                else:
-                    m_response = self.__http_pool_manager.request(
-                        method = request.method,
-                        url = request.url,
-                        redirect = request.follow_redirects,
-                        headers = request.raw_headers,
-                        fields = request.post_data,
-                    )
 
-                # timin end
-                t2 = time()
+            # timing init
+            t1 = time()
 
-                # Calculate response time
-                m_time = t2 - t1
+            # Select request type
+            m_response = None
+            if "POST" == request.method or "PUT" == request.method:
+                m_response = self.__http_pool_manager.request(
+                    method = request.method,
+                    url = request.url,
+                    redirect = request.follow_redirects,
+                    headers = request.raw_headers,
+                    fields = request.post_data,
+                    encode_multipart = request.files_attached
+                )
+            elif "GET" == request.method:
+                m_response = self.__http_pool_manager.request(
+                    method = request.method,
+                    url = request.url,
+                    redirect = request.follow_redirects,
+                    headers = request.raw_headers,
+                )
+            else:
+                m_response = self.__http_pool_manager.request(
+                    method = request.method,
+                    url = request.url,
+                    redirect = request.follow_redirects,
+                    headers = request.raw_headers,
+                    fields = request.post_data,
+                )
 
-                m_response = HTTP_Response(m_response, m_time, request)
+            # timin end
+            t2 = time()
 
-                # Cache are enabled?
-                if request.is_cacheable:
-                    self.set_cache(m_response)
-            except Exception, e:
-                Logger.log_error_verbose("Unknown error: '%s'." % e.message)
+            # Calculate response time
+            m_time = t2 - t1
+
+            m_response = HTTP_Response(m_response, m_time, request)
+
+            # Cache are enabled?
+            if request.is_cacheable:
+                self.set_cache(m_response)
 
         return m_response
 

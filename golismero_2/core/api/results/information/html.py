@@ -97,7 +97,9 @@ class HTML(Information):
         :param data: raw HTML data.
         :type data: str
         """
-        super(Information, self).__init__(Information.INFORMATION_HTML)
+        super(Information, self).__init__()
+
+        self.result_subtype = self.INFORMATION_HTML
 
         # Init and store type of HTML parser
         self.__html_parser_type, self.__html_parser = self.__init_parser(data)

@@ -24,6 +24,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["Url"]
+
 from .information import Information
 
 
@@ -33,14 +35,9 @@ class Url(Information):
 	URL results.
 	"""
 
-	CONTENT_HTTP      = 0
-	CONTENT_JSON      = 1
-	CONTENT_VIEWSTATE = 2
-	CONTENT_SOAP      = 3
-
 
 	#----------------------------------------------------------------------
-	def __init__(self, url, method = "GET", url_params = None, post_params= None, content_type = 0):
+	def __init__(self, url, method = "GET", url_params = None, post_params= None, content_type = None, request_type = 0):
 		"""
 		Construct a URL result.
 
@@ -56,7 +53,8 @@ class Url(Information):
 		:param post_params: params inside post
 		:type post_params: dict
 		"""
-		super(Url, self).__init__(Information.INFORMATION_URL)
+		super(Url, self).__init__()
+		self.result_subtype = self.INFORMATION_URL
 
 		# URL
 		self.__url = url
@@ -71,14 +69,14 @@ class Url(Information):
 		self.__post_params = post_params if post_params else {}
 
 		# HTTPs?
-		self.__is_https = True if url.lower().find("https") else False
-
-		# Len counts
-		self.__has_url_params = None
-		self.__has_post_params = None
+		self.__is_https = url.lower().startswith("https://")
 
 		# Content type
 		self.__content_type = content_type
+
+		# Request type
+		self.__request_type = request_type
+
 
 
 	#----------------------------------------------------------------------
@@ -91,61 +89,65 @@ class Url(Information):
 
 
 	#----------------------------------------------------------------------
-	def __get_url(self):
+	@property
+	def url(self):
 		"""
-		Get raw info of URL.
+		str -- Raw URL
 		"""
 		return self.__url
-	url = property(__get_url)
 
-	def __get_method(self):
+	@property
+	def method(self):
 		"""
-		Get method to get URL
+		str -- HTTP method
 		"""
 		return self.__method
-	method = property(__get_method)
 
-	def __get_url_params(self):
+	@property
+	def url_params(self):
 		"""
-		Get raw info of URL.
+		dict(str) -- URL parameters
 		"""
 		return self.__url_params
-	url_params = property(__get_url_params)
 
-	def __get_post_params(self):
+	@property
+	def post_params(self):
 		"""
-		Get raw info of URL.
+		dict(str) -- POST parameters
 		"""
 		return self.__post_params
-	post_params = property(__get_post_params)
 
-	#----------------------------------------------------------------------
-	def __get_is_http(self):
-		""""""
+	@property
+	def is_https(self):
+		"""
+		bool -- True if it's HTTPS, False otherwise
+		"""
 		return self.__is_https
-	is_https = property(__get_is_http)
 
-	#----------------------------------------------------------------------
-	def __get_has_url_param(self):
-		""""""
-		if self.__has_url_params:
-			self.__has_url_params = True
-	has_url_params = property(__get_has_url_param)
+	@property
+	def has_url_param(self):
+		"""
+		bool - True if there are URL params, False otherwise
+		"""
+		return bool(self.url_params)
 
-	#----------------------------------------------------------------------
-	def __get_has_post_param(self):
-		""""""
-		if self.__has_post_params:
-			self.__has_post_params = True
-	has_post_params = property(__get_has_post_param)
+	@property
+	def has_post_param(self):
+		"""
+		bool - True if there are POST params, False otherwise
+		"""
+		return bool(self.post_params)
 
-
-	#----------------------------------------------------------------------
-	def __get_content_type(self):
-		""""""
+	@property
+	def content_type(self):
+		"""
+		str - MIME content type
+		"""
 		return self.__content_type
-	content_type = property(__get_content_type)
 
-
-
-
+	@property
+	def request_type(self):
+		"""
+		int - One of the HTML.TYPE_* constants
+		"""
+		return self.__request_type

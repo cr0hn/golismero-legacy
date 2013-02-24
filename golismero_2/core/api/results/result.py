@@ -56,49 +56,43 @@ class Result(object):
     TYPE_INFORMATION_GATHERING = 14
     TYPE_AUTHORIZATION         = 15
 
-    TYPE_DEFAULT = TYPE_INFORMATION    # constant for the default type
     TYPE_FIRST   = TYPE_INFORMATION    # constant for the first valid type
     TYPE_LAST    = TYPE_AUTHORIZATION  # constant for the last valid type
 
 
     #----------------------------------------------------------------------
-    def __init__(self, result_type = None):
-        """
-        Constructor.
-        """
-        self.result_type = result_type
+    def __init__(self):
+        self.__result_type = Result.TYPE_ANY
 
 
     #----------------------------------------------------------------------
     def __get_result_type(self):
         """
-        Get the message type.
+        Get the result type.
 
-        :returns: int -- The message type.
+        :returns: int -- The result type.
         """
         return self.__result_type
 
     def __set_result_type(self, result_type):
         """
-        Set the message type.
+        Set the result type.
 
         :param result_type: The type of result
         :type result_type: int
         """
-        if result_type is None:
-            result_type = Result.TYPE_INFORMATION
-        else:
-            if result_type == self.TYPE_ANY:
-                raise ValueError("Results can't be of the TYPE_ANY type")
-            if not self.TYPE_FIRST <= result_type <= self.TYPE_LAST:
-                raise ValueError("Unknown result type: %d" % result_type)
+        if result_type == self.TYPE_ANY:
+            raise ValueError("Results can't be of the TYPE_ANY type")
+        if not self.TYPE_FIRST <= result_type <= self.TYPE_LAST:
+            raise ValueError("Unknown result type: %d" % result_type)
         self.__result_type = result_type
 
     result_type = property(__get_result_type, __set_result_type)
 
 
     #----------------------------------------------------------------------
-    def __get_sum(self):
+    @property
+    def hash_sum(self):
         """
         Get the hash of this object.
         """
@@ -106,5 +100,3 @@ class Result(object):
         #   This can't be cached, because we have no way of knowing if
         #   the internal state of the object has changed.
         return get_unique_id(self)
-
-    hash_sum = property(__get_sum)

@@ -75,16 +75,26 @@ class Spider(TestingPlugin):
         if not p:
             return
 
-        # If there's no embedded information, just return the HTTP response
+        # Send back the HTTP reponse to the kernel
+        self.send_info(p)
+
+        # Stop if there's no embedded information
         if not p.information:
-            return [p]
+            return
+
+        # Send back the embedded information to the kernel
+        self.send_info(p.information)
+
+        # Stop if the embedded information is not HTML
+        if p.information.result_subtype != Information.INFORMATION_HTML:
+            return
 
         # Get hostname and schema to fix URL
         try:
             m_parsed_url = parse_url(info.url)
         except LocationParseError:
             # Error while parsing URL
-            return
+            return [p, p.information]
 
         Logger.log_more_verbose("Spidering URL '%s'\n" % info.url)
 
@@ -160,13 +170,7 @@ class Spider(TestingPlugin):
         # Create instances of Url, and delete duplicates
         m_return = [Url(u) for u in set(m_tmp)]
 
-        # Add the HTTP response result
-        m_return.insert(0, p)
-
-        # Add the information result
-        m_return.insert(0, p.information)
-
-        # Return the results
+        # Return the links, this will send them to the kernel automatically
         return m_return
 
 
