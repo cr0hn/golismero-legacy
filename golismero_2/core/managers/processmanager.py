@@ -36,8 +36,8 @@ from imp import load_source
 
 #------------------------------------------------------------------------------
 
-# Plugin instance per-process cache. Used by the bootstrap function.
-plugin_instance_cache = dict()   # tuple(class, module) -> plugin instance
+# Plugin class per-process cache. Used by the bootstrap function.
+plugin_class_cache = dict()   # tuple(class, module) -> class object
 
 # Serializable bootstrap function to run plugins in subprocesses.
 # This is required for Windows support, since we don't have os.fork() there.
@@ -60,10 +60,11 @@ def bootstrap(context, func, argv, argd):
 
             # Try to get the plugin from the cache
             cache_key = (context.plugin_module, context.plugin_class)
-            try:
-                instance = plugin_instance_cache[cache_key]
 
-            # If not in the cache, load a new instance
+            try:
+                cls = plugin_class_cache[cache_key]
+
+            # If not in the cache, load the class
             except KeyError:
 
                 # Load the plugin module
@@ -74,11 +75,11 @@ def bootstrap(context, func, argv, argd):
                 # Get the plugin class
                 cls = getattr(mod, context.plugin_class)
 
-                # Instance the plugin
-                instance = cls()
+                # Cache the plugin class
+                plugin_class_cache[cache_key] = cls
 
-                # Cache the plugin instance
-                plugin_instance_cache[cache_key] = instance
+            # Instance the plugin
+            instance = cls()
 
             # Set the OOP observer for the plugin
             instance._set_observer(observer)
@@ -316,4 +317,4 @@ class ProcessManager (object):
             self.__pool = None
 
         # Clear the plugin instance cache
-        plugin_instance_cache.clear()
+        plugin_class_cache.clear()
