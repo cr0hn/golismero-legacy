@@ -47,7 +47,9 @@ class Information(Result):
     INFORMATION_HTML          = 5
     INFORMATION_HTTP_REQUEST  = 6
     INFORMATION_HTTP_RESPONSE = 7
-    INFORMATION_UNKNOWN       = 10
+
+    INFORMATION_FIRST = INFORMATION_IMAGE
+    INFORMATION_LAST  = INFORMATION_HTTP_RESPONSE
 
 
     #----------------------------------------------------------------------
@@ -55,7 +57,7 @@ class Information(Result):
         """Constructor."""
         super(Information, self).__init__(Result.TYPE_INFORMATION)
 
-        self.__information_type = information_type
+        self.__result_subtype = information_type
 
 
     #----------------------------------------------------------------------
@@ -65,10 +67,10 @@ class Information(Result):
 
         :returns: int -- The result type.
         """
-        if self.__information_type is None:
+        if self.__result_subtype is None:
             return Information.INFORMATION_URL
         else:
-            return self.__information_type
+            return self.__result_subtype
 
     def __set_information_type(self, information_type):
         """
@@ -78,6 +80,6 @@ class Information(Result):
         :type result_type: int
         """
         if information_type is not None and information_type >= 0 and information_type <= 10:
-            self.__information_type = information_type
+            self.__result_subtype = information_type
 
     result_subtype = property(__get_information_type, __set_information_type)

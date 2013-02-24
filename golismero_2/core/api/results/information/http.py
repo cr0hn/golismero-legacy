@@ -355,7 +355,7 @@ class HTTP_Response (Information):
         # Request time
         self.__request_time = request_time
         # Generate information object
-        self.__information = self.__get_type_by_raw(self.__http_headers, self.__raw_data)
+        self.__information = self.__extract_information(self.__http_headers, self.__raw_data)
         # Wrapper for cookie
         self.__cookie = None
 
@@ -418,18 +418,17 @@ class HTTP_Response (Information):
     information = property(__get_information)
 
     #----------------------------------------------------------------------
-    def __get_type_by_raw(self, headers, data):
+    def __extract_information(self, headers, data):
         """
-        Get an information type from a raw object
+        Get an information type from a raw response
         """
         m_return_content = None
         if headers:
-            if "content-type" in headers.keys():
-                m_content_type = headers["content-type"]
+            m_content_type = headers.get("content-type", "text/html")
 
-                # Select the type
-                if m_content_type.startswith('text/html'):
-                    m_return_content = HTML(data)
+            # Parse HTML
+            if m_content_type.startswith('text/html'):
+                m_return_content = HTML(data)
 
         return m_return_content
 

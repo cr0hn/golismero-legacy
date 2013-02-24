@@ -67,12 +67,12 @@ class Orchestrator (object):
         # Load the plugins
         self.__pluginManager = PriscillaPluginManager()
         success, failure = self.__pluginManager.find_plugins(self.__config.plugins_folder)
-        Logger.log_verbose("Found %d plugins" % len(success))
+        Logger.log_more_verbose("Found %d plugins" % len(success))
         if failure:
             Logger.log_error("Failed to load %d plugins" % len(failure))
             if Logger.is_level(Logger.VERBOSE):
                 for plugin_name in failure:
-                    Logger.log_error("\t%s" % plugin_name)
+                    Logger.log_error_verbose("\t%s" % plugin_name)
 
         loaded = self.__pluginManager.load_plugins(self.__config.plugins)
 

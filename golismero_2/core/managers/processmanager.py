@@ -32,6 +32,7 @@ from ..messaging.message import Message
 
 from multiprocessing import Pool, Queue
 from imp import load_source
+from traceback import format_exc
 
 
 #------------------------------------------------------------------------------
@@ -85,7 +86,19 @@ def bootstrap(context, func, argv, argd):
             instance._set_observer(observer)
 
             # Call the callback method
-            getattr(instance, func)(*argv, **argd)
+            retval = getattr(instance, func)(*argv, **argd)
+
+            # If there's a return value, assume it's a list of results
+            if retval is not None:
+                for result in retval:
+                    try:
+                        instance.send_info(result)
+                    except Exception:
+                        message = Message(message_type = Message.MSG_TYPE_CONTROL,
+                                          message_code = Message.MSG_CONTROL_ERROR,
+                                          message_info = format_exc())
+                        observer.send_msg(message)
+
 
         # No matter what happens, send back an ACK
         finally:
@@ -97,10 +110,9 @@ def bootstrap(context, func, argv, argd):
 
             # Send a message to the Orchestrator to tell about this error
 
-            import traceback
             message = Message(message_type = Message.MSG_TYPE_CONTROL,
                               message_code = Message.MSG_CONTROL_ERROR,
-                              message_info = traceback.format_exc())
+                              message_info = format_exc())
             observer.send_msg(message)
 
         else:

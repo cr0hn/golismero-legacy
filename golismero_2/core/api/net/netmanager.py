@@ -185,12 +185,33 @@ class Web (Protocol):
         self.__http_pool_manager = http_pool
         self.__config = config
 
-        # re object with pattern for domain and/or subdomains
-        self.macher = None
-        if self.__config.subdomain_regex:
-            self.matcher = compile("%s%s" % (self.__config.suddomains_regex, self.__config.targets[0]))
-        else:
-            self.matcher = compile(".*%s" % self.__config.targets[0] if self.__config.include_subdomains else None)
+        # Set of domain names we're allowed to connect to
+        self.__audit_scope = set(parse_url(x).hostname.lower() for x in config.targets)
+        try:
+            self.__audit_scope.remove("")
+        except KeyError:
+            pass
+        try:
+            self.__audit_scope.remove(None)
+        except KeyError:
+            pass
+
+
+    #----------------------------------------------------------------------
+    def is_in_scope(self, url):
+        """
+        Determines if the given URL is within scope of the audit.
+
+        :param url: URL to test.
+        :type url: str
+
+        :returns: True if the URL is within scope of the audit, False otherwise.
+        """
+        hostname = parse_url(url).hostname.lower()
+        return hostname in self.__audit_scope or (
+            self.__config.include_subdomains and
+            any(hostname.endswith("." + domain) for domain in self.__audit_scope)
+        )
 
 
     #----------------------------------------------------------------------
@@ -218,10 +239,9 @@ class Web (Protocol):
             raise TypeError("Expected HTTP_Request, got %s instead" % type(URL))
 
         # Check for host matching
-        m_parser = parse_url(request.url)
-        if all([ m_parser.hostname, not self.matcher.match(m_parser.hostname)]):
-            Logger.log_verbose("Url '%s' out of scope. Skiping it." % request.url)
-            return None
+        if not self.is_in_scope(request.url):
+            Logger.log_verbose("Url '%s' out of scope. Skipping it." % request.url)
+            return
 
         m_response = None
         m_time = None
@@ -279,7 +299,7 @@ class Web (Protocol):
 
 
     #----------------------------------------------------------------------
-    def get(self, URL, method= "GET", post_data = None, follow_redirect=False, cache = True):
+    def get(self, URL, method = "GET", post_data = None, follow_redirect = False, cache = True):
         """
         Get response for an input URL.
 
@@ -297,15 +317,16 @@ class Web (Protocol):
         :raises: TypeError
         """
 
-        # None or not str?
-        if not isinstance(URL, basestring):
-            raise TypeError("Expected str, got %s instead" % type(URL))
+        # Extract the raw URL when applicable
+        try:
+            URL = URL.url
+        except AttributeError:
+            pass
 
         # Check for host matching
-        m_parser = parse_url(URL)
-        if m_parser.hostname and not self.matcher.match(m_parser.hostname):
-            Logger.log_verbose("[!] Url '%s' out of scope. Skiping it." % URL)
-            return None
+        if not self.is_in_scope(URL):
+            Logger.log_verbose("[!] Url '%s' out of scope. Skipping it." % URL)
+            return
 
         # Make HTTP_Request object
         m_request = HTTP_Request(
@@ -316,7 +337,7 @@ class Web (Protocol):
             cache = cache
         )
 
-        return  self.get_custom(m_request)
+        return self.get_custom(m_request)
 
 
 
