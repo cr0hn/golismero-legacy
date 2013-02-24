@@ -105,9 +105,8 @@ class HTML(Information):
 
     def find_all(self, name=None, attrs={}, recursive=True, text=None, limit=None):
         """
-        Looking for in HTML code by patter.
         """
-        return self.__html_parser.find_all(name=None, attrs={}, recursive=True, text=None, limit=None)
+        return self.__html_parser.find_all(name=name, attrs=attrs, recursive=recursive, text=text, limit=limit)
 
 
     def __get_raw(self):
