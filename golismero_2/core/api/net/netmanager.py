@@ -24,18 +24,19 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ['NetManager', 'Web']
+
+
 from ..config import Config
+from ..logger import Logger
 from ..results.information.url import Url
 from ..results.information.http import *
-from ..logger import Logger
 
 from time import time
-from re import match, compile
 
-from thirdparty_libs.urllib3.util import parse_url
-from thirdparty_libs.urllib3 import PoolManager
+from urllib3.util import parse_url
+from urllib3 import PoolManager
 
-__all__ = ['NetManager', 'Web']
 
 #------------------------------------------------------------------------------
 class NetManager (object):

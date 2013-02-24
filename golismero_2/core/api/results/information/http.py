@@ -32,10 +32,10 @@ from .information import *
 from .url import *
 from .html import *
 
-from thirdparty_libs.urllib3.util import parse_url
-from core.main.commonstructures import get_unique_id
+from urllib3.util import parse_url
 from os.path import basename
 from re import findall
+
 
 #------------------------------------------------------------------------------
 class HTTP_Request (Information):
