@@ -25,6 +25,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["launcher"]
+
+
+#----------------------------------------------------------------------
+# Metadata
+
 __author__ = "Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel) - dani@iniqua.com"
 __copyright__ = "Copyright 2011-2013 - GoLismero project"
 __credits__ = ["Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel)", "Mario Vilas (@Mario_Vilas"]
@@ -34,21 +40,106 @@ __license__ = "GPL"
 __version__ = "2.0.0"
 
 
+#----------------------------------------------------------------------
+# Python version check.
+# We must do it now before trying to import any more modules.
+
+import sys
+from sys import version_info, exit
+if __name__ == "__main__":
+    if version_info < (2, 7) or version_info > (3, 0):
+        print
+        print "|--------------------------------------------------|"
+        print "| GoLismero - The Web Knife.                       |"
+        print "|                                                  |"
+        print "| Daniel Garcia a.k.a cr0hn - dani@iniqua.com      |"
+        print "|--------------------------------------------------|"
+        print
+        print "[!] You must use Python version 2.7"
+        exit(1)
+
+
+#----------------------------------------------------------------------
+# Make sure the modules path points to the core first,
+# then the third party libs, and then the system.
+
+import os
+from os import path
+try:
+    _FIXED_PATH_
+except NameError:
+    where = path.split(path.abspath(__file__))[0]
+    if not where:  # if it fails use cwd instead
+        where = path.abspath(os.getcwd())
+    sys.path.insert(0, path.join(where, "thirdparty_libs"))
+    sys.path.insert(0, where)
+    _FIXED_PATH_ = True
+
+
+#----------------------------------------------------------------------
+# Imported modules
 
 import argparse
-import textwrap
 import datetime
-from os import path
-from sys import version_info, exit
-from starter import launcher
-from core.main.commonstructures import GlobalParams
-from core.managers.priscillapluginmanager import PriscillaPluginManager
+import textwrap
+
 from core.api.logger import Logger
+from core.main.commonstructures import GlobalParams
+from core.main.orchestrator import Orchestrator
+from core.managers.priscillapluginmanager import PriscillaPluginManager
+
+
+#----------------------------------------------------------------------
+# Exported function to launch GoLismero
+
+def launcher(options):
+
+    if not isinstance(options, GlobalParams):
+        raise TypeError("Expected GlobalParams, got %s instead" % type(options))
+
+    Logger.configure(level = options.verbose)
+
+    m_orchestrator = None
+
+    try:
+        if options.run_mode == GlobalParams.RUN_MODE.standalone:
+
+            # Run Orchestrator
+            m_orchestrator = Orchestrator(options)
+
+            # Start UI
+            m_orchestrator.start_ui()
+
+            # New audit with command line options
+            m_orchestrator.add_audit(options)
+
+            # Message loop
+            m_orchestrator.msg_loop()
+
+        elif options.run_mode == GlobalParams.RUN_MODE.cloudclient:
+            #
+            # TODO
+            #
+            raise NotImplementedError("Cloud client mode not yet implemented!")
+
+
+        elif options.run_mode == GlobalParams.RUN_MODE.cloudserver:
+            #
+            # TODO
+            #
+            raise NotImplementedError("Cloud server mode not yet implemented!")
+
+        else:
+            raise ValueError("Invalid run mode: %r" % options.run_mode)
+
+    except KeyboardInterrupt:
+        Logger.log("\n[i] Stopping. Please wait...")
 
 
 #----------------------------------------------------------------------
 # Start of program
-if __name__ == '__main__':
+
+def main():
 
     # Show program banner
     print
@@ -58,11 +149,6 @@ if __name__ == '__main__':
     print "| Daniel Garcia a.k.a cr0hn - dani@iniqua.com      |"
     print "|--------------------------------------------------|"
     print
-
-    # Check for python version
-    if version_info < (2, 7):
-        print "[!] You must use python 2.7 or greater"
-        sys.exit(1)
 
     # Configure command line parser
     parser = argparse.ArgumentParser()
@@ -175,7 +261,7 @@ if __name__ == '__main__':
         except ValueError:
             Logger.log("[!] Plugin name not found")
             exit(1)
-        except Exception,e:
+        except Exception, e:
             Logger.log("[!] Error recovering plugin info: %s" % e.message)
             exit(1)
 
@@ -191,3 +277,7 @@ if __name__ == '__main__':
     except SystemExit:
         Logger.log("GoLismero stopped at %s" % datetime.datetime.now())
         raise
+
+
+if __name__ == '__main__':
+    main()
