@@ -85,6 +85,19 @@ class ExamplePlugin(TestingPlugin):
         #if isinstance(p, HTTP_Response):
             #print "aaaa" + str(p.http_code)
 
+        # Test the file API
+        #from core.api.file import FileManager as FF
+        #F = FF()
+        #assert F.exists("example.py")
+        #assert F.isfile("example.py")
+        #assert F.isdir(".")
+        #assert F.samefile("example.py", "example.py")
+        #Logger.log(str(F.listdir()))
+        #Logger.log(str(list(F.walk())))
+        #with F.open("example.py") as fp1:
+            #with F.open("example.py") as fp2:
+                #pass
+
 
         # Send a test message
         for i in xrange(3):

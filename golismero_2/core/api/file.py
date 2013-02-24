@@ -42,6 +42,9 @@ class FileManager (object):
     """
 
 
+    # TODO: this could be a singleton, with a protected method to update the config.
+
+
     #----------------------------------------------------------------------
     def __init__(self):
 
@@ -205,22 +208,6 @@ class FileManager (object):
 
 
     #----------------------------------------------------------------------
-    def sameopenfile(self, fp1, fp2):
-        """
-        Determine if the two given open file objects refer to the same file within the plugin folder.
-
-        :param fp1: First file to test.
-        :type fp1: file
-
-        :param fp2: Second file to test.
-        :type fp2: file
-
-        :returns: bool -- True if the files are the same, False otherwise.
-        """
-        return path.sameopenfile(fp1, fp2)
-
-
-    #----------------------------------------------------------------------
     def listdir(self, folder = "."):
         """
         List all files and folders within the plugin folder.
@@ -254,5 +241,11 @@ class FileManager (object):
         # Sanitize the folder.
         folder = self.__sanitize(folder)
 
-        # List the folder contents and return them.
-        return walk(folder)
+        # List the folder contents and yield them,
+        # fixing the base path to make it relative.
+        p = len(self.__plugin_path)
+        if not self.__plugin_path.endswith(path.sep):
+            p += 1
+        for basepath, directories, files in walk(folder):
+            basepath = basepath[p:]
+            yield basepath, directories, files
