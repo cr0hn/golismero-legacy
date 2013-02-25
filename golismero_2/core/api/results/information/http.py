@@ -330,14 +330,16 @@ class HTTP_Request (Information):
         return self.__files_attached
 
     #----------------------------------------------------------------------
-    def __get_request_id(self):
+    @property
+    def request_id(self):
         """"""
         if not self.__request_id:
             # Create data for key
-            m_string = "%s|%s" (self.__url, [ "%s:%s" %(k, v) for x in self.post_data.items()])
+            m_string = "%s|%s" % (self.__url, [ "%s:%s" % (k, v) for k,v in self.post_data.items()] if self.post_data else '')
 
             # Make the hash
             self.__request_id = hashlib.md5(m_string).hexdigest()
+        return self.__request_id
 
 #------------------------------------------------------------------------------
 class HTTP_Response (Information):
