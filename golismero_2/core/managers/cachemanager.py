@@ -48,8 +48,7 @@ class CacheManager(Singleton):
         """
 
         # Get audit name
-        #m_audit = Config().audit_name
-        m_audit = "aa"
+        m_audit = Config().audit_name
 
         # Set cache for audit, if necessary
         if m_audit not in self.__cache.keys():
@@ -71,8 +70,7 @@ class CacheManager(Singleton):
         :returns: bool -- True if URL has cached. False otherwise.
         """
 
-        #return data.request_id in self.__cache[Config().audit_name].keys()
-        return data.request_id in self.__cache["aa"].keys()
+        return Config().audit_config in self.__cache.keys() and data.request_id in self.__cache[Config().audit_name].keys()
 
     #----------------------------------------------------------------------
     def set_cache(self, data):
@@ -87,8 +85,7 @@ class CacheManager(Singleton):
         """
         # None or empty?
         if data and data.request_id:
-            #self.__cache[Config().audit_name][data.request_id] = data
-            self.__cache["aa"][data.request_id] = data
+            self.__cache[Config().audit_name][data.request_id] = data
 
 
 
