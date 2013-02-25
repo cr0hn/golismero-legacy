@@ -81,10 +81,10 @@ class Url(Information):
 
 	#----------------------------------------------------------------------
 	def __str__(self):
-		return "[%s] %s (%s)" % (
+		return "[%s] %s %s" % (
 			self.__method,
 			self.__url,
-			''.join(["%s = %s | " % (k, v) for k, v in (self.__url_params.items() if self.__method != 'POST' else self.__post_params.items())])[:-2]
+			"(%s)" % ''.join(["%s = %s | " % (k, v) for k, v in (self.__url_params.items() if self.__method != 'POST' else self.__post_params.items())])[:-2] if self.__post_params or self.__url_params else ''
 		)
 
 

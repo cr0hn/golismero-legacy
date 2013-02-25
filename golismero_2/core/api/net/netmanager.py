@@ -31,11 +31,12 @@ from ..config import Config
 from ..logger import Logger
 from ..results.information.url import Url
 from ..results.information.http import *
+from core.managers.cachemanager import *
 
 from time import time
-
 from urllib3.util import parse_url
 from urllib3 import PoolManager
+
 
 
 #------------------------------------------------------------------------------
@@ -84,8 +85,8 @@ class Protocol (object):
     def __init__(self):
         """Constructor."""
 
-        # Init the cache
-        self.__cache = dict()
+        # Set reference to cache
+        self._cache = CacheManager()
 
 
     #----------------------------------------------------------------------
@@ -119,52 +120,6 @@ class Protocol (object):
     def custom_request(self, request):
         """"""
 
-
-    #----------------------------------------------------------------------
-    def get_cache(self, data):
-        """
-        Get URL from cache
-
-        :returns: object cached | None
-        """
-        # None or empty?
-        if not data:
-            return None
-
-        m_return = None
-        try:
-            # if cached
-            m_return = self.__cache[data.hash_sum]
-        except KeyError:
-            # Not cached
-            m_return = None
-
-        return m_return
-
-    #----------------------------------------------------------------------
-    def is_cached(self, data):
-        """
-        Indicates if URL is cached
-
-        :returns: bool -- True if URL has cached. False otherwise.
-        """
-
-        return data.hash_sum in self.__cache.keys()
-
-    #----------------------------------------------------------------------
-    def set_cache(self, data):
-        """
-        Include and URL, and their data, into cache.
-
-        :param URL: String with URL
-        :type URL: str
-
-        :param data: data with information
-        :type data: object
-        """
-        # None or empty?
-        if data.hash_sum:
-            self.__cache[data.hash_sum] = data
 
 
 
@@ -248,52 +203,53 @@ class Web (Protocol):
         m_time = None
 
         # URL is cached?
-        if request.is_cacheable and self.is_cached(request):
-            m_response = self.get_cache(request)
+        if request.is_cacheable and self._cache.is_cached(request):
+            m_response = self._cache.get_cache(request)
         else:
             # Get URL
+            try:
+                # timing init
+                t1 = time()
+                # Select request type
+                m_response = None
+                if "POST" == request.method or "PUT" == request.method:
+                    m_response = self.__http_pool_manager.request(
+                        method = request.method,
+                        url = request.url,
+                        redirect = request.follow_redirects,
+                        headers = request.raw_headers,
+                        fields = request.post_data,
+                        encode_multipart = request.files_attached
+                    )
+                elif "GET" == request.method:
+                    m_response = self.__http_pool_manager.request(
+                        method = request.method,
+                        url = request.url,
+                        redirect = request.follow_redirects,
+                        headers = request.raw_headers,
+                    )
+                else:
+                    m_response = self.__http_pool_manager.request(
+                        method = request.method,
+                        url = request.url,
+                        redirect = request.follow_redirects,
+                        headers = request.raw_headers,
+                        fields = request.post_data,
+                    )
 
-            # timing init
-            t1 = time()
+                # timin end
+                t2 = time()
 
-            # Select request type
-            m_response = None
-            if "POST" == request.method or "PUT" == request.method:
-                m_response = self.__http_pool_manager.request(
-                    method = request.method,
-                    url = request.url,
-                    redirect = request.follow_redirects,
-                    headers = request.raw_headers,
-                    fields = request.post_data,
-                    encode_multipart = request.files_attached
-                )
-            elif "GET" == request.method:
-                m_response = self.__http_pool_manager.request(
-                    method = request.method,
-                    url = request.url,
-                    redirect = request.follow_redirects,
-                    headers = request.raw_headers,
-                )
-            else:
-                m_response = self.__http_pool_manager.request(
-                    method = request.method,
-                    url = request.url,
-                    redirect = request.follow_redirects,
-                    headers = request.raw_headers,
-                    fields = request.post_data,
-                )
+                # Calculate response time
+                m_time = t2 - t1
 
-            # timin end
-            t2 = time()
+                m_response = HTTP_Response(m_response, m_time, request)
 
-            # Calculate response time
-            m_time = t2 - t1
-
-            m_response = HTTP_Response(m_response, m_time, request)
-
-            # Cache are enabled?
-            if request.is_cacheable:
-                self.set_cache(m_response)
+                # Cache is enabled?
+                if request.is_cacheable:
+                    self._cache.set_cache(m_response)
+            except Exception, e:
+                Logger.log_error_verbose("Unknown error: '%s'." % e.message)
 
         return m_response
 

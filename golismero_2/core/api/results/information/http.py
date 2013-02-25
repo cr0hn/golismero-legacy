@@ -34,6 +34,7 @@ from .html import *
 
 from urllib3.util import parse_url
 from os.path import basename
+import hashlib
 from re import findall
 
 
@@ -88,6 +89,9 @@ class HTTP_Request (Information):
 
         # This vas specify if request has files attached
         self.__files_attached = False
+
+        # Id of request
+        self.__request_id = None
 
     #----------------------------------------------------------------------
     #
@@ -325,6 +329,15 @@ class HTTP_Request (Information):
         """"""
         return self.__files_attached
 
+    #----------------------------------------------------------------------
+    def __get_request_id(self):
+        """"""
+        if not self.__request_id:
+            # Create data for key
+            m_string = "%s|%s" (self.__url, [ "%s:%s" %(k, v) for x in self.post_data.items()])
+
+            # Make the hash
+            self.__request_id = hashlib.md5(m_string).hexdigest()
 
 #------------------------------------------------------------------------------
 class HTTP_Response (Information):

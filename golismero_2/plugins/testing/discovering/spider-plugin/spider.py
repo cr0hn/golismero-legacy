@@ -120,7 +120,6 @@ class Spider(TestingPlugin):
 
         # Get HTML redirections in meta
         if p.information.metas:
-
             # We are looking for content like: '...; url=XXXXX>'
             if "content" in p.information.metas[0].attrs:
                 t1 = p.information.metas[0].attrs["content"].split(';')
@@ -172,8 +171,8 @@ class Spider(TestingPlugin):
         # Create instances of Url, and delete duplicates
         m_return = [Url(u) for u in set(m_tmp)]
 
-        # Return the links, this will send them to the kernel automatically
-        return m_return
+        # Send info
+        map(self.send_info, m_return)
 
 
     #----------------------------------------------------------------------

@@ -31,6 +31,7 @@ from core.api.results.result import Result
 from core.messaging.message import Message
 
 from colorizer import *
+
 from time import sleep
 
 
@@ -75,12 +76,14 @@ class ConsoleUIPlugin(UIPlugin):
         #
         # Display in console
         #
+        r = NetManager().get_connection()
+        r = c.get("www.terra.es/portada/")
+        r = c.get("www.terra.es/portada/")
 
-        print colored("hola", color='red')
 
         # TYPE: Url
         if all([info.result_type == Result.TYPE_INFORMATION, info.result_subtype == Information.INFORMATION_URL]):
-            Logger.log("+ New url found: %s." % str(info))
+            Console.display("+ %s" % colored(str(info), 'cyan'))
 
 
     #----------------------------------------------------------------------
