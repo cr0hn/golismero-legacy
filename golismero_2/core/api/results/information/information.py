@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -24,9 +24,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.results.result import Result
+from ..result import Result
 
-__all__=["Information"]
+__all__ = ["Information"]
 
 #------------------------------------------------------------------------------
 class Information(Result):
@@ -39,45 +39,45 @@ class Information(Result):
     # Types of Infomation results
     #
     #--------------------------------------------------------------------------
-    INFORMATION_IMAGE         = 0
-    INFORMATION_URL           = 1
-    INFORMATION_DOCUMENT      = 2
-    INFORMATION_BINARY        = 3
-    INFORMATION_MAIL          = 4
-    INFORMATION_HTML          = 5
-    INFORMATION_HTTP_REQUEST  = 6
-    INFORMATION_HTTP_RESPONSE = 7
-    INFORMATION_UNKNOWN       = 10
+    INFORMATION_UNKNOWN       = 0
+    INFORMATION_IMAGE         = 1
+    INFORMATION_URL           = 2
+    INFORMATION_DOCUMENT      = 3
+    INFORMATION_BINARY        = 4
+    INFORMATION_MAIL          = 5
+    INFORMATION_HTML          = 6
+    INFORMATION_HTTP_REQUEST  = 7
+    INFORMATION_HTTP_RESPONSE = 8
+
+    INFORMATION_FIRST = INFORMATION_UNKNOWN
+    INFORMATION_LAST  = INFORMATION_HTTP_RESPONSE
 
 
     #----------------------------------------------------------------------
-    def __init__(self, information_type = None):
-        """Constructor."""
-        super(Information, self).__init__(Result.TYPE_INFORMATION)
-
-        self.__information_type = information_type
+    def __init__(self):
+        super(Information, self).__init__()
+        self.result_type    = self.TYPE_INFORMATION
+        self.result_subtype = self.INFORMATION_UNKNOWN
 
 
     #----------------------------------------------------------------------
-    def __get_information_type(self):
+    def __get_result_subtype(self):
         """
-        Get the result type.
+        Get the result subtype.
 
         :returns: int -- The result type.
         """
-        if self.__information_type is None:
-            return Information.INFORMATION_URL
-        else:
-            return self.__information_type
+        return self.__result_subtype
 
-    def __set_information_type(self, information_type):
+    def __set_result_subtype(self, result_subtype):
         """
-        Set the result type.
+        Set the result subtype.
 
-        :param result_type: The type of result
+        :param result_type: Result subtype.
         :type result_type: int
         """
-        if information_type is not None and information_type >= 0 and information_type <= 10:
-            self.__information_type = information_type
+        if not self.INFORMATION_FIRST <= result_subtype <= self.INFORMATION_LAST:
+            raise ValueError("Unknown result subtype: %d" % result_subtype)
+        self.__result_subtype = result_subtype
 
-    result_subtype = property(__get_information_type, __set_information_type)
+    result_subtype = property(__get_result_subtype, __set_result_subtype)

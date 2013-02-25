@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -24,12 +24,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.managers.priscillapluginmanager import PriscillaPluginManager
-from core.messaging.notifier import UINotifier
-from core.messaging.message import Message
-from core.main.commonstructures import GlobalParams
-from threading import Thread
-from time import sleep
+from .priscillapluginmanager import PriscillaPluginManager
+from ..messaging.notifier import UINotifier
+from ..messaging.message import Message
+from ..main.commonstructures import GlobalParams
 
 
 #------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -26,18 +26,31 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Config"]
 
-from core.main.commonstructures import Singleton
+from ..main.commonstructures import Singleton
 
 class Config (Singleton):
 
     @property
     def audit_name(self):
+        "str -- Audit name."
         return self.__audit_name
 
     @property
     def audit_config(self):
+        "GlobalConfig -- Audit config."
         return self.__audit_config
 
-    def _set_config(self, audit_name, audit_config):
+    @property
+    def plugin_info(self):
+        "PluginInfo -- Plugin information."
+        return self.__plugin_info
+
+    @property
+    def plugin_config(self):
+        "dict -- Plugin configuration."
+        return self.__plugin_info.plugin_config
+
+    def _set_config(self, audit_name, audit_config, plugin_info):
         self.__audit_name   = audit_name
         self.__audit_config = audit_config
+        self.__plugin_info  = plugin_info

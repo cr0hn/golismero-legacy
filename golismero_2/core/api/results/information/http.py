@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -28,38 +28,47 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["HTTP_Request", "HTTP_Response"]
 
-from core.api.results.information.information import *
-from core.api.results.information.html import *
-from thirdparty_libs.urllib3.util import parse_url
-from core.main.commonstructures import get_unique_id
+from .information import *
+from .url import *
+from .html import *
+
+from urllib3.util import parse_url
 from os.path import basename
 from re import findall
 
+
 #------------------------------------------------------------------------------
 class HTTP_Request (Information):
-    """"""
+    """
+    HTTP request.
+    """
 
-    TYPE_HTTP      = 0
-    TYPE_JSON      = 1
-    TYPE_SOAP      = 2
-    TYPE_VIEWSTATE = 3
+    TYPE_HTTP      = 0    # No additional parsing
+    TYPE_JSON      = 1    # Automatic JSON parsing
+    TYPE_SOAP      = 2    # Automatic SOAP parsing
+    TYPE_VIEWSTATE = 3    # Automatic Viewstate parsing
+
+
+    DEFAULT_USER_AGENT = "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +http://code.google.com/p/golismero)"
+
+
 
     #----------------------------------------------------------------------
-    def __init__(self, url, method='GET', post_data = None, cache = True, follow_redirects=False, cookie="", random_user_agent=False, request_type = 0):
-        """Constructor"""
+    def __init__(self, url, method = 'GET', post_data = None, cache = True, follow_redirects = False, cookie = "", random_user_agent = False, request_type = 0):
+
         # Set method
-        self.__method = method.upper() if method.upper() in ['POST', 'GET', 'PUT'] else 'GET'
+        self.__method = method.upper() if method else "GET"
 
         # Set url
         self.__url = url
-        self.__parsed_url = parse_url(url) if url != '' else None
+        self.__parsed_url = parse_url(url)
 
         # Follow redirects
         self.__follow_redirects = follow_redirects
 
-        # Set main headers
+        # Set headers
         self.__headers = {
-            'User-Agent' : self.generate_user_agent() if random_user_agent else "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +http://code.google.com/p/golismero)",
+            'User-Agent' : self.generate_user_agent() if random_user_agent else self.DEFAULT_USER_AGENT,
             'Accept-Language' : "en-US",
             'Accept' : self.__get_accept_type(),
         }
@@ -131,8 +140,8 @@ class HTTP_Request (Information):
         :param path_to_file: path to file to load.
         :type path_to_file: str
         """
-        if all([path_to_file, param_name]):
-            self.add_file_from_object(param_name, basename(path_to_file), open(path_to_file).read())
+        if path_to_file and param_name:
+            self.add_file_from_object(param_name, basename(path_to_file), open(path_to_file, "rb").read())
 
 
     #----------------------------------------------------------------------
@@ -149,18 +158,19 @@ class HTTP_Request (Information):
         :type obj: binary data
         """
         if all([param_name, file_name, obj]):
+
             # Create dict, if not exits
             if not self.__post_data:
                 self.__post_data = {}
 
-            # Fix method, if is GET
+            # Fix method, if it's GET
             if self.__method == "GET":
                 self.__method = "POST"
 
             # Add data
-            self.__post_data[param_name] = (file_name, obj )
+            self.__post_data[param_name] = (file_name, obj)
 
-            # Set request to file attached
+            # Remember we have attached a file
             self.__files_attached = True
 
 
@@ -194,22 +204,17 @@ class HTTP_Request (Information):
         return m_types["all"]
 
 
-
-    def __get_content_type(self):
-        """Generate dict entry with content type info"""
-        return { 'Content-Type' : "application/x-www-form-urlencoded; charset=UTF-8" }
-
-
     #----------------------------------------------------------------------
     #
-    # Read/Write parameters
+    # Read/write properties
     #
     #----------------------------------------------------------------------
+
     # Hostname
     def __get_host(self):
         return self.__headers['Host']
     def __set_host(self, value):
-        self.__headers['Host'] = value if not value else ''
+        self.__headers['Host'] = value
         self.__parsed_url.hostname = self.__headers['Host']
     hostname = property(__get_host, __set_host)
 
@@ -217,44 +222,43 @@ class HTTP_Request (Information):
     def __get_user_agent(self):
         return self.__headers['User-Agent']
     def __set_user_agent(self, value):
-        self.__headers['User-Agent'] = value if not value else ''
+        self.__headers['User-Agent'] = value
     user_agent = property(__get_user_agent, __set_user_agent)
 
     # Accept language
     def __get_accept_language(self):
         return self.__headers['Accept-Language']
     def __set_accept_language(self, value):
-        self.__headers['Accept-Language'] = value if not value else ''
+        self.__headers['Accept-Language'] = value
     accept_language = property(__get_accept_language, __set_accept_language)
 
     # Content-type
     def __get_accept(self):
         return self.__headers['Accept']
     def __set_accept(self, value):
-        self.__headers['Accept'] = value if not value else ''
+        self.__headers['Accept'] = value
     accept = property(__get_accept, __set_accept)
 
     # Referer
     def __get_referer(self):
         return self.__headers['Referer']
     def __set_referer(self, value):
-        self.__headers['Referer'] = value if not value else ''
+        self.__headers['Referer'] = value
     referer = property(__get_referer, __set_referer)
 
     # Cookie
     def __get_cookie(self):
         return self.__headers['Cookie']
     def __set_cookie(self, value):
-        self.__headers['Cookie'] = value if not value else ''
+        self.__headers['Cookie'] = value
     cookie = property(__get_cookie, __set_cookie)
 
     # Content type
     def __get_content_type(self):
-        return self.__headers['Content-Type'] if 'Content-Type' in self.__headers['Content-Type'] else None
+        return self.__headers['Content-Type']
     def __set_content_type(self, value):
-        self.__headers['Content-Type'] = value if not value else ''
+        self.__headers['Content-Type'] = value
     content_type = property(__get_content_type, __set_content_type)
-
 
     # Post data
     def __get_post_data(self):
@@ -264,209 +268,195 @@ class HTTP_Request (Information):
                 self.__post_data.update(value)
             else:
                 self.__post_data = value
-
-            # Set content type
-            self.__headers.update(self.__set_content_type())
+            self.content_type = "application/x-www-form-urlencoded; charset=UTF-8"
     post_data = property(__get_post_data, __set_post_data)
 
     # Raw headers
     def __get_raw_headers(self):
         return self.__headers
     def __set_raw_headers(self, value):
-        if isinstance(value, dict):
-            self.__headers.update(value)
+        self.__headers.update(value)
     raw_headers = property(__get_raw_headers, __set_raw_headers)
 
+
     #----------------------------------------------------------------------
     #
-    # Read only parameters
+    # Read-only properties
     #
     #----------------------------------------------------------------------
-    def __get_url(self):
+
+    @property
+    def from_request(self):
+        """"""
+        return self.__from_request
+
+    @property
+    def url(self):
         """"""
         return self.__url
-    url = property(__get_url)
 
-    #----------------------------------------------------------------------
-    def __get_parsed_url(self):
+    @property
+    def parsed_url(self):
         """"""
         return self.__parsed_url
-    parsed_url = property(__get_parsed_url)
 
-    #----------------------------------------------------------------------
-    def __get_method(self):
+    @property
+    def method(self):
         """"""
         return self.__method
-    method = property(__get_method)
 
-    #----------------------------------------------------------------------
-    def __get_is_cacheable(self):
+    @property
+    def is_cacheable(self):
         """"""
         return self.__cache
-    is_cacheable = property(__get_is_cacheable)
 
-    #----------------------------------------------------------------------
-    def __get_request_type(self):
+    @property
+    def request_type(self):
         """"""
         return self.__type
-    request_type = property(__get_request_type)
 
-    #----------------------------------------------------------------------
-    def __get_follow_redirects(self):
+    @property
+    def follow_redirects(self):
         """"""
         return self.__follow_redirects
-    follow_redirects = property(__get_follow_redirects)
 
-    #----------------------------------------------------------------------
-    def __get_files_attached(self):
+    @property
+    def files_attached(self):
         """"""
         return self.__files_attached
-    files_attached = property(__get_files_attached)
-
-
 
 
 #------------------------------------------------------------------------------
 class HTTP_Response (Information):
     """
-    This class contain all info fo HTTP response
+    HTTP response.
     """
 
     #----------------------------------------------------------------------
     def __init__(self, raw_response, request_time, request):
-        """Constructor"""
+        super(HTTP_Response, self).__init__()
 
-        super(HTTP_Response, self).__init__(Information.INFORMATION_HTTP_RESPONSE)
+        self.result_subtype = self.INFORMATION_HTTP_RESPONSE
 
-        # URL from response was requested
+        # Request that produced this response
         self.__from_request = request
 
         # HTML code of response
         self.__raw_data = raw_response.data if raw_response.data != None else ""
+
         # HTTP response code
+
         self.__http_response_code = raw_response.status
+
         # HTTP response reason
+
         self.__http_response_code_reason = raw_response.reason
+
         # HTTP headers
         self.__http_headers = dict(raw_response.headers)
+
         # HTTP headers in raw format
         self.__http_headers_raw = ''.join(["%s: %s\n" % (k,v) for k,v in raw_response.headers.items()])
+
         # Request time
         self.__request_time = request_time
+
         # Generate information object
-        self.__information = self.__get_type_by_raw(self.__http_headers, self.__raw_data)
+        self.__information = self.__extract_information(self.__http_headers, self.__raw_data)
+
         # Wrapper for cookie
         self.__cookie = None
 
         #
         # Counters
         #
+
         # Total number of words of body response
         self.__word_count = None
+
         # Total number of lines of body response
         self.__lines_count = None
+
         # Total number of characters of body response
         self.__char_count = None
 
     #----------------------------------------------------------------------
-    def __get_raw(self):
+
+    @property
+    def raw(self):
         """"""
         return self.__raw_data
-    raw_data = property(__get_raw)
 
-    #----------------------------------------------------------------------
-    def __get_cookie(self):
+    @property
+    def cookie(self):
         """"""
         return self.__request.cookie
-    cookie = property(__get_cookie)
 
-    #----------------------------------------------------------------------
-    def __get_http_response_code(self):
+    @property
+    def http_response_code(self):
         """"""
         return self.__http_response_code
-    http_code = property(__get_http_response_code)
 
-    #----------------------------------------------------------------------
-    def __get_http_response_reason(self):
+    @property
+    def http_response_reason(self):
         """"""
         return self.__http_response_code_reason
-    http_reason = property(__get_http_response_reason)
 
-    #----------------------------------------------------------------------
-    def __get_http_headers(self):
+    @property
+    def http_headers(self):
         """"""
         return self.__http_headers
-    http_headers = property(__get_http_headers)
 
-    #----------------------------------------------------------------------
-    def __get_http_raw_headers(self):
+    @property
+    def http_raw_headers(self):
         """"""
         return self.__http_headers_raw
-    http_headers_raw = property(__get_http_raw_headers)
 
-    #----------------------------------------------------------------------
-    def __get_request_time(self):
+    @property
+    def request_time(self):
         """"""
         return self.__request_time
-    request_time = property(__get_request_time)
 
-    #----------------------------------------------------------------------
-    def __get_information(self):
+    @property
+    def information(self):
         """"""
         return self.__information
-    information = property(__get_information)
+
 
     #----------------------------------------------------------------------
-    def __get_type_by_raw(self, headers, data):
+    def __extract_information(self, headers, data):
         """
-        Get an information type from a raw object
+        Get an information type from a raw response
         """
         m_return_content = None
         if headers:
-            if "content-type" in headers.keys():
-                m_content_type = headers["content-type"]
+            m_content_type = headers.get("content-type", "text/html")
 
-                # Select the type
-                if m_content_type.startswith('text/html'):
-                    m_return_content = HTML(data)
+            # Parse HTML
+            if m_content_type.startswith('text/html'):
+                m_return_content = HTML(data)
 
         return m_return_content
 
-
     #----------------------------------------------------------------------
-    def __get_char_count(self):
-        """"""
-        if not self.__char_count:
-            self.__char_count = len(self.__raw_data)
 
+    @property
+    def char_count(self):
+        """Number of chars in response body"""
+        if self.__char_count is None:
+            self.__char_count = len(self.__raw_data)
         return self.__char_count
 
-    char_count = property(__get_char_count)
-    """Number of chars of body response"""
-
-    #----------------------------------------------------------------------
-    def __get_lines_count(self):
-        """"""
-        if not self.__lines_count:
+    @property
+    def lines_count(self):
+        """Number of lines in response body"""
+        if self.__lines_count is None:
             self.__lines_count = len(findall("\S+", self.__raw_data))
-
         return self.__lines_count
 
-    lines_count = property(__get_lines_count)
-    """Number of lines of body response"""
-
-    #----------------------------------------------------------------------
-    def __get_words_count(self):
-        """"""
+    @property
+    def words_count(self):
+        """Number of words in response body"""
         if not self.__word_count:
             self.__word_count = self.__raw_data.count('\n')
         return self.__word_count
-
-    words_count = property(__get_words_count)
-    """Number of words of body response"""
-
-    #----------------------------------------------------------------------
-    def __get_from_request(self):
-        """"""
-        return self.__from_request
-    from_request = property(__get_from_request)

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -24,19 +24,20 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.logger import Logger
-from core.managers.auditmanager import AuditManager
-from core.managers.messagemanager import MessageManager
-from core.managers.priscillapluginmanager import PriscillaPluginManager
-from core.managers.uimanager import UIManager
-from core.managers.processmanager import ProcessManager, Context
-from core.main.commonstructures import GlobalParams
-from core.messaging.message import Message
+from .commonstructures import GlobalParams
+from ..api.logger import Logger
+from ..managers.auditmanager import AuditManager
+from ..managers.messagemanager import MessageManager
+from ..managers.priscillapluginmanager import PriscillaPluginManager
+from ..managers.uimanager import UIManager
+from ..managers.processmanager import ProcessManager, Context
+from ..messaging.message import Message
 
 from multiprocessing import Queue
 from time import sleep
 from traceback import format_exc
 
+__all__ = ["Orchestrator"]
 
 
 class Orchestrator (object):
@@ -65,8 +66,15 @@ class Orchestrator (object):
 
         # Load the plugins
         self.__pluginManager = PriscillaPluginManager()
-        self.__pluginManager.find_plugins(self.__config.plugins_folder)
-        self.__pluginManager.load_plugins(self.__config.plugins)
+        success, failure = self.__pluginManager.find_plugins(self.__config.plugins_folder)
+        Logger.log_more_verbose("Found %d plugins" % len(success))
+        if failure:
+            Logger.log_error("Failed to load %d plugins" % len(failure))
+            if Logger.is_level(Logger.VERBOSE):
+                for plugin_name in failure:
+                    Logger.log_error_verbose("\t%s" % plugin_name)
+
+        loaded = self.__pluginManager.load_plugins(self.__config.plugins)
 
         # Process manager
         self.__processManager = ProcessManager(self.__config)
@@ -162,12 +170,8 @@ class Orchestrator (object):
         # Get the audit configuration
         audit_config = self.__auditManager.get_audit(audit_name).params
 
-        # Get the plugin module and class
-        module = info.plugin_module
-        clazz  = info.plugin_class
-
         # Return the context instance
-        return Context(module, clazz, audit_name, audit_config, self.__queue)
+        return Context(info, audit_name, audit_config, self.__queue)
 
 
     #----------------------------------------------------------------------

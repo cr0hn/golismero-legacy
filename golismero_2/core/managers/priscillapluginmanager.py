@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -31,10 +31,10 @@ import imp
 
 from os import path, walk
 from keyword import iskeyword
-
 from ConfigParser import RawConfigParser
-from core.main.commonstructures import Singleton
-from core.api.plugins.plugin import *
+
+from ..api.plugin import *
+from ..main.commonstructures import Singleton
 
 
 #----------------------------------------------------------------------
@@ -58,6 +58,11 @@ class PluginInfo (object):
     def plugin_class(self):
         "Plugin class name."
         return self.__plugin_class
+
+    @property
+    def plugin_config(self):
+        "Plugin configuration."
+        return self.__plugin_config
 
     @property
     def display_name(self):
@@ -152,6 +157,12 @@ class PluginInfo (object):
             self.__website     = parser.get("Documentation", "Website")
         except Exception:
             self.__website     = "http://code.google.com/p/golismero/"
+
+        # Load the plugin configuration
+        try:
+            self.__plugin_config = dict( parser.items("Configuration") )
+        except Exception:
+            self.__plugin_config = dict()
 
         # Sanitize the plugin module pathname
         if not plugin_module.endswith(".py"):
@@ -290,6 +301,8 @@ class PriscillaPluginManager (Singleton):
                     # On error add the plugin name to the list of failures
                     except Exception:
                         failure.append(plugin_name)
+
+        return success, failure
 
 
     #----------------------------------------------------------------------

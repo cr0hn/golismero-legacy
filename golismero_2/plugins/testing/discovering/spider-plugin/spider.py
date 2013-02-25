@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -24,13 +24,15 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.plugins.plugin import TestingPlugin
-from core.api.results.information.information import Information
 from core.api.logger import Logger
-from core.api.results.information.url import Url
-from thirdparty_libs.urllib3.util import parse_url
-from thirdparty_libs.urllib3.exceptions import LocationParseError
 from core.api.net.netmanager import *
+from core.api.plugin import TestingPlugin
+from core.api.results.information.information import Information
+from core.api.results.information.url import Url
+
+from urllib3.util import parse_url
+from urllib3.exceptions import LocationParseError
+
 
 class Spider(TestingPlugin):
     """
@@ -62,106 +64,115 @@ class Spider(TestingPlugin):
     def recv_info(self, info):
         """Receive URLs."""
 
-        print "Spider run"
+        if not isinstance(info, Url):
+            raise TypeError("Expected Url, got %s instead" % type(info))
+
         m_return = []
 
-        self.send_info(Url("google.com"))
+        # Request this URL
+        m_manager = NetManager.get_connection()
+        p = m_manager.get(info)
 
-        if isinstance(info, Url):
+        # If error p = None => return
+        if not p:
+            return
 
-            # Request this URL
-            m_manager = NetManager.get_connection()
-            p = m_manager.get(info)
+        # Send back the HTTP reponse to the kernel
+        self.send_info(p)
 
-            # If error p = None => return
-            if not p or not p.information:
-                return None
+        # Stop if there's no embedded information
+        if not p.information:
+            return
 
-            # Get hostname and schema to fix URL
+        # Send back the embedded information to the kernel
+        self.send_info(p.information)
+
+        # Stop if the embedded information is not HTML
+        if p.information.result_subtype != Information.INFORMATION_HTML:
+            return
+
+        # Get hostname and schema to fix URL
+        try:
+            m_parsed_url = parse_url(info.url)
+        except LocationParseError:
+            # Error while parsing URL
+            return [p, p.information]
+
+        Logger.log_more_verbose("Spidering URL '%s'\n" % info.url)
+
+
+        m_links = []
+
+        # Get links
+        m_links.extend([x.attrs['href'] for x in p.information.links if 'href' in x.attrs and not x.attrs["href"].startswith("#") and not x.attrs["href"].startswith("javascript")])
+
+        # Get links to css
+        m_links.extend([x.attrs['href'] for x in p.information.css_links if 'href' in x.attrs])
+
+        # Get javascript links
+        m_links.extend([x.attrs['src'] for x in p.information.javascript_links if 'src' in x.attrs])
+
+        # Get Action of forms
+        m_links.extend([x.attrs['src'] for x in p.information.forms if 'src' in x.attrs])
+
+        # Get links to objects
+        m_links.extend([x.attrs['param']['movie'] for x in p.information.objects if 'param' in x.attrs and 'movie' in x.attrs['param']])
+
+        # Get HTML redirections in meta
+        if p.information.metas:
+
+            # We are looking for content like: '...; url=XXXXX>'
+            if "content" in p.information.metas[0].attrs:
+                t1 = p.information.metas[0].attrs["content"].split(';')
+
+                # Must have at least 2 params
+                if len(t1) > 1:
+                    if t1[1].find("url") != -1 and len(t1[1]) > 5:
+                        m_links.append(t1[1][4:])
+
+        # Remove duplicates and fix URL
+        m_tmp = []
+        for u in m_links:
             try:
-                m_parsed_url = parse_url(info.url)
+                l_parsed = parse_url(u)
             except LocationParseError:
                 # Error while parsing URL
-                return None
+                continue
 
-            Logger.log_more_verbose("Spidering URL '%s'\n" % info.url)
+            if u == '':
+                continue
 
+            # Fix hostname
+            m_hostname = ""
+            if l_parsed.hostname is None:
+                m_hostname = m_parsed_url.hostname
+            else:
+                m_hostname = l_parsed.hostname
 
-            m_links = []
+            # Fix scheme
+            m_scheme = m_parsed_url.scheme if l_parsed.scheme is None else l_parsed.scheme
 
-            # Get links
-            m_links.extend([x.attrs['href'] for x in p.information.links if 'href' in x.attrs and not x.attrs["href"].startswith("#") and not x.attrs["href"].startswith("javascript")])
+            # Fix path
+            m_path = ""
+            if l_parsed.path:
+                m_path = '' if len(l_parsed.path) == 1 and l_parsed.path == "/" else l_parsed.path
 
-            # Get links to css
-            m_links.extend([x.attrs['href'] for x in p.information.css_links if 'href' in x.attrs])
+            # Fix params of query
+            m_query = l_parsed.query if l_parsed.query else ''
 
-            # Get javascript links
-            m_links.extend([x.attrs['src'] for x in p.information.javascript_links if 'src' in x.attrs])
+            # Add complete URL
+            m_url = "%s://%s%s%s" % (
+                    m_scheme,
+                    m_hostname,
+                    m_path,
+                    m_query
+                )
+            m_tmp.append(m_url)
 
-            # Get Action of forms
-            m_links.extend([x.attrs['src'] for x in p.information.forms if 'src' in x.attrs])
+        # Create instances of Url, and delete duplicates
+        m_return = [Url(u) for u in set(m_tmp)]
 
-            # Get links to objects
-            m_links.extend([x.attrs['param']['movie'] for x in p.information.objects if 'param' in x.attrs and 'movie' in x.attrs['param']])
-
-            # Get HTML redirections in meta
-            if p.information.metas:
-                # We are looking for content like: '...; url=XXXXX>'
-                if "content" in p.information.metas[0].attrs:
-                    t1 = p.information.metas[0].attrs["content"].split(';')
-
-                    # Must has, at least, 2 params
-                    if len(t1) > 1:
-                        if t1[1].find("url") != -1 and len(t1[1]) > 5:
-                            m_links.append(t1[1][4:])
-
-            # Remove duplicates and fix URL
-            m_tmp = []
-            for u in m_links:
-                try:
-                    l_parsed = parse_url(u)
-                except LocationParseError:
-                    # Error while parsing URL
-                    continue
-
-                if u == '':
-                    continue
-
-                # Fix hostname
-                m_hostname = ""
-                if l_parsed.hostname is None:
-                    m_hostname = m_parsed_url.hostname
-                else:
-                    m_hostname = l_parsed.hostname
-
-                # Fix scheme
-                m_scheme = m_parsed_url.scheme if l_parsed.scheme is None else l_parsed.scheme
-
-                # Fix path
-                m_path = ""
-                if l_parsed.path:
-                    m_path = '' if len(l_parsed.path) == 1 and l_parsed.path == "/" else l_parsed.path
-
-                # Fix params of query
-                m_query = l_parsed.query if l_parsed.query else ''
-
-                # Add complete URL
-                m_url = "%s://%s%s%s" % (
-                        m_scheme,
-                        m_hostname,
-                        m_path,
-                        m_query
-                    )
-
-                # Add to temporal list
-                m_tmp.append(m_url)
-
-            # Create instances of Url, and delete duplicates
-            m_return = [Url(u) for u in set(m_tmp)]
-
-
-
-
+        # Return the links, this will send them to the kernel automatically
         return m_return
 
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -24,15 +24,18 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.main.commonstructures import GlobalParams
-from core.managers.priscillapluginmanager import PriscillaPluginManager
-from core.messaging.notifier import AuditNotifier
-from core.messaging.message import Message
-from core.database.resultdb import ResultDB
-from core.api.results.information.url import Url
-from core.api.results.result import Result
+from ..main.commonstructures import GlobalParams
+from .priscillapluginmanager import PriscillaPluginManager
+from ..messaging.notifier import AuditNotifier
+from ..messaging.message import Message
+from ..database.resultdb import ResultDB
+from ..api.results.information.url import Url
+from ..api.results.result import Result
+
 from multiprocessing import Queue
 from datetime import datetime
+
+__all__ = ["AuditManager", "Audit"]
 
 
 #--------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -24,13 +24,15 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.plugins.plugin import UIPlugin
+from core.api.plugin import UIPlugin
 from core.api.logger import Logger
-from core.messaging.message import Message
-from core.api.results.result import Result
 from core.api.results.information.information import Information
-from thirdparty_libs.colorizer import *
+from core.api.results.result import Result
+from core.messaging.message import Message
+
+from colorizer import *
 from time import sleep
+
 
 class ConsoleUIPlugin(UIPlugin):
     """
@@ -88,7 +90,15 @@ class ConsoleUIPlugin(UIPlugin):
         #
 
         #print "CONTROL"
-        pass
+
+        if not isinstance(message, Message):
+            raise TypeError("Expected Message, got %s instead" % type(message))
+
+        # Show plugin errors
+        if  message.message_type == Message.MSG_TYPE_CONTROL and \
+            message.message_code == Message.MSG_CONTROL_ERROR:
+                Logger.log_error(message.message_info)
+                return
 
 
     #----------------------------------------------------------------------

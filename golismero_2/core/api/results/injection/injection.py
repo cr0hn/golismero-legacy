@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -24,7 +24,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.results.result import Result
+from ..result import Result
 
 
 #------------------------------------------------------------------------------
@@ -39,37 +39,43 @@ class Injection(Result):
     # Types of Infomation injections
     #
     #--------------------------------------------------------------------------
-    XSS_REFLECTED = 0
+
+    INJECTION_ANY = 0
+    XSS_REFLECTED = 1
+
+    INJECTION_FIRST = INJECTION_ANY
+    INJECTION_LAST  = XSS_REFLECTED
 
 
     #----------------------------------------------------------------------
     def __init__(self, injection_type = XSS_REFLECTED):
         """Constructor."""
-        super(Injection, self).__init__(Result.TYPE_INJECTION)
+        super(Injection, self).__init__()
 
-        self.__injection_type = injection_type
+        self.result_type = self.TYPE_INJECTION
+        self.__result_subtype = self.INJECTION_ANY
 
 
     #----------------------------------------------------------------------
-    def __get_injection_type(self):
+    def __get_result_subtype(self):
         """
         Get the injection type.
 
         :returns: int -- The injection type.
         """
-        return self.__injection_type
+        return self.__result_subtype
 
-    def __set_injection_type(self, injection_type = XSS_REFLECTED):
+    def __set_result_subtype(self, result_subtype = XSS_REFLECTED):
         """
         Set the injection type.
 
         :param injection_type: The type of injection
         :type injection_type: int
         """
-        if injection_type is None:
-            injection_type = Injection.XSS_REFLECTED
-        elif injection_type < 0 or injection_type > 10:
-            raise ValueError("Unknown injection type, value: %d" % injection_type)
-        self.__injection_type = injection_type
+        if result_subtype is None:
+            result_subtype = Injection.XSS_REFLECTED
+        elif result_subtype < self.INJECTION_FIRST or result_subtype > self.INJECTION_LAST:
+            raise ValueError("Unknown injection type, value: %d" % result_subtype)
+        self.__result_subtype = result_subtype
 
-    result_subtype = property(__get_injection_type, __set_injection_type)
+    result_subtype = property(__get_result_subtype, __set_result_subtype)

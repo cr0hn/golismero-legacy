@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -24,14 +24,21 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["ProcessManager", "OOPObserver"]
+__all__ = ["ProcessManager", "OOPObserver", "Context"]
 
-from core.api.config import Config
-from core.main.commonstructures import GlobalParams
-from core.messaging.message import Message
+from ..api.config import Config
+from ..main.commonstructures import GlobalParams
+from ..messaging.message import Message
+
 from multiprocessing import Pool, Queue
 from imp import load_source
+from traceback import format_exc
 
+
+#------------------------------------------------------------------------------
+
+# Plugin class per-process cache. Used by the bootstrap function.
+plugin_class_cache = dict()   # tuple(class, module) -> class object
 
 # Serializable bootstrap function to run plugins in subprocesses.
 # This is required for Windows support, since we don't have os.fork() there.
@@ -48,14 +55,29 @@ def bootstrap(context, func, argv, argd):
             # TODO: hook stdout and stderr to catch print statements
 
             # Configure the plugin
-            Config()._set_config(audit_name, audit_config)
+            Config()._set_config(context.audit_name,
+                                 context.audit_config,
+                                 context.plugin_info)
 
-            # Load the plugin module
-            mod = load_source("_plugin_tmp_" + context.plugin_class.lower(),
-                              context.plugin_module)
+            # Try to get the plugin from the cache
+            cache_key = (context.plugin_module, context.plugin_class)
 
-            # Get the plugin class
-            cls = getattr(mod, context.plugin_class)
+            try:
+                cls = plugin_class_cache[cache_key]
+
+            # If not in the cache, load the class
+            except KeyError:
+
+                # Load the plugin module
+                mod = load_source(
+                    "_plugin_tmp_" + context.plugin_class.replace(".", "_"),
+                    context.plugin_module)
+
+                # Get the plugin class
+                cls = getattr(mod, context.plugin_class)
+
+                # Cache the plugin class
+                plugin_class_cache[cache_key] = cls
 
             # Instance the plugin
             instance = cls()
@@ -64,7 +86,19 @@ def bootstrap(context, func, argv, argd):
             instance._set_observer(observer)
 
             # Call the callback method
-            getattr(instance, func)(*argv, **argd)
+            retval = getattr(instance, func)(*argv, **argd)
+
+            # If there's a return value, assume it's a list of results
+            if retval is not None:
+                for result in retval:
+                    try:
+                        instance.send_info(result)
+                    except Exception:
+                        message = Message(message_type = Message.MSG_TYPE_CONTROL,
+                                          message_code = Message.MSG_CONTROL_ERROR,
+                                          message_info = format_exc())
+                        observer.send_msg(message)
+
 
         # No matter what happens, send back an ACK
         finally:
@@ -73,18 +107,128 @@ def bootstrap(context, func, argv, argd):
     # Tell the Orchestrator there's been an error
     except:
         if observer is not None:
-            import traceback
+
+            # Send a message to the Orchestrator to tell about this error
+
             message = Message(message_type = Message.MSG_TYPE_CONTROL,
                               message_code = Message.MSG_CONTROL_ERROR,
-                              message_info = traceback.format_exc())
+                              message_info = format_exc())
             observer.send_msg(message)
+
         else:
 
             # We can't tell the Orchestrator about this error! :(
 
-            # XXX DEBUG
             import traceback
             traceback.print_exc()
+
+
+#------------------------------------------------------------------------------
+class Context (object):
+    """
+    Serializable execution context for the plugins.
+    """
+
+    def __init__(self, plugin_info, audit_name, audit_config, msg_queue):
+        """
+        Serializable execution context for the plugins.
+
+        :param plugin_info: Plugin information.
+        :type plugin_info: PluginInfo
+
+        :param audit_name: Name of the audit.
+        :type audit_name: str
+
+        :param audit_config: Name of the audit.
+        :type audit_config: str
+
+        :param msg_queue: Message queue where to send the responses.
+        :type msg_queue: Queue
+        """
+        self.__plugin_info  = plugin_info
+        self.__audit_name   = audit_name
+        self.__audit_config = audit_config
+        self.__msg_queue    = msg_queue
+
+    @property
+    def plugin_info(self):
+        "PluginInfo -- Plugin information."
+        return self.__plugin_info
+
+    @property
+    def plugin_module(self):
+        "str -- Module where the plugin is to be loaded from."
+        return self.__plugin_info.plugin_module
+
+    @property
+    def plugin_class(self):
+        "str -- Class name of the plugin."
+        return self.__plugin_info.plugin_class
+
+    @property
+    def plugin_config(self):
+        "dict -- Plugin configuration."
+        return self.__plugin_info.plugin_config
+
+    @property
+    def audit_name(self):
+        "str -- Name of the audit."
+        return self.__audit_name
+
+    @property
+    def audit_config(self):
+        "str -- Name of the audit."
+        return self.__audit_config
+
+    @property
+    def msg_queue(self):
+        "str -- Message queue where to send the responses."
+        return self.__msg_queue
+
+
+#------------------------------------------------------------------------------
+class OOPObserver (object):
+    """
+    Observer that proxies messages across different processes.
+    """
+
+    def __init__(self, context):
+        """
+        :param context: Execution context for the OOP observer.
+        :type context: Context
+        """
+        super(OOPObserver, self).__init__()
+        self.__context = context
+
+    def send_ack(self):
+        """
+        Send ACK messages from the plugins to the orchestrator.
+        """
+        message = Message(message_type = Message.MSG_TYPE_CONTROL,
+                          message_code = Message.MSG_CONTROL_ACK,
+                          audit_name   = self.__context.audit_name)
+        self.send_msg(message)
+
+    def send_info(self, result):
+        """
+        Send results from the plugins to the orchestrator.
+
+        :param result: Results to send
+        :type result: Result
+        """
+        message = Message(message_info = result,
+                          message_type = Message.MSG_TYPE_INFO,
+                          audit_name   = self.__context.audit_name)
+        self.send_msg(message)
+
+    def send_msg(self, message):
+        """
+        Send control messages from the plugins to the orchestrator.
+
+        :param message: Message to send
+        :type message: Message
+        """
+        self.__context.msg_queue.put_nowait(message)
 
 
 #------------------------------------------------------------------------------
@@ -184,99 +328,5 @@ class ProcessManager (object):
             # Destroy the process pool
             self.__pool = None
 
-
-#------------------------------------------------------------------------------
-class Context (object):
-    """
-    Serializable execution context for the plugins.
-    """
-
-    def __init__(self, plugin_module, plugin_class, audit_name, audit_config, msg_queue):
-        """
-        Serializable execution context for the plugins.
-
-        :param plugin_module: Module where the plugin is to be loaded from.
-        :type plugin_module: str
-
-        :param plugin_class: Class name of the plugin.
-        :type plugin_class: str
-
-        :param audit_name: Name of the audit.
-        :type audit_name: str
-
-        :param audit_config: Name of the audit.
-        :type audit_config: str
-
-        :param msg_queue: Message queue where to send the responses.
-        :type msg_queue: Queue
-        """
-        self.__plugin_module = plugin_module
-        self.__plugin_class  = plugin_class
-        self.__audit_name    = audit_name
-        self.__audit_config  = audit_config
-        self.__msg_queue     = msg_queue
-
-    @property
-    def plugin_module(self):
-        "str -- Module where the plugin is to be loaded from."
-        return self.__plugin_module
-
-    @property
-    def plugin_class(self):
-        "str -- Class name of the plugin."
-        return self.__plugin_class
-
-    @property
-    def audit_name(self):
-        "str -- Name of the audit."
-        return self.__audit_name
-
-    @property
-    def msg_queue(self):
-        "str -- Message queue where to send the responses."
-        return self.__msg_queue
-
-
-#------------------------------------------------------------------------------
-class OOPObserver (object):
-    """
-    Observer that proxies messages across different processes.
-    """
-
-    def __init__(self, context):
-        """
-        :param context: Execution context for the OOP observer.
-        :type context: Context
-        """
-        super(OOPObserver, self).__init__()
-        self.__context = context
-
-    def send_ack(self):
-        """
-        Send ACK messages from the plugins to the orchestrator.
-        """
-        message = Message(message_type = Message.MSG_TYPE_CONTROL,
-                          message_code = Message.MSG_CONTROL_ACK,
-                          audit_name   = self.__context.audit_name)
-        self.send_msg(message)
-
-    def send_info(self, result):
-        """
-        Send results from the plugins to the orchestrator.
-
-        :param result: Results to send
-        :type result: Result
-        """
-        message = Message(message_info = result,
-                          message_type = Message.MSG_TYPE_INFO,
-                          audit_name   = self.__context.audit_name)
-        self.send_msg(message)
-
-    def send_msg(self, message):
-        """
-        Send control messages from the plugins to the orchestrator.
-
-        :param message: Message to send
-        :type message: Message
-        """
-        self.__context.msg_queue.put_nowait(message)
+        # Clear the plugin instance cache
+        plugin_class_cache.clear()

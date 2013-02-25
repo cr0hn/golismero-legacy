@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -32,7 +32,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 #-----------------------------------------------------------------------
 
-from core.api.results.result import Result
+from .config import Config
+from .results.result import Result
 
 
 class Plugin (object):
@@ -76,8 +77,10 @@ class Plugin (object):
     #----------------------------------------------------------------------
     def display_help(self):
         """Get the help message for this plugin."""
-        # TODO: this could default to the description found in the metadata.
-        raise NotImplementedError("All plugins must implement this method!")
+        text = Config().plugin_info.description
+        if not text:
+            raise NotImplementedError("All plugins must implement this method!")
+        return text
 
 
     #----------------------------------------------------------------------

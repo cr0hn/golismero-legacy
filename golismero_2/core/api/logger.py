@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -65,6 +65,28 @@ class Logger (object):
         if stdout   is not None: cls._f_out   = stdout
         if stderror is not None: cls._f_error = stderror
         if level    is not None: cls._level   = level
+
+
+    #----------------------------------------------------------------------
+    @classmethod
+    def get_level(cls):
+        """
+        Get the current log level.
+
+        :returns: int -- Current log level.
+        """
+        return cls._level
+
+
+    #----------------------------------------------------------------------
+    @classmethod
+    def is_level(cls, level):
+        """
+        Determine if the current log level is at least the one given.
+
+        :returns: bool - True if the log level is at least the one given.
+        """
+        return cls._level >= level
 
 
     #----------------------------------------------------------------------

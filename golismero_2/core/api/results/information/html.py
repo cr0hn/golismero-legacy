@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -24,13 +24,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
-
 __all__ = ["HTML", "HTMLElement"]
 
-from core.api.results.information.information import Information
-from thirdparty_libs.bs3.BeautifulSoup import BeautifulSoup
 
+from .information import Information
+
+from bs3.BeautifulSoup import BeautifulSoup
 
 
 #------------------------------------------------------------------------------
@@ -96,7 +95,9 @@ class HTML(Information):
         :param data: raw HTML data.
         :type data: str
         """
-        super(Information, self).__init__(Information.INFORMATION_HTML)
+        super(Information, self).__init__()
+
+        self.result_subtype = self.INFORMATION_HTML
 
         # Init and store type of HTML parser
         self.__html_parser_type, self.__html_parser = self.__init_parser(data)
@@ -104,9 +105,8 @@ class HTML(Information):
 
     def find_all(self, name=None, attrs={}, recursive=True, text=None, limit=None):
         """
-        Looking for in HTML code by patter.
         """
-        return self.__html_parser.find_all(name=None, attrs={}, recursive=True, text=None, limit=None)
+        return self.__html_parser.find_all(name=name, attrs=attrs, recursive=recursive, text=text, limit=limit)
 
 
     def __get_raw(self):
