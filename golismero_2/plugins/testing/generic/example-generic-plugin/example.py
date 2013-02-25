@@ -75,7 +75,7 @@ class ExamplePlugin(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
         """Callback method to receive information to be processed."""
-        Logger.log("Example plugin. Received: %s\n" % info.url)
+        #Logger.log("Example plugin. Received: %s\n" % info.url)
 
         #r = NetManager.get_connection()
         #p = r.get("/")
@@ -100,6 +100,3 @@ class ExamplePlugin(TestingPlugin):
 
 
         # Send a test message
-        for i in xrange(3):
-            Logger.log("Enviando")
-            self.send_info(Url("http://www.google.com"))
