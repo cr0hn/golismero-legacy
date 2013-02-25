@@ -29,8 +29,9 @@ from core.api.logger import Logger
 from core.api.results.information.information import Information
 from core.api.results.result import Result
 from core.messaging.message import Message
-
+from core.main.console import *
 from colorizer import *
+
 
 from time import sleep
 
@@ -76,10 +77,6 @@ class ConsoleUIPlugin(UIPlugin):
         #
         # Display in console
         #
-        r = NetManager().get_connection()
-        r = c.get("www.terra.es/portada/")
-        r = c.get("www.terra.es/portada/")
-
 
         # TYPE: Url
         if all([info.result_type == Result.TYPE_INFORMATION, info.result_subtype == Information.INFORMATION_URL]):
