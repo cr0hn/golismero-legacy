@@ -53,7 +53,7 @@ class WordListManager(Singleton):
         m_curr_dir = abspath(currentDir)
 
         # Traverse through all files
-        for curFile in filter(lambda a: isdir(a) or a.endswith("txt"), [join(m_curr_dir,x) for x in listdir(m_curr_dir)]):
+        for curFile in filter(lambda a: isdir(a) or (isfile(a) and a.endswith(".txt")), (join(m_curr_dir,x) for x in listdir(m_curr_dir))):
 
             # Add files
             m_files.extend(self.__get_file_from_path(curFile) if isdir(curFile) else [curFile])
