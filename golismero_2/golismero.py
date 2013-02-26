@@ -41,6 +41,20 @@ __version__ = "2.0.0"
 
 
 #----------------------------------------------------------------------
+# Show program banner
+def show_banner():
+    print
+    print "|--------------------------------------------------|"
+    print "| GoLismero - The Web Knife                        |"
+    print "| Contact: golismero.project@gmail.com             |"
+    print "|                                                  |"
+    print "| Daniel Garcia a.k.a cr0hn (@ggdaniel)            |"
+    print "| Mario Vilas (@mario_vilas)                       |"
+    print "|--------------------------------------------------|"
+    print
+
+
+#----------------------------------------------------------------------
 # Python version check.
 # We must do it now before trying to import any more modules.
 
@@ -48,13 +62,7 @@ import sys
 from sys import version_info, exit
 if __name__ == "__main__":
     if version_info < (2, 7) or version_info > (3, 0):
-        print
-        print "|--------------------------------------------------|"
-        print "| GoLismero - The Web Knife.                       |"
-        print "|                                                  |"
-        print "| Daniel Garcia a.k.a cr0hn - dani@iniqua.com      |"
-        print "|--------------------------------------------------|"
-        print
+        show_banner()
         print "[!] You must use Python version 2.7"
         exit(1)
 
@@ -141,14 +149,8 @@ def launcher(options):
 
 def main():
 
-    # Show program banner
-    print
-    print "|--------------------------------------------------|"
-    print "| GoLismero - The Web Knife.                       |"
-    print "|                                                  |"
-    print "| Daniel Garcia a.k.a cr0hn - dani@iniqua.com      |"
-    print "|--------------------------------------------------|"
-    print
+    # Show the program banner
+    show_banner()
 
     # Configure command line parser
     parser = argparse.ArgumentParser()
@@ -165,6 +167,8 @@ def main():
     gr_net.add_argument("--max-connections", action="store", dest="max_connections", help="maximum number of concurrent connections per host [default: 4]", default=4)
     gr_net.add_argument("--no-subdomains", action="store_false", dest="include_subdomains", help="do not include subdomains in the target scope", default=True)
     gr_net.add_argument("--regex", action="store", dest="subdomain_regex", help="include subdomains as regex exprexion", default="")
+    gr_net.add_argument("--recursivity", action="store", dest="recursivity", help="recursivity level of spider.", default=0)
+    gr_net.add_argument("-f","--follow-redirect", action="store_true", dest="follow_redirects", help="follow redirects", default=False)
 
     gr_audit = parser.add_argument_group("audit")
     gr_audit.add_argument('--audit-name', action='store', dest='audit_name', help='customize the audit name')
