@@ -40,9 +40,12 @@ class CacheManager(Singleton):
         self.__cache = {}
 
     #----------------------------------------------------------------------
-    def get_cache(self, data):
+    def get_cache(self, key):
         """
-        Get URL from cache
+        Get info from cache
+
+        :param key: str with key stored in cache.
+        :type key: str
 
         :returns: object cached | None
         """
@@ -50,42 +53,52 @@ class CacheManager(Singleton):
         # Get audit name
         m_audit = Config().audit_name
 
-        # Set cache for audit, if necessary
-        if m_audit not in self.__cache.keys():
-            self.__cache[m_audit] = {}
-
         try:
             # if cached
-            return self.__cache[m_audit][data.request_id]
+            return self.__cache[m_audit][key]
         except KeyError:
             # Not cached
             return None
 
 
     #----------------------------------------------------------------------
-    def is_cached(self, data):
+    def is_cached(self, key):
         """
         Indicates if URL is cached
+
+        :param key: str with key stored in cache.
+        :type key: str
 
         :returns: bool -- True if URL has cached. False otherwise.
         """
 
-        return Config().audit_config in self.__cache.keys() and data.request_id in self.__cache[Config().audit_name].keys()
+        return Config().audit_name in self.__cache and key in self.__cache[Config().audit_name]
 
     #----------------------------------------------------------------------
-    def set_cache(self, data):
+    def set_cache(self, key, data):
         """
         Include and URL, and their data, into cache.
 
         :param URL: String with URL
         :type URL: str
 
+        :param key: str with key stored in cache.
+        :type key: str
+
         :param data: data with information
         :type data: object
         """
         # None or empty?
-        if data and data.request_id:
-            self.__cache[Config().audit_name][data.request_id] = data
+        if key and data:
+
+            m_audit = Config().audit_name
+
+            # Set cache for audit, if necessary
+            if m_audit not in self.__cache:
+                self.__cache[m_audit] = {}
+
+
+            self.__cache[m_audit][key] = data
 
 
 
