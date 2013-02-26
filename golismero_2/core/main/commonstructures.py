@@ -160,6 +160,12 @@ class GlobalParams (object):
         # Subdomains as regex expresion
         self.subdomain_regex = ""
 
+        # Recursivity level for spider
+        self.recursivity = 0
+
+        # Follow redirects
+        self.follow_redirects = False
+
 
     #----------------------------------------------------------------------
     @classmethod
@@ -224,7 +230,15 @@ class GlobalParams (object):
         # Subdomains as regex expresion
         cmdParams.subdomain_regex = args.subdomain_regex
 
+        # Recursivity level for spider
+        cmdParams.recursivity = args.recursivity
+
+        # Follow redirects
+        cmdParams.follow_redirects = args.follow_redirects
+
+        #
         # Check params
+        #
         cmdParams.check_params()
 
 

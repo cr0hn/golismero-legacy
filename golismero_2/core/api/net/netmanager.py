@@ -143,6 +143,10 @@ class Web (Protocol):
 
         # Set of domain names we're allowed to connect to
         self.__audit_scope = set(parse_url(x).hostname.lower() for x in config.targets)
+
+        # Global option for redirects
+        self.__follow_redirects = config.follow_redirects
+
         try:
             self.__audit_scope.remove("")
         except KeyError:
@@ -208,6 +212,9 @@ class Web (Protocol):
         else:
             # Get URL
             try:
+                # Set redirect options
+                request.follow_redirects = request.follow_redirects if request.follow_redirects else self.__follow_redirects
+
                 # timing init
                 t1 = time()
                 # Select request type
@@ -255,7 +262,7 @@ class Web (Protocol):
 
 
     #----------------------------------------------------------------------
-    def get(self, URL, method = "GET", post_data = None, follow_redirect = False, cache = True):
+    def get(self, URL, method = "GET", post_data = None, follow_redirect = None, cache = True):
         """
         Get response for an input URL.
 
@@ -273,6 +280,7 @@ class Web (Protocol):
         :raises: TypeError
         """
 
+
         # Extract the raw URL when applicable
         try:
             URL = URL.url
@@ -284,12 +292,15 @@ class Web (Protocol):
             Logger.log_verbose("[!] Url '%s' out of scope. Skipping it." % URL)
             return
 
+        # Set redirect
+        m_follow_redirects = follow_redirect if follow_redirect else self.__follow_redirects
+
         # Make HTTP_Request object
         m_request = HTTP_Request(
             url = URL,
             method = method,
             post_data = post_data,
-            follow_redirects = follow_redirect,
+            follow_redirects = m_follow_redirects,
             cache = cache
         )
 

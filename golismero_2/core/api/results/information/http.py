@@ -55,7 +55,7 @@ class HTTP_Request (Information):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, url, method = 'GET', post_data = None, cache = True, follow_redirects = False, cookie = "", random_user_agent = False, request_type = 0):
+    def __init__(self, url, method = 'GET', post_data = None, cache = True, follow_redirects = None, cookie = "", random_user_agent = False, request_type = 0):
 
         # Set method
         self.__method = method.upper() if method else "GET"
@@ -201,7 +201,7 @@ class HTTP_Request (Information):
 
         # If type is in list
         if accept_type:
-            if accept_type in m_types.keys():
+            if accept_type in m_types:
                 return m_types[accept_type]
 
         # Otherwise
@@ -283,6 +283,25 @@ class HTTP_Request (Information):
     raw_headers = property(__get_raw_headers, __set_raw_headers)
 
 
+    # Follow redirects
+    def __get_follow_redirects(self):
+        """
+        Redirect options for the request.
+
+        :returns: None | bool. None if not set. Bool otherwise.
+        """
+        return self.__follow_redirects
+
+    # Follow redirects
+    def __set_follow_redirects(self, value):
+        """
+        Redirect options for the request.
+
+        :returns: None | bool. None if not set. Bool otherwise.
+        """
+        self.__follow_redirects = value
+    follow_redirects = property(__get_follow_redirects, __set_follow_redirects)
+
     #----------------------------------------------------------------------
     #
     # Read-only properties
@@ -320,11 +339,6 @@ class HTTP_Request (Information):
         return self.__type
 
     @property
-    def follow_redirects(self):
-        """"""
-        return self.__follow_redirects
-
-    @property
     def files_attached(self):
         """"""
         return self.__files_attached
@@ -335,7 +349,7 @@ class HTTP_Request (Information):
         """"""
         if not self.__request_id:
             # Create data for key
-            m_string = "%s|%s" % (self.__url, [ "%s:%s" % (k, v) for k,v in self.post_data.items()] if self.post_data else '')
+            m_string = "%s|%s" % (self.__url, ''.join(( "%s:%s" % (k, v) for k,v in self.post_data.iteritems()) if self.post_data else ''))
 
             # Make the hash
             self.__request_id = hashlib.md5(m_string).hexdigest()
@@ -371,7 +385,7 @@ class HTTP_Response (Information):
         self.__http_headers = dict(raw_response.headers)
 
         # HTTP headers in raw format
-        self.__http_headers_raw = ''.join(["%s: %s\n" % (k,v) for k,v in raw_response.headers.items()])
+        self.__http_headers_raw = ''.join(("%s: %s\n" % (k,v) for k,v in raw_response.headers.iteritems()))
 
         # Request time
         self.__request_time = request_time
@@ -436,6 +450,7 @@ class HTTP_Response (Information):
     def information(self):
         """"""
         return self.__information
+
 
 
     #----------------------------------------------------------------------
