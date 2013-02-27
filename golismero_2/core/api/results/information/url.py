@@ -37,7 +37,7 @@ class Url(Information):
 
 
 	#----------------------------------------------------------------------
-	def __init__(self, url, method = "GET", url_params = None, post_params= None, content_type = None, request_type = 0):
+	def __init__(self, url, method = "GET", url_params = None, post_params= None, content_type = None, depth = 0, request_type = 0, referer = ""):
 		"""
 		Construct a URL result.
 
@@ -52,6 +52,9 @@ class Url(Information):
 
 		:param post_params: params inside post
 		:type post_params: dict
+
+		:param deep: The deep of URL in relation with main site.
+		:type deep: int
 		"""
 		super(Url, self).__init__()
 		self.result_subtype = self.INFORMATION_URL
@@ -77,15 +80,31 @@ class Url(Information):
 		# Request type
 		self.__request_type = request_type
 
+		# Dept of URL
+		self.__depth = depth
+
+		# Set referer
+		self.__referer = referer
+
 
 
 	#----------------------------------------------------------------------
 	def __str__(self):
+		return self.__url
 		return "[%s] %s %s" % (
 			self.__method,
 			self.__url,
-			"(%s)" % ''.join(["%s = %s | " % (k, v) for k, v in (self.__url_params.items() if self.__method != 'POST' else self.__post_params.items())])[:-2] if self.__post_params or self.__url_params else ''
+			"(%s)" % ''.join(("%s = %s | " % (k, v) for k, v in (self.__url_params.iteritems() if self.__method != 'POST' else self.__post_params.iteritems())))[:-2] if self.__post_params or self.__url_params else ''
 		)
+
+
+	#----------------------------------------------------------------------
+	@property
+	def referer(self):
+		"""
+		Get referer or this Url
+		"""
+		return self.__referer
 
 
 	#----------------------------------------------------------------------
@@ -151,3 +170,10 @@ class Url(Information):
 		int - One of the HTML.TYPE_* constants
 		"""
 		return self.__request_type
+
+	@property
+	def depth(self):
+		"""
+		int - The deep of URL in relation with main site.
+		"""
+		return self.__depth
