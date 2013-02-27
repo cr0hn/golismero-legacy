@@ -81,6 +81,8 @@ class BackupSearcher(TestingPlugin):
         m_url_parts['path_filename'] = split(m_parsed_url.path)[1] if m_parsed_url.path and m_url_parts['path_ext'] else ''
         m_url_parts['query']         = m_parsed_url.query if m_parsed_url.query else ''
 
+        # Fix path folder
+        m_url_parts['path_folder'] = m_url_parts['path_folder'] if m_url_parts['path_folder'].endswith("/") else m_url_parts['path_folder'] + "/"
 
         # if URL looks like:
         # - www.site.com/
@@ -195,8 +197,7 @@ class BackupSearcher(TestingPlugin):
 
         for l_suffix in wordlist:
 
-            # Make url
-            m_return.append("%s://%s%s%s.%s%s" % (
+            m_return.append("%s://%s%s%s%s%s" % (
                 url_parts['scheme'],
                 url_parts['host'],
                 url_parts['path_folder'],
