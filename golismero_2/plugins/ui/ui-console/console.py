@@ -135,7 +135,7 @@ class ConsoleUIPlugin(UIPlugin):
                 Console.display_error(colored(message.message_info, "red"), attrs=("dark",))
 
             # Show plugin errors
-            # (The verbosity is already checked by Logger)
+            # (The verbosity is already checked by bootstrap)
             elif message.message_code == Message.MSG_CONTROL_ERROR:
                 text = colored("[!] Plugin error: ", "red") + \
                        colored(message.message_info, "red", attrs=("dark",))
