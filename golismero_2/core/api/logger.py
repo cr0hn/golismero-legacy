@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Logger"]
 
+from .config import Config
 from ..messaging.message import Message
 
 

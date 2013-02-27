@@ -45,15 +45,18 @@ plugin_class_cache = dict()   # tuple(class, module) -> class object
 # This is required for Windows support, since we don't have os.fork() there.
 # See: http://docs.python.org/2/library/multiprocessing.html#windows
 def bootstrap(context, func, argv, argd):
+    verbose = 1
     try:
         try:
             try:
+                # Get the verbosity
+                verbose = context.audit_config.verbose
+
+                # Set the logger verbosity
+                Logger.set_level(verbose)
 
                 # Configure the plugin
                 Config()._set_context(context)
-
-                # Set the logger verbosity
-                Logger.set_level(context.audit_config.verbose)
 
                 # TODO: hook stdout and stderr to catch print statements
 
@@ -93,17 +96,27 @@ def bootstrap(context, func, argv, argd):
                     for result in retval:
                         try:
                             instance.send_info(result)
-                        except Exception:
-                            context.send_msg(message_type = Message.MSG_TYPE_CONTROL,
-                                             message_code = Message.MSG_CONTROL_ERROR,
-                                             message_info = format_exc())
+                        except Exception, e:
+                            if verbose >= Logger.STANDARD:
+                                if verbose >= Logger.MORE_VERBOSE:
+                                    text = "%s\n%s" % (e.message, format_exc())
+                                else:
+                                    text = e.message
+                                context.send_msg(message_type = Message.MSG_TYPE_CONTROL,
+                                                 message_code = Message.MSG_CONTROL_ERROR,
+                                                 message_info = text)
 
             # Tell the Orchestrator there's been an error
-            except Exception:
+            except Exception, e:
                 try:
-                    context.send_msg(message_type = Message.MSG_TYPE_CONTROL,
-                                     message_code = Message.MSG_CONTROL_ERROR,
-                                     message_info = format_exc())
+                    if verbose >= Logger.STANDARD:
+                        if verbose >= Logger.MORE_VERBOSE:
+                            text = "%s\n%s" % (e.message, format_exc())
+                        else:
+                            text = e.message
+                        context.send_msg(message_type = Message.MSG_TYPE_CONTROL,
+                                         message_code = Message.MSG_CONTROL_ERROR,
+                                         message_info = text)
                 except Exception:
                     print_exc()
 

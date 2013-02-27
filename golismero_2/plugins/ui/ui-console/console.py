@@ -87,15 +87,15 @@ class ConsoleUIPlugin(UIPlugin):
         m_ye = 'yellow'
 
         #
-        # Quiet verbosity: Init and end banner + vulnerabilities summary.
+        # Normal verbosity: Quiet + errors without traceback + extended vulnerabilities
         #
-        if m_verbosity_level == 0:
+        if m_verbosity_level >= Console.STANDARD:
             pass
 
         #
-        # Normal verbosity: Quiet + errors without traceback + extended vulnerabilities
+        # More verbosity: Normal + Urls + important actions of plugins
         #
-        if m_verbosity_level >= 1:
+        if m_verbosity_level >= Console.VERBOSE:
 
             # TYPE: Url
             if  info.result_type == Result.TYPE_INFORMATION and \
@@ -103,15 +103,9 @@ class ConsoleUIPlugin(UIPlugin):
                     Console.display("[i] %s" % colored(str(info), 'cyan'))
 
         #
-        # More verbosity: Normal + Urls + important actions of plugins
-        #
-        if m_verbosity_level >= 2:
-            pass
-
-        #
         # Even more verbosity: More + errors with tracebacks + no important actions of plugins
         #
-        if m_verbosity_level >= 3:
+        if m_verbosity_level >= Console.MORE_VERBOSE:
             pass
 
 
@@ -124,22 +118,24 @@ class ConsoleUIPlugin(UIPlugin):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
-        # Here the verbosity level is being checked implicitly
-        # by the plugins that send the messages.
-        # See the Logger class for more details.
+        # Get verbosity level.
+        m_verbosity_level = Config().audit_config.verbose
 
         # Process control messages
         if message.message_type == Message.MSG_TYPE_CONTROL:
 
             # Show log messages
+            # (The verbosity is already checked by Logger)
             if message.message_code == Message.MSG_CONTROL_LOG_MESSAGE:
                 Console.display_error(colored(message.message_info, "yellow"), attrs=("dark",))
 
             # Show log errors
+            # (The verbosity is already checked by Logger)
             elif message.message_code == Message.MSG_CONTROL_LOG_ERROR:
                 Console.display_error(colored(message.message_info, "red"), attrs=("dark",))
 
             # Show plugin errors
+            # (The verbosity is already checked by Logger)
             elif message.message_code == Message.MSG_CONTROL_ERROR:
                 text = colored("[!] Plugin error: ", "red") + \
                        colored(message.message_info, "red", attrs=("dark",))
