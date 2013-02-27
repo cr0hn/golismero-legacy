@@ -26,8 +26,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 
-from core.api.logger import *
-from core.main.commonstructures import Singleton
+
+from ..logger import *
+from ...main.commonstructures import Singleton
+
 from os import getcwd, walk
 from os.path import join, split
 
