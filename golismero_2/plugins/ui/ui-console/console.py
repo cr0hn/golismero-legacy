@@ -30,6 +30,7 @@ from core.api.results.information.information import Information
 from core.api.results.result import Result
 from core.messaging.message import Message
 from core.main.console import *
+from core.api.config import *
 from colorizer import *
 
 
@@ -78,9 +79,42 @@ class ConsoleUIPlugin(UIPlugin):
         # Display in console
         #
 
-        # TYPE: Url
-        if all([info.result_type == Result.TYPE_INFORMATION, info.result_subtype == Information.INFORMATION_URL]):
-            Console.display("+ %s" % colored(str(info), 'cyan'))
+        # Get verbosity level.
+        m_verbosity_level = Config().audit_config.verbose
+
+        # Colors
+        m_cy = 'cyan'
+        m_re = 'red'
+        m_bl = 'blue'
+        m_ye = 'yellow'
+
+
+        #
+        # Quiet verbosity: Init and end banner + vulnerabilities summary.
+        #
+        if m_verbosity_level == 0:
+            pass
+
+        #
+        # Normal verbosity: Quiet + errors without traceback + extended vulnerabilities
+        #
+        if m_verbosity_level >= 1:
+
+            # TYPE: Url
+            if all([info.result_type == Result.TYPE_INFORMATION, info.result_subtype == Information.INFORMATION_URL]):
+                Console.display("[i] %s" % colored(str(info), 'cyan'))
+
+        #
+        # More verbosity: Normal + Urls + important actions of plugins
+        #
+        if m_verbosity_level >= 2:
+            pass
+
+        #
+        # Even more verbosity: More + errors with tracebacks + no important actions of plugins
+        #
+        if m_verbosity_level >= 3:
+            pass
 
 
     #----------------------------------------------------------------------
@@ -89,17 +123,51 @@ class ConsoleUIPlugin(UIPlugin):
         # Put here the code you want to execute when a control message is received.
         #
 
-        #print "CONTROL"
-
-        if not isinstance(message, Message):
-            raise TypeError("Expected Message, got %s instead" % type(message))
-
         # Show plugin errors
         if  message.message_type == Message.MSG_TYPE_CONTROL and \
             message.message_code == Message.MSG_CONTROL_ERROR:
                 Logger.log_error(message.message_info)
                 return
 
+
+        # Get verbosity level
+        m_verbosity_level = None
+        try:
+            m_verbosity_level = Config().audit_config.verbose
+        except AttributeError:
+            # If config is not ready
+            return
+
+        # Colors
+        m_cy = 'cyan'
+        m_re = 'red'
+        m_bl = 'blue'
+        m_ye = 'yellow'
+
+
+        #
+        # Quiet verbosity: Init and end banner + vulnerabilities summary.
+        #
+        if m_verbosity_level == 0:
+            pass
+
+        #
+        # Normal verbosity: Quiet + errors without traceback + extended vulnerabilities
+        #
+        if m_verbosity_level >= 1:
+            pass
+
+        #
+        # More verbosity: Normal + Urls + important actions of plugins
+        #
+        if m_verbosity_level >= 2:
+            pass
+
+        #
+        # Even more verbosity: More + errors with tracebacks + no important actions of plugins
+        #
+        if m_verbosity_level >= 3:
+            pass
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
