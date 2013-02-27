@@ -25,6 +25,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from .commonstructures import GlobalParams
+from .console import Console
+from ..api.config import Config
 from ..api.logger import Logger
 from ..managers.auditmanager import AuditManager
 from ..managers.messagemanager import MessageManager
@@ -33,9 +35,12 @@ from ..managers.uimanager import UIManager
 from ..managers.processmanager import ProcessManager, Context
 from ..messaging.message import Message
 
-from multiprocessing import Queue
 from time import sleep
 from traceback import format_exc
+from signal import signal, SIGINT, SIG_DFL
+
+import Queue
+import multiprocessing
 
 __all__ = ["Orchestrator"]
 
@@ -59,7 +64,15 @@ class Orchestrator (object):
         self.__config = config
 
         # Incoming message queue
-        self.__queue = Queue()
+        if getattr(config, "max_processes", 1) == 1:
+            self.__queue = Queue.Queue(maxsize = 0)
+        else:
+            self.__queue = multiprocessing.Queue()
+
+        # Orchestrator context
+        self.__context = Context(   msg_queue = self.__queue,
+                                 audit_config = self.__config )
+        Config()._set_context(self.__context)
 
         # Message manager
         self.__messageManager = MessageManager(self.__config)
@@ -70,11 +83,10 @@ class Orchestrator (object):
         Logger.log_more_verbose("Found %d plugins" % len(success))
         if failure:
             Logger.log_error("Failed to load %d plugins" % len(failure))
-            if Logger.is_level(Logger.VERBOSE):
+            if Logger.check_level(Logger.VERBOSE):
                 for plugin_name in failure:
                     Logger.log_error_verbose("\t%s" % plugin_name)
-
-        loaded = self.__pluginManager.load_plugins(self.__config.plugins)
+        self.__pluginManager.load_plugins(self.__config.plugins)
 
         # Process manager
         self.__processManager = ProcessManager(self.__config)
@@ -88,10 +100,36 @@ class Orchestrator (object):
             self.__ui = UIManager(self, self.__config)
             self.__messageManager.add_listener(self.__ui)
 
+        # Signal handler to catch Ctrl-C
+        signal(SIGINT, self.__signal_handler)
+
 
     @property
     def processManager(self):
         return self.__processManager
+
+
+    #----------------------------------------------------------------------
+    def __signal_handler(self, signum, frame):
+        """
+        Signal handler to catch Control-C interrupts.
+        """
+
+        try:
+
+            # Send a stop message to the Orchestrator.
+            message = Message(message_type = Message.MSG_TYPE_CONTROL,
+                              message_code = Message.MSG_CONTROL_STOP,
+                              message_info = False)
+            self.__queue.put_nowait(message)
+
+            # Tell the user the message has been sent.
+            Console.display("User cancel requested, stopping all audits...")
+
+        finally:
+
+            # Only do this once, the next time raise KeyboardInterrupt.
+            signal(SIGINT, SIG_DFL)
 
 
     #----------------------------------------------------------------------
@@ -171,7 +209,7 @@ class Orchestrator (object):
         audit_config = self.__auditManager.get_audit(audit_name).params
 
         # Return the context instance
-        return Context(info, audit_name, audit_config, self.__queue)
+        return Context(self.__queue, info, audit_name, audit_config)
 
 
     #----------------------------------------------------------------------

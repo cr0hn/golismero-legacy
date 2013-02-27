@@ -25,14 +25,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from core.api.plugin import UIPlugin
-from core.api.logger import Logger
 from core.api.results.information.information import Information
 from core.api.results.result import Result
 from core.messaging.message import Message
-from core.main.console import *
+from core.main.console import Console
+
 from colorizer import *
-
-
 from time import sleep
 
 
@@ -79,8 +77,9 @@ class ConsoleUIPlugin(UIPlugin):
         #
 
         # TYPE: Url
-        if all([info.result_type == Result.TYPE_INFORMATION, info.result_subtype == Information.INFORMATION_URL]):
-            Console.display("+ %s" % colored(str(info), 'cyan'))
+        if  info.result_type    == Result.TYPE_INFORMATION      and \
+            info.result_subtype == Information.INFORMATION_URL:
+                Console.display("+ %s" % colored(str(info), 'cyan'))
 
 
     #----------------------------------------------------------------------
@@ -94,11 +93,22 @@ class ConsoleUIPlugin(UIPlugin):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
-        # Show plugin errors
-        if  message.message_type == Message.MSG_TYPE_CONTROL and \
-            message.message_code == Message.MSG_CONTROL_ERROR:
-                Logger.log_error(message.message_info)
-                return
+        # Process control messages
+        if message.message_type == Message.MSG_TYPE_CONTROL:
+
+            # Show log messages
+            if message.message_code == Message.MSG_CONTROL_LOG_MESSAGE:
+                Console.display_error(colored(message.message_info, "yellow"), attrs=("dark",))
+
+            # Show log errors
+            elif message.message_code == Message.MSG_CONTROL_LOG_ERROR:
+                Console.display_error(colored(message.message_info, "red"), attrs=("dark",))
+
+            # Show plugin errors
+            elif message.message_code == Message.MSG_CONTROL_ERROR:
+                text = colored("[!] Plugin error: ", "red") + \
+                       colored(message.message_info, "red", attrs=("dark",))
+                Console.display_error(text)
 
 
     #----------------------------------------------------------------------

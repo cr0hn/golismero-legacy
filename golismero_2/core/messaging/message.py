@@ -87,9 +87,11 @@ class Message (object):
     # UI subsystem
     MSG_CONTROL_START_UI = 40
     MSG_CONTROL_STOP_UI = 41
+    MSG_CONTROL_LOG_MESSAGE = 42
+    MSG_CONTROL_LOG_ERROR = 43
 
     MSG_CONTROL_FIRST = MSG_CONTROL_OK
-    MSG_CONTROL_LAST  = MSG_CONTROL_STOP_UI
+    MSG_CONTROL_LAST  = MSG_CONTROL_LOG_ERROR
 
     #----------------------------------------------------------------------
     # Status messages
@@ -123,6 +125,21 @@ class Message (object):
         :param message_info: the payload of the message.
         :type message_info: object -- type must be resolved at run time.
         """
+
+        # Validate the arguments
+        if type(message_type) != int:
+            raise TypeError("Expected int, got %s instead" % type(message_type))
+        if not self.MSG_TYPE_FIRST <= message_type <= self.MSG_TYPE_LAST:
+            raise ValueError("Invalid message type: %d" % message_type)
+        if message_type != self.MSG_TYPE_INFO and type(message_code) != int:
+            raise TypeError("Expected int, got %s instead" % type(message_code))
+        if  message_type == self.MSG_TYPE_CONTROL and \
+            not self.MSG_CONTROL_FIRST <= message_code <= self.MSG_CONTROL_LAST:
+                raise ValueError("Invalid control message code: %d" % message_code)
+        if audit_name is not None and type(audit_name) not in (str, unicode):
+            raise TypeError("Expected int, got %s instead" % type(audit_name))
+
+        # Build the message object
         self.__message_type = message_type
         self.__message_code = message_code
         self.__audit_name   = audit_name

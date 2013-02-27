@@ -33,24 +33,25 @@ class Config (Singleton):
     @property
     def audit_name(self):
         "str -- Audit name."
-        return self.__audit_name
+        return self.__context.audit_name
 
     @property
     def audit_config(self):
         "GlobalConfig -- Audit config."
-        return self.__audit_config
+        return self.__context.audit_config
 
     @property
     def plugin_info(self):
         "PluginInfo -- Plugin information."
-        return self.__plugin_info
+        return self.__context.plugin_info
 
     @property
     def plugin_config(self):
         "dict -- Plugin configuration."
-        return self.__plugin_info.plugin_config
+        return self.__context.plugin_info.plugin_config
 
-    def _set_config(self, audit_name, audit_config, plugin_info):
-        self.__audit_name   = audit_name
-        self.__audit_config = audit_config
-        self.__plugin_info  = plugin_info
+    def _get_context(self):
+        return self.__context
+
+    def _set_context(self, context):
+        self.__context = context

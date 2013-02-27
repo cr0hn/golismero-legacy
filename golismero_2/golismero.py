@@ -91,7 +91,7 @@ import argparse
 import datetime
 import textwrap
 
-from core.api.logger import Logger
+from core.main.console import Console
 from core.main.commonstructures import GlobalParams
 from core.main.orchestrator import Orchestrator
 from core.managers.priscillapluginmanager import PriscillaPluginManager
@@ -104,8 +104,6 @@ def launcher(options):
 
     if not isinstance(options, GlobalParams):
         raise TypeError("Expected GlobalParams, got %s instead" % type(options))
-
-    Logger.configure(level = options.verbose)
 
     m_orchestrator = None
 
@@ -141,7 +139,7 @@ def launcher(options):
             raise ValueError("Invalid run mode: %r" % options.run_mode)
 
     except KeyboardInterrupt:
-        Logger.log("\n[i] Stopping. Please wait...")
+        Console.display("\n[i] Stopping. Please wait...")
 
 
 #----------------------------------------------------------------------
@@ -211,15 +209,15 @@ def main():
             manager = PriscillaPluginManager()
             manager.find_plugins(plugins_folder)
         except Exception, e:
-            Logger.log("[!] Error loading plugins list: %s" % e.message)
+            Console.display("[!] Error loading plugins list: %s" % e.message)
             exit(1)
 
         # Show the list of plugins
         Logger.configure(level=Logger.VERBOSE)
-        Logger.log("Plugin list")
-        Logger.log("-----------")
+        Console.display("Plugin list")
+        Console.display("-----------")
         for name, info in manager.get_plugins().iteritems():
-            Logger.log("- %s: %s" % (name, info.display_name))
+            Console.display("- %s: %s" % (name, info.display_name))
         exit(0)
 
 
@@ -232,7 +230,7 @@ def main():
             manager = PriscillaPluginManager()
             manager.find_plugins(plugins_folder)
         except Exception, e:
-            Logger.log("[!] Error loading plugins list: %s" % e.message)
+            Console.display("[!] Error loading plugins list: %s" % e.message)
             exit(1)
 
         # Show the plugin information
@@ -243,43 +241,43 @@ def main():
             if m_plugin_info and m_plugin_obj:
                 message = m_plugin_obj.display_help()
                 message = textwrap.dedent(message)
-                Logger.log("Information for plugin: %s" % m_plugin_info.display_name)
-                Logger.log("----------------------")
-                Logger.log("Location: %s" % m_plugin_info.descriptor_file)
-                Logger.log("Source code: %s" % m_plugin_info.plugin_module)
+                Console.display("Information for plugin: %s" % m_plugin_info.display_name)
+                Console.display("----------------------")
+                Console.display("Location: %s" % m_plugin_info.descriptor_file)
+                Console.display("Source code: %s" % m_plugin_info.plugin_module)
                 if m_plugin_info.plugin_class:
-                    Logger.log("Class name: %s" % m_plugin_info.plugin_class)
+                    Console.display("Class name: %s" % m_plugin_info.plugin_class)
                 if m_plugin_info.description != m_plugin_info.display_name:
-                    Logger.log("")
-                    Logger.log(m_plugin_info.description)
+                    Console.display("")
+                    Console.display(m_plugin_info.description)
                 if message != m_plugin_info.description:
-                    Logger.log("")
-                    Logger.log(message)
+                    Console.display("")
+                    Console.display(message)
             else:
-                Logger.log("[!] Plugin name not found")
+                Console.display("[!] Plugin name not found")
                 exit(1)
             exit(0)
         except KeyError:
-            Logger.log("[!] Plugin name not found")
+            Console.display("[!] Plugin name not found")
             exit(1)
         except ValueError:
-            Logger.log("[!] Plugin name not found")
+            Console.display("[!] Plugin name not found")
             exit(1)
         except Exception, e:
-            Logger.log("[!] Error recovering plugin info: %s" % e.message)
+            Console.display("[!] Error recovering plugin info: %s" % e.message)
             exit(1)
 
 
     #------------------------------------------------------------
     # Launch GoLismero
-    Logger.log("GoLismero started at %s" % datetime.datetime.now())
+    Console.display("GoLismero started at %s" % datetime.datetime.now())
     try:
         launcher(cmdParams)
     except KeyboardInterrupt:
-        Logger.log("GoLismero cancelled by the user at %s" % datetime.datetime.now())
+        Console.display("GoLismero cancelled by the user at %s" % datetime.datetime.now())
         exit(1)
     except SystemExit:
-        Logger.log("GoLismero stopped at %s" % datetime.datetime.now())
+        Console.display("GoLismero stopped at %s" % datetime.datetime.now())
         raise
 
 

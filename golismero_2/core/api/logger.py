@@ -26,7 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Logger"]
 
-from sys import stdout, stderr
+from ..messaging.message import Message
+
 
 class Logger (object):
     """
@@ -44,9 +45,7 @@ class Logger (object):
     VERBOSE      = 2
     MORE_VERBOSE = 3
 
-    _f_out   = stdout
-    _f_error = stderr
-    _level   = STANDARD
+    _level = STANDARD
 
 
     #----------------------------------------------------------------------
@@ -59,12 +58,14 @@ class Logger (object):
 
     #----------------------------------------------------------------------
     @classmethod
-    def configure(cls, stdout   = None,
-                       stderror = None,
-                       level    = None):
-        if stdout   is not None: cls._f_out   = stdout
-        if stderror is not None: cls._f_error = stderror
-        if level    is not None: cls._level   = level
+    def set_level(cls, level = STANDARD):
+        """
+        Set the current log level.
+
+        :param level: One of the log level constants defined in this class.
+        :type level: int
+        """
+        cls._level = level
 
 
     #----------------------------------------------------------------------
@@ -80,7 +81,7 @@ class Logger (object):
 
     #----------------------------------------------------------------------
     @classmethod
-    def is_level(cls, level):
+    def check_level(cls, level):
         """
         Determine if the current log level is at least the one given.
 
@@ -91,7 +92,7 @@ class Logger (object):
 
     #----------------------------------------------------------------------
     @classmethod
-    def _log(cls, message):
+    def _log(cls, message, is_error = False):
         """
         Write a message into output
 
@@ -100,10 +101,19 @@ class Logger (object):
         """
         try:
             if message:
-                cls._f_out.write("%s\n" % message)
-                cls._f_out.flush()
-        except Exception,e:
-            print "[!] Error while writing to output onsole: %s" % e.message
+                if is_error:
+                    message_code = Message.MSG_CONTROL_LOG_ERROR
+                else:
+                    message_code = Message.MSG_CONTROL_LOG_MESSAGE
+                Config()._get_context().send_msg(
+                    message_type = Message.MSG_TYPE_CONTROL,
+                    message_code = message_code,
+                    message_info = message)
+        except Exception, e:
+            if is_error:
+                print "[!] Error while writing to error console: %s" % e.message
+            else:
+                print "[!] Error while writing to output console: %s" % e.message
 
 
     #----------------------------------------------------------------------
@@ -115,8 +125,8 @@ class Logger (object):
         :param message: message to write
         :type message: str
         """
-        if  cls._level != cls.DISABLED:
-            cls._log(message)
+        if  cls._level >= cls.STANDARD:
+            cls._log(message, is_error = False)
 
 
     #----------------------------------------------------------------------
@@ -129,7 +139,7 @@ class Logger (object):
         :type message: str
         """
         if cls._level >= cls.VERBOSE:
-            cls._log(message)
+            cls._log(message, is_error = False)
 
 
     #----------------------------------------------------------------------
@@ -142,24 +152,7 @@ class Logger (object):
         :type message: str
         """
         if cls._level >= cls.MORE_VERBOSE:
-            cls._log(message)
-
-
-    #----------------------------------------------------------------------
-    @classmethod
-    def _log_error(cls, message):
-        """
-        Write a error message into output
-
-        :param message: message to write
-        :type message: str
-        """
-        try:
-            if message:
-                cls._f_error.write("%s\n" % message)
-                cls._f_error.flush()
-        except Exception,e:
-            print "[!] Error while writing to error console: %s" % e.message
+            cls._log(message, is_error = False)
 
 
     #----------------------------------------------------------------------
@@ -171,8 +164,8 @@ class Logger (object):
         :param message: message to write
         :type message: str
         """
-        if cls._level != cls.DISABLED:
-            cls._log_error(message)
+        if cls._level >= cls.STANDARD:
+            cls._log(message, is_error = True)
 
 
     #----------------------------------------------------------------------
@@ -185,7 +178,7 @@ class Logger (object):
         :type message: str
         """
         if cls._level >= cls.VERBOSE:
-            cls._log_error(message)
+            cls._log(message, is_error = True)
 
 
     #----------------------------------------------------------------------
@@ -198,4 +191,4 @@ class Logger (object):
         :type message: str
         """
         if cls._level >= cls.MORE_VERBOSE:
-            cls._log_error(message)
+            cls._log(message, is_error = True)
