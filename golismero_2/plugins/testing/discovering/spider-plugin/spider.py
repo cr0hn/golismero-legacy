@@ -131,9 +131,9 @@ class Spider(TestingPlugin):
                         m_links.append(t1[1][4:])
 
 
-
         # Create instances of Url, convert to absolute url, remove duplicates URL and check if URLs are in scope.
-        m_return = [Url(url=u, depth= info.depth + 1, referer=info.url) for u in filter(is_in_scope, convert_to_absolute_urls(info.url, m_links))]
+        converted_urls = convert_to_absolute_urls(info.url, m_links)
+        m_return = [Url(url=u, depth=info.depth + 1, referer=info.url) for u in converted_urls if is_in_scope(u)]
 
         # Send info
         return m_return
