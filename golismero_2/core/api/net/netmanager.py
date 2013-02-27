@@ -31,7 +31,7 @@ from ..config import Config
 from ..logger import Logger
 from ..results.information.url import Url
 from ..results.information.http import *
-from core.managers.cachemanager import *
+from ...managers.cachemanager import *
 from .web_utils import is_in_scope
 
 from time import time
@@ -87,7 +87,7 @@ class Protocol (object):
         """Constructor."""
 
         # Set reference to cache
-        self._cache = CacheManager()
+        self._cache = NetProtocolCacheManager()
 
 
     #----------------------------------------------------------------------
