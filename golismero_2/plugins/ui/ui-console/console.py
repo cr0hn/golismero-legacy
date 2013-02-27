@@ -24,6 +24,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from core.api.config import Config
 from core.api.plugin import UIPlugin
 from core.api.results.information.information import Information
 from core.api.results.result import Result
@@ -76,10 +77,42 @@ class ConsoleUIPlugin(UIPlugin):
         # Display in console
         #
 
-        # TYPE: Url
-        if  info.result_type    == Result.TYPE_INFORMATION      and \
-            info.result_subtype == Information.INFORMATION_URL:
-                Console.display("+ %s" % colored(str(info), 'cyan'))
+        # Get verbosity level.
+        m_verbosity_level = Config().audit_config.verbose
+
+        # Colors
+        m_cy = 'cyan'
+        m_re = 'red'
+        m_bl = 'blue'
+        m_ye = 'yellow'
+
+        #
+        # Quiet verbosity: Init and end banner + vulnerabilities summary.
+        #
+        if m_verbosity_level == 0:
+            pass
+
+        #
+        # Normal verbosity: Quiet + errors without traceback + extended vulnerabilities
+        #
+        if m_verbosity_level >= 1:
+
+            # TYPE: Url
+            if  info.result_type == Result.TYPE_INFORMATION and \
+                info.result_subtype == Information.INFORMATION_URL:
+                    Console.display("[i] %s" % colored(str(info), 'cyan'))
+
+        #
+        # More verbosity: Normal + Urls + important actions of plugins
+        #
+        if m_verbosity_level >= 2:
+            pass
+
+        #
+        # Even more verbosity: More + errors with tracebacks + no important actions of plugins
+        #
+        if m_verbosity_level >= 3:
+            pass
 
 
     #----------------------------------------------------------------------
@@ -88,10 +121,12 @@ class ConsoleUIPlugin(UIPlugin):
         # Put here the code you want to execute when a control message is received.
         #
 
-        #print "CONTROL"
-
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
+
+        # Here the verbosity level is being checked implicitly
+        # by the plugins that send the messages.
+        # See the Logger class for more details.
 
         # Process control messages
         if message.message_type == Message.MSG_TYPE_CONTROL:

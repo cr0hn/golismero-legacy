@@ -158,15 +158,15 @@ def main():
     gr_main.add_argument('-M', "--run-mode", action='store', dest='run_mode', help='run mode [default: Standalone]', default="Standalone", choices=[x.title() for x in GlobalParams.RUN_MODE._values.keys()])
     gr_main.add_argument('-I', "--user-interface", action='store', dest='user_interface', help='user interface mode [default: Console]', default="console", choices=[x.title() for x in GlobalParams.USER_INTERFACE._values.keys()])
     gr_main.add_argument("-v", "--verbose", action="count", default=1, help="increase output verbosity")
-    gr_main.add_argument("-q", "--quiet", action="store_const", const=0, help="suppress text output")
+    gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
     ##gr_audit.add_argument('--max-process', action='store', dest='max_process', help='maximum number of plugins to run concurrently.', default="0")
 
     gr_net = parser.add_argument_group("network")
-    gr_net.add_argument("--max-connections", action="store", dest="max_connections", help="maximum number of concurrent connections per host [default: 4]", default=4)
+    gr_net.add_argument("--max-connections", action="store", dest="max_connections", help="maximum number of concurrent connections per host [default: 4]", default=50)
     gr_net.add_argument("--no-subdomains", action="store_false", dest="include_subdomains", help="do not include subdomains in the target scope", default=True)
     gr_net.add_argument("--regex", action="store", dest="subdomain_regex", help="include subdomains as regex exprexion", default="")
     gr_net.add_argument("--recursivity", action="store", dest="recursivity", help="recursivity level of spider.", default=0)
-    gr_net.add_argument("-f","--follow-redirect", action="store_true", dest="follow_redirects", help="follow redirects", default=False)
+    gr_net.add_argument("-f","--follow-redirects", action="store_true", dest="follow_redirects", help="follow redirects", default=False)
 
     gr_audit = parser.add_argument_group("audit")
     gr_audit.add_argument('--audit-name', action='store', dest='audit_name', help='customize the audit name')

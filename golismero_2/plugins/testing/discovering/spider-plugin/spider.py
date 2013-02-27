@@ -26,9 +26,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.api.logger import Logger
 from core.api.net.netmanager import *
+from core.api.net.web_utils import converto_to_absolute_urls, is_in_scope
 from core.api.plugin import TestingPlugin
 from core.api.results.information.information import Information
 from core.api.results.information.url import Url
+from core.api.config import Config
 
 from urllib3.util import parse_url
 from urllib3.exceptions import LocationParseError
@@ -36,21 +38,12 @@ from urllib3.exceptions import LocationParseError
 
 class Spider(TestingPlugin):
     """
-    This plugin is used por testing purposes and as example of use of plugins
+    This plugin is a web spider
     """
 
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
         """
-        Check input parameters passed by the user.
-
-        Parameters will be passed as an instance of 'GlobalParams'.
-
-        If any parameter is not correct o there is an error, an
-        exception must be raised.
-
-        :param inputParams: input parameters to check
-        :type inputParams: GlobalParams
         """
         pass
 
@@ -67,15 +60,23 @@ class Spider(TestingPlugin):
         if not isinstance(info, Url):
             raise TypeError("Expected Url, got %s instead" % type(info))
 
+        # Check recursivity
+        if info.depth > Config().audit_config.recursivity:
+            return
+
         m_return = []
 
         # Request this URL
         m_manager = NetManager.get_connection()
         p = m_manager.get(info)
 
-        # If error p = None => return
+        # If error p == None => return
         if not p:
             return
+
+        # Alert for redirect, if recursivity is not enabled.
+        if info.depth == Config().audit_config.recursivity and p.http_response_code == 301:
+            Logger.log("==> Initial redirection detected, and not followed. Try with '-f' option or set '--recursivity 1'")
 
         # Send back the HTTP reponse to the kernel
         self.send_info(p)
@@ -98,7 +99,7 @@ class Spider(TestingPlugin):
             # Error while parsing URL
             return [p, p.information]
 
-        Logger.log_more_verbose("Spidering URL '%s'\n" % info.url)
+        Logger.log_more_verbose("[i] Spidering URL: '%s'" % info.url)
 
 
         m_links = []
@@ -129,50 +130,13 @@ class Spider(TestingPlugin):
                     if t1[1].find("url") != -1 and len(t1[1]) > 5:
                         m_links.append(t1[1][4:])
 
-        # Remove duplicates and fix URL
-        m_tmp = []
-        for u in m_links:
-            try:
-                l_parsed = parse_url(u)
-            except LocationParseError:
-                # Error while parsing URL
-                continue
 
-            if u == '':
-                continue
 
-            # Fix hostname
-            m_hostname = ""
-            if l_parsed.hostname is None:
-                m_hostname = m_parsed_url.hostname
-            else:
-                m_hostname = l_parsed.hostname
-
-            # Fix scheme
-            m_scheme = m_parsed_url.scheme if l_parsed.scheme is None else l_parsed.scheme
-
-            # Fix path
-            m_path = ""
-            if l_parsed.path:
-                m_path = '' if len(l_parsed.path) == 1 and l_parsed.path == "/" else l_parsed.path
-
-            # Fix params of query
-            m_query = l_parsed.query if l_parsed.query else ''
-
-            # Add complete URL
-            m_url = "%s://%s%s%s" % (
-                    m_scheme,
-                    m_hostname,
-                    m_path,
-                    m_query
-                )
-            m_tmp.append(m_url)
-
-        # Create instances of Url, and delete duplicates
-        m_return = [Url(u) for u in set(m_tmp)]
+        # Create instances of Url, convert to absolute url, remove duplicates URL and check if URLs are in scope.
+        m_return = [Url(url=u, depth= info.depth + 1, referer=info.url) for u in filter(is_in_scope, converto_to_absolute_urls(info.url, m_links))]
 
         # Send info
-        map(self.send_info, m_return)
+        return m_return
 
 
     #----------------------------------------------------------------------

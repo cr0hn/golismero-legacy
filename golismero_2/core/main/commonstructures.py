@@ -152,7 +152,7 @@ class GlobalParams (object):
         #
 
         # Maximum number of connection, by host
-        self.max_connections = 15
+        self.max_connections = 50
 
         # Include subdomains?
         self.include_subdomains = True
@@ -192,7 +192,6 @@ class GlobalParams (object):
 
         # Set verbosity level
         cmdParams.verbose = args.verbose
-
 
         #
         # Plugins options

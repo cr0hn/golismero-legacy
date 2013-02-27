@@ -32,6 +32,7 @@ from ..logger import Logger
 from ..results.information.url import Url
 from ..results.information.http import *
 from core.managers.cachemanager import *
+from .web_utils import is_in_scope
 
 from time import time
 from urllib3.util import parse_url
@@ -141,38 +142,8 @@ class Web (Protocol):
         self.__http_pool_manager = http_pool
         self.__config = config
 
-        # Set of domain names we're allowed to connect to
-        self.__audit_scope = set(parse_url(x).hostname.lower() for x in config.targets)
-
         # Global option for redirects
         self.__follow_redirects = config.follow_redirects
-
-        try:
-            self.__audit_scope.remove("")
-        except KeyError:
-            pass
-        try:
-            self.__audit_scope.remove(None)
-        except KeyError:
-            pass
-
-
-    #----------------------------------------------------------------------
-    def is_in_scope(self, url):
-        """
-        Determines if the given URL is within scope of the audit.
-
-        :param url: URL to test.
-        :type url: str
-
-        :returns: True if the URL is within scope of the audit, False otherwise.
-        """
-        hostname = parse_url(url).hostname.lower()
-        return hostname in self.__audit_scope or (
-            self.__config.include_subdomains and
-            any(hostname.endswith("." + domain) for domain in self.__audit_scope)
-        )
-
 
     #----------------------------------------------------------------------
     def state(self):
@@ -199,7 +170,7 @@ class Web (Protocol):
             raise TypeError("Expected HTTP_Request, got %s instead" % type(URL))
 
         # Check for host matching
-        if not self.is_in_scope(request.url):
+        if not is_in_scope(request.url):
             Logger.log_verbose("Url '%s' out of scope. Skipping it." % request.url)
             return
 
@@ -207,14 +178,14 @@ class Web (Protocol):
         m_time = None
 
         # URL is cached?
-        if request.is_cacheable and self._cache.is_cached(request):
-            m_response = self._cache.get_cache(request)
+        if request.is_cacheable and self._cache.is_cached(request.request_id):
+            m_response = self._cache.get_cache(request.request_id)
         else:
             #
             # Get URL
             #
 
-            # Set redirect options
+            # Set redirect option
             request.follow_redirects = request.follow_redirects if request.follow_redirects else self.__follow_redirects
 
             # timing init
@@ -256,7 +227,7 @@ class Web (Protocol):
 
             # Cache is enabled?
             if request.is_cacheable:
-                self._cache.set_cache(m_response)
+                self._cache.set_cache(request.request_id, m_response)
 
         return m_response
 
@@ -282,13 +253,18 @@ class Web (Protocol):
 
 
         # Extract the raw URL when applicable
+        m_referer = None
         try:
             URL = URL.url
+
+            # Set referer option
+            m_referer = URL.referer if URL.referer else ''
+
         except AttributeError:
             pass
 
         # Check for host matching
-        if not self.is_in_scope(URL):
+        if not is_in_scope(URL):
             Logger.log_verbose("[!] Url '%s' out of scope. Skipping it." % URL)
             return
 
@@ -303,6 +279,9 @@ class Web (Protocol):
             follow_redirects = m_follow_redirects,
             cache = cache
         )
+
+        # Set referer
+        m_request.referer = m_referer
 
         return self.get_custom(m_request)
 
