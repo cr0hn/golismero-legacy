@@ -24,9 +24,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
 from urllib3.util import parse_url
-from core.api.config import Config
+
+from ..config import Config
+
 
 #----------------------------------------------------------------------
 def is_in_scope(url):
@@ -54,9 +55,8 @@ def is_in_scope(url):
     )
 
 
-
 #----------------------------------------------------------------------
-def converto_to_absolute_url(base_url, relative_url):
+def convert_to_absolute_url(base_url, relative_url):
     """
     Convert 'relative_url' in absolute URL. 'base_url' is the base site
     for the relative url.
@@ -69,11 +69,12 @@ def converto_to_absolute_url(base_url, relative_url):
 
     :returns: str -- converted URL
     """
-    m_return = converto_to_absolute_url(base_url, (relative_url))
+    m_return = convert_to_absolute_url(base_url, (relative_url))
     return m_return[0] if m_return else None
 
+
 #----------------------------------------------------------------------
-def converto_to_absolute_urls(base_url, relative_urls):
+def convert_to_absolute_urls(base_url, relative_urls):
     """
     Convert URLs in the 'relative_urls' in absolute URL list and remove duplicates. 'base_url' is the base site
     for the relative urls.

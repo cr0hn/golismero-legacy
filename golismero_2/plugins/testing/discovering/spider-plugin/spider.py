@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.api.logger import Logger
 from core.api.net.netmanager import *
-from core.api.net.web_utils import converto_to_absolute_urls, is_in_scope
+from core.api.net.web_utils import convert_to_absolute_urls, is_in_scope
 from core.api.plugin import TestingPlugin
 from core.api.results.information.information import Information
 from core.api.results.information.url import Url
@@ -133,7 +133,7 @@ class Spider(TestingPlugin):
 
 
         # Create instances of Url, convert to absolute url, remove duplicates URL and check if URLs are in scope.
-        m_return = [Url(url=u, depth= info.depth + 1, referer=info.url) for u in filter(is_in_scope, converto_to_absolute_urls(info.url, m_links))]
+        m_return = [Url(url=u, depth= info.depth + 1, referer=info.url) for u in filter(is_in_scope, convert_to_absolute_urls(info.url, m_links))]
 
         # Send info
         return m_return
