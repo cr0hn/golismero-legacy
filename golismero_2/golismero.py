@@ -107,39 +107,35 @@ def launcher(options):
 
     m_orchestrator = None
 
-    try:
-        if options.run_mode == GlobalParams.RUN_MODE.standalone:
+    if options.run_mode == GlobalParams.RUN_MODE.standalone:
 
-            # Run Orchestrator
-            m_orchestrator = Orchestrator(options)
+        # Run Orchestrator
+        m_orchestrator = Orchestrator(options)
 
-            # Start UI
-            m_orchestrator.start_ui()
+        # Start UI
+        m_orchestrator.start_ui()
 
-            # New audit with command line options
-            m_orchestrator.add_audit(options)
+        # New audit with command line options
+        m_orchestrator.add_audit(options)
 
-            # Message loop
-            m_orchestrator.msg_loop()
+        # Message loop
+        m_orchestrator.msg_loop()
 
-        elif options.run_mode == GlobalParams.RUN_MODE.cloudclient:
-            #
-            # TODO
-            #
-            raise NotImplementedError("Cloud client mode not yet implemented!")
+    elif options.run_mode == GlobalParams.RUN_MODE.cloudclient:
+        #
+        # TODO
+        #
+        raise NotImplementedError("Cloud client mode not yet implemented!")
 
 
-        elif options.run_mode == GlobalParams.RUN_MODE.cloudserver:
-            #
-            # TODO
-            #
-            raise NotImplementedError("Cloud server mode not yet implemented!")
+    elif options.run_mode == GlobalParams.RUN_MODE.cloudserver:
+        #
+        # TODO
+        #
+        raise NotImplementedError("Cloud server mode not yet implemented!")
 
-        else:
-            raise ValueError("Invalid run mode: %r" % options.run_mode)
-
-    except KeyboardInterrupt:
-        Console.display("\n[i] Stopping. Please wait...")
+    else:
+        raise ValueError("Invalid run mode: %r" % options.run_mode)
 
 
 #----------------------------------------------------------------------
