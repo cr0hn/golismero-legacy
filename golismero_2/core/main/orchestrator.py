@@ -65,8 +65,9 @@ class Orchestrator (object):
 
         # Incoming message queue
         if getattr(config, "max_processes", 1) == 1:
-            self.__queue = Queue.Queue(maxsize = 0)
+            self.__queue = Queue.PriorityQueue(maxsize = 0)
         else:
+            # TODO: priority multiprocessing queue!
             self.__queue = multiprocessing.Queue()
 
         # Orchestrator context
@@ -101,7 +102,7 @@ class Orchestrator (object):
             self.__messageManager.add_listener(self.__ui)
 
         # Signal handler to catch Ctrl-C
-        signal(SIGINT, self.__signal_handler)
+        self.__old_signal_action = signal(SIGINT, self.__signal_handler)
 
 
     @property
@@ -120,7 +121,8 @@ class Orchestrator (object):
             # Send a stop message to the Orchestrator.
             message = Message(message_type = Message.MSG_TYPE_CONTROL,
                               message_code = Message.MSG_CONTROL_STOP,
-                              message_info = False)
+                              message_info = False,
+                                  priority = Message.MSG_PRIORITY_HIGH)
             self.__queue.put_nowait(message)
 
             # Tell the user the message has been sent.
@@ -129,7 +131,11 @@ class Orchestrator (object):
         finally:
 
             # Only do this once, the next time raise KeyboardInterrupt.
-            signal(SIGINT, SIG_DFL)
+            try:
+                action, self.__old_signal_action = self.__old_signal_action, SIG_DFL
+            except AttributeError:
+                action = SIG_DFL
+            signal(SIGINT, action)
 
 
     #----------------------------------------------------------------------

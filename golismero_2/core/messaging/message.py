@@ -24,8 +24,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["Message"]
+
+from functools import total_ordering
+from time import time
+
 
 #------------------------------------------------------------------------------
+@total_ordering
 class Message (object):
     """
     Messages send information, results and internal control events between the
@@ -42,17 +48,19 @@ class Message (object):
     #
     #----------------------------------------------------------------------
     MSG_TYPE_CONTROL = 0
-    MSG_TYPE_INFO = 1
-    MSG_TYPE_STATE = 2
+    MSG_TYPE_INFO    = 1
+    MSG_TYPE_STATE   = 2
 
     MSG_TYPE_FIRST = MSG_TYPE_CONTROL
     MSG_TYPE_LAST  = MSG_TYPE_STATE
+
 
     #----------------------------------------------------------------------
     #
     # Constants for message codes
     #
     #----------------------------------------------------------------------
+
 
     #----------------------------------------------------------------------
     # Control messages
@@ -93,6 +101,7 @@ class Message (object):
     MSG_CONTROL_FIRST = MSG_CONTROL_OK
     MSG_CONTROL_LAST  = MSG_CONTROL_LOG_ERROR
 
+
     #----------------------------------------------------------------------
     # Status messages
     #----------------------------------------------------------------------
@@ -108,10 +117,25 @@ class Message (object):
 
 
     #----------------------------------------------------------------------
+    #
+    # Constants for message priorities
+    #
+    #----------------------------------------------------------------------
+
+    MSG_PRIORITY_HIGH   = 0
+    MSG_PRIORITY_MEDIUM = 1
+    MSG_PRIORITY_LOW    = 2
+
+    MSG_PRIORITY_FIRST = MSG_PRIORITY_HIGH
+    MSG_PRIORITY_LAST  = MSG_PRIORITY_LOW
+
+
+    #----------------------------------------------------------------------
     def __init__(self, message_type = MSG_TYPE_INFO,
                        message_code = 0,
-                       audit_name   = None,
-                       message_info = None):
+                       message_info = None,
+                         audit_name = None,
+                           priority = 1):
         """
         :param message_type: specifies the type of message.
         :type mesage_type: int -- specified in a constant of Message class.
@@ -119,11 +143,14 @@ class Message (object):
         :param message_code: specifies the code of message.
         :type message_code: int -- specified in a constant of Message class.
 
+        :param message_info: the payload of the message.
+        :type message_info: object -- type must be resolved at run time.
+
         :param audit_name: the name of the audit this message belongs to.
         :type audit_name: str
 
-        :param message_info: the payload of the message.
-        :type message_info: object -- type must be resolved at run time.
+        :param priority: the priority level of the message.
+        :type priority: int
         """
 
         # Validate the arguments
@@ -138,13 +165,18 @@ class Message (object):
                 raise ValueError("Invalid control message code: %d" % message_code)
         if audit_name is not None and type(audit_name) not in (str, unicode):
             raise TypeError("Expected int, got %s instead" % type(audit_name))
+        if type(priority) != int:
+            raise TypeError("Expected int, got %s instead" % type(priority))
+        if not self.MSG_PRIORITY_FIRST <= priority <= self.MSG_PRIORITY_LAST:
+            raise ValueError("Invalid priority level: %d" % priority)
 
         # Build the message object
         self.__message_type = message_type
         self.__message_code = message_code
-        self.__audit_name   = audit_name
         self.__message_info = message_info
-
+        self.__audit_name   = audit_name
+        self.__priority     = priority
+        self.__timestamp    = time()
 
     @property
     def message_type(self):
@@ -155,9 +187,32 @@ class Message (object):
         return self.__message_code
 
     @property
+    def message_info(self):
+        return self.__message_info
+
+    @property
     def audit_name(self):
         return self.__audit_name
 
     @property
-    def message_info(self):
-        return self.__message_info
+    def priority(self):
+        return self.__priority
+
+    @property
+    def timestamp(self):
+        return self.__timestamp
+
+
+    #----------------------------------------------------------------------
+    @property
+    def is_ack(self):
+        return (self.message_type == self.MSG_TYPE_CONTROL and
+                self.message_code == self.MSG_CONTROL_ACK)
+
+
+    #----------------------------------------------------------------------
+    def __lt__(self, other):
+
+        # Sort by priority, then by timestamp, then ACKs go last.
+        return (  self.priority,  self.timestamp,  int(not  self.is_ack)) < \
+               ( other.priority, other.timestamp,  int(not other.is_ack))
