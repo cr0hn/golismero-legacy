@@ -25,13 +25,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-__all__ = ["CacheManager"]
+__all__ = ["NetProtocolCacheManager"]
 
-from core.main.commonstructures import Singleton
-from core.api.config import *
+from ..main.commonstructures import Singleton
+from ..api.config import *
 
 #------------------------------------------------------------------------------
-class CacheManager(Singleton):
+class LocalCacheManager(Singleton):
     """"""
 
     #----------------------------------------------------------------------
@@ -75,7 +75,7 @@ class CacheManager(Singleton):
         return Config().audit_name in self.__cache and key in self.__cache[Config().audit_name]
 
     #----------------------------------------------------------------------
-    def set_cache(self, key, data):
+    def set_cache(self, key, data, ):
         """
         Include and URL, and their data, into cache.
 
@@ -99,6 +99,96 @@ class CacheManager(Singleton):
 
 
             self.__cache[m_audit][key] = data
+
+
+
+
+
+
+
+#------------------------------------------------------------------------------
+class NetProtocolCacheManager(Singleton):
+    """"""
+
+    #----------------------------------------------------------------------
+    def __init__(self):
+        """Constructor"""
+        self.__cache = {}
+
+    #----------------------------------------------------------------------
+    def get_cache(self, key, protocol="http"):
+        """
+        Get info from cache
+
+        :param key: str with key stored in cache.
+        :type key: str
+
+        :returns: object cached | None
+        """
+
+        # Get audit name
+        m_audit = Config().audit_name
+
+        # Generate the key
+        m_key = "%s%s" %(protocol, key)
+
+        try:
+            # if cached
+            return self.__cache[m_audit][m_key]
+        except KeyError:
+            # Not cached
+            return None
+
+
+    #----------------------------------------------------------------------
+    def is_cached(self, key, protocol="http"):
+        """
+        Indicates if URL is cached
+
+        :param key: str with key stored in cache.
+        :type key: str
+
+        :returns: bool -- True if URL has cached. False otherwise.
+        """
+        # Generate the key
+        m_key = "%s%s" %(protocol, key)
+
+        return Config().audit_name in self.__cache and m_key in self.__cache[Config().audit_name]
+
+    #----------------------------------------------------------------------
+    def set_cache(self, key, data, protocol="http", timespan=0, lifetime=-1):
+        """
+        Include and URL, and their data, into cache.
+
+        :param URL: String with URL
+        :type URL: str
+
+        :param key: str with key stored in cache.
+        :type key: str
+
+        :param data: data with information
+        :type data: object
+
+        :param timespan: time span for this key in cache.
+        :type timespan: int
+
+        :param lifetime: time to life in cache.
+        :type lifetime: int
+        """
+        # None or empty?
+        if key and data and protocol:
+
+            m_audit = Config().audit_name
+
+            # Set cache for audit, if necessary
+            if m_audit not in self.__cache:
+                self.__cache[m_audit] = {}
+
+            # Generate the key
+            m_key = "%s|%s" %(protocol, key)
+
+            # Add
+            self.__cache[m_audit][m_key] = data
 
 
 
