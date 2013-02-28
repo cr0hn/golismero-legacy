@@ -31,7 +31,7 @@ from ..logger import *
 from ...main.commonstructures import Singleton
 
 from os import getcwd, walk
-from os.path import join, split
+from os.path import join, split, sep
 
 
 
@@ -62,16 +62,9 @@ class WordListManager(Singleton):
             for fname in filenames:
                 if fname.endswith(".txt") and not fname.startswith("_") and fname.find("readme") ==-1:
                     try:
-                        m_file = fname[:-4].lower()
+                        key = join(dirpath[len(currentDir) + 1:], fname[:-4].lower()).replace(sep, "_").lower()
 
-                        # If file name is already in store, looking for new name
-                        if m_file in self.__store:
-                            m_tmp_path = dirpath
-                            while m_file in self.__store:
-                                m_tmp_path = split(m_tmp_path)[1]
-                                m_file = "%s_%s" % (m_tmp_path, m_file)
-
-                        self.__store[m_file] = join(dirpath,fname)
+                        self.__store[key] = join(dirpath,fname)
 
                     except KeyError:
                         pass
