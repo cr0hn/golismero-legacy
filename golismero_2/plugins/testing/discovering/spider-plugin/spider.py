@@ -89,7 +89,7 @@ class Spider(TestingPlugin):
         self.send_info(p.information)
 
         # Stop if the embedded information is not HTML
-        if p.information.result_subtype != Information.INFORMATION_HTML:
+        if p.information.information_type != Information.INFORMATION_HTML:
             return
 
         # Get hostname and schema to fix URL

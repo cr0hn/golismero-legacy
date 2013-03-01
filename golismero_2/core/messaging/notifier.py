@@ -130,7 +130,7 @@ class Notifier (object):
                 m_plugins_to_notify.update(self._notification_info_all)
 
                 # Plugins that expect this type of info
-                result_subtype = message.message_info.result_subtype
+                result_subtype = message.message_info.information_type
                 if result_subtype in self._notification_info_map:
                     m_plugins_to_notify.update(self._notification_info_map[result_subtype])
 

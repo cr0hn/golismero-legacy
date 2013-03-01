@@ -80,4 +80,4 @@ class Information(Result):
             raise ValueError("Unknown result subtype: %d" % result_subtype)
         self.__result_subtype = result_subtype
 
-    result_subtype = property(__get_result_subtype, __set_result_subtype)
+    information_type = property(__get_result_subtype, __set_result_subtype)

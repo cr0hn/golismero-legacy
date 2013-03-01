@@ -99,7 +99,7 @@ class ConsoleUIPlugin(UIPlugin):
 
             # TYPE: Url
             if  info.result_type == Result.TYPE_INFORMATION and \
-                info.result_subtype == Information.INFORMATION_URL:
+                info.information_type == Information.INFORMATION_URL:
                     Console.display("[i] %s" % colored(str(info), 'cyan'))
 
         #
