@@ -29,7 +29,7 @@ from core.api.net.netmanager import *
 from core.api.net.web_utils import convert_to_absolute_url, is_in_scope
 from core.api.plugin import TestingPlugin
 from core.api.results.information.information import Information
-from core.api.results.information.url import Url
+from core.api.results.vulnerability.information_disclouse.url_disclousure import UrlDisclousure
 from core.api.text.wordlistmanager import WordListManager
 from os.path import splitext, split, sep
 from urllib3.util import parse_url
@@ -186,8 +186,6 @@ class BackupSearcher(TestingPlugin):
         # Test all URLs (deleting duplicates)
         for l_iter in m_urls_to_test:
             for l_url in l_iter:
-                print l_url
-                continue
 
                 # Ge URL
                 p = m_net_manager.get(l_url)
@@ -206,12 +204,9 @@ class BackupSearcher(TestingPlugin):
                         self.send_info(p)
                         self.send_info(p.information)
 
-                        # Add to return restuls
-                        m_return.append(l_url)
+                        # Send vulnerability
+                        self.send_info(UrlDisclousure(l_url))
 
-
-            # Create vulns instances
-            #return [Url(u) for u in set()]
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
