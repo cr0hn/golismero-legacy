@@ -29,7 +29,7 @@ from core.api.net.netmanager import *
 from core.api.net.web_utils import convert_to_absolute_url, is_in_scope
 from core.api.plugin import TestingPlugin
 from core.api.results.information.information import Information
-from core.api.results.vulnerability.information_disclouse.url_disclousure import UrlDisclousure
+from core.api.results.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from core.api.text.wordlistmanager import WordListManager
 from os.path import splitext, split, sep
 from urllib3.util import parse_url
@@ -205,7 +205,7 @@ class BackupSearcher(TestingPlugin):
                         self.send_info(p.information)
 
                         # Send vulnerability
-                        self.send_info(UrlDisclousure(l_url))
+                        self.send_info(UrlDisclosure(l_url))
 
 
     #----------------------------------------------------------------------
