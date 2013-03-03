@@ -1,0 +1,13 @@
+# Python and IDE extensions
+*.py[cod]
+*.wpu
+*.wpr
+*.wpr2
+
+# Database file extensions
+*.dbm
+
+# Backup file extensions
+*.bak
+*.back
+*.backup
