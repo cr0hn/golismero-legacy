@@ -4,6 +4,10 @@
 *.wpr
 *.wpr2
 
+# Source control folders
+.svn
+.hg
+
 # Database file extensions
 *.dbm
 
