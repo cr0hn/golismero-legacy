@@ -36,42 +36,47 @@ from urllib3.util import parse_url
 from urllib3.exceptions import LocationParseError
 from core.api.text.text_utils import get_matching_level, generate_random_string
 
+
 class BackupSearcher(TestingPlugin):
     """
     This plugin is used por testing purposes and as example of use of plugins
     """
 
+
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
-        """
-        """
         pass
+
 
     #----------------------------------------------------------------------
     def display_help(self):
-        """Get the help message for this plugin."""
         # TODO: this could default to the description found in the metadata.
         return self.__doc__
 
+
+    #----------------------------------------------------------------------
+    def get_accepted_info(self):
+        return [Information.INFORMATION_URL]
+
+
     #----------------------------------------------------------------------
     def recv_info(self, info):
-        """Receive URLs."""
 
         if not isinstance(info, Url):
             raise TypeError("Expected Url, got %s instead" % type(info))
 
-        # Check if Url is in scope
+        # Check if URL is in scope
         if not is_in_scope(info.url):
             return
 
-        # Parsed original URL
+        # Parse original URL
         m_parsed_url = None
         try:
             m_parsed_url = parse_url(info.url)
         except LocationParseError:
             return
 
-        # Split URL as their parts
+        # Split URL
         m_url_parts = {}
         m_url_parts['scheme']        = m_parsed_url.scheme if m_parsed_url.scheme else ''
         m_url_parts['host']          = m_parsed_url.host if m_parsed_url.host else ''
@@ -84,7 +89,6 @@ class BackupSearcher(TestingPlugin):
         # Fix path folder
         m_url_parts['path_folder'] = m_url_parts['path_folder'] if m_url_parts['path_folder'].endswith("/") else m_url_parts['path_folder'] + "/"
 
-        # To log
         Logger.log_more_verbose("[i] Bruteforcing for discovering in URL: '%s'" % info.url)
 
         # Result info
@@ -104,7 +108,7 @@ class BackupSearcher(TestingPlugin):
         m_wordlist['suffixes'].append(WordListManager().get_wordlist("golismero_predictables_file-compressed-suffixes"))
 
 
-        # 2 - Preffixes
+        # 2 - Prefixes
         m_wordlist['prefixes'] = []
         m_wordlist['prefixes'].append(WordListManager().get_wordlist("golismero_predictables_file-prefix"))
         m_wordlist['prefixes'].append(WordListManager().get_wordlist("fuzzdb_discovery_filenamebruteforce_copy_of.fuzz"))
@@ -190,16 +194,17 @@ class BackupSearcher(TestingPlugin):
                 # Ge URL
                 p = m_net_manager.get(l_url)
 
-                # Check if url is acceptable by comparing
-                # result content.
+                # Check if the url is acceptable by comparing
+                # the result content.
                 #
-                # If the maching level between error page and
-                # this l_url is greater than 52%, then is the
-                # same URL and discart it.
+                # If the maching level between the error page
+                # and this url is greater than 52%, then it's
+                # the same URL and must be discarded.
+                #
                 if p and p.http_response_code == 200:
 
                     if get_matching_level(m_error_response, p.raw) < 52:
-                        # Send responde, HTML and a URL to kernel
+                        # Send response, HTML and URL to kernel
                         self.send_info(Url(l_url))
                         self.send_info(p)
                         self.send_info(p.information)
@@ -209,23 +214,14 @@ class BackupSearcher(TestingPlugin):
 
 
     #----------------------------------------------------------------------
-    def get_accepted_info(self):
-        """
-        Accepted information
-        """
-        return [Information.INFORMATION_URL]
-
-
-
-    #----------------------------------------------------------------------
     def make_url_with_suffixes(self, wordlist, url_parts):
         """
-        Creates URLs with suffixes and return it.
+        Creates an iterator of URLs with suffixes.
 
-        :param wordlist: iterable structure with wordlist.
+        :param wordlist: Wordlist iterator.
         :type wordlist: WordList
 
-        :param url_parts: dict with parts of an URL to permute.
+        :param url_parts: Parsed URL to permute.
         :type url_parts: dict
 
         :returns: iterator with urls.
@@ -256,12 +252,12 @@ class BackupSearcher(TestingPlugin):
     #----------------------------------------------------------------------
     def make_url_with_preffixes(self, wordlist, url_parts):
         """
-        Creates URLs with preffixes and return it.
+        Creates an iterator of URLs with prefixes.
 
-        :param wordlist: iterable structure with wordlist.
+        :param wordlist: Wordlist iterator.
         :type wordlist: WordList
 
-        :param url_parts: dict with parts of an URL to permute.
+        :param url_parts: Parsed URL to permute.
         :type url_parts: dict
 
         :returns: iterator with urls.
@@ -275,7 +271,7 @@ class BackupSearcher(TestingPlugin):
         for l_wordlist in wordlist_suffix['prefixes']:
             # For errors
             if not l_wordlist:
-                Logger.log_error("Can't load one of wordlist fo category: 'prefixes'.")
+                Logger.log_error("Can't load wordlist for category: 'prefixes'.")
                 continue
 
             for l_preffix in l_wordlist:
@@ -294,12 +290,12 @@ class BackupSearcher(TestingPlugin):
     #----------------------------------------------------------------------
     def make_url_with_files_or_folder(self, wordlist, url_parts):
         """
-        Creates URLs append files or folders to end and return it.
+        Creates an iterator of URLs with guessed files and subfolders.
 
-        :param wordlist: iterable structure with wordlist.
+        :param wordlist: Wordlist iterator.
         :type wordlist: WordList
 
-        :param url_parts: dict with parts of an URL to permute.
+        :param url_parts: Parsed URL to permute.
         :type url_parts: dict
         """
 
@@ -313,7 +309,7 @@ class BackupSearcher(TestingPlugin):
         for l_wordlist in m_wordlist_predictable:
             # For errors
             if not l_wordlist:
-                Logger.log_error("Can't load one of wordlist fo category: 'predictable_files'.")
+                Logger.log_error("Can't load wordlist for category: 'predictable_files'.")
                 continue
 
             for l_path in l_wordlist:
@@ -335,20 +331,18 @@ class BackupSearcher(TestingPlugin):
         # For locations source code of application, like:
         # www.site.com/app1/ -> www.site.com/app1.war
         #
-        m_splited_last_folder = split(url_parts['path_folder'])[0]
+        m_last_folder_parts = split(url_parts['path_folder'])[0]
         for l_wordlist in m_wordlist_suffix:
             # For errors
             if not l_wordlist:
-                Logger.log_error("Can't load one of wordlist fo category: 'suffixes'.")
+                Logger.log_error("Can't load wordlist for category: 'suffixes'.")
                 continue
-
-            for l_sufix in l_wordlist:
-
+            for l_suffix in l_wordlist:
                 yield "%s://%s%s/%s." % (
                     url_parts['scheme'],
                     url_parts['host'],
-                    m_splited_last_folder,
-                    l_sufix,
+                    m_last_folder_parts,
+                    l_suffix,
                 )
 
 
@@ -357,12 +351,12 @@ class BackupSearcher(TestingPlugin):
     #----------------------------------------------------------------------
     def make_url_changing_extensions(self, wordlist, url_parts):
         """
-        Creates URLs changing the extesion of file and return it.
+        Creates an iterator of URLs with alternative file extensions.
 
-        :param wordlist: iterable structure with wordlist.
+        :param wordlist: Wordlist iterator.
         :type wordlist: WordList
 
-        :param url_parts: dict with parts of an URL to permute.
+        :param url_parts: Parsed URL to permute.
         :type url_parts: dict
         """
 
@@ -373,10 +367,9 @@ class BackupSearcher(TestingPlugin):
         for l_wordlist in wordlist['extensions']:
             # For errors
             if not l_wordlist:
-                Logger.log_error("Can't load one of wordlist fo category: 'extensions'.")
+                Logger.log_error("Can't load wordlist for category: 'extensions'.")
                 continue
             for l_suffix in l_wordlist:
-
                 yield "%s://%s%s%s.%s%s" % (
                     url_parts['scheme'],
                     url_parts['host'],
@@ -390,9 +383,9 @@ class BackupSearcher(TestingPlugin):
     #----------------------------------------------------------------------
     def make_url_permutate_filename(self, url_parts):
         """
-        Creates URLs mutating filename and return it.
+        Creates an iterator of URLs with mutated filenames.
 
-        :param url_parts: dict with parts of an URL to permute.
+        :param url_parts: Parsed URL to permute.
         :type url_parts: dict
         """
 
@@ -437,8 +430,8 @@ class BackupSearcher(TestingPlugin):
     #----------------------------------------------------------------------
     def is_url_acceptable(self, error_page, page_to_test):
         """
-        Determine if passed URL if a valid page or is a mutation
-        of error page.
+        Determine if the given URL is a valid page or a variant
+        of the error page.
 
         :param error_page: content of the well known error page.
         :type error_page: str
@@ -446,17 +439,15 @@ class BackupSearcher(TestingPlugin):
         :param page_to_test: content of the page to test.
         :type page_to_test: str
 
-        :return: bool -- True if url is acceptable. False otherwise.
+        :return: bool -- True if url is acceptable, False otherwise.
         """
-        return True if get_matching_level(error_page, page_to_test) > 52 else False
-
-
+        return get_matching_level(error_page, page_to_test) > 52
 
 
     #----------------------------------------------------------------------
     def is_url_folder_point(self, url_parts):
         """
-        Determinate if URL points to folder or single file:
+        Determine if the given URL points to a folder or a file:
 
         if URL looks like:
         - www.site.com/
@@ -470,15 +461,13 @@ class BackupSearcher(TestingPlugin):
 
         then ==> Return False
 
-        :param url_parts: dict with parts of an URL.
+        :param url_parts: Parsed URL to test.
         :type url_parts: dict
 
-        :return: bool -- True if is a folder. False if not.
+        :return: bool -- True if it's a folder, False if not.
 
         """
-        if (url_parts['path'] or url_parts['query']) \
-           and \
-           (url_parts['path_filename_ext'] or url_parts['query']):
-            return False
-        else:
-            return True
+        return not (
+            (url_parts['path'] or url_parts['query']) and \
+            (url_parts['path_filename_ext'] or url_parts['query'])
+        )
