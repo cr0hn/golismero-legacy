@@ -35,11 +35,17 @@ from colorizer import *
 from time import sleep
 
 
+
 class ConsoleUIPlugin(UIPlugin):
     """
     Console UI plugin.
     """
 
+    # Colors
+    color_info = 'cyan'
+    color_low = 'green'
+    color_middle = 'orange'
+    color_red = 'red'
 
     #----------------------------------------------------------------------
     def display_help(self):
@@ -80,27 +86,42 @@ class ConsoleUIPlugin(UIPlugin):
         # Get verbosity level.
         m_verbosity_level = Config().audit_config.verbose
 
-        # Colors
-        m_cy = 'cyan'
-        m_re = 'red'
-        m_bl = 'blue'
-        m_ye = 'yellow'
+        #
+        # Defines functions for INFORMATION types
+        #
+        m_info_funcs = {
+            Information.INFORMATION_URL : self.display_info_url
+        }
 
         #
-        # Normal verbosity: Quiet + errors without traceback + extended vulnerabilities
+        # Defines functions for VULNERABILITY types
+        #
+        m_vuln_funcs = {
+            "url_disclouse" : self.display_vuln_url_disclouse
+        }
+
+
+
+        #
+        # Normal verbosity: Quiet + errors without traceback
         #
         if m_verbosity_level >= Console.STANDARD:
-            pass
+
+            # Messages with vulnerability types
+            if  info.result_type == Result.TYPE_VULNERABILITY:
+                m_vuln_funcs[info.vulnerability_type]
 
         #
         # More verbosity: Normal + Urls + important actions of plugins
         #
         if m_verbosity_level >= Console.VERBOSE:
 
-            # TYPE: Url
-            if  info.result_type == Result.TYPE_INFORMATION and \
-                info.information_type == Information.INFORMATION_URL:
-                    Console.display("[i] %s" % colored(str(info), 'cyan'))
+            # Messages with information types
+            if  info.result_type == Result.TYPE_INFORMATION:
+                # Call the function
+                m_info_funcs[info.result_subtype](info)
+
+
 
         #
         # Even more verbosity: More + errors with tracebacks + no important actions of plugins
@@ -164,3 +185,46 @@ class ConsoleUIPlugin(UIPlugin):
         #     return list(Information.INFORMATION_URL, Injection.XSS_REFLECTED)
         #
         return None
+
+
+
+    #----------------------------------------------------------------------
+    #
+    # Display information types
+    #
+    #----------------------------------------------------------------------
+    def display_info_url(self, info):
+        """
+        How to display URL informations.
+
+        :param info: information type
+        """
+        Console.display("[i] %s" % colored(str(info), ConsoleUIPlugin.color_info))
+
+
+    #----------------------------------------------------------------------
+    #
+    # Display vulnerability types
+    #
+    #----------------------------------------------------------------------
+    def display_vuln_url_disclouse(self, info):
+        """
+        How to display discovered URLs.
+
+        :param info: vulnerability type
+        """
+        if not info:
+            return
+
+        # Split parts
+        m_pos_discovered = info.url.find(info.discovered)
+        m_prefix = info.url[:m_pos_discovered]
+        m_content = info.url[m_pos_discovered: m_pos_discovered + len(info.discovered)]
+        m_suffix = info.url[m_pos_discovered + len(info.discovered):] if (m_pos_discovered + len(info.discovered)) < len(info.url) else ""
+
+        # Print info
+        Console.display("[i] %s%s%s" %
+                        m_prefix,
+                        colored(m_content, ConsoleUIPlugin.color_red),
+                        m_suffix)
+
