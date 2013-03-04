@@ -66,6 +66,7 @@ class Spider(TestingPlugin):
 
         m_return = []
 
+
         # Request this URL
         m_manager = NetManager.get_connection()
         p = m_manager.get(info)
@@ -89,7 +90,7 @@ class Spider(TestingPlugin):
         self.send_info(p.information)
 
         # Stop if the embedded information is not HTML
-        if p.information.information_type != Information.INFORMATION_HTML:
+        if p.information.xinformation_type != Information.INFORMATION_HTML:
             return
 
         # Get hostname and schema to fix URL
@@ -133,7 +134,15 @@ class Spider(TestingPlugin):
         # Create instances of Url, convert to absolute url, remove duplicates URL and check if URLs are in scope.
         converted_urls = convert_to_absolute_urls(info.url, m_links)
         if converted_urls:
-            m_return = [Url(url=u, depth=info.depth + 1, referer=info.url) for u in converted_urls if is_in_scope(u)]
+            # Not followed URL that contains:
+            m_no_follow = (
+                "logout",
+                "logoff",
+                "exit",
+                "sigout"
+            )
+
+            m_return = [Url(url=u, depth=info.depth + 1, referer=info.url) for u in converted_urls if is_in_scope(u) and all(x not in u for x in m_no_follow)]
 
         # Send info
         return m_return
