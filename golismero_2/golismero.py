@@ -156,6 +156,7 @@ def main():
     gr_main.add_argument("-v", "--verbose", action="count", default=1, help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
     gr_main.add_argument('--max-process', action='store', dest='max_process', help='maximum number of plugins to run concurrently.', default="0")
+    gr_main.add_argument('--no-color', action="store_false", dest="colorize", help="not colorize output console.", default = True)
 
     gr_net = parser.add_argument_group("network")
     gr_net.add_argument("--max-connections", action="store", dest="max_connections", help="maximum number of concurrent connections per host [default: 4]", default=50)
