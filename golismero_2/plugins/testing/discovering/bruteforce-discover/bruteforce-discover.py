@@ -145,16 +145,26 @@ class BackupSearcher(TestingPlugin):
         # Get the request
         m_error_response = m_net_manager.get(m_error_url).raw
 
+
+        # Impact vectors. Available values: 0 - 3.
+        m_impact_vectors = {
+            "suffixes" : 2,
+            "prefixes" : 1,
+            "file_extensions": 1,
+            "permutations" : 1,
+            "predictables": 3
+        }
+
         #
         # Start with bruteforcing. Cases to try:
         #
         # 1 - Testing suffixes
-        # 2 - Testing preffixes
+        # 2 - Testing prefixes
         # 3 - Testing changing extension of files
         # 4 - Testing filename permutations
         # 5 - Testing predictable files and dirs: hidden files, config, lost files...
         #
-        m_urls_to_test = []
+        m_urls_to_test = {}
 
 
         # if URL looks like don't process suffixes:
@@ -163,19 +173,19 @@ class BackupSearcher(TestingPlugin):
         if not self.is_url_folder_point(m_url_parts):
             #
             #   1 - Suffixes
-            m_urls_to_test.append(self.make_url_with_suffixes(m_wordlist, m_url_parts))
+            m_urls_to_test["suffixes"] = self.make_url_with_suffixes(m_wordlist, m_url_parts)
 
             #
             #   2 - Preffixes
-            m_urls_to_test.append(self.make_url_with_suffixes(m_wordlist, m_url_parts))
+            m_urls_to_test["prefixes"] = self.make_url_with_suffixes(m_wordlist, m_url_parts)
 
             #
             #   3 - Changing extension of files
-            m_urls_to_test.append(self.make_url_changing_extensions(m_wordlist, m_url_parts))
+            m_urls_to_test["fife_extensions"] = self.make_url_changing_extensions(m_wordlist, m_url_parts)
 
             #
             #   4 - Permutation of file
-            m_urls_to_test.append(self.make_url_permutate_filename(m_url_parts))
+            m_urls_to_test["permutations"] = self.make_url_permutate_filename(m_url_parts)
 
 
         # if URL looks like don't process suffixes:
@@ -184,11 +194,11 @@ class BackupSearcher(TestingPlugin):
         #
         if self.is_url_folder_point(m_url_parts):
             #
-            # 3 - Predictable files
-            m_urls_to_test.append(self.make_url_with_files_or_folder(m_wordlist, m_url_parts))
+            # 5 - Predictable files
+            m_urls_to_test["predictables"] = self.make_url_with_files_or_folder(m_wordlist, m_url_parts)
 
         # Test all URLs (deleting duplicates)
-        for l_iter in m_urls_to_test:
+        for l_name, l_iter in m_urls_to_test.iteritems():
             for l_url in l_iter:
 
                 # Ge URL
@@ -209,8 +219,14 @@ class BackupSearcher(TestingPlugin):
                         self.send_info(p)
                         self.send_info(p.information)
 
-                        # Send vulnerability
-                        self.send_info(UrlDisclosure(l_url))
+                        #
+                        # Vulnerability
+                        #
+                        l_vuln = UrlDisclosure(l_url)
+                        # Calculate
+                        l_vuln.severity = m_impact_vectors[l_name]
+                        # Send
+                        self.send_info(l_vuln)
 
 
     #----------------------------------------------------------------------
