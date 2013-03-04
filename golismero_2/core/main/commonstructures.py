@@ -123,6 +123,9 @@ class GlobalParams (object):
         # Set verbosity level
         self.verbose = 1
 
+        # Colorize console?
+        self.colorize = True
+
         #
         # Audit options
         #
@@ -192,6 +195,9 @@ class GlobalParams (object):
 
         # Set verbosity level
         cmdParams.verbose = args.verbose
+
+        # Colorize console?
+        cmdParams.colorize = args.colorize
 
         #
         # Plugins options
