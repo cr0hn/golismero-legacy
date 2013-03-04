@@ -44,8 +44,8 @@ class ConsoleUIPlugin(UIPlugin):
     # Colors
     color_info = 'cyan'
     color_low = 'green'
-    color_middle = 'orange'
-    color_red = 'red'
+    color_middle = 'yellow'
+    color_high = 'red'
 
     #----------------------------------------------------------------------
     def display_help(self):
@@ -101,6 +101,8 @@ class ConsoleUIPlugin(UIPlugin):
         }
 
 
+        # Colorize output?
+        self.__colorize = Config().audit_config.colorize
 
         #
         # Normal verbosity: Quiet + errors without traceback
@@ -142,24 +144,27 @@ class ConsoleUIPlugin(UIPlugin):
         # Get verbosity level.
         m_verbosity_level = Config().audit_config.verbose
 
+        # Colorize output?
+        self.__colorize = Config().audit_config.colorize
+
         # Process control messages
         if message.message_type == Message.MSG_TYPE_CONTROL:
 
             # Show log messages
             # (The verbosity is already checked by Logger)
             if message.message_code == Message.MSG_CONTROL_LOG_MESSAGE:
-                Console.display_error(colored(message.message_info, "yellow"), attrs=("dark",))
+                Console.display_error(self.colorize(message.message_info, ConsoleUIPlugin.color_middle), attrs=("dark",))
 
             # Show log errors
             # (The verbosity is already checked by Logger)
             elif message.message_code == Message.MSG_CONTROL_LOG_ERROR:
-                Console.display_error(colored(message.message_info, "red"), attrs=("dark",))
+                Console.display_error(self.colorize(message.message_info, ConsoleUIPlugin.color_high), attrs=("dark",))
 
             # Show plugin errors
             # (The verbosity is already checked by bootstrap)
             elif message.message_code == Message.MSG_CONTROL_ERROR:
-                text = colored("[!] Plugin error: ", "red") + \
-                       colored(message.message_info, "red", attrs=("dark",))
+                text = self.colorize("[!] Plugin error: ", ConsoleUIPlugin.color_high) + \
+                       self.colorize(message.message_info, ConsoleUIPlugin.color_high, attrs=("dark",))
                 Console.display_error(text)
 
 
@@ -199,7 +204,7 @@ class ConsoleUIPlugin(UIPlugin):
 
         :param info: information type
         """
-        Console.display("[i] %s" % colored(str(info), ConsoleUIPlugin.color_info))
+        Console.display("[i] %s" % self.colorize(str(info), ConsoleUIPlugin.color_info))
 
 
     #----------------------------------------------------------------------
@@ -225,6 +230,14 @@ class ConsoleUIPlugin(UIPlugin):
         # Print info
         Console.display("[i] %s%s%s" %
                         m_prefix,
-                        colored(m_content, ConsoleUIPlugin.color_red),
+                        self.colorize(m_content, ConsoleUIPlugin.color_red),
                         m_suffix)
 
+
+    #----------------------------------------------------------------------
+    def colorize(self, text, color, on_color=None, attrs=None):
+        """Determitates if output must be colorized"""
+        if self.__colorize:
+            return colored(text, color, on_color, attrs)
+        else:
+            return text
