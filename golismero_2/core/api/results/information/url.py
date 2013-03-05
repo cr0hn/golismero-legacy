@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["Url"]
 
 from .information import Information
+from ...colorize import *
 
 
 #------------------------------------------------------------------------------
@@ -86,11 +87,36 @@ class Url(Information):
 		# Set referer
 		self.__referer = referer
 
+		# Printable info
+		self.__printable = None
+		self.__printable_verbose = None
+
 
 
 	#----------------------------------------------------------------------
 	def __str__(self):
 		return self.__url
+
+	@property
+	#----------------------------------------------------------------------
+	def printable(self):
+		return "[%s] %s" % (self.__method, colorize(self.__url, 'info'))
+
+	@property
+	#----------------------------------------------------------------------
+	def printable_verbose(self):
+		""""""
+		"[%s] %s \n %s | [Referer] ->%s" % (
+		    self.__method,
+		    colorize(self.__url, 'info'),
+		    " " * len(self.__method),
+		    self.__referer
+		)
+
+
+
+
+
 
 	#----------------------------------------------------------------------
 	@property
