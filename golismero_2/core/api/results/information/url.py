@@ -57,7 +57,7 @@ class Url(Information):
 		:type deep: int
 		"""
 		super(Url, self).__init__()
-		self.result_subtype = self.INFORMATION_URL
+		self.information_type = self.INFORMATION_URL
 
 		# URL
 		self.__url = url

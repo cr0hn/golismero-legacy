@@ -57,27 +57,27 @@ class Information(Result):
     def __init__(self):
         super(Information, self).__init__()
         self.result_type    = self.TYPE_INFORMATION
-        self.result_subtype = self.INFORMATION_UNKNOWN
+        self.information_type = self.INFORMATION_UNKNOWN
 
 
     #----------------------------------------------------------------------
-    def __get_result_subtype(self):
+    def __get_information_type(self):
         """
         Get the result subtype.
 
         :returns: int -- The result type.
         """
-        return self.__result_subtype
+        return self.__information_type
 
-    def __set_result_subtype(self, result_subtype):
+    def __set_information_type(self, information_type):
         """
         Set the result subtype.
 
         :param result_type: Result subtype.
         :type result_type: int
         """
-        if not self.INFORMATION_FIRST <= result_subtype <= self.INFORMATION_LAST:
-            raise ValueError("Unknown result subtype: %d" % result_subtype)
-        self.__result_subtype = result_subtype
+        if not self.INFORMATION_FIRST <= information_type <= self.INFORMATION_LAST:
+            raise ValueError("Unknown result subtype: %d" % information_type)
+        self.__information_type = information_type
 
-    result_subtype = property(__get_result_subtype, __set_result_subtype)
+    information_type = property(__get_information_type, __set_information_type)

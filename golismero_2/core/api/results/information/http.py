@@ -365,7 +365,7 @@ class HTTP_Response (Information):
     def __init__(self, raw_response, request_time, request):
         super(HTTP_Response, self).__init__()
 
-        self.result_subtype = self.INFORMATION_HTTP_RESPONSE
+        self.information_type = self.INFORMATION_HTTP_RESPONSE
 
         # Request that produced this response
         self.__from_request = request

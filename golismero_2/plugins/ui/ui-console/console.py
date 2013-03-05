@@ -121,7 +121,7 @@ class ConsoleUIPlugin(UIPlugin):
             # Messages with information types
             if  info.result_type == Result.TYPE_INFORMATION:
                 # Call the function
-                m_info_funcs[info.result_subtype](info)
+                m_info_funcs[info.information_type](info)
 
 
 
