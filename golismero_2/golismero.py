@@ -165,7 +165,7 @@ def main():
 
     gr_net = parser.add_argument_group("network")
     gr_net.add_argument("--max-connections", action="store", dest="max_connections", help="maximum number of concurrent connections per host [default: 4]", default=50)
-    gr_net.add_argument("--no-subdomains", action="store_false", dest="include_subdomains", help="do not include subdomains in the target scope", default=True)
+    gr_net.add_argument("--no-subdomains", action="store_true", dest="include_subdomains", help="do not include subdomains in the target scope", default=False)
     gr_net.add_argument("--regex", action="store", dest="subdomain_regex", help="include subdomains as regex exprexion", default="")
     gr_net.add_argument("--recursivity", action="store", dest="recursivity", help="recursivity level of spider.", default=0)
     gr_net.add_argument("-f","--follow-redirects", action="store_true", dest="follow_redirects", help="follow redirects", default=False)
