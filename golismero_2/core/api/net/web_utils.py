@@ -70,7 +70,7 @@ def convert_to_absolute_url(base_url, relative_url):
     :returns: str -- converted URL
     """
     m_return = convert_to_absolute_url(base_url, (relative_url))
-    return m_return[0] if m_return else None
+    return m_return.pop() if m_return else None
 
 
 #----------------------------------------------------------------------
@@ -96,7 +96,8 @@ def convert_to_absolute_urls(base_url, relative_urls):
 
 
     # Remove duplicates and fix URL
-    m_return = []
+    m_return = set()
+    m_bind_add = m_return.add
     for u in relative_urls:
         try:
             l_parsed = parse_url(u)
@@ -126,11 +127,11 @@ def convert_to_absolute_urls(base_url, relative_urls):
         m_query = l_parsed.query if l_parsed.query else ''
 
         # Add complete URL
-        m_return.append("%s://%s%s%s" % (
+        m_bind_add("%s://%s%s%s" % (
                 m_scheme,
                 m_hostname,
                 m_path,
                 m_query
             ))
 
-    return set(m_return)
+    return m_return
