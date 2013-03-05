@@ -127,6 +127,13 @@ class GlobalParams (object):
         self.colorize = True
 
         #
+        # Report options
+        #
+        self.output_file = None
+        self.output_formats = ()
+
+
+        #
         # Audit options
         #
 
@@ -198,6 +205,12 @@ class GlobalParams (object):
 
         # Colorize console?
         cmdParams.colorize = args.colorize
+
+        #
+        # Report options
+        #
+        cmdParams.output_file = args.output_file
+        cmdParams.output_formats = args.output_formats
 
         #
         # Plugins options
@@ -278,4 +291,8 @@ class GlobalParams (object):
                 compile(self.subdomain_regex)
             except error, e:
                 raise ValueError("regex expresion no valid: %s." % e.message)
+
+        # Check for outputs restrictions
+        if not self.output_file and self.output_formats:
+            raise ValueError("You must select output filename wit '-o' option.")
 

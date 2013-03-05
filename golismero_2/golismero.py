@@ -158,6 +158,11 @@ def main():
     gr_main.add_argument('--max-process', action='store', dest='max_process', help='maximum number of plugins to run concurrently.', default="0")
     gr_main.add_argument('--no-color', action="store_false", dest="colorize", help="not colorize output console.", default = True)
 
+    gr_report = parser.add_argument_group("report")
+    gr_report.add_argument("-o", action="store", dest="output_file", help="output file, without extension.")
+    gr_report.add_argument("-of", action="append", dest="output_formats", help="one or more output formats.", choices=('text', 'grepable', 'html'), default=['text'])
+
+
     gr_net = parser.add_argument_group("network")
     gr_net.add_argument("--max-connections", action="store", dest="max_connections", help="maximum number of concurrent connections per host [default: 4]", default=50)
     gr_net.add_argument("--no-subdomains", action="store_false", dest="include_subdomains", help="do not include subdomains in the target scope", default=True)
