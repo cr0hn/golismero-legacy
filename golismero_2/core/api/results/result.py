@@ -76,6 +76,19 @@ class Result(object):
 
     result_type = property(__get_result_type, __set_result_type)
 
+    @property
+    #----------------------------------------------------------------------
+    def printable(self):
+        """Get printable information of a result type"""
+        pass
+
+    @property
+    #----------------------------------------------------------------------
+    def printable_verbose(self):
+        """Get printable information of a result type with more verbosity"""
+        pass
+
+
 
     #----------------------------------------------------------------------
     @property
