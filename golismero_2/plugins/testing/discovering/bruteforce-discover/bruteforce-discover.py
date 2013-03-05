@@ -29,6 +29,7 @@ from core.api.net.netmanager import *
 from core.api.net.web_utils import convert_to_absolute_url, is_in_scope
 from core.api.plugin import TestingPlugin
 from core.api.results.information.information import Information
+from core.api.results.information.url import Url
 from core.api.results.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from core.api.text.wordlistmanager import WordListManager
 from os.path import splitext, split, sep
@@ -122,13 +123,13 @@ class BackupSearcher(TestingPlugin):
 
         # 5 - Predictable filename and folders
         m_wordlist['predictable_files'] = []
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictablesres_cgi_microsoft.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictablesres_apache.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictablesres_iis.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictablesres_php.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictablesres_passwords.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictablesres_oracle9i.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictablesres_unixdotfiles.fuzz"))
+        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_cgi_microsoft.fuzz"))
+        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_apache.fuzz"))
+        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_iis.fuzz"))
+        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_php.fuzz"))
+        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_passwords.fuzz"))
+        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_oracle9i.fuzz"))
+        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_unixdotfiles.fuzz"))
 
         #
         # Generate an error in server to get an error page, using a random string
