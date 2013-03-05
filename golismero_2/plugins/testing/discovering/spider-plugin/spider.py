@@ -31,7 +31,6 @@ from core.api.plugin import TestingPlugin
 from core.api.results.information.information import Information
 from core.api.results.information.url import Url
 from core.api.config import Config
-
 from urllib3.util import parse_url
 from urllib3.exceptions import LocationParseError
 
@@ -66,10 +65,14 @@ class Spider(TestingPlugin):
 
         m_return = []
 
-
         # Request this URL
         m_manager = NetManager.get_connection()
-        p = m_manager.get(info)
+
+        # Check if need follow first redirect
+        if info.depth == 0 and Config().audit_config.follow_first_redirect:
+            p = m_manager.get(info, follow_redirect=True)
+        else:
+            p = m_manager.get(info)
 
         # If error p == None => return
         if not p:
@@ -77,7 +80,7 @@ class Spider(TestingPlugin):
 
         # Alert for redirect, if recursivity is not enabled.
         if info.depth == Config().audit_config.recursivity and p.http_response_code == 301:
-            Logger.log("==> Initial redirection detected, and not followed. Try with '-f' option or set '--recursivity 1'")
+            Logger.log("==> Initial redirection detected, and not followed. Try with '-ff'")
 
         # Send back the HTTP reponse to the kernel
         self.send_info(p)
@@ -90,7 +93,7 @@ class Spider(TestingPlugin):
         self.send_info(p.information)
 
         # Stop if the embedded information is not HTML
-        if p.information.xinformation_type != Information.INFORMATION_HTML:
+        if p.information.information_type != Information.INFORMATION_HTML:
             return
 
         # Get hostname and schema to fix URL
@@ -100,7 +103,7 @@ class Spider(TestingPlugin):
             # Error while parsing URL
             return [p, p.information]
 
-        Logger.log_more_verbose("[i] Spidering URL: '%s'" % info.url)
+        Logger.log_more_verbose("Spidering URL: '%s'" % info.url)
 
 
         m_links = []
@@ -142,7 +145,10 @@ class Spider(TestingPlugin):
                 "sigout"
             )
 
-            m_return = [Url(url=u, depth=info.depth + 1, referer=info.url) for u in converted_urls if is_in_scope(u) and all(x not in u for x in m_no_follow)]
+            #m_return = [Url(url=u, depth=info.depth + 1, referer=info.url) for u in converted_urls if is_in_scope(u) and all(x not in u for x in m_no_follow)]
+            #m_return = [Url(url=u, depth=info.depth + 1, referer=info.url) for u in converted_urls if is_in_scope(u) and u not in m_no_follow]
+            #m_return = [Url(url=u, depth=info.depth + 1, referer=info.url) for u in filter(lambda x: is_in_scope(x) and x not in m_no_follow, converted_urls)]
+            m_return = map(lambda u: Url(url=u, depth=info.depth + 1, referer=info.url), filter(lambda x: is_in_scope(x) and x not in m_no_follow, converted_urls))
 
         # Send info
         return m_return

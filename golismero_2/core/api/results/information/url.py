@@ -100,13 +100,13 @@ class Url(Information):
 	@property
 	#----------------------------------------------------------------------
 	def printable(self):
-		return "[%s] %s" % (self.__method, colorize(self.__url, 'info'))
+		return "(%s) %s" % (self.__method, colorize(self.__url, 'info'))
 
 	@property
 	#----------------------------------------------------------------------
 	def printable_verbose(self):
 		""""""
-		"[%s] %s \n %s | [Referer] ->%s" % (
+		"(%s) %s \n %s | [Referer] ->%s" % (
 		    self.__method,
 		    colorize(self.__url, 'info'),
 		    " " * len(self.__method),

@@ -379,6 +379,7 @@ class HTMLBeautifulSoup(object):
             m_elem = self.__html_parser.findAll(name="object")
 
             m_result = list()
+            m_result_append_bind = m_result.append
 
             for obj in m_elem:
                 # Get attrs
@@ -393,7 +394,7 @@ class HTMLBeautifulSoup(object):
 
                 m_raw_content = "".join((str(item) for item in obj.contents if item != "\n"))
 
-                m_result.append(HTMLElement(obj.name.encode("utf-8"), m_ojb_attr, m_raw_content))
+                m_result_append_bind(HTMLElement(obj.name.encode("utf-8"), m_ojb_attr, m_raw_content))
 
             self.__html_objects = m_result
 

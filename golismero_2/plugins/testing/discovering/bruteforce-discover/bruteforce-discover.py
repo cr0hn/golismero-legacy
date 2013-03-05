@@ -90,7 +90,7 @@ class BackupSearcher(TestingPlugin):
         # Fix path folder
         m_url_parts['path_folder'] = m_url_parts['path_folder'] if m_url_parts['path_folder'].endswith("/") else m_url_parts['path_folder'] + "/"
 
-        Logger.log_more_verbose("[i] Bruteforcing for discovering in URL: '%s'" % info.url)
+        Logger.log_more_verbose("Bruteforcing for discovering in URL: '%s'" % info.url)
 
         # Result info
         m_return = []

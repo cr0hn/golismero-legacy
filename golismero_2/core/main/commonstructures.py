@@ -176,6 +176,9 @@ class GlobalParams (object):
         # Follow redirects
         self.follow_redirects = False
 
+        # Follow only first redirect
+        self.follow_first_redirect = True
+
 
     #----------------------------------------------------------------------
     @classmethod
@@ -253,6 +256,9 @@ class GlobalParams (object):
 
         # Follow redirects
         cmdParams.follow_redirects = args.follow_redirects
+
+        # Follow only first redirect
+        cmdParams.follow_first_redirect = args.follow_first_redirect
 
         #
         # Check params
