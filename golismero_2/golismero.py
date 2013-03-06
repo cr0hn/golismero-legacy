@@ -160,15 +160,17 @@ def main():
 
     gr_report = parser.add_argument_group("report")
     gr_report.add_argument("-o", action="store", dest="output_file", help="output file, without extension.")
-    gr_report.add_argument("-of", action="append", dest="output_formats", help="one or more output formats.", choices=('text', 'grepable', 'html'), default=['text'])
+    gr_report.add_argument("-of", action="append", dest="output_formats", help="one or more output formats.", choices=('text', 'grepable', 'html'))
 
 
     gr_net = parser.add_argument_group("network")
     gr_net.add_argument("--max-connections", action="store", dest="max_connections", help="maximum number of concurrent connections per host [default: 4]", default=50)
-    gr_net.add_argument("--no-subdomains", action="store_true", dest="include_subdomains", help="do not include subdomains in the target scope", default=False)
+    gr_net.add_argument("--no-subdomains", action="store_true", dest="include_subdomains", help="do not include subdomains in the target scope", default=True)
     gr_net.add_argument("--regex", action="store", dest="subdomain_regex", help="include subdomains as regex exprexion", default="")
-    gr_net.add_argument("--recursivity", action="store", dest="recursivity", help="recursivity level of spider.", default=0)
+    gr_net.add_argument("-r", "--recursivity", action="store", dest="recursivity", help="recursivity level of spider.", default=0)
     gr_net.add_argument("-f","--follow-redirects", action="store_true", dest="follow_redirects", help="follow redirects", default=False)
+    gr_net.add_argument("-nff","--no-follow-first", action="store_false", dest="follow_first_redirect", help="follow only first redirect", default=True)
+
 
     gr_audit = parser.add_argument_group("audit")
     gr_audit.add_argument('--audit-name', action='store', dest='audit_name', help='customize the audit name')
