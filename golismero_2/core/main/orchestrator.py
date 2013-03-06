@@ -32,6 +32,7 @@ from ..managers.auditmanager import AuditManager
 from ..managers.messagemanager import MessageManager
 from ..managers.priscillapluginmanager import PriscillaPluginManager
 from ..managers.uimanager import UIManager
+from ..managers.reportmanager import ReportManager
 from ..managers.processmanager import ProcessManager, Context
 from ..messaging.message import Message
 
@@ -100,6 +101,9 @@ class Orchestrator (object):
         if config.run_mode == GlobalParams.RUN_MODE.standalone:
             self.__ui = UIManager(self, self.__config)
             self.__messageManager.add_listener(self.__ui)
+
+        # Load report manager
+        self.__report_manager = ReportManager()
 
         # Signal handler to catch Ctrl-C
         self.__old_signal_action = signal(SIGINT, self.__signal_handler)
@@ -269,3 +273,8 @@ class Orchestrator (object):
 
         # init UI Manager
         self.__ui.run()
+
+    #----------------------------------------------------------------------
+    def generate_reports(self, results):
+        """Run report plugins"""
+        self.__report_manager.generate_reports(self.__config, results)

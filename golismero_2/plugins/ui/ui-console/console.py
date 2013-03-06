@@ -85,7 +85,7 @@ class ConsoleUIPlugin(UIPlugin):
 
             # Messages with vulnerability types
             if  info.result_type == Result.TYPE_VULNERABILITY:
-                Console.display("+ %s" % info.printable)
+                Console.display("+ %s" % info.printable())
 
         #
         # More verbosity: Normal + Urls + important actions of plugins
@@ -95,7 +95,7 @@ class ConsoleUIPlugin(UIPlugin):
             # Messages with information types
             if  info.result_type == Result.TYPE_INFORMATION and info.information_type == Information.INFORMATION_URL:
                 # Call the function
-                Console.display("+ %s" % info.printable)
+                Console.display("+ %s" % info.printable_verbose())
 
 
         #
@@ -123,12 +123,12 @@ class ConsoleUIPlugin(UIPlugin):
             # Show log messages
             # (The verbosity is already checked by Logger)
             if message.message_code == Message.MSG_CONTROL_LOG_MESSAGE:
-                Console.display_error(colorize(message.message_info, 'middle'))
+                Console.display_error("- %s" % colorize(message.message_info, 'middle'))
 
             # Show log errors
             # (The verbosity is already checked by Logger)
             elif message.message_code == Message.MSG_CONTROL_LOG_ERROR:
-                Console.display_error(colorize(message.message_info, 'middle'))
+                Console.display_error("- %s" % colorize(message.message_info, 'middle'))
 
             # Show plugin errors
             # (The verbosity is already checked by bootstrap)

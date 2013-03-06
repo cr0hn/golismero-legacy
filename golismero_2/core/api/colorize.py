@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #----------------------------------------------------------------------
-def colorize(text, level):
+def colorize(text, level, color = True):
 	"""
 	Colorize a text depends of type of alert:
 	- Information
@@ -43,6 +43,14 @@ def colorize(text, level):
 
 	:param text: text to colorize.
 	:type text: int with level (0-4) or string with values: info, low, middle, high, critical.
+
+	:param level: color selected, by level.
+	:type level: str or integer (0-4).
+
+	:param color: indicates if output must be colorized or not.
+	:type color: bool.
+
+	:returns: str -- string with information to print.
 	"""
 
 	# Colors
@@ -62,7 +70,7 @@ def colorize(text, level):
 	m_colors["4"] = m_colors['critical']
 
 	# Ge colorize option
-	if Config().audit_config.colorize:
+	if Config().audit_config.colorize and color:
 		return colored(text, m_colors[str(level)])
 	else:
 		return text

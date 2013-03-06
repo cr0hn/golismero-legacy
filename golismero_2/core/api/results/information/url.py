@@ -97,25 +97,22 @@ class Url(Information):
 	def __str__(self):
 		return self.__url
 
-	@property
 	#----------------------------------------------------------------------
-	def printable(self):
-		return "(%s) %s" % (self.__method, colorize(self.__url, 'info'))
-
-	@property
-	#----------------------------------------------------------------------
-	def printable_verbose(self):
-		""""""
-		"(%s) %s \n %s | [Referer] ->%s" % (
+	def printable(self, colorized = True):
+		return "(%s) %s" % (
 		    self.__method,
-		    colorize(self.__url, 'info'),
-		    " " * len(self.__method),
-		    self.__referer
+		    colorize(self.__url, 'info', color= colorized)
 		)
 
-
-
-
+	#----------------------------------------------------------------------
+	def printable_verbose(self, colorized = True):
+		""""""
+		return "%s\n| Method: %s\n| Referer <- %s\n|-%s" % (
+		    colorize(self.__url, 'info', color= colorized),
+		    self.__method,
+		    self.__referer,
+		    "-" * len(self.__url)
+		)
 
 
 	#----------------------------------------------------------------------

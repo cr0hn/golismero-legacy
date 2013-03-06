@@ -25,9 +25,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from urllib3.util import parse_url
+from urllib3.exceptions import LocationParseError
 
 from ..config import Config
 
+__all__ = ["is_in_scope", "convert_to_absolute_url", "convert_to_absolute_urls"]
 
 #----------------------------------------------------------------------
 def is_in_scope(url):
@@ -116,7 +118,7 @@ def convert_to_absolute_urls(base_url, relative_urls):
             m_hostname = l_parsed.hostname
 
         # Fix scheme
-        m_scheme = m_parsed_url.scheme if l_parsed.scheme is None else l_parsed.scheme
+        m_scheme = 'http' if not m_parsed_url.scheme else m_parsed_url.scheme if l_parsed.scheme is None else l_parsed.scheme
 
         # Fix path
         m_path = ""

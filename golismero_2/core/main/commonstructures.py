@@ -165,7 +165,7 @@ class GlobalParams (object):
         self.max_connections = 50
 
         # Include subdomains?
-        self.include_subdomains = False
+        self.include_subdomains = True
 
         # Subdomains as regex expresion
         self.subdomain_regex = ""
@@ -299,6 +299,7 @@ class GlobalParams (object):
                 raise ValueError("regex expresion no valid: %s." % e.message)
 
         # Check for outputs restrictions
-        if not self.output_file and not self.output_formats:
-            raise ValueError("You must select output filename with '-o' option.")
+        if (not self.output_file and self.output_formats) \
+           or (self.output_file and not self.output_formats):
+            raise ValueError("When you specify '-o' also need to set format option'-of'.")
 

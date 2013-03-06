@@ -66,9 +66,17 @@ class BackupSearcher(TestingPlugin):
         if not isinstance(info, Url):
             raise TypeError("Expected Url, got %s instead" % type(info))
 
+        # Wait to spider
+        if info.depth < 1:
+            return
+
+        return
+
         # Check if URL is in scope
         if not is_in_scope(info.url):
             return
+
+        Logger.log_more_verbose("Bruteforcing in URL: '%s'" % info.url)
 
         # Parse original URL
         m_parsed_url = None
@@ -90,7 +98,7 @@ class BackupSearcher(TestingPlugin):
         # Fix path folder
         m_url_parts['path_folder'] = m_url_parts['path_folder'] if m_url_parts['path_folder'].endswith("/") else m_url_parts['path_folder'] + "/"
 
-        Logger.log_more_verbose("Bruteforcing for discovering in URL: '%s'" % info.url)
+
 
         # Result info
         m_return = []

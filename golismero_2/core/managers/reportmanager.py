@@ -26,6 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["ReportManager"]
 
+from .priscillapluginmanager import *
+
 
 #------------------------------------------------------------------------------
 class ReportManager (object):
@@ -33,13 +35,30 @@ class ReportManager (object):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, results):
+    def __init__(self):
 
-        # Init structures
-        self.__results = results
+        # Load plugins
+        self.__reporters = PriscillaPluginManager().load_plugins(category="report")
 
 
     #----------------------------------------------------------------------
-    def generate_report(self):
-        """"""
-        print "report"
+    def generate_reports(self, config, results):
+        """
+        Call appropiate plugins (user selected) and generate the reports.
+
+        :param config: configuration of audit.
+        :type config: GlobalParams.
+
+        :param results: iterable with results.
+        :type results: iterable.
+        """
+
+        # Check None
+        if not config.output_formats:
+            return
+
+        # Get user selected report types
+        m_selected_reporters = filter(lambda x: x.report_type in config.output_formats, self.__reporters.itervalues())
+
+        # Generate report
+        map(lambda p: p.generate_report(config, results), m_selected_reporters)

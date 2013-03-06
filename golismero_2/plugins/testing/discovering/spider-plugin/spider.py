@@ -26,13 +26,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.api.logger import Logger
 from core.api.net.netmanager import *
-from core.api.net.web_utils import convert_to_absolute_urls, is_in_scope
+from core.api.net.web_utils import *
 from core.api.plugin import TestingPlugin
 from core.api.results.information.information import Information
 from core.api.results.information.url import Url
 from core.api.config import Config
 from urllib3.util import parse_url
 from urllib3.exceptions import LocationParseError
+from time import time
 
 
 class Spider(TestingPlugin):
@@ -80,7 +81,7 @@ class Spider(TestingPlugin):
 
         # Alert for redirect, if recursivity is not enabled.
         if info.depth == Config().audit_config.recursivity and p.http_response_code == 301:
-            Logger.log("==> Initial redirection detected, and not followed. Try with '-ff'")
+            Logger.log("==> Initial redirection detected, and not followed. Try with increasion recursivity with '-r' option.")
 
         # Send back the HTTP reponse to the kernel
         self.send_info(p)
@@ -105,8 +106,16 @@ class Spider(TestingPlugin):
 
         Logger.log_more_verbose("Spidering URL: '%s'" % info.url)
 
+        s1 = time()
 
         m_links = []
+
+        # If is 301 response, get Location property
+        if p.http_response_code == 301:
+            try:
+                m_links.append(p.http_headers["Location"])
+            except KeyError:
+                pass
 
         # Get links
         m_links.extend([x.attrs['href'] for x in p.information.links if 'href' in x.attrs and not x.attrs["href"].startswith("#") and not x.attrs["href"].startswith("javascript")])
@@ -145,10 +154,10 @@ class Spider(TestingPlugin):
                 "sigout"
             )
 
-            #m_return = [Url(url=u, depth=info.depth + 1, referer=info.url) for u in converted_urls if is_in_scope(u) and all(x not in u for x in m_no_follow)]
-            #m_return = [Url(url=u, depth=info.depth + 1, referer=info.url) for u in converted_urls if is_in_scope(u) and u not in m_no_follow]
-            #m_return = [Url(url=u, depth=info.depth + 1, referer=info.url) for u in filter(lambda x: is_in_scope(x) and x not in m_no_follow, converted_urls)]
             m_return = map(lambda u: Url(url=u, depth=info.depth + 1, referer=info.url), filter(lambda x: is_in_scope(x) and x not in m_no_follow, converted_urls))
+
+        s2 = time()
+        Logger.log_more_verbose("Spider: Time to process links: %ss" % (s2 - s1))
 
         # Send info
         return m_return

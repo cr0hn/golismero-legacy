@@ -179,6 +179,10 @@ class AuditManager (object):
                     #       and ACKs are always sent AFTER responses from plugins.
                     #
                     if not audit.expecting_ack:
+                        # Generate reports
+                        self.__orchestrator.generate_reports(self.__audits[message.audit_name].database)
+
+                        # Send finish message
                         m = Message(message_type = Message.MSG_TYPE_CONTROL,
                                     message_code = Message.MSG_CONTROL_STOP_AUDIT,
                                     message_info = True,   # True for finished, False for user cancel

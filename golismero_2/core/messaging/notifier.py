@@ -130,9 +130,14 @@ class Notifier (object):
                 m_plugins_to_notify.update(self._notification_info_all)
 
                 # Plugins that expect this type of info
-                information_type = message.message_info.information_type
-                if information_type in self._notification_info_map:
-                    m_plugins_to_notify.update(self._notification_info_map[information_type])
+                #information_type = message.message_info.information_type
+                #if information_type in self._notification_info_map:
+                #    m_plugins_to_notify.update(self._notification_info_map[information_type])
+
+                # Plugins that expect this type of info
+                m_type = message.message_info.information_type if hasattr(message.message_info, "information_type") else message.message_info.vulnerability_type
+                if m_type in self._notification_info_map:
+                    m_plugins_to_notify.update(self._notification_info_map[m_type])
 
                 # Dispatch message info to each plugin
                 for plugin in m_plugins_to_notify:

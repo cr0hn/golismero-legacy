@@ -48,9 +48,8 @@ class Plugin (object):
 
     PLUGIN_TYPE_ABSTRACT = 0    # Not a real plugin type!
     PLUGIN_TYPE_TESTING  = 1
-    PLUGIN_TYPE_REPORT   = 2
-    PLUGIN_TYPE_UI       = 3
-    PLUGIN_TYPE_GLOBAL   = 4
+    PLUGIN_TYPE_UI       = 2
+    PLUGIN_TYPE_GLOBAL   = 3
 
     PLUGIN_TYPE_FIRST = PLUGIN_TYPE_TESTING
     PLUGIN_TYPE_LAST  = PLUGIN_TYPE_GLOBAL
@@ -140,17 +139,6 @@ class TestingPlugin (Plugin):
 
 
 #------------------------------------------------------------------------------
-class ReportPlugin (Plugin):
-    """
-    Report plugins control how results will be exported.
-
-    This is the base class for all Report plugins.
-    """
-
-    PLUGIN_TYPE = Plugin.PLUGIN_TYPE_REPORT
-
-
-#------------------------------------------------------------------------------
 class UIPlugin (Plugin):
     """
     User Interface plugins control the way in which the user interacts with GoLismero.
@@ -194,3 +182,38 @@ class GlobalPlugin (Plugin):
         :type message: Message
         """
         raise NotImplementedError("All UI plugins must implement this method!")
+
+
+#------------------------------------------------------------------------------
+class ReportPlugin (object):
+    """
+    Report plugins control how results will be exported.
+
+    This is the base class for all Report plugins.
+    """
+
+
+    #----------------------------------------------------------------------
+    @property
+    def report_type(self):
+        """
+        Get an string with the report name that will be generate. For
+        example: text, html, grepable...
+
+        :returns: str -- type of report
+        """
+        raise NotImplementedError("All report plugins must implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def generate_report(self, config, results):
+        """
+        Run plugin and generate report.
+
+        :param config: configuration for report
+        :type config: GlobalParams
+
+        :param results: iterable with results.
+        :type results: iterable.
+        """
+        raise NotImplementedError("All report plugins must implement this method!")
