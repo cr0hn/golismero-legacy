@@ -49,7 +49,8 @@ class Message (object):
     #----------------------------------------------------------------------
     MSG_TYPE_CONTROL = 0
     MSG_TYPE_INFO    = 1
-    MSG_TYPE_STATE   = 2
+    MSG_TYPE_RPC     = 2
+    MSG_TYPE_STATE   = 3
 
     MSG_TYPE_FIRST = MSG_TYPE_CONTROL
     MSG_TYPE_LAST  = MSG_TYPE_STATE

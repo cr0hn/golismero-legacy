@@ -163,7 +163,18 @@ class Orchestrator (object):
 
         try:
 
-            # Dispatch the message to the audits.
+            # If it's an RPC message...
+            if message.message_type == Message.MSG_TYPE_RPC:
+
+                # Execute the call.
+                self.execute_rpc(message.audit_name,
+                                 message.message_code,
+                                 *message.message_info)
+
+                # The method now must return True because the message was sent.
+                return True
+
+            # If it's a control or info message, dispatch it to the audits.
             if self.__auditManager.dispatch_msg(message):
 
                 # If it wasn't dropped, send it to the UI plugins.
@@ -186,6 +197,39 @@ class Orchestrator (object):
                     exit(0)                   # Planned shutdown
                 else:
                     raise KeyboardInterrupt() # User cancel
+
+
+    #----------------------------------------------------------------------
+    def execute_rpc(self, audit_name, rpc_code, response_queue, argv, argd):
+        """
+        Honor a remote procedure call request from a plugin.
+
+        :param audit_name: Name of the audit requesting the call.
+        :type audit_name: str
+
+        :param rpc_code: RPC code.
+        :type rpc_code: int
+
+        :param response_queue: Response queue.
+        :type response_queue: Queue
+
+        :param argv: Positional arguments to the call.
+        :type argv: tuple
+
+        :param argd: Keyword arguments to the call.
+        :type argd: dict
+        """
+
+        #
+        # TODO
+        #
+        print "RPC call: %r" % ((audit_name, rpc_code, argv, argd),)
+
+
+
+        # If the call was synchronous, send the response back to the plugin.
+        ##if response_queue:
+        ##    response_queue.put_nowait(response)
 
 
     #----------------------------------------------------------------------

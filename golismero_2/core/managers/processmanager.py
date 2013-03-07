@@ -24,14 +24,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["ProcessManager", "OOPObserver", "Context"]
+__all__ = ["ProcessManager", "Context"]
 
 from ..api.config import Config
 from ..api.logger import Logger
 from ..main.commonstructures import GlobalParams
 from ..messaging.message import Message
 
-from multiprocessing import Pool, Manager
+from multiprocessing import Pool, Manager, Process
 from imp import load_source
 from traceback import format_exc, print_exc
 
@@ -40,6 +40,38 @@ from traceback import format_exc, print_exc
 
 # Plugin class per-process cache. Used by the bootstrap function.
 plugin_class_cache = dict()   # tuple(class, module) -> class object
+
+# Serializable function to run plugins in subprocesses.
+# This is required for Windows support, since we don't have os.fork() there.
+# See: http://docs.python.org/2/library/multiprocessing.html#windows
+def launcher(queue, max_process, refresh_after_tasks):
+
+    # Instance the pool manager.
+    pool = PluginPoolManager(max_process, refresh_after_tasks)
+
+    # Start the pool manager.
+    wait = True
+    pool.start()
+    try:
+
+        # Consumer loop.
+        while True:
+
+            # Get the next plugin call to issue.
+            item = queue.get()
+
+            # Handle the message to quit.
+            if item is True or item is False:
+                wait = item
+                return
+
+            # Handle the message to call a plugin.
+            pool.run_plugin(*item)
+
+    finally:
+
+        # Stop the pool manager.
+        pool.stop(wait)
 
 # Serializable bootstrap function to run plugins in subprocesses.
 # This is required for Windows support, since we don't have os.fork() there.
@@ -198,6 +230,8 @@ class Context (object):
         "str -- Name of the audit."
         return self.__audit_config
 
+
+    #----------------------------------------------------------------------
     def send_ack(self):
         """
         Send ACK messages from the plugins to the orchestrator.
@@ -205,6 +239,8 @@ class Context (object):
         self.send_msg(message_type = Message.MSG_TYPE_CONTROL,
                       message_code = Message.MSG_CONTROL_ACK)
 
+
+    #----------------------------------------------------------------------
     def send_msg(self, message_type = Message.MSG_TYPE_INFO,
                        message_code = 0,
                        message_info = None):
@@ -226,6 +262,8 @@ class Context (object):
                             audit_name = self.audit_name)
         self.send_raw_msg(message)
 
+
+    #----------------------------------------------------------------------
     def send_raw_msg(self, message):
         """
         Send raw messages from the plugins to the orchestrator.
@@ -234,6 +272,44 @@ class Context (object):
         :type message: Message
         """
         self.msg_queue.put_nowait(message)
+
+
+    #----------------------------------------------------------------------
+    def remote_call(self, rpc_code, *argv, **argd):
+        """
+        Make synchronous remote procedure calls on the orchestrator.
+
+        :param rpc_code: RPC code
+        :type rpc_code: int
+
+        :returns: Depends on the call.
+        """
+
+        # Create the response queue.
+        response_queue = Manager().Queue()
+
+        # Send the RPC message.
+        self.send_msg(message_type = Message.MSG_TYPE_RPC,
+                      message_code = rpc_code,
+                      message_info = (response_queue, argv, argd))
+
+        # Get the response.
+        return response_queue.get()
+
+
+    #----------------------------------------------------------------------
+    def async_remote_call(self, rpc_code, *argv, **argd):
+        """
+        Make asynchronous remote procedure calls on the orchestrator.
+
+        :param rpc_code: RPC code
+        :type rpc_code: int
+        """
+
+        # Send the RPC message.
+        self.send_msg(message_type = Message.MSG_TYPE_RPC,
+                      message_code = rpc_code,
+                      message_info = (None, argv, argd))
 
 
 #------------------------------------------------------------------------------
@@ -290,27 +366,25 @@ class OOPObserver (object):
 
 
 #------------------------------------------------------------------------------
-class ProcessManager (object):
+class PluginPoolManager (object):
     """
     Manages a pool of subprocesses to run plugins in them.
     """
 
 
     #----------------------------------------------------------------------
-    def __init__(self, config):
+    def __init__(self, max_process, refresh_after_tasks):
         """Constructor.
 
-        :param config: Configuration object
-        :type config: GlobalParams
+        :param max_process: Maximum number of processes to create.
+        :type max_process: int
+
+        :param refresh_after_tasks: Maximum number of function calls to make before refreshing a subprocess.
+        :type refresh_after_tasks: int
         """
+        self.__max_processes       = max_process
+        self.__refresh_after_tasks = refresh_after_tasks
 
-        # maximum number of processes to create
-        self.__max_processes       = getattr(config, "max_processes",       None)
-
-        # maximum number of function calls to make before refreshing a subprocess
-        self.__refresh_after_tasks = getattr(config, "refresh_after_tasks", None)
-
-        # no process pool for now...
         self.__pool = None
 
 
@@ -370,7 +444,7 @@ class ProcessManager (object):
 
 
     #----------------------------------------------------------------------
-    def stop(self, wait = False):
+    def stop(self, wait = True):
         """
         Stop the process manager.
 
@@ -393,3 +467,200 @@ class ProcessManager (object):
 
         # Clear the plugin instance cache
         plugin_class_cache.clear()
+
+
+#------------------------------------------------------------------------------
+class PluginLauncher (object):
+    """
+    Manages a pool of subprocesses to run plugins in them.
+    """
+
+
+    #----------------------------------------------------------------------
+    def __init__(self, max_process, refresh_after_tasks):
+        """Constructor.
+
+        :param max_process: Maximum number of processes to create.
+        :type max_process: int
+
+        :param refresh_after_tasks: Maximum number of function calls to make before refreshing a subprocess.
+        :type refresh_after_tasks: int
+        """
+
+        # Initialize the launcher process, but do not start it yet.
+        self.__manager = Manager()
+        self.__queue = self.__manager.Queue()
+        self.__process = Process(target=launcher, args=(self.__queue, max_process, refresh_after_tasks))
+        self.__alive = True
+
+
+    #----------------------------------------------------------------------
+    def run_plugin(self, context, func, argv, argd):
+        """
+        Run a plugin in a pooled process.
+
+        :param context: context for the OOP plugin execution
+        :type context: Context
+
+        :param func: name of the method to execute
+        :type func: str
+
+        :param argv: positional arguments to the function call
+        :type argv: tuple
+
+        :param argd: keyword arguments to the function call
+        :type argd: dict
+        """
+
+        # Raise an exception if the launcher had been stopped.
+        if not self.__alive:
+            raise RuntimeError("Plugin launcher was stopped")
+
+        # Send the plugin run request to the launcher process.
+        self.__queue.put_nowait( (context, func, argv, argd) )
+
+
+    #----------------------------------------------------------------------
+    def start(self):
+        """
+        Start the plugin launcher.
+        """
+
+        # Raise an exception if the launcher had been stopped.
+        if not self.__alive:
+            raise RuntimeError("Plugin launcher was stopped")
+
+        # Start the launcher process.
+        self.__process.start()
+
+
+    #----------------------------------------------------------------------
+    def stop(self, wait = True):
+        """
+        Stop the plugin launcher.
+
+        :param wait: True to wait for the subprocesses to finish, False to kill them.
+        :type wait: bool
+        """
+
+        # Raise an exception if the launcher was already stopped.
+        if not self.__alive:
+            raise RuntimeError("Plugin launcher was stopped")
+
+        # Signal the launcher process to stop.
+        self.__queue.put_nowait(wait)
+
+        # Wait for the launcher process to stop.
+        if wait:
+            self.__process.join()
+        else:
+            self.__process.join(3)
+            try:
+                self.__process.terminate()
+            except Exception:
+                pass
+
+        # Clean up.
+        self.__alive   = False
+        self.__process = None
+        self.__queue   = None
+        self.__manager = None
+
+
+#------------------------------------------------------------------------------
+class ProcessManager (object):
+    """
+    Manages a pool of subprocesses to run plugins in them.
+    """
+
+
+    #----------------------------------------------------------------------
+    def __init__(self, config):
+        """Constructor.
+
+        :param config: Configuration object
+        :type config: GlobalParams
+        """
+        self.__launcher = None
+
+        # maximum number of processes to create
+        self.__max_processes       = getattr(config, "max_process",         None)
+
+        # maximum number of function calls to make before refreshing a subprocess
+        self.__refresh_after_tasks = getattr(config, "refresh_after_tasks", None)
+
+
+    #----------------------------------------------------------------------
+    def run_plugin(self, context, func, argv, argd):
+        """
+        Run a plugin in a pooled process.
+
+        :param context: context for the OOP plugin execution
+        :type context: Context
+
+        :param func: name of the method to execute
+        :type func: str
+
+        :param argv: positional arguments to the function call
+        :type argv: tuple
+
+        :param argd: keyword arguments to the function call
+        :type argd: dict
+        """
+
+        # If we have a dispatcher, run the plugin asynchronously
+        if self.__launcher is not None:
+            self.__launcher.run_plugin(context, func, argv, argd)
+
+        # Otherwise just call the plugin directly
+        config = Config()
+        old_context = config._get_context()
+        try:
+            return bootstrap(context, func, argv, argd)
+        finally:
+            config._set_context(old_context)
+
+
+    #----------------------------------------------------------------------
+    def start(self):
+        """
+        Start the process manager.
+        """
+
+        # If we already have a process pool, do nothing
+        if self.__launcher is None:
+
+            # Are we running the plugins in multiprocessing mode?
+            if self.__max_processes is not None and self.__max_processes > 0:
+
+                # Create the process pool
+                self.__launcher = PluginLauncher(self.__max_processes,
+                                                 self.__refresh_after_tasks)
+
+                # Start it
+                self.__launcher.start()
+
+            # Are we running the plugins in single process mode?
+            else:
+
+                # No process pool then!
+                self.__launcher = None
+
+
+    #----------------------------------------------------------------------
+    def stop(self, wait = True):
+        """
+        Stop the process manager.
+
+        :param wait: True to wait for the subprocesses to finish, False to kill them.
+        :type wait: bool
+        """
+
+        # If we have a process pool...
+        if self.__launcher is not None:
+
+            # Stop it.
+            self.__launcher.stop(wait)
+
+            # Clean up.
+            self.__launcher = None
