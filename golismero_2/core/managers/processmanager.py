@@ -31,7 +31,7 @@ from ..api.logger import Logger
 from ..main.commonstructures import GlobalParams
 from ..messaging.message import Message
 
-from multiprocessing import Pool, Queue
+from multiprocessing import Pool, Manager
 from imp import load_source
 from traceback import format_exc, print_exc
 

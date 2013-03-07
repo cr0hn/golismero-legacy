@@ -39,9 +39,8 @@ from ..messaging.message import Message
 from time import sleep
 from traceback import format_exc
 from signal import signal, SIGINT, SIG_DFL
-
-import Queue
-import multiprocessing
+from multiprocessing import Manager
+from Queue import PriorityQueue
 
 __all__ = ["Orchestrator"]
 
@@ -66,10 +65,10 @@ class Orchestrator (object):
 
         # Incoming message queue
         if getattr(config, "max_processes", 1) == 1:
-            self.__queue = Queue.PriorityQueue(maxsize = 0)
+            self.__queue = PriorityQueue(maxsize = 0)
         else:
-            # TODO: priority multiprocessing queue!
-            self.__queue = multiprocessing.Queue()
+            self.__queue_manager = Manager()
+            self.__queue = self.__queue_manager.Queue()
 
         # Orchestrator context
         self.__context = Context(   msg_queue = self.__queue,

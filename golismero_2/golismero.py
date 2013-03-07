@@ -155,7 +155,7 @@ def main():
     gr_main.add_argument('-I', "--user-interface", action='store', dest='user_interface', help='user interface mode [default: Console]', default="console", choices=[x.title() for x in GlobalParams.USER_INTERFACE._values.keys()])
     gr_main.add_argument("-v", "--verbose", action="count", default=1, help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
-    gr_main.add_argument('--max-process', action='store', dest='max_process', help='maximum number of plugins to run concurrently.', default="0")
+    gr_main.add_argument('--max-process', action='store', dest='max_process', help='maximum number of plugins to run concurrently.', default=0)
     gr_main.add_argument('--no-color', action="store_false", dest="colorize", help="not colorize output console.", default = True)
 
     gr_report = parser.add_argument_group("report")

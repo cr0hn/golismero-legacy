@@ -143,9 +143,8 @@ class GlobalParams (object):
         # Audit database
         self.audit_db = "memory://"
 
-        # Maximum number of processes for execute plugins
-        ##self.max_process = 4
-        self.max_process = 0
+        # Maximum number of processes to execute plugins
+        self.max_process = 10
 
         #
         # Plugins options
@@ -235,8 +234,8 @@ class GlobalParams (object):
         # Audit database
         cmdParams.audit_db = args.audit_db
 
-        # Maximum number of processes for execute plugins
-        ##cmdParams.max_process = args.max_process
+        # Maximum number of processes to execute plugins
+        cmdParams.max_process = args.max_process
 
         #
         # Network options
