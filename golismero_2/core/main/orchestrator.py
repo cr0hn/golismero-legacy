@@ -29,7 +29,6 @@ from .console import Console
 from ..api.config import Config
 from ..api.logger import Logger
 from ..managers.auditmanager import AuditManager
-from ..managers.messagemanager import MessageManager
 from ..managers.priscillapluginmanager import PriscillaPluginManager
 from ..managers.uimanager import UIManager
 from ..managers.reportmanager import ReportManager
