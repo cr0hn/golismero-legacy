@@ -75,9 +75,6 @@ class Orchestrator (object):
                                  audit_config = self.__config )
         Config()._set_context(self.__context)
 
-        # Message manager
-        self.__messageManager = MessageManager(self.__config)
-
         # Load the plugins
         self.__pluginManager = PriscillaPluginManager()
         success, failure = self.__pluginManager.find_plugins(self.__config.plugins_folder)
@@ -99,7 +96,6 @@ class Orchestrator (object):
         # UI manager
         if config.run_mode == GlobalParams.RUN_MODE.standalone:
             self.__ui = UIManager(self, self.__config)
-            self.__messageManager.add_listener(self.__ui)
 
         # Load report manager
         self.__report_manager = ReportManager()
@@ -171,8 +167,8 @@ class Orchestrator (object):
             # Dispatch the message to the audits.
             if self.__auditManager.dispatch_msg(message):
 
-                # If it wasn't dropped, send it to the rest of the plugins.
-                self.__messageManager.send_message(message)
+                # If it wasn't dropped, send it to the UI plugins.
+                self.__ui.dispatch_msg(message)
 
                 # The method now must return True because the message was sent.
                 return True
