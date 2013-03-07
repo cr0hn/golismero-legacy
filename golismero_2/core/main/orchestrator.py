@@ -64,7 +64,7 @@ class Orchestrator (object):
         self.__config = config
 
         # Incoming message queue
-        if getattr(config, "max_processes", 1) == 1:
+        if getattr(config, "max_process", 0) <= 0:
             self.__queue = PriorityQueue(maxsize = 0)
         else:
             self.__queue_manager = Manager()
