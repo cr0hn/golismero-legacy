@@ -433,7 +433,7 @@ class PluginPoolManager (object):
             if self.__max_processes is not None and self.__max_processes > 0:
 
                 # Create the process pool
-                self.__pool = Pool(self.__max_processes,
+                self.__pool = Pool(       processes = self.__max_processes,
                                    maxtasksperchild = self.__refresh_after_tasks)
 
             # Are we running the plugins in single process mode?
