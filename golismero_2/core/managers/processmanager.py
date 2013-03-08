@@ -45,6 +45,10 @@ plugin_class_cache = dict()   # tuple(class, module) -> class object
 # This is required for Windows support, since we don't have os.fork() there.
 # See: http://docs.python.org/2/library/multiprocessing.html#windows
 def launcher(queue, max_process, refresh_after_tasks):
+    #print '-'*79       # XXX DEBUG
+    #import os
+    #print os.getpid()
+    #print '-'*79       # XXX DEBUG
 
     # Instance the pool manager.
     pool = PluginPoolManager(max_process, refresh_after_tasks)
@@ -340,8 +344,8 @@ class OOPObserver (object):
         :param result: Results to send
         :type result: Result
         """
-        self.send_msg(message_type = Message.MSG_TYPE_INFO,
-                      message_info = result)
+        return self.send_msg(message_type = Message.MSG_TYPE_INFO,
+                             message_info = result)
 
     def send_msg(self, message_type = Message.MSG_TYPE_INFO,
                        message_code = 0,
@@ -358,9 +362,9 @@ class OOPObserver (object):
         :param message_info: the payload of the message.
         :type message_info: object -- type must be resolved at run time.
         """
-        self.__context.send_msg(message_type = message_type,
-                                message_code = message_code,
-                                message_info = message_info)
+        return self.__context.send_msg(message_type = message_type,
+                                       message_code = message_code,
+                                       message_info = message_info)
 
     def send_raw_msg(self, message):
         """
@@ -369,7 +373,7 @@ class OOPObserver (object):
         :param message: Message to send
         :type message: Message
         """
-        self.__context.send_raw_msg(message)
+        return self.__context.send_raw_msg(message)
 
 
 #------------------------------------------------------------------------------
@@ -415,8 +419,9 @@ class PluginPoolManager (object):
 
         # If we have a process pool, run the plugin asynchronously
         if self.__pool is not None:
-            return self.__pool.apply_async(bootstrap,
+            self.__pool.apply_async(bootstrap,
                     (context, func, argv, argd))
+            return
 
         # Otherwise just call the plugin directly
         config = Config()
@@ -618,7 +623,7 @@ class ProcessManager (object):
 
         # If we have a dispatcher, run the plugin asynchronously
         if self.__launcher is not None:
-            self.__launcher.run_plugin(context, func, argv, argd)
+            return self.__launcher.run_plugin(context, func, argv, argd)
 
         # Otherwise just call the plugin directly
         config = Config()
