@@ -43,7 +43,6 @@ class PluginInfo (object):
     Plugin descriptor object.
     """
 
-
     @property
     def descriptor_file(self):
         "Plugin descriptor file name."

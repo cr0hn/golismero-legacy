@@ -217,3 +217,10 @@ class Message (object):
         # Sort by priority, then by timestamp, then ACKs go last.
         return (  self.priority,  self.timestamp,  int(not  self.is_ack)) < \
                ( other.priority, other.timestamp,  int(not other.is_ack))
+
+
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        s = "<Message timestamp=%r, type=%r, code=%r, audit=%r, info=%r>"
+        s %= (self.timestamp, self.message_type, self.message_code, self.message_info)
+        return s

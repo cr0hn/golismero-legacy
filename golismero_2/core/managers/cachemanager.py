@@ -189,8 +189,3 @@ class NetProtocolCacheManager(Singleton):
 
             # Add
             self.__cache[m_audit][m_key] = data
-
-
-
-
-

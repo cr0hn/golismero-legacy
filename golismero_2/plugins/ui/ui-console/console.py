@@ -33,11 +33,11 @@ from core.main.console import Console
 from core.api.colorize import *
 
 
-
 class ConsoleUIPlugin(UIPlugin):
     """
     Console UI plugin.
     """
+
 
     #----------------------------------------------------------------------
     def display_help(self):
@@ -160,5 +160,3 @@ class ConsoleUIPlugin(UIPlugin):
         #     return list(Information.INFORMATION_URL, Injection.XSS_REFLECTED)
         #
         return None
-
-

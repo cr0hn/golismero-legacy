@@ -77,8 +77,13 @@ def launcher(queue, max_process, refresh_after_tasks):
 # This is required for Windows support, since we don't have os.fork() there.
 # See: http://docs.python.org/2/library/multiprocessing.html#windows
 def bootstrap(context, func, argv, argd):
-##    import os          # XXX DEBUG
-##    print os.getpid()  # XXX DEBUG
+    #print '-'*79       # XXX DEBUG
+    #import os
+    #print os.getpid()
+    #print context.plugin_info.plugin_class
+    #print argv
+    #print argd
+    #print '-'*79       # XXX DEBUG
     verbose = 1
     try:
         try:

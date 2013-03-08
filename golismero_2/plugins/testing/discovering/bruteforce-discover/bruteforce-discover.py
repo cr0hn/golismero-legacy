@@ -70,7 +70,7 @@ class BackupSearcher(TestingPlugin):
         if info.depth < 1:
             return
 
-        return
+        return        # XXX FIXME
 
         # Check if URL is in scope
         if not is_in_scope(info.url):

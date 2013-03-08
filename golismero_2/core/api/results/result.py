@@ -101,7 +101,6 @@ class Result(object):
         pass
 
 
-
     #----------------------------------------------------------------------
     @property
     def hash_sum(self):
