@@ -73,7 +73,7 @@ class BackupSearcher(TestingPlugin):
 
         Logger.log_more_verbose("Bruteforcing URL: '%s'" % info.url)
         print "Bruteforcing URL: '%s'" % info.url
-        print "Process PID: %s " % str(getpid())
+        print "Bruteforcer - Process PID: %s " % str(getpid())
 
 
         # Parse original URL
@@ -182,7 +182,7 @@ class BackupSearcher(TestingPlugin):
         for l_name, l_iter in m_urls_to_test.iteritems():
             for l_url in l_iter:
 
-                print "Bruteforcer - testing url: '%s'." % l_url
+                #print "Bruteforcer - testing url: '%s'." % l_url
                 #Logger.log_more_verbose("Bruteforcer - testing url: '%s'." % l_url)
 
                 # Ge URL
@@ -196,6 +196,12 @@ class BackupSearcher(TestingPlugin):
                 # the same URL and must be discarded.
                 #
                 if p and p.http_response_code == 200:
+
+                    if m_http_method != "GET":
+                        print "Bruterforce: getting GET info for '%s'." % l_url
+                        p = m_net_manager.get(l_url, cache=False, method="GET")
+
+
                     l_matching_level = get_matching_level(m_error_response, p.raw)
 
                     if l_matching_level < 0.52:
@@ -260,7 +266,7 @@ class BackupSearcher(TestingPlugin):
 
         :returns: str -- HTTP method: GET/HEAD.
         """
-        if not url_parts or not network_conn:
+        if not url or not network_conn:
             return "GET"
 
         p = network_conn.get(url, method="HEAD")
@@ -342,7 +348,7 @@ class BackupSearcher(TestingPlugin):
                 yield "%s://%s%s%s.%s%s" % (
                     url_parts['scheme'],
                     url_parts['host'],
-                    url_parts['complete_path'],
+                    url_parts['complete_path_without_filename'],
                     url_parts['path_filename'],
                     l_suffix,
                     url_parts['query']
@@ -379,7 +385,7 @@ class BackupSearcher(TestingPlugin):
                 yield "%s://%s%s%s%s%s" % (
                     url_parts['scheme'],
                     url_parts['host'],
-                    url_parts['complete_path'],
+                    url_parts['complete_path_without_filename'],
                     l_preffix,
                     url_parts['path_filename'],
                     url_parts['query']
@@ -424,7 +430,7 @@ class BackupSearcher(TestingPlugin):
                 yield "%s://%s%s%s" % (
                     url_parts['scheme'],
                     url_parts['host'],
-                    url_parts['complete_path'],
+                    url_parts['complete_path_without_filename'],
                     l_fixed_path,
                 )
 
@@ -473,7 +479,7 @@ class BackupSearcher(TestingPlugin):
                 yield "%s://%s%s%s.%s%s" % (
                     url_parts['scheme'],
                     url_parts['host'],
-                    url_parts['complete_path'],
+                    url_parts['complete_path_without_filename'],
                     url_parts['path_filename_without_ext'],
                     l_suffix,
                     url_parts['query']
@@ -495,7 +501,7 @@ class BackupSearcher(TestingPlugin):
         m_base_string = "%s://%s%s" % (
                     url_parts['scheme'],
                     url_parts['host'],
-                    url_parts['complete_path']
+                    url_parts['complete_path_without_filename']
                 )
 
         # Change extension to upper case
@@ -597,6 +603,8 @@ class BackupSearcher(TestingPlugin):
         m_last = m_path[m_path[:-1].rfind("/") + 1: -1] # value_id=0
         if m_last.find("=") != -1:
             m_url_parts['complete_path'] = m_prev_folder
+
+        m_url_parts['complete_path_without_filename'] = m_prev_folder
 
 
 
