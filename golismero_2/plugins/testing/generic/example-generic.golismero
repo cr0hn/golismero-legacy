@@ -1,9 +1,0 @@
-[Core]
-Name = Example-plugin
-Module = example-generic-plugin/example
-
-[Documentation]
-Description = Plugin for testing purposes
-Author = Daniel Garcia Garcia (cr0hn)
-Version = 0.1
-Website = http://code.google.com/p/golismero/
