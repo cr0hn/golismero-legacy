@@ -37,6 +37,7 @@ from urllib3.util import parse_url
 from urllib3.exceptions import LocationParseError
 from core.api.text.text_utils import get_matching_level, generate_random_string
 
+from os import getpid
 
 class BackupSearcher(TestingPlugin):
     """
@@ -66,17 +67,13 @@ class BackupSearcher(TestingPlugin):
         if not isinstance(info, Url):
             raise TypeError("Expected Url, got %s instead" % type(info))
 
-        # Wait to spider
-        if info.depth < 1:
-            return
-
-        return
-
         # Check if URL is in scope
         if not is_in_scope(info.url):
             return
 
-        Logger.log_more_verbose("Bruteforcing in URL: '%s'" % info.url)
+        Logger.log_more_verbose("Bruteforcing URL: '%s'" % info.url)
+        print "Bruteforcing URL: '%s'" % info.url
+        print "Process PID: %s " % str(getpid())
 
         # Parse original URL
         m_parsed_url = None
@@ -86,18 +83,12 @@ class BackupSearcher(TestingPlugin):
             return
 
         # Split URL
-        m_url_parts = {}
-        m_url_parts['scheme']        = m_parsed_url.scheme if m_parsed_url.scheme else ''
-        m_url_parts['host']          = m_parsed_url.host if m_parsed_url.host else ''
-        m_url_parts['path']          = m_parsed_url.path if m_parsed_url.path else ''
-        m_url_parts['path_filename_ext']      = splitext(m_parsed_url.path)[1] if m_parsed_url.path else ''
-        m_url_parts['path_folder']   = split(m_parsed_url.path)[0] if m_parsed_url.path and m_url_parts['path_filename_ext'] else ''
-        m_url_parts['path_filename'] = split(m_parsed_url.path)[1] if m_parsed_url.path and m_url_parts['path_filename_ext'] else ''
-        m_url_parts['path_filename_without_ext'] = splitext(m_url_parts['path_filename'])[0] if m_parsed_url.path and m_url_parts['path_filename'] else ''
-        m_url_parts['query']         = m_parsed_url.query if m_parsed_url.query else ''
-        # Fix path folder
-        m_url_parts['path_folder'] = m_url_parts['path_folder'] if m_url_parts['path_folder'].endswith("/") else m_url_parts['path_folder'] + "/"
+        m_url_parts = self.__split_url(m_parsed_url)
 
+        # If file is a javascript, css or imagen, not run
+        if m_url_parts['path_filename_ext'][1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg'):
+            print "Bruteforcer- skipping URL '%s'." % info.url
+            return
 
 
         # Result info
@@ -146,7 +137,7 @@ class BackupSearcher(TestingPlugin):
         m_error_url = "%s://%s%s%s.%s%s" % (
             m_url_parts['scheme'],
             m_url_parts['host'],
-            m_url_parts['path_folder'],
+            m_url_parts['complete_path'],
             m_url_parts['path_filename'],
             generate_random_string(),
             m_url_parts['query']
@@ -156,7 +147,7 @@ class BackupSearcher(TestingPlugin):
 
 
         # Impact vectors. Available values: 0 - 3.
-        m_impact_vectors = {
+        m_severity_vectors = {
             "suffixes" : 2,
             "prefixes" : 1,
             "file_extensions": 1,
@@ -201,17 +192,25 @@ class BackupSearcher(TestingPlugin):
         # - www.site.com/ or
         # - www.site.com
         #
-        if self.is_url_folder_point(m_url_parts):
-            #
-            # 5 - Predictable files
-            m_urls_to_test["predictables"] = self.make_url_with_files_or_folder(m_wordlist, m_url_parts)
+        #
+        # 5 - Predictable files
+        m_urls_to_test["predictables"] = self.make_url_with_files_or_folder(m_wordlist, m_url_parts)
+
+        # List for check discovered results
+        m_discovered_url = []
+        m_discovered_bind_url = m_discovered_url.append
+        m_discovered_level = []
+        m_discovered_bind_level = m_discovered_level.append
 
         # Test all URLs (deleting duplicates)
         for l_name, l_iter in m_urls_to_test.iteritems():
             for l_url in l_iter:
 
+                #print "Bruteforcer - testing url: '%s'." % l_url
+                #Logger.log_more_verbose("Bruteforcer - testing url: '%s'." % l_url)
+
                 # Ge URL
-                p = m_net_manager.get(l_url)
+                p = m_net_manager.get(l_url, cache=False)
 
                 # Check if the url is acceptable by comparing
                 # the result content.
@@ -221,21 +220,51 @@ class BackupSearcher(TestingPlugin):
                 # the same URL and must be discarded.
                 #
                 if p and p.http_response_code == 200:
+                    l_matching_level = get_matching_level(m_error_response, p.raw)
 
-                    if get_matching_level(m_error_response, p.raw) < 52:
-                        # Send response, HTML and URL to kernel
+                    if l_matching_level < 0.52:
+                        # Append to partial results
+                        m_discovered_bind_url((l_url, m_severity_vectors[l_name])) # Url + level of criticality
+                        m_discovered_bind_level(l_matching_level)
+
+                        #print "Bruteforcer - Partial url discovered: '%s'" % l_url
+                        Logger.log_verbose("Bruteforcer - Discovered url: '%s'!!" % l_url)
+
+                        # Send_ response, HTML and URL to kernel.
                         self.send_info(Url(l_url))
                         self.send_info(p)
                         self.send_info(p.information)
 
-                        #
-                        # Vulnerability
-                        #
-                        l_vuln = UrlDisclosure(l_url)
-                        # Calculate
-                        l_vuln.severity = m_impact_vectors[l_name]
-                        # Send
-                        self.send_info(l_vuln)
+        #
+        # Calculate the level of correpondence for all elements. We calculate the
+        # deviation of 5%. All elements in of these deviation are part of same page of
+        # error, and then skip it.
+        #
+        # Calculate average
+        m_average = sum(m_discovered_level) / len(m_discovered_level)
+
+        m_results = []
+        m_results_append = m_results.append
+
+        for i, l_level in enumerate(m_discovered_bind_level):
+            l_value = l_level # Original value
+            l_value_deviation = l_level * 1.05 # 5% of deviation
+
+            # value < average < value * 5% => skip
+            if not (l_value < m_average and m_average < l_value_deviation):
+                Logger.log_verbose("Bruteforcer - discovered URL: %s !!!" % m_discovered_url[i][0])
+
+                #
+                # Send vulnerability
+                #
+                l_vuln = UrlDisclosure(m_discovered_url[i][0])
+                # Calculate impact
+                l_vuln.severity = m_severity_vectors[m_discovered_url[i][1]]
+                # Store
+                m_results_append(l_url)
+
+        # Report
+        return m_results
 
 
     #----------------------------------------------------------------------
@@ -267,7 +296,7 @@ class BackupSearcher(TestingPlugin):
                 yield "%s://%s%s%s.%s%s" % (
                     url_parts['scheme'],
                     url_parts['host'],
-                    url_parts['path_folder'],
+                    url_parts['complete_path'],
                     url_parts['path_filename'],
                     l_suffix,
                     url_parts['query']
@@ -304,7 +333,7 @@ class BackupSearcher(TestingPlugin):
                 yield "%s://%s%s%s%s%s" % (
                     url_parts['scheme'],
                     url_parts['host'],
-                    url_parts['path_folder'],
+                    url_parts['complete_path'],
                     l_preffix,
                     url_parts['path_filename'],
                     url_parts['query']
@@ -349,29 +378,29 @@ class BackupSearcher(TestingPlugin):
                 yield "%s://%s%s%s" % (
                     url_parts['scheme'],
                     url_parts['host'],
-                    url_parts['path_folder'],
+                    url_parts['complete_path'],
                     l_fixed_path,
                 )
 
         # For locations source code of application, like:
-        # www.site.com/app1/ -> www.site.com/app1.war
+        # www.site.com/folder/app1/ -> www.site.com/folder/app1.war
         #
-        m_last_folder_parts = split(url_parts['path_folder'])[0]
+        m_path = url_parts['complete_path']
+        m_prev_folder = m_path[:m_path[:-1].rfind("/") + 1] # www.site.com/folder/
+        m_last_folder = m_path[m_path[:-1].rfind("/") + 1: -1] # app1
         for l_wordlist in m_wordlist_suffix:
             # For errors
             if not l_wordlist:
                 Logger.log_error("Can't load wordlist for category: 'suffixes'.")
                 continue
             for l_suffix in l_wordlist:
-                yield "%s://%s%s/%s." % (
+                yield "%s://%s%s/%s%s." % (
                     url_parts['scheme'],
                     url_parts['host'],
-                    m_last_folder_parts,
+                    m_prev_folder,
+                    m_last_folder,
                     l_suffix,
                 )
-
-
-
 
     #----------------------------------------------------------------------
     def make_url_changing_extensions(self, wordlist, url_parts):
@@ -398,7 +427,7 @@ class BackupSearcher(TestingPlugin):
                 yield "%s://%s%s%s.%s%s" % (
                     url_parts['scheme'],
                     url_parts['host'],
-                    url_parts['path_folder'],
+                    url_parts['complete_path'],
                     url_parts['path_filename_without_ext'],
                     l_suffix,
                     url_parts['query']
@@ -420,7 +449,7 @@ class BackupSearcher(TestingPlugin):
         m_base_string = "%s://%s%s" % (
                     url_parts['scheme'],
                     url_parts['host'],
-                    url_parts['path_folder']
+                    url_parts['complete_path']
                 )
 
         # Change extension to upper case
@@ -484,6 +513,8 @@ class BackupSearcher(TestingPlugin):
         - www.site.com/index.php
         - www.site.com/index.php?id=1&name=bb
 
+        http://www.antpji.com/index.php/noticias/frontpage/6category_id=0
+
         then ==> Return False
 
         :param url_parts: Parsed URL to test.
@@ -493,6 +524,36 @@ class BackupSearcher(TestingPlugin):
 
         """
         return not (
-            (url_parts['path'] or url_parts['query']) and \
+            (url_parts['complete_path'] or url_parts['query']) and \
             (url_parts['path_filename_ext'] or url_parts['query'])
         )
+    #----------------------------------------------------------------------
+    def __split_url(self, parsed_url):
+        """Split URL in their parts"""
+
+        m_parsed_url = parsed_url
+
+        m_url_parts = {}
+        m_url_parts['scheme']                     = m_parsed_url.scheme if m_parsed_url.scheme else ''
+        m_url_parts['host']                       = m_parsed_url.host if m_parsed_url.host else ''
+        m_url_parts['complete_path']              = m_parsed_url.path if m_parsed_url.path else ''
+        # Fix path =
+        m_url_parts['complete_path']              = m_url_parts['complete_path'] if m_url_parts['complete_path'].endswith("/") else m_url_parts['complete_path'] + "/"
+        m_url_parts['path_filename_ext']          = splitext(m_parsed_url.path)[1] if m_parsed_url.path else ''
+        m_url_parts['path_filename']              = split(m_parsed_url.path)[1] if m_parsed_url.path and m_url_parts['path_filename_ext'] else ''
+        m_url_parts['path_filename_without_ext']  = splitext(m_url_parts['path_filename'])[0] if m_parsed_url.path and m_url_parts['path_filename'] else ''
+        m_url_parts['query']                      = m_parsed_url.query if m_parsed_url.query else ''
+
+        # Fix path for values like:
+        # http://www.site.com/folder/value_id=0
+        m_path = m_url_parts['complete_path']
+        m_prev_folder = m_path[:m_path[:-1].rfind("/") + 1] # www.site.com/folder/
+        m_last = m_path[m_path[:-1].rfind("/") + 1: -1] # value_id=0
+        if m_last.find("=") != -1:
+            m_url_parts['complete_path'] = m_prev_folder
+
+
+
+        return m_url_parts
+
+
