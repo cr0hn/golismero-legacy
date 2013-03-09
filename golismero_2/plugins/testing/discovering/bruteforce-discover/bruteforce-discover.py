@@ -75,6 +75,7 @@ class BackupSearcher(TestingPlugin):
         print "Bruteforcing URL: '%s'" % info.url
         print "Process PID: %s " % str(getpid())
 
+
         # Parse original URL
         m_parsed_url = None
         try:
@@ -83,7 +84,7 @@ class BackupSearcher(TestingPlugin):
             return
 
         # Split URL
-        m_url_parts = self.__split_url(m_parsed_url)
+        m_url_parts = self.split_url(m_parsed_url)
 
         # If file is a javascript, css or imagen, not run
         if m_url_parts['path_filename_ext'][1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg'):
@@ -97,38 +98,13 @@ class BackupSearcher(TestingPlugin):
         # Network manager reference
         m_net_manager = NetManager.get_connection()
 
+        # Method for request: GET/HEAD
+        m_http_method = self.is_http_method(info.url, m_net_manager)
+
         #
         # Load wordlists
         #
-        m_wordlist = {}
-
-        # 1 - Suffixes
-        m_wordlist['suffixes'] = []
-        m_wordlist['suffixes'].append(WordListManager().get_wordlist("fuzzdb_discovery_filenamebruteforce_extensions.backup.fuzz"))
-        m_wordlist['suffixes'].append(WordListManager().get_wordlist("golismero_predictables_file-compressed-suffixes"))
-
-
-        # 2 - Prefixes
-        m_wordlist['prefixes'] = []
-        m_wordlist['prefixes'].append(WordListManager().get_wordlist("golismero_predictables_file-prefix"))
-        m_wordlist['prefixes'].append(WordListManager().get_wordlist("fuzzdb_discovery_filenamebruteforce_copy_of.fuzz"))
-
-        # 3 - File extensions
-        m_wordlist['extensions'] = []
-        m_wordlist['extensions'].append(WordListManager().get_wordlist("golismero_predictables_java-file-extensions"))
-        m_wordlist['extensions'].append(WordListManager().get_wordlist("golismero_predictables_microsoft-file-extensions"))
-        m_wordlist['extensions'].append(WordListManager().get_wordlist("golismero_predictables_file-compressed-suffixes"))
-        m_wordlist['extensions'].append(WordListManager().get_wordlist("golismero_predictables_microsoft-file-extensions"))
-
-        # 5 - Predictable filename and folders
-        m_wordlist['predictable_files'] = []
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_cgi_microsoft.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_apache.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_iis.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_php.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_passwords.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_oracle9i.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_unixdotfiles.fuzz"))
+        m_wordlist = self.load_wordlist()
 
         #
         # Generate an error in server to get an error page, using a random string
@@ -206,11 +182,11 @@ class BackupSearcher(TestingPlugin):
         for l_name, l_iter in m_urls_to_test.iteritems():
             for l_url in l_iter:
 
-                #print "Bruteforcer - testing url: '%s'." % l_url
+                print "Bruteforcer - testing url: '%s'." % l_url
                 #Logger.log_more_verbose("Bruteforcer - testing url: '%s'." % l_url)
 
                 # Ge URL
-                p = m_net_manager.get(l_url, cache=False)
+                p = m_net_manager.get(l_url, cache=False, method=m_http_method)
 
                 # Check if the url is acceptable by comparing
                 # the result content.
@@ -252,7 +228,9 @@ class BackupSearcher(TestingPlugin):
 
             # value < average < value * 5% => skip
             if not (l_value < m_average and m_average < l_value_deviation):
+
                 Logger.log_verbose("Bruteforcer - discovered URL: %s !!!" % m_discovered_url[i][0])
+                print "Bruteforcer - discovered URL: %s !!!" % m_discovered_url[i][0]
 
                 #
                 # Send vulnerability
@@ -265,6 +243,74 @@ class BackupSearcher(TestingPlugin):
 
         # Report
         return m_results
+
+
+    #----------------------------------------------------------------------
+    def is_http_method(self, url, network_conn):
+        """
+        Get appropiate HTTP method: GET/HEAD.
+
+        if HEAD is supported return instead of GET.
+
+        :param url: URL to test methods.
+        :type url: str.
+
+        :param network_conn: network connection.
+        :type network_conn: Protocol (Web).
+
+        :returns: str -- HTTP method: GET/HEAD.
+        """
+        if not url_parts or not network_conn:
+            return "GET"
+
+        p = network_conn.get(url, method="HEAD")
+
+        if p.http_response_code == 200 and 'Content-Length' in p.http_headers:
+            return "HEAD"
+        else:
+            return "GET"
+
+
+
+
+    #----------------------------------------------------------------------
+    def load_wordlist(self):
+        """
+        Load all wordlist
+
+        :returns: dict -- A dict with wordlists
+        """
+        m_wordlist = {}
+
+        # 1 - Suffixes
+        m_wordlist['suffixes'] = []
+        m_wordlist['suffixes'].append(WordListManager().get_wordlist("fuzzdb_discovery_filenamebruteforce_extensions.backup.fuzz"))
+        m_wordlist['suffixes'].append(WordListManager().get_wordlist("golismero_predictables_file-compressed-suffixes"))
+
+
+        # 2 - Prefixes
+        m_wordlist['prefixes'] = []
+        m_wordlist['prefixes'].append(WordListManager().get_wordlist("golismero_predictables_file-prefix"))
+        m_wordlist['prefixes'].append(WordListManager().get_wordlist("fuzzdb_discovery_filenamebruteforce_copy_of.fuzz"))
+
+        # 3 - File extensions
+        m_wordlist['extensions'] = []
+        m_wordlist['extensions'].append(WordListManager().get_wordlist("golismero_predictables_java-file-extensions"))
+        m_wordlist['extensions'].append(WordListManager().get_wordlist("golismero_predictables_microsoft-file-extensions"))
+        m_wordlist['extensions'].append(WordListManager().get_wordlist("golismero_predictables_file-compressed-suffixes"))
+        m_wordlist['extensions'].append(WordListManager().get_wordlist("golismero_predictables_microsoft-file-extensions"))
+
+        # 5 - Predictable filename and folders
+        m_wordlist['predictable_files'] = []
+        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_cgi_microsoft.fuzz"))
+        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_apache.fuzz"))
+        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_iis.fuzz"))
+        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_php.fuzz"))
+        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_passwords.fuzz"))
+        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_oracle9i.fuzz"))
+        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_unixdotfiles.fuzz"))
+
+        return m_wordlist
 
 
     #----------------------------------------------------------------------
@@ -528,7 +574,7 @@ class BackupSearcher(TestingPlugin):
             (url_parts['path_filename_ext'] or url_parts['query'])
         )
     #----------------------------------------------------------------------
-    def __split_url(self, parsed_url):
+    def split_url(self, parsed_url):
         """Split URL in their parts"""
 
         m_parsed_url = parsed_url

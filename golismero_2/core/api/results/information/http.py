@@ -76,6 +76,12 @@ class HTTP_Request (Information):
 
         # Cache?
         self.__cache = cache
+        # Set cache headers
+        if not self.__cache:
+            self.__headers['Cache-Control'] = 'no-cache'
+            self.__headers['Cache-Control'] = 'no-store'
+            self.__headers['Pragma'] = 'no-cache'
+            self.__headers['Expires'] = '0'
 
         # Post data
         self.__post_data = post_data
