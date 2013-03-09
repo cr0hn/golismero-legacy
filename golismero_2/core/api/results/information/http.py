@@ -288,7 +288,6 @@ class HTTP_Request (Information):
         self.__headers.update(value)
     raw_headers = property(__get_raw_headers, __set_raw_headers)
 
-
     # Follow redirects
     def __get_follow_redirects(self):
         """
@@ -421,9 +420,8 @@ class HTTP_Response (Information):
         """"""
         return self.__raw_data
 
-    #----------------------------------------------------------------------
     @property
-    def content_lenght(self):
+    def content_length(self):
         """"""
         if self.__http_headers and 'Content-Length' in self.__http_headers:
             return self.__http_headers['Content-Length']
@@ -464,8 +462,6 @@ class HTTP_Response (Information):
     def information(self):
         """"""
         return self.__information
-
-
 
     #----------------------------------------------------------------------
     def __extract_information(self, headers, data):
