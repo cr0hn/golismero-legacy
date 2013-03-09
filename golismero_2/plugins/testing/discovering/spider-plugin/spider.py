@@ -34,6 +34,8 @@ from core.api.config import Config
 from urllib3.util import parse_url
 from urllib3.exceptions import LocationParseError
 from time import time
+from os import getpid
+
 
 
 class Spider(TestingPlugin):
@@ -60,6 +62,8 @@ class Spider(TestingPlugin):
         # Check recursivity
         if info.depth > Config().audit_config.recursivity:
             return
+
+        print "Spider - Process PID: %s " % str(getpid()) # FIXME
 
         m_return = []
 
