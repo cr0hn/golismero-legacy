@@ -281,7 +281,7 @@ class Orchestrator (object):
                             self.dispatch_msg(m)
 
                     # Wait for a message to arrive.
-                    message = self.__queue.get()
+                    message = self.f.get()
                     if not isinstance(message, Message):
                         raise TypeError("Expected Message, got %s" % type(message))
 
