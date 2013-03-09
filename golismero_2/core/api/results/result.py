@@ -76,31 +76,6 @@ class Result(object):
 
     result_type = property(__get_result_type, __set_result_type)
 
-    #----------------------------------------------------------------------
-    def printable(self, colorized = True):
-        """
-        Get printable information of a result type
-
-        :param colorized: indicates if output must be colorized or not.
-        :type colorized: bool.
-
-        :returns: str -- string with information to print.
-        """
-        pass
-
-    #----------------------------------------------------------------------
-    def printable_verbose(self, colorized = True):
-        """
-        Get printable information of a result type with more verbosity
-
-        :param colorized: indicates if output must be colorized or not.
-        :type colorized: bool.
-
-        :returns: str -- string with information to print.
-        """
-        pass
-
-
 
     #----------------------------------------------------------------------
     @property
