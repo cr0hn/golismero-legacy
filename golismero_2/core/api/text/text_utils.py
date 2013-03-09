@@ -46,7 +46,7 @@ def get_matching_level(text1, text2):
     :param text2: Text to comarpe text1.
     :type text2: str
 
-    :returns: int - An integer between 0-100.
+    :returns: float - An integer between 0-1
     """
     if not text1 and not text2:
         return 100 # If two text are empty => are equals
@@ -63,7 +63,7 @@ def get_matching_level(text1, text2):
     # - difflib: More efficient with texts very different.
     if m_difference > CUTOFF_VALUE:
         # difflib method
-        m_return_value = SequenceMatcher(None, text1, text2).ratio() * 100.0
+        m_return_value = SequenceMatcher(None, text1, text2).ratio()
 
     else:
         # Google method
@@ -72,9 +72,9 @@ def get_matching_level(text1, text2):
         l_google_value = float(l_differ.diff_levenshtein(l_differ.diff_main(text1, text2)))
         l_len_text2 = len(text2)
         # Calculate
-        m_return_value = abs( (l_len_text2 - l_google_value) / l_len_text2 ) * 100
+        m_return_value = abs( (l_len_text2 - l_google_value) / l_len_text2 )
 
-    return int(m_return_value)
+    return m_return_value
 
 
 #----------------------------------------------------------------------
