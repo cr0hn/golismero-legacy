@@ -410,11 +410,19 @@ class HTTP_Response (Information):
         self.__char_count = None
 
     #----------------------------------------------------------------------
-
     @property
     def raw(self):
         """"""
         return self.__raw_data
+
+    #----------------------------------------------------------------------
+    @property
+    def content_lenght(self):
+        """"""
+        if self.__http_headers and 'Content-Length' in self.__http_headers:
+            return self.__http_headers['Content-Length']
+        else:
+            return 0
 
     @property
     def cookie(self):
