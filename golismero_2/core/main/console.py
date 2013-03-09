@@ -28,6 +28,7 @@ __all__ = ["Console"]
 
 from sys import stdout, stderr
 
+
 class Console (object):
     """
     Console I/O wrapper.

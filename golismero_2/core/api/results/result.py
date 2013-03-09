@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from ...main.commonstructures import get_unique_id
 
+
 #------------------------------------------------------------------------------
 class Result(object):
     """
@@ -75,6 +76,7 @@ class Result(object):
         self.__result_type = result_type
 
     result_type = property(__get_result_type, __set_result_type)
+
 
     #----------------------------------------------------------------------
     @property

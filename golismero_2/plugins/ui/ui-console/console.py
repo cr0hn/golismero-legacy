@@ -198,7 +198,6 @@ def process_url_disclosure(url, colorized = True):
         m_suffix
     )
 
-
     return "%s\n| Method: %s\n| Referer <- %s\n|-%s" % (
         m_url,
         url.method,
