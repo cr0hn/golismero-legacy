@@ -75,6 +75,16 @@ class ConsoleUIPlugin(UIPlugin):
         # Display in console
         #
 
+        # Processors functions
+        funcs = {
+            Information.INFORMATION_URL : process_url,
+            'url_disclouse': process_url_disclosure
+        }
+
+        # Colorize output?
+        m_colorized = Config().audit_config.colorize
+
+
         # Get verbosity level.
         m_verbosity_level = Config().audit_config.verbose
 
@@ -85,7 +95,7 @@ class ConsoleUIPlugin(UIPlugin):
 
             # Messages with vulnerability types
             if  info.result_type == Result.TYPE_VULNERABILITY:
-                Console.display("+ %s" % info.printable())
+                Console.display("+ %s" % funcs[info.result_type](info, m_colorized))
 
         #
         # More verbosity: Normal + Urls + important actions of plugins
@@ -95,7 +105,7 @@ class ConsoleUIPlugin(UIPlugin):
             # Messages with information types
             if  info.result_type == Result.TYPE_INFORMATION and info.information_type == Information.INFORMATION_URL:
                 # Call the function
-                Console.display("+ %s" % info.printable_verbose())
+                Console.display("+ %s" % funcs[info.information_type](info, m_colorized))
 
 
         #
@@ -160,5 +170,42 @@ class ConsoleUIPlugin(UIPlugin):
         #     return list(Information.INFORMATION_URL, Injection.XSS_REFLECTED)
         #
         return None
+
+
+
+
+#----------------------------------------------------------------------
+def process_url(url, colorized = True):
+    """Display URL info"""
+    return "%s\n| Method: %s\n| Referer <- %s\n|-%s" % (
+        colorize(url.url, 'info', color= colorized),
+        url.method,
+        url.referer,
+        "-" * len(url.url)
+    )
+
+
+#----------------------------------------------------------------------
+def process_url_disclosure(url, colorized = True):
+    """Display URL discover"""
+    # Split parts
+    m_pos_discovered = url.url.find(url.discovered)
+    m_prefix = url.url[:m_pos_discovered]
+    m_content = url.url[m_pos_discovered: m_pos_discovered + len(url.discovered)]
+    m_suffix = url.url[m_pos_discovered + len(url.discovered):] if (m_pos_discovered + len(url.discovered)) < len(url.url) else ""
+
+    m_url = "%s%s%s" % (
+        m_prefix,
+        colorize(m_content, url.risk, color= colorized),
+        m_suffix
+    )
+
+
+    return "%s\n| Method: %s\n| Referer <- %s\n|-%s" % (
+        m_url,
+        url.method,
+        url.referer,
+        "-" * len(url.url)
+    )
 
 
