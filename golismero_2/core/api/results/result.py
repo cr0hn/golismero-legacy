@@ -76,7 +76,6 @@ class Result(object):
 
     result_type = property(__get_result_type, __set_result_type)
 
-
     #----------------------------------------------------------------------
     @property
     def hash_sum(self):

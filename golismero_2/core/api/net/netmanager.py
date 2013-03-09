@@ -301,6 +301,3 @@ class Web (Protocol):
         """
         m_url = parse_url(url)
         return "%s%s%s" % (m_url.scheme, m_url.host, m_url.port)
-
-
-

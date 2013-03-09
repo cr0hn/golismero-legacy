@@ -33,11 +33,11 @@ from core.main.console import Console
 from core.api.colorize import *
 
 
-
 class ConsoleUIPlugin(UIPlugin):
     """
     Console UI plugin.
     """
+
 
     #----------------------------------------------------------------------
     def display_help(self):
@@ -172,8 +172,6 @@ class ConsoleUIPlugin(UIPlugin):
         return None
 
 
-
-
 #----------------------------------------------------------------------
 def process_url(url, colorized = True):
     """Display URL info"""
@@ -207,5 +205,3 @@ def process_url_disclosure(url, colorized = True):
         url.referer,
         "-" * len(url.url)
     )
-
-

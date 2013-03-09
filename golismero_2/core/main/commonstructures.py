@@ -301,4 +301,3 @@ class GlobalParams (object):
         if (not self.output_file and self.output_formats) \
            or (self.output_file and not self.output_formats):
             raise ValueError("When you specify '-o' also need to set format option'-of'.")
-

@@ -1,11 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from thirdparty_libs.colorizer import *
-from core.api.config import Config
-
-__all__ = ["colorize"]
-
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -29,6 +24,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from thirdparty_libs.colorizer import *
+from core.api.config import Config
+
+__all__ = ["colorize"]
 
 
 #----------------------------------------------------------------------
@@ -74,4 +73,3 @@ def colorize(text, level, color = True):
 		return colored(text, m_colors[str(level)])
 	else:
 		return text
-

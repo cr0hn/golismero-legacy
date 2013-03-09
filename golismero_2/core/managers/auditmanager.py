@@ -162,7 +162,7 @@ class AuditManager (object):
         if message.message_type == Message.MSG_TYPE_INFO:
             if not message.audit_name:
                 raise ValueError("Info message with no target audit!")
-            return self.get_audit(message.audit_name).send_msg(message)
+            return self.get_audit(message.audit_name).dispatch_msg(message)
 
         # Process control messages
         elif message.message_type == Message.MSG_TYPE_CONTROL:
@@ -319,7 +319,7 @@ class Audit (object):
 
 
     #----------------------------------------------------------------------
-    def send_msg(self, message):
+    def dispatch_msg(self, message):
         """
         Send messages to the plugins of this audit.
 

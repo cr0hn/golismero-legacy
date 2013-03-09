@@ -24,9 +24,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
-
-
 from ..logger import *
 from ...main.commonstructures import Singleton
 
@@ -34,10 +31,10 @@ from os import getcwd, walk
 from os.path import join, split, sep
 
 
-
 #------------------------------------------------------------------------------
 class WordListManager(Singleton):
     """This class manager wordlist"""
+
 
     #----------------------------------------------------------------------
     def __init__(self):
@@ -76,6 +73,7 @@ class WordListManager(Singleton):
         """"""
         return self.__store.keys()
 
+
     #----------------------------------------------------------------------
     def get_wordlist(self, wordlist_name):
         """"""
@@ -101,10 +99,3 @@ def WordList(wordlist_path):
 
     except IOError,e:
         Logger.log_error("Error opening wordlist %s: " % e.message)
-
-
-
-
-
-
-

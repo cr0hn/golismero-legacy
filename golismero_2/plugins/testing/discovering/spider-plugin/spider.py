@@ -38,7 +38,7 @@ from time import time
 
 class Spider(TestingPlugin):
     """
-    This plugin is a web spider
+    This plugin is a web spider.
     """
 
     #----------------------------------------------------------------------
@@ -49,14 +49,11 @@ class Spider(TestingPlugin):
 
     #----------------------------------------------------------------------
     def display_help(self):
-        """Get the help message for this plugin."""
         # TODO: this could default to the description found in the metadata.
         return self.__doc__
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-        """Receive URLs."""
-
         if not isinstance(info, Url):
             raise TypeError("Expected Url, got %s instead" % type(info))
 
@@ -165,12 +162,4 @@ class Spider(TestingPlugin):
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
-        """
-        Return a list of constants describing
-        which messages are accepted by this plugin.
-
-        Messages types can be found at the Message class.
-
-        :returns: list -- list with constants
-        """
         return [Information.INFORMATION_URL]
