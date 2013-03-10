@@ -228,7 +228,7 @@ class BackupSearcher(TestingPlugin):
         m_results = []
         m_results_append = m_results.append
 
-        for i, l_level in enumerate(m_discovered_bind_level):
+        for i, l_level in enumerate(m_discovered_level):
             l_value = l_level # Original value
             l_value_deviation = l_level * 1.05 # 5% of deviation
 
