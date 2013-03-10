@@ -35,6 +35,9 @@ try:
 except ImportError:
     import pickle
 
+# Lazy import
+json_decode = None
+
 from os import path
 
 import hashlib
@@ -221,12 +224,96 @@ class GlobalParams (object):
             try:
                 compile(self.subdomain_regex)
             except error, e:
-                raise ValueError("Regular expression no valid: %s." % e.message)
+                raise ValueError("Regular expression not valid: %s." % e.message)
 
         # Check for outputs restrictions
         if (not self.output_file and self.output_formats) \
            or (self.output_file and not self.output_formats):
             raise ValueError("When you specify '-o' also need to set format option '-of'.")
+
+
+    #----------------------------------------------------------------------
+    def from_dictionary(self, args):
+        """
+        Get the settings from a Python dictionary.
+
+        :param args: Settings.
+        :type args: dict
+        """
+
+        #
+        # Main options
+        #
+
+        # Get the run mode
+        if "run_mode" in args:
+            self.run_mode = getattr(self.RUN_MODE,
+                                    args["run_mode"].lower())
+
+        # Get the user interface mode
+        if "user_interface" in args:
+            self.user_interface = getattr(self.USER_INTERFACE,
+                                          args["user_interface"].lower())
+
+        # Get the list of targets
+        self.targets = args.get("targets", self.targets)
+
+        # Set verbosity level
+        self.verbose = args.get("verbose", self.verbose)
+
+        # Colorize console?
+        self.colorize = args.get("colorize", self.colorize)
+
+        #
+        # Report options
+        #
+        self.output_file    = args.get("output_file", self.output_file)
+        self.output_formats = args.get("output_formats", self.output_formats)
+
+        #
+        # Plugins options
+        #
+
+        # Get the list of enabled plugins
+        self.plugins = args.get("plugins", self.plugins)
+
+        # Get the plugins folder
+        self.plugins_folder = args.get("plugins_folder", self.plugins_folder)
+
+        #
+        # Audit options
+        #
+
+        # Get the name of the audit
+        self.audit_name = args.get("audit_name", self.audit_name)
+
+        # Audit database
+        self.audit_db = args.get("audit_db", self.audit_db)
+
+        # Maximum number of processes to execute plugins
+        self.max_process = args.get("max_process", self.max_process)
+
+        #
+        # Network options
+        #
+
+        # Maximum number of connection, by host
+        self.max_connections = args.get("max_connections", self.max_connections)
+
+        # Include subdomains?
+        self.include_subdomains = args.get("include_subdomains", self.include_subdomains)
+
+        # Subdomains as regex expresion
+        self.subdomain_regex = args.get("subdomain_regex", self.subdomain_regex)
+
+        # Recursivity level for spider
+        self.recursivity = args.get("recursivity", self.recursivity)
+
+        # Follow redirects
+        self.follow_redirects = args.get("follow_redirects", self.follow_redirects)
+
+        # Follow only first redirect
+        self.follow_first_redirect = args.get("follow_first_redirect", self.follow_first_redirect)
 
 
     #----------------------------------------------------------------------
@@ -238,77 +325,38 @@ class GlobalParams (object):
         :type args: object
         """
 
-        #
-        # Main options
-        #
+        # Converts the argparse result into a dictionary and parses it.
+        self.from_dictionary(dict( (k, getattr(args, k)) for k in dir(args) ))
 
-        # Get the run mode
-        self.run_mode = getattr(self.RUN_MODE,
-                                args.run_mode.lower())
 
-        # Get the user interface mode
-        self.user_interface = getattr(self.USER_INTERFACE,
-                                      args.user_interface.lower())
+    #----------------------------------------------------------------------
+    def from_json(self, json_raw_data):
+        """
+        Get the settings from a JSON encoded dictionary.
 
-        # Get the list of targets
-        self.targets = args.targets
+        :param json_raw_data: JSON raw data.
+        :type json_raw_data: str
+        """
 
-        # Set verbosity level
-        self.verbose = args.verbose
+        # Lazy import of the JSON decoder function.
+        global json_decode
+        if json_decode is None:
+            try:
+                # The fastest JSON parser available for Python.
+                import cjson.decode as json_decode
+            except ImportError:
+                try:
+                    # Faster than the built-in module, usually found.
+                    import simplejson.loads as json_decode
+                except ImportError:
+                    # Built-in module since Python 2.6, very very slow!
+                    import json.loads as json_decode
 
-        # Colorize console?
-        self.colorize = args.colorize
-
-        #
-        # Report options
-        #
-        self.output_file    = args.output_file
-        self.output_formats = args.output_formats
-
-        #
-        # Plugins options
-        #
-
-        # Get the list of enabled plugins
-        self.plugins = self.plugins
-
-        # Get the plugins folder
-        self.plugins_folder = self.plugins_folder
-
-        #
-        # Audit options
-        #
-
-        # Get the name of the audit
-        self.audit_name = args.audit_name
-
-        # Audit database
-        self.audit_db = args.audit_db
-
-        # Maximum number of processes to execute plugins
-        self.max_process = args.max_process
-
-        #
-        # Network options
-        #
-
-        # Maximum number of connection, by host
-        self.max_connections = args.max_connections
-
-        # Include subdomains?
-        self.include_subdomains = args.include_subdomains
-
-        # Subdomains as regex expresion
-        self.subdomain_regex = args.subdomain_regex
-
-        # Recursivity level for spider
-        self.recursivity = args.recursivity
-
-        # Follow redirects
-        self.follow_redirects = args.follow_redirects
-
-        # Follow only first redirect
-        self.follow_first_redirect = args.follow_first_redirect
+        # Converts the JSON into a dictionary and parses it.
+        args = json_decode(json_raw_data)
+        if not isinstance(args, dict):
+            raise TypeError("Invalid JSON data")
+        self.from_dictionary(args)
 
 
     #----------------------------------------------------------------------
@@ -468,13 +516,13 @@ class GlobalParams (object):
                                    " of config file %s") % (key, number, config)
                             raise ConfigFileParseError(msg)
 
-                # On error raise an exception
-                except ConfigFileParseError:
-                    raise
-                except Exception:
-                    msg = "invalid value for %r at line %d of config file %s"
-                    msg = msg % (key, number, filename)
-                    raise ConfigFileParseError(msg)
+                    # On error raise an exception
+                    except ConfigFileParseError:
+                        raise
+                    except Exception:
+                        msg = "invalid value for %r at line %d of config file %s"
+                        msg = msg % (key, number, filename)
+                        raise ConfigFileParseError(msg)
 
     def _parse_list(self, value):
         tokens = set()
