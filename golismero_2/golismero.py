@@ -185,12 +185,13 @@ def main():
 
     # Parse command line options
     try:
-        args = sys.argv
+        args = sys.argv[1:]
         envcfg = getenv("GOLISMERO_SETTINGS")
         if envcfg:
             args = parser.convert_arg_line_to_args(envcfg) + args
+        P = parser.parse_args(args)
         cmdParams = GlobalParams()
-        cmdParams.from_cmdline( parser.parse_args(args) )
+        cmdParams.from_cmdline( P )
         cmdParams.check_params()
     except Exception, e:
         ##raise

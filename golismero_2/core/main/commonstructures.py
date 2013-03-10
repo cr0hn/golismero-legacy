@@ -198,6 +198,10 @@ class GlobalParams (object):
             raise ValueError("Number of processes cannot be a negative number, got %i." % params.max_process)
 
         # Check plugins selected
+        if not self.targets:
+            raise ValueError("No targets selected for execution.")
+
+        # Check plugins selected
         if self.plugins is not None and not self.plugins:
             raise ValueError("No plugins selected for execution.")
 
