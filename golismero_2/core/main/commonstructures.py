@@ -29,6 +29,8 @@ try:
 except ImportError:
     import pickle
 
+from os import path
+
 import hashlib
 
 
@@ -130,7 +132,7 @@ class GlobalParams (object):
         # Report options
         #
         self.output_file = None
-        self.output_formats = ()
+        self.output_formats = []
 
 
         #
@@ -180,95 +182,6 @@ class GlobalParams (object):
 
 
     #----------------------------------------------------------------------
-    @classmethod
-    def from_cmdline(cls, args):
-        """Get the settings from the command line arguments."""
-
-        # Instance a settings object.
-        cmdParams = cls()
-
-        #
-        # Main options
-        #
-
-        # Get the run mode
-        cmdParams.run_mode = getattr(GlobalParams.RUN_MODE,
-                                     args.run_mode.lower())
-
-        # Get the user interface mode
-        cmdParams.user_interface = getattr(GlobalParams.USER_INTERFACE,
-                                           args.user_interface.lower())
-
-        # Get the list of targets
-        cmdParams.targets = args.targets
-
-        # Set verbosity level
-        cmdParams.verbose = args.verbose
-
-        # Colorize console?
-        cmdParams.colorize = args.colorize
-
-        #
-        # Report options
-        #
-        cmdParams.output_file = args.output_file
-        cmdParams.output_formats = args.output_formats
-
-        #
-        # Plugins options
-        #
-
-        # Get the list of enabled plugins
-        cmdParams.plugins = args.plugins
-
-        # Get the plugins folder
-        cmdParams.plugins_folder = args.plugins_folder
-
-        #
-        # Audit options
-        #
-
-        # Get the name of the audit
-        cmdParams.audit_name = args.audit_name
-
-        # Audit database
-        cmdParams.audit_db = args.audit_db
-
-        # Maximum number of processes to execute plugins
-        cmdParams.max_process = args.max_process
-
-        #
-        # Network options
-        #
-
-        # Maximum number of connection, by host
-        cmdParams.max_connections = args.max_connections
-
-        # Include subdomains?
-        cmdParams.include_subdomains = args.include_subdomains
-
-        # Subdomains as regex expresion
-        cmdParams.subdomain_regex = args.subdomain_regex
-
-        # Recursivity level for spider
-        cmdParams.recursivity = args.recursivity
-
-        # Follow redirects
-        cmdParams.follow_redirects = args.follow_redirects
-
-        # Follow only first redirect
-        cmdParams.follow_first_redirect = args.follow_first_redirect
-
-        #
-        # Check params
-        #
-        cmdParams.check_params()
-
-
-        return cmdParams
-
-
-    #----------------------------------------------------------------------
     def check_params(self):
         """
         Check if parameters are valid. Raises an exception otherwise.
@@ -278,11 +191,11 @@ class GlobalParams (object):
 
         # Check max connections
         if self.max_connections < 1:
-            raise ValueError("Number of connections must be greater than 0, got %s." % params.max_connections)
+            raise ValueError("Number of connections must be greater than 0, got %i." % params.max_connections)
 
         # Check max process
         if self.max_process < 0:
-            raise ValueError("Number of process cannot be a negative number, got %s." % params.max_process)
+            raise ValueError("Number of processes cannot be a negative number, got %i." % params.max_process)
 
         # Check plugins selected
         if self.plugins is not None and not self.plugins:
@@ -295,9 +208,91 @@ class GlobalParams (object):
             try:
                 compile(self.subdomain_regex)
             except error, e:
-                raise ValueError("regex expresion no valid: %s." % e.message)
+                raise ValueError("Regular expression no valid: %s." % e.message)
 
         # Check for outputs restrictions
         if (not self.output_file and self.output_formats) \
            or (self.output_file and not self.output_formats):
-            raise ValueError("When you specify '-o' also need to set format option'-of'.")
+            raise ValueError("When you specify '-o' also need to set format option '-of'.")
+
+
+    #----------------------------------------------------------------------
+    def from_cmdline(self, args):
+        """
+        Get the settings from the command line arguments.
+
+        :param args: Command line arguments parsed by argparse.
+        :type args: object
+        """
+
+        #
+        # Main options
+        #
+
+        # Get the run mode
+        self.run_mode = getattr(self.RUN_MODE,
+                                args.run_mode.lower())
+
+        # Get the user interface mode
+        self.user_interface = getattr(self.USER_INTERFACE,
+                                      args.user_interface.lower())
+
+        # Get the list of targets
+        self.targets = args.targets
+
+        # Set verbosity level
+        self.verbose = args.verbose
+
+        # Colorize console?
+        self.colorize = args.colorize
+
+        #
+        # Report options
+        #
+        self.output_file    = args.output_file
+        self.output_formats = args.output_formats
+
+        #
+        # Plugins options
+        #
+
+        # Get the list of enabled plugins
+        self.plugins = self.plugins
+
+        # Get the plugins folder
+        self.plugins_folder = self.plugins_folder
+
+        #
+        # Audit options
+        #
+
+        # Get the name of the audit
+        self.audit_name = args.audit_name
+
+        # Audit database
+        self.audit_db = args.audit_db
+
+        # Maximum number of processes to execute plugins
+        self.max_process = args.max_process
+
+        #
+        # Network options
+        #
+
+        # Maximum number of connection, by host
+        self.max_connections = args.max_connections
+
+        # Include subdomains?
+        self.include_subdomains = args.include_subdomains
+
+        # Subdomains as regex expresion
+        self.subdomain_regex = args.subdomain_regex
+
+        # Recursivity level for spider
+        self.recursivity = args.recursivity
+
+        # Follow redirects
+        self.follow_redirects = args.follow_redirects
+
+        # Follow only first redirect
+        self.follow_first_redirect = args.follow_first_redirect

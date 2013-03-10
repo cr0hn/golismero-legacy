@@ -91,6 +91,8 @@ import argparse
 import datetime
 import textwrap
 
+from os import getenv
+
 from core.main.console import Console
 from core.main.commonstructures import GlobalParams
 from core.main.orchestrator import Orchestrator
@@ -147,8 +149,8 @@ def main():
     show_banner()
 
     # Configure command line parser
-    parser = argparse.ArgumentParser()
-    parser.add_argument('targets', metavar='TARGET', help='one or more target web sites', nargs='+')
+    parser = argparse.ArgumentParser(fromfile_prefix_chars="@")
+    parser.add_argument('targets', metavar='TARGET', nargs='+', help='one or more target web sites')
 
     gr_main = parser.add_argument_group("main options")
     gr_main.add_argument('-M', "--run-mode", action='store', dest='run_mode', help='run mode [default: Standalone]', default="Standalone", choices=[x.title() for x in GlobalParams.RUN_MODE._values.keys()])
@@ -162,7 +164,6 @@ def main():
     gr_report.add_argument("-o", action="store", dest="output_file", help="output file, without extension.")
     gr_report.add_argument("-of", action="append", dest="output_formats", help="one or more output formats.", choices=('text', 'grepable', 'html'))
 
-
     gr_net = parser.add_argument_group("network")
     gr_net.add_argument("--max-connections", action="store", dest="max_connections", help="maximum number of concurrent connections per host [default: 4]", default=50)
     gr_net.add_argument("--no-subdomains", action="store_true", dest="include_subdomains", help="do not include subdomains in the target scope", default=True)
@@ -170,7 +171,6 @@ def main():
     gr_net.add_argument("-r", "--recursivity", action="store", dest="recursivity", help="recursivity level of spider.", default=0)
     gr_net.add_argument("-f","--follow-redirects", action="store_true", dest="follow_redirects", help="follow redirects", default=False)
     gr_net.add_argument("-nff","--no-follow-first", action="store_false", dest="follow_first_redirect", help="follow only first redirect", default=True)
-
 
     gr_audit = parser.add_argument_group("audit")
     gr_audit.add_argument('--audit-name', action='store', dest='audit_name', help='customize the audit name')
@@ -185,8 +185,13 @@ def main():
 
     # Parse command line options
     try:
-        P = parser.parse_args()
-        cmdParams = GlobalParams.from_cmdline( P )
+        args = sys.argv
+        envcfg = getenv("GOLISMERO_SETTINGS")
+        if envcfg:
+            args = parser.convert_arg_line_to_args(envcfg) + args
+        cmdParams = GlobalParams()
+        cmdParams.from_cmdline( parser.parse_args(args) )
+        cmdParams.check_params()
     except Exception, e:
         ##raise
         parser.error(str(e))
