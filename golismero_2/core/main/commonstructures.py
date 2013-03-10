@@ -24,6 +24,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = [
+    "get_unique_id", "enum",
+    "Singleton",
+    "ConfigFileParseError", "GlobalParams"
+]
+
 try:
     import cPickle as pickle
 except ImportError:
@@ -93,6 +99,9 @@ class Singleton (object):
 # AUDIT CONFIGURATION
 #
 #--------------------------------------------------------------------------
+class ConfigFileParseError (RuntimeError):
+    pass
+
 class GlobalParams (object):
     """
     Global parameters for the program.
@@ -300,3 +309,184 @@ class GlobalParams (object):
 
         # Follow only first redirect
         self.follow_first_redirect = args.follow_first_redirect
+
+
+    #----------------------------------------------------------------------
+    def from_file(self, filename, file_history = None):
+        """
+        Get the settings from a configuration file.
+
+        :param filename: Configuration file name.
+        :type filename: str
+        """
+
+        # Get the absolute pathname
+        filename = path.abspath(filename)
+
+        # Keep track of included files history
+        if file_history is None:
+            file_history = [filename]
+
+        # Keep track of duplicated options
+        opt_history = set()
+
+        # Regular expression to split the command and the arguments
+        regexp = re.compile(r'(\S+)\s+(.*)')
+
+        # Open the config file
+        with open(filename, 'rU') as fd:
+            number = 0
+            while 1:
+
+                # Read a line
+                line = fd.readline()
+                if not line: break
+                number += 1
+
+                # Strip the extra whitespace
+                line = line.strip()
+
+                # If it's a comment line or a blank line, discard it
+                if not line or line.startswith('#'):
+                    continue
+
+                # Split the option and its arguments
+                match = regexp.match(line)
+                if not match:
+                    msg = "cannot parse line %d of config file %s"
+                    msg = msg % (number, filename)
+                    raise ConfigFileParseError(msg)
+                key, value = match.groups()
+
+                # Populate the list of targets
+                if key == "target":
+                    if value and value not in self.targets:
+                        self.targets.append(value)
+
+                # Include other config files
+                elif key == "include":
+                    if value in file_history:
+                        found_loop = file_history[ file_history.index(filename) : ]
+                        found_loop.append(value)
+                        msg = "error parsing line %d of config file %s\ncircular includes in config files:\n\t%s\n"
+                        msg %= (number, filename, ",\n\t".join(found_loop))
+                        raise ConfigFileParseError(msg)
+
+                else:
+
+                    # Warn about duplicated options
+                    if key in opt_history:
+                        print "Warning: duplicated option %s in line %d" \
+                              " of config file %s" % (key, number, filename)
+                        print
+                    else:
+                        opt_history.add(key)
+
+                    try:
+
+                        # Get the run mode
+                        if key == "run_mode":
+                            self.run_mode = getattr(self.RUN_MODE,
+                                                    value.lower())
+
+                        # Get verbosity level
+                        elif key == "verbose":
+                            self.verbose = int(value)
+
+                        # Colorize console?
+                        elif key == "colorize":
+                            self.colorize = self._parse_boolean(value)
+
+                        # Report base filename
+                        elif key == "output_file":
+                            self.output_file = value
+
+                        # Report formats
+                        elif key == "output_formats":
+                            output_formats = self._parse_list(value)
+                            self.output_formats = []
+                            for token in output_formats:
+                                token = token.lower()
+                                if token in self.output_formats:
+                                    continue
+                                if token not in ('text', 'grepable', 'html'):
+                                    msg = "invalid output_formats at line %d of config file %s"
+                                    msg = msg % (number, filename)
+                                    raise ConfigFileParseError(msg)
+                                self.output_formats.append(token)
+
+                        # Get the list of enabled plugins
+                        elif key == "plugins":
+                            if value.lower() == "all":
+                                self.plugins = None
+                            else:
+                                self.plugins = self._parse_list(value)
+
+                        # Get the plugins folder
+                        elif key == "plugins_folder":
+                            self.plugins_folder = value
+
+                        # Get the name of the audit
+                        elif key == "audit_name":
+                            self.audit_name = value
+
+                        # Audit database
+                        elif key == "audit_db":
+                            self.audit_db = value
+
+                        # Maximum number of processes to execute plugins
+                        elif key == "max_process":
+                            self.max_process = int(value)
+
+                        # Maximum number of connection, by host
+                        elif key == "max_connections":
+                            self.max_connections = int(value)
+
+                        # Include subdomains?
+                        elif key == "include_subdomains":
+                            self.include_subdomains = self._parse_boolean(value)
+
+                        # Subdomains as regex expresion
+                        elif key == "subdomain_regex":
+                            self.subdomain_regex = value
+
+                        # Recursivity level for spider
+                        elif key == "recursivity":
+                            self.recursivity = int(value)
+
+                        # Follow redirects
+                        elif key == "follow_redirects":
+                            self.follow_redirects = self._parse_boolean(value)
+
+                        # Follow only first redirect
+                        elif key == "follow_first_redirect":
+                            self.follow_first_redirect = self._parse_boolean(value)
+
+                        # Unknown option
+                        else:
+                            msg = ("unknown option %r in line %d"
+                                   " of config file %s") % (key, number, config)
+                            raise ConfigFileParseError(msg)
+
+                # On error raise an exception
+                except ConfigFileParseError:
+                    raise
+                except Exception:
+                    msg = "invalid value for %r at line %d of config file %s"
+                    msg = msg % (key, number, filename)
+                    raise ConfigFileParseError(msg)
+
+    def _parse_list(self, value):
+        tokens = set()
+        for token in value.lower().split(','):
+            token = token.strip()
+            tokens.add(token)
+        return tokens
+
+    def _parse_boolean(self, value):
+        value = value.strip().lower()
+        if value == 'true' or value == 'yes' or value == 'y':
+            return True
+        if value == 'false' or value == 'no' or value == 'n':
+            return False
+        return bool(int(value))
