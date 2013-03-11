@@ -71,11 +71,6 @@ class BackupSearcher(TestingPlugin):
         if not is_in_scope(info.url):
             return
 
-        Logger.log_more_verbose("Bruteforcing URL: '%s'" % info.url)
-        print "Bruteforcing URL: '%s'" % info.url
-        print "Bruteforcer - Process PID: %s " % str(getpid())
-
-
         # Parse original URL
         m_parsed_url = None
         try:
@@ -88,8 +83,11 @@ class BackupSearcher(TestingPlugin):
 
         # If file is a javascript, css or imagen, not run
         if m_url_parts['path_filename_ext'][1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg'):
-            print "Bruteforcer- skipping URL '%s'." % info.url
+            Logger.log_more_verbose("Bruteforcer - skipping URL '%s'." % info.url)
             return
+
+        Logger.log_verbose("Bruteforcer - processing URL: '%s'" % info.url)
+
 
 
         # Result info
@@ -99,7 +97,7 @@ class BackupSearcher(TestingPlugin):
         m_net_manager = NetManager.get_connection()
 
         # Method for request: GET/HEAD
-        m_http_method = self.is_http_method(info.url, m_net_manager)
+        m_http_method = self.get_http_method(info.url, m_net_manager)
 
         #
         # Load wordlists
@@ -124,11 +122,11 @@ class BackupSearcher(TestingPlugin):
 
         # Impact vectors. Available values: 0 - 3.
         m_severity_vectors = {
-            "suffixes" : 2,
-            "prefixes" : 1,
-            "file_extensions": 1,
-            "permutations" : 1,
-            "predictables": 3
+            "suffixes" : 4,
+            "prefixes" : 3,
+            "file_extensions": 3,
+            "permutations" : 3,
+            "predictables": 4
         }
 
         #
@@ -182,8 +180,7 @@ class BackupSearcher(TestingPlugin):
         for l_name, l_iter in m_urls_to_test.iteritems():
             for l_url in l_iter:
 
-                #print "Bruteforcer - testing url: '%s'." % l_url
-                #Logger.log_more_verbose("Bruteforcer - testing url: '%s'." % l_url)
+                Logger.log_more_verbose("Bruteforcer - testing url: '%s'." % l_url)
 
                 # Ge URL
                 p = m_net_manager.get(l_url, cache=False, method=m_http_method)
@@ -198,9 +195,7 @@ class BackupSearcher(TestingPlugin):
                 if p and p.http_response_code == 200:
 
                     if m_http_method != "GET":
-                        print "Bruterforce: getting GET info for '%s'." % l_url
                         p = m_net_manager.get(l_url, cache=False, method="GET")
-
 
                     l_matching_level = get_matching_level(m_error_response, p.raw)
 
@@ -209,13 +204,13 @@ class BackupSearcher(TestingPlugin):
                         m_discovered_bind_url((l_url, m_severity_vectors[l_name])) # Url + level of criticality
                         m_discovered_bind_level(l_matching_level)
 
-                        #print "Bruteforcer - Partial url discovered: '%s'" % l_url
-                        Logger.log_verbose("Bruteforcer - Discovered url: '%s'!!" % l_url)
+                        Logger.log_more_verbose("Bruteforcer - Discovered partial url: '%s'!!" % l_url)
 
                         # Send_ response, HTML and URL to kernel.
-                        self.send_info(Url(l_url))
-                        self.send_info(p)
-                        self.send_info(p.information)
+                        #self.send_info(Url(l_url))
+                        #self.send_info(p)
+                        #if not p.information:
+                        #    self.send_info(p.information)
 
         #
         # Calculate the level of correpondence for all elements. We calculate the
@@ -223,36 +218,41 @@ class BackupSearcher(TestingPlugin):
         # error, and then skip it.
         #
         # Calculate average
-        m_average = sum(m_discovered_level) / len(m_discovered_level)
-
         m_results = []
-        m_results_append = m_results.append
+        if m_discovered_level:
+            #m_length = 1.1 if len(m_discovered_level) == 0 else len(m_discovered_level)
+            m_average = sum(m_discovered_level) / len(m_discovered_level)
 
-        for i, l_level in enumerate(m_discovered_bind_level):
-            l_value = l_level # Original value
-            l_value_deviation = l_level * 1.05 # 5% of deviation
+            m_results_append = m_results.append
 
-            # value < average < value * 5% => skip
-            if not (l_value < m_average and m_average < l_value_deviation):
+            for i, l_level in enumerate(m_discovered_level):
+                l_value = l_level # Original value
+                l_value_deviation = l_level * 1.15 # 15% of deviation
 
-                Logger.log_verbose("Bruteforcer - discovered URL: %s !!!" % m_discovered_url[i][0])
-                print "Bruteforcer - discovered URL: %s !!!" % m_discovered_url[i][0]
+                # value < average < value * 5% => skip
+                if not (l_value < m_average and m_average < l_value_deviation):
 
-                #
-                # Send vulnerability
-                #
-                l_vuln = UrlDisclosure(m_discovered_url[i][0])
-                # Calculate impact
-                l_vuln.severity = m_severity_vectors[m_discovered_url[i][1]]
-                # Store
-                m_results_append(l_url)
+                    Logger.log_verbose("Bruteforcer - discovered URL: %s !!!" % m_discovered_url[i][0])
+
+                    #
+                    # Send vulnerability
+                    #
+                    l_vuln = UrlDisclosure(m_discovered_url[i][0])
+                    # Calculate impact
+                    l_vuln.risk = m_discovered_url[i][1]
+                    # Store
+                    m_results_append(l_vuln)
+                    #
+                    # Send URL
+                    #
+                    self.send_info(Url(m_discovered_url[i][0]))
 
         # Report
         return m_results
 
 
     #----------------------------------------------------------------------
-    def is_http_method(self, url, network_conn):
+    def get_http_method(self, url, network_conn):
         """
         Get appropiate HTTP method: GET/HEAD.
 
@@ -271,7 +271,7 @@ class BackupSearcher(TestingPlugin):
 
         p = network_conn.get(url, method="HEAD")
 
-        if p.http_response_code == 200 and 'Content-Length' in p.http_headers:
+        if p.http_response_code == 200: # and 'Content-Length' in p.http_headers:
             return "HEAD"
         else:
             return "GET"
@@ -293,7 +293,6 @@ class BackupSearcher(TestingPlugin):
         m_wordlist['suffixes'].append(WordListManager().get_wordlist("fuzzdb_discovery_filenamebruteforce_extensions.backup.fuzz"))
         m_wordlist['suffixes'].append(WordListManager().get_wordlist("golismero_predictables_file-compressed-suffixes"))
 
-
         # 2 - Prefixes
         m_wordlist['prefixes'] = []
         m_wordlist['prefixes'].append(WordListManager().get_wordlist("golismero_predictables_file-prefix"))
@@ -312,7 +311,7 @@ class BackupSearcher(TestingPlugin):
         m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_apache.fuzz"))
         m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_iis.fuzz"))
         m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_php.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_passwords.fuzz"))
+        #m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_passwords.fuzz"))
         m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_oracle9i.fuzz"))
         m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_unixdotfiles.fuzz"))
 
@@ -604,7 +603,7 @@ class BackupSearcher(TestingPlugin):
         if m_last.find("=") != -1:
             m_url_parts['complete_path'] = m_prev_folder
 
-        m_url_parts['complete_path_without_filename'] = m_prev_folder
+        m_url_parts['complete_path_without_filename'] = '/' if not m_prev_folder else m_prev_folder
 
 
 
