@@ -227,7 +227,7 @@ class GlobalParams (object):
                 raise ValueError("Regular expression not valid: %s." % e.message)
 
         # Check for outputs restrictions
-        if (not self.output_file and self.output_formats) \
+        if (not self.output_file and 'screen' not in self.output_formats and self.output_formats) \
            or (self.output_file and not self.output_formats):
             raise ValueError("When you specify '-o' also need to set format option '-of'.")
 
