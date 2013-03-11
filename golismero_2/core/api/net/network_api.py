@@ -24,7 +24,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ['NetManager', 'Web']
+__all__ = ['NetworkAPI', 'Web']
 
 
 from ..config import Config
@@ -41,7 +41,7 @@ from urllib3 import PoolManager
 
 
 #------------------------------------------------------------------------------
-class NetManager (object):
+class NetworkAPI (object):
     """"""
 
     TYPE_WEB = 0
@@ -65,10 +65,10 @@ class NetManager (object):
 
         :raises: ValueError
         """
-        if NetManager.__http_pool_manager is None:
-            NetManager.__http_pool_manager = PoolManager(Config().audit_config.max_connections)
-        if protocol is NetManager.TYPE_WEB:
-            return Web(NetManager.__http_pool_manager, Config().audit_config)
+        if NetworkAPI.__http_pool_manager is None:
+            NetworkAPI.__http_pool_manager = PoolManager(Config().audit_config.max_connections)
+        if protocol is NetworkAPI.TYPE_WEB:
+            return Web(NetworkAPI.__http_pool_manager, Config().audit_config)
 
         else:
             raise ValueError("Unknown protocol type, value: %d" % protocol)

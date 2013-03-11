@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from core.api.logger import Logger
-from core.api.net.netmanager import *
+from core.api.net.network_api import *
 from core.api.net.web_utils import *
 from core.api.plugin import TestingPlugin
 from core.api.results.information.information import Information
@@ -66,7 +66,7 @@ class Spider(TestingPlugin):
         m_return = []
 
         # Request this URL
-        m_manager = NetManager.get_connection()
+        m_manager = NetworkAPI.get_connection()
 
         # Check if need follow first redirect
         if info.depth == 0 and Config().audit_config.follow_first_redirect:
