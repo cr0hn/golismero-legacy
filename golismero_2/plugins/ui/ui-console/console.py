@@ -84,7 +84,6 @@ class ConsoleUIPlugin(UIPlugin):
         # Colorize output?
         m_colorized = Config().audit_config.colorize
 
-
         # Get verbosity level.
         m_verbosity_level = Config().audit_config.verbose
 
@@ -95,7 +94,7 @@ class ConsoleUIPlugin(UIPlugin):
 
             # Messages with vulnerability types
             if  info.result_type == Result.TYPE_VULNERABILITY:
-                Console.display("+ %s" % funcs[info.result_type](info, m_colorized))
+                Console.display("%s" % funcs[info.vulnerability_type](info, m_colorized))
 
         #
         # More verbosity: Normal + Urls + important actions of plugins
@@ -133,18 +132,18 @@ class ConsoleUIPlugin(UIPlugin):
             # Show log messages
             # (The verbosity is already checked by Logger)
             if message.message_code == Message.MSG_CONTROL_LOG_MESSAGE:
-                Console.display_error("- %s" % colorize(message.message_info, 'middle'))
+                Console.display_error("<LOG> %s" % colorize(message.message_info, 'middle'))
 
             # Show log errors
             # (The verbosity is already checked by Logger)
             elif message.message_code == Message.MSG_CONTROL_LOG_ERROR:
-                Console.display_error("- %s" % colorize(message.message_info, 'middle'))
+                Console.display_error("<LOG> %s" % colorize(message.message_info, 'middle'))
 
             # Show plugin errors
             # (The verbosity is already checked by bootstrap)
             elif message.message_code == Message.MSG_CONTROL_ERROR:
-                text = colorize("[!] Plugin error: ", 'high') + \
-                       colorize(message.message_info, 'high')
+                text = colorize("[!] Plugin error: ", 'critical') + \
+                       colorize(message.message_info, 'critical')
                 Console.display_error(text)
 
 
@@ -175,11 +174,9 @@ class ConsoleUIPlugin(UIPlugin):
 #----------------------------------------------------------------------
 def process_url(url, colorized = True):
     """Display URL info"""
-    return "%s\n| Method: %s\n| Referer <- %s\n|-%s" % (
-        colorize(url.url, 'info', color= colorized),
+    return "New URL: [%s] %s" % (
         url.method,
-        url.referer,
-        "-" * len(url.url)
+        colorize(url.url, 'info', color= colorized),
     )
 
 
@@ -198,9 +195,10 @@ def process_url_disclosure(url, colorized = True):
         m_suffix
     )
 
-    return "%s\n| Method: %s\n| Referer <- %s\n|-%s" % (
+    return "%s: %s\n| Method: %s\n%s|-%s" % (
+        colorize("!! Discovered", url.risk, color=colorized),
         m_url,
         url.method,
-        url.referer,
+        '| Referer <- %s\n' % url.referer if url.referer else '',
         "-" * len(url.url)
     )
