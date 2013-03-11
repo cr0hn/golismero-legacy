@@ -176,7 +176,7 @@ def process_url(url, colorized = True):
     """Display URL info"""
     return "New URL: [%s] %s" % (
         url.method,
-        colorize(url.url, 'info', color= colorized),
+        colorize(url.url, 'info', is_color= colorized),
     )
 
 
@@ -191,12 +191,12 @@ def process_url_disclosure(url, colorized = True):
 
     m_url = "%s%s%s" % (
         m_prefix,
-        colorize(m_content, url.risk, color= colorized),
+        colorize(m_content, url.risk, is_color= colorized),
         m_suffix
     )
 
     return "%s: %s\n| Method: %s\n%s|-%s" % (
-        colorize("!! Discovered", url.risk, color=colorized),
+        colorize("!! Discovered", url.risk, is_color=colorized),
         m_url,
         url.method,
         '| Referer <- %s\n' % url.referer if url.referer else '',
