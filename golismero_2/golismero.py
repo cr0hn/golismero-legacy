@@ -162,7 +162,7 @@ def main():
 
     gr_report = parser.add_argument_group("report")
     gr_report.add_argument("-o", action="store", dest="output_file", help="output file, without extension.")
-    gr_report.add_argument("-of", action="append", dest="output_formats", help="one or more output formats.", choices=('text', 'grepable', 'html'))
+    gr_report.add_argument("-of", action="append", dest="output_formats", help="one or more output formats.", choices=('screen', 'text', 'grepable', 'html'), default=['screen'])
 
     gr_net = parser.add_argument_group("network")
     gr_net.add_argument("--max-connections", action="store", dest="max_connections", help="maximum number of concurrent connections per host [default: 4]", default=50)
