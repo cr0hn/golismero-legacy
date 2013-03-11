@@ -32,7 +32,7 @@ from os.path import join, split, sep
 
 
 #------------------------------------------------------------------------------
-class WordListManager(Singleton):
+class WordListAPI(Singleton):
     """This class manager wordlist"""
 
 
