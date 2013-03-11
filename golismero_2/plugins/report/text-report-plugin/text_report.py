@@ -32,7 +32,7 @@ from collections import Counter
 from time import time
 
 
-class Spider(ReportPlugin):
+class TextReport(ReportPlugin):
     """
     This plugin generate text reports
     """
@@ -81,7 +81,7 @@ class Spider(ReportPlugin):
         # 1 - Get urls
         m_output.write("\nSpidered Urls\n=============\n\n")
         for u in filter(lambda x: x.result_type == Result.TYPE_INFORMATION and x.information_type == Information.INFORMATION_URL , m_results):
-            m_output.write("+ %s\n" % u.printable_verbose(False))
+            m_output.write("+ %s\n" % str(u))
             m_counter['url'] += 1
 
 
