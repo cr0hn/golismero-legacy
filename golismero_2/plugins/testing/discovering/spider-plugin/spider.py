@@ -63,8 +63,6 @@ class Spider(TestingPlugin):
         if info.depth > Config().audit_config.recursivity:
             return
 
-        print "Spider - Process PID: %s " % str(getpid()) # FIXME
-
         m_return = []
 
         # Request this URL
@@ -105,7 +103,7 @@ class Spider(TestingPlugin):
             # Error while parsing URL
             return [p, p.information]
 
-        Logger.log_more_verbose("Spidering URL: '%s'" % info.url)
+        Logger.log_verbose("Spidering URL: '%s'" % info.url)
 
         s1 = time()
 
