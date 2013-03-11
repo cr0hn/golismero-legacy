@@ -223,7 +223,6 @@ def main():
             exit(1)
 
         # Show the list of plugins
-        Logger.configure(level=Logger.VERBOSE)
         Console.display("Plugin list")
         Console.display("-----------")
         for name, info in manager.get_plugins().iteritems():
