@@ -223,10 +223,23 @@ def main():
             exit(1)
 
         # Show the list of plugins
-        Console.display("Plugin list")
-        Console.display("-----------")
-        for name, info in manager.get_plugins().iteritems():
-            Console.display("- %s: %s" % (name, info.display_name))
+        Console.display("-------------")
+        Console.display(" Plugin list")
+        Console.display("-------------\n")
+        # Testing plugins
+        Console.display("-= Testing plugins =-")
+        for name, info in manager.get_plugins("testing").iteritems():
+            Console.display("+ %s: %s" % (name, info.description))
+        # Report plugins
+        Console.display("\n-= UI plugins =-")
+        for name, info in manager.get_plugins("ui").iteritems():
+            Console.display("+ %s: %s" % (name, info.description))
+        # UI plugins
+        Console.display("\n-= Report plugins =-")
+        for name, info in manager.get_plugins("report").iteritems():
+            Console.display("+ %s: %s" % (name, info.description))
+
+        Console.display(" ")
         exit(0)
 
 
