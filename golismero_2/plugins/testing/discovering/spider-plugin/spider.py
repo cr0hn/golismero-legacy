@@ -60,7 +60,7 @@ class Spider(TestingPlugin):
             raise TypeError("Expected Url, got %s instead" % type(info))
 
         # Check recursivity
-        if info.depth > Config().audit_config.recursivity:
+        if int(info.depth) > int(Config().audit_config.recursivity):
             return
 
         m_return = []
