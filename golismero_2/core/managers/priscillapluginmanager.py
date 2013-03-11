@@ -329,7 +329,7 @@ class PriscillaPluginManager (Singleton):
 
         # Get only the plugins that match the category
         category = category + "/"
-        return dict( plugin for plugin in self.__plugins if plugin[0].startswith(category) )
+        return { plugin: self.__plugins[plugin] for plugin in self.__plugins if plugin.startswith(category) }
 
 
     #----------------------------------------------------------------------
