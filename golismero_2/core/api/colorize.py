@@ -24,14 +24,16 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["colorize"]
+
 from thirdparty_libs.colorizer import *
 from core.api.config import Config
 
-__all__ = ["colorize"]
+
 
 
 #----------------------------------------------------------------------
-def colorize(text, level, color = True):
+def colorize(text, level_or_color, is_color = True):
 	"""
 	Colorize a text depends of type of alert:
 	- Information
@@ -67,9 +69,15 @@ def colorize(text, level, color = True):
 	m_colors["2"] = m_colors['middle']
 	m_colors["3"] = m_colors['high']
 	m_colors["4"] = m_colors['critical']
+	# Map colors
+	m_colors["green"] = 'green'
+	m_colors["cyan"] = 'cyan'
+	m_colors["magenta"] = 'magenta'
+	m_colors["red"] = 'red'
+	m_colors["yellow"] = 'yellow'
 
 	# Ge colorize option
-	if Config().audit_config.colorize and color:
-		return colored(text, m_colors[str(level)])
+	if Config().audit_config.colorize and is_color:
+		return colored(text, m_colors[str(level_or_color)])
 	else:
 		return text
