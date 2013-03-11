@@ -54,11 +54,11 @@ def colorize(text, level, color = True):
 
 	# Colors
 	m_colors = {
-	   'info': 'cyan',
-	   'low': 'green',
-	   'middle': 'yellow',
+	   'info': 'green',
+	   'low': 'cyan',
+	   'middle': 'magenta',
 	   'high' :'red',
-	   'critical' : 'purple'
+	   'critical' : 'yellow'
 	}
 
 	# Map for integers params as level
