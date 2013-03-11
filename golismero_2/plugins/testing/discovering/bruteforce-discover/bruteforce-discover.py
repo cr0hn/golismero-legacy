@@ -219,6 +219,7 @@ class BackupSearcher(TestingPlugin):
         #
         # Calculate average
         m_results = []
+
         if m_discovered_level:
             #m_length = 1.1 if len(m_discovered_level) == 0 else len(m_discovered_level)
             m_average = sum(m_discovered_level) / len(m_discovered_level)
