@@ -1,0 +1,9 @@
+[Core]
+Name = OnScreenReport
+Module = onscreen-report-plugin/onscreen-report-plugin.py
+
+[Documentation]
+Description = UI plugin that display report on screen.
+Author = Daniel Garcia Garcia (cr0hn)
+Version = 0.1
+Website = http://code.google.com/p/golismero/
