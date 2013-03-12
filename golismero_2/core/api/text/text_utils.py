@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from difflib import SequenceMatcher
-from thirdparty_libs.google_diff_match_patch import *
+from google_diff_match_patch import *
 from string import ascii_letters, digits
 from random import choice
 

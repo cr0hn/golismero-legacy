@@ -25,16 +25,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from core.api.logger import Logger
-from core.api.net.netmanager import *
+from core.api.net.network_api import *
 from core.api.net.web_utils import convert_to_absolute_url, is_in_scope
 from core.api.plugin import TestingPlugin
 from core.api.results.information.information import Information
 from core.api.results.information.url import Url
 from core.api.results.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
-from core.api.text.wordlistmanager import WordListManager
+from core.api.text.wordlist_api import WordListAPI
 from os.path import splitext, split, sep
-from urllib3.util import parse_url
-from urllib3.exceptions import LocationParseError
+from core.api.net.web_utils import parse_url
 from core.api.text.text_utils import get_matching_level, generate_random_string
 
 from os import getpid
@@ -75,7 +74,7 @@ class BackupSearcher(TestingPlugin):
         m_parsed_url = None
         try:
             m_parsed_url = parse_url(info.url)
-        except LocationParseError:
+        except ValueError:
             return
 
         # Split URL
@@ -94,7 +93,7 @@ class BackupSearcher(TestingPlugin):
         m_return = []
 
         # Network manager reference
-        m_net_manager = NetManager.get_connection()
+        m_net_manager = NetworkAPI.get_connection()
 
         # Method for request: GET/HEAD
         m_http_method = self.get_http_method(info.url, m_net_manager)
@@ -183,7 +182,12 @@ class BackupSearcher(TestingPlugin):
                 Logger.log_more_verbose("Bruteforcer - testing url: '%s'." % l_url)
 
                 # Ge URL
-                p = m_net_manager.get(l_url, cache=False, method=m_http_method)
+                try:
+                    p = m_net_manager.get(l_url, cache=False, method=m_http_method)
+                except ValueError,e:
+                    Logger.log_more_verbose("Bruteforcer - value error while processing: '%s'. Error: %s" % (l_url, e.message))
+                except ConnectionError:
+                    Logger.log_more_verbose("Bruteforcer - timeout for url: '%s'." % l_url)
 
                 # Check if the url is acceptable by comparing
                 # the result content.
@@ -291,30 +295,30 @@ class BackupSearcher(TestingPlugin):
 
         # 1 - Suffixes
         m_wordlist['suffixes'] = []
-        m_wordlist['suffixes'].append(WordListManager().get_wordlist("fuzzdb_discovery_filenamebruteforce_extensions.backup.fuzz"))
-        m_wordlist['suffixes'].append(WordListManager().get_wordlist("golismero_predictables_file-compressed-suffixes"))
+        m_wordlist['suffixes'].append(WordListAPI().get_wordlist("fuzzdb_discovery_filenamebruteforce_extensions.backup.fuzz"))
+        m_wordlist['suffixes'].append(WordListAPI().get_wordlist("golismero_predictables_file-compressed-suffixes"))
 
         # 2 - Prefixes
         m_wordlist['prefixes'] = []
-        m_wordlist['prefixes'].append(WordListManager().get_wordlist("golismero_predictables_file-prefix"))
-        m_wordlist['prefixes'].append(WordListManager().get_wordlist("fuzzdb_discovery_filenamebruteforce_copy_of.fuzz"))
+        m_wordlist['prefixes'].append(WordListAPI().get_wordlist("golismero_predictables_file-prefix"))
+        m_wordlist['prefixes'].append(WordListAPI().get_wordlist("fuzzdb_discovery_filenamebruteforce_copy_of.fuzz"))
 
         # 3 - File extensions
         m_wordlist['extensions'] = []
-        m_wordlist['extensions'].append(WordListManager().get_wordlist("golismero_predictables_java-file-extensions"))
-        m_wordlist['extensions'].append(WordListManager().get_wordlist("golismero_predictables_microsoft-file-extensions"))
-        m_wordlist['extensions'].append(WordListManager().get_wordlist("golismero_predictables_file-compressed-suffixes"))
-        m_wordlist['extensions'].append(WordListManager().get_wordlist("golismero_predictables_microsoft-file-extensions"))
+        m_wordlist['extensions'].append(WordListAPI().get_wordlist("golismero_predictables_java-file-extensions"))
+        m_wordlist['extensions'].append(WordListAPI().get_wordlist("golismero_predictables_microsoft-file-extensions"))
+        m_wordlist['extensions'].append(WordListAPI().get_wordlist("golismero_predictables_file-compressed-suffixes"))
+        m_wordlist['extensions'].append(WordListAPI().get_wordlist("golismero_predictables_microsoft-file-extensions"))
 
         # 5 - Predictable filename and folders
         m_wordlist['predictable_files'] = []
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_cgi_microsoft.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_apache.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_iis.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_php.fuzz"))
-        #m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_passwords.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_oracle9i.fuzz"))
-        m_wordlist['predictable_files'].append(WordListManager().get_wordlist("fuzzdb_discovery_predictableres_unixdotfiles.fuzz"))
+        m_wordlist['predictable_files'].append(WordListAPI().get_wordlist("fuzzdb_discovery_predictableres_cgi_microsoft.fuzz"))
+        m_wordlist['predictable_files'].append(WordListAPI().get_wordlist("fuzzdb_discovery_predictableres_apache.fuzz"))
+        m_wordlist['predictable_files'].append(WordListAPI().get_wordlist("fuzzdb_discovery_predictableres_iis.fuzz"))
+        m_wordlist['predictable_files'].append(WordListAPI().get_wordlist("fuzzdb_discovery_predictableres_php.fuzz"))
+        #m_wordlist['predictable_files'].append(WordListAPI().get_wordlist("fuzzdb_discovery_predictableres_passwords.fuzz"))
+        m_wordlist['predictable_files'].append(WordListAPI().get_wordlist("fuzzdb_discovery_predictableres_oracle9i.fuzz"))
+        m_wordlist['predictable_files'].append(WordListAPI().get_wordlist("fuzzdb_discovery_predictableres_unixdotfiles.fuzz"))
 
         return m_wordlist
 

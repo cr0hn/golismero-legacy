@@ -24,7 +24,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ['NetManager', 'Web']
+__all__ = ['NetworkAPI', 'Web']
 
 
 from ..config import Config
@@ -32,16 +32,15 @@ from ..logger import Logger
 from ..results.information.url import Url
 from ..results.information.http import *
 from ...managers.cachemanager import *
-from .web_utils import is_in_scope
+from .web_utils import *
+from requests import *
 
 from time import time
-from urllib3.util import parse_url
-from urllib3 import PoolManager
-
+from re import compile, match, IGNORECASE
 
 
 #------------------------------------------------------------------------------
-class NetManager (object):
+class NetworkAPI (object):
     """"""
 
     TYPE_WEB = 0
@@ -65,16 +64,35 @@ class NetManager (object):
 
         :raises: ValueError
         """
-        if NetManager.__http_pool_manager is None:
-            NetManager.__http_pool_manager = PoolManager(Config().audit_config.max_connections)
-        if protocol is NetManager.TYPE_WEB:
-            return Web(NetManager.__http_pool_manager, Config().audit_config)
+        if NetworkAPI.__http_pool_manager is None:
+	    # Set pool
+	    NetworkAPI.__http_pool_manager = Session()
+
+	    # If proxy
+	    m_proxy_addr = Config().audit_config.proxy_addr
+	    if m_proxy_addr:
+		m_auth_user = Config().audit_config.proxy_user
+		m_auth_pass = Config().audit_config.proxy_pass
+
+		# Detect auth method
+		auth, realm = detect_auth_method(m_proxy_addr, m_auth_user, m_auth_pass)
+
+		# Set auth and proxy
+		NetworkAPI.__http_pool_manager.auth = get_auth_obj(auth, m_auth_user, m_auth_pass)
+		NetworkAPI.__http_pool_manager.proxies = {'http': m_proxy_addr}
+
+
+
+	    # Set cookie
+	    m_cookies = Config().audit_config.cookie
+	    if m_cookies:
+		NetworkAPI.__http_pool_manager.cookies = m_cookies
+
+        if protocol is NetworkAPI.TYPE_WEB:
+            return Web(NetworkAPI.__http_pool_manager, Config().audit_config)
 
         else:
             raise ValueError("Unknown protocol type, value: %d" % protocol)
-
-
-
 
 #------------------------------------------------------------------------------
 class Protocol (object):
@@ -188,34 +206,52 @@ class Web (Protocol):
             # Set redirect option
             request.follow_redirects = request.follow_redirects if request.follow_redirects else self.__follow_redirects
 
-            # timing init
-            t1 = time()
-            # Select request type
-            m_response = None
-            if "POST" == request.method or "PUT" == request.method:
-                m_response = self.__http_pool_manager.request(
-                    method = request.method,
-                    url = request.url,
-                    redirect = request.follow_redirects,
-                    headers = request.raw_headers,
-                    fields = request.post_data,
-                    encode_multipart = request.files_attached
-                )
-            elif "GET" == request.method:
-                m_response = self.__http_pool_manager.request(
-                    method = request.method,
-                    url = request.url,
-                    redirect = request.follow_redirects,
-                    headers = request.raw_headers,
-                )
-            else:
-                m_response = self.__http_pool_manager.request(
-                    method = request.method,
-                    url = request.url,
-                    redirect = request.follow_redirects,
-                    headers = request.raw_headers,
-                    fields = request.post_data,
-                )
+	    # allow_redirects
+	    # headers
+	    #
+	    # files = {'file': open('report.xls', 'rb')}
+	    # r = requests.post(url, files=files)
+	    #
+	    #  GET, OPTIONS, HEAD, POST, PUT, PATCH and DELETE.
+
+
+
+	    # Set options
+	    m_request_params = {
+	        'allow_redirects' : request.follow_redirects,
+	        'headers' : request.raw_headers,
+	    }
+
+	    # HTTP method
+	    m_method = request.method
+
+	    # Set files data, if available
+	    if m_method == "POST" or m_method == "PUT" and request.files_attached:
+		# Add files
+		for fname, fvalue in request.files_attached.iteritems():
+		    m_request_params["files"] = { 'file': (fname, fvalue) }
+
+	    # timing init
+	    t1 = time()
+	    # Select request type
+	    m_url = request.url
+	    if m_method == "GET":
+		m_response = self.__http_pool_manager.get(m_url, **m_request_params)
+	    elif m_method == "POST":
+		m_response = self.__http_pool_manager.post(m_url, **m_request_params)
+	    elif m_method == "HEAD":
+		m_response = self.__http_pool_manager.head(m_url, **m_request_params)
+	    elif m_method == "OPTIONS":
+		m_response = self.__http_pool_manager.options(m_url, **m_request_params)
+	    elif m_method == "PUT":
+		m_response = self.__http_pool_manager.put(m_url, **m_request_params)
+	    elif m_method == "PATCH":
+		m_response = self.__http_pool_manager.patch(m_url, **m_request_params)
+	    elif m_method == "DELETE":
+		m_response = self.__http_pool_manager.delete(m_url, **m_request_params)
+	    else:
+		raise ValueError("Method '%s' not allowed." % m_method)
+
 
             # timin end
             t2 = time()
@@ -301,3 +337,4 @@ class Web (Protocol):
         """
         m_url = parse_url(url)
         return "%s%s%s" % (m_url.scheme, m_url.host, m_url.port)
+

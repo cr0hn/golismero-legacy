@@ -15,3 +15,9 @@
 *.bak
 *.back
 *.backup
+
+# Mac files
+.DS_Store
+
+# Testing files
+#testing*py

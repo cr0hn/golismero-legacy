@@ -98,7 +98,6 @@ from core.main.commonstructures import GlobalParams
 from core.main.orchestrator import Orchestrator
 from core.managers.priscillapluginmanager import PriscillaPluginManager
 
-
 #----------------------------------------------------------------------
 # Exported function to launch GoLismero
 
@@ -162,7 +161,7 @@ def main():
 
     gr_report = parser.add_argument_group("report")
     gr_report.add_argument("-o", action="store", dest="output_file", help="output file, without extension.")
-    gr_report.add_argument("-of", action="append", dest="output_formats", help="one or more output formats.", choices=('text', 'grepable', 'html'))
+    gr_report.add_argument("-of", action="append", dest="output_formats", help="one or more output formats.", choices=('screen', 'text', 'grepable', 'html'), default=['screen'])
 
     gr_net = parser.add_argument_group("network")
     gr_net.add_argument("--max-connections", action="store", dest="max_connections", help="maximum number of concurrent connections per host [default: 4]", default=50)
@@ -171,6 +170,11 @@ def main():
     gr_net.add_argument("-r", "--recursivity", action="store", dest="recursivity", help="recursivity level of spider.", default=0)
     gr_net.add_argument("-f","--follow-redirects", action="store_true", dest="follow_redirects", help="follow redirects", default=False)
     gr_net.add_argument("-nff","--no-follow-first", action="store_false", dest="follow_first_redirect", help="follow only first redirect", default=True)
+    gr_net.add_argument("-pu","--proxy-user", action="store", dest="proxy_user", help="proxy user.", default = None)
+    gr_net.add_argument("-pp","--proxy-pass", action="store", dest="proxy_pass", help="proxy pass.", default = None)
+    gr_net.add_argument("-pa","--proxy-addr", action="store", dest="proxy_addr", help="proxy address as format: address:port", default = None)
+    gr_net.add_argument("--cookie", action="store", dest="cookie", help="set cookie for requests", default = None)
+    gr_net.add_argument("--cookie-file", help="load a cookie from file", default = None)
 
     gr_audit = parser.add_argument_group("audit")
     gr_audit.add_argument('--audit-name', action='store', dest='audit_name', help='customize the audit name')
@@ -192,7 +196,6 @@ def main():
         P = parser.parse_args(args)
         cmdParams = GlobalParams()
         cmdParams.from_cmdline( P )
-        cmdParams.check_params()
     except Exception, e:
         ##raise
         parser.error(str(e))
@@ -223,11 +226,23 @@ def main():
             exit(1)
 
         # Show the list of plugins
-        Logger.configure(level=Logger.VERBOSE)
-        Console.display("Plugin list")
-        Console.display("-----------")
-        for name, info in manager.get_plugins().iteritems():
-            Console.display("- %s: %s" % (name, info.display_name))
+        Console.display("-------------")
+        Console.display(" Plugin list")
+        Console.display("-------------\n")
+        # Testing plugins
+        Console.display("-= Testing plugins =-")
+        for name, info in manager.get_plugins("testing").iteritems():
+            Console.display("+ %s: %s" % (name, info.description))
+        # Report plugins
+        Console.display("\n-= UI plugins =-")
+        for name, info in manager.get_plugins("ui").iteritems():
+            Console.display("+ %s: %s" % (name, info.description))
+        # UI plugins
+        Console.display("\n-= Report plugins =-")
+        for name, info in manager.get_plugins("report").iteritems():
+            Console.display("+ %s: %s" % (name, info.description))
+
+        Console.display(" ")
         exit(0)
 
 
@@ -276,6 +291,45 @@ def main():
         except Exception, e:
             Console.display("[!] Error recovering plugin info: %s" % e.message)
             exit(1)
+
+
+
+
+
+    #------------------------------------------------------------
+    # Detect auth in URL and proxy, if specified.
+    # URL:
+    if 1 == 2:
+        for t in cmdParams.targets:
+            auth, realm = detect_auth_method(t)
+            if auth:
+                Console.display("[!] '%s' authentication is needed for '%s'. Specify using syntax: http://user:pass@target.com.\n" % (auth, t))
+                exit(1)
+
+    # Proxy
+    if cmdParams.proxy_addr:
+        # Check de user/pass
+        if cmdParams.proxy_user:
+            check_auth(cmdParams.proxy_addr, cmdParams.proxy_user, cmdParams.proxy_pass)
+        else:
+            auth, realm = detect_auth_method(cmdParams.proxy_addr)
+            if auth:
+                Console.display("[!] Authentication is needed for '%s' proxy. Use '--proxy-user' and '--proxy-pass' to specify them." % cmdParams.proxy_addr)
+                exit(1)
+
+    # Load cookie from file, if needed
+    if P.cookie_file:
+        try:
+            f = open(P.cookie_file, "U")
+            cmdParams.cookie = f.read()
+            f.close()
+        except IOError,e:
+            Console.display("[!] Cant' read cookie  from '%s'. Error: %s " % (P.cookie_file, e.message))
+            exit(1)
+
+
+    # Check if all options are correct
+    cmdParams.check_params()
 
 
     #------------------------------------------------------------

@@ -9,7 +9,7 @@ import socket
 import errno
 
 from socket import error as SocketError, timeout as SocketTimeout
-from .util import resolve_cert_reqs, resolve_ssl_version, parse_url
+from .util import resolve_cert_reqs, resolve_ssl_version
 
 try: # Python 3
     from http.client import HTTPConnection, HTTPException
@@ -178,7 +178,6 @@ class HTTPConnectionPool(ConnectionPool, RequestMethods):
         self.pool = self.QueueCls(maxsize)
         self.block = block
 
-
         # Fill the queue up so that doing get() on it will block properly
         for _ in xrange(maxsize):
             self.pool.put(None)
@@ -323,7 +322,6 @@ class HTTPConnectionPool(ConnectionPool, RequestMethods):
 
         return (scheme, host, port) == (self.scheme, self.host, self.port)
 
-
     def urlopen(self, method, url, body=None, headers=None, retries=3,
                 redirect=True, assert_same_host=True, timeout=_Default,
                 pool_timeout=None, release_conn=None, **response_kw):
@@ -410,11 +408,6 @@ class HTTPConnectionPool(ConnectionPool, RequestMethods):
                 host = "%s:%d" % (host, self.port)
 
             raise HostChangedError(self, url, retries - 1)
-
-        # Filter URL, deleting hostname and schema from URL
-        #parsed_url = parse_url(url)
-        #m_url = "%s%s" % (parsed_url.path if parsed_url.path else "/", parsed_url.query if parsed_url.query else "")
-
 
         conn = None
 

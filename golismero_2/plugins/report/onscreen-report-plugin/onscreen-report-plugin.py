@@ -29,12 +29,12 @@ from core.api.plugin import ReportPlugin
 from core.api.results.result import Result
 from core.api.results.information.information import Information
 from collections import Counter
-from time import time
+from core.api.colorize import *
 
 
-class TextReport(ReportPlugin):
+class ScreenReport(ReportPlugin):
     """
-    This plugin generate text reports
+    This plugin to display reports on screen
     """
 
     #----------------------------------------------------------------------
@@ -46,7 +46,7 @@ class TextReport(ReportPlugin):
 
         :returns: str -- type of report
         """
-        return "text"
+        return "screen"
 
 
     #----------------------------------------------------------------------
@@ -65,33 +65,30 @@ class TextReport(ReportPlugin):
         if not config or not results:
             return
 
-        # Open file to write output
-        m_output = None
-        try:
-            m_output = open(config.output_file, mode='w')
-        except IOError as e:
-            print "Can't open file '%s', got error: %s" % (config.output_file, e.message)
-            return
-
         # All results, with not nulls
         m_results = filter(lambda x: x, results)
 
         m_counter = Counter()
 
+        # Header
+        print "\n\n--= %s =--" % colorize("Report", "cyan")
+
+        #
         # 1 - Get urls
-        m_output.write("\nSpidered Urls\n=============\n\n")
+        #
+        print "\n- %s - \n"% colorize("Spidered URLs", "yellow")
+
         for u in filter(lambda x: x.result_type == Result.TYPE_INFORMATION and x.information_type == Information.INFORMATION_URL , m_results):
-            m_output.write("+ %s\n" % str(u))
+            print "+ %s" % str(u)
             m_counter['url'] += 1
 
 
         #
         # End - Write summary
         #
-        m_output.write("\nSummary\n=======\n\n")
-        # Urls
-        m_output.write("+ Total URLs: %s.\n\n" % str(m_counter['url']))
+        print "\n- %s -\n" % colorize("Summary", "yellow")
 
-        # Close file
-        m_output.close()
+        # Urls
+        print "+ Total URLs: %s\n\n" % colorize(str(m_counter['url']), "yellow")
+
 

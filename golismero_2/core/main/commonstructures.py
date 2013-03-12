@@ -192,6 +192,14 @@ class GlobalParams (object):
         # Follow only first redirect
         self.follow_first_redirect = True
 
+        # Proxy options
+        self.proxy_addr = None
+        self.proxy_user = None
+        self.proxy_pass = None
+
+        # Cookie
+        self.cookie = None
+
 
     #----------------------------------------------------------------------
     def check_params(self):
@@ -227,10 +235,28 @@ class GlobalParams (object):
                 raise ValueError("Regular expression not valid: %s." % e.message)
 
         # Check for outputs restrictions
-        if (not self.output_file and self.output_formats) \
+        if (not self.output_file and 'screen' not in self.output_formats and self.output_formats) \
            or (self.output_file and not self.output_formats):
             raise ValueError("When you specify '-o' also need to set format option '-of'.")
 
+        # Fix targets and set it as complete format
+        for i in xrange(len(self.targets)):
+            self.targets[i] = 'http://%s' % self.targets[i] if not self.targets[i].startswith("http") else self.targets[i]
+
+        # Try con convert for cookies format
+        if self.cookie:
+            try:
+                # Prepare cookie
+                m_cookie = self.cookie.replace(" ", "").replace("=", ":")
+                # Remove 'Cookie:' start, if exits
+                m_cookie = self.cookie[len("Cookie:"):] if m_cookie.startswith("Cookie:") else m_cookie
+                # Split
+                m_cookie = m_cookie.split(";")
+
+                # Parse
+                self.cookie = { c.split(":")[0]:c.split(":")[1] for c in m_cookie}
+            except ValueError:
+                raise ValueError("Invalid cookie format specified. Use format: 'Key=value; key=value'.")
 
     #----------------------------------------------------------------------
     def from_dictionary(self, args):
@@ -314,6 +340,14 @@ class GlobalParams (object):
 
         # Follow only first redirect
         self.follow_first_redirect = args.get("follow_first_redirect", self.follow_first_redirect)
+
+        # Proxy options
+        self.proxy_addr = args.get("proxy_addr", self.proxy_addr)
+        self.proxy_user = args.get("proxy_user", self.proxy_user)
+        self.proxy_pass = args.get("proxy_pass", self.proxy_pass)
+
+        # Cookie
+        self.cookie = args.get("cookie", self.cookie)
 
 
     #----------------------------------------------------------------------

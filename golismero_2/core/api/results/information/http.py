@@ -31,9 +31,10 @@ __all__ = ["HTTP_Request", "HTTP_Response"]
 from .information import *
 from .url import *
 from .html import *
+from ...net.web_utils import parse_url
 
-from urllib3.util import parse_url
 from os.path import basename
+
 import hashlib
 from re import findall
 
@@ -90,11 +91,12 @@ class HTTP_Request (Information):
         if self.__post_data:
             self.__headers.update(self.__get_content_type())
 
+
         # Get type of request
         self.__type = request_type
 
         # This vas specify if request has files attached
-        self.__files_attached = False
+        self.__files_attached = None
 
         # Id of request
         self.__request_id = None
@@ -141,47 +143,47 @@ class HTTP_Request (Information):
         return m_user_agents[randint(0, len(m_user_agents) - 1)]
 
 
-    def add_file_from_file(self, param_name, path_to_file):
+    def add_file_from_file(self, path_to_file, alt_filename=None):
         """Add file from path
-
-        :param param_name: name of parameter in resquest
-        :type param_name: str
 
         :param path_to_file: path to file to load.
         :type path_to_file: str
+
+        :param alt_filename: if you set it, filename used for http post will be set to this.
+        :type alt_filename: str
         """
         if path_to_file and param_name:
-            self.add_file_from_object(param_name, basename(path_to_file), open(path_to_file, "rb").read())
+            self.add_file_from_object(basename(path_to_file), open(path_to_file, "rb").read(), alt_filename)
 
 
     #----------------------------------------------------------------------
-    def add_file_from_object(self, param_name, file_name, obj):
+    def add_file_from_object(self, param_name, obj, alt_filename=None):
         """Add file from a binary object.
 
         :param param_name: name of parameter in resquest
         :type param_name: str
 
-        :param file_name: name of file to send
-        :type file_name: str
-
         :param obj: binary object to send
         :type obj: binary data
+
+        :param alt_filename: if you set it, filename used for http post will be set to this.
+        :type alt_filename: str
         """
-        if all([param_name, file_name, obj]):
+        if param_name and obj:
 
             # Create dict, if not exits
-            if not self.__post_data:
-                self.__post_data = {}
+            if not self.__files_attached:
+                self.__files_attached = {}
 
             # Fix method, if it's GET
             if self.__method == "GET":
                 self.__method = "POST"
 
-            # Add data
-            self.__post_data[param_name] = (file_name, obj)
-
-            # Remember we have attached a file
-            self.__files_attached = True
+            # Add data with true filename or alt filename
+            if alt_filename:
+                self.__files_attached[file_name] = obj
+            else:
+                self.__files_attached[param_name] = obj
 
 
 
@@ -222,7 +224,7 @@ class HTTP_Request (Information):
 
     # Hostname
     def __get_host(self):
-        return self.__headers['Host']
+        return self.__headers['Host'] if 'Host' in self.__headers else None
     def __set_host(self, value):
         self.__headers['Host'] = value
         self.__parsed_url.hostname = self.__headers['Host']
@@ -230,42 +232,42 @@ class HTTP_Request (Information):
 
     # User agent
     def __get_user_agent(self):
-        return self.__headers['User-Agent']
+        return self.__headers['User-Agent'] if 'User-Agent' in self.__headers else None
     def __set_user_agent(self, value):
         self.__headers['User-Agent'] = value
     user_agent = property(__get_user_agent, __set_user_agent)
 
     # Accept language
     def __get_accept_language(self):
-        return self.__headers['Accept-Language']
+        return self.__headers['Accept-Language'] if 'Accept-Language' in self.__headers else None
     def __set_accept_language(self, value):
         self.__headers['Accept-Language'] = value
     accept_language = property(__get_accept_language, __set_accept_language)
 
     # Content-type
     def __get_accept(self):
-        return self.__headers['Accept']
+        return self.__headers['Accept'] if 'Accept' in self.__headers else None
     def __set_accept(self, value):
         self.__headers['Accept'] = value
     accept = property(__get_accept, __set_accept)
 
     # Referer
     def __get_referer(self):
-        return self.__headers['Referer']
+        return self.__headers['Referer'] if 'Referer' in self.__headers else None
     def __set_referer(self, value):
         self.__headers['Referer'] = value
     referer = property(__get_referer, __set_referer)
 
     # Cookie
     def __get_cookie(self):
-        return self.__headers['Cookie']
+        return self.__headers['Cookie'] if 'Cookie' in self.__headers else None
     def __set_cookie(self, value):
         self.__headers['Cookie'] = value
     cookie = property(__get_cookie, __set_cookie)
 
     # Content type
     def __get_content_type(self):
-        return self.__headers['Content-Type']
+        return self.__headers['Content-Type'] if 'Content-Type' in self.__headers else None
     def __set_content_type(self, value):
         self.__headers['Content-Type'] = value
     content_type = property(__get_content_type, __set_content_type)
@@ -345,7 +347,7 @@ class HTTP_Request (Information):
 
     @property
     def files_attached(self):
-        """"""
+        """Get a dict with filenames attached."""
         return self.__files_attached
 
     #----------------------------------------------------------------------
@@ -373,24 +375,22 @@ class HTTP_Response (Information):
         self.information_type = self.INFORMATION_HTTP_RESPONSE
 
         # Request that produced this response
-        self.__from_request = request
+        self.__request = request
 
         # HTML code of response
-        self.__raw_data = raw_response.data if raw_response.data != None else ""
+        self.__raw_data = raw_response.content if raw_response.content != None else ""
 
         # HTTP response code
-
-        self.__http_response_code = raw_response.status
+        self.__http_response_code = raw_response.status_code
 
         # HTTP response reason
-
         self.__http_response_code_reason = raw_response.reason
 
         # HTTP headers
-        self.__http_headers = dict(raw_response.headers)
+        self.__http_headers = raw_response.headers
 
         # HTTP headers in raw format
-        self.__http_headers_raw = ''.join(("%s: %s\n" % (k,v) for k,v in raw_response.headers.iteritems()))
+        self.__http_headers_raw = None
 
         # Request time
         self.__request_time = request_time
@@ -399,7 +399,7 @@ class HTTP_Response (Information):
         self.__information = self.__extract_information(self.__http_headers, self.__raw_data)
 
         # Wrapper for cookie
-        self.__cookie = None
+        self.__cookie = raw_response.cookies.get_dict()
 
         #
         # Counters
@@ -413,6 +413,14 @@ class HTTP_Response (Information):
 
         # Total number of characters of body response
         self.__char_count = None
+
+
+    #----------------------------------------------------------------------
+    @property
+    def request_from(self):
+        """Request that generate this response"""
+        return self.__request
+
 
     #----------------------------------------------------------------------
     @property
@@ -451,6 +459,8 @@ class HTTP_Response (Information):
     @property
     def http_raw_headers(self):
         """"""
+        if not self.__http_headers_raw:
+            self.__http_headers_raw = ''.join(("%s: %s\n" % (k,v) for k,v in raw_response.headers.iteritems()))
         return self.__http_headers_raw
 
     @property
