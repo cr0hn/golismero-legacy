@@ -326,7 +326,7 @@ class GlobalParams (object):
         """
 
         # Converts the argparse result into a dictionary and parses it.
-        self.from_dictionary(dict( (k, getattr(args, k)) for k in dir(args) ))
+        self.from_dictionary(dict( (k, getattr(args, k)) for k in dir(args) if not k.startswith("_") ))
 
 
     #----------------------------------------------------------------------
@@ -419,6 +419,8 @@ class GlobalParams (object):
                         msg = "error parsing line %d of config file %s\ncircular includes in config files:\n\t%s\n"
                         msg %= (number, filename, ",\n\t".join(found_loop))
                         raise ConfigFileParseError(msg)
+                    file_history.append(value)
+                    self.from_file(value, file_history)
 
                 else:
 
