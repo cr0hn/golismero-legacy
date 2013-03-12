@@ -70,8 +70,6 @@ class BackupSearcher(TestingPlugin):
         if not is_in_scope(info.url):
             return
 
-        return
-
         # Parse original URL
         m_parsed_url = None
         try:
