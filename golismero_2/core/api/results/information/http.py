@@ -32,7 +32,7 @@ from .information import *
 from .url import *
 from .html import *
 
-from urllib3.util import parse_url
+from core.api.net.web_utils import parse_url
 from os.path import basename
 import hashlib
 from re import findall
