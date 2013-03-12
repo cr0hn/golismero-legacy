@@ -33,8 +33,7 @@ from core.api.results.information.url import Url
 from core.api.results.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from core.api.text.wordlist_api import WordListAPI
 from os.path import splitext, split, sep
-from urllib3.util import parse_url
-from urllib3.exceptions import LocationParseError
+from core.api.net.web_utils import parse_url
 from core.api.text.text_utils import get_matching_level, generate_random_string
 
 from os import getpid
@@ -75,7 +74,7 @@ class BackupSearcher(TestingPlugin):
         m_parsed_url = None
         try:
             m_parsed_url = parse_url(info.url)
-        except LocationParseError:
+        except ValueError:
             return
 
         # Split URL
@@ -183,7 +182,12 @@ class BackupSearcher(TestingPlugin):
                 Logger.log_more_verbose("Bruteforcer - testing url: '%s'." % l_url)
 
                 # Ge URL
-                p = m_net_manager.get(l_url, cache=False, method=m_http_method)
+                try:
+                    p = m_net_manager.get(l_url, cache=False, method=m_http_method)
+                except ValueError,e:
+                    Logger.log_more_verbose("Bruteforcer - value error while processing: '%s'. Error: %s" % (l_url, e.message))
+                except ConnectionError:
+                    Logger.log_more_verbose("Bruteforcer - timeout for url: '%s'." % l_url)
 
                 # Check if the url is acceptable by comparing
                 # the result content.

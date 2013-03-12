@@ -31,8 +31,7 @@ from core.api.plugin import TestingPlugin
 from core.api.results.information.information import Information
 from core.api.results.information.url import Url
 from core.api.config import Config
-from urllib3.util import parse_url
-from urllib3.exceptions import LocationParseError
+from core.api.net.web_utils import parse_url
 from time import time
 from os import getpid
 
@@ -69,10 +68,16 @@ class Spider(TestingPlugin):
         m_manager = NetworkAPI.get_connection()
 
         # Check if need follow first redirect
-        if info.depth == 0 and Config().audit_config.follow_first_redirect:
-            p = m_manager.get(info, follow_redirect=True)
-        else:
-            p = m_manager.get(info)
+        p = None
+        try:
+            if info.depth == 0 and Config().audit_config.follow_first_redirect:
+                p = m_manager.get(info, follow_redirect=True)
+            else:
+                p = m_manager.get(info)
+        except ValueError,e:
+            Logger.log_more_verbose("Spider - value error while processing: '%s'. Error: %s" % (l_url, e.message))
+        except ConnectionError:
+            Logger.log_more_verbose("Spider - timeout for url: '%s'." % l_url)
 
         # If error p == None => return
         if not p:
@@ -99,7 +104,7 @@ class Spider(TestingPlugin):
         # Get hostname and schema to fix URL
         try:
             m_parsed_url = parse_url(info.url)
-        except LocationParseError:
+        except ValueError:
             # Error while parsing URL
             return [p, p.information]
 
