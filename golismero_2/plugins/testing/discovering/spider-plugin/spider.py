@@ -58,8 +58,8 @@ class Spider(TestingPlugin):
         if not isinstance(info, Url):
             raise TypeError("Expected Url, got %s instead" % type(info))
 
-        # Check recursivity
-        if int(info.depth) > int(Config().audit_config.recursivity):
+        # Check depth
+        if int(info.depth) > int(Config().audit_config.depth):
             return
 
         m_return = []
@@ -83,9 +83,9 @@ class Spider(TestingPlugin):
         if not p:
             return
 
-        # Alert for redirect, if recursivity is not enabled.
-        if info.depth == Config().audit_config.recursivity and p.http_response_code == 301:
-            Logger.log("==> Initial redirection detected, and not followed. Try with increasion recursivity with '-r' option.")
+        # Alert for redirect, if recursive spidering is not enabled.
+        if info.depth == Config().audit_config.depth and p.http_response_code == 301:
+            Logger.log("==> Initial redirection detected, but NOT followed. Try increasing the depth with the '-r' option.")
 
         # Send back the HTTP reponse to the kernel
         self.send_info(p)

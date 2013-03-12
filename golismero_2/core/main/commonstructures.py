@@ -183,8 +183,8 @@ class GlobalParams (object):
         # Subdomains as regex expresion
         self.subdomain_regex = ""
 
-        # Recursivity level for spider
-        self.recursivity = 0
+        # Depth level for spider
+        self.depth = 0
 
         # Follow redirects
         self.follow_redirects = False
@@ -332,8 +332,8 @@ class GlobalParams (object):
         # Subdomains as regex expresion
         self.subdomain_regex = args.get("subdomain_regex", self.subdomain_regex)
 
-        # Recursivity level for spider
-        self.recursivity = args.get("recursivity", self.recursivity)
+        # Depth level for spider
+        self.depth = args.get("depth", self.depth)
 
         # Follow redirects
         self.follow_redirects = args.get("follow_redirects", self.follow_redirects)
@@ -534,9 +534,9 @@ class GlobalParams (object):
                         elif key == "subdomain_regex":
                             self.subdomain_regex = value
 
-                        # Recursivity level for spider
-                        elif key == "recursivity":
-                            self.recursivity = int(value)
+                        # Depth level for spider
+                        elif key == "depth":
+                            self.depth = int(value)
 
                         # Follow redirects
                         elif key == "follow_redirects":
