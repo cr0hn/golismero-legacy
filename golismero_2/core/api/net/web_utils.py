@@ -50,26 +50,26 @@ def check_auth(url, user, password):
     :return: True if authentication is successful. False otherwise.
     """
     if not url:
-	return False
+        return False
 
     # Get auth method
     auth, realm = detect_auth_method(url)
 
     if auth:
-	# Get authentication object
-	m_auth_obj = get_auth_obj(auth, user,password)
+        # Get authentication object
+        m_auth_obj = get_auth_obj(auth, user,password)
 
-	# Try the request
-	req = Request(url=url, auth=m_auth_obj)
-	p = req.prepare()
+        # Try the request
+        req = Request(url=url, auth=m_auth_obj)
+        p = req.prepare()
 
-	s = Session()
-	r = s.send(p)
+        s = Session()
+        r = s.send(p)
 
-	if r.status_code == codes.ok:
-	    return True
-	else:
-	    return False
+        if r.status_code == codes.ok:
+            return True
+        else:
+            return False
 
 
 
@@ -92,13 +92,13 @@ def get_auth_obj(method, user, password):
 
     if method:
 
-	m_method = method.lower()
-	if m_method == "basic":
-	    m_auth_obj = HTTPBasicAuth(user, password)
-	elif m_method == "digest":
-	    m_auth_obj = HTTPDigestAuth(user, password)
-	elif m_method == "ntlm":
-	    m_auth_obj = HttpNtlmAuth(user, password)
+        m_method = method.lower()
+        if m_method == "basic":
+            m_auth_obj = HTTPBasicAuth(user, password)
+        elif m_method == "digest":
+            m_auth_obj = HTTPDigestAuth(user, password)
+        elif m_method == "ntlm":
+            m_auth_obj = HttpNtlmAuth(user, password)
 
     return m_auth_obj
 
@@ -121,13 +121,13 @@ def detect_auth_method(url):
     r = s.send(p)
 
     if 'www-authenticate' in r.headers:
-	authline = r.headers['www-authenticate']
-	authobj = compile(r'''(?:\s*www-authenticate\s*:)?\s*(\w*)\s+realm=['"]([^'"]+)['"]''',IGNORECASE)
-	matchobj = authobj.match(authline)
-	if not matchobj:
-		return None, None
-	scheme = matchobj.group(1)
-	realm = matchobj.group(2)
+        authline = r.headers['www-authenticate']
+        authobj = compile(r'''(?:\s*www-authenticate\s*:)?\s*(\w*)\s+realm=['"]([^'"]+)['"]''',IGNORECASE)
+        matchobj = authobj.match(authline)
+        if not matchobj:
+            return None, None
+        scheme = matchobj.group(1)
+        realm = matchobj.group(2)
 
     return scheme, realm
 
@@ -232,11 +232,11 @@ def convert_to_absolute_urls(base_url, relative_urls):
 
         # Add complete URL
         m_bind_add("%s://%s%s%s" % (
-                m_scheme,
-                m_hostname,
-                m_path,
-                m_query
-            ))
+            m_scheme,
+            m_hostname,
+            m_path,
+            m_query
+        ))
 
     return m_return
 
