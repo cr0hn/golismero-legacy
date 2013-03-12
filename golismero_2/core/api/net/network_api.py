@@ -65,28 +65,28 @@ class NetworkAPI (object):
         :raises: ValueError
         """
         if NetworkAPI.__http_pool_manager is None:
-	    # Set pool
-	    NetworkAPI.__http_pool_manager = Session()
+            # Set pool
+            NetworkAPI.__http_pool_manager = Session()
 
-	    # If proxy
-	    m_proxy_addr = Config().audit_config.proxy_addr
-	    if m_proxy_addr:
-		m_auth_user = Config().audit_config.proxy_user
-		m_auth_pass = Config().audit_config.proxy_pass
+            # If proxy
+            m_proxy_addr = Config().audit_config.proxy_addr
+            if m_proxy_addr:
+                m_auth_user = Config().audit_config.proxy_user
+                m_auth_pass = Config().audit_config.proxy_pass
 
-		# Detect auth method
-		auth, realm = detect_auth_method(m_proxy_addr, m_auth_user, m_auth_pass)
+                # Detect auth method
+                auth, realm = detect_auth_method(m_proxy_addr, m_auth_user, m_auth_pass)
 
-		# Set auth and proxy
-		NetworkAPI.__http_pool_manager.auth = get_auth_obj(auth, m_auth_user, m_auth_pass)
-		NetworkAPI.__http_pool_manager.proxies = {'http': m_proxy_addr}
+                # Set auth and proxy
+                NetworkAPI.__http_pool_manager.auth = get_auth_obj(auth, m_auth_user, m_auth_pass)
+                NetworkAPI.__http_pool_manager.proxies = {'http': m_proxy_addr}
 
 
 
-	    # Set cookie
-	    m_cookies = Config().audit_config.cookie
-	    if m_cookies:
-		NetworkAPI.__http_pool_manager.cookies = m_cookies
+            # Set cookie
+            m_cookies = Config().audit_config.cookie
+            if m_cookies:
+                NetworkAPI.__http_pool_manager.cookies = m_cookies
 
         if protocol is NetworkAPI.TYPE_WEB:
             return Web(NetworkAPI.__http_pool_manager, Config().audit_config)
@@ -94,11 +94,13 @@ class NetworkAPI (object):
         else:
             raise ValueError("Unknown protocol type, value: %d" % protocol)
 
+
 #------------------------------------------------------------------------------
 class Protocol (object):
     """
     Super class for networks protocols.
     """
+
 
     #----------------------------------------------------------------------
     def __init__(self):
@@ -112,6 +114,7 @@ class Protocol (object):
     def state(self):
         """"""
         pass
+
 
     #----------------------------------------------------------------------
     def close(self):
@@ -135,6 +138,7 @@ class Protocol (object):
         """
         pass
 
+
     #----------------------------------------------------------------------
     def custom_request(self, request):
         """"""
@@ -152,6 +156,7 @@ class Web (Protocol):
     Class for manager web protocols, like HTTP or HTTPs
     """
 
+
     #----------------------------------------------------------------------
     def __init__(self, http_pool, config):
         """Constructor"""
@@ -163,15 +168,18 @@ class Web (Protocol):
         # Global option for redirects
         self.__follow_redirects = config.follow_redirects
 
+
     #----------------------------------------------------------------------
     def state(self):
         """"""
         pass
 
+
     #----------------------------------------------------------------------
     def close(self):
         """Close and clear pool connections"""
         self.__http_pool_manager.clear()
+
 
     #----------------------------------------------------------------------
     def get_custom(self, request):
@@ -206,51 +214,51 @@ class Web (Protocol):
             # Set redirect option
             request.follow_redirects = request.follow_redirects if request.follow_redirects else self.__follow_redirects
 
-	    # allow_redirects
-	    # headers
-	    #
-	    # files = {'file': open('report.xls', 'rb')}
-	    # r = requests.post(url, files=files)
-	    #
-	    #  GET, OPTIONS, HEAD, POST, PUT, PATCH and DELETE.
+            # allow_redirects
+            # headers
+            #
+            # files = {'file': open('report.xls', 'rb')}
+            # r = requests.post(url, files=files)
+            #
+            #  GET, OPTIONS, HEAD, POST, PUT, PATCH and DELETE.
 
 
 
-	    # Set options
-	    m_request_params = {
-	        'allow_redirects' : request.follow_redirects,
-	        'headers' : request.raw_headers,
-	    }
+            # Set options
+            m_request_params = {
+                'allow_redirects' : request.follow_redirects,
+                'headers' : request.raw_headers,
+            }
 
-	    # HTTP method
-	    m_method = request.method
+            # HTTP method
+            m_method = request.method
 
-	    # Set files data, if available
-	    if m_method == "POST" or m_method == "PUT" and request.files_attached:
-		# Add files
-		for fname, fvalue in request.files_attached.iteritems():
-		    m_request_params["files"] = { 'file': (fname, fvalue) }
+            # Set files data, if available
+            if m_method == "POST" or m_method == "PUT" and request.files_attached:
+                # Add files
+                for fname, fvalue in request.files_attached.iteritems():
+                    m_request_params["files"] = { 'file': (fname, fvalue) }
 
-	    # timing init
-	    t1 = time()
-	    # Select request type
-	    m_url = request.url
-	    if m_method == "GET":
-		m_response = self.__http_pool_manager.get(m_url, **m_request_params)
-	    elif m_method == "POST":
-		m_response = self.__http_pool_manager.post(m_url, **m_request_params)
-	    elif m_method == "HEAD":
-		m_response = self.__http_pool_manager.head(m_url, **m_request_params)
-	    elif m_method == "OPTIONS":
-		m_response = self.__http_pool_manager.options(m_url, **m_request_params)
-	    elif m_method == "PUT":
-		m_response = self.__http_pool_manager.put(m_url, **m_request_params)
-	    elif m_method == "PATCH":
-		m_response = self.__http_pool_manager.patch(m_url, **m_request_params)
-	    elif m_method == "DELETE":
-		m_response = self.__http_pool_manager.delete(m_url, **m_request_params)
-	    else:
-		raise ValueError("Method '%s' not allowed." % m_method)
+            # timing init
+            t1 = time()
+            # Select request type
+            m_url = request.url
+            if m_method == "GET":
+                m_response = self.__http_pool_manager.get(m_url, **m_request_params)
+            elif m_method == "POST":
+                m_response = self.__http_pool_manager.post(m_url, **m_request_params)
+            elif m_method == "HEAD":
+                m_response = self.__http_pool_manager.head(m_url, **m_request_params)
+            elif m_method == "OPTIONS":
+                m_response = self.__http_pool_manager.options(m_url, **m_request_params)
+            elif m_method == "PUT":
+                m_response = self.__http_pool_manager.put(m_url, **m_request_params)
+            elif m_method == "PATCH":
+                m_response = self.__http_pool_manager.patch(m_url, **m_request_params)
+            elif m_method == "DELETE":
+                m_response = self.__http_pool_manager.delete(m_url, **m_request_params)
+            else:
+                raise ValueError("Method '%s' not allowed." % m_method)
 
 
             # timin end
@@ -322,7 +330,6 @@ class Web (Protocol):
         return self.get_custom(m_request)
 
 
-
     #----------------------------------------------------------------------
     #
     # Static methods
@@ -337,4 +344,3 @@ class Web (Protocol):
         """
         m_url = parse_url(url)
         return "%s%s%s" % (m_url.scheme, m_url.host, m_url.port)
-

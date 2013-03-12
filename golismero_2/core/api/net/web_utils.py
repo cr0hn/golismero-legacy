@@ -24,6 +24,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["is_in_scope", "convert_to_absolute_url", "convert_to_absolute_urls", 'detect_auth_method', 'get_auth_obj', 'check_auth']
+
 from requests import *
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests_ntlm import HttpNtlmAuth
@@ -31,7 +33,6 @@ from ..config import Config
 
 from collections import namedtuple
 
-__all__ = ["is_in_scope", "convert_to_absolute_url", "convert_to_absolute_urls", 'detect_auth_method', 'get_auth_obj', 'check_auth']
 
 #----------------------------------------------------------------------
 def check_auth(url, user, password):
@@ -72,7 +73,6 @@ def check_auth(url, user, password):
             return False
 
 
-
 #----------------------------------------------------------------------
 def get_auth_obj(method, user, password):
     """Generates an authentication code
@@ -103,7 +103,6 @@ def get_auth_obj(method, user, password):
     return m_auth_obj
 
 
-
 #------------------------------------------------------------------------------
 def detect_auth_method(url):
     """
@@ -130,7 +129,6 @@ def detect_auth_method(url):
         realm = matchobj.group(2)
 
     return scheme, realm
-
 
 
 #----------------------------------------------------------------------
@@ -240,9 +238,10 @@ def convert_to_absolute_urls(base_url, relative_urls):
 
     return m_return
 
+
 #----------------------------------------------------------------------
 #
-# THIS CODE HAS BEEN BORROEWED FROM URLLIB3 PROJECT
+# THIS CODE HAS BEEN BORROWED FROM THE URLLIB3 PROJECT
 #
 #----------------------------------------------------------------------
 class Url(namedtuple('Url', ['scheme', 'auth', 'host', 'port', 'path', 'query', 'fragment'])):
