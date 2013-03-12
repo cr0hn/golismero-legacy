@@ -28,7 +28,6 @@ __all__ = ["HTML", "HTMLElement"]
 
 
 from .information import Information
-
 from bs3.BeautifulSoup import BeautifulSoup
 
 

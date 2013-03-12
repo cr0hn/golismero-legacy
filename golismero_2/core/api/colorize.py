@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["colorize"]
 
 from thirdparty_libs.colorizer import *
-from core.api.config import Config
+from .config import Config
 
 
 

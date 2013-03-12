@@ -31,9 +31,10 @@ __all__ = ["HTTP_Request", "HTTP_Response"]
 from .information import *
 from .url import *
 from .html import *
+from ...net.web_utils import parse_url
 
-from core.api.net.web_utils import parse_url
 from os.path import basename
+
 import hashlib
 from re import findall
 

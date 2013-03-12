@@ -24,11 +24,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from thirdparty_libs.requests import *
-from thirdparty_libs.requests.auth import HTTPBasicAuth, HTTPDigestAuth
-from thirdparty_libs.requests_ntlm import HttpNtlmAuth
-from collections import namedtuple
+from requests import *
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+from requests_ntlm import HttpNtlmAuth
 from ..config import Config
+
+from collections import namedtuple
 
 __all__ = ["is_in_scope", "convert_to_absolute_url", "convert_to_absolute_urls", 'detect_auth_method', 'get_auth_obj', 'check_auth']
 

@@ -32,13 +32,12 @@ from ..logger import Logger
 from ..results.information.url import Url
 from ..results.information.http import *
 from ...managers.cachemanager import *
-from .web_utils import is_in_scope
+from .web_utils import *
+from requests import *
 
 from time import time
 from re import compile, match, IGNORECASE
-from core.api.net.web_utils import parse_url
-from thirdparty_libs.requests import *
-from core.api.net.web_utils import *
+
 
 #------------------------------------------------------------------------------
 class NetworkAPI (object):
