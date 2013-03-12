@@ -20,4 +20,4 @@
 .DS_Store
 
 # Testing files
-testing*py
+#testing*py
