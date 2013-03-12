@@ -27,9 +27,112 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from urllib3.util import parse_url
 from urllib3.exceptions import LocationParseError
 
+from thirdparty_libs.requests import *
+from thirdparty_libs.requests.auth import HTTPBasicAuth, HTTPDigestAuth
+from thirdparty_libs.requests_ntlm import HttpNtlmAuth
 from ..config import Config
 
-__all__ = ["is_in_scope", "convert_to_absolute_url", "convert_to_absolute_urls"]
+__all__ = ["is_in_scope", "convert_to_absolute_url", "convert_to_absolute_urls", 'detect_auth_method', 'get_auth_obj', 'check_auth']
+
+#----------------------------------------------------------------------
+def check_auth(url, user, password):
+    """
+    Check the auth for and specified url.
+
+    :param url: String with url.
+    :type url: str
+
+    :param user: string with user text
+    :type user: str
+
+    :param password: string with password text
+    :type password: str
+
+    :return: True if authentication is successful. False otherwise.
+    """
+    if not url:
+	return False
+
+    # Get auth method
+    auth, realm = detect_auth_method(url)
+
+    if auth:
+	# Get authentication object
+	m_auth_obj = get_auth_obj(auth, user,password)
+
+	# Try the request
+	req = Request(url=url, auth=m_auth_obj)
+	p = req.prepare()
+
+	s = Session()
+	r = s.send(p)
+
+	if r.status_code == codes.ok:
+	    return True
+	else:
+	    return False
+
+
+
+#----------------------------------------------------------------------
+def get_auth_obj(method, user, password):
+    """Generates an authentication code
+
+    :param method: Auth method: basic, digest, ntlm.
+    :type method: str
+
+    :param user: string with user text
+    :type user: str
+
+    :param password: string with password text
+    :type password: str
+
+    :return: an object with authentication or None if error/problem.
+    """
+    m_auth_obj = None
+
+    if method:
+
+	m_method = method.lower()
+	if m_method == "basic":
+	    m_auth_obj = HTTPBasicAuth(user, password)
+	elif m_method == "digest":
+	    m_auth_obj = HTTPDigestAuth(user, password)
+	elif m_method == "ntlm":
+	    m_auth_obj = HttpNtlmAuth(user, password)
+
+    return m_auth_obj
+
+
+
+#------------------------------------------------------------------------------
+def detect_auth_method(url):
+    """
+    Detects authentication method.
+
+    :param url: url to test authentication.
+    :type url: str.
+
+    :return: (scheme, realm) if auth required. None otherwise.
+    """
+    req = Request(url=url)
+    p = req.prepare()
+
+    s = Session()
+    r = s.send(p)
+
+    if 'www-authenticate' in r.headers:
+	authline = r.headers['www-authenticate']
+	authobj = compile(r'''(?:\s*www-authenticate\s*:)?\s*(\w*)\s+realm=['"]([^'"]+)['"]''',IGNORECASE)
+	matchobj = authobj.match(authline)
+	if not matchobj:
+		return None, None
+	scheme = matchobj.group(1)
+	realm = matchobj.group(2)
+
+    return scheme, realm
+
+
 
 #----------------------------------------------------------------------
 def is_in_scope(url):
