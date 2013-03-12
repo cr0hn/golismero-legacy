@@ -36,8 +36,7 @@ from .web_utils import is_in_scope
 
 from time import time
 from re import compile, match, IGNORECASE
-from urllib3.util import parse_url
-from urllib3 import PoolManager
+from core.api.net.web_utils import parse_url
 from thirdparty_libs.requests import *
 from core.api.net.web_utils import *
 
@@ -67,8 +66,6 @@ class NetworkAPI (object):
         :raises: ValueError
         """
         if NetworkAPI.__http_pool_manager is None:
-            #NetworkAPI.__http_pool_manager = PoolManager(Config().audit_config.max_connections)
-
 	    # Set pool
 	    NetworkAPI.__http_pool_manager = Session()
 
