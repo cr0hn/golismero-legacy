@@ -15,3 +15,6 @@
 *.bak
 *.back
 *.backup
+
+# Mac files
+.DS_Store
