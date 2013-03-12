@@ -25,11 +25,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-
-
-if __name__=='__main__':
-    pass
-
 url = ["http://entretenimiento.terra.es/vuelve-alvaro-el-superman-de-gran-hermano-14,e676a7215295d310VgnVCM3000009acceb0aRCRD.html",
 "http://deportes.terra.es/equipos/seleccion",
 "http://noticias.terra.es/mundo/renuncia-y-sucesor-de-benedicto-xvi/la-eleccion-del-papa-con-terra-desde-dentro-y-al-minuto,e4657913b045d310VgnVCM5000009ccceb0aRCRD.html",
@@ -371,15 +366,18 @@ def httplib2_test():
     print
     print "Errors: %s | Oks: %s." % (str(errors), str(oks))
 
-print "Testing python HTTP libs performance:"
-print
-print "Each library will request '%s' URLs." % len(url)
 
-print
-print "'Request' library time: %s s" % str(timeit.timeit("request_test()", setup="from __main__ import request_test", number=1))
-print
-print "'urllib2' library time: %s s" % str(timeit.timeit("urllib2_test()", setup="from __main__ import urllib2_test", number=1))
-print
-print "'httplib2' library time: %s s" % str(timeit.timeit("httplib2_test()", setup="from __main__ import httplib2_test", number=1))
-print
-print "'urllib3' library time: %s s" % str(timeit.timeit("urllib3_test()", setup="from __main__ import urllib3_test", number=1))
+if __name__=='__main__':
+
+    print "Testing python HTTP libs performance:"
+    print
+    print "Each library will request '%s' URLs." % len(url)
+
+    print
+    print "'Request' library time: %s s" % str(timeit.timeit("request_test()", setup="from __main__ import request_test", number=1))
+    print
+    print "'urllib2' library time: %s s" % str(timeit.timeit("urllib2_test()", setup="from __main__ import urllib2_test", number=1))
+    print
+    print "'httplib2' library time: %s s" % str(timeit.timeit("httplib2_test()", setup="from __main__ import httplib2_test", number=1))
+    print
+    print "'urllib3' library time: %s s" % str(timeit.timeit("urllib3_test()", setup="from __main__ import urllib3_test", number=1))
