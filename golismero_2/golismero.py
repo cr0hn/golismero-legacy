@@ -200,7 +200,7 @@ def main():
         cmdParams = GlobalParams()
         cmdParams.from_cmdline( P )
     except Exception, e:
-        raise
+        ##raise
         parser.error(str(e))
 
 
