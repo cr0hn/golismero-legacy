@@ -24,7 +24,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ['NetworkAPI', 'Web']
+__all__ = ['NetworkAPI', 'Web', 'RequestException']
+
 
 
 from ..config import Config
@@ -34,6 +35,7 @@ from ..results.information.http import *
 from ...managers.cachemanager import *
 from .web_utils import *
 from requests import *
+from requests.exceptions import *
 
 from time import time
 from re import compile, match, IGNORECASE
