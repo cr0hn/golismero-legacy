@@ -57,6 +57,10 @@ def show_banner():
 #----------------------------------------------------------------------
 # Python version check.
 # We must do it now before trying to import any more modules.
+#
+# Note: this is mostly because of argparse, if you install it
+#       separately you can try removing this check and seeing
+#       what happens (we haven't tested it!).
 
 import sys
 from sys import version_info, exit
@@ -122,21 +126,68 @@ def launcher(options):
         # Message loop
         m_orchestrator.msg_loop()
 
-    elif options.run_mode == GlobalParams.RUN_MODE.cloudclient:
+    elif options.run_mode == GlobalParams.RUN_MODE.master:
         #
         # TODO
         #
-        raise NotImplementedError("Cloud client mode not yet implemented!")
+        raise NotImplementedError("Master mode not yet implemented!")
 
-
-    elif options.run_mode == GlobalParams.RUN_MODE.cloudserver:
+    elif options.run_mode == GlobalParams.RUN_MODE.slave:
         #
         # TODO
         #
-        raise NotImplementedError("Cloud server mode not yet implemented!")
+        raise NotImplementedError("Slave mode not yet implemented!")
 
     else:
         raise ValueError("Invalid run mode: %r" % options.run_mode)
+
+
+#----------------------------------------------------------------------
+# Custom argparse actions
+
+# --enable-plugin
+class EnablePluginAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        assert self.dest == "enabled_plugins"
+        all_plugins = ["all"]
+        values = values.strip().lower()
+        if values == "all":
+            enabled_plugins = all_plugins
+        else:
+            enabled_plugins = getattr(namespace, "enabled_plugins", [])
+            if enabled_plugins != all_plugins:
+                enabled_plugins.append(values)
+        namespace.enabled_plugins = enabled_plugins
+        disabled_plugins = getattr(namespace, "disabled_plugins", [])
+        if values in disabled_plugins:
+            disabled_plugins.remove(values)
+
+# --disable-plugin
+class DisablePluginAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        assert self.dest == "disabled_plugins"
+        all_plugins = ["all"]
+        values = values.strip().lower()
+        if values == "all":
+            disabled_plugins = all_plugins
+        else:
+            disabled_plugins = getattr(namespace, "disabled_plugins", [])
+            if disabled_plugins != all_plugins:
+                disabled_plugins.append(values)
+        namespace.disabled_plugins = disabled_plugins
+        enabled_plugins = getattr(namespace, "enabled_plugins", [])
+        if values in enabled_plugins:
+            enabled_plugins.remove(values)
+
+# --cookie-file
+class ReadValueFromFileAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        try:
+            with open(values, "rU") as f:
+                data = f.read()
+        except IOError, e:
+            parser.error("Can't read file %r. Error: %s" % (values, e.message))
+        setattr(namespace, self.dest, data)
 
 
 #----------------------------------------------------------------------
@@ -152,8 +203,8 @@ def main():
     parser.add_argument("targets", metavar="TARGET", nargs="+", help="one or more target web sites")
 
     gr_main = parser.add_argument_group("main options")
-    gr_main.add_argument("-M", "--run-mode", metavar="MODE", help="run mode [default: Standalone]", default="Standalone", choices=[x.title() for x in GlobalParams.RUN_MODE._values.keys()])
-    gr_main.add_argument("-I", "--user-interface", metavar="MODE", help="user interface mode [default: Console]", default="Console", choices=[x.title() for x in GlobalParams.USER_INTERFACE._values.keys()])
+    gr_main.add_argument("-M", "--run-mode", metavar="MODE", add_help=False, help="run mode [default: standalone]", default="standalone", choices=[x.title() for x in GlobalParams.RUN_MODE._values.keys()])
+    gr_main.add_argument("-I", "--user-interface", metavar="MODE", add_help=False, help="user interface mode [default: console]", default="console", choices=[x.title() for x in GlobalParams.USER_INTERFACE._values.keys()])
     gr_main.add_argument("-v", "--verbose", action="count", default=1, help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
     gr_main.add_argument("--max-process", metavar="N", type=int, help="maximum number of plugins to run concurrently [default: 2]", default=2)
@@ -178,14 +229,15 @@ def main():
     gr_net.add_argument("-pp","--proxy-pass", metavar="PASS", help="HTTP proxy password")
     gr_net.add_argument("-pa","--proxy-addr", metavar="ADDRESS:PORT", help="HTTP proxy address in format: address:port")
     gr_net.add_argument("--cookie", metavar="COOKIE", help="set cookie for requests")
-    gr_net.add_argument("--cookie-file", metavar="FILE", help="load a cookie from file")
+    gr_net.add_argument("--cookie-file", metavar="FILE", action=ReadValueFromFileAction, dest="cookie", help="load a cookie from file")
 
     gr_audit = parser.add_argument_group("audit")
     gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
     gr_audit.add_argument("--audit-database", metavar="DATABASE", dest="audit_db", default="memory://", help="specify a database connection string")
 
     gr_plugins = parser.add_argument_group("plugins")
-    gr_plugins.add_argument("-P", "--enable-plugin", metavar="NAME", action="append", dest="plugins", help="customize which plugins to load" )
+    gr_plugins.add_argument("-P", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load", default=["all"])
+    gr_plugins.add_argument("-NP", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load")
     gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
     gr_plugins.add_argument("--plugin-list", action="store_true", help="list available plugins and quit")
     gr_plugins.add_argument("--plugin-info", metavar="NAME", dest="plugin_name", help="show plugin info and quit")
@@ -218,7 +270,8 @@ def main():
 
 
     #------------------------------------------------------------
-    # List plugins
+    # List plugins and quit
+
     if P.plugin_list:
 
         # Load the plugins list
@@ -251,7 +304,8 @@ def main():
 
 
     #------------------------------------------------------------
-    # Display plugin info
+    # Display plugin info and quit
+
     if P.plugin_name:
 
         # Load the plugins list
@@ -297,50 +351,62 @@ def main():
             exit(1)
 
 
+    #------------------------------------------------------------
+    # Use the --output and --output-formats defaults if needed.
 
+    if cmdParams.output_file and (
+        not cmdParams.output_formats or
+        cmdParams.output_formats == [GlobalParams.REPORT_FORMAT.screen]
+    ):
+        filename, ext = path.splitext(cmdParams.output_file)
+        ext = ext.lower()
+        if ext == ".txt":
+            cmdParams.output_formats = [GlobalParams.REPORT_FORMAT.text]
+        elif ext == ".grepable":
+            cmdParams.output_formats = [GlobalParams.REPORT_FORMAT.grepable]
+        elif ext in (".html", ".htm"):
+            cmdParams.output_formats = [GlobalParams.REPORT_FORMAT.html]
+        else:
+            parser.error("Can't guess the output format from that filename! Use '--output-format'.")
+        cmdParams.output_file = filename
 
 
     #------------------------------------------------------------
-    # Detect auth in URL and proxy, if specified.
-    # URL:
-    if 1 == 2:
-        for t in cmdParams.targets:
-            auth, realm = detect_auth_method(t)
-            if auth:
-                Console.display("[!] '%s' authentication is needed for '%s'. Specify using syntax: http://user:pass@target.com.\n" % (auth, t))
-                exit(1)
-
-    # Proxy
-    if cmdParams.proxy_addr:
-        # Check de user/pass
-        if cmdParams.proxy_user:
-            check_auth(cmdParams.proxy_addr, cmdParams.proxy_user, cmdParams.proxy_pass)
-        else:
-            auth, realm = detect_auth_method(cmdParams.proxy_addr)
-            if auth:
-                Console.display("[!] Authentication is needed for '%s' proxy. Use '--proxy-user' and '--proxy-pass' to specify them." % cmdParams.proxy_addr)
-                exit(1)
-
-    # Load cookie from file, if needed
-    if P.cookie_file:
-        try:
-            f = open(P.cookie_file, "U")
-            cmdParams.cookie = f.read()
-            f.close()
-        except IOError,e:
-            Console.display("[!] Cant' read cookie  from '%s'. Error: %s " % (P.cookie_file, e.message))
-            exit(1)
-
-
     # Check if all options are correct
-    cmdParams.check_params()
+
+    try:
+        cmdParams.check_params()
+    except Exception, e:
+        parser.error(e.message)
 
 
     #------------------------------------------------------------
     # Launch GoLismero
+
     Console.display("GoLismero started at %s" % datetime.datetime.now())
     try:
+        from core.api.net.web_utils import detect_auth_method, check_auth
+
+        # Detect auth in URLs
+        if 1 == 2:
+            for t in cmdParams.targets:
+                auth, realm = detect_auth_method(t)
+                if auth:
+                    Console.display("[!] '%s' authentication is needed for '%s'. Specify using syntax: http://user:pass@target.com." % (auth, t))
+                    exit(1)
+
+        # Detect auth in proxy, if specified
+        if cmdParams.proxy_addr:
+            if cmdParams.proxy_user:
+                check_auth(cmdParams.proxy_addr, cmdParams.proxy_user, cmdParams.proxy_pass)
+            else:
+                auth, realm = detect_auth_method(cmdParams.proxy_addr)
+                if auth:
+                    Console.display("[!] Authentication is needed for '%s' proxy. Use '--proxy-user' and '--proxy-pass' to specify them." % cmdParams.proxy_addr)
+                    exit(1)
+
         launcher(cmdParams)
+
     except KeyboardInterrupt:
         Console.display("GoLismero cancelled by the user at %s" % datetime.datetime.now())
         exit(1)
