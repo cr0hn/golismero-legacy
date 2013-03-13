@@ -25,11 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 #-----------------------------------------------------------------------
-#
-#
-# This file contains interfaces and base classes for plugins
-#
-#
+# Base classes for plugins
 #-----------------------------------------------------------------------
 
 from .config import Config
@@ -38,12 +34,7 @@ from .results.result import Result
 
 class Plugin (object):
     """
-    Base class for plugins.
-
-    Contains helper methods for plugins, and defines an interface that
-    will be implemented by subclasses.
-
-    All plugins must derive from this class, or one if its subclasses.
+    Base class for all plugins.
     """
 
     PLUGIN_TYPE_ABSTRACT = 0    # Not a real plugin type!
@@ -80,6 +71,14 @@ class Plugin (object):
         if not text:
             raise NotImplementedError("All plugins must implement this method!")
         return text
+
+
+#------------------------------------------------------------------------------
+class InformationPlugin (Plugin):
+    """
+    Information plugins are the ones that receive information, and may also
+    send it back. Thus they can form feedback loops among each other.
+    """
 
 
     #----------------------------------------------------------------------
@@ -128,7 +127,7 @@ class Plugin (object):
 
 
 #------------------------------------------------------------------------------
-class TestingPlugin (Plugin):
+class TestingPlugin (InformationPlugin):
     """
     Testing plugins are the ones that perform the security tests.
 
@@ -139,7 +138,7 @@ class TestingPlugin (Plugin):
 
 
 #------------------------------------------------------------------------------
-class UIPlugin (Plugin):
+class UIPlugin (InformationPlugin):
     """
     User Interface plugins control the way in which the user interacts with GoLismero.
 
@@ -161,7 +160,7 @@ class UIPlugin (Plugin):
 
 
 #------------------------------------------------------------------------------
-class GlobalPlugin (Plugin):
+class GlobalPlugin (InformationPlugin):
     """
     Global plugins can control all stages of an audit.
 
@@ -185,7 +184,7 @@ class GlobalPlugin (Plugin):
 
 
 #------------------------------------------------------------------------------
-class ReportPlugin (object):
+class ReportPlugin (Plugin):
     """
     Report plugins control how results will be exported.
 
@@ -197,8 +196,8 @@ class ReportPlugin (object):
     @property
     def report_type(self):
         """
-        Get an string with the report name that will be generate. For
-        example: text, html, grepable...
+        Get an string with the report name that will be generated.
+        For example: text, html, grepable...
 
         :returns: str -- type of report
         """
