@@ -203,8 +203,8 @@ def main():
     parser.add_argument("targets", metavar="TARGET", nargs="+", help="one or more target web sites")
 
     gr_main = parser.add_argument_group("main options")
-    gr_main.add_argument("-M", "--run-mode", metavar="MODE", help="run mode [default: standalone]", default="standalone", choices=[x.title() for x in GlobalParams.RUN_MODE._values.keys()])
-    gr_main.add_argument("-I", "--user-interface", metavar="MODE", help="user interface mode [default: console]", default="console", choices=[x.title() for x in GlobalParams.USER_INTERFACE._values.keys()])
+    gr_main.add_argument("-M", "--run-mode", metavar="MODE", help="run mode [default: standalone]", default="standalone", choices=GlobalParams.RUN_MODE._values.keys())
+    gr_main.add_argument("-I", "--user-interface", metavar="MODE", help="user interface mode [default: console]", default="console", choices=GlobalParams.USER_INTERFACE._values.keys())
     gr_main.add_argument("-v", "--verbose", action="count", default=1, help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
     gr_main.add_argument("--max-process", metavar="N", type=int, help="maximum number of plugins to run concurrently [default: 2]", default=2)
@@ -213,7 +213,7 @@ def main():
 
     gr_report = parser.add_argument_group("report")
     gr_report.add_argument("-o", "--output-file", metavar="BASENAME", help="output file, without extension")
-    gr_report.add_argument("-of", "--output-format", metavar="FORMAT", action="append", dest="output_formats", help="add an output format", choices=GlobalParams.REPORT_FORMAT._values.keys())
+    gr_report.add_argument("-of", "--output-format", metavar="FORMAT", action="append", dest="output_formats", help="add an output format", default=["screen"], choices=GlobalParams.REPORT_FORMAT._values.keys())
 
     gr_net = parser.add_argument_group("network")
     gr_net.add_argument("--max-connections", help="maximum number of concurrent connections per host [default: 4]", default=50)

@@ -178,6 +178,9 @@ def bootstrap(context, func, argv, argd):
                          message_code = Message.MSG_CONTROL_STOP,
                          message_info = False)
 
+        # Raise the exception again
+        raise
+
 
 #------------------------------------------------------------------------------
 class Context (object):

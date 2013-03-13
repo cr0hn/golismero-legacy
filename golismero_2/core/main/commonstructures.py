@@ -138,10 +138,10 @@ class GlobalParams (object):
         self.targets = []
 
         # Run mode
-        self.run_mode = GlobalParams.RUN_MODE.standalone
+        self.run_mode = "standalone"
 
         # UI mode
-        self.user_interface = GlobalParams.USER_INTERFACE.console
+        self.user_interface = "console"
 
         # Set verbosity level
         self.verbose = 1
@@ -153,7 +153,7 @@ class GlobalParams (object):
         # Report options
         #
         self.output_file = None
-        self.output_formats = [self.REPORT_FORMAT.screen]
+        self.output_formats = ["screen"]
 
 
         #
@@ -224,18 +224,18 @@ class GlobalParams (object):
         run_mode = run_mode.strip().lower()
         if not run_mode in self.RUN_MODE._values:
             raise ValueError("Invalid run mode: %s" % run_mode)
-        self.__run_mode = run_mode
+        self.__run_mode = getattr(self.RUN_MODE, run_mode)
     def __get_run_mode(self):
         return self.__run_mode
     run_mode = property(__get_run_mode, __set_run_mode)
 
 
     #----------------------------------------------------------------------
-    def __set_user_interface(self, run_mode):
+    def __set_user_interface(self, user_interface):
         user_interface = user_interface.strip().lower()
         if not user_interface in self.USER_INTERFACE._values:
             raise ValueError("Invalid user interface mode: %s" % user_interface)
-        self.__user_interface = user_interface
+        self.__user_interface = getattr(self.USER_INTERFACE, user_interface)
     def __get_user_interface(self):
         return self.__user_interface
     user_interface = property(__get_user_interface, __set_user_interface)
@@ -244,16 +244,17 @@ class GlobalParams (object):
     #----------------------------------------------------------------------
     def __set_output_formats(self, output_formats):
         if output_formats:
-            output_formats = [fmt.strip().lower() for fmt in output_formats]
-            for fmt in output_formats:
-                if not fmt in self.REPORT_FORMAT._values:
-                    raise ValueError("Invalid output format: %s" % fmt)
+            try:
+                output_formats = [getattr(self.REPORT_FORMAT, fmt.strip().lower())
+                                  for fmt in output_formats]
+            except AttributeError:
+                raise ValueError("Invalid output format: %s" % fmt)
         else:
             output_formats = []
         self.__output_formats = output_formats
     def __get_output_formats(self):
         return self.__output_formats
-    output_formats = property(__set_output_formats, __get_output_formats)
+    output_formats = property(__get_output_formats, __set_output_formats)
 
 
     #----------------------------------------------------------------------
