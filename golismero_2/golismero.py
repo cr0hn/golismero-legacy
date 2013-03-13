@@ -149,42 +149,45 @@ def main():
 
     # Configure command line parser
     parser = argparse.ArgumentParser(fromfile_prefix_chars="@")
-    parser.add_argument('targets', metavar='TARGET', nargs='+', help='one or more target web sites')
+    parser.add_argument("targets", metavar="TARGET", nargs="+", help="one or more target web sites")
 
     gr_main = parser.add_argument_group("main options")
-    gr_main.add_argument('-M', "--run-mode", action='store', dest='run_mode', help='run mode [default: Standalone]', default="Standalone", choices=[x.title() for x in GlobalParams.RUN_MODE._values.keys()])
-    gr_main.add_argument('-I', "--user-interface", action='store', dest='user_interface', help='user interface mode [default: Console]', default="console", choices=[x.title() for x in GlobalParams.USER_INTERFACE._values.keys()])
+    gr_main.add_argument("-M", "--run-mode", metavar="MODE", help="run mode [default: Standalone]", default="Standalone", choices=[x.title() for x in GlobalParams.RUN_MODE._values.keys()])
+    gr_main.add_argument("-I", "--user-interface", metavar="MODE", help="user interface mode [default: Console]", default="Console", choices=[x.title() for x in GlobalParams.USER_INTERFACE._values.keys()])
     gr_main.add_argument("-v", "--verbose", action="count", default=1, help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
-    gr_main.add_argument('--max-process', action='store', type=int, dest='max_process', help='maximum number of plugins to run concurrently.', default=0)
-    gr_main.add_argument('--no-color', action="store_false", dest="colorize", help="not colorize output console.", default = True)
+    gr_main.add_argument("--max-process", metavar="N", type=int, help="maximum number of plugins to run concurrently [default: 2]", default=2)
+    gr_main.add_argument("--color", action="store_true", dest="colorize", help="use colors in console output [default]", default=True)
+    gr_main.add_argument("--no-color", action="store_false", dest="colorize", help="suppress colors in console output")
 
     gr_report = parser.add_argument_group("report")
-    gr_report.add_argument("-o", action="store", dest="output_file", help="output file, without extension.")
-    gr_report.add_argument("-of", action="append", dest="output_formats", help="one or more output formats.", choices=('screen', 'text', 'grepable', 'html'), default=['screen'])
+    gr_report.add_argument("-o", "--output-file", metavar="BASENAME", help="output file, without extension")
+    gr_report.add_argument("-of", "--output-format", metavar="FORMAT", action="append", dest="output_formats", help="add an output format", choices=GlobalParams.REPORT_FORMAT._values.keys())
 
     gr_net = parser.add_argument_group("network")
-    gr_net.add_argument("--max-connections", action="store", dest="max_connections", help="maximum number of concurrent connections per host [default: 4]", default=50)
-    gr_net.add_argument("--no-subdomains", action="store_true", dest="include_subdomains", help="do not include subdomains in the target scope", default=True)
-    gr_net.add_argument("--regex", action="store", dest="subdomain_regex", help="include subdomains as regex exprexion", default="")
-    gr_net.add_argument("-r", "--depth", action="store", type=int, dest="depth", help="depth level of spider.", default=0)
+    gr_net.add_argument("--max-connections", help="maximum number of concurrent connections per host [default: 4]", default=50)
+    gr_net.add_argument("--allow-subdomains", action="store_true", dest="include_subdomains", help="include subdomains in the target scope [default]", default=True)
+    gr_net.add_argument("--forbid-subdomains", action="store_false", dest="include_subdomains", help="do not include subdomains in the target scope")
+    gr_net.add_argument("--subdomain-regex", metavar="REGEX", help="filter subdomains using a regular expression", default="")
+    gr_net.add_argument("-r", "--depth", type=int, help="depth level of spider [default: 0]", default=0)
     gr_net.add_argument("-f","--follow-redirects", action="store_true", dest="follow_redirects", help="follow redirects", default=False)
-    gr_net.add_argument("-nff","--no-follow-first", action="store_false", dest="follow_first_redirect", help="follow only first redirect", default=True)
-    gr_net.add_argument("-pu","--proxy-user", action="store", dest="proxy_user", help="proxy user.")
-    gr_net.add_argument("-pp","--proxy-pass", action="store", dest="proxy_pass", help="proxy pass.")
-    gr_net.add_argument("-pa","--proxy-addr", action="store", dest="proxy_addr", help="proxy address as format: address:port")
-    gr_net.add_argument("--cookie", action="store", dest="cookie", help="set cookie for requests")
-    gr_net.add_argument("--cookie-file", help="load a cookie from file")
+    gr_net.add_argument("-nf","--no-follow-redirects", action="store_false", dest="follow_redirects", help="do not follow redirects [default]")
+    gr_net.add_argument("-nff","--no-follow-first", action="store_false", dest="follow_first_redirect", help="follow only the first redirect", default=True)
+    gr_net.add_argument("-pu","--proxy-user", metavar="USER", help="HTTP proxy username")
+    gr_net.add_argument("-pp","--proxy-pass", metavar="PASS", help="HTTP proxy password")
+    gr_net.add_argument("-pa","--proxy-addr", metavar="ADDRESS:PORT", help="HTTP proxy address in format: address:port")
+    gr_net.add_argument("--cookie", metavar="COOKIE", help="set cookie for requests")
+    gr_net.add_argument("--cookie-file", metavar="FILE", help="load a cookie from file")
 
     gr_audit = parser.add_argument_group("audit")
-    gr_audit.add_argument('--audit-name', action='store', dest='audit_name', help='customize the audit name')
-    gr_audit.add_argument('--audit-database', action='store', dest='audit_db', default="memory://", help='specify a database connection string')
+    gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
+    gr_audit.add_argument("--audit-database", metavar="DATABASE", dest="audit_db", default="memory://", help="specify a database connection string")
 
     gr_plugins = parser.add_argument_group("plugins")
-    gr_plugins.add_argument('-P', '--enable-plugin', action='append', dest='plugins', help="customize which plugins to load" )
-    gr_plugins.add_argument('--plugins-folder', action='store', dest="plugins_folder", help="customize the location of the plugins" )
-    gr_plugins.add_argument('--plugin-list', action='store_true', help="list available plugins")
-    gr_plugins.add_argument('--plugin-info', action='store', dest="plugin_name", help="show plugin info")
+    gr_plugins.add_argument("-P", "--enable-plugin", metavar="NAME", action="append", dest="plugins", help="customize which plugins to load" )
+    gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
+    gr_plugins.add_argument("--plugin-list", action="store_true", help="list available plugins and quit")
+    gr_plugins.add_argument("--plugin-info", metavar="NAME", dest="plugin_name", help="show plugin info and quit")
 
 
     # Parse command line options
@@ -197,7 +200,7 @@ def main():
         cmdParams = GlobalParams()
         cmdParams.from_cmdline( P )
     except Exception, e:
-        ##raise
+        raise
         parser.error(str(e))
 
 

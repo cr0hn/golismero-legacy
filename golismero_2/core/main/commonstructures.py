@@ -116,6 +116,9 @@ class GlobalParams (object):
     # User interface
     USER_INTERFACE = enum('console')
 
+    # Report formats
+    REPORT_FORMAT = enum('screen', 'text', 'grepable', 'html')
+
 
     #----------------------------------------------------------------------
     def __init__(self):
@@ -144,7 +147,7 @@ class GlobalParams (object):
         # Report options
         #
         self.output_file = None
-        self.output_formats = []
+        self.output_formats = [self.REPORT_FORMAT.screen]
 
 
         #
@@ -209,23 +212,23 @@ class GlobalParams (object):
         :raises: ValueError
         """
 
-        # Check max connections
+        # Validate the network connections limit
         if self.max_connections < 1:
             raise ValueError("Number of connections must be greater than 0, got %i." % params.max_connections)
 
-        # Check max process
+        # Validate the number of concurrent processes
         if self.max_process < 0:
             raise ValueError("Number of processes cannot be a negative number, got %i." % params.max_process)
 
-        # Check plugins selected
+        # Validate the list of targets
         if not self.targets:
             raise ValueError("No targets selected for execution.")
 
-        # Check plugins selected
+        # Validate the list of plugins
         if self.plugins is not None and not self.plugins:
             raise ValueError("No plugins selected for execution.")
 
-        # Check regular expresion
+        # Validate the regular expresion
         if self.subdomain_regex:
             from re import compile, error
 
@@ -234,29 +237,39 @@ class GlobalParams (object):
             except error, e:
                 raise ValueError("Regular expression not valid: %s." % e.message)
 
-        # Check for outputs restrictions
-        if (not self.output_file and 'screen' not in self.output_formats and self.output_formats) \
-           or (self.output_file and not self.output_formats):
-            raise ValueError("When you specify '-o' also need to set format option '-of'.")
+        # Validate the output options
+        if not self.output_file and self.REPORT_FORMAT.screen not in self.output_formats:
+            raise ValueError("Output format specified, but no output file!")
+        if self.output_file and not self.output_formats:
+            filename, ext = path.splitext(self.output_file)
+            ext = ext.lower()
+            if ext == ".txt":
+                self.output_formats = [self.REPORT_FORMAT.text]
+            elif ext == ".grepable":
+                self.output_formats = [self.REPORT_FORMAT.grepable]
+            elif ext in (".html", ".htm"):
+                self.output_formats = [self.REPORT_FORMAT.html]
+            else:
+                raise ValueError("When you specify '--output' you must also use '--output-format'.")
+            self.output_file = filename
 
-        # Fix targets and set it as complete format
-        for i in xrange(len(self.targets)):
-            self.targets[i] = 'http://%s' % self.targets[i] if not self.targets[i].startswith("http") else self.targets[i]
+        # Fix target URLs if the scheme part is missing
+        self.targets = [(x if x.startswith("http://") else "http://" + x) for x in self.targets]
 
-        # Try con convert for cookies format
+        # Parse the cookies argument
         if self.cookie:
             try:
                 # Prepare cookie
                 m_cookie = self.cookie.replace(" ", "").replace("=", ":")
                 # Remove 'Cookie:' start, if exits
-                m_cookie = self.cookie[len("Cookie:"):] if m_cookie.startswith("Cookie:") else m_cookie
+                m_cookie = m_cookie[len("Cookie:"):] if m_cookie.startswith("Cookie:") else m_cookie
                 # Split
                 m_cookie = m_cookie.split(";")
-
                 # Parse
                 self.cookie = { c.split(":")[0]:c.split(":")[1] for c in m_cookie}
             except ValueError:
-                raise ValueError("Invalid cookie format specified. Use format: 'Key=value; key=value'.")
+                raise ValueError("Invalid cookie format specified. Use this format: 'Key=value; key=value'.")
+
 
     #----------------------------------------------------------------------
     def from_dictionary(self, args):
@@ -294,7 +307,9 @@ class GlobalParams (object):
         # Report options
         #
         self.output_file    = args.get("output_file", self.output_file)
-        self.output_formats = args.get("output_formats", self.output_formats)
+        if "output_formats" in args and args["output_formats"]:
+            self.output_formats = [ getattr(self.REPORT_FORMAT, x.lower())
+                                    for x in args["output_formats"] ]
 
         #
         # Plugins options
