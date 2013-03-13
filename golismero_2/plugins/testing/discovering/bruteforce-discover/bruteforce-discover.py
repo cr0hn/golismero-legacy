@@ -186,7 +186,7 @@ class BackupSearcher(TestingPlugin):
                     p = m_net_manager.get(l_url, cache=False, method=m_http_method)
                 except ValueError,e:
                     Logger.log_more_verbose("Bruteforcer - value error while processing: '%s'. Error: %s" % (l_url, e.message))
-                except ConnectionError:
+                except RuntimeError: ##ConnectionError:
                     Logger.log_more_verbose("Bruteforcer - timeout for url: '%s'." % l_url)
 
                 # Check if the url is acceptable by comparing
