@@ -81,7 +81,12 @@ def launcher(queue, max_process, refresh_after_tasks):
     finally:
 
         # Stop the pool manager.
-        pool.stop(wait)
+        try:
+            pool.stop(wait)
+        except:
+            # If we reached this point we can assume the parent process is dead.
+            import sys
+            sys.exit(1)
 
 # Serializable bootstrap function to run plugins in subprocesses.
 # This is required for Windows support, since we don't have os.fork() there.
