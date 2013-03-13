@@ -62,7 +62,13 @@ def launcher(queue, max_process, refresh_after_tasks):
         while True:
 
             # Get the next plugin call to issue.
-            item = queue.get()
+            try:
+                item = queue.get()
+            except:
+                # If we reached this point we can assume the parent process is dead.
+                wait = False
+                import sys
+                sys.exit(1)
 
             # Handle the message to quit.
             if item is True or item is False:
@@ -151,32 +157,36 @@ def bootstrap(context, func, argv, argd):
 
             # Tell the Orchestrator there's been an error
             except Exception, e:
-                try:
-                    if verbose >= Logger.STANDARD:
-                        if verbose >= Logger.MORE_VERBOSE:
-                            text = "%s\n%s" % (e.message, format_exc())
-                        else:
-                            text = e.message
-                        context.send_msg(message_type = Message.MSG_TYPE_CONTROL,
-                                         message_code = Message.MSG_CONTROL_ERROR,
-                                         message_info = text)
-                except Exception:
-                    print_exc()
+                if verbose >= Logger.STANDARD:
+                    if verbose >= Logger.MORE_VERBOSE:
+                        text = "%s\n%s" % (e.message, format_exc())
+                    else:
+                        text = e.message
+                    context.send_msg(message_type = Message.MSG_TYPE_CONTROL,
+                                     message_code = Message.MSG_CONTROL_ERROR,
+                                     message_info = text)
 
         # No matter what happens, send back an ACK
         finally:
-            try:
-                context.send_ack()
-            except Exception:
-                print_exc()
+            context.send_ack()
 
     # Tell the Orchestrator we need to stop
     except:
 
         # Send a message to the Orchestrator to stop
-        context.send_msg(message_type = Message.MSG_TYPE_CONTROL,
-                         message_code = Message.MSG_CONTROL_STOP,
-                         message_info = False)
+        try:
+            context.send_msg(message_type = Message.MSG_TYPE_CONTROL,
+                             message_code = Message.MSG_CONTROL_STOP,
+                             message_info = False)
+        except:
+            try:
+                print_exc()
+            except:
+                pass
+
+        # If we reached this point we can assume the parent process is dead.
+        import sys
+        sys.exit(1)
 
 
 #------------------------------------------------------------------------------
@@ -282,7 +292,13 @@ class Context (object):
         :param message: Message to send
         :type message: Message
         """
-        self.msg_queue.put_nowait(message)
+        try:
+            self.msg_queue.put_nowait(message)
+
+        # If we reached this point we can assume the parent process is dead.
+        except:
+            import sys
+            sys.exit(1)
 
 
     #----------------------------------------------------------------------
@@ -295,17 +311,23 @@ class Context (object):
 
         :returns: Depends on the call.
         """
+        try:
 
-        # Create the response queue.
-        response_queue = Manager().Queue()
+            # Create the response queue.
+            response_queue = Manager().Queue()
 
-        # Send the RPC message.
-        self.send_msg(message_type = Message.MSG_TYPE_RPC,
-                      message_code = rpc_code,
-                      message_info = (response_queue, argv, argd))
+            # Send the RPC message.
+            self.send_msg(message_type = Message.MSG_TYPE_RPC,
+                          message_code = rpc_code,
+                          message_info = (response_queue, argv, argd))
 
-        # Get the response.
-        return response_queue.get()
+            # Get the response.
+            return response_queue.get()
+
+        # If we reached this point we can assume the parent process is dead.
+        except:
+            import sys
+            sys.exit(1)
 
 
     #----------------------------------------------------------------------

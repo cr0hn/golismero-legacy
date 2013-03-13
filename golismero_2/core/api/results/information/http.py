@@ -224,7 +224,7 @@ class HTTP_Request (Information):
 
     # Hostname
     def __get_host(self):
-        return self.__headers['Host'] if 'Host' in self.__headers else None
+        return self.__headers.get('Host')
     def __set_host(self, value):
         self.__headers['Host'] = value
         self.__parsed_url.hostname = self.__headers['Host']
@@ -232,42 +232,42 @@ class HTTP_Request (Information):
 
     # User agent
     def __get_user_agent(self):
-        return self.__headers['User-Agent'] if 'User-Agent' in self.__headers else None
+        return self.__headers.get('User-Agent')
     def __set_user_agent(self, value):
         self.__headers['User-Agent'] = value
     user_agent = property(__get_user_agent, __set_user_agent)
 
     # Accept language
     def __get_accept_language(self):
-        return self.__headers['Accept-Language'] if 'Accept-Language' in self.__headers else None
+        return self.__headers.get('Accept-Language')
     def __set_accept_language(self, value):
         self.__headers['Accept-Language'] = value
     accept_language = property(__get_accept_language, __set_accept_language)
 
     # Content-type
     def __get_accept(self):
-        return self.__headers['Accept'] if 'Accept' in self.__headers else None
+        return self.__headers.get('Accept')
     def __set_accept(self, value):
         self.__headers['Accept'] = value
     accept = property(__get_accept, __set_accept)
 
     # Referer
     def __get_referer(self):
-        return self.__headers['Referer'] if 'Referer' in self.__headers else None
+        return self.__headers.get('Referer')
     def __set_referer(self, value):
         self.__headers['Referer'] = value
     referer = property(__get_referer, __set_referer)
 
     # Cookie
     def __get_cookie(self):
-        return self.__headers['Cookie'] if 'Cookie' in self.__headers else None
+        return self.__headers.get('Cookie')
     def __set_cookie(self, value):
         self.__headers['Cookie'] = value
     cookie = property(__get_cookie, __set_cookie)
 
     # Content type
     def __get_content_type(self):
-        return self.__headers['Content-Type'] if 'Content-Type' in self.__headers else None
+        return self.__headers.get('Content-Type')
     def __set_content_type(self, value):
         self.__headers['Content-Type'] = value
     content_type = property(__get_content_type, __set_content_type)

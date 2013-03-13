@@ -188,6 +188,8 @@ class BackupSearcher(TestingPlugin):
                     Logger.log_more_verbose("Bruteforcer - value error while processing: '%s'. Error: %s" % (l_url, e.message))
                 except RequestException:
                     Logger.log_more_verbose("Bruteforcer - timeout for url: '%s'." % l_url)
+                except RuntimeError:
+                    Logger.log_more_verbose("Bruteforcer - error getting url: '%s'." % l_url)
 
                 # Check if the url is acceptable by comparing
                 # the result content.

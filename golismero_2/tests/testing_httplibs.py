@@ -24,11 +24,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+import os.path, sys
+where = path.split(path.abspath(__file__))[0]
+if not where:  # if it fails use cwd instead
+    where = path.abspath(os.getcwd())
+where = os.path.join(where, "..", "thirdparty_libs")
+where = os.path.abspath(where)
+sys.path.insert(0, where)
 
-
-
-if __name__=='__main__':
-    pass
 
 url = ["http://entretenimiento.terra.es/vuelve-alvaro-el-superman-de-gran-hermano-14,e676a7215295d310VgnVCM3000009acceb0aRCRD.html",
 "http://deportes.terra.es/equipos/seleccion",
@@ -283,9 +286,9 @@ url = ["http://entretenimiento.terra.es/vuelve-alvaro-el-superman-de-gran-herman
 
 import timeit
 import urllib2
-from thirdparty_libs.urllib3 import PoolManager
-from thirdparty_test.httplib2 import *
-from thirdparty_test.requests import *
+from urllib3 import PoolManager
+from httplib2 import *
+from requests import *
 #import httplib2
 import os
 
@@ -371,15 +374,19 @@ def httplib2_test():
     print
     print "Errors: %s | Oks: %s." % (str(errors), str(oks))
 
-print "Testing python HTTP libs performance:"
-print
-print "Each library will request '%s' URLs." % len(url)
 
-print
-print "'Request' library time: %s s" % str(timeit.timeit("request_test()", setup="from __main__ import request_test", number=1))
-print
-print "'urllib2' library time: %s s" % str(timeit.timeit("urllib2_test()", setup="from __main__ import urllib2_test", number=1))
-print
-print "'httplib2' library time: %s s" % str(timeit.timeit("httplib2_test()", setup="from __main__ import httplib2_test", number=1))
-print
-print "'urllib3' library time: %s s" % str(timeit.timeit("urllib3_test()", setup="from __main__ import urllib3_test", number=1))
+#----------------------------------------------------------------------
+if __name__=='__main__':
+
+    print "Testing python HTTP libs performance:"
+    print
+    print "Each library will request '%s' URLs." % len(url)
+
+    print
+    print "'Request' library time: %s s" % str(timeit.timeit("request_test()", setup="from __main__ import request_test", number=1))
+    print
+    print "'urllib2' library time: %s s" % str(timeit.timeit("urllib2_test()", setup="from __main__ import urllib2_test", number=1))
+    print
+    print "'httplib2' library time: %s s" % str(timeit.timeit("httplib2_test()", setup="from __main__ import httplib2_test", number=1))
+    print
+    print "'urllib3' library time: %s s" % str(timeit.timeit("urllib3_test()", setup="from __main__ import urllib3_test", number=1))

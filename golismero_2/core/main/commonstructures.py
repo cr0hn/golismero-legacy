@@ -105,16 +105,25 @@ class Singleton (object):
 class ConfigFileParseError (RuntimeError):
     pass
 
+# The logic in this class is always:
+# - Checking options without fixing them is done in check_params().
+# - Sanitizing (fixing) options is done in setters.
+# - For each source, there's a "from_*" method. They add to the
+#   current options rather than overwriting them completely.
+#   This allows options to be read from multiple sources.
 class GlobalParams (object):
     """
     Global parameters for the program.
     """
 
     # Run modes
-    RUN_MODE = enum('standalone', 'cloudclient', 'cloudserver')
+    RUN_MODE = enum('standalone', 'master', 'slave')
 
     # User interface
     USER_INTERFACE = enum('console')
+
+    # Report formats
+    REPORT_FORMAT = enum('screen', 'text', 'grepable', 'html')
 
 
     #----------------------------------------------------------------------
@@ -129,10 +138,10 @@ class GlobalParams (object):
         self.targets = []
 
         # Run mode
-        self.run_mode = GlobalParams.RUN_MODE.standalone
+        self.run_mode = "standalone"
 
         # UI mode
-        self.user_interface = GlobalParams.USER_INTERFACE.console
+        self.user_interface = "console"
 
         # Set verbosity level
         self.verbose = 1
@@ -144,7 +153,7 @@ class GlobalParams (object):
         # Report options
         #
         self.output_file = None
-        self.output_formats = []
+        self.output_formats = ["screen"]
 
 
         #
@@ -183,8 +192,8 @@ class GlobalParams (object):
         # Subdomains as regex expresion
         self.subdomain_regex = ""
 
-        # Recursivity level for spider
-        self.recursivity = 0
+        # Depth level for spider
+        self.depth = 0
 
         # Follow redirects
         self.follow_redirects = False
@@ -202,30 +211,103 @@ class GlobalParams (object):
 
 
     #----------------------------------------------------------------------
+    def __set_targets(self, targets):
+        # Fix target URLs if the scheme part is missing
+        self.__targets = [(x if x.startswith("http://") else "http://" + x) for x in targets]
+    def __get_targets(self):
+        return self.__targets
+    targets = property(__get_targets, __set_targets)
+
+
+    #----------------------------------------------------------------------
+    def __set_run_mode(self, run_mode):
+        run_mode = run_mode.strip().lower()
+        if not run_mode in self.RUN_MODE._values:
+            raise ValueError("Invalid run mode: %s" % run_mode)
+        self.__run_mode = getattr(self.RUN_MODE, run_mode)
+    def __get_run_mode(self):
+        return self.__run_mode
+    run_mode = property(__get_run_mode, __set_run_mode)
+
+
+    #----------------------------------------------------------------------
+    def __set_user_interface(self, user_interface):
+        user_interface = user_interface.strip().lower()
+        if not user_interface in self.USER_INTERFACE._values:
+            raise ValueError("Invalid user interface mode: %s" % user_interface)
+        self.__user_interface = getattr(self.USER_INTERFACE, user_interface)
+    def __get_user_interface(self):
+        return self.__user_interface
+    user_interface = property(__get_user_interface, __set_user_interface)
+
+
+    #----------------------------------------------------------------------
+    def __set_output_formats(self, output_formats):
+        if output_formats:
+            try:
+                output_formats = [getattr(self.REPORT_FORMAT, fmt.strip().lower())
+                                  for fmt in output_formats]
+            except AttributeError:
+                raise ValueError("Invalid output format: %s" % fmt)
+        else:
+            output_formats = []
+        self.__output_formats = output_formats
+    def __get_output_formats(self):
+        return self.__output_formats
+    output_formats = property(__get_output_formats, __set_output_formats)
+
+
+    #----------------------------------------------------------------------
+    def __set_cookie(self, cookie):
+        if cookie:
+            # Parse the cookies argument
+            try:
+                # Prepare cookie
+                m_cookie = self.cookie.replace(" ", "").replace("=", ":")
+                # Remove 'Cookie:' start, if exits
+                m_cookie = m_cookie[len("Cookie:"):] if m_cookie.startswith("Cookie:") else m_cookie
+                # Split
+                m_cookie = m_cookie.split(";")
+                # Parse
+                self.cookie = { c.split(":")[0]:c.split(":")[1] for c in m_cookie}
+            except ValueError:
+                raise ValueError("Invalid cookie format specified. Use this format: 'Key=value; key=value'.")
+        else:
+            cookie = None
+        self.__cookie = cookie
+    def __get_cookie(self):
+        return self.__cookie
+    cookie = property(__get_cookie, __set_cookie)
+
+
+    #----------------------------------------------------------------------
     def check_params(self):
         """
         Check if parameters are valid. Raises an exception otherwise.
 
+        This method only checks the validity of the arguments, it won't modify them.
+
         :raises: ValueError
         """
 
-        # Check max connections
+        # Validate the network connections limit
         if self.max_connections < 1:
             raise ValueError("Number of connections must be greater than 0, got %i." % params.max_connections)
 
-        # Check max process
+        # Validate the number of concurrent processes
         if self.max_process < 0:
             raise ValueError("Number of processes cannot be a negative number, got %i." % params.max_process)
 
-        # Check plugins selected
+        # Validate the list of targets
         if not self.targets:
             raise ValueError("No targets selected for execution.")
 
-        # Check plugins selected
+        # Validate the list of plugins
+
         if self.plugins is not None and not self.plugins:
             raise ValueError("No plugins selected for execution.")
 
-        # Check regular expresion
+        # Validate the regular expresion
         if self.subdomain_regex:
             from re import compile, error
 
@@ -234,29 +316,10 @@ class GlobalParams (object):
             except error, e:
                 raise ValueError("Regular expression not valid: %s." % e.message)
 
-        # Check for outputs restrictions
-        if (not self.output_file and 'screen' not in self.output_formats and self.output_formats) \
-           or (self.output_file and not self.output_formats):
-            raise ValueError("When you specify '-o' also need to set format option '-of'.")
+        # Validate the output options
+        if not self.output_file and self.REPORT_FORMAT.screen not in self.output_formats:
+            raise ValueError("Output format specified, but no output file!")
 
-        # Fix targets and set it as complete format
-        for i in xrange(len(self.targets)):
-            self.targets[i] = 'http://%s' % self.targets[i] if not self.targets[i].startswith("http") else self.targets[i]
-
-        # Try con convert for cookies format
-        if self.cookie:
-            try:
-                # Prepare cookie
-                m_cookie = self.cookie.replace(" ", "").replace("=", ":")
-                # Remove 'Cookie:' start, if exits
-                m_cookie = self.cookie[len("Cookie:"):] if m_cookie.startswith("Cookie:") else m_cookie
-                # Split
-                m_cookie = m_cookie.split(";")
-
-                # Parse
-                self.cookie = { c.split(":")[0]:c.split(":")[1] for c in m_cookie}
-            except ValueError:
-                raise ValueError("Invalid cookie format specified. Use format: 'Key=value; key=value'.")
 
     #----------------------------------------------------------------------
     def from_dictionary(self, args):
@@ -272,14 +335,10 @@ class GlobalParams (object):
         #
 
         # Get the run mode
-        if "run_mode" in args:
-            self.run_mode = getattr(self.RUN_MODE,
-                                    args["run_mode"].lower())
+        self.run_mode = args.get("run_mode", self.run_mode)
 
         # Get the user interface mode
-        if "user_interface" in args:
-            self.user_interface = getattr(self.USER_INTERFACE,
-                                          args["user_interface"].lower())
+        self.user_interface = args.get("user_interface", self.user_interface)
 
         # Get the list of targets
         self.targets = args.get("targets", self.targets)
@@ -293,7 +352,7 @@ class GlobalParams (object):
         #
         # Report options
         #
-        self.output_file    = args.get("output_file", self.output_file)
+        self.output_file = args.get("output_file", self.output_file)
         self.output_formats = args.get("output_formats", self.output_formats)
 
         #
@@ -332,8 +391,8 @@ class GlobalParams (object):
         # Subdomains as regex expresion
         self.subdomain_regex = args.get("subdomain_regex", self.subdomain_regex)
 
-        # Recursivity level for spider
-        self.recursivity = args.get("recursivity", self.recursivity)
+        # Depth level for spider
+        self.depth = args.get("depth", self.depth)
 
         # Follow redirects
         self.follow_redirects = args.get("follow_redirects", self.follow_redirects)
@@ -360,7 +419,7 @@ class GlobalParams (object):
         """
 
         # Converts the argparse result into a dictionary and parses it.
-        self.from_dictionary(dict( (k, getattr(args, k)) for k in dir(args) ))
+        self.from_dictionary(dict( (k, getattr(args, k)) for k in dir(args) if not k.startswith("_") ))
 
 
     #----------------------------------------------------------------------
@@ -453,6 +512,8 @@ class GlobalParams (object):
                         msg = "error parsing line %d of config file %s\ncircular includes in config files:\n\t%s\n"
                         msg %= (number, filename, ",\n\t".join(found_loop))
                         raise ConfigFileParseError(msg)
+                    file_history.append(value)
+                    self.from_file(value, file_history)
 
                 else:
 
@@ -532,9 +593,9 @@ class GlobalParams (object):
                         elif key == "subdomain_regex":
                             self.subdomain_regex = value
 
-                        # Recursivity level for spider
-                        elif key == "recursivity":
-                            self.recursivity = int(value)
+                        # Depth level for spider
+                        elif key == "depth":
+                            self.depth = int(value)
 
                         # Follow redirects
                         elif key == "follow_redirects":

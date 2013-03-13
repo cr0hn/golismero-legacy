@@ -26,58 +26,59 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["colorize"]
 
-from thirdparty_libs.colorizer import *
+from colorizer import *
 from .config import Config
 
 
+#----------------------------------------------------------------------
+# Map of colors
+m_colors = {
+
+    # String log levels to color names
+    'info': 'green',
+    'low': 'cyan',
+    'middle': 'magenta',
+    'high' :'red',
+    'critical' : 'yellow',
+
+    # Integer log levels to color names
+    0: 'green',
+    1: 'cyan',
+    2: 'magenta',
+    3: 'red',
+    4: 'yellow',
+
+    # Color names mapped to themselves
+    'green': 'green',
+    'cyan': 'cyan',
+    'magenta': 'magenta',
+    'red': 'red',
+    'yellow': 'yellow',
+}
 
 
 #----------------------------------------------------------------------
 def colorize(text, level_or_color, is_color = True):
-	"""
-	Colorize a text depends of type of alert:
-	- Information
-	- Low
-	- Middle
-	- Hight
-	- Critical
+    """
+    Colorize a text depends of type of alert:
+    - Information
+    - Low
+    - Middle
+    - Hight
+    - Critical
 
-	:param text: text to colorize.
-	:type text: int with level (0-4) or string with values: info, low, middle, high, critical.
+    :param text: text to colorize.
+    :type text: int with level (0-4) or string with values: info, low, middle, high, critical.
 
-	:param level: color selected, by level.
-	:type level: str or integer (0-4).
+    :param level: color selected, by level.
+    :type level: str or integer (0-4).
 
-	:param color: indicates if output must be colorized or not.
-	:type color: bool.
+    :param color: indicates if output must be colorized or not.
+    :type color: bool.
 
-	:returns: str -- string with information to print.
-	"""
-
-	# Colors
-	m_colors = {
-	   'info': 'green',
-	   'low': 'cyan',
-	   'middle': 'magenta',
-	   'high' :'red',
-	   'critical' : 'yellow'
-	}
-
-	# Map for integers params as level
-	m_colors["0"] = m_colors['info']
-	m_colors["1"] = m_colors['low']
-	m_colors["2"] = m_colors['middle']
-	m_colors["3"] = m_colors['high']
-	m_colors["4"] = m_colors['critical']
-	# Map colors
-	m_colors["green"] = 'green'
-	m_colors["cyan"] = 'cyan'
-	m_colors["magenta"] = 'magenta'
-	m_colors["red"] = 'red'
-	m_colors["yellow"] = 'yellow'
-
-	# Ge colorize option
-	if Config().audit_config.colorize and is_color:
-		return colored(text, m_colors[str(level_or_color)])
-	else:
-		return text
+    :returns: str -- string with information to print.
+    """
+    if Config().audit_config.colorize and is_color:
+        return colored(text, m_colors[level_or_color])
+    else:
+        return text
