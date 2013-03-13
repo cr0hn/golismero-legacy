@@ -76,7 +76,7 @@ class Spider(TestingPlugin):
                 p = m_manager.get(info)
         except ValueError,e:
             Logger.log_more_verbose("Spider - value error while processing: '%s'. Error: %s" % (l_url, e.message))
-        except ConnectionError:
+        except RequestException:
             Logger.log_more_verbose("Spider - timeout for url: '%s'." % l_url)
 
         # If error p == None => return
