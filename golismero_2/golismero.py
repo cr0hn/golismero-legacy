@@ -203,8 +203,8 @@ def main():
     parser.add_argument("targets", metavar="TARGET", nargs="+", help="one or more target web sites")
 
     gr_main = parser.add_argument_group("main options")
-    gr_main.add_argument("-M", "--run-mode", metavar="MODE", add_help=False, help="run mode [default: standalone]", default="standalone", choices=[x.title() for x in GlobalParams.RUN_MODE._values.keys()])
-    gr_main.add_argument("-I", "--user-interface", metavar="MODE", add_help=False, help="user interface mode [default: console]", default="console", choices=[x.title() for x in GlobalParams.USER_INTERFACE._values.keys()])
+    gr_main.add_argument("-M", "--run-mode", metavar="MODE", help="run mode [default: standalone]", default="standalone", choices=[x.title() for x in GlobalParams.RUN_MODE._values.keys()])
+    gr_main.add_argument("-I", "--user-interface", metavar="MODE", help="user interface mode [default: console]", default="console", choices=[x.title() for x in GlobalParams.USER_INTERFACE._values.keys()])
     gr_main.add_argument("-v", "--verbose", action="count", default=1, help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
     gr_main.add_argument("--max-process", metavar="N", type=int, help="maximum number of plugins to run concurrently [default: 2]", default=2)
