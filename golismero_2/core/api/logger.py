@@ -116,6 +116,10 @@ class Logger (object):
             else:
                 print "[!] Error while writing to output console: %s" % e.message
 
+            # HACK: on error we're assuming the parent process is dead.
+            import sys
+            sys.exit(1)
+
 
     #----------------------------------------------------------------------
     @classmethod
