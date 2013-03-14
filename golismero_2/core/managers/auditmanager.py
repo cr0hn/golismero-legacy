@@ -29,8 +29,8 @@ from .priscillapluginmanager import PriscillaPluginManager
 from ..messaging.notifier import AuditNotifier
 from ..messaging.message import Message
 from ..database.resultdb import ResultDB
-from ..api.results.information.url import Url
-from ..api.results.result import Result
+from ..api.data.information.url import Url
+from ..api.data.data import Data
 
 from multiprocessing import Queue
 from datetime import datetime
@@ -333,10 +333,10 @@ class Audit (object):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
-        # Is it a result?
+        # Is it a data?
         if message.message_type == Message.MSG_TYPE_INFO:
 
-            # Drop duplicate results
+            # Drop duplicate data
             if message.message_info in self.__database:
                 self.__expecting_ack += 1
                 m = Message(message_type = Message.MSG_TYPE_CONTROL,
@@ -345,7 +345,7 @@ class Audit (object):
                 self.orchestrator.dispatch_msg(m)
                 return False
 
-            # Add new results to the database
+            # Add new data to the database
             self.__database.add(message.message_info)
 
         # Send the message to the plugins

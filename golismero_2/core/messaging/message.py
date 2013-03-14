@@ -34,8 +34,8 @@ from time import time
 @total_ordering
 class Message (object):
     """
-    Messages send information, results and internal control events between the
-    different components of GoLismero.
+    Messages send information, vulnerabilities, resources and internal control
+    events between the different components of GoLismero.
 
     They may be shared locally (console run mode) or serialized and sent across
     the network (cloud run modes).

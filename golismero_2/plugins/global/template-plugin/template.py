@@ -68,7 +68,7 @@ class TemplatePlugin(GlobalPlugin):
         # Return here the list of the types of info you want to receive.
         #
         # To build the list, you will need to use the constants of
-        # the core.api.results package.
+        # the core.api.data package.
         #
         # An empty list means you don't get any info at all!
         #
@@ -80,8 +80,8 @@ class TemplatePlugin(GlobalPlugin):
         #
         # 1 - Include libraries, at top of this file:
         #
-        #     from core.api.results.information.information import Information
-        #     from core.api.results.injection.injection import Injection
+        #     from core.api.data.information.information import Information
+        #     from core.api.data.injection.injection import Injection
         #
         # 2 - Make the list with the info we want receive:
         #

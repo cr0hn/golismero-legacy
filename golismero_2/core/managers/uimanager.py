@@ -99,7 +99,7 @@ class UIManager (object):
         Send information from the plugins back to the Orchestrator.
 
         :param information: The information to send.
-        :type information: Result
+        :type information: Data
         """
         message = Message(message_type = Message.MSG_TYPE_INFO,
                           message_info = information)
