@@ -145,11 +145,11 @@ def bootstrap(context, func, argv, argd):
                 # Call the callback method
                 retval = getattr(instance, func)(*argv, **argd)
 
-                # If there's a return value, assume it's a list of results
+                # If there's a return value, assume it's a list of data
                 if retval is not None:
-                    for result in retval:
+                    for data in retval:
                         try:
-                            instance.send_info(result)
+                            instance.send_info(data)
                         except Exception, e:
                             if verbose >= Logger.STANDARD:
                                 if verbose >= Logger.MORE_VERBOSE:
@@ -364,15 +364,15 @@ class OOPObserver (object):
         super(OOPObserver, self).__init__()
         self.__context = context
 
-    def send_info(self, result):
+    def send_info(self, data):
         """
-        Send results from the plugins to the orchestrator.
+        Send data from the plugins to the orchestrator.
 
-        :param result: Results to send
-        :type result: Result
+        :param data: Data to send
+        :type data: Data
         """
         return self.send_msg(message_type = Message.MSG_TYPE_INFO,
-                             message_info = result)
+                             message_info = data)
 
     def send_msg(self, message_type = Message.MSG_TYPE_INFO,
                        message_code = 0,

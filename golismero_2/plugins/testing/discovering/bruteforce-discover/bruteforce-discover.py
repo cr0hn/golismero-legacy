@@ -28,9 +28,9 @@ from core.api.logger import Logger
 from core.api.net.network_api import *
 from core.api.net.web_utils import convert_to_absolute_url, is_in_scope
 from core.api.plugin import TestingPlugin
-from core.api.results.information.information import Information
-from core.api.results.information.url import Url
-from core.api.results.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
+from core.api.data.information.information import Information
+from core.api.data.information.url import Url
+from core.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from core.api.text.wordlist_api import WordListAPI
 from os.path import splitext, split, sep
 from core.api.net.web_utils import parse_url
@@ -69,6 +69,8 @@ class BackupSearcher(TestingPlugin):
         # Check if URL is in scope
         if not is_in_scope(info.url):
             return
+
+        return
 
         # Parse original URL
         m_parsed_url = None
@@ -169,7 +171,7 @@ class BackupSearcher(TestingPlugin):
         # 5 - Predictable files
         m_urls_to_test["predictables"] = self.make_url_with_files_or_folder(m_wordlist, m_url_parts)
 
-        # List for check discovered results
+        # List for check discovered data
         m_discovered_url = []
         m_discovered_bind_url = m_discovered_url.append
         m_discovered_level = []

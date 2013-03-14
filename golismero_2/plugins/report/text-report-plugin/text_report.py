@@ -26,8 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 from core.api.plugin import ReportPlugin
-from core.api.results.result import Result
-from core.api.results.information.information import Information
+from core.api.data.result import Result
+from core.api.data.information.information import Information
 from collections import Counter
 from time import time
 
@@ -80,7 +80,7 @@ class TextReport(ReportPlugin):
 
         # 1 - Get urls
         m_output.write("\nSpidered Urls\n=============\n\n")
-        for u in filter(lambda x: x.result_type == Result.TYPE_INFORMATION and x.information_type == Information.INFORMATION_URL , m_results):
+        for u in filter(lambda x: x.data_type == Result.TYPE_INFORMATION and x.information_type == Information.INFORMATION_URL , m_results):
             m_output.write("+ %s\n" % str(u))
             m_counter['url'] += 1
 

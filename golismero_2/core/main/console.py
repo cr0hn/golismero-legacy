@@ -133,6 +133,7 @@ class Console (object):
         """
         try:
             if message:
+
                 cls._f_error.write("%s\n" % message)
                 cls._f_error.flush()
         except Exception,e:

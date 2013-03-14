@@ -224,7 +224,7 @@ class AuditNotifier(Notifier):
         :type method: str
 
         :param payload: Message or information to send to plugins
-        :type payload: Message or Result
+        :type payload: Message or data
         """
 
         # If the plugin doesn't support the callback method, drop the message

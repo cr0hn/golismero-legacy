@@ -27,10 +27,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from core.api.logger import Logger
 from core.api.net.network_api import *
 from core.api.plugin import TestingPlugin
-from core.api.results.information.information import Information
-from core.api.results.information.url import Url
+from core.api.data.information.information import Information
+from core.api.data.information.url import Url
 from core.api.config import Config
-from core.api.net.web_utils import parse_url
+from core.api.net.web_utils import parse_url, convert_to_absolute_urls, is_in_scope
 from time import time
 from os import getpid
 

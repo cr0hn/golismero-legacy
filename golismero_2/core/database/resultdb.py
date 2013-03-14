@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["ResultDB"]
 
-from ..api.results.result import Result
+from ..api.data.data import Data
 
 import zlib
 import urlparse
@@ -44,7 +44,7 @@ anydbm = None
 #------------------------------------------------------------------------------
 class BaseResultDB (object):
     """
-    Storage of Result objects.
+    Storage of data objects.
     """
 
 

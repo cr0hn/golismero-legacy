@@ -26,8 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.api.config import Config
 from core.api.plugin import UIPlugin
-from core.api.results.information.information import Information
-from core.api.results.result import Result
+from core.api.data.information.information import Information
+from core.api.data.data import Data
 from core.messaging.message import Message
 from core.main.console import Console
 from core.api.colorize import *
@@ -93,7 +93,7 @@ class ConsoleUIPlugin(UIPlugin):
         if m_verbosity_level >= Console.STANDARD:
 
             # Messages with vulnerability types
-            if  info.result_type == Result.TYPE_VULNERABILITY:
+            if  info.data_type == Data.TYPE_VULNERABILITY:
                 Console.display("%s" % funcs[info.vulnerability_type](info, m_colorized))
 
         #
@@ -102,7 +102,7 @@ class ConsoleUIPlugin(UIPlugin):
         if m_verbosity_level >= Console.VERBOSE:
 
             # Messages with information types
-            if  info.result_type == Result.TYPE_INFORMATION and info.information_type == Information.INFORMATION_URL:
+            if  info.data_type == Data.TYPE_INFORMATION and info.information_type == Information.INFORMATION_URL:
                 # Call the function
                 Console.display("+ %s" % funcs[info.information_type](info, m_colorized))
 
@@ -153,16 +153,16 @@ class ConsoleUIPlugin(UIPlugin):
         # Put here the list of the type of info you want to receive.
         #
         # To build the list, you will need to use the constants of
-        # the results package.
+        # the data package.
         #
         # Example:
         #
-        # Receive XSS results and URLs, write this:
+        # Receive XSS vulnerability and URLs, write this:
         #
         # 1 - Include libraries, at top of this file:
         #
-        #     from core.api.results.information.information import Information
-        #     from core.api.results.injection.injection import Injection
+        #     from core.api.data.information.information import Information
+        #     from core.api.data.injection.injection import Injection
         #
         # 2 - Make the list with the info we want receive:
         #

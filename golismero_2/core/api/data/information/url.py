@@ -34,14 +34,14 @@ from .information import Information
 #------------------------------------------------------------------------------
 class Url(Information):
     """
-    URL results.
+    URL information type.
     """
 
 
     #----------------------------------------------------------------------
     def __init__(self, url, method = "GET", url_params = None, post_params = None, content_type = None, depth = 0, request_type = 0, referer = ""):
         """
-        Construct a URL result.
+        Construct a URL information type.
 
         :param url: URL to manage
         :type url: str

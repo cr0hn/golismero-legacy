@@ -29,9 +29,9 @@ from .priscillapluginmanager import PriscillaPluginManager
 from ..messaging.notifier import AuditNotifier
 from ..messaging.message import Message
 from ..database.resultdb import ResultDB
-from ..api.results.information.information import Information
-from ..api.results.information.url import Url
-from ..api.results.result import Result
+from ..api.data.information.information import Information
+from ..api.data.information.url import Url
+from ..api.data.result import Result
 
 from multiprocessing import Queue
 from datetime import datetime
@@ -337,10 +337,10 @@ class Audit (object):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
-        # Is it a result?
+        # Is it data?
         if message.message_type == Message.MSG_TYPE_INFO:
 
-            # Is it a duplicate result?
+            # Is it duplicated data?
             if message.message_info in self.__database:
 
                 # Send the ACK to the queue to make sure all
@@ -354,18 +354,14 @@ class Audit (object):
                 # Drop the message.
                 return False
 
-            # Add new result to the database
+            # Add new data to the database
             self.__database.add(message.message_info)
 
-##            # If the result is an URL, extract the root as well.
-##            if message.message_info.result_type == Information.INFORMATION_URL:
-##                p = message.message_info.parsed_url
-##                u = Url("%s%s/" % (p.scheme, p.host))
-##                if u not in self.__database:
-##                    m = Message(message_type = Message.MSG_TYPE_INFO,
-##                                message_info = u,
-##                                  audit_name = self.name)
-##                    self.orchestrator.dispatch_msg(m)
+            #
+            #
+            # XXX TODO: extract the domain names here
+            #
+            #
 
         # Send the message to the plugins
         self.__expecting_ack += self.__notifier.notify(message)

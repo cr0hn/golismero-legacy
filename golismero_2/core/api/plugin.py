@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #-----------------------------------------------------------------------
 
 from .config import Config
-from .results.result import Result
+from .data.data import Data
 
 
 class Plugin (object):
@@ -87,7 +87,7 @@ class InformationPlugin (Plugin):
         Callback method to receive information to be processed.
 
         :param info: input info to process
-        :type info: Result
+        :type info: Data
         """
         raise NotImplementedError("All plugins must implement this method!")
 
@@ -120,8 +120,8 @@ class InformationPlugin (Plugin):
 
         Do not override this method!
         """
-        if not isinstance(information, Result):
-            raise ValueError("Expected Result, got %r instead" % type(information))
+        if not isinstance(information, Data):
+            raise ValueError("Expected Data, got %r instead" % type(information))
 
         self.__observer_ref.send_info(information)
 

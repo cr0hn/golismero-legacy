@@ -27,8 +27,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from core.api.logger import Logger
 from core.api.net.network_api import *
 from core.api.plugin import TestingPlugin
-from core.api.results.information.information import Information
-from core.api.results.information.url import Url
+from core.api.data.information.information import Information
+from core.api.data.information.url import Url
 from core.api.net.web_utils import parse_url, convert_to_absolute_url
 import codecs
 
@@ -91,7 +91,7 @@ class Robots(TestingPlugin):
         # Results
         m_return = []
         m_return_bind = m_return.append
-
+        tmp_discovered = None
         for rawline in m_robots_text.splitlines():
             m_line = rawline
 
@@ -117,13 +117,14 @@ class Robots(TestingPlugin):
                     continue
 
                 if m_key in ('disallow', 'allow', 'sitemap') and m_value:
-                    Logger.log_more_verbose("Robots - discovered new url: %s" % m_value)
-                    m_return_bind(m_value)
+                    tmp_discovered = convert_to_absolute_url(info.url, m_value)
+                    Logger.log_more_verbose("Robots - discovered new url: %s" % tmp_discovered)
+                    m_return_bind(tmp_discovered)
             except Exception,e:
                 continue
 
         # Generate results
-        return [Url(url=convert_to_absolute_url(info.url, u)) for u in m_return]
+        return [Url(u) for u in m_return]
 
 
 
