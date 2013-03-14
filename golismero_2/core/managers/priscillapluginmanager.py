@@ -343,7 +343,7 @@ class PriscillaPluginManager (Singleton):
         :returns: set -- Plugin names.
         :raises: KeyError -- The requested category doesn't exist.
         """
-        return set(self.get_plugins().keys())
+        return set(self.get_plugins(category).keys())
 
 
     #----------------------------------------------------------------------
