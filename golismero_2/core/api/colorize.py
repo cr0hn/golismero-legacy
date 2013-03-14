@@ -30,9 +30,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["colorize"]
 
-from colorizer import *
-from .config import Config
+#
+# DON'T CHANGE THIS INCLUDE. THE FORM:
+# "from colorizer import *" => don't work on mac!!!
+from thirdparty_libs.colorizer import *
 
+from .config import Config
 
 #----------------------------------------------------------------------
 # Map of colors
@@ -60,7 +63,6 @@ m_colors = {
     'yellow': 'yellow',
 }
 
-
 #----------------------------------------------------------------------
 def colorize(text, level_or_color, is_color = True):
     """
@@ -82,6 +84,8 @@ def colorize(text, level_or_color, is_color = True):
 
     :returns: str -- string with information to print.
     """
+
+
     if Config().audit_config.colorize and is_color:
         return colored(text, m_colors[level_or_color])
     else:
