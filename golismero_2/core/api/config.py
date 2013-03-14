@@ -24,11 +24,21 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+#-----------------------------------------------------------------------
+# Plugin configuration API
+#-----------------------------------------------------------------------
+
 __all__ = ["Config"]
 
 from ..main.commonstructures import Singleton
 
 class Config (Singleton):
+    """
+    Current plugin configuration.
+
+    Whenever a plugin instances this object it will receive its own
+    configuration, including the current audit's name and settings.
+    """
 
     @property
     def audit_name(self):
@@ -49,6 +59,8 @@ class Config (Singleton):
     def plugin_config(self):
         "dict -- Plugin configuration."
         return self.__context.plugin_info.plugin_config
+
+    # The following two methods may only be used internally.
 
     def _get_context(self):
         return self.__context
