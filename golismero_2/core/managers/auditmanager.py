@@ -179,15 +179,18 @@ class AuditManager (object):
                     #       and ACKs are always sent AFTER responses from plugins.
                     #
                     if not audit.expecting_ack:
+
                         # Generate reports
-                        self.__orchestrator.generate_reports(self.__audits[message.audit_name].database)
+                        try:
+                            self.__orchestrator.generate_reports(self.__audits[message.audit_name].database)
 
                         # Send finish message
-                        m = Message(message_type = Message.MSG_TYPE_CONTROL,
-                                    message_code = Message.MSG_CONTROL_STOP_AUDIT,
-                                    message_info = True,   # True for finished, False for user cancel
-                                    audit_name   = message.audit_name)
-                        self.__orchestrator.dispatch_msg(m)
+                        finally:
+                            m = Message(message_type = Message.MSG_TYPE_CONTROL,
+                                        message_code = Message.MSG_CONTROL_STOP_AUDIT,
+                                        message_info = True,   # True for finished, False for user cancel
+                                        audit_name   = message.audit_name)
+                            self.__orchestrator.dispatch_msg(m)
 
             # Stop an audit if requested
             elif message.message_code == Message.MSG_CONTROL_STOP_AUDIT:
@@ -333,20 +336,31 @@ class Audit (object):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
-        # Is it a data?
+        # Is it data?
         if message.message_type == Message.MSG_TYPE_INFO:
 
-            # Drop duplicate data
+            # Is it duplicated data?
             if message.message_info in self.__database:
+
+                # Send the ACK to the queue to make sure all
+                # messages in-between are processed correctly.
                 self.__expecting_ack += 1
                 m = Message(message_type = Message.MSG_TYPE_CONTROL,
                             message_code = Message.MSG_CONTROL_ACK,
                             audit_name   = self.name)
                 self.orchestrator.dispatch_msg(m)
+
+                # Drop the message.
                 return False
 
             # Add new data to the database
             self.__database.add(message.message_info)
+
+            #
+            #
+            # XXX TODO: extract the domain names here
+            #
+            #
 
         # Send the message to the plugins
         self.__expecting_ack += self.__notifier.notify(message)

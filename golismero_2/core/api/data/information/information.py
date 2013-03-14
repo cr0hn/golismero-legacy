@@ -56,7 +56,7 @@ class Information(Data):
     #----------------------------------------------------------------------
     def __init__(self):
         super(Information, self).__init__()
-        self.data_type    = self.TYPE_INFORMATION
+        self.data_type        = self.TYPE_INFORMATION
         self.information_type = self.INFORMATION_UNKNOWN
 
 

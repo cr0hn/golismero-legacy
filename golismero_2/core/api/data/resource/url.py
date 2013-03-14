@@ -28,6 +28,8 @@ __all__ = ["Url"]
 
 from .resource import Resource
 from ...colorize import *
+from urlparse import urlparse
+
 
 
 #------------------------------------------------------------------------------
@@ -38,7 +40,7 @@ class Url(Resource):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, url, method = "GET", url_params = None, post_params= None, content_type = None, depth = 0, request_type = 0, referer = ""):
+    def __init__(self, url, method = "GET", url_params = None, post_params = None, content_type = None, depth = 0, request_type = 0, referer = ""):
         """
         Construct a URL information type.
 
@@ -87,11 +89,12 @@ class Url(Resource):
         # Set referer
         self.__referer = referer
 
+
     #----------------------------------------------------------------------
     def __str__(self):
         return "(%s) %s" % (
-            self.__method,
-            self.__url,
+            self.method,
+            self.url,
         )
 
 
@@ -109,6 +112,13 @@ class Url(Resource):
         str -- Raw URL
         """
         return self.__url
+
+    @property
+    def parsed_url(self):
+        """
+        str -- Parsed URL
+        """
+        return urlparse(self.__url)
 
     @property
     def method(self):

@@ -38,6 +38,7 @@ class Resource(Data):
     #--------------------------------------------------------------------------
     RESOURCE_UNKNOWN       = 0
     RESOURCE_URL           = 1
+    RESOURCE_DOMAIN        = 2    # Domain names
 
 
     RESOURCE_FIRST = RESOURCE_UNKNOWN
