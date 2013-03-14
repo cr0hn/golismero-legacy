@@ -251,7 +251,9 @@ class Web (Protocol):
 
             # Cache the response if enabled
             if request.is_cacheable:
-                self._cache[request.request_id] = m_response
+                self._cache.set(request.request_id, m_response,
+                                protocol  = request.parsed_url.scheme,
+                                timestamp = t1)
 
         # Return the response
         return m_response

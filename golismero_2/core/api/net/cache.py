@@ -137,8 +137,8 @@ class NetworkCache(AbstractCache):
         :param protocol: network protocol
         :type protocol: str
 
-        :param timespan: time stamp for this network resource
-        :type timespan: int
+        :param timestamp: timestamp for this network resource
+        :type timestamp: int
 
         :param lifespan: time to live in the cache
         :type lifespan: int
