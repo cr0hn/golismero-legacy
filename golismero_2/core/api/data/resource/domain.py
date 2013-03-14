@@ -32,14 +32,14 @@ from .resource import Resource
 #------------------------------------------------------------------------------
 class Domain(Resource):
     """
-    Domain name results.
+    Domain name resource.
     """
 
 
     #----------------------------------------------------------------------
     def __init__(self, name, *addresses):
         """
-        Construct a domain name result.
+        Construct a domain name resource.
 
         :param name: Domain name
         :type name: str
@@ -48,7 +48,8 @@ class Domain(Resource):
         :type addresses: list
         """
         super(Url, self).__init__()
-        self.information_type = self.INFORMATION_DOMAIN
+
+        self.resource_type = self.RESOURCE_DOMAIN
 
         # Domain name
         self.__name = name
