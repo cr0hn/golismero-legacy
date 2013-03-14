@@ -49,7 +49,7 @@ class FileManager (object):
     def __init__(self):
 
         # Try to use the location of the plugin module file as the plugin path.
-        plugin_path = path.abspath(Config().plugin_info.plugin_module)
+        plugin_path = path.abspath(Config.plugin_info.plugin_module)
         if path.isdir(plugin_path):
             plugin_path = path.join(plugin_path, "__init__.py")
         if not plugin_path.endswith(".py"):
@@ -58,14 +58,14 @@ class FileManager (object):
 
         # If that fails for some reason, use the location of the config file instead.
         if not path.exists(plugin_path):
-            plugin_path = path.abspath(Config().plugin_info.plugin_descriptor)
+            plugin_path = path.abspath(Config.plugin_info.plugin_descriptor)
             plugin_path = path.split(plugin_path)[0]
 
             # If that fails too, log the error and use the tmp folder.
             if not path.exists(plugin_path):
-                name = Config().plugin_info.plugin_class
+                name = Config.plugin_info.plugin_class
                 if not name:
-                    name = Config().plugin_info.display_name
+                    name = Config.plugin_info.display_name
                 Logger.log_error("[%s] Cannot determine the plugin's path!" % name)
                 plugin_path = tempfile.gettempdir()
 

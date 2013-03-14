@@ -51,7 +51,7 @@ class LocalCacheManager(Singleton):
         """
 
         # Get audit name
-        m_audit = Config().audit_name
+        m_audit = Config.audit_name
 
         try:
             # if cached
@@ -72,7 +72,8 @@ class LocalCacheManager(Singleton):
         :returns: bool -- True if URL has cached. False otherwise.
         """
 
-        return Config().audit_name in self.__cache and key in self.__cache[Config().audit_name]
+        return Config.audit_name in self.__cache and key in self.__cache[Config.audit_name]
+
 
     #----------------------------------------------------------------------
     def set_cache(self, key, data, ):
@@ -91,7 +92,7 @@ class LocalCacheManager(Singleton):
         # None or empty?
         if key and data:
 
-            m_audit = Config().audit_name
+            m_audit = Config.audit_name
 
             # Set cache for audit, if necessary
             if m_audit not in self.__cache:
@@ -101,19 +102,16 @@ class LocalCacheManager(Singleton):
             self.__cache[m_audit][key] = data
 
 
-
-
-
-
-
 #------------------------------------------------------------------------------
 class NetProtocolCacheManager(Singleton):
     """"""
+
 
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
         self.__cache = {}
+
 
     #----------------------------------------------------------------------
     def get_cache(self, key, protocol="http"):
@@ -127,7 +125,7 @@ class NetProtocolCacheManager(Singleton):
         """
 
         # Get audit name
-        m_audit = Config().audit_name
+        m_audit = Config.audit_name
 
         # Generate the key
         m_key = "%s%s" %(protocol, key)
@@ -153,7 +151,8 @@ class NetProtocolCacheManager(Singleton):
         # Generate the key
         m_key = "%s%s" %(protocol, key)
 
-        return Config().audit_name in self.__cache and m_key in self.__cache[Config().audit_name]
+        return Config.audit_name in self.__cache and m_key in self.__cache[Config.audit_name]
+
 
     #----------------------------------------------------------------------
     def set_cache(self, key, data, protocol="http", timespan=0, lifetime=-1):
@@ -178,7 +177,7 @@ class NetProtocolCacheManager(Singleton):
         # None or empty?
         if key and data and protocol:
 
-            m_audit = Config().audit_name
+            m_audit = Config.audit_name
 
             # Set cache for audit, if necessary
             if m_audit not in self.__cache:

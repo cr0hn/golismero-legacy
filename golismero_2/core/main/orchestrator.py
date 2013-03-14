@@ -72,7 +72,7 @@ class Orchestrator (object):
         # Orchestrator context
         self.__context = Context(   msg_queue = self.__queue,
                                  audit_config = self.__config )
-        Config()._set_context(self.__context)
+        Config._set_context(self.__context)
 
         # Load the plugins
         self.__pluginManager = PriscillaPluginManager()

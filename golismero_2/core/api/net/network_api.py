@@ -26,8 +26,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ['NetworkAPI', 'Web', 'RequestException']
 
-
-
 from ..config import Config
 from ..logger import Logger
 from ..data.information.url import Url
@@ -48,10 +46,10 @@ class NetworkAPI (object):
     TYPE_WEB = 0
     TYPE_FTP = 1
 
-    # init?
-    __is_initialized = None
+    TYPE_FIRST = TYPE_WEB
+    TYPE_LAST  = TYPE_FTP
 
-    # Pool manager. A pool for target
+    # Pool manager. One pool per target.
     __http_pool_manager = None
 
 
@@ -67,14 +65,15 @@ class NetworkAPI (object):
         :raises: ValueError
         """
         if NetworkAPI.__http_pool_manager is None:
+
             # Set pool
             NetworkAPI.__http_pool_manager = Session()
 
             # If proxy
-            m_proxy_addr = Config().audit_config.proxy_addr
+            m_proxy_addr = Config.audit_config.proxy_addr
             if m_proxy_addr:
-                m_auth_user = Config().audit_config.proxy_user
-                m_auth_pass = Config().audit_config.proxy_pass
+                m_auth_user = Config.audit_config.proxy_user
+                m_auth_pass = Config.audit_config.proxy_pass
 
                 # Detect auth method
                 auth, realm = detect_auth_method(m_proxy_addr, m_auth_user, m_auth_pass)
@@ -86,12 +85,12 @@ class NetworkAPI (object):
 
 
             # Set cookie
-            m_cookies = Config().audit_config.cookie
+            m_cookies = Config.audit_config.cookie
             if m_cookies:
                 NetworkAPI.__http_pool_manager.cookies = m_cookies
 
         if protocol is NetworkAPI.TYPE_WEB:
-            return Web(NetworkAPI.__http_pool_manager, Config().audit_config)
+            return Web(NetworkAPI.__http_pool_manager, Config.audit_config)
 
         else:
             raise ValueError("Unknown protocol type, value: %d" % protocol)
@@ -240,6 +239,9 @@ class Web (Protocol):
                 # Add files
                 for fname, fvalue in request.files_attached.iteritems():
                     m_request_params["files"] = { 'file': (fname, fvalue) }
+
+            # Try to get the response from the cache
+
 
             # timing init
             t1 = time()

@@ -67,7 +67,7 @@ class Plugin (object):
     #----------------------------------------------------------------------
     def display_help(self):
         """Get the help message for this plugin."""
-        text = Config().plugin_info.description
+        text = Config.plugin_info.description
         if not text:
             raise NotImplementedError("All plugins must implement this method!")
         return text
