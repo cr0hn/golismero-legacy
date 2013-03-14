@@ -25,12 +25,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from core.api.logger import Logger
-from core.api.net.network_api import *
+from core.api.net.protocol import NetworkAPI
 from core.api.plugin import TestingPlugin
 from core.api.data.resource.url import Url
 from core.api.net.web_utils import parse_url, convert_to_absolute_url
 import codecs
-
 
 
 class Robots(TestingPlugin):
@@ -54,13 +53,20 @@ class Robots(TestingPlugin):
         if not isinstance(info, Url):
             raise TypeError("Expected Url, got %s instead" % type(info))
 
-        # Request this URL
-        m_manager = NetworkAPI.get_connection()
+        # Parse the url
+        m_parsed_url = parse_url(info.url)
+
+        # Only work for the root url
+        if (m_parsed_url.path and m_parsed_url.path != "/") or m_parsed_url.query or m_parsed_url.fragment:
+            return
 
         # Get the url of hosts
-        m_parsed_url = parse_url(info.url)
-        m_url_robots_txt = "%s://%s/robots.txt" % (m_parsed_url.scheme, m_parsed_url.host)
-        # Check if need follow first redirect
+        m_url_robots_txt = "%s://%s/robots.txt" % (m_parsed_url.scheme, m_parsed_url.hostname)
+
+        # Only do this once per robots.txt file
+
+        # Request this URL
+        m_manager = NetworkAPI.get_connection()
 
         Logger.log_verbose("Robots - looking for robots.txt in URL: '%s'" % m_url_robots_txt)
 
@@ -79,6 +85,10 @@ class Robots(TestingPlugin):
 
         # Text with info
         m_robots_text = p.information
+        try:
+            m_robots_text = m_robots_text.raw_data
+        except AttributeError:
+            pass
 
         # Prepare for unicode
         try:
@@ -110,9 +120,9 @@ class Robots(TestingPlugin):
                 continue
 
             # Looking for URLs
-            m_key, m_value = [x.strip() for x in m_line.split(':', 1)]
-            m_key = m_key.lower()
             try:
+                m_key, m_value = [x.strip() for x in m_line.split(':', 1)]
+                m_key = m_key.lower()
 
                 # If a wildcard found, is not a valid URL
                 if '*' in m_value:

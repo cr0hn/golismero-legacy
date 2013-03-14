@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+#-----------------------------------------------------------------------
+# Network protocols API
+#-----------------------------------------------------------------------
+
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -24,21 +28,19 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ['NetworkAPI', 'Web', 'RequestException']
+__all__ = ['NetworkAPI', 'NetworkException', 'Web']
 
-from ..config import Config
-from ..logger import Logger
-from ..data.resource.url import Url
 from .cache import NetworkCache
-
-# TODO: fix these imports so they load only what's needed
-from ..data.information.http import *
+from ..config import Config
+from ..data.information.http import HTTP_Request, HTTP_Response
+from ..data.resource.url import Url
+from ..logger import Logger
 from .web_utils import *
-from requests import *
-from requests.exceptions import *
 
-from time import time
 from re import compile, match, IGNORECASE
+from requests import *
+from requests.exceptions import RequestException as NetworkException
+from time import time
 
 
 #------------------------------------------------------------------------------

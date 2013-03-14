@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from core.api.logger import Logger
-from core.api.net.network_api import *
+from core.api.net.protocol import NetworkAPI
 from core.api.plugin import TestingPlugin
 from core.api.data.resource.url import Url
 from core.api.data.information.information import Information
