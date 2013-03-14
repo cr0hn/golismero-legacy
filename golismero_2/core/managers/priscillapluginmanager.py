@@ -333,6 +333,20 @@ class PriscillaPluginManager (Singleton):
 
 
     #----------------------------------------------------------------------
+    def get_plugin_names(self, category = "all"):
+        """
+        Get the names of the available plugins, optionally filtering by category.
+
+        :param category: Category. Use "all" to get plugins from all categories.
+        :type category: str
+
+        :returns: set -- Plugin names.
+        :raises: KeyError -- The requested category doesn't exist.
+        """
+        return set(self.get_plugins().keys())
+
+
+    #----------------------------------------------------------------------
     def get_plugin_by_name(self, plugin_name):
         """
         Get info on the requested plugin.
@@ -350,12 +364,15 @@ class PriscillaPluginManager (Singleton):
 
 
     #----------------------------------------------------------------------
-    def load_plugins(self, plugin_names = None, category = "all"):
+    def load_plugins(self, enabled_plugins = ("all",), disabled_plugins = (), category = "all"):
         """
         Get info on the available plugins, optionally filtering by category.
 
-        :param plugin_names: List of plugins to load, by name. Use None to load all plugins.
-        :type plugin_names: list
+        :param enabled_plugins: List of enabled plugins, by name. Use "all" to enable all plugins (save those in disabled_plugins).
+        :type enabled_plugins: list
+
+        :param disabled_plugins: List of disabled plugins, by name. Use "all" to disable all plugins (save those in enabled_plugins).
+        :type disabled_plugins: list
 
         :param category: Category. Use "all" to load plugins from all categories.
         :type category: str
@@ -365,36 +382,47 @@ class PriscillaPluginManager (Singleton):
         :raises: Exception -- Plugins may throw exceptions if they fail to load.
         """
 
-        # If no list of plugin names is given, get all the plugins
-        if plugin_names is None:
-            plugin_names = self.__plugins.keys()
+        # Sanitize the category
+        category = category.strip().lower()
 
-        # Remove any duplicated names
-        plugin_names = set(plugin_names)
+        # Make sure the category exists, otherwise raise an exception
+        if category != "all" and category not in self.CATEGORIES:
+            raise KeyError("Unknown plugin category: %r" % category)
 
-        # Make sure the category is lowercase
-        category = category.lower()
+        # Get the list of all plugins for the requested category
+        plugins = self.get_plugin_names(category)
 
-        # If filtering by category...
-        if category != "all":
+        # Remove duplicates and check for consistency in black and white lists
+        if "all" in enabled_plugins:
+            enabled_plugins  = {"all"}
+        if "all" in disabled_plugins:
+            disabled_plugins = {"all"}
+        enabled_plugins  = set(enabled_plugins)
+        disabled_plugins = set(disabled_plugins)
+        if enabled_plugins.intersection(disabled_plugins):
+            raise ValueError("Conflicting black and white lists!")
+        if "all" not in enabled_plugins and "all" not in disabled_plugins:
+            disabled_plugins = set()
 
-            # Make sure the category exists, otherwise raise an exception
-            if category not in self.CATEGORIES:
-                raise KeyError("Unknown plugin category: %r" % category)
-
-            # Filter the requested plugins that don't belong to the category
-            category = category + "/"
-            plugin_names = set( name for name in plugin_names if name.startswith(category) )
-
-        # Make sure all requested plugins exist
-        missing_plugins = plugin_names.difference(self.__plugins.keys())
+        # Make sure all the plugins in the whitelist exist
+        missing_plugins = enabled_plugins.difference(self.get_plugin_names())
+        if "all" in missing_plugins:
+            missing_plugins.remove("all")
         if missing_plugins:
             if len(missing_plugins) > 1:
                 raise KeyError("Missing plugins: %s" % ", ".join(sorted(missing_plugins)))
             raise KeyError("Missing plugin: %s" % missing_plugins.pop())
 
+        # Blacklist approach
+        if "all" in enabled_plugins:
+            plugins.difference_update(disabled_plugins)
+
+        # Whitelist approach
+        else:
+            plugins = enabled_plugins
+
         # Load each requested plugin
-        return dict( (name, self.load_plugin_by_name(name)) for name in plugin_names )
+        return dict( (name, self.load_plugin_by_name(name)) for name in plugins )
 
 
     #----------------------------------------------------------------------

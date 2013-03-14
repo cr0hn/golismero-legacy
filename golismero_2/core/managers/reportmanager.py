@@ -35,10 +35,12 @@ class ReportManager (object):
 
 
     #----------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, config):
 
         # Load plugins
-        self.__reporters = PriscillaPluginManager().load_plugins(category="report")
+        self.__reporters = PriscillaPluginManager().load_plugins(
+            config.enabled_plugins, config.disabled_plugins,
+            category="report")
 
 
     #----------------------------------------------------------------------

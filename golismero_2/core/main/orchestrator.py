@@ -83,7 +83,8 @@ class Orchestrator (object):
             if Logger.check_level(Logger.VERBOSE):
                 for plugin_name in failure:
                     Logger.log_error_verbose("\t%s" % plugin_name)
-        self.__pluginManager.load_plugins(self.__config.plugins)
+        self.__pluginManager.load_plugins(self.__config.enabled_plugins,
+                                          self.__config.disabled_plugins)
 
         # Process manager
         self.__processManager = ProcessManager(self.__config)
@@ -97,7 +98,7 @@ class Orchestrator (object):
             self.__ui = UIManager(self, self.__config)
 
         # Load report manager
-        self.__report_manager = ReportManager()
+        self.__report_manager = ReportManager(self.__config)
 
         # Signal handler to catch Ctrl-C
         self.__old_signal_action = signal(SIGINT, self.__signal_handler)

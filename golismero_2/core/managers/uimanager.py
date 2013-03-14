@@ -56,7 +56,9 @@ class UIManager (object):
         self.__notifier = UINotifier()
 
         # Load UI plugins
-        m_plugins = PriscillaPluginManager().load_plugins(config.plugins, "ui")
+        m_plugins = PriscillaPluginManager().load_plugins(config.enabled_plugins,
+                                                          config.disabled_plugins,
+                                                          "ui")
 
         # Configure plugins to be it own the target of messages and add to notifier
         for p in m_plugins.itervalues():

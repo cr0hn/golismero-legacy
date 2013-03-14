@@ -174,7 +174,10 @@ class GlobalParams (object):
         #
 
         # Enabled plugins
-        self.plugins = None
+        self.enabled_plugins = ["all"]
+
+        # Disabled plugins
+        self.disabled_plugins = []
 
         # Plugins folder
         self.plugins_folder = None
@@ -303,9 +306,10 @@ class GlobalParams (object):
             raise ValueError("No targets selected for execution.")
 
         # Validate the list of plugins
-
-        if self.plugins is not None and not self.plugins:
+        if not self.enabled_plugins:
             raise ValueError("No plugins selected for execution.")
+        if set(self.enabled_plugins).intersection(self.disabled_plugins):
+            raise ValueError("Conflicting plugins selection, aborting execution.")
 
         # Validate the regular expresion
         if self.subdomain_regex:
@@ -360,7 +364,8 @@ class GlobalParams (object):
         #
 
         # Get the list of enabled plugins
-        self.plugins = args.get("plugins", self.plugins)
+        self.enabled_plugins = args.get("enabled_plugins", self.enabled_plugins)
+        self.disabled_plugins = args.get("disabled_plugins", self.disabled_plugins)
 
         # Get the plugins folder
         self.plugins_folder = args.get("plugins_folder", self.plugins_folder)
@@ -504,6 +509,26 @@ class GlobalParams (object):
                     if value and value not in self.targets:
                         self.targets.append(value)
 
+                # Enable a plugin
+                elif key == "enable":
+                    if value.lower() == "all":
+                        self.enabled_plugins  = ["all"]
+                        self.disabled_plugins = []
+                    elif "all" not in self.enabled_plugins:
+                        self.enabled_plugins.append(value)
+                        if value in self.disabled_plugins:
+                            self.disabled_plugins.remove(value)
+
+                # Disable a plugin
+                elif key == "disable":
+                    if value.lower() == "all":
+                        self.enabled_plugins  = []
+                        self.disabled_plugins = ["all"]
+                    elif "all" not in self.disabled_plugins:
+                        self.disabled_plugins.append(value)
+                        if value in self.enabled_plugins:
+                            self.enabled_plugins.remove(value)
+
                 # Include other config files
                 elif key == "include":
                     if value in file_history:
@@ -558,12 +583,13 @@ class GlobalParams (object):
                                     raise ConfigFileParseError(msg)
                                 self.output_formats.append(token)
 
-                        # Get the list of enabled plugins
+                        # Get the absolute list of enabled plugins
                         elif key == "plugins":
-                            if value.lower() == "all":
-                                self.plugins = None
-                            else:
-                                self.plugins = self._parse_list(value)
+                            plugins = self._parse_list(value)
+                            if "all" in (x.strip().lower() for x in plugins):
+                                plugins = ["all"]
+                            self.enabled_plugins = plugins
+                            self.disabled_plugins = []
 
                         # Get the plugins folder
                         elif key == "plugins_folder":

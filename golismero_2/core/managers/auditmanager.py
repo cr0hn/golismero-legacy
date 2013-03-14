@@ -286,7 +286,9 @@ class Audit (object):
         self.__expecting_ack = 0
 
         # Load testing plugins
-        m_audit_plugins = PriscillaPluginManager().load_plugins(self.__audit_params.plugins, "testing")
+        m_audit_plugins = PriscillaPluginManager().load_plugins(self.__audit_params.enabled_plugins,
+                                                                self.__audit_params.disabled_plugins,
+                                                                "testing")
 
         # Register plugins with the notifier
         for l_plugin in m_audit_plugins.itervalues():

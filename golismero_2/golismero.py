@@ -149,35 +149,33 @@ def launcher(options):
 class EnablePluginAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         assert self.dest == "enabled_plugins"
-        all_plugins = ["all"]
-        values = values.strip().lower()
-        if values == "all":
-            enabled_plugins = all_plugins
+        values = values.strip()
+        if values.lower() == "all":
+            namespace.enabled_plugins  = ["all"]
+            namespace.disabled_plugins = []
         else:
             enabled_plugins = getattr(namespace, "enabled_plugins", [])
-            if enabled_plugins != all_plugins:
+            if "all" not in enabled_plugins:
                 enabled_plugins.append(values)
-        namespace.enabled_plugins = enabled_plugins
-        disabled_plugins = getattr(namespace, "disabled_plugins", [])
-        if values in disabled_plugins:
-            disabled_plugins.remove(values)
+            disabled_plugins = getattr(namespace, "disabled_plugins", [])
+            if values in disabled_plugins:
+                disabled_plugins.remove(values)
 
 # --disable-plugin
 class DisablePluginAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         assert self.dest == "disabled_plugins"
-        all_plugins = ["all"]
-        values = values.strip().lower()
-        if values == "all":
-            disabled_plugins = all_plugins
+        values = values.strip()
+        if values.lower() == "all":
+            namespace.enabled_plugins  = []
+            namespace.disabled_plugins = ["all"]
         else:
             disabled_plugins = getattr(namespace, "disabled_plugins", [])
-            if disabled_plugins != all_plugins:
+            if "all" not in disabled_plugins:
                 disabled_plugins.append(values)
-        namespace.disabled_plugins = disabled_plugins
-        enabled_plugins = getattr(namespace, "enabled_plugins", [])
-        if values in enabled_plugins:
-            enabled_plugins.remove(values)
+            enabled_plugins = getattr(namespace, "enabled_plugins", [])
+            if values in enabled_plugins:
+                enabled_plugins.remove(values)
 
 # --cookie-file
 class ReadValueFromFileAction(argparse.Action):
@@ -237,7 +235,7 @@ def main():
 
     gr_plugins = parser.add_argument_group("plugins")
     gr_plugins.add_argument("-P", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load", default=["all"])
-    gr_plugins.add_argument("-NP", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load")
+    gr_plugins.add_argument("-NP", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load", default=[])
     gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
     gr_plugins.add_argument("--plugin-list", action="store_true", help="list available plugins and quit")
     gr_plugins.add_argument("--plugin-info", metavar="NAME", dest="plugin_name", help="show plugin info and quit")
