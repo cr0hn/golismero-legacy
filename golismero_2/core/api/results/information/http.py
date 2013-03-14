@@ -485,6 +485,8 @@ class HTTP_Response (Information):
             # Parse HTML
             if m_content_type.startswith('text/html'):
                 m_return_content = HTML(data)
+            elif m_content_type.startswith('text/plain'):
+                m_return_content = data
 
         return m_return_content
 
