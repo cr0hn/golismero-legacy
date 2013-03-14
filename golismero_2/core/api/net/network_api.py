@@ -28,7 +28,7 @@ __all__ = ['NetworkAPI', 'Web', 'RequestException']
 
 from ..config import Config
 from ..logger import Logger
-from ..data.information.url import Url
+from ..data.resource.url import Url
 from ..data.information.http import *
 from ...managers.cachemanager import *
 from .web_utils import *

@@ -65,9 +65,9 @@ class BaseResultDB (object):
 
 
     #----------------------------------------------------------------------
-    def add(self, result):
+    def add(self, data):
         """
-        Add result to the database.
+        Add data to the database.
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -78,7 +78,7 @@ class BaseResultDB (object):
 
 
     #----------------------------------------------------------------------
-    def __contains__(self, result):
+    def __contains__(self, data):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
@@ -109,12 +109,12 @@ class ResultMemoryDB (BaseResultDB):
 
 
     #----------------------------------------------------------------------
-    def add(self, result):
-        if not isinstance(result, Result):
-            raise TypeError("Expected Result, got %d instead" % type(result))
-        hash_sum = result.hash_sum
+    def add(self, data):
+        if not isinstance(data, Data):
+            raise TypeError("Expected Result, got %d instead" % type(data))
+        hash_sum = data.hash_sum
         if hash_sum not in self.__results:
-            self.__results[hash_sum] = result
+            self.__results[hash_sum] = data
 
 
     #----------------------------------------------------------------------
@@ -123,10 +123,10 @@ class ResultMemoryDB (BaseResultDB):
 
 
     #----------------------------------------------------------------------
-    def __contains__(self, result):
-        if not isinstance(result, Result):
-            raise TypeError("Expected Result, got %d instead" % type(result))
-        return result.hash_sum in self.__results
+    def __contains__(self, data):
+        if not isinstance(data, Data):
+            raise TypeError("Expected Data, got %d instead" % type(data))
+        return data.hash_sum in self.__results
 
 
     #----------------------------------------------------------------------
@@ -175,12 +175,12 @@ class ResultFileDB (BaseResultDB):
 
 
     #----------------------------------------------------------------------
-    def add(self, result):
-        if not isinstance(result, Result):
-            raise TypeError("Expected Result, got %d instead" % type(result))
-        hash_sum = result.hash_sum
+    def add(self, data):
+        if not isinstance(data, Data):
+            raise TypeError("Expected Data, got %d instead" % type(data))
+        hash_sum = data.hash_sum
         if hash_sum not in self.__db:
-            data = pickle.dumps(result, protocol = pickle.HIGHEST_PROTOCOL)
+            data = pickle.dumps(data, protocol = pickle.HIGHEST_PROTOCOL)
             data = zlib.compress(data, 9)
             self.__db[hash_sum] = data
 
@@ -191,10 +191,10 @@ class ResultFileDB (BaseResultDB):
 
 
     #----------------------------------------------------------------------
-    def __contains__(self, result):
-        if not isinstance(result, Result):
-            raise TypeError("Expected Result, got %d instead" % type(result))
-        return self.__db.has_key(result.hash_sum)
+    def __contains__(self, data):
+        if not isinstance(data, Data):
+            raise TypeError("Expected Data, got %d instead" % type(data))
+        return self.__db.has_key(data.hash_sum)
 
 
     #----------------------------------------------------------------------

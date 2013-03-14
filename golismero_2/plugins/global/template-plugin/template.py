@@ -85,7 +85,7 @@ class TemplatePlugin(GlobalPlugin):
         #
         # 2 - Make the list with the info we want receive:
         #
-        #     return list(Information.INFORMATION_URL, Injection.XSS_REFLECTED)
+        #     return list(Resource.RESOURCE_URL), Injection.XSS_REFLECTED)
         #
         #
         return None

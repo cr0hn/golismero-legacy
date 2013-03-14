@@ -26,13 +26,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Url"]
 
+from .resource import Resource
+from ...colorize import *
 from urlparse import urlparse
 
-from .information import Information
 
 
 #------------------------------------------------------------------------------
-class Url(Information):
+class Url(Resource):
     """
     URL information type.
     """
@@ -59,7 +60,7 @@ class Url(Information):
         :type deep: int
         """
         super(Url, self).__init__()
-        self.information_type = self.INFORMATION_URL
+        self.resource_type = self.RESOURCE_URL
 
         # URL
         self.__url = url

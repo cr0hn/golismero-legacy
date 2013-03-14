@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 """
@@ -26,58 +26,51 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from ..data import Data
 
-__all__ = ["Information"]
-
 #------------------------------------------------------------------------------
-class Information(Data):
+class Resource(Data):
     """
-    Base class for informational results.
+    Base class resources.
     """
-
     #--------------------------------------------------------------------------
     #
     # Types of Infomation results
     #
     #--------------------------------------------------------------------------
-    INFORMATION_UNKNOWN       = 0
-    INFORMATION_IMAGE         = 1
-    INFORMATION_DOCUMENT      = 2
-    INFORMATION_BINARY        = 3
-    INFORMATION_MAIL          = 4
-    INFORMATION_HTML          = 5
-    INFORMATION_HTTP_REQUEST  = 6
-    INFORMATION_HTTP_RESPONSE = 7
-    INFORMATION_PLAIN_TEXT    = 8
+    RESOURCE_UNKNOWN       = 0
+    RESOURCE_URL           = 1
+    RESOURCE_DOMAIN        = 2    # Domain names
 
-    INFORMATION_FIRST = INFORMATION_UNKNOWN
-    INFORMATION_LAST  = INFORMATION_PLAIN_TEXT
 
+    RESOURCE_FIRST = RESOURCE_UNKNOWN
+    RESOURCE_LAST  = RESOURCE_URL
 
     #----------------------------------------------------------------------
     def __init__(self):
-        super(Information, self).__init__()
-        self.data_type        = self.TYPE_INFORMATION
-        self.information_type = self.INFORMATION_UNKNOWN
+        super(Resource, self).__init__()
+        self.__data_type = Data.TYPE_RESOURCE
 
 
     #----------------------------------------------------------------------
-    def __get_information_type(self):
+    def __get_resource_type(self):
         """
-        Get the information subtype.
+        Get the resource type.
 
-        :returns: int -- The information type.
+        :returns: int -- The resource type.
         """
-        return self.__information_type
+        return self.__resource_type
 
-    def __set_information_type(self, information_type):
+    def __set_resource_type(self, resource_type):
         """
-        Set the information subtype.
+        Set the resource type.
 
-        :param information_type: information subtype.
-        :type information_type: int
+        :param resource_type: The type of resource
+        :type resource_type: int
         """
-        if not self.INFORMATION_FIRST <= information_type <= self.INFORMATION_LAST:
-            raise ValueError("Unknown information subtype: %d" % information_type)
-        self.__information_type = information_type
+        if resource_type == self.TYPE_ANY:
+            raise ValueError("Resource can't be of the TYPE_ANY type")
+        if not self.TYPE_FIRST <= resource_type <= self.TYPE_LAST:
+            raise ValueError("Unknown resource type: %d" % resource_type)
+        self.__resource_type = resource_type
 
-    information_type = property(__get_information_type, __set_information_type)
+    resource_type = property(__get_resource_type, __set_resource_type)
+

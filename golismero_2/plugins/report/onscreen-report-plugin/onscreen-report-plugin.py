@@ -26,8 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 from core.api.plugin import ReportPlugin
-from core.api.data.result import Result
-from core.api.data.information.information import Information
+from core.api.data.resource.resource import Resource
+from core.api.data.data import Data
 from collections import Counter
 from core.api.colorize import *
 
@@ -78,7 +78,7 @@ class ScreenReport(ReportPlugin):
         #
         print "\n- %s - \n"% colorize("Spidered URLs", "yellow")
 
-        for u in filter(lambda x: x.data_type == Result.TYPE_INFORMATION and x.information_type == Information.INFORMATION_URL , m_results):
+        for u in filter(lambda x: x.data_type == Data.TYPE_INFORMATION and x.information_type == Resource.RESOURCE_URL , m_results):
             print "+ %s" % str(u)
             m_counter['url'] += 1
 

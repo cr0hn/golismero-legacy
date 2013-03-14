@@ -29,9 +29,8 @@ from .priscillapluginmanager import PriscillaPluginManager
 from ..messaging.notifier import AuditNotifier
 from ..messaging.message import Message
 from ..database.resultdb import ResultDB
-from ..api.data.information.information import Information
-from ..api.data.information.url import Url
-from ..api.data.result import Result
+from ..api.data.resource.url import Url
+from ..api.data.data import Data
 
 from multiprocessing import Queue
 from datetime import datetime
