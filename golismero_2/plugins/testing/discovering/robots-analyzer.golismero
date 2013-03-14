@@ -1,0 +1,9 @@
+[Core]
+Name = robots_txt_analyzer
+Module = robots-analyzer/robots
+
+[Documentation]
+Description = Analyze robots.txt and extracts their links.
+Author = Daniel Garcia Garcia (cr0hn)
+Version = 0.1
+Website = http://code.google.com/p/golismero/
