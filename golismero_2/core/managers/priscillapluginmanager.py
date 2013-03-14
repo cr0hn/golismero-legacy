@@ -413,6 +413,15 @@ class PriscillaPluginManager (Singleton):
                 raise KeyError("Missing plugins: %s" % ", ".join(sorted(missing_plugins)))
             raise KeyError("Missing plugin: %s" % missing_plugins.pop())
 
+        # Make sure all the plugins in the blacklist exist
+        missing_plugins = disabled_plugins.difference(self.get_plugin_names())
+        if "all" in missing_plugins:
+            missing_plugins.remove("all")
+        if missing_plugins:
+            if len(missing_plugins) > 1:
+                raise KeyError("Unknown plugins: %s" % ", ".join(sorted(missing_plugins)))
+            raise KeyError("Unknown plugin: %s" % missing_plugins.pop())
+
         # Blacklist approach
         if "all" in enabled_plugins:
             plugins.difference_update(disabled_plugins)
