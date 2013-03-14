@@ -60,35 +60,38 @@ class Robots(TestingPlugin):
 
         # Get the url of hosts
         m_parsed_url = parse_url(info.url)
-        m_url_robots.txt = "%s://%s/robots.txt" % (m_parsed_url.scheme, m_parsed_url.hostname)
-
+        m_url_robots_txt = "%s://%s/robots.txt" % (m_parsed_url.scheme, m_parsed_url.host)
         # Check if need follow first redirect
         p = None
         try:
-            p = m_manager.get(info)
+            p = m_manager.get(m_url_robots_txt)
         except ValueError,e:
             Logger.log_more_verbose("Robots - value error while processing: '%s'. Error: %s" % (l_url, e.message))
         except RequestException:
             Logger.log_more_verbose("Robots - timeout for url: '%s'." % l_url)
+
+
         if not p or not p.information:
             Logger.log_error("Robots - no robots.txt found.")
             return
 
+        # Text with info
+        m_robots_text = p.information
+
         # Prepare for unicode
         try:
-            if m_robots.startswith(codecs.BOM_UTF8):
-                m_robots = m_robots.decode('utf-8').lstrip(unicode(codecs.BOM_UTF8, 'utf-8'))
-            elif m_robots.startswith(codecs.BOM_UTF16):
-                m_robots = m_robots.decode('utf-16')
+            if m_robots_text.startswith(codecs.BOM_UTF8):
+                m_robots_text = m_robots_text.decode('utf-8').lstrip(unicode(codecs.BOM_UTF8, 'utf-8'))
+            elif m_robots_text.startswith(codecs.BOM_UTF16):
+                m_robots_text = m_robots_text.decode('utf-16')
         except UnicodeDecodeError:
-            Logger.log_error("Robots - error while parsing robots.txt: Unicode format error.")
+            Logger.log_error_verbose("Robots - error while parsing robots.txt: Unicode format error.")
             return
 
         # Results
         m_return = []
         m_return_bind = m_return.append
-        # Text with info
-        m_robots_text = p.information
+
         for rawline in m_robots_text.splitlines():
             m_line = rawline
 
@@ -108,18 +111,20 @@ class Robots(TestingPlugin):
             m_key, m_value = [x.strip() for x in m_line.split(':', 1)]
             m_key = m_key.lower()
             try:
+
                 # If a wildcard found, is not a valid URL
-                if '*' in m_val:
+                if '*' in m_value:
                     continue
 
                 if m_key in ('disallow', 'allow', 'sitemap') and m_value:
-                    Logger.log("Robots - discovered new url: %s" % val)
-                    m_return_bind(val)
-            except:
+                    Logger.log_more_verbose("Robots - discovered new url: %s" % m_value)
+                    m_return_bind(m_value)
+            except Exception,e:
                 continue
 
         # Generate results
         return [Url(url=convert_to_absolute_url(info.url, u)) for u in m_return]
+
 
 
 
