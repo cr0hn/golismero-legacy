@@ -26,8 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["NetworkCache"]
 
-from ..main.commonstructures import Singleton
-from ..api.config import *
+from ...main.commonstructures import Singleton
+from ...api.config import *
 
 from collections import defaultdict
 from functools import partial
