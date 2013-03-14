@@ -86,7 +86,7 @@ def colorize(text, level_or_color, is_color = True):
     """
 
 
-    if Config().audit_config.colorize and is_color:
+    if Config.audit_config.colorize and is_color:
         return colored(text, m_colors[level_or_color])
     else:
         return text

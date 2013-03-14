@@ -48,6 +48,7 @@ class Domain(Resource):
         :type addresses: list
         """
         super(Url, self).__init__()
+
         self.resource_type = self.RESOURCE_DOMAIN
 
         # Domain name

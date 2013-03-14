@@ -32,7 +32,7 @@ __all__ = ["Config"]
 
 from ..main.commonstructures import Singleton
 
-class Config (Singleton):
+class _Config (Singleton):
     """
     Current plugin configuration.
 
@@ -67,3 +67,5 @@ class Config (Singleton):
 
     def _set_context(self, context):
         self.__context = context
+
+Config = _Config()

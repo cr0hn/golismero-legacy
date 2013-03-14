@@ -110,7 +110,7 @@ def bootstrap(context, func, argv, argd):
                 Logger.set_level(verbose)
 
                 # Configure the plugin
-                Config()._set_context(context)
+                Config._set_context(context)
 
                 # TODO: hook stdout and stderr to catch print statements
 
@@ -451,12 +451,11 @@ class PluginPoolManager (object):
             return
 
         # Otherwise just call the plugin directly
-        config = Config()
-        old_context = config._get_context()
+        old_context = Config._get_context()
         try:
             return bootstrap(context, func, argv, argd)
         finally:
-            config._set_context(old_context)
+            Config._set_context(old_context)
 
 
     #----------------------------------------------------------------------
@@ -653,12 +652,11 @@ class ProcessManager (object):
             return self.__launcher.run_plugin(context, func, argv, argd)
 
         # Otherwise just call the plugin directly
-        config = Config()
-        old_context = config._get_context()
+        old_context = Config._get_context()
         try:
             return bootstrap(context, func, argv, argd)
         finally:
-            config._set_context(old_context)
+            Config._set_context(old_context)
 
 
     #----------------------------------------------------------------------

@@ -26,13 +26,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ['NetworkAPI', 'Web', 'RequestException']
 
-
-
 from ..config import Config
 from ..logger import Logger
 from ..data.resource.url import Url
+from .cache import NetworkCache
+
+# TODO: fix these imports so they load only what's needed
 from ..data.information.http import *
-from ...managers.cachemanager import *
 from .web_utils import *
 from requests import *
 from requests.exceptions import *
@@ -48,10 +48,10 @@ class NetworkAPI (object):
     TYPE_WEB = 0
     TYPE_FTP = 1
 
-    # init?
-    __is_initialized = None
+    TYPE_FIRST = TYPE_WEB
+    TYPE_LAST  = TYPE_FTP
 
-    # Pool manager. A pool for target
+    # Pool manager. One pool per target.
     __http_pool_manager = None
 
 
@@ -67,14 +67,15 @@ class NetworkAPI (object):
         :raises: ValueError
         """
         if NetworkAPI.__http_pool_manager is None:
+
             # Set pool
             NetworkAPI.__http_pool_manager = Session()
 
             # If proxy
-            m_proxy_addr = Config().audit_config.proxy_addr
+            m_proxy_addr = Config.audit_config.proxy_addr
             if m_proxy_addr:
-                m_auth_user = Config().audit_config.proxy_user
-                m_auth_pass = Config().audit_config.proxy_pass
+                m_auth_user = Config.audit_config.proxy_user
+                m_auth_pass = Config.audit_config.proxy_pass
 
                 # Detect auth method
                 auth, realm = detect_auth_method(m_proxy_addr, m_auth_user, m_auth_pass)
@@ -86,12 +87,12 @@ class NetworkAPI (object):
 
 
             # Set cookie
-            m_cookies = Config().audit_config.cookie
+            m_cookies = Config.audit_config.cookie
             if m_cookies:
                 NetworkAPI.__http_pool_manager.cookies = m_cookies
 
         if protocol is NetworkAPI.TYPE_WEB:
-            return Web(NetworkAPI.__http_pool_manager, Config().audit_config)
+            return Web(NetworkAPI.__http_pool_manager, Config.audit_config)
 
         else:
             raise ValueError("Unknown protocol type, value: %d" % protocol)
@@ -100,68 +101,58 @@ class NetworkAPI (object):
 #------------------------------------------------------------------------------
 class Protocol (object):
     """
-    Super class for networks protocols.
+    Superclass for networks protocols.
     """
 
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """Constructor."""
 
-        # Set reference to cache
-        self._cache = NetProtocolCacheManager()
+        # Network cache API.
+        self._cache = NetworkCache()
 
 
     #----------------------------------------------------------------------
     def state(self):
-        """"""
         pass
 
 
     #----------------------------------------------------------------------
     def close(self):
-        """"""
+        """
+        Release all resources associated with this object.
+        """
         pass
 
 
     #----------------------------------------------------------------------
-    def get(self, URL, method = None, cache = True):
+    def get(self, URL, cache = True):
         """
-        This method obtain the URL passed as parameter with method specified.
+        Fetch a resource, optionally specifying if it must be stored
+        in the cache.
 
         :param URL: URL to get.
         :type URL: str
 
-        :param method: method to get URL
-        :type method: str
-
-        :param method: indicates if response must be cached.
+        :param cache: True if response must be cached, False if it must not, None if it's indifferent.
         :type cache: bool
         """
-        pass
-
-
-    #----------------------------------------------------------------------
-    def custom_request(self, request):
-        """"""
-
-
+        raise NotImplementedError("Subclasses MUST implement this method!")
 
 
 #------------------------------------------------------------------------------
 #
-# Web methods and data structures
+# Web protocols.
 #
 #------------------------------------------------------------------------------
 class Web (Protocol):
     """
-    Class for manager web protocols, like HTTP or HTTPs
+    Web protocols handler (HTTP, HTTPS).
     """
 
 
     #----------------------------------------------------------------------
     def __init__(self, http_pool, config):
-        """Constructor"""
         super(Web, self).__init__()
 
         self.__http_pool_manager = http_pool
@@ -173,31 +164,27 @@ class Web (Protocol):
 
     #----------------------------------------------------------------------
     def state(self):
-        """"""
         pass
 
 
     #----------------------------------------------------------------------
     def close(self):
-        """Close and clear pool connections"""
         self.__http_pool_manager.clear()
 
 
     #----------------------------------------------------------------------
     def get_custom(self, request):
-        """Get an HTTP response from a custom HTTP Request object
+        """Get an HTTP response from a custom HTTP Request object.
 
-        :param request: An instance of HTTP_Request.
+        :param request: An HTTP request object.
         :type request: HTTP_request
 
-        :returns: HTTPResponse instance or None if any error or URL out of scope.
-
-        :raises: TypeError
+        :returns: HTTP_Response -- HTTP response object | None
         """
-        if not  isinstance(request, HTTP_Request):
+        if not isinstance(request, HTTP_Request):
             raise TypeError("Expected HTTP_Request, got %s instead" % type(URL))
 
-        # Check for host matching
+        # Check if the URL is within scope of the audit.
         if not is_in_scope(request.url):
             Logger.log_verbose("Url '%s' out of scope. Skipping it." % request.url)
             return
@@ -206,15 +193,16 @@ class Web (Protocol):
         m_time = None
 
         # URL is cached?
-        if request.is_cacheable and self._cache.is_cached(request.request_id):
-            m_response = self._cache.get_cache(request.request_id)
+        if request.is_cacheable and self._cache.exists(request.request_id):
+            m_response = self._cache[request.request_id]
         else:
             #
             # Get URL
             #
 
             # Set redirect option
-            request.follow_redirects = request.follow_redirects if request.follow_redirects else self.__follow_redirects
+            request.follow_redirects = request.follow_redirects or self.__follow_redirects
+
 
             # allow_redirects
             # headers
@@ -233,48 +221,39 @@ class Web (Protocol):
             }
 
             # HTTP method
-            m_method = request.method
+            m_method = request.method.upper()
 
             # Set files data, if available
-            if m_method == "POST" or m_method == "PUT" and request.files_attached:
+            if m_method == "POST" or (m_method == "PUT" and request.files_attached):
                 # Add files
                 for fname, fvalue in request.files_attached.iteritems():
-                    m_request_params["files"] = { 'file': (fname, fvalue) }
+                    m_request_params["files"] = { 'file': (fname, fvalue) } # overloaded operator!
 
-            # timing init
-            t1 = time()
             # Select request type
             m_url = request.url
-            if m_method == "GET":
-                m_response = self.__http_pool_manager.get(m_url, **m_request_params)
-            elif m_method == "POST":
-                m_response = self.__http_pool_manager.post(m_url, **m_request_params)
-            elif m_method == "HEAD":
-                m_response = self.__http_pool_manager.head(m_url, **m_request_params)
-            elif m_method == "OPTIONS":
-                m_response = self.__http_pool_manager.options(m_url, **m_request_params)
-            elif m_method == "PUT":
-                m_response = self.__http_pool_manager.put(m_url, **m_request_params)
-            elif m_method == "PATCH":
-                m_response = self.__http_pool_manager.patch(m_url, **m_request_params)
-            elif m_method == "DELETE":
-                m_response = self.__http_pool_manager.delete(m_url, **m_request_params)
-            else:
-                raise ValueError("Method '%s' not allowed." % m_method)
+            if m_method not in ("GET", "POST", "HEAD", "OPTIONS", "PUT", "PATCH", "DELETE"):
+                raise NotImplementedError("Method '%s' not allowed." % m_method)
 
+            # Start timing the request
+            t1 = time()
 
-            # timin end
+            # Issue the request
+            m_response = getattr(self.__http_pool_manager, m_method.lower())(m_url, **m_request_params)
+
+            # Stop timing the request
             t2 = time()
 
-            # Calculate response time
+            # Calculate the request time
             m_time = t2 - t1
 
+            # Parse the response
             m_response = HTTP_Response(m_response, m_time, request)
 
-            # Cache is enabled?
+            # Cache the response if enabled
             if request.is_cacheable:
-                self._cache.set_cache(request.request_id, m_response)
+                self._cache[request.request_id] = m_response
 
+        # Return the response
         return m_response
 
 
@@ -330,19 +309,3 @@ class Web (Protocol):
         m_request.referer = m_referer
 
         return self.get_custom(m_request)
-
-
-    #----------------------------------------------------------------------
-    #
-    # Static methods
-    #
-    #----------------------------------------------------------------------
-    @staticmethod
-    def get_url_id(url):
-        """
-        Makes an identifier for a URL.
-
-        :returns: str -- Identifier, using: URL.scheme + URL.host + URL.port
-        """
-        m_url = parse_url(url)
-        return "%s%s%s" % (m_url.scheme, m_url.host, m_url.port)

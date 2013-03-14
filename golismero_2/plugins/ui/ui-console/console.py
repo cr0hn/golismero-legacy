@@ -82,10 +82,10 @@ class ConsoleUIPlugin(UIPlugin):
         }
 
         # Colorize output?
-        m_colorized = Config().audit_config.colorize
+        m_colorized = Config.audit_config.colorize
 
         # Get verbosity level.
-        m_verbosity_level = Config().audit_config.verbose
+        m_verbosity_level = Config.audit_config.verbose
 
         #
         # Normal verbosity: Quiet + errors without traceback
@@ -124,7 +124,7 @@ class ConsoleUIPlugin(UIPlugin):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
         # Get verbosity level.
-        m_verbosity_level = Config().audit_config.verbose
+        m_verbosity_level = Config.audit_config.verbose
 
         # Process control messages
         if message.message_type == Message.MSG_TYPE_CONTROL:

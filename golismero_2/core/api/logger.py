@@ -108,7 +108,7 @@ class Logger (object):
                     message_code = Message.MSG_CONTROL_LOG_ERROR
                 else:
                     message_code = Message.MSG_CONTROL_LOG_MESSAGE
-                Config()._get_context().send_msg(
+                Config._get_context().send_msg(
                     message_type = Message.MSG_TYPE_CONTROL,
                     message_code = message_code,
                     message_info = message)

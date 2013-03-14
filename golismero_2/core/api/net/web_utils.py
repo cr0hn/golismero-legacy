@@ -145,10 +145,10 @@ def is_in_scope(url):
         return False
 
     # Scope options
-    m_include_subdomains = Config().audit_config.include_subdomains
+    m_include_subdomains = Config.audit_config.include_subdomains
 
     # Set of domain names we're allowed to connect to
-    m_audit_scope = set(parse_url(x).hostname.lower() for x in Config().audit_config.targets)
+    m_audit_scope = set(parse_url(x).hostname.lower() for x in Config.audit_config.targets)
 
     hostname = parse_url(url).hostname.lower()
     return hostname in m_audit_scope or (
