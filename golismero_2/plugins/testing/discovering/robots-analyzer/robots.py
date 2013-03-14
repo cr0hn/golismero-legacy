@@ -91,7 +91,7 @@ class Robots(TestingPlugin):
         # Results
         m_return = []
         m_return_bind = m_return.append
-
+        tmp_discovered = None
         for rawline in m_robots_text.splitlines():
             m_line = rawline
 
@@ -117,13 +117,14 @@ class Robots(TestingPlugin):
                     continue
 
                 if m_key in ('disallow', 'allow', 'sitemap') and m_value:
-                    Logger.log_more_verbose("Robots - discovered new url: %s" % m_value)
-                    m_return_bind(m_value)
+                    tmp_discovered = convert_to_absolute_url(info.url, m_value)
+                    Logger.log_more_verbose("Robots - discovered new url: %s" % tmp_discovered)
+                    m_return_bind(tmp_discovered)
             except Exception,e:
                 continue
 
         # Generate results
-        return [Url(url=convert_to_absolute_url(info.url, u)) for u in m_return]
+        return [Url(u) for u in m_return]
 
 
 
