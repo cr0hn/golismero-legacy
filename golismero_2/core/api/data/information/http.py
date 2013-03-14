@@ -401,6 +401,9 @@ class HTTP_Response (Information):
         # Wrapper for cookie
         self.__cookie = raw_response.cookies.get_dict()
 
+        # Content type
+        self.__content_type = None
+
         #
         # Counters
         #
@@ -484,14 +487,28 @@ class HTTP_Response (Information):
 
             # Parse HTML
             if m_content_type.startswith('text/html'):
+                self.__content_type = "html"
                 m_return_content = HTML(data)
             elif m_content_type.startswith('text/plain'):
+                self.__content_type = "text"
                 m_return_content = data
-
         return m_return_content
 
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
+    @property
+    def content_type(self):
+        """
+        Content type of data of response.
+
+        Available types are:
+        - html
+        - text
+        """
+        return self.__content_type
+
+
+    #----------------------------------------------------------------------
     @property
     def char_count(self):
         """Number of chars in response body"""

@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from core.api.plugin import GlobalPlugin
-from core.api.data.information.information import Information
+from core.api.data.resource.resource import Resource
 from core.api.logger import Logger
 
 class ExamplePlugin(GlobalPlugin):
@@ -79,4 +79,4 @@ class ExamplePlugin(GlobalPlugin):
 
         :returns: list -- list with constants
         """
-        return list(Information.INFORMATION_URL)
+        return list(Resource.RESOURCE_URL)

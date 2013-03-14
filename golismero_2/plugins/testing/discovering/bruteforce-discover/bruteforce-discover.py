@@ -28,8 +28,7 @@ from core.api.logger import Logger
 from core.api.net.network_api import *
 from core.api.net.web_utils import convert_to_absolute_url, is_in_scope
 from core.api.plugin import TestingPlugin
-from core.api.data.information.information import Information
-from core.api.data.information.url import Url
+from core.api.data.resource.url import Url
 from core.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from core.api.text.wordlist_api import WordListAPI
 from os.path import splitext, split, sep
@@ -57,7 +56,7 @@ class BackupSearcher(TestingPlugin):
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Information.INFORMATION_URL]
+        return [Url.RESOURCE_URL]
 
 
     #----------------------------------------------------------------------

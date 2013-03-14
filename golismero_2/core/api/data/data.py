@@ -30,7 +30,7 @@ from ...main.commonstructures import get_unique_id
 #------------------------------------------------------------------------------
 class Data(object):
     """
-    Base class for plugin data.
+    Base class for all data.
     """
 
     #--------------------------------------------------------------------------

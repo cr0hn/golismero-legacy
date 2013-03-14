@@ -27,8 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from core.api.logger import Logger
 from core.api.net.network_api import *
 from core.api.plugin import TestingPlugin
-from core.api.data.information.information import Information
-from core.api.data.information.url import Url
+from core.api.data.resource.url import Url
 from core.api.net.web_utils import parse_url, convert_to_absolute_url
 import codecs
 
@@ -62,6 +61,9 @@ class Robots(TestingPlugin):
         m_parsed_url = parse_url(info.url)
         m_url_robots_txt = "%s://%s/robots.txt" % (m_parsed_url.scheme, m_parsed_url.host)
         # Check if need follow first redirect
+
+        Logger.log_verbose("Robots - looking for robots.txt in URL: '%s'" % m_url_robots_txt)
+
         p = None
         try:
             p = m_manager.get(m_url_robots_txt)
@@ -71,7 +73,7 @@ class Robots(TestingPlugin):
             Logger.log_more_verbose("Robots - timeout for url: '%s'." % l_url)
 
 
-        if not p or not p.information:
+        if not p or not p.information and p.content_type == "text":
             Logger.log_error("Robots - no robots.txt found.")
             return
 
@@ -132,4 +134,4 @@ class Robots(TestingPlugin):
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Information.INFORMATION_URL]
+        return [Url.RESOURCE_URL]

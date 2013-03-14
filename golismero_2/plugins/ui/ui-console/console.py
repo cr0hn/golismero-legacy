@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from core.api.config import Config
 from core.api.plugin import UIPlugin
-from core.api.data.information.information import Information
+from core.api.data.resource.resource import Resource
 from core.api.data.data import Data
 from core.messaging.message import Message
 from core.main.console import Console
@@ -77,7 +77,7 @@ class ConsoleUIPlugin(UIPlugin):
 
         # Processors functions
         funcs = {
-            Information.INFORMATION_URL : process_url,
+            Resource.RESOURCE_URL : process_url,
             'url_disclouse': process_url_disclosure
         }
 
@@ -102,9 +102,9 @@ class ConsoleUIPlugin(UIPlugin):
         if m_verbosity_level >= Console.VERBOSE:
 
             # Messages with information types
-            if  info.data_type == Data.TYPE_INFORMATION and info.information_type == Information.INFORMATION_URL:
+            if  info.data_type == Data.TYPE_RESOURCE and info.data_type == Resource.RESOURCE_URL:
                 # Call the function
-                Console.display("+ %s" % funcs[info.information_type](info, m_colorized))
+                Console.display("+ %s" % funcs[info.RESOURCE_URL](info, m_colorized))
 
 
         #
@@ -166,7 +166,7 @@ class ConsoleUIPlugin(UIPlugin):
         #
         # 2 - Make the list with the info we want receive:
         #
-        #     return list(Information.INFORMATION_URL, Injection.XSS_REFLECTED)
+        #     return list(Resource.RESOURCE_URL, Injection.XSS_REFLECTED)
         #
         return None
 
