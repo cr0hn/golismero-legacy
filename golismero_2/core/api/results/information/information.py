@@ -39,15 +39,16 @@ class Information(Result):
     # Types of Infomation results
     #
     #--------------------------------------------------------------------------
-    INFORMATION_UNKNOWN       = 0
-    INFORMATION_IMAGE         = 1
-    INFORMATION_URL           = 2
-    INFORMATION_DOCUMENT      = 3
-    INFORMATION_BINARY        = 4
-    INFORMATION_MAIL          = 5
-    INFORMATION_HTML          = 6
-    INFORMATION_HTTP_REQUEST  = 7
-    INFORMATION_HTTP_RESPONSE = 8
+    INFORMATION_UNKNOWN       = 0    # Placeholder value, not a real type!
+    INFORMATION_URL           = 1    # URLs
+    INFORMATION_DOMAIN        = 2    # Domain names
+    INFORMATION_DOCUMENT      = 3    # Documents in a recognized format
+    INFORMATION_BINARY        = 4    # Binary files in an unsupported format
+    INFORMATION_IMAGE         = 5    # Pictures and photos
+    INFORMATION_MAIL          = 6    # Emails
+    INFORMATION_HTML          = 7    # HTML documents
+    INFORMATION_HTTP_REQUEST  = 8    # HTTP requests sent to the server
+    INFORMATION_HTTP_RESPONSE = 9    # HTTP responses received from the server
 
     INFORMATION_FIRST = INFORMATION_UNKNOWN
     INFORMATION_LAST  = INFORMATION_HTTP_RESPONSE
@@ -56,7 +57,7 @@ class Information(Result):
     #----------------------------------------------------------------------
     def __init__(self):
         super(Information, self).__init__()
-        self.result_type    = self.TYPE_INFORMATION
+        self.result_type      = self.TYPE_INFORMATION
         self.information_type = self.INFORMATION_UNKNOWN
 
 

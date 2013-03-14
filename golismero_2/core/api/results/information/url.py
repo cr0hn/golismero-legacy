@@ -26,8 +26,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Url"]
 
+from urlparse import urlparse
+
 from .information import Information
-from ...colorize import *
 
 
 #------------------------------------------------------------------------------
@@ -38,7 +39,7 @@ class Url(Information):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, url, method = "GET", url_params = None, post_params= None, content_type = None, depth = 0, request_type = 0, referer = ""):
+    def __init__(self, url, method = "GET", url_params = None, post_params = None, content_type = None, depth = 0, request_type = 0, referer = ""):
         """
         Construct a URL result.
 
@@ -87,11 +88,12 @@ class Url(Information):
         # Set referer
         self.__referer = referer
 
+
     #----------------------------------------------------------------------
     def __str__(self):
         return "(%s) %s" % (
-            self.__method,
-            self.__url,
+            self.method,
+            self.url,
         )
 
 
@@ -109,6 +111,13 @@ class Url(Information):
         str -- Raw URL
         """
         return self.__url
+
+    @property
+    def parsed_url(self):
+        """
+        str -- Parsed URL
+        """
+        return urlparse(self.__url)
 
     @property
     def method(self):

@@ -29,6 +29,7 @@ from .priscillapluginmanager import PriscillaPluginManager
 from ..messaging.notifier import AuditNotifier
 from ..messaging.message import Message
 from ..database.resultdb import ResultDB
+from ..api.results.information.information import Information
 from ..api.results.information.url import Url
 from ..api.results.result import Result
 
@@ -179,15 +180,18 @@ class AuditManager (object):
                     #       and ACKs are always sent AFTER responses from plugins.
                     #
                     if not audit.expecting_ack:
+
                         # Generate reports
-                        self.__orchestrator.generate_reports(self.__audits[message.audit_name].database)
+                        try:
+                            self.__orchestrator.generate_reports(self.__audits[message.audit_name].database)
 
                         # Send finish message
-                        m = Message(message_type = Message.MSG_TYPE_CONTROL,
-                                    message_code = Message.MSG_CONTROL_STOP_AUDIT,
-                                    message_info = True,   # True for finished, False for user cancel
-                                    audit_name   = message.audit_name)
-                        self.__orchestrator.dispatch_msg(m)
+                        finally:
+                            m = Message(message_type = Message.MSG_TYPE_CONTROL,
+                                        message_code = Message.MSG_CONTROL_STOP_AUDIT,
+                                        message_info = True,   # True for finished, False for user cancel
+                                        audit_name   = message.audit_name)
+                            self.__orchestrator.dispatch_msg(m)
 
             # Stop an audit if requested
             elif message.message_code == Message.MSG_CONTROL_STOP_AUDIT:
@@ -336,17 +340,32 @@ class Audit (object):
         # Is it a result?
         if message.message_type == Message.MSG_TYPE_INFO:
 
-            # Drop duplicate results
+            # Is it a duplicate result?
             if message.message_info in self.__database:
+
+                # Send the ACK to the queue to make sure all
+                # messages in-between are processed correctly.
                 self.__expecting_ack += 1
                 m = Message(message_type = Message.MSG_TYPE_CONTROL,
                             message_code = Message.MSG_CONTROL_ACK,
                             audit_name   = self.name)
                 self.orchestrator.dispatch_msg(m)
+
+                # Drop the message.
                 return False
 
-            # Add new results to the database
+            # Add new result to the database
             self.__database.add(message.message_info)
+
+##            # If the result is an URL, extract the root as well.
+##            if message.message_info.result_type == Information.INFORMATION_URL:
+##                p = message.message_info.parsed_url
+##                u = Url("%s%s/" % (p.scheme, p.host))
+##                if u not in self.__database:
+##                    m = Message(message_type = Message.MSG_TYPE_INFO,
+##                                message_info = u,
+##                                  audit_name = self.name)
+##                    self.orchestrator.dispatch_msg(m)
 
         # Send the message to the plugins
         self.__expecting_ack += self.__notifier.notify(message)
