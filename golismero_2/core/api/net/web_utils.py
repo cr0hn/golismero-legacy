@@ -171,7 +171,8 @@ def convert_to_absolute_url(base_url, relative_url):
 
     :returns: str -- converted URL
     """
-    m_return = convert_to_absolute_url(base_url, (relative_url))
+
+    m_return = convert_to_absolute_urls(base_url, (relative_url,))
     return m_return.pop() if m_return else None
 
 
