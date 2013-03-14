@@ -422,7 +422,7 @@ class PriscillaPluginManager (Singleton):
             plugins = enabled_plugins
 
         # Load each requested plugin
-        return dict( (name, self.load_plugin_by_name(name)) for name in plugins )
+        return { name : self.load_plugin_by_name(name) for name in plugins }
 
 
     #----------------------------------------------------------------------

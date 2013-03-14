@@ -196,7 +196,7 @@ class ReportPlugin (Plugin):
     @property
     def report_type(self):
         """
-        Get an string with the report name that will be generated.
+        Returns a string with the report name that will be generated.
         For example: text, html, grepable...
 
         :returns: str -- type of report
