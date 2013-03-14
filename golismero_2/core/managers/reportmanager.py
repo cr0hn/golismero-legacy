@@ -40,7 +40,7 @@ class ReportManager (object):
         # Load plugins
         self.__reporters = PriscillaPluginManager().load_plugins(
             config.enabled_plugins, config.disabled_plugins,
-            category="report")
+            category = "report")
 
 
     #----------------------------------------------------------------------

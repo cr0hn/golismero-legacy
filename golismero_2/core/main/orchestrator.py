@@ -84,7 +84,8 @@ class Orchestrator (object):
                 for plugin_name in failure:
                     Logger.log_error_verbose("\t%s" % plugin_name)
         self.__pluginManager.load_plugins(self.__config.enabled_plugins,
-                                          self.__config.disabled_plugins)
+                                          self.__config.disabled_plugins,
+                                          category = "all")
 
         # Process manager
         self.__processManager = ProcessManager(self.__config)
