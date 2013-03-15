@@ -466,6 +466,9 @@ class GlobalParams (object):
         # Cookie
         self.cookie = args.get("cookie", self.cookie)
 
+        # Use persistent cache?
+        self.use_cache_db = args.get("use_cache_db", self.use_cache_db)
+
 
     #----------------------------------------------------------------------
     def from_cmdline(self, args):
@@ -591,7 +594,7 @@ class GlobalParams (object):
                         msg %= (number, filename, ",\n\t".join(found_loop))
                         raise ConfigFileParseError(msg)
                     file_history.append(value)
-                    self.from_file(value, file_history)
+                    self.from_file(value, file_history)      # recursive function call here!
 
                 else:
 
@@ -684,6 +687,22 @@ class GlobalParams (object):
                         elif key == "follow_first_redirect":
                             self.follow_first_redirect = self._parse_boolean(value)
 
+                        # Proxy options
+                        elif key == "proxy_addr":
+                            self.proxy_addr = value
+                        elif key == "proxy_user":
+                            self.proxy_user = value
+                        elif key == "proxy_pass":
+                            self.proxy_pass = value
+
+                        # Cookie
+                        elif key == "cookie":
+                            self.cookie = value
+
+                        # Use persistent cache?
+                        elif key == "use_cache_db":
+                            self.use_cache_db = self._parse_trinary(value)
+
                         # Unknown option
                         else:
                             msg = ("unknown option %r in line %d"
@@ -712,3 +731,16 @@ class GlobalParams (object):
         if value == 'false' or value == 'no' or value == 'n':
             return False
         return bool(int(value))
+
+    def _parse_trinary(self, value):
+        value = value.strip().lower()
+        if not value or value == 'none' or value == 'default' or value == '?':
+            return None
+        if value == 'true' or value == 'yes' or value == 'y':
+            return True
+        if value == 'false' or value == 'no' or value == 'n':
+            return False
+        value = int(value)
+        if value < 0:
+            return None
+        return value > 0
