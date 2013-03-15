@@ -191,7 +191,7 @@ class ReadValueFromFileAction(argparse.Action):
 #----------------------------------------------------------------------
 # Start of program
 
-def main():
+def main(args):
 
     # Show the program banner
     show_banner()
@@ -245,7 +245,6 @@ def main():
 
     # Parse command line options
     try:
-        args = sys.argv[1:]
         envcfg = getenv("GOLISMERO_SETTINGS")
         if envcfg:
             args = parser.convert_arg_line_to_args(envcfg) + args
@@ -416,4 +415,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
