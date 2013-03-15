@@ -29,6 +29,12 @@ __all__ = ["DataDB"]
 from .common import BaseDB, transactional
 
 from ..api.data.data import Data
+from ..api.data.information.information import Information
+from ..api.data.resource.resource import Resource
+from ..api.data.vulnerability.vulnerability import Vulnerability
+
+import urlparse
+import warnings
 
 # Lazy imports
 anydbm = None
@@ -205,7 +211,7 @@ class DataSQLiteDB (BaseDataDB):
         :param filename: Optional SQLite database file name.
         :type filename: str
         """
-        super(DataFileDB, self).__init__(audit_name)
+        super(DataSQLiteDB, self).__init__(audit_name)
         global sqlite3
         if sqlite3 is None:
             import sqlite3
@@ -252,34 +258,71 @@ class DataSQLiteDB (BaseDataDB):
 
     #----------------------------------------------------------------------
     @transactional
-    def _create(self):
+    def __create(self):
         """
         Create the database schema if needed.
         """
         self.__cursor.execute("""
-            CREATE TABLE IF NOT EXISTS information(
+            CREATE TABLE IF NOT EXISTS information (
                 id INTEGER PRIMARY KEY,
                 hash_sum STRING UNIQUE NOT NULL,
                 information_type INTEGER NOT NULL,
-                data STRING NOT NULL,
+                data BLOB NOT NULL
             );
         """)
         self.__cursor.execute("""
-            CREATE TABLE IF NOT EXISTS resource(
+            CREATE TABLE IF NOT EXISTS resource (
                 id INTEGER PRIMARY KEY,
                 hash_sum STRING UNIQUE NOT NULL,
                 resource_type INTEGER NOT NULL,
-                data STRING NOT NULL,
+                data BLOB NOT NULL
             );
         """)
         self.__cursor.execute("""
-            CREATE TABLE IF NOT EXISTS vulnerability(
+            CREATE TABLE IF NOT EXISTS vulnerability (
                 id INTEGER PRIMARY KEY,
                 hash_sum STRING UNIQUE NOT NULL,
                 vulnerability_type STRING NOT NULL,
-                data STRING NOT NULL,
+                data BLOB NOT NULL
             );
         """)
+
+
+    #----------------------------------------------------------------------
+    def __get_data_table_and_type(self, data):
+        data_type = data.data_type
+        if   data_type == Data.TYPE_INFORMATION:
+            table = "information"
+            dtype = data.information_type
+        elif data_type == Data.TYPE_RESOURCE:
+            table = "resource"
+            dtype = data.resource_type
+        elif data_type == Data.TYPE_VULNERABILITY:
+            table = "vulnerability"
+            dtype = data.vulnerability_type
+        elif data_type == Data.TYPE_ANY:
+            warnings.warn(
+                "Received %s object of type TYPE_ANY" % type(data),
+                RuntimeWarning)
+            if   isinstance(data, Information):
+                data.data_type = Data.TYPE_INFORMATION
+                table = "information"
+                dtype = data.information_type
+            elif isinstance(data, Resource):
+                data.data_type = Data.TYPE_RESOURCE
+                table = "resource"
+                dtype = data.resource_type
+            elif isinstance(data, Vulnerability):
+                data.data_type = Data.TYPE_VULNERABILITY
+                table = "vulnerability"
+                dtype = data.vulnerability_type
+            else:
+                raise NotImplementedError(
+                    "Unknown data type %r!" % type(data))
+        else:
+            raise NotImplementedError(
+                "Unknown data type %r!" % data_type)
+        return table, dtype
 
 
     #----------------------------------------------------------------------
@@ -287,24 +330,10 @@ class DataSQLiteDB (BaseDataDB):
     def add(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
-        hash_sum = data.hash_sum
-        if hash_sum not in self.__db:
-            if   data.data_type == Data.TYPE_INFORMATION:
-                table = "information"
-                type  = data.information_type
-            elif data.data_type == Data.TYPE_RESOURCE:
-                table = "resource"
-                type  = data.resource_type
-            elif data.data_type == Data.TYPE_VULNERABILITY:
-                table = "vulnerability"
-                type  = data.vulnerability_type
-            else:
-                msg  = "Can't store data type %r in the database!"
-                msg %= data.data_type
-                raise NotImplementedError(msg)
-            query  = "INSERT INTO %s VALUES (NULL, ?, ?, ?);" % table
-            values = (data.hash_sum, type, self.encode(data))
-            self.__cursor.execute(query, values)
+        table, type = self.__get_data_table_and_type(data)
+        query  = "INSERT OR REPLACE INTO %s VALUES (NULL, ?, ?, ?);" % table
+        values = (data.hash_sum, type, sqlite3.Binary(self.encode(data)))
+        self.__cursor.execute(query, values)
 
 
     #----------------------------------------------------------------------
@@ -322,16 +351,7 @@ class DataSQLiteDB (BaseDataDB):
     def __contains__(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
-        if   data.data_type == Data.TYPE_INFORMATION:
-            table = "information"
-        elif data.data_type == Data.TYPE_RESOURCE:
-            table = "resource"
-        elif data.data_type == Data.TYPE_VULNERABILITY:
-            table = "vulnerability"
-        else:
-            msg  = "Unknown data type %r!"
-            msg %= data.data_type
-            raise NotImplementedError(msg)
+        table, type = self.__get_data_table_and_type(data)
         query = "SELECT COUNT(id) FROM %s WHERE hash_sum = ? LIMIT 1;"
         self.__cursor.execute(query % table, (data.hash_sum,))
         return bool(self.__cursor.fetchone()[0])

@@ -29,7 +29,6 @@ __all__ = ["BaseDB", "transactional"]
 
 
 import zlib
-import urlparse
 import functools
 
 
@@ -58,13 +57,11 @@ except ImportError:
 
 #------------------------------------------------------------------------------
 @decorator
-def transactional(fn):
+def transactional(fn, self, *argv, **argd):
     """
     Transactional method.
     """
-    def wrapper(self, *argv, **argd):
-        return self._transaction(fn, argv, argd)
-    return wrapper
+    return self._transaction(fn, argv, argd)
 
 
 #------------------------------------------------------------------------------
