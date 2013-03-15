@@ -25,8 +25,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 __all__ = [
-    "get_unique_id", "enum",
-    "Singleton",
+    "get_unique_id", "get_user_settings_folder",
+    "Singleton", "enum",
     "ConfigFileParseError", "GlobalParams"
 ]
 
@@ -40,6 +40,7 @@ json_decode = None
 
 from os import path
 
+import os
 import hashlib
 
 
@@ -58,6 +59,49 @@ def get_unique_id(obj):
 
     # Return the hexadecimal digest of the hash.
     return hash_sum.hexdigest()
+
+
+#--------------------------------------------------------------------------
+_user_settings_folder = None
+def get_user_settings_folder():
+    """
+    Get the current user's GoLismero settings folder.
+
+    This folder will be used to store the various caches
+    and the user-defined plugins.
+    """
+
+    # TODO: on Windows, use the roaming data folder instead.
+
+    # Return the cached value if available.
+    global _user_settings_folder
+    if _user_settings_folder:
+        return _user_settings_folder
+
+    # Get the user's home folder.
+    home = os.getenv("HOME")              # Unix
+    if not home:
+        home = os.getenv("USERPROFILE")   # Windows
+
+        # If all else fails, use the current directory.
+        if not home:
+            home = os.getcwd()
+
+    # Get the user settings folder.
+    folder = path.join(home, ".golismero")
+
+    # Make sure it ends with a slash.
+    if not folder.endswith(path.sep):
+        folder += path.sep
+
+    # Make sure it exists.
+    os.makedirs(folder)
+
+    # Cache the folder.
+    _user_settings_folder = folder
+
+    # Return the folder.
+    return folder
 
 
 #--------------------------------------------------------------------------
