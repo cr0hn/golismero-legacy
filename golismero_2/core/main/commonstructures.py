@@ -95,7 +95,10 @@ def get_user_settings_folder():
         folder += path.sep
 
     # Make sure it exists.
-    os.makedirs(folder)
+    try:
+        os.makedirs(folder)
+    except Exception:
+        pass
 
     # Cache the folder.
     _user_settings_folder = folder
