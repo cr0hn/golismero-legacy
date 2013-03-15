@@ -31,28 +31,7 @@ __all__ = ["BaseDB", "transactional"]
 import zlib
 import functools
 
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
-
-try:
-    from decorator import decorator
-except ImportError:
-    import functools
-    def decorator(w):
-        """
-        The decorator module was not found. You can install it from:
-        http://pypi.python.org/pypi/decorator/
-        """
-        def d(fn):
-            @functools.wraps(fn)
-            def x(*argv, **argd):
-                return w(fn, *argv, **argd)
-            return x
-        return d
+from ..main.commonstructures import pickle, decorator
 
 
 #------------------------------------------------------------------------------

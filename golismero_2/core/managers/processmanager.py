@@ -33,7 +33,7 @@ from ..messaging.message import Message
 
 from multiprocessing import Pool, Manager, Process
 from imp import load_source
-from traceback import format_exc, print_exc
+from traceback import format_exc, print_exc, print_exception
 
 
 #------------------------------------------------------------------------------
@@ -316,23 +316,30 @@ class Context (object):
 
         :returns: Depends on the call.
         """
+
+        # Create the response queue.
+        response_queue = Manager().Queue()
+
+        # Send the RPC message.
+        self.send_msg(message_type = Message.MSG_TYPE_RPC,
+                      message_code = rpc_code,
+                      message_info = (response_queue, argv, argd))
+
+        # Get the response.
         try:
+            raw_response = response_queue.get()
 
-            # Create the response queue.
-            response_queue = Manager().Queue()
-
-            # Send the RPC message.
-            self.send_msg(message_type = Message.MSG_TYPE_RPC,
-                          message_code = rpc_code,
-                          message_info = (response_queue, argv, argd))
-
-            # Get the response.
-            return response_queue.get()
-
-        # If we reached this point we can assume the parent process is dead.
+        # If the above fails we can assume the parent process is dead.
         except:
             import sys
             sys.exit(1)
+
+        # Return the response, or raise an exception on error.
+        success, response = raw_response
+        if not success:
+            print_exception(*response)
+            raise response[0], response[1]
+        return response
 
 
     #----------------------------------------------------------------------
@@ -343,7 +350,6 @@ class Context (object):
         :param rpc_code: RPC code
         :type rpc_code: int
         """
-
         # Send the RPC message.
         self.send_msg(message_type = Message.MSG_TYPE_RPC,
                       message_code = rpc_code,

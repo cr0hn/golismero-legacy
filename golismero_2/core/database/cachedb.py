@@ -24,12 +24,16 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+# TODO: add documentation instead of forcing inheritance from NetworkCache
+
 __all__ = ["PersistentNetworkCache", "VolatileNetworkCache"]
 
 from .common import BaseDB, transactional
 
 from ..api.net.cache import NetworkCache
 from ..main.commonstructures import get_user_settings_folder
+from ..managers.rpcmanager import implementor
+from ..messaging.message import Message
 
 from collections import defaultdict
 from functools import partial
@@ -37,6 +41,22 @@ from os.path import join
 
 # Lazy imports
 sqlite3 = None
+
+
+#----------------------------------------------------------------------
+# Cache API implementors
+
+@implementor(Message.MSG_RPC_CACHE_GET)
+def rpc_cache_get(cls, orchestrator, audit_name, *argv, **argd):
+    return orchestrator.cacheManager.get(audit_name, *argv, **argd)
+
+@implementor(Message.MSG_RPC_CACHE_SET)
+def rpc_cache_set(cls, orchestrator, audit_name, *argv, **argd):
+    return orchestrator.cacheManager.set(audit_name, *argv, **argd)
+
+@implementor(Message.MSG_RPC_CACHE_CHECK)
+def rpc_cache_check(cls, orchestrator, audit_name, *argv, **argd):
+    return orchestrator.cacheManager.exists(audit_name, *argv, **argd)
 
 
 #------------------------------------------------------------------------------
@@ -53,26 +73,27 @@ class VolatileNetworkCache(NetworkCache):
 
 
     #----------------------------------------------------------------------
-    def get(self, key, protocol="http"):
-        return self.__cache[Config.audit_name][protocol].get(key, None)
+    def get(self, audit, key, protocol="http"):
+        return self.__cache[audit][protocol].get(key, None)
 
 
     #----------------------------------------------------------------------
-    def set(self, key, data, protocol="http", timestamp=None, lifespan=None):
-        self.__cache[Config.audit_name][protocol][key] = data
+    def set(self, audit, key, data, protocol="http", timestamp=None, lifespan=None):
+        # FIXME: timestamp and lifespan not yet supported in volatile mode!
+        self.__cache[audit][protocol][key] = data
 
 
     #----------------------------------------------------------------------
     def remove(self, audit, key, protocol="http"):
         try:
-            del self.__cache[Config.audit_name][protocol][key]
+            del self.__cache[audit][protocol][key]
         except KeyError:
             pass
 
 
     #----------------------------------------------------------------------
-    def exists(self, key, protocol="http"):
-        return key in self.__cache[Config.audit_name][protocol]
+    def exists(self, audit, key, protocol="http"):
+        return key in self.__cache[audit][protocol]
 
 
 #------------------------------------------------------------------------------

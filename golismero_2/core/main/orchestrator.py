@@ -33,6 +33,7 @@ from ..managers.auditmanager import AuditManager
 from ..managers.priscillapluginmanager import PriscillaPluginManager
 from ..managers.uimanager import UIManager
 from ..managers.reportmanager import ReportManager
+from ..managers.rpcmanager import RPCManager
 from ..managers.processmanager import ProcessManager, Context
 from ..messaging.message import Message
 
@@ -96,6 +97,9 @@ class Orchestrator (object):
         else:
                 self.__cache = VolatileNetworkCache()
 
+        # RPC manager
+        self.__rpcManager = RPCManager(self)
+
         # Process manager
         self.__processManager = ProcessManager(self.__config)
         self.__processManager.start()
@@ -114,9 +118,36 @@ class Orchestrator (object):
         self.__old_signal_action = signal(SIGINT, self.__signal_handler)
 
 
+    #----------------------------------------------------------------------
+    # Manager getters (mostly used by RPC implementors)
+
+    @property
+    def pluginManager(self):
+        return self.__pluginManager
+
+    @property
+    def cacheManager(self):
+        return self.__cache
+
+    @property
+    def rpcManager(self):
+        return self.__rpcManager
+
     @property
     def processManager(self):
         return self.__processManager
+
+    @property
+    def auditManager(self):
+        return self.__auditManager
+
+    @property
+    def uiManager(self):
+        return self.__ui
+
+    @property
+    def reportManager(self):
+        return self.__report_manager
 
 
     #----------------------------------------------------------------------
@@ -178,9 +209,9 @@ class Orchestrator (object):
             if message.message_type == Message.MSG_TYPE_RPC:
 
                 # Execute the call.
-                self.execute_rpc(message.audit_name,
-                                 message.message_code,
-                                 *message.message_info)
+                self.__rpcManager.execute_rpc(message.audit_name,
+                                              message.message_code,
+                                              * message.message_info)
 
                 # The method now must return True because the message was sent.
                 return True
@@ -208,39 +239,6 @@ class Orchestrator (object):
                     exit(0)                   # Planned shutdown
                 else:
                     raise KeyboardInterrupt() # User cancel
-
-
-    #----------------------------------------------------------------------
-    def execute_rpc(self, audit_name, rpc_code, response_queue, argv, argd):
-        """
-        Honor a remote procedure call request from a plugin.
-
-        :param audit_name: Name of the audit requesting the call.
-        :type audit_name: str
-
-        :param rpc_code: RPC code.
-        :type rpc_code: int
-
-        :param response_queue: Response queue.
-        :type response_queue: Queue
-
-        :param argv: Positional arguments to the call.
-        :type argv: tuple
-
-        :param argd: Keyword arguments to the call.
-        :type argd: dict
-        """
-
-        #
-        # TODO
-        #
-        print "RPC call: %r" % ((audit_name, rpc_code, argv, argd),)
-
-
-
-        # If the call was synchronous, send the response back to the plugin.
-        ##if response_queue:
-        ##    response_queue.put_nowait(response)
 
 
     #----------------------------------------------------------------------

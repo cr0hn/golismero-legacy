@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = [
     "get_unique_id", "get_user_settings_folder",
-    "Singleton", "enum",
+    "Singleton", "enum", "decorator", "pickle",
     "ConfigFileParseError", "GlobalParams"
 ]
 
@@ -42,6 +42,22 @@ from os import path
 
 import os
 import hashlib
+
+try:
+    from decorator import decorator
+except ImportError:
+    import functools
+    def decorator(w):
+        """
+        The decorator module was not found. You can install it from:
+        http://pypi.python.org/pypi/decorator/
+        """
+        def d(fn):
+            @functools.wraps(fn)
+            def x(*argv, **argd):
+                return w(fn, *argv, **argd)
+            return x
+        return d
 
 
 #--------------------------------------------------------------------------
