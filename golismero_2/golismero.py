@@ -209,11 +209,11 @@ def main():
     gr_main.add_argument("--color", action="store_true", dest="colorize", help="use colors in console output [default]", default=True)
     gr_main.add_argument("--no-color", action="store_false", dest="colorize", help="suppress colors in console output")
 
-    gr_report = parser.add_argument_group("report")
+    gr_report = parser.add_argument_group("report options")
     gr_report.add_argument("-o", "--output-file", metavar="BASENAME", help="output file, without extension")
     gr_report.add_argument("-of", "--output-format", metavar="FORMAT", action="append", dest="output_formats", help="add an output format", default=["screen"], choices=GlobalParams.REPORT_FORMAT._values.keys())
 
-    gr_net = parser.add_argument_group("network")
+    gr_net = parser.add_argument_group("network options")
     gr_net.add_argument("--max-connections", help="maximum number of concurrent connections per host [default: 4]", default=50)
     gr_net.add_argument("--allow-subdomains", action="store_true", dest="include_subdomains", help="include subdomains in the target scope [default]", default=True)
     gr_net.add_argument("--forbid-subdomains", action="store_false", dest="include_subdomains", help="do not include subdomains in the target scope")
@@ -229,11 +229,11 @@ def main():
     gr_net.add_argument("--cookie", metavar="COOKIE", help="set cookie for requests")
     gr_net.add_argument("--cookie-file", metavar="FILE", action=ReadValueFromFileAction, dest="cookie", help="load a cookie from file")
 
-    gr_audit = parser.add_argument_group("audit")
+    gr_audit = parser.add_argument_group("audit options")
     gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
     gr_audit.add_argument("--audit-database", metavar="DATABASE", dest="audit_db", default="memory://", help="specify a database connection string")
 
-    gr_plugins = parser.add_argument_group("plugins")
+    gr_plugins = parser.add_argument_group("plugin options")
     gr_plugins.add_argument("-P", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load", default=["all"])
     gr_plugins.add_argument("-NP", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load", default=[])
     gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
