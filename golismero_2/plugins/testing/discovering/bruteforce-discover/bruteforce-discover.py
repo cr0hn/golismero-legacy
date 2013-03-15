@@ -4,7 +4,9 @@
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
-Author: Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
+Authors:
+  Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
+  Mario Vilas | mvilas@gmail.com
 
 Golismero project site: http://code.google.com/p/golismero/
 Golismero project mail: golismero.project@gmail.com
@@ -23,6 +25,15 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
+
+# Acknowledgments:
+#
+#   We'd like to thank @capi_x for his idea on how
+#   to detect fake 200 responses from servers by
+#   issuing known good and bad queries and diffing
+#   them to calculate the deviation.
+#
+#   https://twitter.com/capi_x
 
 from core.api.logger import Logger
 from core.api.net.protocol import NetworkAPI
