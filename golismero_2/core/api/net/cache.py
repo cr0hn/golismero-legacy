@@ -40,14 +40,14 @@ class AbstractCache(Singleton):
     """
 
 
-    #----------------------------------------------------------------------
-    # Python operators mapped to the cache operations.
-    def __getitem__(self, key):
-        return self.get(key)
-    def __setitem__(self, key, data):
-        return self.set(key, data)
-    def __contains__(self, key):
-        return self.exists(key)
+##    #----------------------------------------------------------------------
+##    # Python operators mapped to the cache operations.
+##    def __getitem__(self, key):
+##        return self.get(key)
+##    def __setitem__(self, key, data):
+##        return self.set(key, data)
+##    def __contains__(self, key):
+##        return self.exists(key)
 
 
     #----------------------------------------------------------------------
