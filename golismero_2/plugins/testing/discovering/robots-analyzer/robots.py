@@ -29,6 +29,9 @@ from core.api.net.protocol import NetworkAPI
 from core.api.plugin import TestingPlugin
 from core.api.data.resource.url import Url
 from core.api.net.web_utils import parse_url, convert_to_absolute_url
+
+from requests.exceptions import RequestException
+
 import codecs
 
 
