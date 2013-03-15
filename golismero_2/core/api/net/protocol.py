@@ -195,7 +195,7 @@ class Web (Protocol):
         m_time = None
 
         # URL is cached?
-        if request.is_cacheable and self._cache.exists(request.request_id):
+        if request.is_cacheable and self._cache.exists(request.request_id, protocol=request.parsed_url.scheme):
             m_response = self._cache.get(request.request_id, protocol=request.parsed_url.scheme)
         else:
             #
