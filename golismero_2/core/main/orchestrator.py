@@ -28,6 +28,7 @@ from .commonstructures import GlobalParams
 from .console import Console
 from ..api.config import Config
 from ..api.logger import Logger
+from ..database.cachedb import PersistentNetworkCache, VolatileNetworkCache
 from ..managers.auditmanager import AuditManager
 from ..managers.priscillapluginmanager import PriscillaPluginManager
 from ..managers.uimanager import UIManager
@@ -86,6 +87,14 @@ class Orchestrator (object):
         self.__pluginManager.load_plugins(self.__config.enabled_plugins,
                                           self.__config.disabled_plugins,
                                           category = "all")
+
+        # Network cache
+        if  self.__config.use_cache_db or (
+            self.__config.use_cache_db is None and
+            self.__config.run_mode != GlobalParams.RUN_MODE.standalone):
+                self.__cache = PersistentNetworkCache()
+        else:
+                self.__cache = VolatileNetworkCache()
 
         # Process manager
         self.__processManager = ProcessManager(self.__config)

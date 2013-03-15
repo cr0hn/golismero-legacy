@@ -256,6 +256,12 @@ class GlobalParams (object):
         # Cookie
         self.cookie = None
 
+        # Use persistent cache?
+        # True: yes
+        # False: no
+        # None: default for current run mode
+        self.use_cache_db = None
+
 
     #----------------------------------------------------------------------
     def __set_targets(self, targets):

@@ -9,7 +9,10 @@
 .hg
 
 # Database file extensions
+*.db
 *.dbm
+*.sql
+*.sqlite
 
 # Backup file extensions
 *.bak

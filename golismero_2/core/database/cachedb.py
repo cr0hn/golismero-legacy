@@ -24,19 +24,59 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["CacheDB"]
+__all__ = ["PersistentNetworkCache", "VolatileNetworkCache"]
 
 from .common import BaseDB, transactional
 
 from ..api.net.cache import NetworkCache
 from ..main.commonstructures import get_user_settings_folder
 
-import os.path
-import sqlite3
+from collections import defaultdict
+from functools import partial
+from os.path import join
+
+# Lazy imports
+sqlite3 = None
 
 
 #------------------------------------------------------------------------------
-class NetworkCacheDB(NetworkCache, BaseDB, Singleton):
+class VolatileNetworkCache(NetworkCache):
+    """
+    In-memory cache for network resources, separated by protocol.
+    """
+
+
+    #----------------------------------------------------------------------
+    def __init__(self):
+        # audit -> protocol -> key -> data
+        self.__cache = defaultdict( partial(defaultdict, dict) )
+
+
+    #----------------------------------------------------------------------
+    def get(self, key, protocol="http"):
+        return self.__cache[Config.audit_name][protocol].get(key, None)
+
+
+    #----------------------------------------------------------------------
+    def set(self, key, data, protocol="http", timestamp=None, lifespan=None):
+        self.__cache[Config.audit_name][protocol][key] = data
+
+
+    #----------------------------------------------------------------------
+    def remove(self, audit, key, protocol="http"):
+        try:
+            del self.__cache[Config.audit_name][protocol][key]
+        except KeyError:
+            pass
+
+
+    #----------------------------------------------------------------------
+    def exists(self, key, protocol="http"):
+        return key in self.__cache[Config.audit_name][protocol]
+
+
+#------------------------------------------------------------------------------
+class PersistentNetworkCache(NetworkCache, BaseDB):
     """
     Network cache with a database backend.
     """
@@ -44,7 +84,10 @@ class NetworkCacheDB(NetworkCache, BaseDB, Singleton):
 
     #----------------------------------------------------------------------
     def __init__(self):
-        filename = os.path.join(get_user_settings_folder(), "cache.db")
+        filename = join(get_user_settings_folder(), "cache.db")
+        global sqlite3
+        if sqlite3 is None:
+            import sqlite3
         self.__db = sqlite3.connect(filename)
         self.__cursor = None
         self.__busy = False
