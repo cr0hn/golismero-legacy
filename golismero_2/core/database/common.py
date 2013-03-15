@@ -62,7 +62,7 @@ def transactional(fn):
     """
     Transactional method.
     """
-    def wrapper(self, *argv, *argd):
+    def wrapper(self, *argv, **argd):
         return self._transaction(fn, argv, argd)
     return wrapper
 
