@@ -126,7 +126,7 @@ class NetworkCache(AbstractCache):
     #----------------------------------------------------------------------
     def set(self, key, data, protocol="http", timestamp=None, lifespan=None):
         """
-        Include and URL, and their data, into cache.
+        Store a network resource in the cache.
 
         :param key: key to reference the network resource
         :type key: str
@@ -144,6 +144,23 @@ class NetworkCache(AbstractCache):
         :type lifespan: int
         """
         self.__cache[Config.audit_name][protocol][key] = data
+
+
+    #----------------------------------------------------------------------
+    def remove(self, audit, key, protocol="http"):
+        """
+        Remove a network resource from the cache.
+
+        :param key: key to reference the network resource
+        :type key: str
+
+        :param protocol: network protocol
+        :type protocol: str
+        """
+        try:
+            del self.__cache[Config.audit_name][protocol][key]
+        except KeyError:
+            pass
 
 
     #----------------------------------------------------------------------
