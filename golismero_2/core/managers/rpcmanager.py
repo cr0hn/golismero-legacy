@@ -78,7 +78,9 @@ class RPCManager (object):
         missing = set(xrange(Message.MSG_RPC_FIRST, Message.MSG_RPC_LAST + 1))
         missing.difference_update(self.__rpcMap.keys())
         if missing:
-            warnings.warn("Missing RPC implementors for codes: %s" % ", ".join(sorted(missing)))
+            msg  = "Missing RPC implementors for codes: %s"
+            msg %= ", ".join(sorted(missing))
+            warnings.warn(msg, RuntimeWarning)
 
 
     #----------------------------------------------------------------------
