@@ -28,7 +28,7 @@ from ..main.commonstructures import GlobalParams
 from .priscillapluginmanager import PriscillaPluginManager
 from ..messaging.notifier import AuditNotifier
 from ..messaging.message import Message
-from ..database.resultdb import ResultDB
+from ..database.datadb import DataDB
 from ..api.data.resource.url import Url
 from ..api.data.data import Data
 
@@ -249,7 +249,7 @@ class Audit (object):
         self.__notifier = AuditNotifier(self)
 
         # create result db
-        self.__database = ResultDB(self.__auditname, auditParams.audit_db)
+        self.__database = DataDB(self.__auditname, auditParams.audit_db)
 
 
     @property
