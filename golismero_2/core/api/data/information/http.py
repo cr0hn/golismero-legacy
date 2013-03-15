@@ -26,8 +26,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
-
 __all__ = ["HTTP_Request", "HTTP_Response"]
 
 from .information import *
@@ -52,9 +50,7 @@ class HTTP_Request (Information):
     TYPE_SOAP      = 2    # Automatic SOAP parsing
     TYPE_VIEWSTATE = 3    # Automatic Viewstate parsing
 
-
     DEFAULT_USER_AGENT = "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +http://code.google.com/p/golismero)"
-
 
 
     #----------------------------------------------------------------------
@@ -103,11 +99,13 @@ class HTTP_Request (Information):
         # Id of request
         self.__request_id = None
 
+
     #----------------------------------------------------------------------
     #
     # Public functions
     #
     #----------------------------------------------------------------------
+
     def generate_user_agent(self):
         """Return a random user agent string"""
         from random import randint
@@ -145,6 +143,7 @@ class HTTP_Request (Information):
         return m_user_agents[randint(0, len(m_user_agents) - 1)]
 
 
+    #----------------------------------------------------------------------
     def add_file_from_file(self, path_to_file, alt_filename=None):
         """Add file from path
 
@@ -188,12 +187,12 @@ class HTTP_Request (Information):
                 self.__files_attached[param_name] = obj
 
 
-
     #----------------------------------------------------------------------
     #
     # Private functions
     #
     #----------------------------------------------------------------------
+
     def __get_accept_type(self, accept_type=None):
         """Get accepted types.
 
@@ -223,6 +222,7 @@ class HTTP_Request (Information):
     # Read/write properties
     #
     #----------------------------------------------------------------------
+
 
     # Hostname
     def __get_host(self):
@@ -311,11 +311,13 @@ class HTTP_Request (Information):
         self.__follow_redirects = value
     follow_redirects = property(__get_follow_redirects, __set_follow_redirects)
 
+
     #----------------------------------------------------------------------
     #
     # Read-only properties
     #
     #----------------------------------------------------------------------
+
 
     @property
     def from_request(self):
@@ -352,7 +354,6 @@ class HTTP_Request (Information):
         """Get a dict with filenames attached."""
         return self.__files_attached
 
-    #----------------------------------------------------------------------
     @property
     def request_id(self):
         """"""
@@ -364,17 +365,18 @@ class HTTP_Request (Information):
             self.__request_id = hashlib.md5(m_string).hexdigest()
         return self.__request_id
 
+
 #------------------------------------------------------------------------------
 class HTTP_Response (Information):
     """
     HTTP response.
     """
 
+    information_type = Information.INFORMATION_HTTP_RESPONSE
+
+
     #----------------------------------------------------------------------
     def __init__(self, raw_response, request_time, request):
-        super(HTTP_Response, self).__init__()
-
-        self.information_type = self.INFORMATION_HTTP_RESPONSE
 
         # Request that produced this response
         self.__request = request
@@ -421,13 +423,30 @@ class HTTP_Response (Information):
 
 
     #----------------------------------------------------------------------
+    def __extract_information(self, headers, data):
+        """
+        Get an information type from a raw response
+        """
+        m_return_content = None
+        if headers:
+            m_content_type = headers.get("content-type", "text/html")
+
+            # Parse HTML
+            if m_content_type.startswith('text/html'):
+                self.__content_type = "html"
+                m_return_content = HTML(data)
+            elif m_content_type.startswith('text/plain'):
+                self.__content_type = "text"
+                m_return_content = data
+        return m_return_content
+
+
+    #----------------------------------------------------------------------
     @property
     def request_from(self):
         """Request that generate this response"""
         return self.__request
 
-
-    #----------------------------------------------------------------------
     @property
     def raw(self):
         """"""
@@ -478,26 +497,6 @@ class HTTP_Response (Information):
         """"""
         return self.__information
 
-    #----------------------------------------------------------------------
-    def __extract_information(self, headers, data):
-        """
-        Get an information type from a raw response
-        """
-        m_return_content = None
-        if headers:
-            m_content_type = headers.get("content-type", "text/html")
-
-            # Parse HTML
-            if m_content_type.startswith('text/html'):
-                self.__content_type = "html"
-                m_return_content = HTML(data)
-            elif m_content_type.startswith('text/plain'):
-                self.__content_type = "text"
-                m_return_content = data
-        return m_return_content
-
-
-    #----------------------------------------------------------------------
     @property
     def content_type(self):
         """

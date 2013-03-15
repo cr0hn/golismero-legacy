@@ -32,12 +32,13 @@ from .resource import Resource
 from urlparse import urlparse
 
 
-
 #------------------------------------------------------------------------------
 class Url(Resource):
     """
     URL information type.
     """
+
+    resource_type = Resource.RESOURCE_URL
 
 
     #----------------------------------------------------------------------
@@ -60,8 +61,6 @@ class Url(Resource):
         :param deep: The deep of URL in relation with main site.
         :type deep: int
         """
-        super(Url, self).__init__()
-        self.resource_type = self.RESOURCE_URL
 
         # URL
         self.__url = url

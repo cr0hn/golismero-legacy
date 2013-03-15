@@ -26,6 +26,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["Data"]
+
 from ...main.commonstructures import get_unique_id
 
 
@@ -34,6 +36,7 @@ class Data(object):
     """
     Base class for all data.
     """
+
 
     #--------------------------------------------------------------------------
     #
@@ -51,34 +54,7 @@ class Data(object):
     TYPE_LAST    = TYPE_RESOURCE       # constant for the last valid type
 
 
-    #----------------------------------------------------------------------
-    def __init__(self):
-        self.__data_type = Data.TYPE_ANY
-
-
-    #----------------------------------------------------------------------
-    def __get_data_type(self):
-        """
-        Get the data type.
-
-        :returns: int -- The data type.
-        """
-        return self.__data_type
-
-    def __set_data_type(self, data_type):
-        """
-        Set the data type.
-
-        :param data_type: The type of data
-        :type data_type: int
-        """
-        if data_type == self.TYPE_ANY:
-            raise ValueError("Data can't be of the TYPE_ANY type")
-        if not self.TYPE_FIRST <= data_type <= self.TYPE_LAST:
-            raise ValueError("Unknown data type: %d" % data_type)
-        self.__data_type = data_type
-
-    data_type = property(__get_data_type, __set_data_type)
+    data_type = TYPE_ANY
 
 
     #----------------------------------------------------------------------

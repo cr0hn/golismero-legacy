@@ -26,13 +26,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["Resource"]
+
 from ..data import Data
+
 
 #------------------------------------------------------------------------------
 class Resource(Data):
     """
     Base class resources.
     """
+
     #--------------------------------------------------------------------------
     #
     # Types of Infomation results
@@ -46,33 +50,8 @@ class Resource(Data):
     RESOURCE_FIRST = RESOURCE_UNKNOWN
     RESOURCE_LAST  = RESOURCE_DOMAIN
 
-    #----------------------------------------------------------------------
-    def __init__(self):
-        super(Resource, self).__init__()
-        self.__data_type = Data.TYPE_RESOURCE
-
 
     #----------------------------------------------------------------------
-    def __get_resource_type(self):
-        """
-        Get the resource type.
 
-        :returns: int -- The resource type.
-        """
-        return self.__resource_type
-
-    def __set_resource_type(self, resource_type):
-        """
-        Set the resource type.
-
-        :param resource_type: The type of resource
-        :type resource_type: int
-        """
-        if resource_type == self.TYPE_ANY:
-            raise ValueError("Resource can't be of the TYPE_ANY type")
-        if not self.TYPE_FIRST <= resource_type <= self.TYPE_LAST:
-            raise ValueError("Unknown resource type: %d" % resource_type)
-        self.__resource_type = resource_type
-
-    resource_type = property(__get_resource_type, __set_resource_type)
-
+    data_type = Data.TYPE_RESOURCE
+    resource_type = RESOURCE_UNKNOWN

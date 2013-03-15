@@ -37,6 +37,8 @@ class Domain(Resource):
     Domain name resource.
     """
 
+    resource_type = Resource.RESOURCE_DOMAIN
+
 
     #----------------------------------------------------------------------
     def __init__(self, name, *addresses):
@@ -49,9 +51,6 @@ class Domain(Resource):
         :param addresses: List of IP addresses
         :type addresses: list
         """
-        super(Url, self).__init__()
-
-        self.resource_type = self.RESOURCE_DOMAIN
 
         # Domain name
         self.__name = name

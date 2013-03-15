@@ -26,15 +26,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["Information"]
+
 from ..data import Data
 
-__all__ = ["Information"]
 
 #------------------------------------------------------------------------------
 class Information(Data):
     """
     Base class for informational results.
     """
+
 
     #--------------------------------------------------------------------------
     #
@@ -56,30 +58,6 @@ class Information(Data):
 
 
     #----------------------------------------------------------------------
-    def __init__(self):
-        super(Information, self).__init__()
-        self.data_type        = self.TYPE_INFORMATION
-        self.information_type = self.INFORMATION_UNKNOWN
 
-
-    #----------------------------------------------------------------------
-    def __get_information_type(self):
-        """
-        Get the information subtype.
-
-        :returns: int -- The information type.
-        """
-        return self.__information_type
-
-    def __set_information_type(self, information_type):
-        """
-        Set the information subtype.
-
-        :param information_type: information subtype.
-        :type information_type: int
-        """
-        if not self.INFORMATION_FIRST <= information_type <= self.INFORMATION_LAST:
-            raise ValueError("Unknown information subtype: %d" % information_type)
-        self.__information_type = information_type
-
-    information_type = property(__get_information_type, __set_information_type)
+    data_type = Data.TYPE_INFORMATION
+    information_type = INFORMATION_UNKNOWN
