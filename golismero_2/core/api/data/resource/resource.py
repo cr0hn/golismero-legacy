@@ -42,7 +42,7 @@ class Resource(Data):
 
 
     RESOURCE_FIRST = RESOURCE_UNKNOWN
-    RESOURCE_LAST  = RESOURCE_URL
+    RESOURCE_LAST  = RESOURCE_DOMAIN
 
     #----------------------------------------------------------------------
     def __init__(self):
