@@ -26,14 +26,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-# TODO: add documentation instead of forcing inheritance from NetworkCache
-
 __all__ = ["PersistentNetworkCache", "VolatileNetworkCache"]
 
-from .common import BaseDB, transactional
+from .common import BaseDB, atomic, transactional
 
-from ..api.net.cache import NetworkCache
-from ..common import get_user_settings_folder
+from ..common import get_user_settings_folder, Singleton
 from ..managers.rpcmanager import implementor
 from ..messaging.message import Message
 
@@ -66,7 +63,91 @@ def rpc_cache_remove(orchestrator, audit_name, *argv, **argd):
 
 
 #------------------------------------------------------------------------------
-class VolatileNetworkCache(NetworkCache):
+class BaseNetworkCache(BaseDB):
+    """
+    Abtract class for network cache databases.
+    """
+
+
+    #----------------------------------------------------------------------
+    def get(self, audit, key, protocol="http"):
+        """
+        Get a network resource from the cache.
+
+        :param key: key to reference the network resource
+        :type key: str
+
+        :param protocol: network protocol
+        :type protocol: str
+
+        :returns: object -- resource from the cache | None
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def set(self, audit, key, data, protocol="http", timestamp=None, lifespan=None):
+        """
+        Store a network resource in the cache.
+
+        :param key: key to reference the network resource
+        :type key: str
+
+        :param data: data to store in the cache
+        :type data: object
+
+        :param protocol: network protocol
+        :type protocol: str
+
+        :param timestamp: timestamp for this network resource
+        :type timestamp: int
+
+        :param lifespan: time to live in the cache
+        :type lifespan: int
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def remove(self, audit, key, protocol="http"):
+        """
+        Remove a network resource from the cache.
+
+        :param key: key to reference the network resource
+        :type key: str
+
+        :param protocol: network protocol
+        :type protocol: str
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def exists(self, audit, key, protocol="http"):
+        """
+        Verify if the given key exists in the cache.
+
+        :param key: key to reference the network resource
+        :type key: str
+
+        :returns: True if the resource is in the cache, False otherwise.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def clean(self, audit):
+        """
+        Delete all cache entries for the given audit.
+
+        :param audit: Audit name.
+        :type audit: str
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+#------------------------------------------------------------------------------
+class VolatileNetworkCache(BaseNetworkCache):
     """
     In-memory cache for network resources, separated by protocol.
     """
@@ -85,6 +166,7 @@ class VolatileNetworkCache(NetworkCache):
 
     #----------------------------------------------------------------------
     def set(self, audit, key, data, protocol="http", timestamp=None, lifespan=None):
+
         # FIXME: timestamp and lifespan not yet supported in volatile mode!
         self.__cache[audit][protocol][key] = data
 
@@ -102,8 +184,23 @@ class VolatileNetworkCache(NetworkCache):
         return key in self.__cache[audit][protocol]
 
 
+    #----------------------------------------------------------------------
+    def clean(self, audit):
+        self.__cache = defaultdict( partial(defaultdict, dict) )
+
+
+    #----------------------------------------------------------------------
+    def close(self):
+        self.clean()
+
+
+    #----------------------------------------------------------------------
+    def dump(self, filename):
+        pass
+
+
 #------------------------------------------------------------------------------
-class PersistentNetworkCache(NetworkCache, BaseDB):
+class PersistentNetworkCache(BaseNetworkCache):
     """
     Network cache with a database backend.
     """
@@ -122,28 +219,26 @@ class PersistentNetworkCache(NetworkCache, BaseDB):
 
 
     #----------------------------------------------------------------------
-    def close(self):
+    def _atom(self, fn, argv, argd):
+        # this will fail for multithreaded accesses,
+        # but sqlite is not multithreaded either
+        if self.__busy:
+            raise RuntimeError("The database is busy")
         try:
-            try:
-                self.__db.execute("PURGE;")
-            finally:
-                self.__db.close()
-        except Exception:
-            pass
-        self.__busy = True
+            self.__busy = True
+            return fn(self, *argv, **argd)
+        finally:
+            self.__busy = False
 
 
     #----------------------------------------------------------------------
     def _transaction(self, fn, argv, argd):
-        """
-        Execute a transactional operation.
-        """
-        # this will fail for multithread accesses,
+        # this will fail for multithreaded accesses,
         # but sqlite is not multithreaded either
         if self.__busy:
             raise RuntimeError("The database is busy")
-        self.__busy = True
         try:
+            self.__busy = True
             self.__cursor = self.__db.cursor()
             try:
                 retval = fn(self, *argv, **argd)
@@ -232,12 +327,6 @@ class PersistentNetworkCache(NetworkCache, BaseDB):
     #----------------------------------------------------------------------
     @transactional
     def clean(self, audit):
-        """
-        Delete all cache entries for the given audit.
-
-        :param audit: Audit name.
-        :type audit: str
-        """
         self.__cursor.execute("""
             DELETE FROM cache
             WHERE audit = ?;
@@ -247,12 +336,29 @@ class PersistentNetworkCache(NetworkCache, BaseDB):
     #----------------------------------------------------------------------
     @transactional
     def compact(self):
-        """
-        Free unused disk space.
-        """
         self.__cursor.executescript("""
             DELETE FROM cache
                 WHERE timestamp != NULL AND lifespan != NULL AND
                       timestamp + lifespan <= DATETIME('now', 'unixepoch');
             VACUUM;
         """)
+
+
+    #----------------------------------------------------------------------
+    @atomic
+    def dump(self, filename):
+        with open(filename, 'w') as f:
+            for line in self.__db.iterdump():
+                f.write(line + "\n")
+
+
+    #----------------------------------------------------------------------
+    @atomic
+    def close(self):
+        try:
+            try:
+                self.__db.execute("PURGE;")
+            finally:
+                self.__db.close()
+        except Exception:
+            pass

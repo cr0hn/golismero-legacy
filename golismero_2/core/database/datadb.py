@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["DataDB"]
 
-from .common import BaseDB, transactional
+from .common import BaseDB, atomic, transactional
 
 from ..api.data.data import Data
 from ..api.data.information.information import Information
@@ -164,9 +164,24 @@ class DataFileDB (BaseDataDB):
         if not filename:
             filename = audit_name + ".dbm"
         self.__db = anydbm.open(filename, "c", 0600)
+        self.__busy = False
 
 
     #----------------------------------------------------------------------
+    def _atom(self, fn, argv, argd):
+        # this will fail for multithreaded accesses,
+        # but dbm implementations are usually not multithreaded either
+        if self.__busy:
+            raise RuntimeError("The database is busy")
+        self.__busy = True
+        try:
+            return fn(self, *argv, **argd)
+        finally:
+            self.__busy = False
+
+
+    #----------------------------------------------------------------------
+    @atomic
     def close(self):
         try:
             self.__db.close()
@@ -175,6 +190,7 @@ class DataFileDB (BaseDataDB):
 
 
     #----------------------------------------------------------------------
+    @atomic
     def add(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
@@ -185,11 +201,13 @@ class DataFileDB (BaseDataDB):
 
 
     #----------------------------------------------------------------------
+    @atomic
     def __len__(self):
         return len(self.__db)
 
 
     #----------------------------------------------------------------------
+    @atomic
     def __contains__(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
@@ -198,8 +216,15 @@ class DataFileDB (BaseDataDB):
 
     #----------------------------------------------------------------------
     def __iter__(self):
-        for data in self.__db.itervalues():
-            yield self.decode(data)
+        # we can't use @atomic here
+        if self.__busy:
+            raise RuntimeError("The database is busy")
+        self.__busy = True
+        try:
+            for data in self.__db.itervalues():
+                yield self.decode(data)
+        finally:
+            self.__busy = False
 
 
 #------------------------------------------------------------------------------
@@ -233,12 +258,16 @@ class DataSQLiteDB (BaseDataDB):
 
 
     #----------------------------------------------------------------------
-    def close(self):
+    def _atom(self, fn, argv, argd):
+        # this will fail for multithreaded accesses,
+        # but sqlite is not multithreaded either
+        if self.__busy:
+            raise RuntimeError("The database is busy")
         try:
-            self.__db.close()
-        except Exception:
-            pass
-        self.__busy = True
+            self.__busy = True
+            return fn(self, *argv, **argd)
+        finally:
+            self.__busy = False
 
 
     #----------------------------------------------------------------------
@@ -246,12 +275,12 @@ class DataSQLiteDB (BaseDataDB):
         """
         Execute a transactional operation.
         """
-        # this will fail for multithread accesses,
+        # this will fail for multithreaded accesses,
         # but sqlite is not multithreaded either
         if self.__busy:
             raise RuntimeError("The database is busy")
-        self.__busy = True
         try:
+            self.__busy = True
             self.__cursor = self.__db.cursor()
             try:
                 retval = fn(self, *argv, **argd)
@@ -373,7 +402,7 @@ class DataSQLiteDB (BaseDataDB):
 
     #----------------------------------------------------------------------
     def __iter__(self):
-        # can't use @transactional here!
+        # can't use @transactional or @atomic here!
         try:
             self.__busy = True
             cursor = self.__db.cursor()
@@ -389,17 +418,29 @@ class DataSQLiteDB (BaseDataDB):
 
 
     #----------------------------------------------------------------------
+    @atomic
     def dump(self, filename):
         """
         Dump the database in SQL format.
+
+        :param filename: Output filename.
+        :type filename: str
         """
-        # no need for @transactional here, we don't use a cursor
+        with open(filename, 'w') as f:
+            for line in self.__db.iterdump():
+                f.write(line + "\n")
+
+
+    #----------------------------------------------------------------------
+    @atomic
+    def close(self):
         try:
-            self.__busy = True
-            with open(filename, 'w') as f:
-                apply(f.write, (line + "\n" for line in self.__db.iterdump()))
-        finally:
-            self.__busy = False
+            try:
+                self.__db.execute("PURGE;")
+            finally:
+                self.__db.close()
+        except Exception:
+            pass
 
 
 #------------------------------------------------------------------------------

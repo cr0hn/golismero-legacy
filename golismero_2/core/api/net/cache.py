@@ -53,6 +53,8 @@ class AbstractCache(Singleton):
 ##        return self.get(key)
 ##    def __setitem__(self, key, data):
 ##        return self.set(key, data)
+##    def __delitem__(self, key):
+##        return self.remove(key)
 ##    def __contains__(self, key):
 ##        return self.exists(key)
 
@@ -93,6 +95,17 @@ class AbstractCache(Singleton):
         :type key: str
 
         :returns: True if the data is in the cache, False otherwise.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def remove(self, key):
+        """
+        Remove data from the cache.
+
+        :param key: key to reference the network resource
+        :type key: str
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
