@@ -1,6 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+#-----------------------------------------------------------------------
+# Network cache API
+#-----------------------------------------------------------------------
+
 """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -28,9 +32,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["NetworkCache"]
 
-from ...main.commonstructures import Singleton
+from ..config import Config
+from ...common import Singleton
 from ...messaging.message import Message
-from ..config import *
 
 from collections import defaultdict
 from functools import partial

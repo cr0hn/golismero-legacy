@@ -31,7 +31,7 @@ __all__ = ["ProcessManager", "Context"]
 from ..api.config import Config
 from ..api.logger import Logger
 from ..api.net.cache import NetworkCache
-from ..main.commonstructures import GlobalParams
+from ..common import GlobalParams
 from ..messaging.message import Message
 
 from multiprocessing import Manager, Process

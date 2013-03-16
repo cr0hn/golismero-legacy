@@ -33,7 +33,7 @@ __all__ = ["BaseDB", "transactional"]
 import zlib
 import functools
 
-from ..main.commonstructures import pickle, decorator
+from ..common import pickle, decorator
 
 
 #------------------------------------------------------------------------------

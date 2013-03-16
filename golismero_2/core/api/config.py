@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Config"]
 
-from ..main.commonstructures import Singleton
+from ..common import Singleton
 
 class _Config (Singleton):
     """

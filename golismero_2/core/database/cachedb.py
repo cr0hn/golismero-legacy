@@ -33,7 +33,7 @@ __all__ = ["PersistentNetworkCache", "VolatileNetworkCache"]
 from .common import BaseDB, transactional
 
 from ..api.net.cache import NetworkCache
-from ..main.commonstructures import get_user_settings_folder
+from ..common import get_user_settings_folder
 from ..managers.rpcmanager import implementor
 from ..messaging.message import Message
 

@@ -29,9 +29,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["UIManager"]
 
 from .priscillapluginmanager import PriscillaPluginManager
-from ..messaging.notifier import UINotifier
+from ..common import GlobalParams
 from ..messaging.message import Message
-from ..main.commonstructures import GlobalParams
+from ..messaging.notifier import UINotifier
 
 
 #------------------------------------------------------------------------------

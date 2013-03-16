@@ -97,10 +97,15 @@ import textwrap
 
 from os import getenv
 
+
+#----------------------------------------------------------------------
+# GoLismero modules
+
+from core.common import GlobalParams
 from core.main.console import Console
-from core.main.commonstructures import GlobalParams
 from core.main.orchestrator import Orchestrator
 from core.managers.priscillapluginmanager import PriscillaPluginManager
+
 
 #----------------------------------------------------------------------
 # Exported function to launch GoLismero

@@ -26,18 +26,18 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from ..main.commonstructures import GlobalParams
-from .priscillapluginmanager import PriscillaPluginManager
-from ..messaging.notifier import AuditNotifier
-from ..messaging.message import Message
-from ..database.datadb import DataDB
-from ..api.data.resource.url import Url
-from ..api.data.data import Data
-
-from multiprocessing import Queue
-from datetime import datetime
-
 __all__ = ["AuditManager", "Audit"]
+
+from .priscillapluginmanager import PriscillaPluginManager
+from ..api.data.data import Data
+from ..api.data.resource.url import Url
+from ..common import GlobalParams
+from ..database.datadb import DataDB
+from ..messaging.message import Message
+from ..messaging.notifier import AuditNotifier
+
+from datetime import datetime
+from multiprocessing import Queue
 
 
 #--------------------------------------------------------------------------

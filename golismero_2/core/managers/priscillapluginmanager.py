@@ -28,15 +28,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["PriscillaPluginManager", "PluginInfo"]
 
-import re
-import imp
+from ..api.plugin import *
+from ..common import Singleton
 
 from os import path, walk
 from keyword import iskeyword
 from ConfigParser import RawConfigParser
 
-from ..api.plugin import *
-from ..main.commonstructures import Singleton
+import re
+import imp
 
 
 #----------------------------------------------------------------------

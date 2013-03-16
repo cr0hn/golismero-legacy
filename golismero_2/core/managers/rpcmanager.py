@@ -28,8 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["RPCManager"]
 
+from ..common import pickle
 from ..messaging.message import Message
-from ..main.commonstructures import pickle
 
 from functools import partial
 
