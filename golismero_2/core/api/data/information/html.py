@@ -366,12 +366,9 @@ class HTMLBeautifulSoup(object):
                 m_ojb_attr["param"] = {}
 
                 # Add value for params
-                apply(m_ojb_attr["param"].update,
-                    (
-                        { k[0].encode("utf-8"): k[1].encode("utf-8") for k in param.attrs}
-                        for param in obj.findAllNext("param")
-                    )
-                )
+                update = m_ojb_attr["param"].update
+                for param in obj.findAllNext("param"):
+                    update({ k[0].encode("utf-8"): k[1].encode("utf-8") for k in param.attrs})
 
                 m_raw_content = "".join((str(item) for item in obj.contents if item != "\n"))
 
