@@ -79,9 +79,9 @@ class Robots(TestingPlugin):
         try:
             p = m_manager.get(m_url_robots_txt)
         except ValueError,e:
-            Logger.log_more_verbose("Robots - value error while processing: '%s'. Error: %s" % (l_url, e.message))
+            Logger.log_more_verbose("Robots - value error while processing: '%s'. Error: %s" % (m_url_robots_txt, e.message))
         except RequestException:
-            Logger.log_more_verbose("Robots - timeout for url: '%s'." % l_url)
+            Logger.log_more_verbose("Robots - timeout for url: '%s'." % m_url_robots_txt)
 
 
         if not p or not p.information and p.content_type == "text":
