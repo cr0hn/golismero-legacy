@@ -341,8 +341,11 @@ class Audit (object):
         # Is it data?
         if message.message_type == Message.MSG_TYPE_INFO:
 
+            # Add the data to the database
+            is_new = self.__database.add(message.message_info)
+
             # Is it duplicated data?
-            if message.message_info in self.__database:
+            if not is_new:
 
                 # Send the ACK to the queue to make sure all
                 # messages in-between are processed correctly.
@@ -354,9 +357,6 @@ class Audit (object):
 
                 # Drop the message.
                 return False
-
-            # Add new data to the database
-            self.__database.add(message.message_info)
 
             #
             #
