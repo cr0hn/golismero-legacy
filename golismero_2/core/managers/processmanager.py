@@ -30,12 +30,15 @@ __all__ = ["ProcessManager", "Context"]
 
 from ..api.config import Config
 from ..api.logger import Logger
+from ..api.net.cache import NetworkCache
 from ..main.commonstructures import GlobalParams
 from ..messaging.message import Message
 
 from multiprocessing import Pool, Manager, Process
 from imp import load_source
-from traceback import format_exc, print_exc, print_exception
+from traceback import format_exc, print_exc, format_exception_only, format_list
+
+from sys import exit, stdout, stderr   # the real std handles, not hooked
 
 
 #------------------------------------------------------------------------------
@@ -69,8 +72,7 @@ def launcher(queue, max_process, refresh_after_tasks):
             except:
                 # If we reached this point we can assume the parent process is dead.
                 wait = False
-                import sys
-                sys.exit(1)
+                exit(1)
 
             # Handle the message to quit.
             if item is True or item is False:
@@ -87,8 +89,7 @@ def launcher(queue, max_process, refresh_after_tasks):
             pool.stop(wait)
         except:
             # If we reached this point we can assume the parent process is dead.
-            import sys
-            sys.exit(1)
+            exit(1)
 
 # Serializable bootstrap function to run plugins in subprocesses.
 # This is required for Windows support, since we don't have os.fork() there.
@@ -115,6 +116,9 @@ def bootstrap(context, func, argv, argd):
                 Config._set_context(context)
 
                 # TODO: hook stdout and stderr to catch print statements
+
+                # Clear the local network cache for this process
+                NetworkCache()._clear_local_cache()
 
                 # Create the OOP observer so the plugin can talk back
                 observer = OOPObserver(context)
@@ -192,8 +196,7 @@ def bootstrap(context, func, argv, argd):
                 pass
 
         # If we reached this point we can assume the parent process is dead.
-        import sys
-        sys.exit(1)
+        exit(1)
 
 
 #------------------------------------------------------------------------------
@@ -255,7 +258,7 @@ class Context (object):
 
     @property
     def audit_config(self):
-        "str -- Name of the audit."
+        "GlobalParams -- Parameters of the audit."
         return self.__audit_config
 
 
@@ -284,6 +287,17 @@ class Context (object):
         :param message_info: the payload of the message.
         :type message_info: object -- type must be resolved at run time.
         """
+
+        # Special case for monoprocess mode:
+        # We can't implement RPC calls using messages,
+        # because we'd deadlock against ourselves.
+        if  message_type == Message.MSG_TYPE_RPC and \
+            self.audit_config.max_process <= 0:
+                self._orchestrator.rpcManager.execute_rpc(
+                            self.audit_name, message_code, *message_info)
+                return
+
+        # Send the raw message.
         message = Message(message_type = message_type,
                           message_code = message_code,
                           message_info = message_info,
@@ -304,8 +318,7 @@ class Context (object):
 
         # If we reached this point we can assume the parent process is dead.
         except:
-            import sys
-            sys.exit(1)
+            exit(1)
 
 
     #----------------------------------------------------------------------
@@ -333,13 +346,14 @@ class Context (object):
 
         # If the above fails we can assume the parent process is dead.
         except:
-            import sys
-            sys.exit(1)
+            exit(1)
 
         # Return the response, or raise an exception on error.
         success, response = raw_response
         if not success:
-            print_exception(*response)
+            exc_type, exc_value, tb_list = response
+            stderr.writelines( format_exception_only(exc_type, exc_value) )
+            stderr.writelines( format_list(tb_list) )
             raise response[0], response[1]
         return response
 
@@ -622,19 +636,26 @@ class ProcessManager (object):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, config):
+    def __init__(self, orchestrator, config):
         """Constructor.
+
+        :param orchestrator: Core to send messages to
+        :type orchestrator: Orchestrator
 
         :param config: Configuration object
         :type config: GlobalParams
         """
         self.__launcher = None
 
-        # maximum number of processes to create
+        # Maximum number of processes to create
         self.__max_processes       = getattr(config, "max_process",         None)
 
-        # maximum number of function calls to make before refreshing a subprocess
+        # Maximum number of function calls to make before refreshing a subprocess
         self.__refresh_after_tasks = getattr(config, "refresh_after_tasks", None)
+
+        # In monoprocess mode, keep a static reference to the orchestrator
+        if self.__max_processes <= 0:
+            Context._orchestrator = orchestrator
 
 
     #----------------------------------------------------------------------

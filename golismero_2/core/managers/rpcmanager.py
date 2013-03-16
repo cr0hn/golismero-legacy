@@ -29,11 +29,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["RPCManager"]
 
 from ..messaging.message import Message
+from ..main.commonstructures import pickle
 
 from functools import partial
 
 import sys
 import warnings
+import traceback
 
 
 #------------------------------------------------------------------------------
@@ -81,7 +83,7 @@ class RPCManager (object):
         missing.difference_update(self.__rpcMap.keys())
         if missing:
             msg  = "Missing RPC implementors for codes: %s"
-            msg %= ", ".join(sorted(missing))
+            msg %= ", ".join(str(x) for x in sorted(missing))
             warnings.warn(msg, RuntimeWarning)
 
 
@@ -124,16 +126,17 @@ class RPCManager (object):
 
             # Call the implementor and get the response (or the exception).
             try:
-                response = method(orchestrator, audit_name, *argv, **argd)
+                response = method(self.__orchestrator, audit_name, *argv, **argd)
             except Exception:
                 success  = False
-                response = sys.exc_info()
+                response = self.__prepare_exception(*sys.exc_info())
 
         # Catch any errors and send them back to the plugin.
         except:
             internal_error = True
             success = False
-            response = sys.exc_info()
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            response = self.__prepare_exception(exc_type, exc_value, exc_traceback)
 
         # If the call was synchronous, send the response back to the plugin.
         if response_queue:
@@ -141,4 +144,16 @@ class RPCManager (object):
 
         # If there was an internal error, raise the exception.
         if internal_error:
-            raise response
+            raise exc_type, exc_value
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def __prepare_exception(exc_type, exc_value, exc_traceback):
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        try:
+            pickle.dumps(exc_value)
+        except Exception:
+            exc_value = traceback.format_exception_only(exc_type, exc_value)
+        exc_traceback = traceback.extract_tb(exc_traceback)
+        return exc_type, exc_value, exc_traceback

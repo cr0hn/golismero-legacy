@@ -205,7 +205,7 @@ def main(args):
     gr_main.add_argument("-I", "--user-interface", metavar="MODE", help="user interface mode [default: console]", default="console", choices=GlobalParams.USER_INTERFACE._values.keys())
     gr_main.add_argument("-v", "--verbose", action="count", default=1, help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
-    gr_main.add_argument("--max-process", metavar="N", type=int, help="maximum number of plugins to run concurrently [default: 2]", default=2)
+    gr_main.add_argument("--max-process", metavar="N", type=int, help="maximum number of plugins to run concurrently [default: 2]", default=0)
     gr_main.add_argument("--color", action="store_true", dest="colorize", help="use colors in console output [default]", default=True)
     gr_main.add_argument("--no-color", action="store_false", dest="colorize", help="suppress colors in console output")
 

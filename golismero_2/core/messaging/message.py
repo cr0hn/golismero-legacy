@@ -73,10 +73,11 @@ class Message (object):
     MSG_RPC_CACHE_GET = 0
     MSG_RPC_CACHE_SET = 1
     MSG_RPC_CACHE_CHECK = 2
+    MSG_RPC_CACHE_REMOVE = 3
 
 
     MSG_RPC_FIRST = MSG_RPC_CACHE_GET
-    MSG_RPC_LAST  = MSG_RPC_CACHE_CHECK
+    MSG_RPC_LAST  = MSG_RPC_CACHE_REMOVE
 
 
     #----------------------------------------------------------------------

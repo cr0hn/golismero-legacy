@@ -49,16 +49,20 @@ sqlite3 = None
 # Cache API implementors
 
 @implementor(Message.MSG_RPC_CACHE_GET)
-def rpc_cache_get(cls, orchestrator, audit_name, *argv, **argd):
+def rpc_cache_get(orchestrator, audit_name, *argv, **argd):
     return orchestrator.cacheManager.get(audit_name, *argv, **argd)
 
 @implementor(Message.MSG_RPC_CACHE_SET)
-def rpc_cache_set(cls, orchestrator, audit_name, *argv, **argd):
+def rpc_cache_set(orchestrator, audit_name, *argv, **argd):
     return orchestrator.cacheManager.set(audit_name, *argv, **argd)
 
 @implementor(Message.MSG_RPC_CACHE_CHECK)
-def rpc_cache_check(cls, orchestrator, audit_name, *argv, **argd):
+def rpc_cache_check(orchestrator, audit_name, *argv, **argd):
     return orchestrator.cacheManager.exists(audit_name, *argv, **argd)
+
+@implementor(Message.MSG_RPC_CACHE_REMOVE)
+def rpc_cache_remove(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.cacheManager.remove(audit_name, *argv, **argd)
 
 
 #------------------------------------------------------------------------------

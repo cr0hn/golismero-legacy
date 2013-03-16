@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["NetworkCache"]
 
 from ...main.commonstructures import Singleton
+from ...messaging.message import Message
 from ..config import *
 
 from collections import defaultdict
@@ -101,11 +102,20 @@ class NetworkCache(AbstractCache):
 
     #----------------------------------------------------------------------
     def __init__(self):
+        self._clear_local_cache()
 
-        # XXX HACK: for now it's all stored in memory.
-        # This will soon be a centralized database.
 
+    #----------------------------------------------------------------------
+    def _clear_local_cache(self):
+
+        # This method is called from the plugin bootstrap.
+
+        # During the lifetime of the plugin,
+        # results from the centralized cache
+        # are also stored in memory here.
+        #
         # audit -> protocol -> key -> data
+        #
         self.__cache = defaultdict( partial(defaultdict, dict) )
 
 
@@ -122,7 +132,21 @@ class NetworkCache(AbstractCache):
 
         :returns: object -- resource from the cache | None
         """
-        return self.__cache[Config.audit_name][protocol].get(key, None)
+
+        # First, try to get the resource from the local cache.
+        data = self.__cache[Config.audit_name][protocol].get(key, None)
+        if data is None:
+
+            # If not found locally, query the global cache.
+            data = Config._get_context().remote_call(
+                                Message.MSG_RPC_CACHE_GET, key, protocol)
+
+            # Store the global cache result locally.
+            if data is not None:
+                self.__cache[Config.audit_name][protocol][key] = data
+
+        # Return the cached data.
+        return data
 
 
     #----------------------------------------------------------------------
@@ -145,7 +169,13 @@ class NetworkCache(AbstractCache):
         :param lifespan: time to live in the cache
         :type lifespan: int
         """
+
+        # Store the resource in the local cache.
         self.__cache[Config.audit_name][protocol][key] = data
+
+        # Send the resource to the global cache.
+        Config._get_context().async_remote_call(
+                            Message.MSG_RPC_CACHE_SET, key, protocol, data)
 
 
     #----------------------------------------------------------------------
@@ -159,10 +189,16 @@ class NetworkCache(AbstractCache):
         :param protocol: network protocol
         :type protocol: str
         """
+
+        # Remove the resource from the local cache.
         try:
             del self.__cache[Config.audit_name][protocol][key]
         except KeyError:
             pass
+
+        # Remove the resource from the global cache.
+        Config._get_context().async_remote_call(
+                            Message.MSG_RPC_CACHE_REMOVE, key, protocol)
 
 
     #----------------------------------------------------------------------
@@ -175,4 +211,15 @@ class NetworkCache(AbstractCache):
 
         :returns: True if the resource is in the cache, False otherwise.
         """
-        return key in self.__cache[Config.audit_name][protocol]
+
+        # First, check if it's in the local cache.
+        found = key in self.__cache[Config.audit_name][protocol]
+
+        # If not found, check the global cache.
+        if not found:
+            found = Config._get_context().remote_call(
+                                Message.MSG_RPC_CACHE_CHECK, key, protocol)
+            found = bool(found)
+
+        # Return the status.
+        return found

@@ -65,9 +65,11 @@ class _Config (Singleton):
     # The following two methods may only be used internally.
 
     def _get_context(self):
+        ":returns: Context"
         return self.__context
 
     def _set_context(self, context):
+        ":type context: Context"
         self.__context = context
 
 Config = _Config()

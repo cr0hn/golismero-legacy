@@ -103,7 +103,7 @@ class Orchestrator (object):
         self.__rpcManager = RPCManager(self)
 
         # Process manager
-        self.__processManager = ProcessManager(self.__config)
+        self.__processManager = ProcessManager(self, self.__config)
         self.__processManager.start()
 
         # Audit manager
