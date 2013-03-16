@@ -33,11 +33,13 @@ from core.api.data.resource.url import Url
 from core.api.data.information.information import Information
 from core.api.config import Config
 from core.api.net.web_utils import parse_url, convert_to_absolute_urls, is_in_scope
+
+from requests.exceptions import RequestException
 from time import time
 from os import getpid
 
 
-
+#----------------------------------------------------------------------
 class Spider(TestingPlugin):
     """
     This plugin is a web spider.
