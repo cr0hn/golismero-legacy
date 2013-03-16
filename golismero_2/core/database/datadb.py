@@ -70,6 +70,11 @@ class BaseDataDB (BaseDB):
     def add(self, data):
         """
         Add data to the database.
+
+        :param data: Data to add.
+        :type data: Data
+
+        :returns: bool -- True if the data was added, False if it was updated
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -107,8 +112,9 @@ class DataMemoryDB (BaseDataDB):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
         identity = data.identity
-        if identity not in self.__results:
-            self.__results[identity] = data
+        is_new = identity not in self.__results
+        self.__results[identity] = data
+        return is_new
 
 
     #----------------------------------------------------------------------
@@ -173,8 +179,9 @@ class DataFileDB (BaseDataDB):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
         identity = data.identity
-        if identity not in self.__db:
-            self.__db[identity] = self.encode(data)
+        is_new = identity not in self.__db
+        self.__db[identity] = self.encode(data)
+        return is_new
 
 
     #----------------------------------------------------------------------
@@ -266,24 +273,24 @@ class DataSQLiteDB (BaseDataDB):
         """
         self.__cursor.execute("""
             CREATE TABLE IF NOT EXISTS information (
-                id INTEGER PRIMARY KEY,
-                hash_sum STRING UNIQUE NOT NULL,
+                rowid INTEGER PRIMARY KEY,
+                identity STRING UNIQUE NOT NULL,
                 information_type INTEGER NOT NULL,
                 data BLOB NOT NULL
             );
         """)
         self.__cursor.execute("""
             CREATE TABLE IF NOT EXISTS resource (
-                id INTEGER PRIMARY KEY,
-                hash_sum STRING UNIQUE NOT NULL,
+                rowid INTEGER PRIMARY KEY,
+                identity STRING UNIQUE NOT NULL,
                 resource_type INTEGER NOT NULL,
                 data BLOB NOT NULL
             );
         """)
         self.__cursor.execute("""
             CREATE TABLE IF NOT EXISTS vulnerability (
-                id INTEGER PRIMARY KEY,
-                hash_sum STRING UNIQUE NOT NULL,
+                rowid INTEGER PRIMARY KEY,
+                identity STRING UNIQUE NOT NULL,
                 vulnerability_type STRING NOT NULL,
                 data BLOB NOT NULL
             );
@@ -332,10 +339,15 @@ class DataSQLiteDB (BaseDataDB):
     def add(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
-        table, type = self.__get_data_table_and_type(data)
+        table, dtype = self.__get_data_table_and_type(data)
+        identity = data.identity
+        query = "SELECT COUNT(rowid) FROM %s WHERE identity = ? LIMIT 1;"
+        self.__cursor.execute(query % table, (identity,))
+        is_new = not bool(self.__cursor.fetchone()[0])
         query  = "INSERT OR REPLACE INTO %s VALUES (NULL, ?, ?, ?);" % table
-        values = (data.identity, type, sqlite3.Binary(self.encode(data)))
+        values = (identity, dtype, sqlite3.Binary(self.encode(data)))
         self.__cursor.execute(query, values)
+        return is_new
 
 
     #----------------------------------------------------------------------
@@ -343,7 +355,7 @@ class DataSQLiteDB (BaseDataDB):
     def __len__(self):
         count = 0
         for table in ("information", "resource", "vulnerability"):
-            self.__cursor.execute("SELECT COUNT(id) FROM %s;" % table)
+            self.__cursor.execute("SELECT COUNT(rowid) FROM %s;" % table)
             count += int(self.__cursor.fetchone()[0])
         return count
 
@@ -353,8 +365,8 @@ class DataSQLiteDB (BaseDataDB):
     def __contains__(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
-        table, type = self.__get_data_table_and_type(data)
-        query = "SELECT COUNT(id) FROM %s WHERE hash_sum = ? LIMIT 1;"
+        table, _ = self.__get_data_table_and_type(data)
+        query = "SELECT COUNT(rowid) FROM %s WHERE identity = ? LIMIT 1;"
         self.__cursor.execute(query % table, (data.identity,))
         return bool(self.__cursor.fetchone()[0])
 
@@ -450,7 +462,7 @@ class DataDB (BaseDataDB):
                 return DataFileDB(audit_name, filename)
             return DataSQLiteDB(audit_name, filename)
 
-        ##if any(map(scheme.startswith, ("sqlite+", "mysql", "mssql", "plsql", "oracle"))):
+        ##if any(map(scheme.startswith, ("mysql", "mssql", "plsql", "oracle"))):
         ##    return DataSQLDB(audit_name, audit_db)
 
         raise ValueError("Unsupported database type: %r" % scheme)
