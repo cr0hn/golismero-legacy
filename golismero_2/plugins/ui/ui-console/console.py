@@ -30,7 +30,7 @@ from core.api.data.resource.resource import Resource
 from core.api.data.data import Data
 from core.messaging.message import Message
 from core.main.console import Console
-from core.api.colorize import *
+from core.api.color import colorize
 
 
 class ConsoleUIPlugin(UIPlugin):

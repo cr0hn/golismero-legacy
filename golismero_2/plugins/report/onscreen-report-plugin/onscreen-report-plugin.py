@@ -31,7 +31,7 @@ from core.api.plugin import ReportPlugin
 from core.api.data.resource.resource import Resource
 from core.api.data.data import Data
 from collections import Counter
-from core.api.colorize import *
+from core.api.color import colorize
 
 
 class ScreenReport(ReportPlugin):

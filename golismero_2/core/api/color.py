@@ -32,12 +32,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["colorize"]
 
-#
-# DON'T CHANGE THIS INCLUDE. THE FORM:
-# "from colorizer import *" => don't work on mac!!!
-from thirdparty_libs.colorizer import *
-
 from .config import Config
+
+from colorizer import *
 
 #----------------------------------------------------------------------
 # Map of colors
