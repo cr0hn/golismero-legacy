@@ -34,11 +34,39 @@ from ..api.net.cache import NetworkCache
 from ..main.commonstructures import GlobalParams
 from ..messaging.message import Message
 
-from multiprocessing import Pool, Manager, Process
+from multiprocessing import Manager, Process
+from multiprocessing.pool import Pool
 from imp import load_source
 from traceback import format_exc, print_exc, format_exception_only, format_list
 
 from sys import exit, stdout, stderr   # the real std handles, not hooked
+
+
+#------------------------------------------------------------------------------
+class Process(Process):
+    """
+    A customized process that forces the 'daemon' property to False.
+    """
+
+    @property
+    def daemon(self):
+        return False
+
+    @daemon.setter
+    def daemon(self, value):
+        pass
+
+    @daemon.deleter
+    def daemon(self, value):
+        pass
+
+
+#------------------------------------------------------------------------------
+class Pool(Pool):
+    """
+    A customized process pool that forces the 'daemon' property to False.
+    """
+    Process = Process
 
 
 #------------------------------------------------------------------------------

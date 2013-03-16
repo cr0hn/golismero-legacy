@@ -112,7 +112,7 @@ class RPCManager (object):
             success = True
 
             # DEBUG
-            print "RPC call: %r" % ((audit_name, rpc_code, argv, argd),)
+            ##print "RPC call: %r" % ((audit_name, rpc_code, argv, argd),)
 
             # Check the validity of the RPC code.
             if not Message.MSG_RPC_FIRST <= rpc_code <= Message.MSG_RPC_LAST:
