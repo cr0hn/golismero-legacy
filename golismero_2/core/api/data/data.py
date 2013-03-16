@@ -26,9 +26,42 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["Data"]
+__all__ = ["Data", "identity"]
 
-from ...main.commonstructures import get_unique_id
+from ...main.commonstructures import pickle
+
+import hashlib
+
+
+#------------------------------------------------------------------------------
+class identity(property):
+    """
+    Decorator that marks read-only properties as part of the object's identity.
+
+    It may not be combined with any other decorator, and may not be subclassed.
+    """
+
+    def __init__(self, fget = None, doc = None):
+        property.__init__(self, fget, doc = doc)
+
+    def setter(self):
+        raise AttributeError("can't set attribute")
+
+    def deleter(self):
+        raise AttributeError("can't delete attribute")
+
+    @staticmethod
+    def is_identity_property(other):
+        # TODO: benchmark!!!
+        ##return isinstance(other, identity)
+        ##return getattr(other, "is_identity_property", None) is not None
+        ##return hasattr(other, "is_identity_property")
+        try:
+            other.__get__
+            other.is_identity_property
+            return True
+        except AttributeError:
+            return False
 
 
 #------------------------------------------------------------------------------
@@ -53,17 +86,59 @@ class Data(object):
     TYPE_FIRST   = TYPE_INFORMATION    # constant for the first valid type
     TYPE_LAST    = TYPE_RESOURCE       # constant for the last valid type
 
-
     data_type = TYPE_ANY
 
-
     #----------------------------------------------------------------------
+
     @property
-    def hash_sum(self):
+    def identity(self):
         """
-        Get the hash of this object.
+        Get the identity hash of this object.
         """
-        # NOTE:
-        #   This can't be cached, because we have no way of knowing if
-        #   the internal state of the object has changed.
-        return get_unique_id(self)
+
+        # If the hash is already in the cache, return it.
+        if self.__identity is not None:
+            return self.__identity
+
+        # Build a dictionary of all properties
+        # marked as part of the identity.
+        collection = self._collect_identity_properties()
+
+        # Pickle the data with the compatibility protocol.
+        # This produces always the same result for the same input data.
+        data = pickle.dumps(collection, protocol = 0)
+
+        # Calculate the MD5 hash of the pickled data.
+        hash_sum = hashlib.md5(data)
+
+        # Calculate the hexadecimal digest of the hash.
+        hex_digest = hash_sum.hexdigest()
+
+        # Store it in the cache.
+        self.__identity = hex_digest
+
+        # Return it.
+        return self.__identity
+
+    # Identity hash cache.
+    __identity = None
+
+    # Protected method, we don't want outsiders calling it.
+    def _collect_identity_properties(self):
+        """
+        Returns a dictionary of identity properties
+        and their values for this data object.
+
+        Subclasses may override this method if very
+        special circumstances require it, but it's
+        generally discouraged.
+        """
+        is_identity_property = identity.is_identity_property
+        clazz = self.__class__
+        collection = {}
+        for key in dir(self):
+            if not key.startswith("_"):
+                prop = getattr(clazz, key, None)
+                if prop is not None and is_identity_property(prop):
+                    collection[key] = prop.__get__(self)
+        return collection

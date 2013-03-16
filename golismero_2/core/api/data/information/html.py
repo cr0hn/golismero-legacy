@@ -28,7 +28,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["HTML", "HTMLElement"]
 
+from ..data import identity
 from .information import Information
+
 from bs3.BeautifulSoup import BeautifulSoup
 
 
@@ -99,15 +101,17 @@ class HTML(Information):
 
     #----------------------------------------------------------------------
 
+    @identity
+    def raw_data(self):
+        """Get raw HTML code"""
+        return self.__html_parser.raw_data
+
+    #----------------------------------------------------------------------
+
     @property
     def elements(self):
         """Get all HTML elements"""
         return self.__html_parser.elements
-
-    @property
-    def raw_data(self):
-        """Get raw HTML code"""
-        return self.__html_parser.raw_data
 
     @property
     def forms(self):

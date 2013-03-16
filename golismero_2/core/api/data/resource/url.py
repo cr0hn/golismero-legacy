@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Url"]
 
+from ..data import identity
 from .resource import Resource
 from urlparse import urlparse
 
@@ -106,12 +107,30 @@ class Url(Resource):
 
 
     #----------------------------------------------------------------------
-    @property
+
+    @identity
     def url(self):
         """
         str -- Raw URL
         """
         return self.__url
+
+    @identity
+    def method(self):
+        """
+        str -- HTTP method
+        """
+        return self.__method
+
+    @identity
+    def post_params(self):
+        """
+        dict(str) -- POST parameters
+        """
+        return self.__post_params
+
+
+    #----------------------------------------------------------------------
 
     @property
     def parsed_url(self):
@@ -121,25 +140,11 @@ class Url(Resource):
         return urlparse(self.__url)
 
     @property
-    def method(self):
-        """
-        str -- HTTP method
-        """
-        return self.__method
-
-    @property
     def url_params(self):
         """
         dict(str) -- URL parameters
         """
         return self.__url_params
-
-    @property
-    def post_params(self):
-        """
-        dict(str) -- POST parameters
-        """
-        return self.__post_params
 
     @property
     def is_https(self):

@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 __all__ = [
-    "get_unique_id", "get_user_settings_folder",
+    "get_user_settings_folder",
     "Singleton", "enum", "decorator", "pickle",
     "ConfigFileParseError", "GlobalParams"
 ]
@@ -60,23 +60,6 @@ except ImportError:
                 return w(fn, *argv, **argd)
             return x
         return d
-
-
-#--------------------------------------------------------------------------
-def get_unique_id(obj):
-    """
-    Get a unique ID for this object.
-    """
-
-    # Pickle the object with the compatibility protocol.
-    # This produces always the same result for the same input data.
-    data = pickle.dumps(obj, protocol=0)
-
-    # Calculate the MD5 hash of the pickled data.
-    hash_sum = hashlib.md5(data)
-
-    # Return the hexadecimal digest of the hash.
-    return hash_sum.hexdigest()
 
 
 #--------------------------------------------------------------------------

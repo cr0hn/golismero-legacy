@@ -106,9 +106,9 @@ class DataMemoryDB (BaseDataDB):
     def add(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
-        hash_sum = data.hash_sum
-        if hash_sum not in self.__results:
-            self.__results[hash_sum] = data
+        identity = data.identity
+        if identity not in self.__results:
+            self.__results[identity] = data
 
 
     #----------------------------------------------------------------------
@@ -120,7 +120,7 @@ class DataMemoryDB (BaseDataDB):
     def __contains__(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
-        return data.hash_sum in self.__results
+        return data.identity in self.__results
 
 
     #----------------------------------------------------------------------
@@ -172,9 +172,9 @@ class DataFileDB (BaseDataDB):
     def add(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
-        hash_sum = data.hash_sum
-        if hash_sum not in self.__db:
-            self.__db[hash_sum] = self.encode(data)
+        identity = data.identity
+        if identity not in self.__db:
+            self.__db[identity] = self.encode(data)
 
 
     #----------------------------------------------------------------------
@@ -186,7 +186,7 @@ class DataFileDB (BaseDataDB):
     def __contains__(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
-        return self.__db.has_key(data.hash_sum)
+        return self.__db.has_key(data.identity)
 
 
     #----------------------------------------------------------------------
@@ -334,7 +334,7 @@ class DataSQLiteDB (BaseDataDB):
             raise TypeError("Expected Data, got %d instead" % type(data))
         table, type = self.__get_data_table_and_type(data)
         query  = "INSERT OR REPLACE INTO %s VALUES (NULL, ?, ?, ?);" % table
-        values = (data.hash_sum, type, sqlite3.Binary(self.encode(data)))
+        values = (data.identity, type, sqlite3.Binary(self.encode(data)))
         self.__cursor.execute(query, values)
 
 
@@ -355,7 +355,7 @@ class DataSQLiteDB (BaseDataDB):
             raise TypeError("Expected Data, got %d instead" % type(data))
         table, type = self.__get_data_table_and_type(data)
         query = "SELECT COUNT(id) FROM %s WHERE hash_sum = ? LIMIT 1;"
-        self.__cursor.execute(query % table, (data.hash_sum,))
+        self.__cursor.execute(query % table, (data.identity,))
         return bool(self.__cursor.fetchone()[0])
 
 

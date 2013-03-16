@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Domain"]
 
+from ..data import identity
 from .resource import Resource
 
 
@@ -77,13 +78,14 @@ class Domain(Resource):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def name(self):
         """
         str -- Domain name
         """
         return self.__name
 
+    #----------------------------------------------------------------------
     @property
     def addresses(self):
         """
