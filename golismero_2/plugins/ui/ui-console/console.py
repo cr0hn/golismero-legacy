@@ -31,7 +31,7 @@ from core.api.data.data import Data
 from core.messaging.codes import MessageType, MessageCode
 from core.messaging.message import Message
 from core.main.console import Console
-from core.api.color import colorize, init_color, deinit_color
+from core.api.color import colorize
 
 #
 # Verbosity levels:
