@@ -40,6 +40,7 @@ from ..managers.processmanager import ProcessManager, Context
 from ..messaging.codes import MessageType, MessageCode
 from ..messaging.message import Message
 
+from os import getpid
 from time import sleep
 from traceback import format_exc
 from signal import signal, SIGINT, SIG_DFL
@@ -75,8 +76,9 @@ class Orchestrator (object):
             self.__queue = self.__queue_manager.Queue()
 
         # Orchestrator context
-        self.__context = Context(   msg_queue = self.__queue,
-                                 audit_config = self.__config )
+        self.__context = Context( orchestrator_pid = getpid(),
+                                         msg_queue = self.__queue,
+                                      audit_config = self.__config )
         Config._set_context(self.__context)
 
         # Load the plugins
@@ -309,7 +311,7 @@ class Orchestrator (object):
         audit_config = self.__auditManager.get_audit(audit_name).params
 
         # Return the context instance
-        return Context(self.__queue, info, audit_name, audit_config)
+        return Context(getpid(), self.__queue, info, audit_name, audit_config)
 
 
     #----------------------------------------------------------------------

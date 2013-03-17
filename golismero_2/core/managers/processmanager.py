@@ -35,11 +35,11 @@ from ..common import GlobalParams
 from ..messaging.codes import MessageType, MessageCode
 from ..messaging.message import Message
 
+from imp import load_source
 from multiprocessing import Manager, Process
 from multiprocessing.pool import Pool
-from imp import load_source
+from os import getpid
 from traceback import format_exc, print_exc, format_exception_only, format_list
-
 from sys import exit, stdout, stderr   # the real std handles, not hooked
 
 
@@ -234,9 +234,13 @@ class Context (object):
     Serializable execution context for the plugins.
     """
 
-    def __init__(self, msg_queue, plugin_info = None, audit_name = None, audit_config = None):
+    def __init__(self, orchestrator_pid, msg_queue,
+                 plugin_info = None, audit_name = None, audit_config = None):
         """
         Serializable execution context for the plugins.
+
+        :param orchestrator_pid: Process ID of the Orchestrator.
+        :type orchestrator_pid: int
 
         :param msg_queue: Message queue where to send the responses.
         :type msg_queue: Queue
@@ -250,10 +254,11 @@ class Context (object):
         :param audit_config: Name of the audit.
         :type audit_config: str
         """
-        self.__plugin_info  = plugin_info
-        self.__audit_name   = audit_name
-        self.__audit_config = audit_config
-        self.__msg_queue    = msg_queue
+        self.__orchestrator_pid = orchestrator_pid
+        self.__plugin_info      = plugin_info
+        self.__audit_name       = audit_name
+        self.__audit_config     = audit_config
+        self.__msg_queue        = msg_queue
 
     @property
     def msg_queue(self):
@@ -268,17 +273,20 @@ class Context (object):
     @property
     def plugin_module(self):
         "str -- Module where the plugin is to be loaded from."
-        return self.__plugin_info.plugin_module
+        if self.__plugin_info:
+            return self.__plugin_info.plugin_module
 
     @property
     def plugin_class(self):
         "str -- Class name of the plugin."
-        return self.__plugin_info.plugin_class
+        if self.__plugin_info:
+            return self.__plugin_info.plugin_class
 
     @property
     def plugin_config(self):
         "dict -- Plugin configuration."
-        return self.__plugin_info.plugin_config
+        if self.__plugin_info:
+            return self.__plugin_info.plugin_config
 
     @property
     def audit_name(self):
@@ -317,14 +325,16 @@ class Context (object):
         :type message_info: object -- type must be resolved at run time.
         """
 
-        # Special case for monoprocess mode:
-        # We can't implement RPC calls using messages,
-        # because we'd deadlock against ourselves.
+        # Special case if we're in the same process
+        # as the Orchestrator: we can't implement RPC
+        # calls using messages, because we'd deadlock
+        # against ourselves, since the producer and
+        # the consumer would be the same process.
         if  message_type == MessageType.MSG_TYPE_RPC and \
-            self.audit_config.max_process <= 0:
-                self._orchestrator.rpcManager.execute_rpc(
+                                        self.__orchestrator_pid == getpid():
+            self._orchestrator.rpcManager.execute_rpc(
                             self.audit_name, message_code, *message_info)
-                return
+            return
 
         # Send the raw message.
         message = Message(message_type = message_type,
