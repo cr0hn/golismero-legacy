@@ -1,9 +1,9 @@
 [Core]
-Name = UI console
-Module = ui-console/console
+Name = Text Report
+Module = text.py
 
 [Documentation]
-Description = Console interface
+Description = Plugin to generate text reports
 Author = Daniel Garcia Garcia (cr0hn)
 Version = 0.1
 Website = http://code.google.com/p/golismero/
