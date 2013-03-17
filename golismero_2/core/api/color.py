@@ -34,7 +34,8 @@ __all__ = ["colorize"]
 
 from .config import Config
 
-from colorizer import *
+from colorizer import colored
+
 
 #----------------------------------------------------------------------
 # Map of colors
@@ -43,7 +44,7 @@ m_colors = {
     # String log levels to color names
     'info': 'green',
     'low': 'cyan',
-    'middle': 'magenta',
+    'middle': 'white',
     'high' :'red',
     'critical' : 'yellow',
 
@@ -61,6 +62,7 @@ m_colors = {
     'red': 'red',
     'yellow': 'yellow',
 }
+
 
 #----------------------------------------------------------------------
 def colorize(text, level_or_color, is_color = True):
@@ -83,8 +85,6 @@ def colorize(text, level_or_color, is_color = True):
 
     :returns: str -- string with information to print.
     """
-
-
     if Config.audit_config.colorize and is_color:
         return colored(text, m_colors[level_or_color])
     else:
