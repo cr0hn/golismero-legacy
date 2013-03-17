@@ -80,6 +80,88 @@ class BaseDataDB (BaseDB):
 
 
     #----------------------------------------------------------------------
+    def remove(self, identity, data_type = None):
+        """
+        Remove an object given its identity hash.
+
+        Optionally restrict the result by data type. Depending on the
+        underlying database, this may result in a performance gain.
+
+        :param identity: Identity hash.
+        :type identity: str
+
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
+        :type data_type: int
+
+        :returns: bool -- True if the object was removed, False if it didn't exist.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def has_key(self, identity, data_type = None):
+        """
+        Check if an object with the given
+        identity hash is present in the database.
+
+        Optionally restrict the result by data type. Depending on the
+        underlying database, this may result in a performance gain.
+
+        :param identity: Identity hash.
+        :type identity: str
+
+        :returns: bool - True if the object is present, False otherwise.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def get(self, identity, data_type = None):
+        """
+        Get an object given its identity hash.
+
+        Optionally restrict the result by data type. Depending on the
+        underlying database, this may result in a performance gain.
+
+        :param identity: Identity hash.
+        :type identity: str
+
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
+        :type data_type: int
+
+        :returns: Data | None
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def get_keys(self, data_type, data_subtype = None):
+        """
+        Get a list of identity hashes for all objects of the requested
+        type, optionally filtering by subtype.
+
+        :param data_type: Data type. One of the Data.TYPE_* values.
+        :type data_type: int
+
+        :param data_subtype: Optional data subtype.
+        :type data_subtype: int | str
+
+        :returns: set(str) -- Identity hashes.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def get_all_keys(self):
+        """
+        Get a list of identity hashes for all objects.
+
+        :returns: set(str) -- Identity hashes.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
     def __len__(self):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -115,6 +197,63 @@ class DataMemoryDB (BaseDataDB):
         is_new = identity not in self.__results
         self.__results[identity] = data
         return is_new
+
+
+    #----------------------------------------------------------------------
+    def remove(self, identity, data_type = None):
+        try:
+            if data_type is None or self.__results[identity].data_type == data_type:
+                del self.__results[identity]
+                return True
+        except KeyError:
+            pass
+        return False
+
+
+    #----------------------------------------------------------------------
+    def has_key(self, identity, data_type = None):
+        return self.get(identity, data_type) is not None
+
+
+    #----------------------------------------------------------------------
+    def get(self, identity, data_type = None):
+        data = self.__results.get(identity, None)
+        if data_type is not None and data is not None and data.data_type != data_type:
+            data = None
+        return data
+
+
+    #----------------------------------------------------------------------
+    def get_keys(self, data_type, data_subtype = None):
+
+        # Ugly but (hopefully) efficient code follows.
+
+        if data_subtype is None:
+            return { identity
+                     for identity, data in self.__results.iteritems()
+                     if data.data_type == data_type }
+        if data_type == Data.TYPE_INFORMATION:
+            return { identity
+                     for identity, data in self.__results.iteritems()
+                     if data.data_type == data_type
+                     and data.information_type == data_subtype }
+        if data_type == Data.TYPE_RESOURCE:
+            return { identity
+                     for identity, data in self.__results.iteritems()
+                     if data.data_type == data_type
+                     and data.resource_type == data_subtype }
+        if data_type == Data.TYPE_VULNERABILITY:
+            return { identity
+                     for identity, data in self.__results.iteritems()
+                     if data.data_type == data_type
+                     and data.vulnerability_type == data_subtype }
+        raise NotImplementedError(
+            "Unknown data type %r!" % data_type)
+
+
+    #----------------------------------------------------------------------
+    def get_all_keys(self):
+        return set(self.__results)
 
 
     #----------------------------------------------------------------------
@@ -202,6 +341,92 @@ class DataFileDB (BaseDataDB):
 
     #----------------------------------------------------------------------
     @atomic
+    def remove(self, identity, data_type = None):
+        # XXX data_type is ignored because it'd be grossly inefficient
+        try:
+            del self.__db[identity]
+        except KeyError:
+            return False
+        return True
+
+
+    #----------------------------------------------------------------------
+    def has_key(self, identity, data_type = None):
+        # not using @atomic because we're calling self.get()
+        return self.get(identity, data_type) is not None
+
+
+    #----------------------------------------------------------------------
+    @atomic
+    def get(self, identity, data_type = None):
+        data = self.__db.get(identity, None)
+        if data_type is not None and data is not None and data.data_type != data_type:
+            data = None
+        return data
+
+
+    #----------------------------------------------------------------------
+    @atomic
+    def get_keys(self, data_type, data_subtype = None):
+
+        # This code is ugly, but there's not that much
+        # we can do when the dbm databases only support
+        # a subset of dictionary methods, and are only
+        # barely documented anyway. :(
+
+        # Validate the data type.
+        if data_type not in (Data.TYPE_INFORMATION,
+                             Data.TYPE_RESOURCE,
+                             Data.TYPE_VULNERABILITY):
+            raise NotImplementedError(
+                "Unknown data type %r!" % data_type)
+
+        # Build a set of identity hashes.
+        hashes = set()
+
+        # For each identity hash in the database...
+        for identity in self.__db:
+
+            # Get the data object.
+            data = self.__db[identity]
+
+            # If the data type doesn't match, skip it.
+            if data.data_type != data_type:
+                continue
+
+            # If we need to filter by subtype...
+            if data_subtype is not None:
+
+                # Filter by information_type.
+                if data_type == Data.TYPE_INFORMATION:
+                    if data.information_type != data_subtype:
+                        continue
+
+                # Filter by resource_type.
+                if data_type == Data.TYPE_RESOURCE:
+                    if data.resource_type == data_subtype:
+                        continue
+
+                # Filter by vulnerability_type.
+                if data_type == Data.TYPE_VULNERABILITY:
+                    if data.vulnerability_type == data_subtype:
+                        continue
+
+            # Add the identity hash to the set.
+            hashes.add(identity)
+
+        # Return the set of identity hashes.
+        return hashes
+
+
+    #----------------------------------------------------------------------
+    @atomic
+    def get_all_keys(self):
+        return set(self.__db)
+
+
+    #----------------------------------------------------------------------
+    @atomic
     def __len__(self):
         return len(self.__db)
 
@@ -221,8 +446,8 @@ class DataFileDB (BaseDataDB):
             raise RuntimeError("The database is busy")
         self.__busy = True
         try:
-            for data in self.__db.itervalues():
-                yield self.decode(data)
+            for identity in self.__db:
+                yield self.decode( self.__db[identity] )
         finally:
             self.__busy = False
 
@@ -304,7 +529,7 @@ class DataSQLiteDB (BaseDataDB):
             CREATE TABLE IF NOT EXISTS information (
                 rowid INTEGER PRIMARY KEY,
                 identity STRING UNIQUE NOT NULL,
-                information_type INTEGER NOT NULL,
+                type INTEGER NOT NULL,
                 data BLOB NOT NULL
             );
         """)
@@ -312,7 +537,7 @@ class DataSQLiteDB (BaseDataDB):
             CREATE TABLE IF NOT EXISTS resource (
                 rowid INTEGER PRIMARY KEY,
                 identity STRING UNIQUE NOT NULL,
-                resource_type INTEGER NOT NULL,
+                type INTEGER NOT NULL,
                 data BLOB NOT NULL
             );
         """)
@@ -320,7 +545,7 @@ class DataSQLiteDB (BaseDataDB):
             CREATE TABLE IF NOT EXISTS vulnerability (
                 rowid INTEGER PRIMARY KEY,
                 identity STRING UNIQUE NOT NULL,
-                vulnerability_type STRING NOT NULL,
+                type STRING NOT NULL,
                 data BLOB NOT NULL
             );
         """)
@@ -377,6 +602,106 @@ class DataSQLiteDB (BaseDataDB):
         values = (identity, dtype, sqlite3.Binary(self.encode(data)))
         self.__cursor.execute(query, values)
         return is_new
+
+
+    #----------------------------------------------------------------------
+    @transactional
+    def remove(self, identity, data_type = None):
+        if data_type is None:
+            tables = ("information", "resource", "vulnerability")
+        elif data_type == Data.TYPE_INFORMATION:
+            tables = ("information",)
+        elif data_type == Data.TYPE_RESOURCE:
+            tables = ("resource",)
+        elif data_type == Data.TYPE_VULNERABILITY:
+            tables = ("vulnerability",)
+        else:
+            raise NotImplementedError(
+                "Unknown data type %r!" % data_type)
+        for table in tables:
+            query  = "DELETE FROM identity WHERE identity = ?;" % table
+            self.__cursor.execute(query, (identity,))
+            if self.__cursor.rowcount:
+                return True
+        return False
+
+
+    #----------------------------------------------------------------------
+    @transactional
+    def has_key(self, identity, data_type = None):
+        if data_type is None:
+            tables = ("information", "resource", "vulnerability")
+        elif data_type == Data.TYPE_INFORMATION:
+            tables = ("information",)
+        elif data_type == Data.TYPE_RESOURCE:
+            tables = ("resource",)
+        elif data_type == Data.TYPE_VULNERABILITY:
+            tables = ("vulnerability",)
+        else:
+            raise NotImplementedError(
+                "Unknown data type %r!" % data_type)
+        for table in tables:
+            query = "SELECT COUNT(rowid) FROM %s WHERE identity = ? LIMIT 1;" % table
+            self.__cursor.execute(query, (identity,))
+            row = self.__cursor.fetchone()
+            if row[0]:
+                return True
+        return False
+
+
+    #----------------------------------------------------------------------
+    @transactional
+    def get(self, identity, data_type = None):
+        if data_type is None:
+            tables = ("information", "resource", "vulnerability")
+        elif data_type == Data.TYPE_INFORMATION:
+            tables = ("information",)
+        elif data_type == Data.TYPE_RESOURCE:
+            tables = ("resource",)
+        elif data_type == Data.TYPE_VULNERABILITY:
+            tables = ("vulnerability",)
+        else:
+            raise NotImplementedError(
+                "Unknown data type %r!" % data_type)
+        for table in tables:
+            query = "SELECT data FROM %s WHERE identity = ? LIMIT 1;" % table
+            self.__cursor.execute(query, (identity,))
+            row = self.__cursor.fetchone()
+            if row and row[0]:
+                return self.decode(row[0])
+
+
+    #----------------------------------------------------------------------
+    @transactional
+    def get_keys(self, data_type, data_subtype = None):
+        if   data_type == Data.TYPE_INFORMATION:
+            table = "information"
+        elif data_type == Data.TYPE_RESOURCE:
+            table = "resource"
+        elif data_type == Data.TYPE_VULNERABILITY:
+            table = "vulnerability"
+        else:
+            raise NotImplementedError(
+                "Unknown data type %r!" % data_type)
+        if data_subtype is None:
+            query  = "SELECT identity FROM %s;" % table
+            values = ()
+        else:
+            query  = "SELECT identity FROM %s WHERE type = ?;" % table
+            values = (data_subtype)
+        self.__cursor.execute(query, values)
+        return { row[0] for row in self.__cursor.fetchall() }
+
+
+    #----------------------------------------------------------------------
+    @transactional
+    def get_all_keys(self):
+        hashes = set()
+        for table in ("information", "resource", "vulnerability"):
+            query  = "SELECT identity FROM %s;" % table
+            self.__cursor.execute(query)
+            hashes.update( row[0] for row in self.__cursor.fetchall() )
+        return hashes
 
 
     #----------------------------------------------------------------------

@@ -28,6 +28,7 @@ from core.api.config import Config
 from core.api.plugin import UIPlugin
 from core.api.data.resource.resource import Resource
 from core.api.data.data import Data
+from core.messaging.codes import MessageType, MessageCode
 from core.messaging.message import Message
 from core.main.console import Console
 from core.api.color import colorize
@@ -127,21 +128,21 @@ class ConsoleUIPlugin(UIPlugin):
         m_verbosity_level = Config.audit_config.verbose
 
         # Process control messages
-        if message.message_type == Message.MSG_TYPE_CONTROL:
+        if message.message_type == MessageType.MSG_TYPE_CONTROL:
 
             # Show log messages
             # (The verbosity is already checked by Logger)
-            if message.message_code == Message.MSG_CONTROL_LOG_MESSAGE:
+            if message.message_code == MessageCode.MSG_CONTROL_LOG_MESSAGE:
                 Console.display_error("<LOG> %s" % colorize(message.message_info, 'middle'))
 
             # Show log errors
             # (The verbosity is already checked by Logger)
-            elif message.message_code == Message.MSG_CONTROL_LOG_ERROR:
+            elif message.message_code == MessageCode.MSG_CONTROL_LOG_ERROR:
                 Console.display_error("<LOG> %s" % colorize(message.message_info, 'middle'))
 
             # Show plugin errors
             # (The verbosity is already checked by bootstrap)
-            elif message.message_code == Message.MSG_CONTROL_ERROR:
+            elif message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 text = colorize("[!] Plugin error: ", 'critical') + \
                        colorize(message.message_info, 'critical')
                 Console.display_error(text)

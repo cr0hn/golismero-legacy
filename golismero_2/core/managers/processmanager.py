@@ -32,6 +32,7 @@ from ..api.config import Config
 from ..api.logger import Logger
 from ..api.net.cache import NetworkCache
 from ..common import GlobalParams
+from ..messaging.codes import MessageType, MessageCode
 from ..messaging.message import Message
 
 from multiprocessing import Manager, Process
@@ -190,8 +191,8 @@ def bootstrap(context, func, argv, argd):
                                     text = "%s\n%s" % (e.message, format_exc())
                                 else:
                                     text = e.message
-                                context.send_msg(message_type = Message.MSG_TYPE_CONTROL,
-                                                 message_code = Message.MSG_CONTROL_ERROR,
+                                context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                                                 message_code = MessageCode.MSG_CONTROL_ERROR,
                                                  message_info = text)
 
             # Tell the Orchestrator there's been an error
@@ -201,8 +202,8 @@ def bootstrap(context, func, argv, argd):
                         text = "%s\n%s" % (e.message, format_exc())
                     else:
                         text = e.message
-                    context.send_msg(message_type = Message.MSG_TYPE_CONTROL,
-                                     message_code = Message.MSG_CONTROL_ERROR,
+                    context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                                     message_code = MessageCode.MSG_CONTROL_ERROR,
                                      message_info = text)
 
         # No matter what happens, send back an ACK
@@ -214,8 +215,8 @@ def bootstrap(context, func, argv, argd):
 
         # Send a message to the Orchestrator to stop
         try:
-            context.send_msg(message_type = Message.MSG_TYPE_CONTROL,
-                             message_code = Message.MSG_CONTROL_STOP,
+            context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                             message_code = MessageCode.MSG_CONTROL_STOP,
                              message_info = False)
         except:
             try:
@@ -295,12 +296,12 @@ class Context (object):
         """
         Send ACK messages from the plugins to the orchestrator.
         """
-        self.send_msg(message_type = Message.MSG_TYPE_CONTROL,
-                      message_code = Message.MSG_CONTROL_ACK)
+        self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                      message_code = MessageCode.MSG_CONTROL_ACK)
 
 
     #----------------------------------------------------------------------
-    def send_msg(self, message_type = Message.MSG_TYPE_INFO,
+    def send_msg(self, message_type = MessageType.MSG_TYPE_DATA,
                        message_code = 0,
                        message_info = None):
         """
@@ -319,7 +320,7 @@ class Context (object):
         # Special case for monoprocess mode:
         # We can't implement RPC calls using messages,
         # because we'd deadlock against ourselves.
-        if  message_type == Message.MSG_TYPE_RPC and \
+        if  message_type == MessageType.MSG_TYPE_RPC and \
             self.audit_config.max_process <= 0:
                 self._orchestrator.rpcManager.execute_rpc(
                             self.audit_name, message_code, *message_info)
@@ -364,7 +365,7 @@ class Context (object):
         response_queue = Manager().Queue()
 
         # Send the RPC message.
-        self.send_msg(message_type = Message.MSG_TYPE_RPC,
+        self.send_msg(message_type = MessageType.MSG_TYPE_RPC,
                       message_code = rpc_code,
                       message_info = (response_queue, argv, argd))
 
@@ -395,7 +396,7 @@ class Context (object):
         :type rpc_code: int
         """
         # Send the RPC message.
-        self.send_msg(message_type = Message.MSG_TYPE_RPC,
+        self.send_msg(message_type = MessageType.MSG_TYPE_RPC,
                       message_code = rpc_code,
                       message_info = (None, argv, argd))
 
@@ -421,10 +422,10 @@ class OOPObserver (object):
         :param data: Data to send
         :type data: Data
         """
-        return self.send_msg(message_type = Message.MSG_TYPE_INFO,
+        return self.send_msg(message_type = MessageType.MSG_TYPE_DATA,
                              message_info = data)
 
-    def send_msg(self, message_type = Message.MSG_TYPE_INFO,
+    def send_msg(self, message_type = MessageType.MSG_TYPE_DATA,
                        message_code = 0,
                        message_info = None):
         """

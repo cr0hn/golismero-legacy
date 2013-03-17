@@ -112,7 +112,10 @@ def get_user_settings_folder():
 def enum(*sequential, **named):
     "Enumerated type"
     values = dict(zip(sequential, range(len(sequential))), **named)
+    keys = values.keys()
     values['_values'] = values
+    values['_first'] = min(keys)
+    values['_last'] = max(keys)
     return type('Enum', (), values)
 
 

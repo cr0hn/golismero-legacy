@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["Logger"]
 
 from .config import Config
-from ..messaging.message import Message
+from ..messaging.codes import MessageType, MessageCode
 
 
 class Logger (object):
@@ -107,11 +107,11 @@ class Logger (object):
         try:
             if message:
                 if is_error:
-                    message_code = Message.MSG_CONTROL_LOG_ERROR
+                    message_code = MessageCode.MSG_CONTROL_LOG_ERROR
                 else:
-                    message_code = Message.MSG_CONTROL_LOG_MESSAGE
+                    message_code = MessageCode.MSG_CONTROL_LOG_MESSAGE
                 Config._get_context().send_msg(
-                    message_type = Message.MSG_TYPE_CONTROL,
+                    message_type = MessageType.MSG_TYPE_CONTROL,
                     message_code = message_code,
                     message_info = message)
         except Exception, e:

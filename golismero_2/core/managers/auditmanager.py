@@ -33,6 +33,7 @@ from ..api.data.data import Data
 from ..api.data.resource.url import Url
 from ..common import GlobalParams
 from ..database.datadb import DataDB
+from ..messaging.codes import MessageType, MessageCode
 from ..messaging.message import Message
 from ..messaging.notifier import AuditNotifier
 
@@ -161,16 +162,16 @@ class AuditManager (object):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
         # Send info messages to their target audit
-        if message.message_type == Message.MSG_TYPE_INFO:
+        if message.message_type == MessageType.MSG_TYPE_DATA:
             if not message.audit_name:
                 raise ValueError("Info message with no target audit!")
             return self.get_audit(message.audit_name).dispatch_msg(message)
 
         # Process control messages
-        elif message.message_type == Message.MSG_TYPE_CONTROL:
+        elif message.message_type == MessageType.MSG_TYPE_CONTROL:
 
             # Send ACKs to their target audit
-            if message.message_code == Message.MSG_CONTROL_ACK:
+            if message.message_code == MessageCode.MSG_CONTROL_ACK:
                 if message.audit_name:
                     audit = self.get_audit(message.audit_name)
                     audit.acknowledge()
@@ -188,14 +189,14 @@ class AuditManager (object):
 
                         # Send finish message
                         finally:
-                            m = Message(message_type = Message.MSG_TYPE_CONTROL,
-                                        message_code = Message.MSG_CONTROL_STOP_AUDIT,
+                            m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
+                                        message_code = MessageCode.MSG_CONTROL_STOP_AUDIT,
                                         message_info = True,   # True for finished, False for user cancel
                                         audit_name   = message.audit_name)
                             self.__orchestrator.dispatch_msg(m)
 
             # Stop an audit if requested
-            elif message.message_code == Message.MSG_CONTROL_STOP_AUDIT:
+            elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
                 if not message.audit_name:
                     raise ValueError("I don't know which audit to stop...")
                 self.get_audit(message.audit_name).stop()
@@ -303,7 +304,7 @@ class Audit (object):
         # FIXME: this should not be done here!
         for url in self.__audit_params.targets:
             message = Message(message_info = Url(url),
-                              message_type = Message.MSG_TYPE_INFO,
+                              message_type = MessageType.MSG_TYPE_DATA,
                               audit_name   = self.name)
             self.orchestrator.dispatch_msg(message)
 
@@ -339,7 +340,7 @@ class Audit (object):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
         # Is it data?
-        if message.message_type == Message.MSG_TYPE_INFO:
+        if message.message_type == MessageType.MSG_TYPE_DATA:
 
             # Add the data to the database
             is_new = self.__database.add(message.message_info)
@@ -350,8 +351,8 @@ class Audit (object):
                 # Send the ACK to the queue to make sure all
                 # messages in-between are processed correctly.
                 self.__expecting_ack += 1
-                m = Message(message_type = Message.MSG_TYPE_CONTROL,
-                            message_code = Message.MSG_CONTROL_ACK,
+                m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
+                            message_code = MessageCode.MSG_CONTROL_ACK,
                             audit_name   = self.name)
                 self.orchestrator.dispatch_msg(m)
 

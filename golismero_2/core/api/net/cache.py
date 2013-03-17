@@ -34,7 +34,7 @@ __all__ = ["NetworkCache"]
 
 from ..config import Config
 from ...common import Singleton
-from ...messaging.message import Message
+from ...messaging.codes import MessageCode
 
 from collections import defaultdict
 from functools import partial
@@ -156,7 +156,7 @@ class NetworkCache(AbstractCache):
 
             # If not found locally, query the global cache.
             data = Config._get_context().remote_call(
-                                Message.MSG_RPC_CACHE_GET, key, protocol)
+                                MessageCode.MSG_RPC_CACHE_GET, key, protocol)
 
             # Store the global cache result locally.
             if data is not None:
@@ -192,7 +192,7 @@ class NetworkCache(AbstractCache):
 
         # Send the resource to the global cache.
         Config._get_context().async_remote_call(
-                            Message.MSG_RPC_CACHE_SET, key, protocol, data)
+                            MessageCode.MSG_RPC_CACHE_SET, key, protocol, data)
 
 
     #----------------------------------------------------------------------
@@ -215,7 +215,7 @@ class NetworkCache(AbstractCache):
 
         # Remove the resource from the global cache.
         Config._get_context().async_remote_call(
-                            Message.MSG_RPC_CACHE_REMOVE, key, protocol)
+                            MessageCode.MSG_RPC_CACHE_REMOVE, key, protocol)
 
 
     #----------------------------------------------------------------------
@@ -235,7 +235,7 @@ class NetworkCache(AbstractCache):
         # If not found, check the global cache.
         if not found:
             found = Config._get_context().remote_call(
-                                Message.MSG_RPC_CACHE_CHECK, key, protocol)
+                                MessageCode.MSG_RPC_CACHE_CHECK, key, protocol)
             found = bool(found)
 
         # Return the status.

@@ -28,9 +28,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["AuditNotifier", "UINotifier"]
 
+from ..api.data.data import Data
 from ..api.logger import Logger
 from ..api.plugin import Plugin
 from .message import Message
+from .codes import MessageType
 from ..managers.priscillapluginmanager import PriscillaPluginManager
 
 from collections import defaultdict
@@ -125,24 +127,20 @@ class Notifier (object):
         try:
 
             # Info messages are sent to the send_info() method
-            if message.message_type == Message.MSG_TYPE_INFO:
+            if message.message_type == MessageType.MSG_TYPE_DATA:
                 m_plugins_to_notify = set()
 
                 # Plugins that expect all types of info
                 m_plugins_to_notify.update(self._notification_info_all)
 
                 # Plugins that expect this type of info
-                #information_type = message.message_info.information_type
-                #if information_type in self._notification_info_map:
-                #    m_plugins_to_notify.update(self._notification_info_map[information_type])
-
-                # Plugins that expect this type of info
+                # TODO: should vulnerability types be processed like trees?
                 m_type = None
-                if hasattr(message.message_info, 'information_type'):
+                if message.message_info.data_type == Data.TYPE_INFORMATION:
                     m_type = message.message_info.information_type
-                elif hasattr(message.message_info, 'resource_type'):
+                elif message.message_info.data_type == Data.TYPE_RESOURCE:
                     m_type = message.message_info.resource_type
-                elif hasattr(message.message_code, 'vulnerability_type'):
+                elif message.message_info.data_type == Data.TYPE_VULNERABILITY:
                     m_type = message.message_info.vulnerability_type
 
                 if m_type in self._notification_info_map:

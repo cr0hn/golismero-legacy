@@ -28,6 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Message"]
 
+from .codes import *
+
 from functools import total_ordering
 from time import time
 
@@ -45,104 +47,7 @@ class Message (object):
 
 
     #----------------------------------------------------------------------
-    #
-    # Constants for message types
-    #
-    #----------------------------------------------------------------------
-    MSG_TYPE_CONTROL = 0
-    MSG_TYPE_INFO    = 1
-    MSG_TYPE_RPC     = 2
-    MSG_TYPE_STATE   = 3
-
-    MSG_TYPE_FIRST = MSG_TYPE_CONTROL
-    MSG_TYPE_LAST  = MSG_TYPE_STATE
-
-
-    #----------------------------------------------------------------------
-    #
-    # Constants for message codes
-    #
-    #----------------------------------------------------------------------
-
-
-    #----------------------------------------------------------------------
-    # RPC messages
-    #----------------------------------------------------------------------
-
-    # Cache API
-    MSG_RPC_CACHE_GET = 0
-    MSG_RPC_CACHE_SET = 1
-    MSG_RPC_CACHE_CHECK = 2
-    MSG_RPC_CACHE_REMOVE = 3
-
-
-    MSG_RPC_FIRST = MSG_RPC_CACHE_GET
-    MSG_RPC_LAST  = MSG_RPC_CACHE_REMOVE
-
-
-    #----------------------------------------------------------------------
-    # Control messages
-    #----------------------------------------------------------------------
-
-    # Global control
-    MSG_CONTROL_ACK = 0
-    MSG_CONTROL_ERROR = 1
-    MSG_CONTROL_START = 2
-    MSG_CONTROL_STOP = 3
-    #MSG_CONTROL_PAUSE = 4
-    #MSG_CONTROL_CONTINUE = 5
-    #MSG_CONTROL_REGISTER = 6
-
-    # Audit control
-    MSG_CONTROL_START_AUDIT = 10
-    MSG_CONTROL_STOP_AUDIT = 11
-    #MSG_CONTROL_PAUSE_AUDIT = 12
-    #MSG_CONTROL_CONTINUE_AUDIT = 13
-
-    # System control
-    #MSG_CONTROL_CORE_VERSION = 20
-    #MSG_CONTROL_CORE_VERSION_RESPONSE = 21
-    #MSG_CONTROL_PLUGIN_VERSION = 22
-    #MSG_CONTROL_PLUGIN_VERSION_RESPONSE = 23
-    #MSG_CONTROL_UPDATE_PLUGINS = 24
-    #MSG_CONTROL_UPDATE_CORE = 25
-    #MSG_CONTROL_SYSTEM_STATUS = 26 # System load
-    #MSG_CONTROL_SYSTEM_STATUS_RESPONSE = 27
-
-    # Internal cache
-    #MSG_CONTROL_CACHE = 30
-    #MSG_CONTROL_CACHE_RESPONSE = 31
-
-    # UI subsystem
-    MSG_CONTROL_START_UI = 40
-    MSG_CONTROL_STOP_UI = 41
-    MSG_CONTROL_LOG_MESSAGE = 42
-    MSG_CONTROL_LOG_ERROR = 43
-
-
-    MSG_CONTROL_FIRST = MSG_CONTROL_ACK
-    MSG_CONTROL_LAST  = MSG_CONTROL_LOG_ERROR
-
-
-    #----------------------------------------------------------------------
-    # Status messages
-    #----------------------------------------------------------------------
-    #MSG_STATUS_ALIVE = 0
-    #MSG_STATUS_OK = 1
-    #MSG_STATUS_SYSTEM = 2
-    #MSG_STATUS_SYSTEM_RESPONSE = 3
-    #MSG_STATUS_AUDIT = 4
-    #MSG_STATUS_AUDIT_RESPONSE = 5
-
-    #MSG_STATUS_FIRST = MSG_STATUS_ALIVE
-    #MSG_STATUS_LAST  = MSG_STATUS_AUDIT_RESPONSE
-
-
-    #----------------------------------------------------------------------
-    #
-    # Constants for message priorities
-    #
-    #----------------------------------------------------------------------
+    # Message priorities
 
     MSG_PRIORITY_HIGH   = 0
     MSG_PRIORITY_MEDIUM = 1
@@ -153,7 +58,7 @@ class Message (object):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, message_type = MSG_TYPE_INFO,
+    def __init__(self, message_type = MessageType.MSG_TYPE_DATA,
                        message_code = 0,
                        message_info = None,
                          audit_name = None,
@@ -178,12 +83,12 @@ class Message (object):
         # Validate the arguments
         if type(message_type) != int:
             raise TypeError("Expected int, got %s instead" % type(message_type))
-        if not self.MSG_TYPE_FIRST <= message_type <= self.MSG_TYPE_LAST:
+        if not message_type in MSG_CODES:
             raise ValueError("Invalid message type: %d" % message_type)
-        if message_type != self.MSG_TYPE_INFO and type(message_code) != int:
+        if message_type != MessageType.MSG_TYPE_DATA and type(message_code) != int:
             raise TypeError("Expected int, got %s instead" % type(message_code))
-        if  message_type == self.MSG_TYPE_CONTROL and \
-            not self.MSG_CONTROL_FIRST <= message_code <= self.MSG_CONTROL_LAST:
+        if  message_type == MessageType.MSG_TYPE_CONTROL and \
+            not message_code in MSG_CONTROL_CODES:
                 raise ValueError("Invalid control message code: %d" % message_code)
         if audit_name is not None and type(audit_name) not in (str, unicode):
             raise TypeError("Expected int, got %s instead" % type(audit_name))
@@ -228,8 +133,8 @@ class Message (object):
     #----------------------------------------------------------------------
     @property
     def is_ack(self):
-        return (self.message_type == self.MSG_TYPE_CONTROL and
-                self.message_code == self.MSG_CONTROL_ACK)
+        return (self.message_type == MessageType.MSG_TYPE_CONTROL and
+                self.message_code == MessageCode.MSG_CONTROL_ACK)
 
 
     #----------------------------------------------------------------------
@@ -242,6 +147,6 @@ class Message (object):
 
     #----------------------------------------------------------------------
     def __repr__(self):
-        s = "<Message timestamp=%r, type=%r, code=%r, audit=%r, info=%r>"
+        s  = "<Message timestamp=%r, type=%r, code=%r, audit=%r, info=%r>"
         s %= (self.timestamp, self.message_type, self.message_code, self.message_info)
         return s

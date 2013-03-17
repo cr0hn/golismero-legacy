@@ -35,8 +35,9 @@ from ..managers.auditmanager import AuditManager
 from ..managers.priscillapluginmanager import PriscillaPluginManager
 from ..managers.uimanager import UIManager
 from ..managers.reportmanager import ReportManager
-from ..managers.rpcmanager import RPCManager
+from ..managers.rpcmanager import RPCManager, implementor
 from ..managers.processmanager import ProcessManager, Context
+from ..messaging.codes import MessageType, MessageCode
 from ..messaging.message import Message
 
 from time import sleep
@@ -153,6 +154,46 @@ class Orchestrator (object):
 
 
     #----------------------------------------------------------------------
+    # RPC implementors for the database API.
+
+    #MSG_RPC_DATA_ADD          = 110
+    #MSG_RPC_DATA_REMOVE       = 111
+    #MSG_RPC_DATA_GET          = 112
+    #MSG_RPC_DATA_GET_KEYS     = 113
+    #MSG_RPC_DATA_GET_ALL_KEYS = 114
+    #MSG_RPC_DATA_COUNT        = 115
+    #MSG_RPC_DATA_CHECK        = 116
+
+    @implementor(MessageCode.MSG_RPC_DATA_ADD)
+    def rpc_datadb_add(self, audit_name, *argv, **argd):
+        return self.auditManager.get_audit(audit_name).database.add(*argv, **argd)
+
+    @implementor(MessageCode.MSG_RPC_DATA_REMOVE)
+    def rpc_datadb_remove(self, audit_name, *argv, **argd):
+        return self.auditManager.get_audit(audit_name).database.remove(*argv, **argd)
+
+    @implementor(MessageCode.MSG_RPC_DATA_GET)
+    def rpc_datadb_get(self, audit_name, *argv, **argd):
+        return self.auditManager.get_audit(audit_name).database.get(*argv, **argd)
+
+    @implementor(MessageCode.MSG_RPC_DATA_GET_KEYS)
+    def rpc_datadb_get_keys(self, audit_name, *argv, **argd):
+        return self.auditManager.get_audit(audit_name).database.get_keys(*argv, **argd)
+
+    @implementor(MessageCode.MSG_RPC_DATA_GET_ALL_KEYS)
+    def rpc_datadb_get_all_keys(self, audit_name, *argv, **argd):
+        return self.auditManager.get_audit(audit_name).database.get_all_keys(*argv, **argd)
+
+    @implementor(MessageCode.MSG_RPC_DATA_COUNT)
+    def rpc_datadb_count(self, audit_name):
+        return len(self.auditManager.get_audit(audit_name).database)
+
+    @implementor(MessageCode.MSG_RPC_DATA_CHECK)
+    def rpc_datadb_count(self, audit_name, identity):
+        return self.auditManager.get_audit(audit_name).database.has_key(identity)
+
+
+    #----------------------------------------------------------------------
     def __signal_handler(self, signum, frame):
         """
         Signal handler to catch Control-C interrupts.
@@ -161,8 +202,8 @@ class Orchestrator (object):
         try:
 
             # Send a stop message to the Orchestrator.
-            message = Message(message_type = Message.MSG_TYPE_CONTROL,
-                              message_code = Message.MSG_CONTROL_STOP,
+            message = Message(message_type = MessageType.MSG_TYPE_CONTROL,
+                              message_code = MessageCode.MSG_CONTROL_STOP,
                               message_info = False,
                                   priority = Message.MSG_PRIORITY_HIGH)
             self.__queue.put_nowait(message)
@@ -208,7 +249,7 @@ class Orchestrator (object):
         try:
 
             # If it's an RPC message...
-            if message.message_type == Message.MSG_TYPE_RPC:
+            if message.message_type == MessageType.MSG_TYPE_RPC:
 
                 # Execute the call.
                 self.__rpcManager.execute_rpc(message.audit_name,
@@ -233,8 +274,8 @@ class Orchestrator (object):
         finally:
 
             # If it's a quit message...
-            if  message.message_type == Message.MSG_TYPE_CONTROL and \
-                message.message_code == Message.MSG_CONTROL_STOP:
+            if  message.message_type == MessageType.MSG_TYPE_CONTROL and \
+                message.message_code == MessageCode.MSG_CONTROL_STOP:
 
                 # Stop the program execution
                 if message.message_info:
@@ -286,8 +327,8 @@ class Orchestrator (object):
                     # In standalone mode, if all audits have finished we have to stop.
                     if  self.__config.run_mode == GlobalParams.RUN_MODE.standalone and \
                         not self.__auditManager.has_audits():
-                            m = Message(message_type = Message.MSG_TYPE_CONTROL,
-                                        message_code = Message.MSG_CONTROL_STOP,
+                            m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
+                                        message_code = MessageCode.MSG_CONTROL_STOP,
                                         message_info = True)  # True for finished, False for user cancel
                             self.dispatch_msg(m)
 

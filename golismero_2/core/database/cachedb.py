@@ -32,7 +32,7 @@ from .common import BaseDB, atomic, transactional
 
 from ..common import get_user_settings_folder, Singleton
 from ..managers.rpcmanager import implementor
-from ..messaging.message import Message
+from ..messaging.codes import MessageCode
 
 from collections import defaultdict
 from functools import partial
@@ -45,19 +45,19 @@ sqlite3 = None
 #----------------------------------------------------------------------
 # Cache API implementors
 
-@implementor(Message.MSG_RPC_CACHE_GET)
+@implementor(MessageCode.MSG_RPC_CACHE_GET)
 def rpc_cache_get(orchestrator, audit_name, *argv, **argd):
     return orchestrator.cacheManager.get(audit_name, *argv, **argd)
 
-@implementor(Message.MSG_RPC_CACHE_SET)
+@implementor(MessageCode.MSG_RPC_CACHE_SET)
 def rpc_cache_set(orchestrator, audit_name, *argv, **argd):
     return orchestrator.cacheManager.set(audit_name, *argv, **argd)
 
-@implementor(Message.MSG_RPC_CACHE_CHECK)
+@implementor(MessageCode.MSG_RPC_CACHE_CHECK)
 def rpc_cache_check(orchestrator, audit_name, *argv, **argd):
     return orchestrator.cacheManager.exists(audit_name, *argv, **argd)
 
-@implementor(Message.MSG_RPC_CACHE_REMOVE)
+@implementor(MessageCode.MSG_RPC_CACHE_REMOVE)
 def rpc_cache_remove(orchestrator, audit_name, *argv, **argd):
     return orchestrator.cacheManager.remove(audit_name, *argv, **argd)
 

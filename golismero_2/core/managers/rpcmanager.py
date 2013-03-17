@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["RPCManager"]
 
 from ..common import pickle
-from ..messaging.message import Message
+from ..messaging.codes import MessageCode, MSG_RPC_CODES
 
 from functools import partial
 
@@ -79,8 +79,7 @@ class RPCManager (object):
         self.__rpcMap = rpcMap
 
         # Check all RPC messages have been mapped at this point.
-        missing = set(xrange(Message.MSG_RPC_FIRST, Message.MSG_RPC_LAST + 1))
-        missing.difference_update(self.__rpcMap.keys())
+        missing = MSG_RPC_CODES.difference(self.__rpcMap.keys())
         if missing:
             msg  = "Missing RPC implementors for codes: %s"
             msg %= ", ".join(str(x) for x in sorted(missing))
@@ -113,10 +112,6 @@ class RPCManager (object):
 
             # DEBUG
             ##print "RPC call: %r" % ((audit_name, rpc_code, argv, argd),)
-
-            # Check the validity of the RPC code.
-            if not Message.MSG_RPC_FIRST <= rpc_code <= Message.MSG_RPC_LAST:
-                raise ValueError("Unsupported RPC code: %i" % rpc_code)
 
             # Get the implementor for the RPC code.
             try:

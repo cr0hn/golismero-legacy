@@ -30,6 +30,7 @@ __all__ = ["UIManager"]
 
 from .priscillapluginmanager import PriscillaPluginManager
 from ..common import GlobalParams
+from ..messaging.codes import MessageType, MessageCode
 from ..messaging.message import Message
 from ..messaging.notifier import UINotifier
 
@@ -75,8 +76,8 @@ class UIManager (object):
         """
         Launch the UI.
         """
-        message = Message(message_type = Message.MSG_TYPE_CONTROL,
-                          message_code = Message.MSG_CONTROL_START_UI)
+        message = Message(message_type = MessageType.MSG_TYPE_CONTROL,
+                          message_code = MessageCode.MSG_CONTROL_START_UI)
         self.__orchestrator.dispatch_msg(message)
 
 
@@ -92,8 +93,8 @@ class UIManager (object):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
         # Filter out ACKs but send all other messages.
-        if  message.message_type != Message.MSG_TYPE_CONTROL or \
-            message.message_code != Message.MSG_CONTROL_ACK:
+        if  message.message_type != MessageType.MSG_TYPE_CONTROL or \
+            message.message_code != MessageCode.MSG_CONTROL_ACK:
                 self.__notifier.notify(message)
 
 
@@ -105,7 +106,7 @@ class UIManager (object):
         :param information: The information to send.
         :type information: Data
         """
-        message = Message(message_type = Message.MSG_TYPE_INFO,
+        message = Message(message_type = MessageType.MSG_TYPE_DATA,
                           message_info = information)
         self.__orchestrator.dispatch_msg(message)
 
