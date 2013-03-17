@@ -57,12 +57,12 @@ class ReportManager (object):
         :type results: iterable.
         """
 
-        # Check None
+        # Abort if reporting is disabled
         if not config.output_formats:
             return
 
         # Get user selected report types
-        m_selected_reporters = filter(lambda x: x.report_type in config.output_formats, self.__reporters.itervalues())
+        selected_reporters = [x for x in self.__reporters.itervalues() if x.report_type in config.output_formats]
 
-        # Generate report
-        map(lambda p: p.generate_report(config, results), m_selected_reporters)
+        # Generate report(s)
+        map(lambda p: p.generate_report(config, results), selected_reporters)
