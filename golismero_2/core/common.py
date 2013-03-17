@@ -473,7 +473,9 @@ class GlobalParams (Configuration):
         # Always append, never overwrite
         # Fix target URLs if the scheme part is missing
         self._targets = getattr(self, "_targets", [])
-        self._targets.extend((x if x.startswith("http://") else "http://" + x) for x in targets)
+        if targets:
+            self._targets.extend(
+                (x if x.startswith("http://") else "http://" + x) for x in targets)
 
     @targets.deleter
     def targets(self):
