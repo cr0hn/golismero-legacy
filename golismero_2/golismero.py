@@ -233,8 +233,8 @@ def main(args):
     gr_audit.add_argument("--audit-database", metavar="DATABASE", dest="audit_db", default="memory://", help="specify a database connection string")
 
     gr_plugins = parser.add_argument_group("plugin options")
-    gr_plugins.add_argument("-P", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load", default=["all"])
-    gr_plugins.add_argument("-NP", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load", default=[])
+    gr_plugins.add_argument("-P", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load", default=["global", "testing", "report", "ui/console"])
+    gr_plugins.add_argument("-NP", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load", default=["all"])
     gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
     gr_plugins.add_argument("--plugin-list", action="store_true", help="list available plugins and quit")
     gr_plugins.add_argument("--plugin-info", metavar="NAME", dest="plugin_name", help="show plugin info and quit")
