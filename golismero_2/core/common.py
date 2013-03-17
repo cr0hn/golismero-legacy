@@ -296,9 +296,13 @@ class Configuration (object):
 #----------------------------------------------------------------------
 # The option parsers:
 
-def _parse_targets(targets):
-    # Fix target URLs if the scheme part is missing
-    return [(x if x.startswith("http://") else "http://" + x) for x in targets]
+def _parse_string(x):
+    return str(x) if x is not None else None
+
+def _parse_trinary(x):
+    if x not in (None, True, False):
+        raise SyntaxError("Trinary values only accept True, False and None")
+    return x
 
 def _parse_run_mode(run_mode):
     run_mode = run_mode.strip().lower()
@@ -376,7 +380,7 @@ class GlobalParams (Configuration):
         #
 
         # Targets
-        ("targets", _parse_targets, []),
+        ("targets", None, []),
 
         # Run mode
         ("run_mode", _parse_run_mode, "standalone"),
@@ -393,7 +397,7 @@ class GlobalParams (Configuration):
         #
         # Report options
         #
-        "output_file",
+        ("output_file", _parse_string),
         ("output_formats", _parse_output_formats, ["screen"]),
 
 
@@ -402,7 +406,7 @@ class GlobalParams (Configuration):
         #
 
         # Audit name
-        "audit_name",
+        ("audit_name", _parse_string),
 
         # Audit database
         ("audit_db", None, "memory://"),
@@ -421,7 +425,7 @@ class GlobalParams (Configuration):
         ("disabled_plugins", list, ["all"]),
 
         # Plugins folder
-        "plugins_folder",
+        ("plugins_folder", _parse_string),
 
         #
         # Networks options
@@ -434,7 +438,7 @@ class GlobalParams (Configuration):
         ("include_subdomains", bool, True),
 
         # Subdomains as regex expresion
-        "subdomain_regex",
+        ("subdomain_regex", _parse_string),
 
         # Depth level for spider
         ("depth", int, 0),
@@ -446,9 +450,9 @@ class GlobalParams (Configuration):
         ("follow_first_redirect", bool, True),
 
         # Proxy options
-        "proxy_addr",
-        "proxy_user",
-        "proxy_pass",
+        ("proxy_addr", _parse_string),
+        ("proxy_user", _parse_string),
+        ("proxy_pass", _parse_string),
 
         # Cookie
         ("cookie", _parse_cookie),
@@ -457,8 +461,23 @@ class GlobalParams (Configuration):
         # True: yes
         # False: no
         # None: default for current run mode
-        "use_cache_db",
+        ("use_cache_db", _parse_trinary),
     )
+
+    @property
+    def targets(self):
+        return self._targets
+
+    @targets.setter
+    def targets(self, targets):
+        # Always append, never overwrite
+        # Fix target URLs if the scheme part is missing
+        self._targets = getattr(self, "_targets", [])
+        self._targets.extend((x if x.startswith("http://") else "http://" + x) for x in targets)
+
+    @targets.deleter
+    def targets(self):
+        self._targets = []
 
 
     #----------------------------------------------------------------------
