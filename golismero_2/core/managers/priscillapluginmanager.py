@@ -412,7 +412,7 @@ class PriscillaPluginManager (Singleton):
                 disabled_plugins.remove(cat)
                 if category == "all":
                     disabled_plugins.update(self.get_plugin_names(cat))
-            if cat in enabled_plugins:
+            elif cat in enabled_plugins:
                 if cat in disabled_plugins:
                     raise ValueError("Conflicting black and white lists!")
                 enabled_plugins.remove(cat)
@@ -450,7 +450,7 @@ class PriscillaPluginManager (Singleton):
 
         # Whitelist approach
         else:
-            plugins = enabled_plugins
+            plugins.intersection_update(enabled_plugins)
 
         # Load each requested plugin
         return { name : self.load_plugin_by_name(name) for name in plugins }
