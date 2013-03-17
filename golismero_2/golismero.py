@@ -247,9 +247,9 @@ def main(args):
             args = parser.convert_arg_line_to_args(envcfg) + args
         P = parser.parse_args(args)
         cmdParams = GlobalParams()
-        cmdParams.from_cmdline( P )
+        cmdParams.from_object( P )
     except Exception, e:
-        ##raise
+        raise
         parser.error(str(e))
 
 
