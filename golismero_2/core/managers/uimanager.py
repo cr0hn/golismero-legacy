@@ -72,12 +72,22 @@ class UIManager (object):
 
 
     #----------------------------------------------------------------------
-    def run(self):
+    def start(self):
         """
-        Launch the UI.
+        Send the UI start message.
         """
         message = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                           message_code = MessageCode.MSG_CONTROL_START_UI)
+        self.__orchestrator.dispatch_msg(message)
+
+
+    #----------------------------------------------------------------------
+    def stop(self):
+        """
+        Send the UI stop message.
+        """
+        message = Message(message_type = MessageType.MSG_TYPE_CONTROL,
+                          message_code = MessageCode.MSG_CONTROL_STOP_UI)
         self.__orchestrator.dispatch_msg(message)
 
 
@@ -109,11 +119,3 @@ class UIManager (object):
         message = Message(message_type = MessageType.MSG_TYPE_DATA,
                           message_info = information)
         self.__orchestrator.dispatch_msg(message)
-
-
-    #----------------------------------------------------------------------
-    def stop(self):
-        """
-        Stop UI plugins
-        """
-        pass

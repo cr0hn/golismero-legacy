@@ -120,16 +120,8 @@ def launcher(options):
     if options.run_mode == GlobalParams.RUN_MODE.standalone:
 
         # Run Orchestrator
-        m_orchestrator = Orchestrator(options)
-
-        # Start UI
-        m_orchestrator.start_ui()
-
-        # New audit with command line options
-        m_orchestrator.add_audit(options)
-
-        # Message loop
-        m_orchestrator.msg_loop()
+        with Orchestrator(options) as m_orchestrator:
+            m_orchestrator.run( start_audits = (options,) )
 
     elif options.run_mode == GlobalParams.RUN_MODE.master:
         #
@@ -321,7 +313,7 @@ def main(args):
             exit(1)
 
         # Show the plugin information
-        Logger.configure(level=Logger.VERBOSE)
+        Console.level = Console.VERBOSE
         try:
             m_plugin_info = manager.get_plugin_by_name(P.plugin_name)
             m_plugin_obj  = manager.load_plugin_by_name(P.plugin_name)

@@ -356,9 +356,6 @@ class PersistentNetworkCache(BaseNetworkCache):
     @atomic
     def close(self):
         try:
-            try:
-                self.__db.execute("PURGE;")
-            finally:
-                self.__db.close()
+            self.__db.close()
         except Exception:
             pass

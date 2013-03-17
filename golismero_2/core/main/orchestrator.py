@@ -37,15 +37,14 @@ from ..managers.uimanager import UIManager
 from ..managers.reportmanager import ReportManager
 from ..managers.rpcmanager import RPCManager, implementor
 from ..managers.processmanager import ProcessManager, Context
-from ..messaging.codes import MessageType, MessageCode
+from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 
 from os import getpid
 from time import sleep
-from traceback import format_exc
+from traceback import format_exc, print_exc
 from signal import signal, SIGINT, SIG_DFL
 from multiprocessing import Manager
-from Queue import PriorityQueue
 
 __all__ = ["Orchestrator"]
 
@@ -54,6 +53,12 @@ class Orchestrator (object):
     """
     Orchestrator is the core (or kernel) of GoLismero.
     """
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.close()
 
 
     #----------------------------------------------------------------------
@@ -70,26 +75,26 @@ class Orchestrator (object):
 
         # Incoming message queue
         if getattr(config, "max_process", 0) <= 0:
-            self.__queue = PriorityQueue(maxsize = 0)
+            from Queue import Queue
+            self.__queue = Queue(maxsize = 0)
         else:
             self.__queue_manager = Manager()
             self.__queue = self.__queue_manager.Queue()
 
-        # Orchestrator context
+        # Set the Orchestrator context
         self.__context = Context( orchestrator_pid = getpid(),
                                          msg_queue = self.__queue,
                                       audit_config = self.__config )
         Config._set_context(self.__context)
 
+        # Within the Orchestrator process, keep a static reference to it
+        Context._orchestrator = self
+
         # Load the plugins
         self.__pluginManager = PriscillaPluginManager()
         success, failure = self.__pluginManager.find_plugins(self.__config.plugins_folder)
-        Logger.log_more_verbose("Found %d plugins" % len(success))
-        if failure:
-            Logger.log_error("Failed to load %d plugins" % len(failure))
-            if Logger.check_level(Logger.VERBOSE):
-                for plugin_name in failure:
-                    Logger.log_error_verbose("\t%s" % plugin_name)
+        if not success:
+            raise RuntimeError("Failed to find any plugins!")
         self.__pluginManager.load_plugins(self.__config.enabled_plugins,
                                           self.__config.disabled_plugins,
                                           category = "all")
@@ -121,6 +126,13 @@ class Orchestrator (object):
 
         # Signal handler to catch Ctrl-C
         self.__old_signal_action = signal(SIGINT, self.__signal_handler)
+
+        # Log the plugins that failed to load
+        Logger.log_more_verbose("Found %d plugins" % len(success))
+        if failure:
+            Logger.log_error("Failed to load %d plugins" % len(failure))
+            for plugin_name in failure:
+                Logger.log_error_verbose("\t%s" % plugin_name)
 
 
     #----------------------------------------------------------------------
@@ -207,7 +219,7 @@ class Orchestrator (object):
             message = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                               message_code = MessageCode.MSG_CONTROL_STOP,
                               message_info = False,
-                                  priority = Message.MSG_PRIORITY_HIGH)
+                                  priority = MessagePriority.MSG_PRIORITY_HIGH)
             self.__queue.put_nowait(message)
 
             # Tell the user the message has been sent.
@@ -315,12 +327,18 @@ class Orchestrator (object):
 
 
     #----------------------------------------------------------------------
-    def msg_loop(self):
+    def run(self, start_audits = ()):
         """
         Message loop.
         """
-
         try:
+
+            # Start the UI.
+            self.__ui.start()
+
+            # If we have initial audits, start them.
+            for params in start_audits:
+                self.add_audit(params)
 
             # Message loop.
             while True:
@@ -348,23 +366,42 @@ class Orchestrator (object):
                     Logger.log_error("Error processing message!\n%s" % format_exc())
 
         finally:
+
+            # Stop the UI.
             try:
-
-                # Stop the UI.
                 self.__ui.stop()
-
-            finally:
-
-                # Stop the process manager.
-                self.__processManager.stop()
+            except Exception:
+                print_exc()
 
 
     #----------------------------------------------------------------------
-    def start_ui(self):
-        """Start UI"""
+    def close(self):
+        """
+        Release all resources held by the Orchestrator.
+        """
 
-        # init UI Manager
-        self.__ui.run()
+        # Stop the process manager.
+        try:
+            self.processManager.stop()
+        except:
+            pass
+
+        # Stop the audit manager.
+        try:
+            self.auditManager.close()
+        except:
+            pass
+
+        # Compact and close the cache database.
+        try:
+            self.cacheManager.compact()
+        except:
+            pass
+        try:
+            self.cacheManager.close()
+        except:
+            pass
+
 
     #----------------------------------------------------------------------
     def generate_reports(self, results):

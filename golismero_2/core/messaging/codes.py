@@ -26,8 +26,21 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["MessageType", "MessageCode",
-           "MSG_TYPES", "MSG_CODES", "MSG_RPC_CODES", "MSG_CONTROL_CODES"]
+__all__ = ["MessageType", "MessageCode", "MessagePriority",
+           "MSG_PRIORITIES", "MSG_TYPES",
+           "MSG_CODES", "MSG_RPC_CODES", "MSG_CONTROL_CODES"]
+
+
+#----------------------------------------------------------------------
+#
+# Message priorities
+#
+#----------------------------------------------------------------------
+
+class MessagePriority(object):
+    MSG_PRIORITY_HIGH   = 0
+    MSG_PRIORITY_MEDIUM = 1
+    MSG_PRIORITY_LOW    = 2
 
 
 #----------------------------------------------------------------------
@@ -69,11 +82,10 @@ class MessageCode(object):
     #MSG_CONTROL_PAUSE_AUDIT    = 12
     #MSG_CONTROL_CONTINUE_AUDIT = 13
 
-    # UI subsystem
-    MSG_CONTROL_START_UI    = 20
-    MSG_CONTROL_STOP_UI     = 21
-    MSG_CONTROL_LOG_MESSAGE = 22
-    MSG_CONTROL_LOG_ERROR   = 23
+    # UI subsystem and logging
+    MSG_CONTROL_START_UI = 20
+    MSG_CONTROL_STOP_UI  = 21
+    MSG_CONTROL_LOG      = 22
 
 
     #----------------------------------------------------------------------
@@ -102,7 +114,10 @@ class MessageCode(object):
 #
 #----------------------------------------------------------------------
 
-MSG_TYPES = {getattr(MessageCode, x) for x in dir(MessageCode) if x.startswith("MSG_TYPE_")}
+MSG_PRIORITIES = {getattr(MessagePriority, x) for x in dir(MessagePriority) if x.startswith("MSG_")}
+
+MSG_TYPES = {getattr(MessageType, x) for x in dir(MessageType) if x.startswith("MSG_")}
+
 MSG_CODES = {getattr(MessageCode, x) for x in dir(MessageCode) if x.startswith("MSG_")}
 
 MSG_RPC_CODES     = {getattr(MessageCode, x) for x in dir(MessageCode) if x.startswith("MSG_RPC_")}

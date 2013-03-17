@@ -33,7 +33,7 @@ from ..api.data.data import Data
 from ..api.data.resource.url import Url
 from ..common import GlobalParams
 from ..database.datadb import DataDB
-from ..messaging.codes import MessageType, MessageCode
+from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 from ..messaging.notifier import AuditNotifier
 
@@ -143,7 +143,12 @@ class AuditManager (object):
 
         :raises: KeyError
         """
-        del self.__audits[auditName]
+        audit = self.__audits[auditName]
+        try:
+            audit.close()
+        finally:
+            del self.__audits[auditName]
+            self.orchestrator.cacheManager.clean(auditName)
 
 
     #----------------------------------------------------------------------
@@ -199,7 +204,7 @@ class AuditManager (object):
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
                 if not message.audit_name:
                     raise ValueError("I don't know which audit to stop...")
-                self.get_audit(message.audit_name).stop()
+                self.get_audit(message.audit_name).close()
                 self.remove_audit(message.audit_name)
 
             # TODO: pause and resume audits, start new audits
@@ -208,13 +213,15 @@ class AuditManager (object):
 
 
     #----------------------------------------------------------------------
-    def stop(self):
+    def close(self):
         """
-        Stop all audits.
+        Release all resources held by all audits.
         """
-        for a in self.__audits.values(): # not itervalues, may be modified
-            a.stop()
-
+        for name in self.__audits.keys(): # not iterkeys, will be modified
+            try:
+                self.remove_audit(name)
+            except:
+                pass
 
 
 #--------------------------------------------------------------------------
@@ -353,6 +360,7 @@ class Audit (object):
                 self.__expecting_ack += 1
                 m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                             message_code = MessageCode.MSG_CONTROL_ACK,
+                                priority = MessagePriority.MSG_PRIORITY_LOW,
                             audit_name   = self.name)
                 self.orchestrator.dispatch_msg(m)
 
@@ -371,13 +379,11 @@ class Audit (object):
 
 
     #----------------------------------------------------------------------
-    def stop(self):
+    def close(self):
         """
-        Stop audit.
+        Release all resources held by this audit.
         """
-        #
-        #
-        # XXX TODO
-        #
-        #
-        self.__database.close()
+        try:
+            self.__database.compact()
+        finally:
+            self.__database.close()
