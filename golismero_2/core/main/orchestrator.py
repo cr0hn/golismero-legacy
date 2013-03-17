@@ -215,15 +215,18 @@ class Orchestrator (object):
 
         try:
 
+            # Tell the user the message has been sent.
+            Console.display("User cancel requested, stopping all audits...")
+
             # Send a stop message to the Orchestrator.
             message = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                               message_code = MessageCode.MSG_CONTROL_STOP,
                               message_info = False,
                                   priority = MessagePriority.MSG_PRIORITY_HIGH)
-            self.__queue.put_nowait(message)
-
-            # Tell the user the message has been sent.
-            Console.display("User cancel requested, stopping all audits...")
+            try:
+                self.__queue.put_nowait(message)
+            except Exception:
+                exit(1)
 
         finally:
 
@@ -353,7 +356,11 @@ class Orchestrator (object):
                             self.dispatch_msg(m)
 
                     # Wait for a message to arrive.
-                    message = self.__queue.get()
+                    try:
+                        message = self.__queue.get()
+                    except Exception:
+                        # If this fails, kill the Orchestrator.
+                        exit(1)
                     if not isinstance(message, Message):
                         raise TypeError("Expected Message, got %s" % type(message))
 
