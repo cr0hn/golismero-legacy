@@ -65,9 +65,15 @@ def _add_implementor(rpc_code, fn):
 @implementor(MessageCode.MSG_RPC_BULK)
 def rpc_bulk(orchestrator, audit_name, rpc_code, *arguments):
 
-    # Prepare a partial function call to the internal RPC executor.
-    caller = partial(orchestrator.rpcManager._internal_rpc_execute,
-                     audit_name, rpc_code)
+    # Get the implementor for the RPC code.
+    # Raise NotImplementedError if it's not defined.
+    try:
+        method = rpcMap[rpc_code]
+    except KeyError:
+        raise NotImplementedError("RPC code not implemented: %r" % rpc_code)
+
+    # Prepare a partial function call to the implementor.
+    caller = partial(method, audit_name)
 
     # Use the built-in map() function to issue all the calls.
     # This ensures we support the exact same interface and functionality.
@@ -124,70 +130,27 @@ class RPCManager (object):
         :param argd: Keyword arguments to the call.
         :type argd: dict
         """
+        success = True
         try:
-            internal_error = False
 
-            # Make the function call and get the response.
-            # On error catch the exception and prepare it for sending.
-            success = True
+            # Get the implementor for the RPC code.
+            # Raise NotImplementedError if it's not defined.
             try:
-                success, response = self._internal_execute_rpc(
-                                        audit_name, rpc_code, argv, argd)
-            except Exception:
-                success  = False
-                response = self.__prepare_exception(*sys.exc_info())
+                method = self.__rpcMap[rpc_code]
+            except KeyError:
+                raise NotImplementedError("RPC code not implemented: %r" % rpc_code)
 
-        # Catch any internal errors as well and prepare them for sending.
-        except:
-            internal_error = True
-            success = False
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            response = self.__prepare_exception(exc_type, exc_value, exc_traceback)
+            # Call the implementor and get the response.
+            response = method(self.__orchestrator, audit_name, *argv, **argd)
+
+        # Catch exceptions and prepare them for sending.
+        except Exception:
+            success  = False
+            response = self.__prepare_exception(*sys.exc_info())
 
         # If the call was synchronous, send the response/error back to the plugin.
         if response_queue:
             response_queue.put_nowait( (success, response) )
-
-        # If there was an internal error, raise the exception.
-        if internal_error:
-            raise exc_type, exc_value
-
-
-    def _internal_execute_rpc(self, audit_name, rpc_code, argv, argd):
-        """
-        Make the actual RPC call and return the response value instead
-        of sending it back through a response queue.
-
-        Called by execute_rpc() and rpc_bulk().
-
-        :param audit_name: Name of the audit requesting the call.
-        :type audit_name: str
-
-        :param rpc_code: RPC code.
-        :type rpc_code: int
-
-        :param argv: Positional arguments to the call.
-        :type argv: tuple
-
-        :param argd: Keyword arguments to the call.
-        :type argd: dict
-
-        :returns: Return value from the RPC call. The caller is
-            responsible for sending the response back to the plugin.
-        :raises: Exception -- Any exception raised by the RPC call
-            is thrown back to the caller, who is responsible for
-            catching the exception and sending it back to the plugin.
-        """
-
-        # Get the implementor for the RPC code.
-        try:
-            method = self.__rpcMap[rpc_code]
-        except KeyError:
-            raise NotImplementedError("RPC code not implemented: %i" % rpc_code)
-
-        # Call the implementor and return the response.
-        # Exceptions raised by the implementor are thrown up to the caller.
-        return method(self.__orchestrator, audit_name, *argv, **argd)
 
 
     #----------------------------------------------------------------------
