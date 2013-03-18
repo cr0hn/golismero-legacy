@@ -28,8 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = [
     "get_user_settings_folder",
-    "Singleton", "Abstract", "virtual",
-    "enum", "decorator", "pickle",
+    "Singleton", "enum", "decorator", "pickle",
     "OrchestratorConfig", "AuditConfig"
 ]
 
@@ -148,46 +147,6 @@ class Singleton (object):
 
         # Return the instance.
         return cls._instance
-
-
-#--------------------------------------------------------------------------
-def virtual(fn):
-    try:
-        fn._is_virtual = True
-    except AttributeError:
-        # this happens when combining with @staticmethod
-        # and may also happen in other weird situations
-        raise SyntaxError("Improper use of the @virtual decorator")
-    return fn
-
-def _is_virtual(fn):
-    return hasattr(fn, "_is_virtual")
-
-class _abstract_metaclass(type):
-    def __init__(cls, name, bases, namespace):
-        type.__init__(cls, name, bases, namespace)
-        found = set()
-        for clazz in bases:
-            for symbol in dir(clazz):
-                if symbol.startswith("_"):
-                    continue
-                parent = getattr(clazz, symbol)
-                if not _is_virtual(parent):
-                    continue
-                child = getattr(cls, symbol)
-                if not _is_virtual(child):
-                    continue
-                found.add(symbol)
-        if found:
-            msg = "Virtual methods not implemented in class %s: %s"
-            msg %= (name, ", ".join(found))
-            raise SyntaxError(msg)
-
-class Abstract (object):
-    """
-    Implementation of abstract classes.
-    """
-    __metaclass__ = _abstract_metaclass
 
 
 #--------------------------------------------------------------------------
