@@ -28,7 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = [
     "get_user_settings_folder",
-    "Singleton", "enum", "decorator", "pickle",
+    "Singleton", "Abstract", "virtual",
+    "enum", "decorator", "pickle",
     "OrchestratorConfig", "AuditConfig"
 ]
 
@@ -147,6 +148,41 @@ class Singleton (object):
 
         # Return the instance.
         return cls._instance
+
+
+#--------------------------------------------------------------------------
+class virtual(object):
+    def __new__(cls, fn):
+        cls = type(cls.__name__, (cls,), {"__doc__":fn.__doc__})
+        return object.__new__(cls)
+    def __call__(self, *argv, **argd):
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+class _abstract_metaclass(type):
+    def __init__(cls, name, bases, namespace):
+        type.__init__(cls, name, bases, namespace)
+        found = set()
+        for clazz in bases:
+            for symbol in dir(clazz):
+                if symbol.startswith("_"):
+                    continue
+                parent = getattr(clazz, symbol)
+                if not isinstance(parent, virtual):
+                    continue
+                child = getattr(cls, symbol)
+                if not isinstance(child, virtual):
+                    continue
+                found.add(symbol)
+        if found:
+            msg = "Virtual methods not implemented in class %s: %s"
+            msg %= (name, ", ".join(found))
+            raise SyntaxError(msg)
+
+class Abstract (object):
+    """
+    Implementation of abstract classes.
+    """
+    __metaclass__ = _abstract_metaclass
 
 
 #--------------------------------------------------------------------------
