@@ -91,6 +91,6 @@ def generate_random_string(string_length=30):
     :param string_length: length of string generated
     :type string_length: int
     """
-    m_available_chars = "%s%s" % (ascii_letters, digits) #, "#!_-.;,")
+    m_available_chars = "%s%s" % (ascii_letters, digits)
 
     return ''.join(choice(m_available_chars) for x in xrange(string_length))

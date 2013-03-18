@@ -55,7 +55,7 @@ class WordListAPI(Singleton):
 
     #----------------------------------------------------------------------
     def __load_wordlists(self, currentDir):
-        """"""
+        """Load wordlist from currenDir arg"""
 
 
         # The following levels belong to the plugins
@@ -76,17 +76,25 @@ class WordListAPI(Singleton):
     #----------------------------------------------------------------------
     @property
     def all_wordlists(self):
-        """"""
+        """
+        Get names of all wordlists.
+
+        :returns: list
+        """
         return self.__store.keys()
 
 
     #----------------------------------------------------------------------
     def get_wordlist(self, wordlist_name):
-        """"""
+        """
+        Get an iterator with the selected wordlist.
+
+        :returns: iterator with wordlist.
+        """
         try:
             return WordList(self.__store[wordlist_name.lower()])
         except KeyError:
-            return None
+            return ()
 
 
 #------------------------------------------------------------------------------
