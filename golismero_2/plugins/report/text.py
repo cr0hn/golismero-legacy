@@ -28,10 +28,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 from core.api.plugin import ReportPlugin
+
 from core.api.data.data import Data
+from core.api.data.db import Database
 from core.api.data.resource.resource import Resource
-from collections import Counter
-from time import time
+
+from collections import defaultdict
 
 
 class TextReport(ReportPlugin):
@@ -39,61 +41,51 @@ class TextReport(ReportPlugin):
     This plugin generate text reports
     """
 
-    #----------------------------------------------------------------------
-    @property
-    def report_type(self):
-        """
-        Get an string with the report name that will be generate. For
-        example: text, html, grepable...
-
-        :returns: str -- type of report
-        """
-        return "text"
-
 
     #----------------------------------------------------------------------
-    def generate_report(self, config, results):
+    def is_supported(self, output_file):
+        """
+        Determine if this plugin supports the requested file format.
+
+        :param output_file: Output file to generate.
+        :type output_file: str | None
+
+        :returns: bool - True if this plugin supports the format, False otherwise.
+        """
+        return output_file and output_file.endswith(".txt")
+
+
+    #----------------------------------------------------------------------
+    def generate_report(self, output_file):
         """
         Run plugin and generate report.
 
-        :param config: configuration for report
-        :type config: GlobalParams
-
-        :param results: iterable with results.
-        :type results: iterable.
+        :param output_file: Output file to generate.
+        :type output_file: str | None
         """
 
-        # Check for None
-        if not config or not results:
-            return
+        # Get access to the database API.
+        db = Database()
 
-        # Open file to write output
-        m_output = None
-        try:
-            m_output = open(config.output_file, mode='w')
-        except IOError as e:
-            print "Can't open file '%s', got error: %s" % (config.output_file, e.message)
-            return
+        # Dictionary where to keep all the counters.
+        count = defaultdict(int)
 
-        # All results, with not nulls
-        m_results = filter(lambda x: x, results)
+        # Open the output file for writing.
+        with open(output_file, mode='w') as fd:
 
-        m_counter = Counter()
+            # Show all discovered URLs.
+            fd.write("\nSpidered URLs\n=============\n\n")
+            for identity in db.get_keys(Data.TYPE_RESOURCE, Resource.RESOURCE_URL):
+                u = db.get(identity)
+                fd.write("+ %s\n" % str(u))
+                count["url"] += 1
 
-        # 1 - Get urls
-        m_output.write("\nSpidered Urls\n=============\n\n")
-        for u in filter(lambda x: x.data_type == Data.TYPE_INFORMATION and x.information_type == Resource.RESOURCE_URL , m_results):
-            m_output.write("+ %s\n" % str(u))
-            m_counter['url'] += 1
+            #
+            #
+            # XXX TODO
+            #
+            #
 
-
-        #
-        # End - Write summary
-        #
-        m_output.write("\nSummary\n=======\n\n")
-        # Urls
-        m_output.write("+ Total URLs: %s.\n\n" % str(m_counter['url']))
-
-        # Close file
-        m_output.close()
-
+            # Write summary.
+            fd.write("\nSummary\n=======\n\n")
+            fd.write("+ Total URLs: %s.\n\n" % str(count['url']))

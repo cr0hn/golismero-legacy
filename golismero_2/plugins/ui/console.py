@@ -30,8 +30,7 @@ from core.api.data.resource.resource import Resource
 from core.api.data.data import Data
 from core.messaging.codes import MessageType, MessageCode
 from core.messaging.message import Message
-from core.main.console import Console
-from core.api.color import colorize
+from core.main.console import Console, colorize
 
 #
 # Verbosity levels:
@@ -90,9 +89,6 @@ class ConsoleUIPlugin(UIPlugin):
             'url_disclouse': process_url_disclosure
         }
 
-        # Colorize output?
-        m_colorized = Config.audit_config.colorize
-
         # Get verbosity level.
         Console.level = Config.audit_config.verbose
 
@@ -100,13 +96,13 @@ class ConsoleUIPlugin(UIPlugin):
 
             # Messages with vulnerability types
             if  info.data_type == Data.TYPE_VULNERABILITY:
-                Console.display("%s" % funcs[info.vulnerability_type](info, m_colorized))
+                Console.display("%s" % funcs[info.vulnerability_type](info))
 
         if Console.level >= Console.VERBOSE:
 
             # Messages with information types
             if  info.data_type == Data.TYPE_RESOURCE and info.data_type == Resource.RESOURCE_URL:
-                Console.display("+ %s" % funcs[info.RESOURCE_URL](info, m_colorized))
+                Console.display("+ %s" % funcs[info.RESOURCE_URL](info))
 
 
     #----------------------------------------------------------------------
@@ -117,9 +113,6 @@ class ConsoleUIPlugin(UIPlugin):
 
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
-
-        # Colorize output?
-        m_colorized = Config.audit_config.colorize
 
         # Set verbosity level.
         Console.level = Config.audit_config.verbose
@@ -132,8 +125,7 @@ class ConsoleUIPlugin(UIPlugin):
             if message.message_code == MessageCode.MSG_CONTROL_LOG:
                 (text, level, is_error) = message.message_info
                 if Console.level >= level:
-                    if m_colorized:
-                        text = colorize(text, 'middle')
+                    text = colorize(text, 'middle')
                     text = "[*] %s" % text
                     if is_error:
                         Console.display_error(text)
@@ -146,9 +138,8 @@ class ConsoleUIPlugin(UIPlugin):
             elif message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 (description, traceback) = message.message_info
                 text = "[!] Plugin error: " + description
-                if m_colorized:
-                    text = colorize(text, 'critical')
-                    traceback = colorize(traceback, 'critical')
+                text = colorize(text, 'critical')
+                traceback = colorize(traceback, 'critical')
                 Console.display_error(text)
                 Console.display_error_more_verbose(traceback)
 
@@ -178,16 +169,16 @@ class ConsoleUIPlugin(UIPlugin):
 
 
 #----------------------------------------------------------------------
-def process_url(url, colorized = True):
+def process_url(url):
     """Display URL info"""
     return "New URL: [%s] %s" % (
         url.method,
-        colorize(url.url, 'info', is_color= colorized),
+        colorize(url.url, 'info'),
     )
 
 
 #----------------------------------------------------------------------
-def process_url_disclosure(url, colorized = True):
+def process_url_disclosure(url):
     """Display URL discover"""
     # Split parts
     m_pos_discovered = url.url.find(url.discovered)
@@ -197,12 +188,12 @@ def process_url_disclosure(url, colorized = True):
 
     m_url = "%s%s%s" % (
         m_prefix,
-        colorize(m_content, url.risk, is_color= colorized),
+        colorize(m_content, url.risk),
         m_suffix
     )
 
     return "%s: %s\n| Method: %s\n%s|-%s" % (
-        colorize("!! Discovered", url.risk, is_color=colorized),
+        colorize("!! Discovered", url.risk),
         m_url,
         url.method,
         '| Referer <- %s\n' % url.referer if url.referer else '',

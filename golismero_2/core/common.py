@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = [
     "get_user_settings_folder",
     "Singleton", "enum", "decorator", "pickle",
-    "ConfigFileParseError", "GlobalParams"
+    "OrchestratorConfig", "AuditConfig"
 ]
 
 try:
@@ -155,6 +155,15 @@ class Configuration (object):
     Generic configuration class.
     """
 
+    #----------------------------------------------------------------------
+    # The logic in configuration classes is always:
+    # - Checking options without fixing them is done in check_params().
+    # - Sanitizing (fixing) options is done in parsers or in property setters.
+    # - For each source, there's a "from_*" method. They add to the
+    #   current options rather than overwriting them completely.
+    #   This allows options to be read from multiple sources.
+
+    #----------------------------------------------------------------------
     # Here's where subclasses define the options.
     #
     # It's a list of tuples of the following format:
@@ -169,26 +178,39 @@ class Configuration (object):
     #
     # Example:
     #    class MySettings(Configuration):
-    #        _settings_  = (
-    #            ("verbose", int, 0),   # A complete definition.
-    #            ("output_file", str),  # Omitting the default value (None is used).
-    #            "data",                # Omitting the parser too (values won't be filtered).
-    #        )
+    #        _settings_  = {
+    #            "verbose": (int, 0), # A complete definition.
+    #            "output_file": str,  # Omitting the default value (None is used).
+    #            "data": None,        # Omitting the parser too.
+    #        }
     #
-    _settings_ = ()
+    _settings_ = {}
+
+
+    #----------------------------------------------------------------------
+    # Some helper parsers.
+
+    @staticmethod
+    def string(x):
+        return str(x) if x is not None else None
+
+    @staticmethod
+    def trinary(x):
+        if x not in (None, True, False):
+            raise SyntaxError("Trinary values only accept True, False and None")
+        return x
 
 
     #----------------------------------------------------------------------
     def __init__(self):
-        self.__setter = dict()
         history = set()
-        for option in self._settings_:
-            if isinstance(option, str):
-                option = (option,)
-            if option[0] in history:
-                raise SyntaxError("Duplicated option name: %r" % option[0])
-            history.add(option[0])
-            self.__init_option(*option)
+        for name, definition in self._settings_.iteritems():
+            if name in history:
+                raise SyntaxError("Duplicated option name: %r" % name)
+            history.add(name)
+            if type(definition) not in (tuple, list):
+                definition = (definition, None)
+            self.__init_option(name, *definition)
 
 
     #----------------------------------------------------------------------
@@ -205,20 +227,31 @@ class Configuration (object):
         if name.startswith("_"):
             msg = "Option name %r is a protected Python identifier"
             raise SyntaxError(msg % name)
-        if parser is not None:
-            self.__setter[name] = parser
         setattr(self, name, default)
 
 
     #----------------------------------------------------------------------
     def __setattr__(self, name, value):
-        try:
-            parser = self.__setter.get(name, None)
-        except AttributeError:
-            parser = None
-        if parser is not None:
-            value = parser(value)
+        if not name.startswith("_"):
+            definition = self._settings_.get(name, (None, None))
+            if type(definition) not in (tuple, list):
+                definition = (definition, None)
+            parser = definition[0]
+            if parser is not None:
+                value = parser(value)
         object.__setattr__(self, name, value)
+
+
+    #----------------------------------------------------------------------
+    def check_params(self):
+        """
+        Check if parameters are valid. Raises an exception otherwise.
+
+        This method only checks the validity of the arguments, it won't modify them.
+
+        :raises: ValueError
+        """
+        return
 
 
     #----------------------------------------------------------------------
@@ -229,13 +262,9 @@ class Configuration (object):
         :param args: Settings.
         :type args: dict
         """
-        for option in self._settings_:
-            if isinstance(option, str):
-                option = (option,)
-            name = option[0]
-            default = getattr(self, name)
-            value = args.get(name, default)
-            setattr(self, name, value)
+        for name, value in args.iteritems():
+            if name in self._settings_:
+                setattr(self, name, value)
 
 
     #----------------------------------------------------------------------
@@ -292,177 +321,175 @@ class Configuration (object):
 #
 #----------------------------------------------------------------------
 
-
-#----------------------------------------------------------------------
-# The option parsers:
-
-def _parse_string(x):
-    return str(x) if x is not None else None
-
-def _parse_trinary(x):
-    if x not in (None, True, False):
-        raise SyntaxError("Trinary values only accept True, False and None")
-    return x
-
-def _parse_run_mode(run_mode):
-    run_mode = run_mode.strip().lower()
-    if not run_mode in GlobalParams.RUN_MODE._values:
-        raise ValueError("Invalid run mode: %s" % run_mode)
-    return getattr(GlobalParams.RUN_MODE, run_mode)
-
-def _parse_user_interface(user_interface):
-    user_interface = user_interface.strip().lower()
-    if not user_interface in GlobalParams.USER_INTERFACE._values:
-        raise ValueError("Invalid user interface mode: %s" % user_interface)
-    return getattr(GlobalParams.USER_INTERFACE, user_interface)
-
-def _parse_output_formats(output_formats):
-    if output_formats:
-        try:
-            output_formats = [getattr(GlobalParams.REPORT_FORMAT, fmt.strip().lower())
-                              for fmt in output_formats]
-        except AttributeError:
-            raise ValueError("Invalid output format: %s" % fmt)
-    else:
-        output_formats = []
-    return output_formats
-
-def _parse_cookie(cookie):
-    if cookie:
-        # Parse the cookies argument
-        try:
-            # Prepare cookie
-            m_cookie = cookie.replace(" ", "").replace("=", ":")
-            # Remove 'Cookie:' start, if exits
-            m_cookie = m_cookie[len("Cookie:"):] if m_cookie.startswith("Cookie:") else m_cookie
-            # Split
-            m_cookie = m_cookie.split(";")
-            # Parse
-            self.cookie = { c.split(":")[0]:c.split(":")[1] for c in m_cookie}
-        except ValueError:
-            raise ValueError("Invalid cookie format specified. Use this format: 'Key=value; key=value'.")
-    else:
-        cookie = None
-    return cookie
-
-
-#--------------------------------------------------------------------------
-class GlobalParams (Configuration):
+class OrchestratorConfig (Configuration):
     """
-    Global parameters for the program.
+    Orchestator configuration object.
     """
-
-    # The logic in this class is always:
-    # - Checking options without fixing them is done in check_params().
-    # - Sanitizing (fixing) options is done in setters.
-    # - For each source, there's a "from_*" method. They add to the
-    #   current options rather than overwriting them completely.
-    #   This allows options to be read from multiple sources.
-
 
     # Run modes
     RUN_MODE = enum('standalone', 'master', 'slave')
-
-    # User interface
-    USER_INTERFACE = enum('console')
-
-    # Report formats
-    REPORT_FORMAT = enum('screen', 'text', 'grepable', 'html')
 
 
     #----------------------------------------------------------------------
     # The options definitions:
     #
-    _settings_ = (
+    _settings_ = {
 
         #
         # Main options
         #
 
-        # Targets
-        ("targets", None, []),
-
         # Run mode
-        ("run_mode", _parse_run_mode, "standalone"),
-
-        # UI mode
-        ("user_interface", _parse_user_interface, "console"),
+        "run_mode": (str, "standalone"),
 
         # Verbosity level
-        ("verbose", int, 1),
+        "verbose": (int, 1),
 
         # Colorize console?
-        ("colorize", bool, True),
-
-        #
-        # Report options
-        #
-        ("output_file", _parse_string),
-        ("output_formats", _parse_output_formats, ["screen"]),
-
-
-        #
-        # Audit options
-        #
-
-        # Audit name
-        ("audit_name", _parse_string),
-
-        # Audit database
-        ("audit_db", None, "memory://"),
-
-        # Maximum number of processes to execute plugins
-        ("max_process", int, 10),
+        "colorize": (bool, True),
 
         #
         # Plugins options
         #
 
         # Enabled plugins
-        ("enabled_plugins", list, ["global", "testing", "report", "ui/console"]),
+        "enabled_plugins": (list, ["global", "testing", "report", "ui/console"]),
 
         # Disabled plugins
-        ("disabled_plugins", list, ["all"]),
+        "disabled_plugins": (list, ["all"]),
 
         # Plugins folder
-        ("plugins_folder", _parse_string),
+        "plugins_folder": Configuration.string,
+
+        # Maximum number of processes to execute plugins
+        "max_process": (int, 10),
 
         #
         # Networks options
         #
 
-        # Maximum number of connection, by host
-        ("max_connections", int, 50),
-
-        # Include subdomains?
-        ("include_subdomains", bool, True),
-
-        # Subdomains as regex expresion
-        ("subdomain_regex", _parse_string),
-
-        # Depth level for spider
-        ("depth", int, 0),
-
-        # Follow redirects
-        ("follow_redirects", bool, True),
-
-        # Follow only first redirect
-        ("follow_first_redirect", bool, True),
-
-        # Proxy options
-        ("proxy_addr", _parse_string),
-        ("proxy_user", _parse_string),
-        ("proxy_pass", _parse_string),
-
-        # Cookie
-        ("cookie", _parse_cookie),
+        # Maximum number of connections per host
+        "max_connections": (int, 50),
 
         # Use persistent cache?
         # True: yes
         # False: no
         # None: default for current run mode
-        ("use_cache_db", _parse_trinary),
-    )
+        "use_cache_db": Configuration.trinary,
+    }
+
+
+    #----------------------------------------------------------------------
+
+    @property
+    def run_mode(self):
+        return self._run_mode
+
+    @run_mode.setter
+    def run_mode(self, run_mode):
+        run_mode = run_mode.strip().lower()
+        if not run_mode in self.RUN_MODE._values:
+            raise ValueError("Invalid run mode: %s" % run_mode)
+        self._run_mode = getattr(self.RUN_MODE, run_mode)
+
+
+    #----------------------------------------------------------------------
+    def check_params(self):
+
+        # Validate the network connections limit
+        if self.max_connections < 1:
+            raise ValueError("Number of connections must be greater than 0, got %i." % params.max_connections)
+
+        # Validate the number of concurrent processes
+        if self.max_process < 0:
+            raise ValueError("Number of processes cannot be a negative number, got %i." % params.max_process)
+
+        # Validate the list of plugins
+        if not self.enabled_plugins:
+            raise ValueError("No plugins selected for execution.")
+        if set(self.enabled_plugins).intersection(self.disabled_plugins):
+            raise ValueError("Conflicting plugins selection, aborting execution.")
+
+
+#----------------------------------------------------------------------
+#
+# Audit options parser
+#
+#----------------------------------------------------------------------
+
+class AuditConfig (Configuration):
+    """
+    Audit configuration object.
+    """
+
+
+    #----------------------------------------------------------------------
+    # The options definitions:
+    #
+    _settings_ = {
+
+        #
+        # Main options
+        #
+
+        # Targets
+        "targets": (list, []),
+
+        #
+        # Report options
+        #
+        "reports": (list, []),
+
+        #
+        # Audit options
+        #
+
+        # Audit name
+        "audit_name": Configuration.string,
+
+        # Audit database
+        "audit_db": (None, "memory://"),
+
+        #
+        # Plugins options
+        #
+
+        # Enabled plugins
+        "enabled_plugins": (list, ["testing", "report"]),
+
+        # Disabled plugins
+        "disabled_plugins": (list, ["all"]),
+
+        #
+        # Networks options
+        #
+
+        # Include subdomains?
+        "include_subdomains": (bool, True),
+
+        # Subdomains as regular expression
+        "subdomain_regex": Configuration.string,
+
+        # Depth level for spider
+        "depth": (int, 0),
+
+        # Follow redirects
+        "follow_redirects": (bool, True),
+
+        # Follow only first redirect
+        "follow_first_redirect": (bool, True),
+
+        # Proxy options
+        "proxy_addr": Configuration.string,
+        "proxy_user": Configuration.string,
+        "proxy_pass": Configuration.string,
+
+        # Cookie
+        "cookie": Configuration.string,
+    }
+
+
+    #----------------------------------------------------------------------
 
     @property
     def targets(self):
@@ -475,30 +502,53 @@ class GlobalParams (Configuration):
         self._targets = getattr(self, "_targets", [])
         if targets:
             self._targets.extend(
-                (x if x.startswith("http://") else "http://" + x) for x in targets)
+                (x if x.startswith("http://") else "http://" + x)
+                for x in targets)
 
-    @targets.deleter
-    def targets(self):
-        self._targets = []
+
+    #----------------------------------------------------------------------
+
+    @property
+    def reports(self):
+        return self._reports
+
+    @reports.setter
+    def reports(self, reports):
+        # Always append, never overwrite
+        self._reports = getattr(self, "_reports", [])
+        if reports:
+            self._reports.extend(
+                (str(x) if x is not None else None) for x in reports)
+
+
+    #----------------------------------------------------------------------
+
+    @property
+    def cookie(self):
+        return self._cookie
+
+    @cookie.setter
+    def cookie(self, cookie):
+        if cookie:
+            # Parse the cookies argument
+            try:
+                # Prepare cookie
+                m_cookie = cookie.replace(" ", "").replace("=", ":")
+                # Remove 'Cookie:' start, if exits
+                m_cookie = m_cookie[len("Cookie:"):] if m_cookie.startswith("Cookie:") else m_cookie
+                # Split
+                m_cookie = m_cookie.split(";")
+                # Parse
+                self.cookie = { c.split(":")[0]:c.split(":")[1] for c in m_cookie}
+            except ValueError:
+                raise ValueError("Invalid cookie format specified. Use this format: 'Key=value; key=value'.")
+        else:
+            cookie = None
+        self._cookie = cookie
 
 
     #----------------------------------------------------------------------
     def check_params(self):
-        """
-        Check if parameters are valid. Raises an exception otherwise.
-
-        This method only checks the validity of the arguments, it won't modify them.
-
-        :raises: ValueError
-        """
-
-        # Validate the network connections limit
-        if self.max_connections < 1:
-            raise ValueError("Number of connections must be greater than 0, got %i." % params.max_connections)
-
-        # Validate the number of concurrent processes
-        if self.max_process < 0:
-            raise ValueError("Number of processes cannot be a negative number, got %i." % params.max_process)
 
         # Validate the list of targets
         if not self.targets:
@@ -518,7 +568,3 @@ class GlobalParams (Configuration):
                 compile(self.subdomain_regex)
             except error, e:
                 raise ValueError("Regular expression not valid: %s." % e.message)
-
-        # Validate the output options
-        if not self.output_file and self.REPORT_FORMAT.screen not in self.output_formats:
-            raise ValueError("Output format specified, but no output file!")

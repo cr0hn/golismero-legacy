@@ -26,12 +26,16 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
 from core.api.plugin import ReportPlugin
-from core.api.data.resource.resource import Resource
+
 from core.api.data.data import Data
-from collections import Counter
-from core.api.color import colorize
+from core.api.data.db import Database
+from core.api.data.resource.resource import Resource
+
+# XXX HACK
+from core.main.console import colorize
+
+from collections import defaultdict
 
 
 class ScreenReport(ReportPlugin):
@@ -39,58 +43,59 @@ class ScreenReport(ReportPlugin):
     This plugin to display reports on screen
     """
 
-    #----------------------------------------------------------------------
-    @property
-    def report_type(self):
-        """
-        Get an string with the report name that will be generate. For
-        example: text, html, grepable...
-
-        :returns: str -- type of report
-        """
-        return "screen"
-
 
     #----------------------------------------------------------------------
-    def generate_report(self, config, results):
+    def is_supported(self, output_file):
+        """
+        Determine if this plugin supports the requested file format.
+
+        :param output_file: Output file to generate.
+        :type output_file: str | None
+
+        :returns: bool - True if this plugin supports the format, False otherwise.
+        """
+        return not output_file
+
+
+    #----------------------------------------------------------------------
+    def generate_report(self, output_file):
         """
         Run plugin and generate report.
 
-        :param config: configuration for report
-        :type config: GlobalParams
-
-        :param results: iterable with results.
-        :type results: iterable.
+        :param output_file: Output file to generate.
+        :type output_file: str | None
         """
 
-        # Check for None
-        if not config or not results:
-            return
+        # Get access to the database API.
+        db = Database()
 
-        # All results, with not nulls
-        m_results = filter(lambda x: x, results)
+        # Dictionary where to keep all the counters.
+        count = defaultdict(int)
 
-        m_counter = Counter()
-
+        # ----------------------------------------
         # Header
+        # ----------------------------------------
         print "\n\n--= %s =--" % colorize("Report", "cyan")
 
-        #
-        # 1 - Get urls
-        #
+        # ----------------------------------------
+        # Discovered URLs
+        # ----------------------------------------
         print "\n- %s - \n"% colorize("Spidered URLs", "yellow")
-
-        for u in filter(lambda x: x.data_type == Data.TYPE_INFORMATION and x.information_type == Resource.RESOURCE_URL , m_results):
+        for identity in db.get_keys(Data.TYPE_RESOURCE, Resource.RESOURCE_URL):
+            u = db.get(identity)
             print "+ %s" % str(u)
-            m_counter['url'] += 1
-
+            count["url"] += 1
 
         #
-        # End - Write summary
         #
+        # XXX TODO
+        #
+        #
+
+        # ----------------------------------------
+        # Summary
+        # ----------------------------------------
         print "\n- %s -\n" % colorize("Summary", "yellow")
 
         # Urls
-        print "+ Total URLs: %s\n\n" % colorize(str(m_counter['url']), "yellow")
-
-
+        print "+ Total URLs: %s\n\n" % colorize(str(count['url']), "yellow")

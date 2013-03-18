@@ -71,10 +71,11 @@ class MessageCode(object):
     # Global control
     MSG_CONTROL_ACK       = 0
     MSG_CONTROL_ERROR     = 1
-    MSG_CONTROL_START     = 2
-    MSG_CONTROL_STOP      = 3
-    #MSG_CONTROL_PAUSE    = 4
-    #MSG_CONTROL_CONTINUE = 5
+    MSG_CONTROL_LOG       = 2
+    MSG_CONTROL_START     = 3
+    MSG_CONTROL_STOP      = 4
+    #MSG_CONTROL_PAUSE    = 5
+    #MSG_CONTROL_CONTINUE = 6
 
     # Audit control
     MSG_CONTROL_START_AUDIT     = 10
@@ -82,10 +83,13 @@ class MessageCode(object):
     #MSG_CONTROL_PAUSE_AUDIT    = 12
     #MSG_CONTROL_CONTINUE_AUDIT = 13
 
-    # UI subsystem and logging
+    # UI subsystem
     MSG_CONTROL_START_UI = 20
     MSG_CONTROL_STOP_UI  = 21
-    MSG_CONTROL_LOG      = 22
+
+    # Logging and reporting
+    MSG_CONTROL_START_REPORT = 30
+    #MSG_CONTROL_CANCEL_REPORT = 31
 
 
     #----------------------------------------------------------------------

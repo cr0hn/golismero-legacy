@@ -55,13 +55,13 @@ class Plugin (object):
         """
         Check input parameters passed by the user.
 
-        Parameters will be passed as an instance of 'GlobalParams'.
+        Parameters will be passed as an instance of 'AuditConfig'.
 
         If any parameter is not correct o there is an error, an
         exception must be raised.
 
         :param inputParams: input parameters to check
-        :type inputParams: GlobalParams
+        :type inputParams: AuditConfig
         """
         raise NotImplementedError("All plugins must implement this method!")
 
@@ -73,6 +73,14 @@ class Plugin (object):
         if not text:
             raise NotImplementedError("All plugins must implement this method!")
         return text
+
+
+    #----------------------------------------------------------------------
+    def _set_observer(self, observer):
+        """
+        Called internally by GoLismero. Do not call or override!
+        """
+        return
 
 
 #------------------------------------------------------------------------------
@@ -195,26 +203,24 @@ class ReportPlugin (Plugin):
 
 
     #----------------------------------------------------------------------
-    @property
-    def report_type(self):
+    def is_supported(self, output_file):
         """
-        Returns a string with the report name that will be generated.
-        For example: text, html, grepable...
+        Determine if this plugin supports the requested file format.
 
-        :returns: str -- type of report
+        :param output_file: Output file to generate.
+        :type output_file: str | None
+
+        :returns: bool - True if this plugin supports the format, False otherwise.
         """
         raise NotImplementedError("All report plugins must implement this method!")
 
 
     #----------------------------------------------------------------------
-    def generate_report(self, config, results):
+    def generate_report(self, output_file):
         """
         Run plugin and generate report.
 
-        :param config: configuration for report
-        :type config: GlobalParams
-
-        :param results: iterable with results.
-        :type results: iterable.
+        :param output_file: Output file to generate.
+        :type output_file: str | None
         """
         raise NotImplementedError("All report plugins must implement this method!")

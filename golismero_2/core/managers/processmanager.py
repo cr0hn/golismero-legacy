@@ -31,7 +31,6 @@ __all__ = ["ProcessManager", "Context"]
 from ..api.config import Config
 from ..api.logger import Logger
 from ..api.net.cache import NetworkCache
-from ..common import GlobalParams
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 
@@ -135,8 +134,6 @@ def bootstrap(context, func, argv, argd):
     try:
         try:
             try:
-                # Get the verbosity
-                verbose = context.audit_config.verbose
 
                 # Configure the plugin
                 Config._set_context(context)
@@ -284,7 +281,7 @@ class Context (object):
 
     @property
     def audit_config(self):
-        "GlobalParams -- Parameters of the audit."
+        "AuditConfig -- Parameters of the audit."
         return self.__audit_config
 
 
@@ -681,11 +678,11 @@ class ProcessManager (object):
     def __init__(self, orchestrator, config):
         """Constructor.
 
-        :param orchestrator: Core to send messages to
+        :param orchestrator: Orchestrator to send messages to.
         :type orchestrator: Orchestrator
 
-        :param config: Configuration object
-        :type config: GlobalParams
+        :param config: Global configuration.
+        :type config: OrchestratorConfig
         """
         self.__launcher = None
 

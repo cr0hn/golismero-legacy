@@ -110,9 +110,6 @@ class RPCManager (object):
             internal_error = False
             success = True
 
-            # DEBUG
-            ##print "RPC call: %r" % ((audit_name, rpc_code, argv, argd),)
-
             # Get the implementor for the RPC code.
             try:
                 method = self.__rpcMap[rpc_code]

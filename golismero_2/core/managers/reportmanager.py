@@ -28,7 +28,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["ReportManager"]
 
+from ..api.logger import Logger
 from .priscillapluginmanager import *
+
+from traceback import format_exc
 
 
 #------------------------------------------------------------------------------
@@ -37,32 +40,77 @@ class ReportManager (object):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, config):
+    def __init__(self, config, orchestrator):
+        """
+        Constructor.
 
-        # Load plugins
-        self.__reporters = PriscillaPluginManager().load_plugins(
+        :param config: Audit configuration.
+        :type config: AuditConfig.
+
+        :param orchestrator: Orchestrator.
+        :type orchestrator: Orchestrator
+        """
+
+        # Keep a reference to the audit configuration.
+        self.__config = config
+
+        # Keep a reference to the orchestrator.
+        self.__orchestrator = orchestrator
+
+        # Load the report plugins.
+        self.__plugins = PriscillaPluginManager().load_plugins(
             config.enabled_plugins, config.disabled_plugins,
             category = "report")
 
+        # Map report plugins to output files.
+        self.__reporters = {}
+        for output_file in config.reports:
+            if output_file in self.__reporters:
+                continue
+            found = [name for name, plugin in self.__plugins.iteritems()
+                          if plugin.is_supported(output_file)]
+            if not found:
+                raise ValueError(
+                    "Output file format not supported: %r" % output_file)
+            if len(found) > 1:
+                msg = "Output file format supported by multiple plugins!\nFile: %r\nPlugins:\n\t"
+                msg %= output_file
+                msg += "\n\t".join(found)
+                raise ValueError(msg)
+            self.__reporters[output_file] = found[0]
+
+
+    @property
+    def config(self):
+        return self.__config
+
+    @property
+    def orchestrator(self):
+        return self.__orchestrator
+
 
     #----------------------------------------------------------------------
-    def generate_reports(self, config, results):
+    def generate_reports(self, notifier):
         """
-        Call appropiate plugins (user selected) and generate the reports.
+        Generate all the requested reports for the audit.
 
-        :param config: configuration of audit.
-        :type config: GlobalParams.
+        :param notifier: Plugin notifier.
+        :type notifier: AuditNotifier
 
-        :param results: iterable with results.
-        :type results: iterable.
+        :returns: int -- Number of plugins executed.
         """
 
-        # Abort if reporting is disabled
-        if not config.output_formats:
-            return
+        # Abort if reporting is disabled.
+        if not self.__reporters:
+            return 0
 
-        # Get user selected report types
-        selected_reporters = [x for x in self.__reporters.itervalues() if x.report_type in config.output_formats]
-
-        # Generate report(s)
-        map(lambda p: p.generate_report(config, results), selected_reporters)
+        # For each output file, run its corresponding report plugin.
+        count = 0
+        for output_file, plugin_name in self.__reporters.iteritems():
+            try:
+                notifier.start_report(self.__plugins[plugin_name], output_file)
+            except Exception, e:
+                Logger.log_error("Failed to start report for file %r: %s" % (output_file, e.message))
+                Logger.log_error_more_verbose(format_exc())
+            count += 1
+        return count

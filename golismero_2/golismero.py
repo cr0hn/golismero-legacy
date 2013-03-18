@@ -101,7 +101,7 @@ from os import getenv
 #----------------------------------------------------------------------
 # GoLismero modules
 
-from core.common import GlobalParams
+from core.common import OrchestratorConfig, AuditConfig
 from core.main.console import Console
 from core.main.orchestrator import Orchestrator
 from core.managers.priscillapluginmanager import PriscillaPluginManager
@@ -110,33 +110,19 @@ from core.managers.priscillapluginmanager import PriscillaPluginManager
 #----------------------------------------------------------------------
 # Exported function to launch GoLismero
 
-def launcher(options):
+def launcher(options, *audits):
 
-    if not isinstance(options, GlobalParams):
-        raise TypeError("Expected GlobalParams, got %s instead" % type(options))
+    # We need to validate the arguments,
+    # since it may be called from outside.
+    if not isinstance(options, OrchestratorConfig):
+        raise TypeError("Expected OrchestratorConfig, got %s instead" % type(options))
+    for params in audits:
+        if not isinstance(params, AuditConfig):
+            raise TypeError("Expected AuditConfig, got %s instead" % type(options))
 
-    m_orchestrator = None
-
-    if options.run_mode == GlobalParams.RUN_MODE.standalone:
-
-        # Run Orchestrator
-        with Orchestrator(options) as m_orchestrator:
-            m_orchestrator.run( start_audits = (options,) )
-
-    elif options.run_mode == GlobalParams.RUN_MODE.master:
-        #
-        # TODO
-        #
-        raise NotImplementedError("Master mode not yet implemented!")
-
-    elif options.run_mode == GlobalParams.RUN_MODE.slave:
-        #
-        # TODO
-        #
-        raise NotImplementedError("Slave mode not yet implemented!")
-
-    else:
-        raise ValueError("Invalid run mode: %r" % options.run_mode)
+    # Run the Orchestrator.
+    with Orchestrator(options) as orchestrator:
+        orchestrator.run(*audits)
 
 
 #----------------------------------------------------------------------
@@ -174,6 +160,11 @@ class DisablePluginAction(argparse.Action):
             if values in enabled_plugins:
                 enabled_plugins.remove(values)
 
+# --no-output
+class ResetListAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, [])
+
 # --cookie-file
 class ReadValueFromFileAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -186,29 +177,26 @@ class ReadValueFromFileAction(argparse.Action):
 
 
 #----------------------------------------------------------------------
-# Start of program
+# Command line parser using argparse
 
-def main(args):
-
-    # Show the program banner
-    show_banner()
-
-    # Configure command line parser
+def cmdline_parser():
     parser = argparse.ArgumentParser(fromfile_prefix_chars="@")
     parser.add_argument("targets", metavar="TARGET", nargs="+", help="one or more target web sites")
 
     gr_main = parser.add_argument_group("main options")
-    gr_main.add_argument("-M", "--run-mode", metavar="MODE", help="run mode [default: standalone]", default="standalone", choices=GlobalParams.RUN_MODE._values.keys())
-    gr_main.add_argument("-I", "--user-interface", metavar="MODE", help="user interface mode [default: console]", default="console", choices=GlobalParams.USER_INTERFACE._values.keys())
+    gr_main.add_argument("-M", "--run-mode", metavar="MODE", help="run mode [default: standalone]", default="standalone", choices=OrchestratorConfig.RUN_MODE._values.keys())
     gr_main.add_argument("-v", "--verbose", action="count", default=1, help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
-    gr_main.add_argument("--max-process", metavar="N", type=int, help="maximum number of plugins to run concurrently [default: 2]", default=2)
     gr_main.add_argument("--color", action="store_true", dest="colorize", help="use colors in console output [default]", default=True)
     gr_main.add_argument("--no-color", action="store_false", dest="colorize", help="suppress colors in console output")
 
+    gr_audit = parser.add_argument_group("audit options")
+    gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
+    gr_audit.add_argument("--audit-database", metavar="DATABASE", dest="audit_db", default="memory://", help="specify a database connection string")
+
     gr_report = parser.add_argument_group("report options")
-    gr_report.add_argument("-o", "--output-file", metavar="BASENAME", help="output file, without extension")
-    gr_report.add_argument("-of", "--output-format", metavar="FORMAT", action="append", dest="output_formats", help="add an output format", default=["screen"], choices=GlobalParams.REPORT_FORMAT._values.keys())
+    gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", default=[None], help="write the results of the audit to this file [default: stdout]")
+    gr_report.add_argument("-no", "--no-output", dest="reports", action=ResetListAction, help="do not output the results")
 
     gr_net = parser.add_argument_group("network options")
     gr_net.add_argument("--max-connections", help="maximum number of concurrent connections per host [default: 4]", default=50)
@@ -228,36 +216,47 @@ def main(args):
     gr_net.add_argument("--persistent-cache", action="store_true", dest="use_cache_db", help="use a persistent network cache [default in distributed modes]")
     gr_net.add_argument("--volatile-cache", action="store_false", dest="use_cache_db", help="use a volatile network cache [default in standalone mode]")
 
-    gr_audit = parser.add_argument_group("audit options")
-    gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
-    gr_audit.add_argument("--audit-database", metavar="DATABASE", dest="audit_db", default="memory://", help="specify a database connection string")
-
     gr_plugins = parser.add_argument_group("plugin options")
     gr_plugins.add_argument("-P", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load", default=["global", "testing", "report", "ui/console"])
     gr_plugins.add_argument("-NP", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load", default=["all"])
+    gr_plugins.add_argument("--max-process", metavar="N", type=int, help="maximum number of plugins to run concurrently [default: 2]", default=2)
     gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
     gr_plugins.add_argument("--plugin-list", action="store_true", help="list available plugins and quit")
     gr_plugins.add_argument("--plugin-info", metavar="NAME", dest="plugin_name", help="show plugin info and quit")
 
+    return parser
 
-    # Parse command line options
+
+#----------------------------------------------------------------------
+# Start of program
+
+def main(args):
+
+    # Show the program banner.
+    show_banner()
+
+    # Get the command line parser.
+    parser = cmdline_parser()
+
+    # Parse command line options.
     try:
         envcfg = getenv("GOLISMERO_SETTINGS")
         if envcfg:
             args = parser.convert_arg_line_to_args(envcfg) + args
         P = parser.parse_args(args)
-        cmdParams = GlobalParams()
-        cmdParams.from_object( P )
+        cmdParams = OrchestratorConfig()
+        cmdParams.from_object(P)
+        auditParams = AuditConfig()
+        auditParams.from_object(P)
     except Exception, e:
-        raise
+        ##raise    # XXX DEBUG
         parser.error(str(e))
 
-
-    # Get the plugins folder from the parameters
+    # Get the plugins folder from the parameters.
     # TODO: allow more than one plugin location!
     plugins_folder = cmdParams.plugins_folder
 
-    # If no plugins folder is given, use the default
+    # If no plugins folder is given, use the default.
     if not plugins_folder:
         plugins_folder = path.abspath(__file__)
         plugins_folder = path.split(plugins_folder)[0]
@@ -278,22 +277,38 @@ def main(args):
             Console.display("[!] Error loading plugins list: %s" % e.message)
             exit(1)
 
-        # Show the list of plugins
+        # Show the list of plugins.
         Console.display("-------------")
         Console.display(" Plugin list")
         Console.display("-------------\n")
-        # Testing plugins
-        Console.display("-= Testing plugins =-")
-        for name, info in manager.get_plugins("testing").iteritems():
-            Console.display("+ %s: %s" % (name, info.description))
-        # Report plugins
-        Console.display("\n-= UI plugins =-")
-        for name, info in manager.get_plugins("ui").iteritems():
-            Console.display("+ %s: %s" % (name, info.description))
-        # UI plugins
-        Console.display("\n-= Report plugins =-")
-        for name, info in manager.get_plugins("report").iteritems():
-            Console.display("+ %s: %s" % (name, info.description))
+
+        # Testing plugins...
+        testing_plugins = manager.get_plugins("testing")
+        if testing_plugins:
+            Console.display("-= Testing plugins =-")
+            for name, info in testing_plugins.iteritems():
+                Console.display("+ %s: %s" % (name, info.description))
+
+        # UI plugins...
+        ui_plugins = manager.get_plugins("ui")
+        if ui_plugins:
+            Console.display("\n-= UI plugins =-")
+            for name, info in ui_plugins.iteritems():
+                Console.display("+ %s: %s" % (name, info.description))
+
+        # Report plugins...
+        report_plugins = manager.get_plugins("report")
+        if ui_plugins:
+            Console.display("\n-= Report plugins =-")
+            for name, info in report_plugins.iteritems():
+                Console.display("+ %s: %s" % (name, info.description))
+
+        # Global plugins...
+        global_plugins = manager.get_plugins("global")
+        if global_plugins:
+            Console.display("\n-= Global plugins =-")
+            for name, info in global_plugins.iteritems():
+                Console.display("+ %s: %s" % (name, info.description))
 
         Console.display(" ")
         exit(0)
@@ -304,7 +319,7 @@ def main(args):
 
     if P.plugin_name:
 
-        # Load the plugins list
+        # Load the plugins list.
         try:
             manager = PriscillaPluginManager()
             manager.find_plugins(plugins_folder)
@@ -312,7 +327,7 @@ def main(args):
             Console.display("[!] Error loading plugins list: %s" % e.message)
             exit(1)
 
-        # Show the plugin information
+        # Show the plugin information.
         Console.level = Console.VERBOSE
         try:
             m_plugin_info = manager.get_plugin_by_name(P.plugin_name)
@@ -348,30 +363,11 @@ def main(args):
 
 
     #------------------------------------------------------------
-    # Use the --output and --output-formats defaults if needed.
-
-    if cmdParams.output_file and (
-        not cmdParams.output_formats or
-        cmdParams.output_formats == [GlobalParams.REPORT_FORMAT.screen]
-    ):
-        filename, ext = path.splitext(cmdParams.output_file)
-        ext = ext.lower()
-        if ext == ".txt":
-            cmdParams.output_formats = [GlobalParams.REPORT_FORMAT.text]
-        elif ext == ".grepable":
-            cmdParams.output_formats = [GlobalParams.REPORT_FORMAT.grepable]
-        elif ext in (".html", ".htm"):
-            cmdParams.output_formats = [GlobalParams.REPORT_FORMAT.html]
-        else:
-            parser.error("Can't guess the output format from that filename! Use '--output-format'.")
-        cmdParams.output_file = filename
-
-
-    #------------------------------------------------------------
     # Check if all options are correct
 
     try:
         cmdParams.check_params()
+        auditParams.check_params()
     except Exception, e:
         parser.error(e.message)
 
@@ -383,25 +379,26 @@ def main(args):
     try:
         from core.api.net.web_utils import detect_auth_method, check_auth
 
-        # Detect auth in URLs
+        # Detect auth in URLs.
         if 1 == 2:
-            for t in cmdParams.targets:
+            for t in auditParams.targets:
                 auth, realm = detect_auth_method(t)
                 if auth:
                     Console.display("[!] '%s' authentication is needed for '%s'. Specify using syntax: http://user:pass@target.com." % (auth, t))
                     exit(1)
 
-        # Detect auth in proxy, if specified
-        if cmdParams.proxy_addr:
-            if cmdParams.proxy_user:
-                check_auth(cmdParams.proxy_addr, cmdParams.proxy_user, cmdParams.proxy_pass)
+        # Detect auth in proxy, if specified.
+        if auditParams.proxy_addr:
+            if auditParams.proxy_user:
+                check_auth(auditParams.proxy_addr, auditParams.proxy_user, auditParams.proxy_pass)
             else:
-                auth, realm = detect_auth_method(cmdParams.proxy_addr)
+                auth, realm = detect_auth_method(auditParams.proxy_addr)
                 if auth:
                     Console.display("[!] Authentication is needed for '%s' proxy. Use '--proxy-user' and '--proxy-pass' to specify them." % cmdParams.proxy_addr)
                     exit(1)
 
-        launcher(cmdParams)
+        # Launch GoLismero.
+        launcher(cmdParams, auditParams)
 
     except KeyboardInterrupt:
         Console.display("GoLismero cancelled by the user at %s" % datetime.datetime.now())

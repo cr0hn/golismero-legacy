@@ -26,15 +26,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from .commonstructures import GlobalParams
 from .console import Console
 from ..api.config import Config
 from ..api.logger import Logger
+from ..common import OrchestratorConfig, AuditConfig
 from ..database.cachedb import PersistentNetworkCache, VolatileNetworkCache
 from ..managers.auditmanager import AuditManager
 from ..managers.priscillapluginmanager import PriscillaPluginManager
 from ..managers.uimanager import UIManager
-from ..managers.reportmanager import ReportManager
 from ..managers.rpcmanager import RPCManager, implementor
 from ..managers.processmanager import ProcessManager, Context
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
@@ -67,11 +66,22 @@ class Orchestrator (object):
         Start the orchestrator.
 
         :param config: configuration of orchestrator.
-        :type config: GlobalParams
+        :type config: OrchestratorConfig
         """
 
         # Configuration
         self.__config = config
+
+        # Set the color configuration
+        Console.use_colors = config.colorize
+
+        # Check the run mode
+        if config.run_mode == config.RUN_MODE.master:
+            raise NotImplementedError("Master mode not yet implemented!")
+        if config.run_mode == config.RUN_MODE.slave:
+            raise NotImplementedError("Slave mode not yet implemented!")
+        if config.run_mode != config.RUN_MODE.standalone:
+            raise ValueError("Invalid run mode: %r" % options.run_mode)
 
         # Incoming message queue
         if getattr(config, "max_process", 0) <= 0:
@@ -102,7 +112,7 @@ class Orchestrator (object):
         # Network cache
         if  self.__config.use_cache_db or (
             self.__config.use_cache_db is None and
-            self.__config.run_mode != GlobalParams.RUN_MODE.standalone):
+            self.__config.run_mode != OrchestratorConfig.RUN_MODE.standalone):
                 self.__cache = PersistentNetworkCache()
         else:
                 self.__cache = VolatileNetworkCache()
@@ -118,11 +128,10 @@ class Orchestrator (object):
         self.__auditManager = AuditManager(self, self.__config)
 
         # UI manager
-        if config.run_mode == GlobalParams.RUN_MODE.standalone:
+        if config.run_mode == OrchestratorConfig.RUN_MODE.standalone:
             self.__ui = UIManager(self, self.__config)
-
-        # Load report manager
-        self.__report_manager = ReportManager(self.__config)
+        else:
+            self.__ui = None
 
         # Signal handler to catch Ctrl-C
         self.__old_signal_action = signal(SIGINT, self.__signal_handler)
@@ -161,10 +170,6 @@ class Orchestrator (object):
     @property
     def uiManager(self):
         return self.__ui
-
-    @property
-    def reportManager(self):
-        return self.__report_manager
 
 
     #----------------------------------------------------------------------
@@ -244,7 +249,7 @@ class Orchestrator (object):
         Start a new audit.
 
         :param params: Audit settings
-        :type params: GlobalParams
+        :type params: AuditConfig
         """
         self.__auditManager.new_audit(params)
 
@@ -280,7 +285,8 @@ class Orchestrator (object):
             if self.__auditManager.dispatch_msg(message):
 
                 # If it wasn't dropped, send it to the UI plugins.
-                self.__ui.dispatch_msg(message)
+                if self.__ui is not None:
+                    self.__ui.dispatch_msg(message)
 
                 # The method now must return True because the message was sent.
                 return True
@@ -330,17 +336,18 @@ class Orchestrator (object):
 
 
     #----------------------------------------------------------------------
-    def run(self, start_audits = ()):
+    def run(self, *audits):
         """
         Message loop.
         """
         try:
 
             # Start the UI.
-            self.__ui.start()
+            if self.__ui is not None:
+                self.__ui.start()
 
             # If we have initial audits, start them.
-            for params in start_audits:
+            for params in audits:
                 self.add_audit(params)
 
             # Message loop.
@@ -348,7 +355,7 @@ class Orchestrator (object):
                 try:
 
                     # In standalone mode, if all audits have finished we have to stop.
-                    if  self.__config.run_mode == GlobalParams.RUN_MODE.standalone and \
+                    if  self.__config.run_mode == OrchestratorConfig.RUN_MODE.standalone and \
                         not self.__auditManager.has_audits():
                             m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                                         message_code = MessageCode.MSG_CONTROL_STOP,
@@ -376,7 +383,8 @@ class Orchestrator (object):
 
             # Stop the UI.
             try:
-                self.__ui.stop()
+                if self.__ui is not None:
+                    self.__ui.stop()
             except Exception:
                 print_exc()
 
@@ -408,9 +416,3 @@ class Orchestrator (object):
             self.cacheManager.close()
         except:
             pass
-
-
-    #----------------------------------------------------------------------
-    def generate_reports(self, results):
-        """Run report plugins"""
-        self.__report_manager.generate_reports(self.__config, results)
