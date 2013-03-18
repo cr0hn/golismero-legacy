@@ -151,12 +151,17 @@ class Singleton (object):
 
 
 #--------------------------------------------------------------------------
-class virtual(object):
-    def __new__(cls, fn):
-        cls = type(cls.__name__, (cls,), {"__doc__":fn.__doc__})
-        return object.__new__(cls)
-    def __call__(self, *argv, **argd):
-        raise NotImplementedError("Subclasses MUST implement this method!")
+def virtual(fn):
+    try:
+        fn._is_virtual = True
+    except AttributeError:
+        # this happens when combining with @staticmethod
+        # and may also happen in other weird situations
+        raise SyntaxError("Improper use of the @virtual decorator")
+    return fn
+
+def _is_virtual(fn):
+    return hasattr(fn, "_is_virtual")
 
 class _abstract_metaclass(type):
     def __init__(cls, name, bases, namespace):
@@ -167,10 +172,10 @@ class _abstract_metaclass(type):
                 if symbol.startswith("_"):
                     continue
                 parent = getattr(clazz, symbol)
-                if not isinstance(parent, virtual):
+                if not _is_virtual(parent):
                     continue
                 child = getattr(cls, symbol)
-                if not isinstance(child, virtual):
+                if not _is_virtual(child):
                     continue
                 found.add(symbol)
         if found:
