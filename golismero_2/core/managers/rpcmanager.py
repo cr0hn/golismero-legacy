@@ -73,7 +73,7 @@ def rpc_bulk(orchestrator, audit_name, rpc_code, *arguments):
         raise NotImplementedError("RPC code not implemented: %r" % rpc_code)
 
     # Prepare a partial function call to the implementor.
-    caller = partial(method, audit_name)
+    caller = partial(method, orchestrator, audit_name)
 
     # Use the built-in map() function to issue all the calls.
     # This ensures we support the exact same interface and functionality.

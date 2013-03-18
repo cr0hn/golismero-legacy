@@ -149,12 +149,29 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
-    def get_keys(self, data_type, data_subtype = None):
+    def get_many(self, identities):
+        """
+        Get an object given its identity hash.
+
+        :param identities: Identity hashes.
+        :type identities: list(str)
+
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
+        :type data_type: int
+
+        :returns: list(Data)
+        """
+        return Config._get_context().bulk_remote_call(
+            MessageCode.MSG_RPC_DATA_GET, identities)
+
+
+    #----------------------------------------------------------------------
+    def keys(self, data_type = None, data_subtype = None):
         """
         Get a list of identity hashes for all objects of the requested
         type, optionally filtering by subtype.
 
-        :param data_type: Data type. One of the Data.TYPE_* values.
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
         :type data_type: int
 
         :param data_subtype: Optional data subtype.
@@ -162,19 +179,34 @@ class Database(Singleton):
 
         :returns: set(str) -- Identity hashes.
         """
+        if data_type is None:
+            if data_subtype is not None:
+                raise NotImplementedError(
+                    "Can't filter by subtype for all types")
         return Config._get_context().remote_call(
-            MessageCode.MSG_RPC_DATA_GET_KEYS, data_type, data_subtype)
+            MessageCode.MSG_RPC_DATA_KEYS, data_type, data_subtype)
 
 
     #----------------------------------------------------------------------
-    def get_all_keys(self):
+    def count(self, data_type = None, data_subtype = None):
         """
-        Get a list of identity hashes for all objects.
+        Count all objects of the requested type,
+        optionally filtering by subtype.
+
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
+        :type data_type: int
+
+        :param data_subtype: Optional data subtype.
+        :type data_subtype: int | str
 
         :returns: set(str) -- Identity hashes.
         """
+        if data_type is None:
+            if data_subtype is not None:
+                raise NotImplementedError(
+                    "Can't filter by subtype for all types")
         return Config._get_context().remote_call(
-            MessageCode.MSG_RPC_DATA_GET_ALL_KEYS)
+            MessageCode.MSG_RPC_DATA_COUNT, data_type, data_subtype)
 
 
     #----------------------------------------------------------------------
@@ -191,14 +223,13 @@ class Database(Singleton):
 
         :returns: generator -- Generator of Data objects.
         """
-        for identity in self.get_keys(data_type, data_subtype):
+        for identity in self.keys(data_type, data_subtype):
             yield self.get(identity)
 
 
     #----------------------------------------------------------------------
     def __len__(self):
-        return Config._get_context().remote_call(
-            MessageCode.MSG_RPC_DATA_COUNT)
+        return self.count()
 
 
     #----------------------------------------------------------------------
@@ -217,5 +248,4 @@ class Database(Singleton):
 
         :returns: generator -- Generator of Data objects.
         """
-        for identity in self.get_all_keys():
-            yield self.get(identity)
+        return self.iterate()

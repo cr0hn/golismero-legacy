@@ -195,20 +195,16 @@ class Orchestrator (object):
     def rpc_datadb_get(self, audit_name, *argv, **argd):
         return self.auditManager.get_audit(audit_name).database.get(*argv, **argd)
 
-    @implementor(MessageCode.MSG_RPC_DATA_GET_KEYS)
-    def rpc_datadb_get_keys(self, audit_name, *argv, **argd):
-        return self.auditManager.get_audit(audit_name).database.get_keys(*argv, **argd)
-
-    @implementor(MessageCode.MSG_RPC_DATA_GET_ALL_KEYS)
-    def rpc_datadb_get_all_keys(self, audit_name, *argv, **argd):
-        return self.auditManager.get_audit(audit_name).database.get_all_keys(*argv, **argd)
+    @implementor(MessageCode.MSG_RPC_DATA_KEYS)
+    def rpc_datadb_keys(self, audit_name, *argv, **argd):
+        return self.auditManager.get_audit(audit_name).database.keys(*argv, **argd)
 
     @implementor(MessageCode.MSG_RPC_DATA_COUNT)
-    def rpc_datadb_count(self, audit_name):
-        return len(self.auditManager.get_audit(audit_name).database)
+    def rpc_datadb_count(self, audit_name, *argv, **argd):
+        return self.auditManager.get_audit(audit_name).database.count(*argv, **argd)
 
     @implementor(MessageCode.MSG_RPC_DATA_CHECK)
-    def rpc_datadb_count(self, audit_name, identity):
+    def rpc_datadb_check(self, audit_name, identity):
         return self.auditManager.get_audit(audit_name).database.has_key(identity)
 
 

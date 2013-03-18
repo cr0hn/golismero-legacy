@@ -113,13 +113,12 @@ class MessageCode(object):
     MSG_RPC_CACHE_REMOVE = 4
 
     # Database API
-    MSG_RPC_DATA_ADD          = 10
-    MSG_RPC_DATA_REMOVE       = 11
-    MSG_RPC_DATA_GET          = 12
-    MSG_RPC_DATA_GET_KEYS     = 13
-    MSG_RPC_DATA_GET_ALL_KEYS = 14
-    MSG_RPC_DATA_COUNT        = 15
-    MSG_RPC_DATA_CHECK        = 16
+    MSG_RPC_DATA_ADD     = 10
+    MSG_RPC_DATA_REMOVE  = 11
+    MSG_RPC_DATA_GET     = 12
+    MSG_RPC_DATA_KEYS    = 13
+    MSG_RPC_DATA_COUNT   = 15
+    MSG_RPC_DATA_CHECK   = 16
 
 
 #----------------------------------------------------------------------

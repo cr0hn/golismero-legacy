@@ -135,12 +135,12 @@ class BaseDataDB (BaseDB):
 
 
     #----------------------------------------------------------------------
-    def get_keys(self, data_type, data_subtype = None):
+    def keys(self, data_type = None, data_subtype = None):
         """
         Get a list of identity hashes for all objects of the requested
         type, optionally filtering by subtype.
 
-        :param data_type: Data type. One of the Data.TYPE_* values.
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
         :type data_type: int
 
         :param data_subtype: Optional data subtype.
@@ -152,9 +152,16 @@ class BaseDataDB (BaseDB):
 
 
     #----------------------------------------------------------------------
-    def get_all_keys(self):
+    def count(self, data_type = None, data_subtype = None):
         """
-        Get a list of identity hashes for all objects.
+        Count all objects of the requested type,
+        optionally filtering by subtype.
+
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
+        :type data_type: int
+
+        :param data_subtype: Optional data subtype.
+        :type data_subtype: int | str
 
         :returns: set(str) -- Identity hashes.
         """
@@ -163,12 +170,14 @@ class BaseDataDB (BaseDB):
 
     #----------------------------------------------------------------------
     def __len__(self):
-        raise NotImplementedError("Subclasses MUST implement this method!")
+        return self.count()
 
 
     #----------------------------------------------------------------------
     def __contains__(self, data):
-        raise NotImplementedError("Subclasses MUST implement this method!")
+        if not isinstance(data, Data):
+            raise TypeError("Expected Data, got %d instead" % type(data))
+        return self.has_key(data.identity)
 
 
     #----------------------------------------------------------------------
@@ -224,10 +233,16 @@ class DataMemoryDB (BaseDataDB):
 
 
     #----------------------------------------------------------------------
-    def get_keys(self, data_type, data_subtype = None):
+    def keys(self, data_type = None, data_subtype = None):
 
         # Ugly but (hopefully) efficient code follows.
 
+        if data_type is None:
+            if data_subtype is not None:
+                raise NotImplementedError(
+                    "Can't filter by subtype for all types")
+            return { identity
+                     for identity, data in self.__results.iteritems() }
         if data_subtype is None:
             return { identity
                      for identity, data in self.__results.iteritems()
@@ -248,12 +263,40 @@ class DataMemoryDB (BaseDataDB):
                      if data.data_type == data_type
                      and data.vulnerability_type == data_subtype }
         raise NotImplementedError(
-            "Unknown data type %r!" % data_type)
+            "Unknown data type: %r" % data_type)
 
 
     #----------------------------------------------------------------------
-    def get_all_keys(self):
-        return set(self.__results)
+    def count(self, data_type = None, data_subtype = None):
+
+        # Ugly but (hopefully) efficient code follows.
+
+        if data_type is None:
+            if data_subtype is not None:
+                raise NotImplementedError(
+                    "Can't filter by subtype for all types")
+            return len(self.__results)
+        if data_subtype is None:
+            return len({ identity
+                     for identity, data in self.__results.iteritems()
+                     if data.data_type == data_type })
+        if data_type == Data.TYPE_INFORMATION:
+            return len({ identity
+                     for identity, data in self.__results.iteritems()
+                     if data.data_type == data_type
+                     and data.information_type == data_subtype })
+        if data_type == Data.TYPE_RESOURCE:
+            return len({ identity
+                     for identity, data in self.__results.iteritems()
+                     if data.data_type == data_type
+                     and data.resource_type == data_subtype })
+        if data_type == Data.TYPE_VULNERABILITY:
+            return len({ identity
+                     for identity, data in self.__results.iteritems()
+                     if data.data_type == data_type
+                     and data.vulnerability_type == data_subtype })
+        raise NotImplementedError(
+            "Unknown data type: %r" % data_type)
 
 
     #----------------------------------------------------------------------
@@ -367,7 +410,7 @@ class DataFileDB (BaseDataDB):
 
     #----------------------------------------------------------------------
     @atomic
-    def get_keys(self, data_type, data_subtype = None):
+    def keys(self, data_type = None, data_subtype = None):
 
         # This code is ugly, but there's not that much
         # we can do when the dbm databases only support
@@ -375,11 +418,19 @@ class DataFileDB (BaseDataDB):
         # barely documented anyway. :(
 
         # Validate the data type.
-        if data_type not in (Data.TYPE_INFORMATION,
-                             Data.TYPE_RESOURCE,
-                             Data.TYPE_VULNERABILITY):
+        if data_type is None:
+            if data_subtype is not None:
+                raise NotImplementedError(
+                    "Can't filter by subtype for all types")
+        elif data_type not in (Data.TYPE_INFORMATION,
+                               Data.TYPE_RESOURCE,
+                               Data.TYPE_VULNERABILITY):
             raise NotImplementedError(
-                "Unknown data type %r!" % data_type)
+                "Unknown data type: %r" % data_type)
+
+        # Shortcut to get all identity hashes.
+        if data_type is None:
+            return set(self.__db)
 
         # Build a set of identity hashes.
         hashes = set()
@@ -391,7 +442,7 @@ class DataFileDB (BaseDataDB):
             data = self.__db[identity]
 
             # If the data type doesn't match, skip it.
-            if data.data_type != data_type:
+            if data_type is not None and data.data_type != data_type:
                 continue
 
             # If we need to filter by subtype...
@@ -420,9 +471,18 @@ class DataFileDB (BaseDataDB):
 
 
     #----------------------------------------------------------------------
-    @atomic
-    def get_all_keys(self):
-        return set(self.__db)
+    def count(self, data_type = None, data_subtype = None):
+        # not using @atomic here!
+
+        # Shortcut to get the total count.
+        if data_type is None:
+            if data_subtype is not None:
+                raise NotImplementedError(
+                    "Can't filter by subtype for all types")
+            return len(self)
+
+        # Count the requested elements.
+        return len(self.keys(data_type, data_subtype))
 
 
     #----------------------------------------------------------------------
@@ -673,7 +733,21 @@ class DataSQLiteDB (BaseDataDB):
 
     #----------------------------------------------------------------------
     @transactional
-    def get_keys(self, data_type, data_subtype = None):
+    def keys(self, data_type = None, data_subtype = None):
+
+        # Get all the keys.
+        if data_type is None:
+            if data_subtype is not None:
+                raise NotImplementedError(
+                    "Can't filter by subtype for all types")
+            hashes = set()
+            for table in ("information", "resource", "vulnerability"):
+                query  = "SELECT identity FROM %s;" % table
+                self.__cursor.execute(query)
+                hashes.update( row[0] for row in self.__cursor.fetchall() )
+            return hashes
+
+        # Get keys filtered by type and subtype.
         if   data_type == Data.TYPE_INFORMATION:
             table = "information"
         elif data_type == Data.TYPE_RESOURCE:
@@ -695,13 +769,37 @@ class DataSQLiteDB (BaseDataDB):
 
     #----------------------------------------------------------------------
     @transactional
-    def get_all_keys(self):
-        hashes = set()
-        for table in ("information", "resource", "vulnerability"):
-            query  = "SELECT identity FROM %s;" % table
-            self.__cursor.execute(query)
-            hashes.update( row[0] for row in self.__cursor.fetchall() )
-        return hashes
+    def count(self, data_type = None, data_subtype = None):
+
+        # Count all the keys.
+        if data_type is None:
+            if data_subtype is not None:
+                raise NotImplementedError(
+                    "Can't filter by subtype for all types")
+            count = 0
+            for table in ("information", "resource", "vulnerability"):
+                self.__cursor.execute("SELECT COUNT(rowid) FROM %s;" % table)
+                count += int(self.__cursor.fetchone()[0])
+            return count
+
+        # Count keys filtered by type and subtype.
+        if   data_type == Data.TYPE_INFORMATION:
+            table = "information"
+        elif data_type == Data.TYPE_RESOURCE:
+            table = "resource"
+        elif data_type == Data.TYPE_VULNERABILITY:
+            table = "vulnerability"
+        else:
+            raise NotImplementedError(
+                "Unknown data type %r!" % data_type)
+        if data_subtype is None:
+            query  = "SELECT COUNT(rowid) FROM %s;" % table
+            values = ()
+        else:
+            query  = "SELECT COUNT(rowid) FROM %s WHERE type = ?;" % table
+            values = (data_subtype)
+        self.__cursor.execute(query, values)
+        return int(self.__cursor.fetchone()[0])
 
 
     #----------------------------------------------------------------------
