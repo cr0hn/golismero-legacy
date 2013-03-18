@@ -400,6 +400,8 @@ class Context (object):
         """
         Make asynchronous remote procedure calls on the orchestrator.
 
+        There's no return value, since we're not waiting for a response.
+
         :param rpc_code: RPC code
         :type rpc_code: int
         """
@@ -407,6 +409,48 @@ class Context (object):
         self.send_msg(message_type = MessageType.MSG_TYPE_RPC,
                       message_code = rpc_code,
                       message_info = (None, argv, argd))
+
+
+    #----------------------------------------------------------------------
+    def bulk_remote_call(self, rpc_code, *arguments):
+        """
+        Make synchronous bulk remote procedure calls on the orchestrator.
+
+        The interface and behavior mimics that of the built-in map() function.
+        For more details see: http://docs.python.org/2/library/functions.html#map
+
+        :param rpc_code: RPC code
+        :type rpc_code: int
+
+        :returns: list -- List contents depend on the call.
+        """
+
+        # Convert all the iterables to tuples to make sure they're serializable.
+        arguments = tuple( tuple(x) for x in arguments )
+
+        # Send the MSG_RPC_BULK call and return the response.
+        return self.remote_call(MessageCode.MSG_RPC_BULK, rpc_code, *arguments)
+
+
+    #----------------------------------------------------------------------
+    def async_bulk_remote_call(self, rpc_code, *arguments):
+        """
+        Make asynchronous bulk remote procedure calls on the orchestrator.
+
+        The interface and behavior mimics that of the built-in map() function.
+        For more details see: http://docs.python.org/2/library/functions.html#map
+
+        There's no return value, since we're not waiting for a response.
+
+        :param rpc_code: RPC code
+        :type rpc_code: int
+        """
+
+        # Convert all the iterables to tuples to make sure they're serializable.
+        arguments = tuple( tuple(x) for x in arguments )
+
+        # Send the MSG_RPC_BULK call.
+        self.async_remote_call(MessageCode.MSG_RPC_BULK, rpc_code, *arguments)
 
 
 #------------------------------------------------------------------------------

@@ -39,21 +39,39 @@ import traceback
 
 
 #------------------------------------------------------------------------------
+# Decorator to automatically register RPC implementors at import time.
+
+# Global map of RPC codes to implementors.
+rpcMap = {}
+
 def implementor(rpc_code):
     """
-    RPC implementor classmethod.
+    RPC implementation function.
     """
     return partial(_add_implementor, rpc_code)
 
 def _add_implementor(rpc_code, fn):
     """
-    RPC implementor classmethod.
+    RPC implementation function.
     """
     rpcMap[rpc_code] = fn
-    return fn
+    # TODO: use introspection to validate the function signature
+    return fn  # no function wrapping is needed :)
 
-# Global map of RPC codes to implementors
-rpcMap = {}
+
+#------------------------------------------------------------------------------
+# Implementor for the special MSG_RPC_BULK code for bulk RPC calls.
+
+@implementor(MessageCode.MSG_RPC_BULK)
+def rpc_bulk(orchestrator, audit_name, rpc_code, *arguments):
+
+    # Prepare a partial function call to the internal RPC executor.
+    caller = partial(orchestrator.rpcManager._internal_rpc_execute,
+                     audit_name, rpc_code)
+
+    # Use the built-in map() function to issue all the calls.
+    # This ensures we support the exact same interface and functionality.
+    return map(caller, *arguments)
 
 
 #------------------------------------------------------------------------------
@@ -108,29 +126,25 @@ class RPCManager (object):
         """
         try:
             internal_error = False
+
+            # Make the function call and get the response.
+            # On error catch the exception and prepare it for sending.
             success = True
-
-            # Get the implementor for the RPC code.
             try:
-                method = self.__rpcMap[rpc_code]
-            except KeyError:
-                raise NotImplementedError("RPC code not implemented: %i" % rpc_code)
-
-            # Call the implementor and get the response (or the exception).
-            try:
-                response = method(self.__orchestrator, audit_name, *argv, **argd)
+                success, response = self._internal_execute_rpc(
+                                        audit_name, rpc_code, argv, argd)
             except Exception:
                 success  = False
                 response = self.__prepare_exception(*sys.exc_info())
 
-        # Catch any errors and send them back to the plugin.
+        # Catch any internal errors as well and prepare them for sending.
         except:
             internal_error = True
             success = False
             exc_type, exc_value, exc_traceback = sys.exc_info()
             response = self.__prepare_exception(exc_type, exc_value, exc_traceback)
 
-        # If the call was synchronous, send the response back to the plugin.
+        # If the call was synchronous, send the response/error back to the plugin.
         if response_queue:
             response_queue.put_nowait( (success, response) )
 
@@ -139,13 +153,68 @@ class RPCManager (object):
             raise exc_type, exc_value
 
 
+    def _internal_execute_rpc(self, audit_name, rpc_code, argv, argd):
+        """
+        Make the actual RPC call and return the response value instead
+        of sending it back through a response queue.
+
+        Called by execute_rpc() and rpc_bulk().
+
+        :param audit_name: Name of the audit requesting the call.
+        :type audit_name: str
+
+        :param rpc_code: RPC code.
+        :type rpc_code: int
+
+        :param argv: Positional arguments to the call.
+        :type argv: tuple
+
+        :param argd: Keyword arguments to the call.
+        :type argd: dict
+
+        :returns: Return value from the RPC call. The caller is
+            responsible for sending the response back to the plugin.
+        :raises: Exception -- Any exception raised by the RPC call
+            is thrown back to the caller, who is responsible for
+            catching the exception and sending it back to the plugin.
+        """
+
+        # Get the implementor for the RPC code.
+        try:
+            method = self.__rpcMap[rpc_code]
+        except KeyError:
+            raise NotImplementedError("RPC code not implemented: %i" % rpc_code)
+
+        # Call the implementor and return the response.
+        # Exceptions raised by the implementor are thrown up to the caller.
+        return method(self.__orchestrator, audit_name, *argv, **argd)
+
+
     #----------------------------------------------------------------------
     @staticmethod
     def __prepare_exception(exc_type, exc_value, exc_traceback):
+        """
+        Prepare an exception for sending back to the plugins.
+
+        :param exc_type: Exception type.
+        :type exc_type: class
+
+        :param exc_value: Exception value.
+        :type exc_value:
+
+        :returns: tuple(class, object, str) -- Exception type, exception value
+            and formatted traceback. The exception value may be formatted too
+            and the exception type replaced by Exception if it's not possible
+            to serialize them for sending.
+        """
         exc_type, exc_value, exc_traceback = sys.exc_info()
         try:
             pickle.dumps(exc_value)
         except Exception:
             exc_value = traceback.format_exception_only(exc_type, exc_value)
+        try:
+            pickle.dumps(exc_type)
+        except Exception:
+            exc_type = Exception
         exc_traceback = traceback.extract_tb(exc_traceback)
         return exc_type, exc_value, exc_traceback

@@ -46,7 +46,7 @@ class Message (object):
 
     #----------------------------------------------------------------------
     def __init__(self, message_type = MessageType.MSG_TYPE_DATA,
-                       message_code = MessageCode.MSG_CONTROL_ACK,
+                       message_code = MessageCode.MSG_DATA_NEW,
                        message_info = None,
                          audit_name = None,
                            priority = MessagePriority.MSG_PRIORITY_MEDIUM):

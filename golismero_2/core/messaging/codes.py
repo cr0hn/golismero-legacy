@@ -65,6 +65,13 @@ class MessageCode(object):
 
 
     #----------------------------------------------------------------------
+    # Data message codes
+    #----------------------------------------------------------------------
+
+    MSG_DATA_NEW = 0
+
+
+    #----------------------------------------------------------------------
     # Control message codes
     #----------------------------------------------------------------------
 
@@ -96,20 +103,23 @@ class MessageCode(object):
     # RPC message codes
     #----------------------------------------------------------------------
 
+    # Bulk requests
+    MSG_RPC_BULK = 0
+
     # Cache API
-    MSG_RPC_CACHE_GET    = 100
-    MSG_RPC_CACHE_SET    = 101
-    MSG_RPC_CACHE_CHECK  = 102
-    MSG_RPC_CACHE_REMOVE = 103
+    MSG_RPC_CACHE_GET    = 1
+    MSG_RPC_CACHE_SET    = 2
+    MSG_RPC_CACHE_CHECK  = 3
+    MSG_RPC_CACHE_REMOVE = 4
 
     # Database API
-    MSG_RPC_DATA_ADD          = 110
-    MSG_RPC_DATA_REMOVE       = 111
-    MSG_RPC_DATA_GET          = 112
-    MSG_RPC_DATA_GET_KEYS     = 113
-    MSG_RPC_DATA_GET_ALL_KEYS = 114
-    MSG_RPC_DATA_COUNT        = 115
-    MSG_RPC_DATA_CHECK        = 116
+    MSG_RPC_DATA_ADD          = 10
+    MSG_RPC_DATA_REMOVE       = 11
+    MSG_RPC_DATA_GET          = 12
+    MSG_RPC_DATA_GET_KEYS     = 13
+    MSG_RPC_DATA_GET_ALL_KEYS = 14
+    MSG_RPC_DATA_COUNT        = 15
+    MSG_RPC_DATA_CHECK        = 16
 
 
 #----------------------------------------------------------------------
