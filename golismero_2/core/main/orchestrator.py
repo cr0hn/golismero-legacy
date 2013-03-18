@@ -175,14 +175,6 @@ class Orchestrator (object):
     #----------------------------------------------------------------------
     # RPC implementors for the database API.
 
-    #MSG_RPC_DATA_ADD          = 110
-    #MSG_RPC_DATA_REMOVE       = 111
-    #MSG_RPC_DATA_GET          = 112
-    #MSG_RPC_DATA_GET_KEYS     = 113
-    #MSG_RPC_DATA_GET_ALL_KEYS = 114
-    #MSG_RPC_DATA_COUNT        = 115
-    #MSG_RPC_DATA_CHECK        = 116
-
     @implementor(MessageCode.MSG_RPC_DATA_ADD)
     def rpc_datadb_add(self, audit_name, *argv, **argd):
         return self.auditManager.get_audit(audit_name).database.add(*argv, **argd)
