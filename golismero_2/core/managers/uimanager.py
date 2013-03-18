@@ -29,7 +29,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["UIManager"]
 
 from .priscillapluginmanager import PriscillaPluginManager
-from ..common import GlobalParams
 from ..messaging.codes import MessageType, MessageCode
 from ..messaging.message import Message
 from ..messaging.notifier import UINotifier
@@ -51,7 +50,7 @@ class UIManager (object):
         :type orchestrator: Orchestrator
 
         :param config: Configuration for audit
-        :type config: GlobalParams
+        :type config: AuditConfig
         """
 
         # Keep a reference to the orchestrator
@@ -72,12 +71,22 @@ class UIManager (object):
 
 
     #----------------------------------------------------------------------
-    def run(self):
+    def start(self):
         """
-        Launch the UI.
+        Send the UI start message.
         """
         message = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                           message_code = MessageCode.MSG_CONTROL_START_UI)
+        self.__orchestrator.dispatch_msg(message)
+
+
+    #----------------------------------------------------------------------
+    def stop(self):
+        """
+        Send the UI stop message.
+        """
+        message = Message(message_type = MessageType.MSG_TYPE_CONTROL,
+                          message_code = MessageCode.MSG_CONTROL_STOP_UI)
         self.__orchestrator.dispatch_msg(message)
 
 
@@ -109,11 +118,3 @@ class UIManager (object):
         message = Message(message_type = MessageType.MSG_TYPE_DATA,
                           message_info = information)
         self.__orchestrator.dispatch_msg(message)
-
-
-    #----------------------------------------------------------------------
-    def stop(self):
-        """
-        Stop UI plugins
-        """
-        pass

@@ -1,0 +1,10 @@
+[Core]
+Name = Bruteforce URL discovery
+Module = bruteforce.py
+
+[Documentation]
+Description = Tries to discover URLs not linked anywhere in the page using a brute force approach.
+Author = Daniel Garcia Garcia (cr0hn)
+Version = 0.1
+Website = http://code.google.com/p/golismero/
+

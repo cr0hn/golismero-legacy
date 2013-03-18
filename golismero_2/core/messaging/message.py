@@ -30,12 +30,10 @@ __all__ = ["Message"]
 
 from .codes import *
 
-from functools import total_ordering
 from time import time
 
 
 #------------------------------------------------------------------------------
-@total_ordering
 class Message (object):
     """
     Messages send information, vulnerabilities, resources and internal control
@@ -47,22 +45,11 @@ class Message (object):
 
 
     #----------------------------------------------------------------------
-    # Message priorities
-
-    MSG_PRIORITY_HIGH   = 0
-    MSG_PRIORITY_MEDIUM = 1
-    MSG_PRIORITY_LOW    = 2
-
-    MSG_PRIORITY_FIRST = MSG_PRIORITY_HIGH
-    MSG_PRIORITY_LAST  = MSG_PRIORITY_LOW
-
-
-    #----------------------------------------------------------------------
     def __init__(self, message_type = MessageType.MSG_TYPE_DATA,
-                       message_code = 0,
+                       message_code = MessageCode.MSG_DATA_NEW,
                        message_info = None,
                          audit_name = None,
-                           priority = 1):
+                           priority = MessagePriority.MSG_PRIORITY_MEDIUM):
         """
         :param message_type: specifies the type of message.
         :type mesage_type: int -- specified in a constant of Message class.
@@ -83,7 +70,7 @@ class Message (object):
         # Validate the arguments
         if type(message_type) != int:
             raise TypeError("Expected int, got %s instead" % type(message_type))
-        if not message_type in MSG_CODES:
+        if message_type not in MSG_CODES:
             raise ValueError("Invalid message type: %d" % message_type)
         if message_type != MessageType.MSG_TYPE_DATA and type(message_code) != int:
             raise TypeError("Expected int, got %s instead" % type(message_code))
@@ -94,7 +81,7 @@ class Message (object):
             raise TypeError("Expected int, got %s instead" % type(audit_name))
         if type(priority) != int:
             raise TypeError("Expected int, got %s instead" % type(priority))
-        if not self.MSG_PRIORITY_FIRST <= priority <= self.MSG_PRIORITY_LAST:
+        if priority not in MSG_PRIORITIES:
             raise ValueError("Invalid priority level: %d" % priority)
 
         # Build the message object
@@ -135,14 +122,6 @@ class Message (object):
     def is_ack(self):
         return (self.message_type == MessageType.MSG_TYPE_CONTROL and
                 self.message_code == MessageCode.MSG_CONTROL_ACK)
-
-
-    #----------------------------------------------------------------------
-    def __lt__(self, other):
-
-        # Sort by priority, then by timestamp, then ACKs go last.
-        return (  self.priority,  self.timestamp,  int(not  self.is_ack)) < \
-               ( other.priority, other.timestamp,  int(not other.is_ack))
 
 
     #----------------------------------------------------------------------

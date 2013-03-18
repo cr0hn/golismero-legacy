@@ -28,9 +28,69 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Console"]
 
-from sys import stdout, stderr
+from ..api.logger import Logger
+
+# do not use the "from sys import" form, or coloring won't work on Windows
+import sys
+
+from colorizer import colored
 
 
+#----------------------------------------------------------------------
+# Map of colors
+m_colors = {
+
+    # String log levels to color names
+    'info': 'green',
+    'low': 'cyan',
+    'middle': 'white',
+    'high' :'red',
+    'critical' : 'yellow',
+
+    # Integer log levels to color names
+    0: 'green',
+    1: 'cyan',
+    2: 'magenta',
+    3: 'red',
+    4: 'yellow',
+
+    # Color names mapped to themselves
+    'green': 'green',
+    'cyan': 'cyan',
+    'magenta': 'magenta',
+    'red': 'red',
+    'yellow': 'yellow',
+}
+
+
+#----------------------------------------------------------------------
+def colorize(text, level_or_color):
+    """
+    Colorize a text depends of type of alert:
+    - Information
+    - Low
+    - Middle
+    - Hight
+    - Critical
+
+    :param text: text to colorize.
+    :type text: int with level (0-4) or string with values: info, low, middle, high, critical.
+
+    :param level: color selected, by level.
+    :type level: str or integer (0-4).
+
+    :param color: indicates if output must be colorized or not.
+    :type color: bool.
+
+    :returns: str -- string with information to print.
+    """
+    if Console.use_colors:
+        return colored(text, m_colors[level_or_color])
+    else:
+        return text
+
+
+#----------------------------------------------------------------------
 class Console (object):
     """
     Console I/O wrapper.
@@ -38,34 +98,18 @@ class Console (object):
 
 
     #----------------------------------------------------------------------
-    #
     # Verbose levels
-    #
-    #----------------------------------------------------------------------
-    DISABLED     = 0
-    STANDARD     = 1
-    VERBOSE      = 2
-    MORE_VERBOSE = 3
 
-    _f_out   = stdout
-    _f_error = stderr
-    _level   = STANDARD
+    DISABLED     = Logger.DISABLED
+    STANDARD     = Logger.STANDARD
+    VERBOSE      = Logger.VERBOSE
+    MORE_VERBOSE = Logger.MORE_VERBOSE
 
+    # Current verbose level
+    level = STANDARD
 
-    #----------------------------------------------------------------------
-    @classmethod
-    def configure(cls, ConsoleOut   = None,
-                       ConsoleError = None,
-                       ConsoleLevel = None):
-
-        if ConsoleOut is not None:
-            cls._f_out   = ConsoleOut
-
-        if ConsoleError is not None:
-            cls._f_error = ConsoleError
-
-        if ConsoleLevel is not None:
-            cls._level   = ConsoleLevel
+    # Use colors?
+    use_colors = True
 
 
     #----------------------------------------------------------------------
@@ -79,8 +123,8 @@ class Console (object):
         """
         try:
             if message:
-                cls._f_out.write("%s\n" % message)
-                cls._f_out.flush()
+                sys.stdout.write("%s\n" % message)
+                sys.stdout.flush()
         except Exception,e:
             print "[!] Error while writing to output onsole: %s" % e.message
 
@@ -94,7 +138,7 @@ class Console (object):
         :param message: message to write
         :type message: str
         """
-        if  cls._level != cls.DISABLED:
+        if  cls.level >= cls.STANDARD:
             cls._display(message)
 
 
@@ -107,7 +151,7 @@ class Console (object):
         :param message: message to write
         :type message: str
         """
-        if cls._level >= cls.VERBOSE:
+        if cls.level >= cls.VERBOSE:
             cls._display(message)
 
 
@@ -120,7 +164,7 @@ class Console (object):
         :param message: message to write
         :type message: str
         """
-        if cls._level >= cls.MORE_VERBOSE:
+        if cls.level >= cls.MORE_VERBOSE:
             cls._display(message)
 
 
@@ -135,9 +179,8 @@ class Console (object):
         """
         try:
             if message:
-
-                cls._f_error.write("%s\n" % message)
-                cls._f_error.flush()
+                sys.stderr.write("%s\n" % message)
+                sys.stderr.flush()
         except Exception,e:
             print "[!] Error while writing to error console: %s" % e.message
 
@@ -151,7 +194,7 @@ class Console (object):
         :param message: message to write
         :type message: str
         """
-        if cls._level != cls.DISABLED:
+        if cls.level >= cls.STANDARD:
             cls._display_error(message)
 
 
@@ -164,7 +207,7 @@ class Console (object):
         :param message: message to write
         :type message: str
         """
-        if cls._level >= cls.VERBOSE:
+        if cls.level >= cls.VERBOSE:
             cls._display_error(message)
 
 
@@ -177,5 +220,5 @@ class Console (object):
         :param message: message to write
         :type message: str
         """
-        if cls._level >= cls.MORE_VERBOSE:
+        if cls.level >= cls.MORE_VERBOSE:
             cls._display_error(message)

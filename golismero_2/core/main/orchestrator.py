@@ -26,26 +26,24 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from .commonstructures import GlobalParams
 from .console import Console
 from ..api.config import Config
 from ..api.logger import Logger
+from ..common import OrchestratorConfig, AuditConfig
 from ..database.cachedb import PersistentNetworkCache, VolatileNetworkCache
 from ..managers.auditmanager import AuditManager
 from ..managers.priscillapluginmanager import PriscillaPluginManager
 from ..managers.uimanager import UIManager
-from ..managers.reportmanager import ReportManager
 from ..managers.rpcmanager import RPCManager, implementor
 from ..managers.processmanager import ProcessManager, Context
-from ..messaging.codes import MessageType, MessageCode
+from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 
 from os import getpid
 from time import sleep
-from traceback import format_exc
+from traceback import format_exc, print_exc
 from signal import signal, SIGINT, SIG_DFL
 from multiprocessing import Manager
-from Queue import PriorityQueue
 
 __all__ = ["Orchestrator"]
 
@@ -55,6 +53,12 @@ class Orchestrator (object):
     Orchestrator is the core (or kernel) of GoLismero.
     """
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.close()
+
 
     #----------------------------------------------------------------------
     def __init__(self, config):
@@ -62,34 +66,45 @@ class Orchestrator (object):
         Start the orchestrator.
 
         :param config: configuration of orchestrator.
-        :type config: GlobalParams
+        :type config: OrchestratorConfig
         """
 
         # Configuration
         self.__config = config
 
+        # Set the color configuration
+        Console.use_colors = config.colorize
+
+        # Check the run mode
+        if config.run_mode == config.RUN_MODE.master:
+            raise NotImplementedError("Master mode not yet implemented!")
+        if config.run_mode == config.RUN_MODE.slave:
+            raise NotImplementedError("Slave mode not yet implemented!")
+        if config.run_mode != config.RUN_MODE.standalone:
+            raise ValueError("Invalid run mode: %r" % options.run_mode)
+
         # Incoming message queue
         if getattr(config, "max_process", 0) <= 0:
-            self.__queue = PriorityQueue(maxsize = 0)
+            from Queue import Queue
+            self.__queue = Queue(maxsize = 0)
         else:
             self.__queue_manager = Manager()
             self.__queue = self.__queue_manager.Queue()
 
-        # Orchestrator context
+        # Set the Orchestrator context
         self.__context = Context( orchestrator_pid = getpid(),
                                          msg_queue = self.__queue,
                                       audit_config = self.__config )
         Config._set_context(self.__context)
 
+        # Within the Orchestrator process, keep a static reference to it
+        Context._orchestrator = self
+
         # Load the plugins
         self.__pluginManager = PriscillaPluginManager()
         success, failure = self.__pluginManager.find_plugins(self.__config.plugins_folder)
-        Logger.log_more_verbose("Found %d plugins" % len(success))
-        if failure:
-            Logger.log_error("Failed to load %d plugins" % len(failure))
-            if Logger.check_level(Logger.VERBOSE):
-                for plugin_name in failure:
-                    Logger.log_error_verbose("\t%s" % plugin_name)
+        if not success:
+            raise RuntimeError("Failed to find any plugins!")
         self.__pluginManager.load_plugins(self.__config.enabled_plugins,
                                           self.__config.disabled_plugins,
                                           category = "all")
@@ -97,7 +112,7 @@ class Orchestrator (object):
         # Network cache
         if  self.__config.use_cache_db or (
             self.__config.use_cache_db is None and
-            self.__config.run_mode != GlobalParams.RUN_MODE.standalone):
+            self.__config.run_mode != OrchestratorConfig.RUN_MODE.standalone):
                 self.__cache = PersistentNetworkCache()
         else:
                 self.__cache = VolatileNetworkCache()
@@ -113,14 +128,20 @@ class Orchestrator (object):
         self.__auditManager = AuditManager(self, self.__config)
 
         # UI manager
-        if config.run_mode == GlobalParams.RUN_MODE.standalone:
+        if config.run_mode == OrchestratorConfig.RUN_MODE.standalone:
             self.__ui = UIManager(self, self.__config)
-
-        # Load report manager
-        self.__report_manager = ReportManager(self.__config)
+        else:
+            self.__ui = None
 
         # Signal handler to catch Ctrl-C
         self.__old_signal_action = signal(SIGINT, self.__signal_handler)
+
+        # Log the plugins that failed to load
+        Logger.log_more_verbose("Found %d plugins" % len(success))
+        if failure:
+            Logger.log_error("Failed to load %d plugins" % len(failure))
+            for plugin_name in failure:
+                Logger.log_error_verbose("\t%s" % plugin_name)
 
 
     #----------------------------------------------------------------------
@@ -150,21 +171,9 @@ class Orchestrator (object):
     def uiManager(self):
         return self.__ui
 
-    @property
-    def reportManager(self):
-        return self.__report_manager
-
 
     #----------------------------------------------------------------------
     # RPC implementors for the database API.
-
-    #MSG_RPC_DATA_ADD          = 110
-    #MSG_RPC_DATA_REMOVE       = 111
-    #MSG_RPC_DATA_GET          = 112
-    #MSG_RPC_DATA_GET_KEYS     = 113
-    #MSG_RPC_DATA_GET_ALL_KEYS = 114
-    #MSG_RPC_DATA_COUNT        = 115
-    #MSG_RPC_DATA_CHECK        = 116
 
     @implementor(MessageCode.MSG_RPC_DATA_ADD)
     def rpc_datadb_add(self, audit_name, *argv, **argd):
@@ -178,20 +187,16 @@ class Orchestrator (object):
     def rpc_datadb_get(self, audit_name, *argv, **argd):
         return self.auditManager.get_audit(audit_name).database.get(*argv, **argd)
 
-    @implementor(MessageCode.MSG_RPC_DATA_GET_KEYS)
-    def rpc_datadb_get_keys(self, audit_name, *argv, **argd):
-        return self.auditManager.get_audit(audit_name).database.get_keys(*argv, **argd)
-
-    @implementor(MessageCode.MSG_RPC_DATA_GET_ALL_KEYS)
-    def rpc_datadb_get_all_keys(self, audit_name, *argv, **argd):
-        return self.auditManager.get_audit(audit_name).database.get_all_keys(*argv, **argd)
+    @implementor(MessageCode.MSG_RPC_DATA_KEYS)
+    def rpc_datadb_keys(self, audit_name, *argv, **argd):
+        return self.auditManager.get_audit(audit_name).database.keys(*argv, **argd)
 
     @implementor(MessageCode.MSG_RPC_DATA_COUNT)
-    def rpc_datadb_count(self, audit_name):
-        return len(self.auditManager.get_audit(audit_name).database)
+    def rpc_datadb_count(self, audit_name, *argv, **argd):
+        return self.auditManager.get_audit(audit_name).database.count(*argv, **argd)
 
     @implementor(MessageCode.MSG_RPC_DATA_CHECK)
-    def rpc_datadb_count(self, audit_name, identity):
+    def rpc_datadb_check(self, audit_name, identity):
         return self.auditManager.get_audit(audit_name).database.has_key(identity)
 
 
@@ -203,15 +208,18 @@ class Orchestrator (object):
 
         try:
 
+            # Tell the user the message has been sent.
+            Console.display("User cancel requested, stopping all audits...")
+
             # Send a stop message to the Orchestrator.
             message = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                               message_code = MessageCode.MSG_CONTROL_STOP,
                               message_info = False,
-                                  priority = Message.MSG_PRIORITY_HIGH)
-            self.__queue.put_nowait(message)
-
-            # Tell the user the message has been sent.
-            Console.display("User cancel requested, stopping all audits...")
+                                  priority = MessagePriority.MSG_PRIORITY_HIGH)
+            try:
+                self.__queue.put_nowait(message)
+            except Exception:
+                exit(1)
 
         finally:
 
@@ -229,7 +237,7 @@ class Orchestrator (object):
         Start a new audit.
 
         :param params: Audit settings
-        :type params: GlobalParams
+        :type params: AuditConfig
         """
         self.__auditManager.new_audit(params)
 
@@ -265,7 +273,8 @@ class Orchestrator (object):
             if self.__auditManager.dispatch_msg(message):
 
                 # If it wasn't dropped, send it to the UI plugins.
-                self.__ui.dispatch_msg(message)
+                if self.__ui is not None:
+                    self.__ui.dispatch_msg(message)
 
                 # The method now must return True because the message was sent.
                 return True
@@ -315,19 +324,26 @@ class Orchestrator (object):
 
 
     #----------------------------------------------------------------------
-    def msg_loop(self):
+    def run(self, *audits):
         """
         Message loop.
         """
-
         try:
+
+            # Start the UI.
+            if self.__ui is not None:
+                self.__ui.start()
+
+            # If we have initial audits, start them.
+            for params in audits:
+                self.add_audit(params)
 
             # Message loop.
             while True:
                 try:
 
                     # In standalone mode, if all audits have finished we have to stop.
-                    if  self.__config.run_mode == GlobalParams.RUN_MODE.standalone and \
+                    if  self.__config.run_mode == OrchestratorConfig.RUN_MODE.standalone and \
                         not self.__auditManager.has_audits():
                             m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                                         message_code = MessageCode.MSG_CONTROL_STOP,
@@ -335,7 +351,11 @@ class Orchestrator (object):
                             self.dispatch_msg(m)
 
                     # Wait for a message to arrive.
-                    message = self.__queue.get()
+                    try:
+                        message = self.__queue.get()
+                    except Exception:
+                        # If this fails, kill the Orchestrator.
+                        exit(1)
                     if not isinstance(message, Message):
                         raise TypeError("Expected Message, got %s" % type(message))
 
@@ -348,25 +368,39 @@ class Orchestrator (object):
                     Logger.log_error("Error processing message!\n%s" % format_exc())
 
         finally:
+
+            # Stop the UI.
             try:
-
-                # Stop the UI.
-                self.__ui.stop()
-
-            finally:
-
-                # Stop the process manager.
-                self.__processManager.stop()
+                if self.__ui is not None:
+                    self.__ui.stop()
+            except Exception:
+                print_exc()
 
 
     #----------------------------------------------------------------------
-    def start_ui(self):
-        """Start UI"""
+    def close(self):
+        """
+        Release all resources held by the Orchestrator.
+        """
 
-        # init UI Manager
-        self.__ui.run()
+        # Stop the process manager.
+        try:
+            self.processManager.stop()
+        except:
+            pass
 
-    #----------------------------------------------------------------------
-    def generate_reports(self, results):
-        """Run report plugins"""
-        self.__report_manager.generate_reports(self.__config, results)
+        # Stop the audit manager.
+        try:
+            self.auditManager.close()
+        except:
+            pass
+
+        # Compact and close the cache database.
+        try:
+            self.cacheManager.compact()
+        except:
+            pass
+        try:
+            self.cacheManager.close()
+        except:
+            pass

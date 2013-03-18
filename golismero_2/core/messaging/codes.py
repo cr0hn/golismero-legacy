@@ -26,8 +26,21 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["MessageType", "MessageCode",
-           "MSG_TYPES", "MSG_CODES", "MSG_RPC_CODES", "MSG_CONTROL_CODES"]
+__all__ = ["MessageType", "MessageCode", "MessagePriority",
+           "MSG_PRIORITIES", "MSG_TYPES",
+           "MSG_CODES", "MSG_RPC_CODES", "MSG_CONTROL_CODES"]
+
+
+#----------------------------------------------------------------------
+#
+# Message priorities
+#
+#----------------------------------------------------------------------
+
+class MessagePriority(object):
+    MSG_PRIORITY_HIGH   = 0
+    MSG_PRIORITY_MEDIUM = 1
+    MSG_PRIORITY_LOW    = 2
 
 
 #----------------------------------------------------------------------
@@ -52,16 +65,24 @@ class MessageCode(object):
 
 
     #----------------------------------------------------------------------
+    # Data message codes
+    #----------------------------------------------------------------------
+
+    MSG_DATA_NEW = 0
+
+
+    #----------------------------------------------------------------------
     # Control message codes
     #----------------------------------------------------------------------
 
     # Global control
     MSG_CONTROL_ACK       = 0
     MSG_CONTROL_ERROR     = 1
-    MSG_CONTROL_START     = 2
-    MSG_CONTROL_STOP      = 3
-    #MSG_CONTROL_PAUSE    = 4
-    #MSG_CONTROL_CONTINUE = 5
+    MSG_CONTROL_LOG       = 2
+    MSG_CONTROL_START     = 3
+    MSG_CONTROL_STOP      = 4
+    #MSG_CONTROL_PAUSE    = 5
+    #MSG_CONTROL_CONTINUE = 6
 
     # Audit control
     MSG_CONTROL_START_AUDIT     = 10
@@ -70,30 +91,34 @@ class MessageCode(object):
     #MSG_CONTROL_CONTINUE_AUDIT = 13
 
     # UI subsystem
-    MSG_CONTROL_START_UI    = 20
-    MSG_CONTROL_STOP_UI     = 21
-    MSG_CONTROL_LOG_MESSAGE = 22
-    MSG_CONTROL_LOG_ERROR   = 23
+    MSG_CONTROL_START_UI = 20
+    MSG_CONTROL_STOP_UI  = 21
+
+    # Logging and reporting
+    MSG_CONTROL_START_REPORT = 30
+    #MSG_CONTROL_CANCEL_REPORT = 31
 
 
     #----------------------------------------------------------------------
     # RPC message codes
     #----------------------------------------------------------------------
 
+    # Bulk requests
+    MSG_RPC_BULK = 0
+
     # Cache API
-    MSG_RPC_CACHE_GET    = 100
-    MSG_RPC_CACHE_SET    = 101
-    MSG_RPC_CACHE_CHECK  = 102
-    MSG_RPC_CACHE_REMOVE = 103
+    MSG_RPC_CACHE_GET    = 1
+    MSG_RPC_CACHE_SET    = 2
+    MSG_RPC_CACHE_CHECK  = 3
+    MSG_RPC_CACHE_REMOVE = 4
 
     # Database API
-    MSG_RPC_DATA_ADD          = 110
-    MSG_RPC_DATA_REMOVE       = 111
-    MSG_RPC_DATA_GET          = 112
-    MSG_RPC_DATA_GET_KEYS     = 113
-    MSG_RPC_DATA_GET_ALL_KEYS = 114
-    MSG_RPC_DATA_COUNT        = 115
-    MSG_RPC_DATA_CHECK        = 116
+    MSG_RPC_DATA_ADD     = 10
+    MSG_RPC_DATA_REMOVE  = 11
+    MSG_RPC_DATA_GET     = 12
+    MSG_RPC_DATA_KEYS    = 13
+    MSG_RPC_DATA_COUNT   = 15
+    MSG_RPC_DATA_CHECK   = 16
 
 
 #----------------------------------------------------------------------
@@ -102,7 +127,10 @@ class MessageCode(object):
 #
 #----------------------------------------------------------------------
 
-MSG_TYPES = {getattr(MessageCode, x) for x in dir(MessageCode) if x.startswith("MSG_TYPE_")}
+MSG_PRIORITIES = {getattr(MessagePriority, x) for x in dir(MessagePriority) if x.startswith("MSG_")}
+
+MSG_TYPES = {getattr(MessageType, x) for x in dir(MessageType) if x.startswith("MSG_")}
+
 MSG_CODES = {getattr(MessageCode, x) for x in dir(MessageCode) if x.startswith("MSG_")}
 
 MSG_RPC_CODES     = {getattr(MessageCode, x) for x in dir(MessageCode) if x.startswith("MSG_RPC_")}

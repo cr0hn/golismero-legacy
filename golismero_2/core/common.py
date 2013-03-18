@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = [
     "get_user_settings_folder",
     "Singleton", "enum", "decorator", "pickle",
-    "ConfigFileParseError", "GlobalParams"
+    "OrchestratorConfig", "AuditConfig"
 ]
 
 try:
@@ -40,6 +40,7 @@ except ImportError:
 # Lazy import
 json_decode = None
 
+from keyword import iskeyword
 from os import path
 
 import os
@@ -149,195 +150,96 @@ class Singleton (object):
 
 
 #--------------------------------------------------------------------------
-#
-# AUDIT CONFIGURATION
-#
-#--------------------------------------------------------------------------
-class ConfigFileParseError (RuntimeError):
-    pass
-
-# The logic in this class is always:
-# - Checking options without fixing them is done in check_params().
-# - Sanitizing (fixing) options is done in setters.
-# - For each source, there's a "from_*" method. They add to the
-#   current options rather than overwriting them completely.
-#   This allows options to be read from multiple sources.
-class GlobalParams (object):
+class Configuration (object):
     """
-    Global parameters for the program.
+    Generic configuration class.
     """
 
-    # Run modes
-    RUN_MODE = enum('standalone', 'master', 'slave')
+    #----------------------------------------------------------------------
+    # The logic in configuration classes is always:
+    # - Checking options without fixing them is done in check_params().
+    # - Sanitizing (fixing) options is done in parsers or in property setters.
+    # - For each source, there's a "from_*" method. They add to the
+    #   current options rather than overwriting them completely.
+    #   This allows options to be read from multiple sources.
 
-    # User interface
-    USER_INTERFACE = enum('console')
+    #----------------------------------------------------------------------
+    # Here's where subclasses define the options.
+    #
+    # It's a list of tuples of the following format:
+    #
+    #   ( name, parser, default )
+    #
+    # Where "name" is the option name, "parser" is an optional
+    # callback to parse the input values, and "default" is an
+    # optional default value.
+    #
+    # If no parser is given, the values are preserved when set.
+    #
+    # Example:
+    #    class MySettings(Configuration):
+    #        _settings_  = {
+    #            "verbose": (int, 0), # A complete definition.
+    #            "output_file": str,  # Omitting the default value (None is used).
+    #            "data": None,        # Omitting the parser too.
+    #        }
+    #
+    _settings_ = {}
 
-    # Report formats
-    REPORT_FORMAT = enum('screen', 'text', 'grepable', 'html')
+
+    #----------------------------------------------------------------------
+    # Some helper parsers.
+
+    @staticmethod
+    def string(x):
+        return str(x) if x is not None else None
+
+    @staticmethod
+    def trinary(x):
+        if x not in (None, True, False):
+            raise SyntaxError("Trinary values only accept True, False and None")
+        return x
 
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """Constructor."""
-
-        #
-        # Main options
-        #
-
-        # Targets
-        self.targets = []
-
-        # Run mode
-        self.run_mode = "standalone"
-
-        # UI mode
-        self.user_interface = "console"
-
-        # Set verbosity level
-        self.verbose = 1
-
-        # Colorize console?
-        self.colorize = True
-
-        #
-        # Report options
-        #
-        self.output_file = None
-        self.output_formats = ["screen"]
-
-
-        #
-        # Audit options
-        #
-
-        # Audit name
-        self.audit_name = ""
-
-        # Audit database
-        self.audit_db = "memory://"
-
-        # Maximum number of processes to execute plugins
-        self.max_process = 10
-
-        #
-        # Plugins options
-        #
-
-        # Enabled plugins
-        self.enabled_plugins = ["all"]
-
-        # Disabled plugins
-        self.disabled_plugins = []
-
-        # Plugins folder
-        self.plugins_folder = None
-
-        #
-        # Networks options
-        #
-
-        # Maximum number of connection, by host
-        self.max_connections = 50
-
-        # Include subdomains?
-        self.include_subdomains = True
-
-        # Subdomains as regex expresion
-        self.subdomain_regex = ""
-
-        # Depth level for spider
-        self.depth = 0
-
-        # Follow redirects
-        self.follow_redirects = False
-
-        # Follow only first redirect
-        self.follow_first_redirect = True
-
-        # Proxy options
-        self.proxy_addr = None
-        self.proxy_user = None
-        self.proxy_pass = None
-
-        # Cookie
-        self.cookie = None
-
-        # Use persistent cache?
-        # True: yes
-        # False: no
-        # None: default for current run mode
-        self.use_cache_db = None
+        history = set()
+        for name, definition in self._settings_.iteritems():
+            if name in history:
+                raise SyntaxError("Duplicated option name: %r" % name)
+            history.add(name)
+            if type(definition) not in (tuple, list):
+                definition = (definition, None)
+            self.__init_option(name, *definition)
 
 
     #----------------------------------------------------------------------
-    def __set_targets(self, targets):
-        # Fix target URLs if the scheme part is missing
-        self.__targets = [(x if x.startswith("http://") else "http://" + x) for x in targets]
-    def __get_targets(self):
-        return self.__targets
-    targets = property(__get_targets, __set_targets)
+    def __init_option(self, name, parser = None, default = None):
+        if name.endswith("_") or not name.replace("_", "").isalnum():
+            msg = "Option name %r is not a valid Python identifier"
+            raise SyntaxError(msg % name)
+        if iskeyword(name):
+            msg = "Option name %r is a Python reserved keyword"
+            raise SyntaxError(msg % name)
+        if name.startswith("__"):
+            msg = "Option name %r is a private Python identifier"
+            raise SyntaxError(msg % name)
+        if name.startswith("_"):
+            msg = "Option name %r is a protected Python identifier"
+            raise SyntaxError(msg % name)
+        setattr(self, name, default)
 
 
     #----------------------------------------------------------------------
-    def __set_run_mode(self, run_mode):
-        run_mode = run_mode.strip().lower()
-        if not run_mode in self.RUN_MODE._values:
-            raise ValueError("Invalid run mode: %s" % run_mode)
-        self.__run_mode = getattr(self.RUN_MODE, run_mode)
-    def __get_run_mode(self):
-        return self.__run_mode
-    run_mode = property(__get_run_mode, __set_run_mode)
-
-
-    #----------------------------------------------------------------------
-    def __set_user_interface(self, user_interface):
-        user_interface = user_interface.strip().lower()
-        if not user_interface in self.USER_INTERFACE._values:
-            raise ValueError("Invalid user interface mode: %s" % user_interface)
-        self.__user_interface = getattr(self.USER_INTERFACE, user_interface)
-    def __get_user_interface(self):
-        return self.__user_interface
-    user_interface = property(__get_user_interface, __set_user_interface)
-
-
-    #----------------------------------------------------------------------
-    def __set_output_formats(self, output_formats):
-        if output_formats:
-            try:
-                output_formats = [getattr(self.REPORT_FORMAT, fmt.strip().lower())
-                                  for fmt in output_formats]
-            except AttributeError:
-                raise ValueError("Invalid output format: %s" % fmt)
-        else:
-            output_formats = []
-        self.__output_formats = output_formats
-    def __get_output_formats(self):
-        return self.__output_formats
-    output_formats = property(__get_output_formats, __set_output_formats)
-
-
-    #----------------------------------------------------------------------
-    def __set_cookie(self, cookie):
-        if cookie:
-            # Parse the cookies argument
-            try:
-                # Prepare cookie
-                m_cookie = self.cookie.replace(" ", "").replace("=", ":")
-                # Remove 'Cookie:' start, if exits
-                m_cookie = m_cookie[len("Cookie:"):] if m_cookie.startswith("Cookie:") else m_cookie
-                # Split
-                m_cookie = m_cookie.split(";")
-                # Parse
-                self.cookie = { c.split(":")[0]:c.split(":")[1] for c in m_cookie}
-            except ValueError:
-                raise ValueError("Invalid cookie format specified. Use this format: 'Key=value; key=value'.")
-        else:
-            cookie = None
-        self.__cookie = cookie
-    def __get_cookie(self):
-        return self.__cookie
-    cookie = property(__get_cookie, __set_cookie)
+    def __setattr__(self, name, value):
+        if not name.startswith("_"):
+            definition = self._settings_.get(name, (None, None))
+            if type(definition) not in (tuple, list):
+                definition = (definition, None)
+            parser = definition[0]
+            if parser is not None:
+                value = parser(value)
+        object.__setattr__(self, name, value)
 
 
     #----------------------------------------------------------------------
@@ -349,37 +251,7 @@ class GlobalParams (object):
 
         :raises: ValueError
         """
-
-        # Validate the network connections limit
-        if self.max_connections < 1:
-            raise ValueError("Number of connections must be greater than 0, got %i." % params.max_connections)
-
-        # Validate the number of concurrent processes
-        if self.max_process < 0:
-            raise ValueError("Number of processes cannot be a negative number, got %i." % params.max_process)
-
-        # Validate the list of targets
-        if not self.targets:
-            raise ValueError("No targets selected for execution.")
-
-        # Validate the list of plugins
-        if not self.enabled_plugins:
-            raise ValueError("No plugins selected for execution.")
-        if set(self.enabled_plugins).intersection(self.disabled_plugins):
-            raise ValueError("Conflicting plugins selection, aborting execution.")
-
-        # Validate the regular expresion
-        if self.subdomain_regex:
-            from re import compile, error
-
-            try:
-                compile(self.subdomain_regex)
-            except error, e:
-                raise ValueError("Regular expression not valid: %s." % e.message)
-
-        # Validate the output options
-        if not self.output_file and self.REPORT_FORMAT.screen not in self.output_formats:
-            raise ValueError("Output format specified, but no output file!")
+        return
 
 
     #----------------------------------------------------------------------
@@ -390,101 +262,25 @@ class GlobalParams (object):
         :param args: Settings.
         :type args: dict
         """
-
-        #
-        # Main options
-        #
-
-        # Get the run mode
-        self.run_mode = args.get("run_mode", self.run_mode)
-
-        # Get the user interface mode
-        self.user_interface = args.get("user_interface", self.user_interface)
-
-        # Get the list of targets
-        self.targets = args.get("targets", self.targets)
-
-        # Set verbosity level
-        self.verbose = args.get("verbose", self.verbose)
-
-        # Colorize console?
-        self.colorize = args.get("colorize", self.colorize)
-
-        #
-        # Report options
-        #
-        self.output_file = args.get("output_file", self.output_file)
-        self.output_formats = args.get("output_formats", self.output_formats)
-
-        #
-        # Plugins options
-        #
-
-        # Get the list of enabled plugins
-        self.enabled_plugins = args.get("enabled_plugins", self.enabled_plugins)
-        self.disabled_plugins = args.get("disabled_plugins", self.disabled_plugins)
-
-        # Get the plugins folder
-        self.plugins_folder = args.get("plugins_folder", self.plugins_folder)
-
-        #
-        # Audit options
-        #
-
-        # Get the name of the audit
-        self.audit_name = args.get("audit_name", self.audit_name)
-
-        # Audit database
-        self.audit_db = args.get("audit_db", self.audit_db)
-
-        # Maximum number of processes to execute plugins
-        self.max_process = args.get("max_process", self.max_process)
-
-        #
-        # Network options
-        #
-
-        # Maximum number of connection, by host
-        self.max_connections = args.get("max_connections", self.max_connections)
-
-        # Include subdomains?
-        self.include_subdomains = args.get("include_subdomains", self.include_subdomains)
-
-        # Subdomains as regex expresion
-        self.subdomain_regex = args.get("subdomain_regex", self.subdomain_regex)
-
-        # Depth level for spider
-        self.depth = args.get("depth", self.depth)
-
-        # Follow redirects
-        self.follow_redirects = args.get("follow_redirects", self.follow_redirects)
-
-        # Follow only first redirect
-        self.follow_first_redirect = args.get("follow_first_redirect", self.follow_first_redirect)
-
-        # Proxy options
-        self.proxy_addr = args.get("proxy_addr", self.proxy_addr)
-        self.proxy_user = args.get("proxy_user", self.proxy_user)
-        self.proxy_pass = args.get("proxy_pass", self.proxy_pass)
-
-        # Cookie
-        self.cookie = args.get("cookie", self.cookie)
-
-        # Use persistent cache?
-        self.use_cache_db = args.get("use_cache_db", self.use_cache_db)
+        for name, value in args.iteritems():
+            if name in self._settings_:
+                setattr(self, name, value)
 
 
     #----------------------------------------------------------------------
-    def from_cmdline(self, args):
+    def from_object(self, args):
         """
-        Get the settings from the command line arguments.
+        Get the settings from the attributes of a Python object.
 
-        :param args: Command line arguments parsed by argparse.
+        :param args: Python object, for example the command line arguments parsed by argparse.
         :type args: object
         """
 
-        # Converts the argparse result into a dictionary and parses it.
-        self.from_dictionary(dict( (k, getattr(args, k)) for k in dir(args) if not k.startswith("_") ))
+        # Builds a dictionary with the object's public attributes.
+        args = { k : getattr(args, k) for k in dir(args) if not k.startswith("_") }
+
+        # Extract the settings from the dictionary.
+        self.from_dictionary(args)
 
 
     #----------------------------------------------------------------------
@@ -510,241 +306,265 @@ class GlobalParams (object):
                     # Built-in module since Python 2.6, very very slow!
                     import json.loads as json_decode
 
-        # Converts the JSON into a dictionary and parses it.
+        # Converts the JSON data into a dictionary.
         args = json_decode(json_raw_data)
         if not isinstance(args, dict):
             raise TypeError("Invalid JSON data")
+
+        # Extract the settings from the dictionary.
         self.from_dictionary(args)
 
 
+#----------------------------------------------------------------------
+#
+# Global options parser
+#
+#----------------------------------------------------------------------
+
+class OrchestratorConfig (Configuration):
+    """
+    Orchestator configuration object.
+    """
+
+    # Run modes
+    RUN_MODE = enum('standalone', 'master', 'slave')
+
+
     #----------------------------------------------------------------------
-    def from_file(self, filename, file_history = None):
-        """
-        Get the settings from a configuration file.
+    # The options definitions:
+    #
+    _settings_ = {
 
-        :param filename: Configuration file name.
-        :type filename: str
-        """
+        #
+        # Main options
+        #
 
-        # Get the absolute pathname
-        filename = path.abspath(filename)
+        # Run mode
+        "run_mode": (str, "standalone"),
 
-        # Keep track of included files history
-        if file_history is None:
-            file_history = [filename]
+        # Verbosity level
+        "verbose": (int, 1),
 
-        # Keep track of duplicated options
-        opt_history = set()
+        # Colorize console?
+        "colorize": (bool, True),
 
-        # Regular expression to split the command and the arguments
-        regexp = re.compile(r'(\S+)\s+(.*)')
+        #
+        # Plugins options
+        #
 
-        # Open the config file
-        with open(filename, 'rU') as fd:
-            number = 0
-            while 1:
+        # Enabled plugins
+        "enabled_plugins": (list, ["global", "testing", "report", "ui/console"]),
 
-                # Read a line
-                line = fd.readline()
-                if not line: break
-                number += 1
+        # Disabled plugins
+        "disabled_plugins": (list, ["all"]),
 
-                # Strip the extra whitespace
-                line = line.strip()
+        # Plugins folder
+        "plugins_folder": Configuration.string,
 
-                # If it's a comment line or a blank line, discard it
-                if not line or line.startswith('#'):
-                    continue
+        # Maximum number of processes to execute plugins
+        "max_process": (int, 10),
 
-                # Split the option and its arguments
-                match = regexp.match(line)
-                if not match:
-                    msg = "cannot parse line %d of config file %s"
-                    msg = msg % (number, filename)
-                    raise ConfigFileParseError(msg)
-                key, value = match.groups()
+        #
+        # Networks options
+        #
 
-                # Populate the list of targets
-                if key == "target":
-                    if value and value not in self.targets:
-                        self.targets.append(value)
+        # Maximum number of connections per host
+        "max_connections": (int, 50),
 
-                # Enable a plugin
-                elif key == "enable":
-                    if value.lower() == "all":
-                        self.enabled_plugins  = ["all"]
-                        self.disabled_plugins = []
-                    elif "all" not in self.enabled_plugins:
-                        self.enabled_plugins.append(value)
-                        if value in self.disabled_plugins:
-                            self.disabled_plugins.remove(value)
+        # Use persistent cache?
+        # True: yes
+        # False: no
+        # None: default for current run mode
+        "use_cache_db": Configuration.trinary,
+    }
 
-                # Disable a plugin
-                elif key == "disable":
-                    if value.lower() == "all":
-                        self.enabled_plugins  = []
-                        self.disabled_plugins = ["all"]
-                    elif "all" not in self.disabled_plugins:
-                        self.disabled_plugins.append(value)
-                        if value in self.enabled_plugins:
-                            self.enabled_plugins.remove(value)
 
-                # Include other config files
-                elif key == "include":
-                    if value in file_history:
-                        found_loop = file_history[ file_history.index(filename) : ]
-                        found_loop.append(value)
-                        msg = "error parsing line %d of config file %s\ncircular includes in config files:\n\t%s\n"
-                        msg %= (number, filename, ",\n\t".join(found_loop))
-                        raise ConfigFileParseError(msg)
-                    file_history.append(value)
-                    self.from_file(value, file_history)      # recursive function call here!
+    #----------------------------------------------------------------------
 
-                else:
+    @property
+    def run_mode(self):
+        return self._run_mode
 
-                    # Warn about duplicated options
-                    if key in opt_history:
-                        print "Warning: duplicated option %s in line %d" \
-                              " of config file %s" % (key, number, filename)
-                        print
-                    else:
-                        opt_history.add(key)
+    @run_mode.setter
+    def run_mode(self, run_mode):
+        run_mode = run_mode.strip().lower()
+        if not run_mode in self.RUN_MODE._values:
+            raise ValueError("Invalid run mode: %s" % run_mode)
+        self._run_mode = getattr(self.RUN_MODE, run_mode)
 
-                    try:
 
-                        # Get the run mode
-                        if key == "run_mode":
-                            self.run_mode = getattr(self.RUN_MODE,
-                                                    value.lower())
+    #----------------------------------------------------------------------
+    def check_params(self):
 
-                        # Get verbosity level
-                        elif key == "verbose":
-                            self.verbose = int(value)
+        # Validate the network connections limit
+        if self.max_connections < 1:
+            raise ValueError("Number of connections must be greater than 0, got %i." % params.max_connections)
 
-                        # Colorize console?
-                        elif key == "colorize":
-                            self.colorize = self._parse_boolean(value)
+        # Validate the number of concurrent processes
+        if self.max_process < 0:
+            raise ValueError("Number of processes cannot be a negative number, got %i." % params.max_process)
 
-                        # Report base filename
-                        elif key == "output_file":
-                            self.output_file = value
+        # Validate the list of plugins
+        if not self.enabled_plugins:
+            raise ValueError("No plugins selected for execution.")
+        if set(self.enabled_plugins).intersection(self.disabled_plugins):
+            raise ValueError("Conflicting plugins selection, aborting execution.")
 
-                        # Report formats
-                        elif key == "output_formats":
-                            output_formats = self._parse_list(value)
-                            self.output_formats = []
-                            for token in output_formats:
-                                token = token.lower()
-                                if token in self.output_formats:
-                                    continue
-                                if token not in ('text', 'grepable', 'html'):
-                                    msg = "invalid output_formats at line %d of config file %s"
-                                    msg = msg % (number, filename)
-                                    raise ConfigFileParseError(msg)
-                                self.output_formats.append(token)
 
-                        # Get the absolute list of enabled plugins
-                        elif key == "plugins":
-                            plugins = self._parse_list(value)
-                            if "all" in (x.strip().lower() for x in plugins):
-                                plugins = ["all"]
-                            self.enabled_plugins = plugins
-                            self.disabled_plugins = []
+#----------------------------------------------------------------------
+#
+# Audit options parser
+#
+#----------------------------------------------------------------------
 
-                        # Get the plugins folder
-                        elif key == "plugins_folder":
-                            self.plugins_folder = value
+class AuditConfig (Configuration):
+    """
+    Audit configuration object.
+    """
 
-                        # Get the name of the audit
-                        elif key == "audit_name":
-                            self.audit_name = value
 
-                        # Audit database
-                        elif key == "audit_db":
-                            self.audit_db = value
+    #----------------------------------------------------------------------
+    # The options definitions:
+    #
+    _settings_ = {
 
-                        # Maximum number of processes to execute plugins
-                        elif key == "max_process":
-                            self.max_process = int(value)
+        #
+        # Main options
+        #
 
-                        # Maximum number of connection, by host
-                        elif key == "max_connections":
-                            self.max_connections = int(value)
+        # Targets
+        "targets": (list, []),
 
-                        # Include subdomains?
-                        elif key == "include_subdomains":
-                            self.include_subdomains = self._parse_boolean(value)
+        #
+        # Report options
+        #
+        "reports": (list, []),
 
-                        # Subdomains as regex expresion
-                        elif key == "subdomain_regex":
-                            self.subdomain_regex = value
+        #
+        # Audit options
+        #
 
-                        # Depth level for spider
-                        elif key == "depth":
-                            self.depth = int(value)
+        # Audit name
+        "audit_name": Configuration.string,
 
-                        # Follow redirects
-                        elif key == "follow_redirects":
-                            self.follow_redirects = self._parse_boolean(value)
+        # Audit database
+        "audit_db": (None, "memory://"),
 
-                        # Follow only first redirect
-                        elif key == "follow_first_redirect":
-                            self.follow_first_redirect = self._parse_boolean(value)
+        #
+        # Plugins options
+        #
 
-                        # Proxy options
-                        elif key == "proxy_addr":
-                            self.proxy_addr = value
-                        elif key == "proxy_user":
-                            self.proxy_user = value
-                        elif key == "proxy_pass":
-                            self.proxy_pass = value
+        # Enabled plugins
+        "enabled_plugins": (list, ["testing", "report"]),
 
-                        # Cookie
-                        elif key == "cookie":
-                            self.cookie = value
+        # Disabled plugins
+        "disabled_plugins": (list, ["all"]),
 
-                        # Use persistent cache?
-                        elif key == "use_cache_db":
-                            self.use_cache_db = self._parse_trinary(value)
+        #
+        # Networks options
+        #
 
-                        # Unknown option
-                        else:
-                            msg = ("unknown option %r in line %d"
-                                   " of config file %s") % (key, number, config)
-                            raise ConfigFileParseError(msg)
+        # Include subdomains?
+        "include_subdomains": (bool, True),
 
-                    # On error raise an exception
-                    except ConfigFileParseError:
-                        raise
-                    except Exception:
-                        msg = "invalid value for %r at line %d of config file %s"
-                        msg = msg % (key, number, filename)
-                        raise ConfigFileParseError(msg)
+        # Subdomains as regular expression
+        "subdomain_regex": Configuration.string,
 
-    def _parse_list(self, value):
-        tokens = set()
-        for token in value.lower().split(','):
-            token = token.strip()
-            tokens.add(token)
-        return tokens
+        # Depth level for spider
+        "depth": (int, 0),
 
-    def _parse_boolean(self, value):
-        value = value.strip().lower()
-        if value == 'true' or value == 'yes' or value == 'y':
-            return True
-        if value == 'false' or value == 'no' or value == 'n':
-            return False
-        return bool(int(value))
+        # Follow redirects
+        "follow_redirects": (bool, True),
 
-    def _parse_trinary(self, value):
-        value = value.strip().lower()
-        if not value or value == 'none' or value == 'default' or value == '?':
-            return None
-        if value == 'true' or value == 'yes' or value == 'y':
-            return True
-        if value == 'false' or value == 'no' or value == 'n':
-            return False
-        value = int(value)
-        if value < 0:
-            return None
-        return value > 0
+        # Follow only first redirect
+        "follow_first_redirect": (bool, True),
+
+        # Proxy options
+        "proxy_addr": Configuration.string,
+        "proxy_user": Configuration.string,
+        "proxy_pass": Configuration.string,
+
+        # Cookie
+        "cookie": Configuration.string,
+    }
+
+
+    #----------------------------------------------------------------------
+
+    @property
+    def targets(self):
+        return self._targets
+
+    @targets.setter
+    def targets(self, targets):
+        # Always append, never overwrite
+        # Fix target URLs if the scheme part is missing
+        self._targets = getattr(self, "_targets", [])
+        if targets:
+            self._targets.extend(
+                (x if x.startswith("http://") else "http://" + x)
+                for x in targets)
+
+
+    #----------------------------------------------------------------------
+
+    @property
+    def reports(self):
+        return self._reports
+
+    @reports.setter
+    def reports(self, reports):
+        # Always append, never overwrite
+        self._reports = getattr(self, "_reports", [])
+        if reports:
+            self._reports.extend(
+                (str(x) if x is not None else None) for x in reports)
+
+
+    #----------------------------------------------------------------------
+
+    @property
+    def cookie(self):
+        return self._cookie
+
+    @cookie.setter
+    def cookie(self, cookie):
+        if cookie:
+            # Parse the cookies argument
+            try:
+                # Prepare cookie
+                m_cookie = cookie.replace(" ", "").replace("=", ":")
+                # Remove 'Cookie:' start, if exits
+                m_cookie = m_cookie[len("Cookie:"):] if m_cookie.startswith("Cookie:") else m_cookie
+                # Split
+                m_cookie = m_cookie.split(";")
+                # Parse
+                self.cookie = { c.split(":")[0]:c.split(":")[1] for c in m_cookie}
+            except ValueError:
+                raise ValueError("Invalid cookie format specified. Use this format: 'Key=value; key=value'.")
+        else:
+            cookie = None
+        self._cookie = cookie
+
+
+    #----------------------------------------------------------------------
+    def check_params(self):
+
+        # Validate the list of targets
+        if not self.targets:
+            raise ValueError("No targets selected for execution.")
+
+        # Validate the list of plugins
+        if not self.enabled_plugins:
+            raise ValueError("No plugins selected for execution.")
+        if set(self.enabled_plugins).intersection(self.disabled_plugins):
+            raise ValueError("Conflicting plugins selection, aborting execution.")
+
+        # Validate the regular expresion
+        if self.subdomain_regex:
+            from re import compile, error
+
+            try:
+                compile(self.subdomain_regex)
+            except error, e:
+                raise ValueError("Regular expression not valid: %s." % e.message)

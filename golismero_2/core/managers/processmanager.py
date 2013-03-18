@@ -31,8 +31,7 @@ __all__ = ["ProcessManager", "Context"]
 from ..api.config import Config
 from ..api.logger import Logger
 from ..api.net.cache import NetworkCache
-from ..common import GlobalParams
-from ..messaging.codes import MessageType, MessageCode
+from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 
 from imp import load_source
@@ -135,11 +134,6 @@ def bootstrap(context, func, argv, argd):
     try:
         try:
             try:
-                # Get the verbosity
-                verbose = context.audit_config.verbose
-
-                # Set the logger verbosity
-                Logger.set_level(verbose)
 
                 # Configure the plugin
                 Config._set_context(context)
@@ -186,25 +180,15 @@ def bootstrap(context, func, argv, argd):
                         try:
                             instance.send_info(data)
                         except Exception, e:
-                            if verbose >= Logger.STANDARD:
-                                if verbose >= Logger.MORE_VERBOSE:
-                                    text = "%s\n%s" % (e.message, format_exc())
-                                else:
-                                    text = e.message
-                                context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                                 message_code = MessageCode.MSG_CONTROL_ERROR,
-                                                 message_info = text)
+                            context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                                             message_code = MessageCode.MSG_CONTROL_ERROR,
+                                             message_info = (e.message, format_exc()))
 
             # Tell the Orchestrator there's been an error
             except Exception, e:
-                if verbose >= Logger.STANDARD:
-                    if verbose >= Logger.MORE_VERBOSE:
-                        text = "%s\n%s" % (e.message, format_exc())
-                    else:
-                        text = e.message
-                    context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                     message_code = MessageCode.MSG_CONTROL_ERROR,
-                                     message_info = text)
+                context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                                 message_code = MessageCode.MSG_CONTROL_ERROR,
+                                 message_info = (e.message, format_exc()))
 
         # No matter what happens, send back an ACK
         finally:
@@ -218,6 +202,8 @@ def bootstrap(context, func, argv, argd):
             context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                              message_code = MessageCode.MSG_CONTROL_STOP,
                              message_info = False)
+        except SystemExit:
+            raise
         except:
             try:
                 print_exc()
@@ -295,7 +281,7 @@ class Context (object):
 
     @property
     def audit_config(self):
-        "GlobalParams -- Parameters of the audit."
+        "AuditConfig -- Parameters of the audit."
         return self.__audit_config
 
 
@@ -305,13 +291,15 @@ class Context (object):
         Send ACK messages from the plugins to the orchestrator.
         """
         self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                      message_code = MessageCode.MSG_CONTROL_ACK)
+                      message_code = MessageCode.MSG_CONTROL_ACK,
+                      priority = MessagePriority.MSG_PRIORITY_LOW)
 
 
     #----------------------------------------------------------------------
     def send_msg(self, message_type = MessageType.MSG_TYPE_DATA,
                        message_code = 0,
-                       message_info = None):
+                       message_info = None,
+                       priority = MessagePriority.MSG_PRIORITY_MEDIUM):
         """
         Send messages from the plugins to the orchestrator.
 
@@ -330,17 +318,18 @@ class Context (object):
         # calls using messages, because we'd deadlock
         # against ourselves, since the producer and
         # the consumer would be the same process.
-        if  message_type == MessageType.MSG_TYPE_RPC and \
-                                        self.__orchestrator_pid == getpid():
-            self._orchestrator.rpcManager.execute_rpc(
+        if message_type == MessageType.MSG_TYPE_RPC and \
+           self.__orchestrator_pid == getpid():
+                self._orchestrator.rpcManager.execute_rpc(
                             self.audit_name, message_code, *message_info)
-            return
+                return
 
         # Send the raw message.
         message = Message(message_type = message_type,
                           message_code = message_code,
                           message_info = message_info,
-                            audit_name = self.audit_name)
+                            audit_name = self.audit_name,
+                              priority = priority)
         self.send_raw_msg(message)
 
 
@@ -352,6 +341,15 @@ class Context (object):
         :param message: Message to send
         :type message: Message
         """
+
+        # Hack for urgent messages: if we're in the same process
+        # as the Orchestrator, skip the queue and dispatch them now.
+        if message.priority >= MessagePriority.MSG_PRIORITY_HIGH and \
+           self.__orchestrator_pid == getpid():
+                self._orchestrator.dispatch_msg(message)
+                return
+
+        # Put the message in the queue.
         try:
             self.msg_queue.put_nowait(message)
 
@@ -402,6 +400,8 @@ class Context (object):
         """
         Make asynchronous remote procedure calls on the orchestrator.
 
+        There's no return value, since we're not waiting for a response.
+
         :param rpc_code: RPC code
         :type rpc_code: int
         """
@@ -409,6 +409,48 @@ class Context (object):
         self.send_msg(message_type = MessageType.MSG_TYPE_RPC,
                       message_code = rpc_code,
                       message_info = (None, argv, argd))
+
+
+    #----------------------------------------------------------------------
+    def bulk_remote_call(self, rpc_code, *arguments):
+        """
+        Make synchronous bulk remote procedure calls on the orchestrator.
+
+        The interface and behavior mimics that of the built-in map() function.
+        For more details see: http://docs.python.org/2/library/functions.html#map
+
+        :param rpc_code: RPC code
+        :type rpc_code: int
+
+        :returns: list -- List contents depend on the call.
+        """
+
+        # Convert all the iterables to tuples to make sure they're serializable.
+        arguments = tuple( tuple(x) for x in arguments )
+
+        # Send the MSG_RPC_BULK call and return the response.
+        return self.remote_call(MessageCode.MSG_RPC_BULK, rpc_code, *arguments)
+
+
+    #----------------------------------------------------------------------
+    def async_bulk_remote_call(self, rpc_code, *arguments):
+        """
+        Make asynchronous bulk remote procedure calls on the orchestrator.
+
+        The interface and behavior mimics that of the built-in map() function.
+        For more details see: http://docs.python.org/2/library/functions.html#map
+
+        There's no return value, since we're not waiting for a response.
+
+        :param rpc_code: RPC code
+        :type rpc_code: int
+        """
+
+        # Convert all the iterables to tuples to make sure they're serializable.
+        arguments = tuple( tuple(x) for x in arguments )
+
+        # Send the MSG_RPC_BULK call.
+        self.async_remote_call(MessageCode.MSG_RPC_BULK, rpc_code, *arguments)
 
 
 #------------------------------------------------------------------------------
@@ -437,7 +479,8 @@ class OOPObserver (object):
 
     def send_msg(self, message_type = MessageType.MSG_TYPE_DATA,
                        message_code = 0,
-                       message_info = None):
+                       message_info = None,
+                       priority = MessagePriority.MSG_PRIORITY_MEDIUM):
         """
         Send messages from the plugins to the orchestrator.
 
@@ -452,7 +495,8 @@ class OOPObserver (object):
         """
         return self.__context.send_msg(message_type = message_type,
                                        message_code = message_code,
-                                       message_info = message_info)
+                                       message_info = message_info,
+                                           priority = priority)
 
     def send_raw_msg(self, message):
         """
@@ -678,11 +722,11 @@ class ProcessManager (object):
     def __init__(self, orchestrator, config):
         """Constructor.
 
-        :param orchestrator: Core to send messages to
+        :param orchestrator: Orchestrator to send messages to.
         :type orchestrator: Orchestrator
 
-        :param config: Configuration object
-        :type config: GlobalParams
+        :param config: Global configuration.
+        :type config: OrchestratorConfig
         """
         self.__launcher = None
 
@@ -691,10 +735,6 @@ class ProcessManager (object):
 
         # Maximum number of function calls to make before refreshing a subprocess
         self.__refresh_after_tasks = getattr(config, "refresh_after_tasks", None)
-
-        # In monoprocess mode, keep a static reference to the orchestrator
-        if self.__max_processes <= 0:
-            Context._orchestrator = orchestrator
 
 
     #----------------------------------------------------------------------

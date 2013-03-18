@@ -394,20 +394,40 @@ class PriscillaPluginManager (Singleton):
         # Get the list of all plugins for the requested category
         plugins = self.get_plugin_names(category)
 
-        # Remove duplicates and check for consistency in black and white lists
+        # Remove duplicates in black and white lists
         if "all" in enabled_plugins:
             enabled_plugins  = {"all"}
         if "all" in disabled_plugins:
             disabled_plugins = {"all"}
         enabled_plugins  = set(enabled_plugins)
         disabled_plugins = set(disabled_plugins)
+
+        # Convert categories to plugin names
+        for cat in self.CATEGORIES:
+            if cat in disabled_plugins:
+                if cat in enabled_plugins:
+                    raise ValueError("Conflicting black and white lists!")
+                if cat == category:   # if the requested category is disabled,
+                    return {}         # just return an empty set now
+                disabled_plugins.remove(cat)
+                if category == "all":
+                    disabled_plugins.update(self.get_plugin_names(cat))
+            elif cat in enabled_plugins:
+                if cat in disabled_plugins:
+                    raise ValueError("Conflicting black and white lists!")
+                enabled_plugins.remove(cat)
+                if category == "all" or cat == category:
+                    enabled_plugins.update(self.get_plugin_names(cat))
+
+        # Check for consistency in black and white lists
         if enabled_plugins.intersection(disabled_plugins):
             raise ValueError("Conflicting black and white lists!")
         if "all" not in enabled_plugins and "all" not in disabled_plugins:
             disabled_plugins = set()
 
         # Make sure all the plugins in the whitelist exist
-        missing_plugins = enabled_plugins.difference(self.get_plugin_names())
+        all_plugins = self.get_plugin_names()
+        missing_plugins = enabled_plugins.difference(all_plugins)
         if "all" in missing_plugins:
             missing_plugins.remove("all")
         if missing_plugins:
@@ -416,7 +436,7 @@ class PriscillaPluginManager (Singleton):
             raise KeyError("Missing plugin: %s" % missing_plugins.pop())
 
         # Make sure all the plugins in the blacklist exist
-        missing_plugins = disabled_plugins.difference(self.get_plugin_names())
+        missing_plugins = disabled_plugins.difference(all_plugins)
         if "all" in missing_plugins:
             missing_plugins.remove("all")
         if missing_plugins:
@@ -430,7 +450,7 @@ class PriscillaPluginManager (Singleton):
 
         # Whitelist approach
         else:
-            plugins = enabled_plugins
+            plugins.intersection_update(enabled_plugins)
 
         # Load each requested plugin
         return { name : self.load_plugin_by_name(name) for name in plugins }

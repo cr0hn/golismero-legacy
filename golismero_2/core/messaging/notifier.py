@@ -203,7 +203,7 @@ class Notifier (object):
 #------------------------------------------------------------------------------
 class AuditNotifier(Notifier):
     """
-    Audit message dispatcher. Sends messages to Testing plugins.
+    Audit message dispatcher. Sends messages to plugins.
     """
 
 
@@ -277,6 +277,17 @@ class AuditNotifier(Notifier):
         :type message: Message
         """
         self.__run_plugin(plugin, "recv_msg", message)
+
+
+    #----------------------------------------------------------------------
+    def start_report(self, plugin, output_file):
+        """
+        Start an audit report.
+
+        :param plugin: Target plugin
+        :type plugin: Plugin
+        """
+        self.__run_plugin(plugin, "generate_report", output_file)
 
 
 #------------------------------------------------------------------------------

@@ -31,9 +31,10 @@ __all__ = ["AuditManager", "Audit"]
 from .priscillapluginmanager import PriscillaPluginManager
 from ..api.data.data import Data
 from ..api.data.resource.url import Url
-from ..common import GlobalParams
+from ..common import AuditConfig
 from ..database.datadb import DataDB
-from ..messaging.codes import MessageType, MessageCode
+from ..managers.reportmanager import ReportManager
+from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 from ..messaging.notifier import AuditNotifier
 
@@ -55,8 +56,8 @@ class AuditManager (object):
         :param orchestrator: Core to send messages to
         :type orchestrator: Orchestrator
 
-        :param config: Configuration object
-        :type config: GlobalParams
+        :param config: Global configuration object
+        :type config: OrchestratorConfig
         """
 
         # Init audits dicts
@@ -72,22 +73,22 @@ class AuditManager (object):
 
 
     #----------------------------------------------------------------------
-    def new_audit(self, globalParams):
+    def new_audit(self, params):
         """
         Creates a new audit.
 
-        :param globalParams: Params of audit
-        :type globalParams: GlobalParams
+        :param params: Params of audit
+        :type params: AuditConfig
 
-        :returns: Audit -- return just created audit
+        :returns: Audit
 
         :raises: TypeError
         """
-        if not isinstance(globalParams, GlobalParams):
-            raise TypeError("globalParams must be an instance of GlobalParams")
+        if not isinstance(params, AuditConfig):
+            raise TypeError("Expected AuditConfig, got %r instead" % type(params))
 
         # Create the audit
-        m_audit = Audit(globalParams, self.__orchestrator)
+        m_audit = Audit(params, self.__orchestrator)
 
         # Store it
         self.__audits[m_audit.name] = m_audit
@@ -143,7 +144,12 @@ class AuditManager (object):
 
         :raises: KeyError
         """
-        del self.__audits[auditName]
+        audit = self.__audits[auditName]
+        try:
+            audit.close()
+        finally:
+            del self.__audits[auditName]
+            self.orchestrator.cacheManager.clean(auditName)
 
 
     #----------------------------------------------------------------------
@@ -184,11 +190,11 @@ class AuditManager (object):
                     if not audit.expecting_ack:
 
                         # Generate reports
-                        try:
-                            self.__orchestrator.generate_reports(self.__audits[message.audit_name].database)
+                        if not audit.is_report_started:
+                            audit.generate_reports()
 
                         # Send finish message
-                        finally:
+                        else:
                             m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                                         message_code = MessageCode.MSG_CONTROL_STOP_AUDIT,
                                         message_info = True,   # True for finished, False for user cancel
@@ -199,7 +205,7 @@ class AuditManager (object):
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
                 if not message.audit_name:
                     raise ValueError("I don't know which audit to stop...")
-                self.get_audit(message.audit_name).stop()
+                self.get_audit(message.audit_name).close()
                 self.remove_audit(message.audit_name)
 
             # TODO: pause and resume audits, start new audits
@@ -208,13 +214,15 @@ class AuditManager (object):
 
 
     #----------------------------------------------------------------------
-    def stop(self):
+    def close(self):
         """
-        Stop all audits.
+        Release all resources held by all audits.
         """
-        for a in self.__audits.values(): # not itervalues, may be modified
-            a.stop()
-
+        for name in self.__audits.keys(): # not iterkeys, will be modified
+            try:
+                self.remove_audit(name)
+            except:
+                pass
 
 
 #--------------------------------------------------------------------------
@@ -230,34 +238,41 @@ class Audit (object):
         :param orchestrator: Orchestrator instance that will receive messages sent by this audit.
         :type orchestrator: Orchestrator
 
-        :param auditParams: global params for an audit execution
-        :type auditParams: GlobalParams
+        :param auditParams: Audit configuration.
+        :type auditParams: AuditConfig
         """
 
-        if not isinstance(auditParams, GlobalParams):
-            raise TypeError("Expected GlobalParams, got %s instead" % type(auditParams))
+        if not isinstance(auditParams, AuditConfig):
+            raise TypeError("Expected AuditConfig, got %s instead" % type(auditParams))
 
-        # set audit params
-        self.__audit_params = auditParams
+        # Keep the audit settings.
+        self.__params = auditParams
 
-        # set Receiver
+        # Keep a reference to the Orchestrator.
         self.__orchestrator = orchestrator
 
-        # set audit name
-        self.__auditname = self.__audit_params.audit_name
-        if not self.__auditname:
-            self.__auditname = self.__generateAuditName()
+        # Set the audit name.
+        self.__name = self.__params.audit_name
+        if not self.__name:
+            self.__name = self.__generateAuditName()
+            self.__params.audit_name = self.__name
 
-        # Create the notifier
+        # Initialize the "report started" flag.
+        self.__is_report_started = False
+
+        # Create the notifier.
         self.__notifier = AuditNotifier(self)
 
-        # create result db
-        self.__database = DataDB(self.__auditname, auditParams.audit_db)
+        # Create the report manager.
+        self.__report_manager = ReportManager(auditParams, orchestrator)
+
+        # Create the database.
+        self.__database = DataDB(self.__name, auditParams.audit_db)
 
 
     @property
     def name(self):
-        return self.__auditname
+        return self.__name
 
     @property
     def orchestrator(self):
@@ -265,11 +280,19 @@ class Audit (object):
 
     @property
     def params(self):
-        return self.__audit_params
+        return self.__params
 
     @property
     def database(self):
         return self.__database
+
+    @property
+    def reportManager(self):
+        return self.__report_manager
+
+    @property
+    def is_report_started(self):
+        return self.__is_report_started
 
 
     #----------------------------------------------------------------------
@@ -292,8 +315,8 @@ class Audit (object):
         self.__expecting_ack = 0
 
         # Load testing plugins
-        m_audit_plugins = PriscillaPluginManager().load_plugins(self.__audit_params.enabled_plugins,
-                                                                self.__audit_params.disabled_plugins,
+        m_audit_plugins = PriscillaPluginManager().load_plugins(self.params.enabled_plugins,
+                                                                self.params.disabled_plugins,
                                                                 category = "testing")
 
         # Register plugins with the notifier
@@ -301,8 +324,7 @@ class Audit (object):
             self.__notifier.add_plugin(l_plugin)
 
         # Send a message to the orchestrator for each target URL
-        # FIXME: this should not be done here!
-        for url in self.__audit_params.targets:
+        for url in self.params.targets:
             message = Message(message_info = Url(url),
                               message_type = MessageType.MSG_TYPE_DATA,
                               audit_name   = self.name)
@@ -343,7 +365,7 @@ class Audit (object):
         if message.message_type == MessageType.MSG_TYPE_DATA:
 
             # Add the data to the database
-            is_new = self.__database.add(message.message_info)
+            is_new = self.database.add(message.message_info)
 
             # Is it duplicated data?
             if not is_new:
@@ -353,6 +375,7 @@ class Audit (object):
                 self.__expecting_ack += 1
                 m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                             message_code = MessageCode.MSG_CONTROL_ACK,
+                                priority = MessagePriority.MSG_PRIORITY_LOW,
                             audit_name   = self.name)
                 self.orchestrator.dispatch_msg(m)
 
@@ -371,13 +394,22 @@ class Audit (object):
 
 
     #----------------------------------------------------------------------
-    def stop(self):
+    def generate_reports(self):
         """
-        Stop audit.
+        Start the generation of all the requested reports for the audit.
         """
-        #
-        #
-        # XXX TODO
-        #
-        #
-        self.__database.close()
+        if self.__is_report_started:
+            raise RuntimeError("Why are you asking for the report twice?")
+        self.__is_report_started = True
+        self.__expecting_ack += self.__report_manager.generate_reports(self.__notifier)
+
+
+    #----------------------------------------------------------------------
+    def close(self):
+        """
+        Release all resources held by this audit.
+        """
+        try:
+            self.database.compact()
+        finally:
+            self.database.close()

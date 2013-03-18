@@ -1,9 +1,9 @@
 [Core]
-Name = robots_txt_analyzer
-Module = robots-analyzer/robots
+Name = Console UI
+Module = console
 
 [Documentation]
-Description = Analyze robots.txt and extracts their links.
+Description = Console interface
 Author = Daniel Garcia Garcia (cr0hn)
 Version = 0.1
 Website = http://code.google.com/p/golismero/

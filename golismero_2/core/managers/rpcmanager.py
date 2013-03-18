@@ -39,21 +39,45 @@ import traceback
 
 
 #------------------------------------------------------------------------------
+# Decorator to automatically register RPC implementors at import time.
+
+# Global map of RPC codes to implementors.
+rpcMap = {}
+
 def implementor(rpc_code):
     """
-    RPC implementor classmethod.
+    RPC implementation function.
     """
     return partial(_add_implementor, rpc_code)
 
 def _add_implementor(rpc_code, fn):
     """
-    RPC implementor classmethod.
+    RPC implementation function.
     """
     rpcMap[rpc_code] = fn
-    return fn
+    # TODO: use introspection to validate the function signature
+    return fn  # no function wrapping is needed :)
 
-# Global map of RPC codes to implementors
-rpcMap = {}
+
+#------------------------------------------------------------------------------
+# Implementor for the special MSG_RPC_BULK code for bulk RPC calls.
+
+@implementor(MessageCode.MSG_RPC_BULK)
+def rpc_bulk(orchestrator, audit_name, rpc_code, *arguments):
+
+    # Get the implementor for the RPC code.
+    # Raise NotImplementedError if it's not defined.
+    try:
+        method = rpcMap[rpc_code]
+    except KeyError:
+        raise NotImplementedError("RPC code not implemented: %r" % rpc_code)
+
+    # Prepare a partial function call to the implementor.
+    caller = partial(method, orchestrator, audit_name)
+
+    # Use the built-in map() function to issue all the calls.
+    # This ensures we support the exact same interface and functionality.
+    return map(caller, *arguments)
 
 
 #------------------------------------------------------------------------------
@@ -106,49 +130,54 @@ class RPCManager (object):
         :param argd: Keyword arguments to the call.
         :type argd: dict
         """
+        success = True
         try:
-            internal_error = False
-            success = True
-
-            # DEBUG
-            ##print "RPC call: %r" % ((audit_name, rpc_code, argv, argd),)
 
             # Get the implementor for the RPC code.
+            # Raise NotImplementedError if it's not defined.
             try:
                 method = self.__rpcMap[rpc_code]
             except KeyError:
-                raise NotImplementedError("RPC code not implemented: %i" % rpc_code)
+                raise NotImplementedError("RPC code not implemented: %r" % rpc_code)
 
-            # Call the implementor and get the response (or the exception).
-            try:
-                response = method(self.__orchestrator, audit_name, *argv, **argd)
-            except Exception:
-                success  = False
-                response = self.__prepare_exception(*sys.exc_info())
+            # Call the implementor and get the response.
+            response = method(self.__orchestrator, audit_name, *argv, **argd)
 
-        # Catch any errors and send them back to the plugin.
-        except:
-            internal_error = True
-            success = False
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            response = self.__prepare_exception(exc_type, exc_value, exc_traceback)
+        # Catch exceptions and prepare them for sending.
+        except Exception:
+            success  = False
+            response = self.__prepare_exception(*sys.exc_info())
 
-        # If the call was synchronous, send the response back to the plugin.
+        # If the call was synchronous, send the response/error back to the plugin.
         if response_queue:
             response_queue.put_nowait( (success, response) )
-
-        # If there was an internal error, raise the exception.
-        if internal_error:
-            raise exc_type, exc_value
 
 
     #----------------------------------------------------------------------
     @staticmethod
     def __prepare_exception(exc_type, exc_value, exc_traceback):
+        """
+        Prepare an exception for sending back to the plugins.
+
+        :param exc_type: Exception type.
+        :type exc_type: class
+
+        :param exc_value: Exception value.
+        :type exc_value:
+
+        :returns: tuple(class, object, str) -- Exception type, exception value
+            and formatted traceback. The exception value may be formatted too
+            and the exception type replaced by Exception if it's not possible
+            to serialize them for sending.
+        """
         exc_type, exc_value, exc_traceback = sys.exc_info()
         try:
             pickle.dumps(exc_value)
         except Exception:
             exc_value = traceback.format_exception_only(exc_type, exc_value)
+        try:
+            pickle.dumps(exc_type)
+        except Exception:
+            exc_type = Exception
         exc_traceback = traceback.extract_tb(exc_traceback)
         return exc_type, exc_value, exc_traceback
