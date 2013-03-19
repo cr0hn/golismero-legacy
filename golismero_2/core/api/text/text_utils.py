@@ -95,5 +95,4 @@ def generate_random_string(string_length=30):
     m_available_chars = ascii_letters + digits
     choice = random.choice
 
-
     return ''.join(choice(m_available_chars) for _ in xrange(string_length))
