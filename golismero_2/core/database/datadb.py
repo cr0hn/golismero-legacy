@@ -29,18 +29,47 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["DataDB"]
 
 from .common import BaseDB, atomic, transactional
-
 from ..api.data.data import Data
 from ..api.data.information.information import Information
 from ..api.data.resource.resource import Resource
 from ..api.data.vulnerability.vulnerability import Vulnerability
+from ..messaging.codes import MessageCode
+from ..managers.rpcmanager import implementor
 
 import urlparse
 import warnings
 
 # Lazy imports
-anydbm = None
+anydbm  = None
 sqlite3 = None
+
+
+#----------------------------------------------------------------------
+# RPC implementors for the database API.
+
+@implementor(MessageCode.MSG_RPC_DATA_ADD)
+def rpc_datadb_add(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.add(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_DATA_REMOVE)
+def rpc_datadb_remove(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.remove(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_DATA_GET)
+def rpc_datadb_get(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.get(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_DATA_KEYS)
+def rpc_datadb_keys(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.keys(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_DATA_COUNT)
+def rpc_datadb_count(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.count(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_DATA_CHECK)
+def rpc_datadb_check(orchestrator, audit_name, identity):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_key(identity)
 
 
 #------------------------------------------------------------------------------

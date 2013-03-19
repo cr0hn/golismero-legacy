@@ -33,11 +33,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ['NetworkAPI', 'NetworkException', 'Web']
 
 from .cache import NetworkCache
+from .web_utils import *
 from ..config import Config
 from ..data.information.http import HTTP_Request, HTTP_Response
 from ..data.resource.url import Url
 from ..logger import Logger
-from .web_utils import *
+from ...messaging.codes import MessageCode
 
 from re import compile, match, IGNORECASE
 from requests import *
@@ -100,6 +101,30 @@ class NetworkAPI (object):
 
         else:
             raise ValueError("Unknown protocol type, value: %d" % protocol)
+
+
+#------------------------------------------------------------------------------
+class ConnectionSlot (object):
+    """
+    Connection slot context manager.
+    """
+
+    @property
+    def hostname(self):
+        return self.__host
+
+    def __init__(self, hostname):
+        self.__host = hostname
+
+    def __enter__(self):
+        self.__token = Config._get_context().remote_call(
+            MessageCode.MSG_RPC_REQUEST_SLOT, self.hostname, 1
+        )
+
+    def __exit__(self, type, value, tb):
+        Config._get_context().remote_call(
+            MessageCode.MSG_RPC_RELEASE_SLOT, self.__token
+        )
 
 
 #------------------------------------------------------------------------------
@@ -193,16 +218,14 @@ class Web (Protocol):
             Logger.log_verbose("Url '%s' out of scope. Skipping it." % request.url)
             return
 
-        m_response = None
-        m_time = None
-
-        # URL is cached?
+        # If the URL is cached, return the cached contents.
         if request.is_cacheable and self._cache.exists(request.request_id, protocol=request.parsed_url.scheme):
-            m_response = self._cache.get(request.request_id, protocol=request.parsed_url.scheme)
-        else:
-            #
-            # Get URL
-            #
+            return self._cache.get(request.request_id, protocol=request.parsed_url.scheme)
+
+        #
+        # Get URL
+        #
+        with ConnectionSlot(request.parsed_url.hostname):
 
             # Set redirect option
             request.follow_redirects = request.follow_redirects or self.__follow_redirects
