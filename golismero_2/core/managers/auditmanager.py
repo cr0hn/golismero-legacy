@@ -60,10 +60,10 @@ class AuditManager (object):
         :type config: OrchestratorConfig
         """
 
-        # Init audits dicts
+        # Create the dictionary where we'll store the Audit objects.
         self.__audits = dict()
 
-        # Init params
+        # Keep a reference to the Orchestrator.
         self.__orchestrator = orchestrator
 
 
@@ -88,7 +88,7 @@ class AuditManager (object):
             raise TypeError("Expected AuditConfig, got %r instead" % type(params))
 
         # Create the audit
-        m_audit = Audit(params, self.__orchestrator)
+        m_audit = Audit(params, self.orchestrator)
 
         # Store it
         self.__audits[m_audit.name] = m_audit
