@@ -27,25 +27,39 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 __all__ = [
+
+    # Dynamically loaded modules, picks the fastest one available.
+    "pickle", "random",
+
+    # Helper functions.
     "get_user_settings_folder",
-    "Singleton", "enum", "decorator", "pickle",
+
+    # Helper classes and decorators.
+    "Singleton", "enum", "decorator",
+
+    # Configuration objects.
     "OrchestratorConfig", "AuditConfig"
 ]
 
+# Load the fast C version of pickle,
+# if not available use the pure-Python version.
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
 
-# Lazy import
+# Load NumPy's random (faster, written in C) if available,
+# otherwise use the built-in but slower random module.
+try:
+    import numpy.random as random
+except ImportError:
+    import random
+
+# Lazy import of the JSON decoder.
 json_decode = None
 
-from keyword import iskeyword
-from os import path
-
-import os
-import hashlib
-
+# Import @decorator from the decorator module, if available.
+# Otherwise define a simple but crude replacement.
 try:
     from decorator import decorator
 except ImportError:
@@ -61,6 +75,13 @@ except ImportError:
                 return w(fn, *argv, **argd)
             return x
         return d
+
+# Other imports.
+from keyword import iskeyword
+from os import path
+
+import os
+import hashlib
 
 
 #--------------------------------------------------------------------------
