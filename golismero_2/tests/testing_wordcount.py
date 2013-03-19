@@ -12,7 +12,7 @@ The loop in lines 13 and 14 is how we send the data off to the reducers. The WMR
 from re import findall
 import timeit
 import difflib
-from thirdparty_libs.google_diff_match_patch import *
+from thirdparty_libs.diff_match_patch import diff_match_patch
 
 def unotext():
     """"""

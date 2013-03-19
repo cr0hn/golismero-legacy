@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from ...common import random
 
 from difflib import SequenceMatcher
-from google_diff_match_patch import *
+from diff_match_patch import diff_match_patch
 from string import ascii_letters, digits
 
 

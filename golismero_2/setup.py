@@ -161,9 +161,9 @@ packages, package_data = scan_subpackages(package_dir)
 metadata = {
 
     # Setup instructions
-    'requires'          : ['BeautifulSoup', 'cjson', 'colorizer', 'decorator',
-                           'google_diff_match_patch', 'numpy', 'requests',
-                           'requests_ntlm', 'urllib3'],
+    'requires'          : ['BeautifulSoup', 'python-cjson', 'colorizer',
+                           'decorator', 'diff-match-patch', 'numpy',
+                           'requests', 'requests_ntlm', 'urllib3'],
     'provides'          : ['golismero'],
     'packages'          : packages,
     'package_dir'       : package_dir,
