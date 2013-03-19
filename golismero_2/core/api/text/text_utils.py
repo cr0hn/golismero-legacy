@@ -30,11 +30,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from ...common import random
+
 from difflib import SequenceMatcher
 from google_diff_match_patch import *
 from string import ascii_letters, digits
-from random import choice
-
 
 
 #----------------------------------------------------------------------
@@ -91,6 +91,7 @@ def generate_random_string(string_length=30):
     :param string_length: length of string generated
     :type string_length: int
     """
-    m_available_chars = "%s%s" % (ascii_letters, digits) #, "#!_-.;,")
+    m_available_chars = ascii_letters + digits
+    choice = random.choice
 
-    return ''.join(choice(m_available_chars) for x in xrange(string_length))
+    return ''.join(choice(m_available_chars) for _ in xrange(string_length))
