@@ -791,7 +791,7 @@ class DataSQLiteDB (BaseDataDB):
             values = ()
         else:
             query  = "SELECT identity FROM %s WHERE type = ?;" % table
-            values = (data_subtype)
+            values = (data_subtype,)
         self.__cursor.execute(query, values)
         return { row[0] for row in self.__cursor.fetchall() }
 
@@ -826,7 +826,7 @@ class DataSQLiteDB (BaseDataDB):
             values = ()
         else:
             query  = "SELECT COUNT(rowid) FROM %s WHERE type = ?;" % table
-            values = (data_subtype)
+            values = (data_subtype,)
         self.__cursor.execute(query, values)
         return int(self.__cursor.fetchone()[0])
 

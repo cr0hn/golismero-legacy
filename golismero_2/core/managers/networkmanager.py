@@ -99,7 +99,7 @@ class NetworkManager (object):
             raise ValueError("Number of slots can't be negative!")
         host = host.lower()
         if self.__hosts[host] + number <= self.max_connections:
-            token = "%s|%.8X" % (host, random.randint(0, 0x7FFFFFFF))
+            token = "%.8X|%s" % (random.randint(0, 0x7FFFFFFF), host)
             self.__tokens[audit_name][token] = (host, number)
             self.__hosts[host] += number
             return token
@@ -133,7 +133,7 @@ class NetworkManager (object):
         :param audit_name: Audit name.
         :type audit_name: str
         """
-        for host, number in self.__tokens.pop(audit_name).itervalues():
+        for host, number in self.__tokens.pop(audit_name, {}).itervalues():
             self.__hosts[host] -= number
             if self.__hosts[host] <= 0:
                 del self.__hosts[host]
