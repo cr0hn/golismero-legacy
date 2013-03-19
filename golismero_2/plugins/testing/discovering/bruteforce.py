@@ -35,16 +35,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 #   https://twitter.com/capi_x
 
-from core.api.logger import Logger
-from core.api.net.protocol import NetworkAPI
-from core.api.net.web_utils import convert_to_absolute_url, is_in_scope
-from core.api.plugin import TestingPlugin
-from core.api.data.resource.url import Url
-from core.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
-from core.api.text.wordlist_api import WordListAPI
+from golismero.api.logger import Logger
+from golismero.api.net.protocol import NetworkAPI
+from golismero.api.net.web_utils import convert_to_absolute_url, is_in_scope
+from golismero.api.plugin import TestingPlugin
+from golismero.api.data.resource.url import Url
+from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
+from golismero.api.text.wordlist_api import WordListAPI
 from os.path import splitext, split, sep
-from core.api.net.web_utils import parse_url
-from core.api.text.text_utils import get_matching_level, generate_random_string
+from golismero.api.net.web_utils import parse_url
+from golismero.api.text.text_utils import get_matching_level, generate_random_string
 
 from os import getpid
 import threading, Queue

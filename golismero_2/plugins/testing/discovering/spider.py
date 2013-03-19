@@ -26,13 +26,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.logger import Logger
-from core.api.net.protocol import NetworkAPI
-from core.api.plugin import TestingPlugin
-from core.api.data.resource.url import Url
-from core.api.data.information.information import Information
-from core.api.config import Config
-from core.api.net.web_utils import parse_url, convert_to_absolute_urls, is_in_scope
+from golismero.api.logger import Logger
+from golismero.api.net.protocol import NetworkAPI
+from golismero.api.plugin import TestingPlugin
+from golismero.api.data.resource.url import Url
+from golismero.api.data.information.information import Information
+from golismero.api.config import Config
+from golismero.api.net.web_utils import parse_url, convert_to_absolute_urls, is_in_scope
 
 from requests.exceptions import RequestException
 from time import time

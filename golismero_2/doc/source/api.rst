@@ -4,7 +4,7 @@ api Package
 :mod:`config` Module
 --------------------
 
-.. automodule:: core.api.config
+.. automodule:: golismero.api.config
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ api Package
 :mod:`file` Module
 ------------------
 
-.. automodule:: core.api.file
+.. automodule:: golismero.api.file
     :members:
     :undoc-members:
     :show-inheritance:
@@ -20,7 +20,7 @@ api Package
 :mod:`logger` Module
 --------------------
 
-.. automodule:: core.api.logger
+.. automodule:: golismero.api.logger
     :members:
     :undoc-members:
     :show-inheritance:
@@ -28,7 +28,7 @@ api Package
 :mod:`plugin` Module
 --------------------
 
-.. automodule:: core.api.plugin
+.. automodule:: golismero.api.plugin
     :members:
     :undoc-members:
     :show-inheritance:
@@ -38,7 +38,7 @@ Subpackages
 
 .. toctree::
 
-    core.api.data
-    core.api.net
-    core.api.text
+    api.data
+    api.net
+    api.text
 

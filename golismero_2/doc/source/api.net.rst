@@ -4,7 +4,7 @@ net Package
 :mod:`cache` Module
 -------------------
 
-.. automodule:: core.api.net.cache
+.. automodule:: golismero.api.net.cache
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ net Package
 :mod:`protocol` Module
 ----------------------
 
-.. automodule:: core.api.net.protocol
+.. automodule:: golismero.api.net.protocol
     :members:
     :undoc-members:
     :show-inheritance:
@@ -20,7 +20,7 @@ net Package
 :mod:`web_utils` Module
 -----------------------
 
-.. automodule:: core.api.net.web_utils
+.. automodule:: golismero.api.net.web_utils
     :members:
     :undoc-members:
     :show-inheritance:

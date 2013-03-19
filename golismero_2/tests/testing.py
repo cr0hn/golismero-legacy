@@ -27,12 +27,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 # Testing file
 
-from core.api.data.information.html import HTML, HTMLElement
-from core.api.net.network_api import *
-from core.api.data.information.http import *
-from core.main.commonstructures import GlobalParams
-from core.managers.priscillapluginmanager import PriscillaPluginManager
-from core.api.data.information.url import Url
+from golismero.api.data.information.html import HTML, HTMLElement
+from golismero.api.net.network_api import *
+from golismero.api.data.information.http import *
+from golismero.main.commonstructures import GlobalParams
+from golismero.managers.priscillapluginmanager import PriscillaPluginManager
+from golismero.api.data.information.url import Url
 from thirdparty_libs.urllib3 import *
 
 import sys

@@ -24,13 +24,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.config import Config
-from core.api.plugin import UIPlugin
-from core.api.data.resource.resource import Resource
-from core.api.data.data import Data
-from core.messaging.codes import MessageType, MessageCode
-from core.messaging.message import Message
-from core.main.console import Console, colorize
+from golismero.api.config import Config
+from golismero.api.plugin import UIPlugin
+from golismero.api.data.resource.resource import Resource
+from golismero.api.data.data import Data
+from golismero.messaging.codes import MessageType, MessageCode
+from golismero.messaging.message import Message
+from golismero.main.console import Console, colorize
 
 #
 # Verbosity levels:
@@ -158,8 +158,8 @@ class ConsoleUIPlugin(UIPlugin):
         #
         # 1 - Include libraries, at top of this file:
         #
-        #     from core.api.data.information.information import Information
-        #     from core.api.data.injection.injection import Injection
+        #     from golismero.api.data.information.information import Information
+        #     from golismero.api.data.injection.injection import Injection
         #
         # 2 - Make the list with the info we want receive:
         #

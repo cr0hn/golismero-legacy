@@ -4,7 +4,7 @@ data Package
 :mod:`data` Module
 ------------------
 
-.. automodule:: core.api.data.data
+.. automodule:: golismero.api.data.data
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ data Package
 :mod:`db` Module
 ----------------
 
-.. automodule:: core.api.data.db
+.. automodule:: golismero.api.data.db
     :members:
     :undoc-members:
     :show-inheritance:
@@ -22,7 +22,7 @@ Subpackages
 
 .. toctree::
 
-    core.api.data.information
-    core.api.data.resource
-    core.api.data.vulnerability
+    api.data.information
+    api.data.resource
+    api.data.vulnerability
 

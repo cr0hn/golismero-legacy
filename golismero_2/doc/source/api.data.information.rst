@@ -4,7 +4,7 @@ information Package
 :mod:`html` Module
 ------------------
 
-.. automodule:: core.api.data.information.html
+.. automodule:: golismero.api.data.information.html
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ information Package
 :mod:`http` Module
 ------------------
 
-.. automodule:: core.api.data.information.http
+.. automodule:: golismero.api.data.information.http
     :members:
     :undoc-members:
     :show-inheritance:
@@ -20,7 +20,7 @@ information Package
 :mod:`information` Module
 -------------------------
 
-.. automodule:: core.api.data.information.information
+.. automodule:: golismero.api.data.information.information
     :members:
     :undoc-members:
     :show-inheritance:

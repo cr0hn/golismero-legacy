@@ -4,7 +4,7 @@ text Package
 :mod:`text_utils` Module
 ------------------------
 
-.. automodule:: core.api.text.text_utils
+.. automodule:: golismero.api.text.text_utils
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ text Package
 :mod:`wordlist_api` Module
 --------------------------
 
-.. automodule:: core.api.text.wordlist_api
+.. automodule:: golismero.api.text.wordlist_api
     :members:
     :undoc-members:
     :show-inheritance:

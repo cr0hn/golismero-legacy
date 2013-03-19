@@ -24,8 +24,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from core.api.plugin import GlobalPlugin
-from core.api.logger import Logger
+from golismero.api.plugin import GlobalPlugin
+from golismero.api.logger import Logger
 
 class TemplatePlugin(GlobalPlugin):
     """
@@ -68,7 +68,7 @@ class TemplatePlugin(GlobalPlugin):
         # Return here the list of the types of info you want to receive.
         #
         # To build the list, you will need to use the constants of
-        # the core.api.data package.
+        # the golismero.api.data package.
         #
         # An empty list means you don't get any info at all!
         #
@@ -80,8 +80,8 @@ class TemplatePlugin(GlobalPlugin):
         #
         # 1 - Include libraries, at top of this file:
         #
-        #     from core.api.data.information.information import Information
-        #     from core.api.data.injection.injection import Injection
+        #     from golismero.api.data.information.information import Information
+        #     from golismero.api.data.injection.injection import Injection
         #
         # 2 - Make the list with the info we want receive:
         #
@@ -106,7 +106,7 @@ class TemplatePlugin(GlobalPlugin):
         #
         # 1 - Include log library, at top of this file:
         #
-        #     from core.api.logger import IO
+        #     from golismero.api.logger import IO
         #
         # 2 - Write into log system
         #

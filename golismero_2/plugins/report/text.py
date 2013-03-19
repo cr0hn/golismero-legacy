@@ -27,11 +27,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-from core.api.plugin import ReportPlugin
+from golismero.api.plugin import ReportPlugin
 
-from core.api.data.data import Data
-from core.api.data.db import Database
-from core.api.data.resource.resource import Resource
+from golismero.api.data.data import Data
+from golismero.api.data.db import Database
+from golismero.api.data.resource.resource import Resource
 
 from collections import defaultdict
 

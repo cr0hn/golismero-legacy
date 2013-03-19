@@ -103,10 +103,10 @@ from os import getenv
 #----------------------------------------------------------------------
 # GoLismero modules
 
-from core.common import OrchestratorConfig, AuditConfig
-from core.main.console import Console
-from core.main.orchestrator import Orchestrator
-from core.managers.priscillapluginmanager import PriscillaPluginManager
+from golismero.common import OrchestratorConfig, AuditConfig
+from golismero.main.console import Console
+from golismero.main.orchestrator import Orchestrator
+from golismero.managers.priscillapluginmanager import PriscillaPluginManager
 
 
 #----------------------------------------------------------------------
@@ -379,7 +379,7 @@ def main(args):
 
     Console.display("GoLismero started at %s" % datetime.datetime.now())
     try:
-        from core.api.net.web_utils import detect_auth_method, check_auth
+        from golismero.api.net.web_utils import detect_auth_method, check_auth
 
         # Detect auth in URLs.
         if 1 == 2:

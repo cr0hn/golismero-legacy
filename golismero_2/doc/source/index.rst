@@ -11,7 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   core.api
+   api
 
 
 Indices and tables
