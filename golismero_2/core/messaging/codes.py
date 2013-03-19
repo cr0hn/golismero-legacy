@@ -120,6 +120,10 @@ class MessageCode(object):
     MSG_RPC_DATA_COUNT   = 15
     MSG_RPC_DATA_CHECK   = 16
 
+    # Network API
+    MSG_RPC_REQUEST_SLOT = 20
+    MSG_RPC_RELEASE_SLOT = 21
+
 
 #----------------------------------------------------------------------
 #

@@ -34,13 +34,13 @@ from ..database.cachedb import PersistentNetworkCache, VolatileNetworkCache
 from ..managers.auditmanager import AuditManager
 from ..managers.priscillapluginmanager import PriscillaPluginManager
 from ..managers.uimanager import UIManager
-from ..managers.rpcmanager import RPCManager, implementor
+from ..managers.rpcmanager import RPCManager
 from ..managers.processmanager import ProcessManager, Context
+from ..managers.networkmanager import NetworkManager
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 
 from os import getpid
-from time import sleep
 from traceback import format_exc, print_exc
 from signal import signal, SIGINT, SIG_DFL
 from multiprocessing import Manager
@@ -109,6 +109,9 @@ class Orchestrator (object):
                                           self.__config.disabled_plugins,
                                           category = "all")
 
+        # Network connection manager
+        self.__netManager = NetworkManager(self.__config)
+
         # Network cache
         if  self.__config.use_cache_db or (
             self.__config.use_cache_db is None and
@@ -152,6 +155,10 @@ class Orchestrator (object):
         return self.__pluginManager
 
     @property
+    def netManager(self):
+        return self.__netManager
+
+    @property
     def cacheManager(self):
         return self.__cache
 
@@ -170,34 +177,6 @@ class Orchestrator (object):
     @property
     def uiManager(self):
         return self.__ui
-
-
-    #----------------------------------------------------------------------
-    # RPC implementors for the database API.
-
-    @implementor(MessageCode.MSG_RPC_DATA_ADD)
-    def rpc_datadb_add(self, audit_name, *argv, **argd):
-        return self.auditManager.get_audit(audit_name).database.add(*argv, **argd)
-
-    @implementor(MessageCode.MSG_RPC_DATA_REMOVE)
-    def rpc_datadb_remove(self, audit_name, *argv, **argd):
-        return self.auditManager.get_audit(audit_name).database.remove(*argv, **argd)
-
-    @implementor(MessageCode.MSG_RPC_DATA_GET)
-    def rpc_datadb_get(self, audit_name, *argv, **argd):
-        return self.auditManager.get_audit(audit_name).database.get(*argv, **argd)
-
-    @implementor(MessageCode.MSG_RPC_DATA_KEYS)
-    def rpc_datadb_keys(self, audit_name, *argv, **argd):
-        return self.auditManager.get_audit(audit_name).database.keys(*argv, **argd)
-
-    @implementor(MessageCode.MSG_RPC_DATA_COUNT)
-    def rpc_datadb_count(self, audit_name, *argv, **argd):
-        return self.auditManager.get_audit(audit_name).database.count(*argv, **argd)
-
-    @implementor(MessageCode.MSG_RPC_DATA_CHECK)
-    def rpc_datadb_check(self, audit_name, identity):
-        return self.auditManager.get_audit(audit_name).database.has_key(identity)
 
 
     #----------------------------------------------------------------------

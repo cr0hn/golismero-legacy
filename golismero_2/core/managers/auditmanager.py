@@ -60,10 +60,10 @@ class AuditManager (object):
         :type config: OrchestratorConfig
         """
 
-        # Init audits dicts
+        # Create the dictionary where we'll store the Audit objects.
         self.__audits = dict()
 
-        # Init params
+        # Keep a reference to the Orchestrator.
         self.__orchestrator = orchestrator
 
 
@@ -88,7 +88,7 @@ class AuditManager (object):
             raise TypeError("Expected AuditConfig, got %r instead" % type(params))
 
         # Create the audit
-        m_audit = Audit(params, self.__orchestrator)
+        m_audit = Audit(params, self.orchestrator)
 
         # Store it
         self.__audits[m_audit.name] = m_audit
@@ -144,12 +144,17 @@ class AuditManager (object):
 
         :raises: KeyError
         """
-        audit = self.__audits[auditName]
         try:
-            audit.close()
+            self.orchestrator.netManager.release_all_slots(auditName)
         finally:
-            del self.__audits[auditName]
-            self.orchestrator.cacheManager.clean(auditName)
+            try:
+                audit = self.__audits[auditName]
+                try:
+                    audit.close()
+                finally:
+                    del self.__audits[auditName]
+            finally:
+                self.orchestrator.cacheManager.clean(auditName)
 
 
     #----------------------------------------------------------------------
