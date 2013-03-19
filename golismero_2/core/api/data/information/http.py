@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
+__license__="""
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
@@ -263,7 +263,7 @@ class HTTP_Request (Information):
     def __set_referer(self, value):
         if isinstance(value, basestring):
             self.__headers['Referer'] = value
-    referer = property(__get_referer, __set_referer, doc=="set/get HTTP 'Referer' field value of HTTP header")
+    referer = property(__get_referer, __set_referer, doc="set/get HTTP 'Referer' field value of HTTP header")
 
     # Cookie
     def __get_cookie(self):
