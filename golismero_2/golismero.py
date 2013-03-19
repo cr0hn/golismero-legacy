@@ -34,11 +34,11 @@ __all__ = ["launcher", "show_banner"]
 # Metadata
 
 __author__ = "Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel) - dani@iniqua.com"
-__copyright__ = "Copyright 2011-2013 - GoLismero project"
-__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel)", "Mario Vilas (@Mario_Vilas"]
+__copyright__ = "Copyright 2011-2013 - GoLismero Project"
+__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel)", "Mario Vilas (@Mario_Vilas)"]
 __maintainer__ = "cr0hn"
 __email__ = "golismero.project@gmail.com"
-__version__ = "2.0.0"
+__version__ = "2.0.0a1"
 
 
 #----------------------------------------------------------------------
@@ -73,20 +73,28 @@ if __name__ == "__main__":
 
 
 #----------------------------------------------------------------------
-# Make sure the modules path points to the core first,
-# then the third party libs, and then the system.
+# Fix the module load path when running as a portable script and during installation.
 
 import os
 from os import path
-try:
-    _FIXED_PATH_
-except NameError:
-    where = path.split(path.abspath(__file__))[0]
-    if not where:  # if it fails use cwd instead
-        where = path.abspath(os.getcwd())
-    sys.path.insert(0, path.join(where, "thirdparty_libs"))
-    sys.path.insert(0, where)
-    _FIXED_PATH_ = True
+if __name__ == "__main__" or __name__ == "golismero_launcher":
+    try:
+        _FIXED_PATH_
+    except NameError:
+        here = path.split(path.abspath(__file__))[0]
+        if not here:  # if it fails use cwd instead
+            here = path.abspath(os.getcwd())
+        thirdparty_libs = path.join(here, "thirdparty_libs")
+        if path.exists(thirdparty_libs):
+            if __name__ == "__main__":
+                # As a portable script: use our versions always
+                sys.path.insert(0, thirdparty_libs)
+                sys.path.insert(0, here)
+            else:
+                # When installing: prefer system version to ours
+                sys.path.insert(0, here)
+                sys.path.append(thirdparty_libs)
+        _FIXED_PATH_ = True
 
 
 #----------------------------------------------------------------------
@@ -254,14 +262,19 @@ def main(args):
         parser.error(str(e))
 
     # Get the plugins folder from the parameters.
+    # If no plugins folder is given, use the default.
     # TODO: allow more than one plugin location!
     plugins_folder = cmdParams.plugins_folder
-
-    # If no plugins folder is given, use the default.
     if not plugins_folder:
         plugins_folder = path.abspath(__file__)
-        plugins_folder = path.split(plugins_folder)[0]
+        plugins_folder = path.dirname(plugins_folder)
         plugins_folder = path.join(plugins_folder, "plugins")
+        if not path.isdir(plugins_folder):
+            plugins_folder = path.abspath(golismero.common.__file__)
+            plugins_folder = path.dirname(plugins_folder)
+            plugins_folder = path.join(plugins_folder, "plugins")
+            if not path.isdir(plugins_folder):
+                parser.error("Default plugins folder not found, aborting!")
         cmdParams.plugins_folder = plugins_folder
 
 
