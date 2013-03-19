@@ -31,7 +31,7 @@ __all__ = ["HTML", "HTMLElement"]
 from ..data import identity
 from .information import Information
 
-from bs3.BeautifulSoup import BeautifulSoup
+from BeautifulSoup import BeautifulSoup
 
 
 #------------------------------------------------------------------------------
