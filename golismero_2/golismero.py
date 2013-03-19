@@ -27,7 +27,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["launcher"]
+__all__ = ["launcher", "show_banner"]
 
 
 #----------------------------------------------------------------------
@@ -38,7 +38,6 @@ __copyright__ = "Copyright 2011-2013 - GoLismero project"
 __credits__ = ["Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel)", "Mario Vilas (@Mario_Vilas"]
 __maintainer__ = "cr0hn"
 __email__ = "golismero.project@gmail.com"
-__license__ = "GPL"
 __version__ = "2.0.0"
 
 
