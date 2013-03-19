@@ -192,10 +192,10 @@ class HTTP_Request (Information):
     def __get_accept_type(self, accept_type=None):
         """Get accepted types.
 
-        Available types are: html, text, all.
+        :param accept_type: One of the following: "html", "text", "all"
+        :type accept_type: str
 
-        :type accetp_type: str
-        :returns: complete string for specified input accept type.
+        :returns: str -- Value to use on the Accept: HTTP header.
         """
 
         m_types = {
@@ -224,82 +224,82 @@ class HTTP_Request (Information):
     def __get_host(self):
         return self.__headers.get('Host')
     def __set_host(self, value):
-        if isinstance(value, basestring):
-            self.__headers['Host'] = value
-            self.__parsed_url.hostname = self.__headers['Host']
-    hostname = property(__get_host, __set_host, doc="set/get 'Host' field value of HTTP header")
+        assert isinstance(value, basestring)
+        self.__headers['Host'] = value
+        self.__parsed_url.hostname = self.__headers['Host']
+    hostname = property(__get_host, __set_host, doc="'Host' HTTP header")
 
     # User agent
     def __get_user_agent(self):
         return self.__headers.get('User-Agent')
     def __set_user_agent(self, value):
-        if isinstance(value, basestring):
-            self.__headers['User-Agent'] = value
-    user_agent = property(__get_user_agent, __set_user_agent, doc="set/get 'User-Agent' field value of HTTP header")
+        assert isinstance(value, basestring)
+        self.__headers['User-Agent'] = value
+    user_agent = property(__get_user_agent, __set_user_agent, doc="'User-Agent' HTTP header")
 
     # Accept language
     def __get_accept_language(self):
         return self.__headers.get('Accept-Language')
     def __set_accept_language(self, value):
-        if isinstance(value, basestring):
-            self.__headers['Accept-Language'] = value
-    accept_language = property(__get_accept_language, __set_accept_language, doc="set/get 'Accept-Language' field value of HTTP header")
+        assert isinstance(value, basestring)
+        self.__headers['Accept-Language'] = value
+    accept_language = property(__get_accept_language, __set_accept_language, doc="'Accept-Language' HTTP header")
 
     # Content-type
     def __get_accept(self):
         return self.__headers.get('Accept')
     def __set_accept(self, value):
-        if isinstance(value, basestring):
-            self.__headers['Accept'] = value
-    accept = property(__get_accept, __set_accept, doc="set/get 'Accept' field value of HTTP header")
+        assert isinstance(value, basestring)
+        self.__headers['Accept'] = value
+    accept = property(__get_accept, __set_accept, doc="'Accept' HTTP header")
 
     # Referer
     def __get_referer(self):
         return self.__headers.get('Referer')
     def __set_referer(self, value):
-        if isinstance(value, basestring):
-            self.__headers['Referer'] = value
-    referer = property(__get_referer, __set_referer, doc="set/get HTTP 'Referer' field value of HTTP header")
+        assert isinstance(value, basestring)
+        self.__headers['Referer'] = value
+    referer = property(__get_referer, __set_referer, doc="'Referer' HTTP header")
 
     # Cookie
     def __get_cookie(self):
         return self.__headers.get('Cookie')
     def __set_cookie(self, value):
-        if isinstance(value, basestring):
-            self.__headers['Cookie'] = value
-    cookie = property(__get_cookie, __set_cookie, doc="set/get 'Cookie' field value of HTTP header")
+        assert isinstance(value, basestring)
+        self.__headers['Cookie'] = value
+    cookie = property(__get_cookie, __set_cookie, doc="'Cookie' HTTP header")
 
     # Content type
     def __get_content_type(self):
         return self.__headers.get('Content-Type')
     def __set_content_type(self, value):
-        if isinstance(value, basestring):
-            self.__headers['Content-Type'] = value
-    content_type = property(__get_content_type, __set_content_type, doc="get/set 'Content-Type' field value of HTTP header")
+        assert isinstance(value, basestring)
+        self.__headers['Content-Type'] = value
+    content_type = property(__get_content_type, __set_content_type, doc="'Content-Type' HTTP header")
 
     # Post data
     def __get_post_data(self):
         return self.__post_data
     def __set_post_data(self, value):
-            if self.__post_data:
-                self.__post_data.update(value)
-            else:
-                self.__post_data = value
-            self.content_type = "application/x-www-form-urlencoded; charset=UTF-8"
-    post_data = property(__get_post_data, __set_post_data, doc="set/get HTTP POST data")
+        if self.__post_data:
+            self.__post_data.update(value)
+        else:
+            self.__post_data = value
+        self.content_type = "application/x-www-form-urlencoded; charset=UTF-8"
+    post_data = property(__get_post_data, __set_post_data, doc="HTTP POST data")
 
     # Raw headers
     def __get_raw_headers(self):
         return self.__headers
     def __set_raw_headers(self, value):
-        if isinstance(value, dict):
-            self.__headers.update(value)
-    raw_headers = property(__get_raw_headers, __set_raw_headers, doc="set/get a dict() with raw HTTP headers")
+        assert isinstance(value, dict)
+        self.__headers.update(value)
+    raw_headers = property(__get_raw_headers, __set_raw_headers, doc="Raw HTTP headers")
 
     # Follow redirects
     def __get_follow_redirects(self):
         """
-        Redirect options for the request.
+        Redirect options for the request (True to follow redirects, False otherwise).
 
         :returns: None | bool. None if not set. Bool otherwise.
         """
@@ -308,13 +308,12 @@ class HTTP_Request (Information):
     # Follow redirects
     def __set_follow_redirects(self, value):
         """
-        Redirect options for the request.
+        Redirect options for the request (True to follow redirects, False otherwise).
 
         :returns: None | bool. None if not set. Bool otherwise.
         """
-        if isinstance(value, bool):
-            self.__follow_redirects = value
-    follow_redirects = property(__get_follow_redirects, __set_follow_redirects, doc="set/get HTTP redirect")
+        self.__follow_redirects = value
+    follow_redirects = property(__get_follow_redirects, __set_follow_redirects, doc="Follow HTTP redirections")
 
 
     #----------------------------------------------------------------------
@@ -334,16 +333,17 @@ class HTTP_Request (Information):
     @property
     def parsed_url(self):
         """
-        Parsed URL. Format is the returned function 'parse_url' value.
+        Returns named tuples in the same format as the parse_url() function
+        from the standard urlparse module.
 
-        :returns: dict
+        :returns: named tuple
         """
         return self.__parsed_url
 
     @property
     def method(self):
         """
-        Get HTTP method used for this request.
+        HTTP method used for this request.
 
         :returns: str
         """
@@ -374,9 +374,7 @@ class HTTP_Request (Information):
     @property
     def files_attached(self):
         """
-        Get a dict with filenames attached.
-
-        The format of dict are:
+        Get a dictionary with filenames attached, in the following format:
         {
           'file_name_1' : raw_object_1,
           'file_name_2' : raw_object_2,
@@ -389,7 +387,7 @@ class HTTP_Request (Information):
     @property
     def request_id(self):
         """
-        Get the unique md5 value of the request.
+        Get a unique ID for this request.
 
         :returns: str
         """
@@ -461,7 +459,7 @@ class HTTP_Response (Information):
     #----------------------------------------------------------------------
     def __extract_information(self, headers, data):
         """
-        Get an information type from a raw response
+        Get an information object from a raw response.
         """
         m_return_content = None
         if headers:
@@ -481,7 +479,7 @@ class HTTP_Response (Information):
     @property
     def request_from(self):
         """
-        Original request that generate this response.
+        Original request that generated this response.
 
         :returns: An HTTP_Request object.
         """
@@ -490,7 +488,7 @@ class HTTP_Response (Information):
     @property
     def raw(self):
         """
-        Get raw inforamtion of HTTP response.
+        Get raw information from the HTTP response.
 
         :returns: str
         """
@@ -499,20 +497,20 @@ class HTTP_Response (Information):
     @property
     def content_length(self):
         """
-        Integer with content length. If content-length can't be obtained, 0 value
-        will be returned.
+        Integer value of the 'Content-Length' header.
 
-        :returns: int
+        If the value can't be obtained, None is returned.
+
+        :returns: int | None
         """
         if self.__http_headers and 'Content-Length' in self.__http_headers:
-            return self.__http_headers['Content-Length']
-        else:
-            return 0
+            return int(self.__http_headers['Content-Length'])
+        return None
 
     @property
     def cookie(self):
         """
-        Return 'Cookie' field value of HTTP.
+        Value of the 'Cookie' header.
 
         :returns: str
         """
@@ -521,7 +519,7 @@ class HTTP_Response (Information):
     @property
     def http_response_code(self):
         """
-        Returns the HTTP code of response.
+        HTTP response code.
 
         :returns: int
         """
@@ -530,7 +528,7 @@ class HTTP_Response (Information):
     @property
     def http_response_reason(self):
         """
-        Return a text with reason of HTTP response code.
+        Descriptive text for the HTTP response code.
 
         :returns: str
         """
@@ -539,7 +537,7 @@ class HTTP_Response (Information):
     @property
     def http_headers(self):
         """
-        Returns a dict with HTTP headers of response.
+        HTTP response headers.
 
         :returns: dict
         """
@@ -548,7 +546,7 @@ class HTTP_Response (Information):
     @property
     def http_raw_headers(self):
         """
-        Returns a raw string with HTTP response.
+        Raw HTTP response headers.
 
         :returns: str
         """
@@ -568,16 +566,18 @@ class HTTP_Response (Information):
     @property
     def information(self):
         """
-        Information of HTTP response as 'Information' sub-object.
+        Information object extracted from this HTTP response.
 
-        :returns: Information sub-object
+        :returns: Information
         """
         return self.__information
 
     @property
     def content_type(self):
         """
-        Content type of data of response.
+        Simplified content type identifier.
+
+        This is not the same as the MIME type.
 
         Available types are:
         - html

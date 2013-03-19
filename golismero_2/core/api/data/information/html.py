@@ -65,12 +65,12 @@ class HTMLElement (object):
 
     @property
     def tag_name(self):
-        """Name of HTML tag name."""
+        """Name of HTML tag."""
         return self.__tag_name
 
     @property
     def attrs(self):
-        """Attributes of HTML element."""
+        """Attributes of HTML tag."""
         return self.__attrs
 
     @property
