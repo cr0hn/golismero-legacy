@@ -118,7 +118,7 @@ class BaseDB (object):
 
         :returns: str -- Encoded data.
         """
-        data = pickle.dumps(data, protocol = pickle.HIGHEST_PROTOCOL)
+        data = pickle.dumps(data, -1)
         data = zlib.compress(data, 9)
         return data
 

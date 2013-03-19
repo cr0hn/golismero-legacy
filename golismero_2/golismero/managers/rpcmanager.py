@@ -172,11 +172,11 @@ class RPCManager (object):
         """
         exc_type, exc_value, exc_traceback = sys.exc_info()
         try:
-            pickle.dumps(exc_value)
+            pickle.dumps(exc_value, -1)
         except Exception:
             exc_value = traceback.format_exception_only(exc_type, exc_value)
         try:
-            pickle.dumps(exc_type)
+            pickle.dumps(exc_type, -1)
         except Exception:
             exc_type = Exception
         exc_traceback = traceback.extract_tb(exc_traceback)
