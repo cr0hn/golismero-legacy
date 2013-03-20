@@ -368,6 +368,9 @@ class Orchestrator (object):
         except:
             pass
 
+        # TODO: dump any pending messages and store the current state.
+        # See: http://stackoverflow.com/questions/1540822/dumping-a-multiprocessing-queue-into-a-list
+
         # Stop the audit manager.
         try:
             self.auditManager.close()
