@@ -852,14 +852,9 @@ class BackupSearcher_old(object):
         # deviation of 5%. All elements in of these deviation are part of same page of
         # error, and then skip it.
         #
-        # Calculate average
-        m_results = []
-
         if m_discovered_level:
             #m_length = 1.1 if len(m_discovered_level) == 0 else len(m_discovered_level)
             m_average = sum(m_discovered_level) / len(m_discovered_level)
-
-            m_results_append = m_results.append
 
             for i, l_level in enumerate(m_discovered_level):
                 l_value = l_level # Original value
@@ -868,7 +863,7 @@ class BackupSearcher_old(object):
                 # value < average < value * 5% => skip
                 if not (l_value < m_average and m_average < l_value_deviation):
 
-                    Logger.log_verbose("Bruteforcer - discovered URL: %s !!!" % m_discovered_url[i][0])
+                    Logger.log_verbose("Bruteforcer - discovered URL: %s" % m_discovered_url[i][0])
 
                     #
                     # Send vulnerability
@@ -876,15 +871,13 @@ class BackupSearcher_old(object):
                     l_vuln = UrlDisclosure(m_discovered_url[i][0])
                     # Calculate impact
                     l_vuln.risk = m_discovered_url[i][1]
-                    # Store
-                    m_results_append(l_vuln)
+                    # Send vulnerability
+                    self.send_info(l_vuln)
+
                     #
                     # Send URL
                     #
                     self.send_info(Url(m_discovered_url[i][0]))
-
-        # Report
-        return m_results
 
 
     #----------------------------------------------------------------------

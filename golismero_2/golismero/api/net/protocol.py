@@ -335,6 +335,7 @@ class Web (Protocol):
         )
 
         # Set referer
-        m_request.referer = m_referer
+        if m_referer:
+            m_request.referer = m_referer
 
         return self.get_custom(m_request)

@@ -86,7 +86,7 @@ class Url(Resource):
         self.__request_type = request_type
 
         # Dept of URL
-        assert type(referer) == int
+        assert type(depth) == int
         self.__depth = depth
 
         # Set referer
