@@ -42,16 +42,19 @@ class Robots(TestingPlugin):
     This plugin search and analyze robots.txt files.
     """
 
+
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
         """
         """
         pass
 
+
     #----------------------------------------------------------------------
     def display_help(self):
         # TODO: this could default to the description found in the metadata.
         return self.__doc__
+
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
@@ -82,7 +85,6 @@ class Robots(TestingPlugin):
             Logger.log_more_verbose("Robots - value error while processing: '%s'. Error: %s" % (m_url_robots_txt, e.message))
         except RequestException:
             Logger.log_more_verbose("Robots - timeout for url: '%s'." % m_url_robots_txt)
-
 
         if not p or not p.information and p.content_type == "text":
             Logger.log_error("Robots - no robots.txt found.")
@@ -120,31 +122,29 @@ class Robots(TestingPlugin):
             # Delete init spaces
             m_line = m_line.rstrip()
 
-            # Ignore no valid lines
-            if m_line == '' and ':' not in m_line:
+            # Ignore invalid lines
+            if not m_line or ':' not in m_line:
                 continue
 
             # Looking for URLs
             try:
-                m_key, m_value = [x.strip() for x in m_line.split(':', 1)]
-                m_key = m_key.lower()
+                m_key, m_value = m_line.split(':', 1)
+                m_key = m_key.strip().lower()
+                m_value = m_value.strip()
 
-                # If a wildcard found, is not a valid URL
+                # Ignore wildcards
                 if '*' in m_value:
                     continue
 
                 if m_key in ('disallow', 'allow', 'sitemap') and m_value:
                     tmp_discovered = convert_to_absolute_url(info.url, m_value)
                     Logger.log_more_verbose("Robots - discovered new url: %s" % tmp_discovered)
-                    m_return_bind(tmp_discovered)
+                    m_return_bind( Url(tmp_discovered) )
             except Exception,e:
                 continue
 
         # Generate results
-        return [Url(u) for u in m_return]
-
-
-
+        return m_return
 
 
     #----------------------------------------------------------------------
