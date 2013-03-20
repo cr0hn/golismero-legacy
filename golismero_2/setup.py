@@ -166,8 +166,8 @@ if os.path.sep == '\\':
 metadata = {
 
     # Setup instructions.
-    'requires'          : ['BeautifulSoup', 'python-cjson', 'colorizer',
-                           'decorator', 'diff-match-patch', 'numpy',
+    'requires'          : ['BeautifulSoup', 'python_cjson', 'colorizer',
+                           'decorator', 'diff_match_patch', 'numpy',
                            'requests', 'requests_ntlm', 'urllib3'],
     'provides'          : ['golismero'],
     'packages'          : packages,
