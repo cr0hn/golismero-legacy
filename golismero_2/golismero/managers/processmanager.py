@@ -74,10 +74,17 @@ class Pool(Pool):
 # Plugin class per-process cache. Used by the bootstrap function.
 plugin_class_cache = dict()   # tuple(class, module) -> class object
 
+# Do-nothing function for "warming up" the process pool.
+# This increases startup time, but results in a speedup later on.
+def do_nothing():
+    return
+
 # Serializable function to run plugins in subprocesses.
 # This is required for Windows support, since we don't have os.fork() there.
 # See: http://docs.python.org/2/library/multiprocessing.html#windows
 def launcher(queue, max_process, refresh_after_tasks):
+    return _launcher(queue, max_process, refresh_after_tasks)
+def _launcher(queue, max_process, refresh_after_tasks):
     #print '-'*79       # XXX DEBUG
     #import os
     #print os.getpid()
@@ -123,6 +130,8 @@ def launcher(queue, max_process, refresh_after_tasks):
 # This is required for Windows support, since we don't have os.fork() there.
 # See: http://docs.python.org/2/library/multiprocessing.html#windows
 def bootstrap(context, func, argv, argd):
+    return _bootstrap(context, func, argv, argd)
+def _bootstrap(context, func, argv, argd):
     #print '-'*79       # XXX DEBUG
     #import os
     #print os.getpid()
@@ -579,6 +588,9 @@ class PluginPoolManager (object):
                 self.__pool = Pool(
                     processes = self.__max_processes,
                     maxtasksperchild = self.__refresh_after_tasks)
+
+                # For the pool to start all its processes
+                map(self.__pool.apply_async(do_nothing), [] * self.__max_processes)
 
             # Are we running the plugins in single process mode?
             else:
