@@ -64,6 +64,7 @@ class Url(Resource):
         """
 
         # URL
+        assert isinstance(referer, basestring)
         self.__url = url
 
         # Method
@@ -85,9 +86,11 @@ class Url(Resource):
         self.__request_type = request_type
 
         # Dept of URL
+        assert type(referer) == int
         self.__depth = depth
 
         # Set referer
+        assert isinstance(referer, basestring)
         self.__referer = referer
 
 
