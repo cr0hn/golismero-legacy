@@ -29,30 +29,30 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ['metadata', 'setup']
 
 from collections import defaultdict
-from distutils.core import setup
 from distutils import version
+from distutils.core import setup
 from warnings import warn
 
-import re
-import os
-import imp
-import sys
 import glob
+import imp
+import os
+import re
+import sys
 
-# Get the base directory
+# Get the base directory.
 here = os.path.dirname(__file__)
 if not here:
     here = os.path.curdir
 else:
     os.chdir(here)
 
-# Fetch the banner printer and the rest of the metadata from golismero.py
-# This will also check the Python version
+# Fetch the banner printer and the rest of the metadata from golismero.py.
+# This will also check the Python version.
 sys.path.insert(0, os.path.abspath(here))
 golismero_launcher = imp.load_source('golismero_launcher', 'golismero.py')
 from golismero_launcher import show_banner, __author__, __copyright__, __credits__, __maintainer__, __email__, __version__
 
-# Show the banner
+# Show the banner.
 if __name__ == '__main__':
     show_banner()
 
@@ -78,7 +78,7 @@ if __name__ == '__main__':
             return StrictVersion.parse(self, vstring)
     version.StrictVersion = NotSoStrictVersion
 
-# Text describing the module (reStructured text)
+# Text describing the module (reStructured text).
 try:
     readme = os.path.join(here, 'README')
     long_description = open(readme, 'r').read()
@@ -87,7 +87,7 @@ except Exception:
     readme = __license__
     long_description = """GoLismero - The Web Knife"""
 
-# Get the package name and relative location from its directory
+# Get the package name and relative location from its directory.
 def get_package_name_and_location(root, location, basedir, base_package):
     location = os.path.abspath(location)
     rel_location = basedir[len(root):]
@@ -107,7 +107,7 @@ def get_package_name_and_location(root, location, basedir, base_package):
         package_name = base_package
     return package_name, rel_location
 
-# Scan recursively looking for subpackages and their data
+# Scan recursively looking for subpackages and their data.
 def scan_subpackages(package_dir):
     packages = []
     package_data = defaultdict(list)
@@ -157,10 +157,15 @@ def scan_subpackages(package_dir):
 package_dir = {'golismero': 'golismero', 'golismero.plugins': 'plugins'}
 packages, package_data = scan_subpackages(package_dir)
 
-# Set the parameters for the setup script
+# Loader scripts.
+scripts = ['golismero.py']
+if os.path.sep == '\\':
+    scripts.append('golismero.bat')
+
+# Set the parameters for the setup script.
 metadata = {
 
-    # Setup instructions
+    # Setup instructions.
     'requires'          : ['BeautifulSoup', 'python-cjson', 'colorizer',
                            'decorator', 'diff-match-patch', 'numpy',
                            'requests', 'requests_ntlm', 'urllib3'],
@@ -168,9 +173,9 @@ metadata = {
     'packages'          : packages,
     'package_dir'       : package_dir,
     'package_data'      : package_data,
-    'scripts'           : ['golismero.py'],
+    'scripts'           : scripts,
 
-    # Metadata
+    # Metadata.
     'name'              : 'golismero',
     'version'           : __version__,
     'description'       : 'GoLismero - The Web Knife',
@@ -208,7 +213,8 @@ metadata = {
 # XXX DEBUG
 ##import pprint
 ##pprint.pprint(metadata)
+##sys.exit(0)
 
-# Execute the setup script
+# Execute the setup script.
 if __name__ == '__main__':
     setup(**metadata)
