@@ -76,7 +76,7 @@ plugin_class_cache = dict()   # tuple(class, module) -> class object
 
 # Do-nothing function for "warming up" the process pool.
 # This increases startup time, but results in a speedup later on.
-def do_nothing():
+def do_nothing(*argv, **argd):
     return
 
 # Serializable function to run plugins in subprocesses.
@@ -589,8 +589,8 @@ class PluginPoolManager (object):
                     processes = self.__max_processes,
                     maxtasksperchild = self.__refresh_after_tasks)
 
-                # For the pool to start all its processes
-                map(self.__pool.apply_async(do_nothing), [] * self.__max_processes)
+                # Force the pool to start all its processes.
+                self.__pool.map_async(do_nothing, "A" * self.__max_processes)
 
             # Are we running the plugins in single process mode?
             else:
