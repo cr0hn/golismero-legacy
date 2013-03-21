@@ -28,11 +28,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Information"]
 
-from ..data import Data
-
+from ..data import ExtraData
 
 #------------------------------------------------------------------------------
-class Information(Data):
+class Information(ExtraData):
     """
     Base class for informational results.
     """
@@ -59,5 +58,5 @@ class Information(Data):
 
     #----------------------------------------------------------------------
 
-    data_type = Data.TYPE_INFORMATION
+    data_type = ExtraData.TYPE_INFORMATION
     information_type = INFORMATION_UNKNOWN

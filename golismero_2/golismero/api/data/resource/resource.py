@@ -29,6 +29,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["Resource"]
 
 from ..data import Data
+from ..information.information import Information
+from ..vulnerability.vulnerability import Vulnerability
 
 
 #------------------------------------------------------------------------------
@@ -55,3 +57,63 @@ class Resource(Data):
 
     data_type = Data.TYPE_RESOURCE
     resource_type = RESOURCE_UNKNOWN
+
+
+    #----------------------------------------------------------------------
+    def __init__(self):
+        """"""
+
+        # List of information elements associated
+        self.__info_elements = dict()
+
+        # List of vulnerability elements associated
+        self.__vuln_elements = dict()
+
+        super(Resource, self).__init__()
+
+
+
+    #----------------------------------------------------------------------
+    def add_information(self, info):
+        """
+        Add information elements associated to an resource.
+
+        :param info: information subclass
+        :type info: Information
+        """
+        if isinstance(info, Information):
+            self.__info_elements[info.identity] = True
+
+    #----------------------------------------------------------------------
+    def add_vulnerability(self, vuln):
+        """
+        Add vulnerability elements associated to an resource.
+
+        :param info: vulnerability subclass
+        :type info: Vulnerability
+        """
+        if isinstance(info, Vulnerability):
+            self.__info_elements[info.identity] = True
+
+
+    #----------------------------------------------------------------------
+    @property
+    def associated_vulnerabilities(self):
+        """
+        Get a list with vulnerabilities associated with this resource.
+
+        :return: list with vulnerabilities
+        :rtype: list
+        """
+        return self.__vuln_elements.values()
+
+    #----------------------------------------------------------------------
+    @property
+    def associated_informations(self):
+        """
+        Get a list with informations associated with this resource.
+
+        :return: list with informations
+        :rtype: list
+        """
+        return self.__info_elements.values()

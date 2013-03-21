@@ -59,6 +59,9 @@ class Domain(Resource):
         # List of IP addresses
         self.__addresses = tuple(addresses)
 
+        # Parent constructor
+        super(Domain, self).__init__()
+
 
     #----------------------------------------------------------------------
     def __str__(self):

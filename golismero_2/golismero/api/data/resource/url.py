@@ -93,6 +93,9 @@ class Url(Resource):
         assert isinstance(referer, basestring)
         self.__referer = referer
 
+        # Parent constructor
+        super(Url, self).__init__()
+
 
     #----------------------------------------------------------------------
     def __str__(self):
