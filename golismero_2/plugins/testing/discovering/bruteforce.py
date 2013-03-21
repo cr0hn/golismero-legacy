@@ -42,33 +42,161 @@ from golismero.api.plugin import TestingPlugin
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.text.wordlist_api import WordListAPI
-from os.path import splitext, split, sep
 from golismero.api.net.web_utils import parse_url
 from golismero.api.text.text_utils import get_matching_level, generate_random_string
 
+from os.path import splitext, split, sep
 from os import getpid
-import threading, Queue
+import threading
+
+
+# Impact vectors. Available values: 0 - 3.
+severity_vectors = {
+    "suffixes" : 4,
+    "prefixes" : 3,
+    "file_extensions": 3,
+    "permutations" : 3,
+    "predictables": 4
+}
+
 
 #------------------------------------------------------------------------------
-class ParallelBruter(threading.Thread):
+class DiscoveredInfo(object):
     """"""
 
     #----------------------------------------------------------------------
-    def __init__(self, wordlist, queue, net, method):
+    def __init__(self):
+        """Constructor"""
+        self.__data = dict()
+        self.__level_average = 0.0
+
+        self.__curr_url = None
+        self.__curr_risk = None
+        self.__curr_level = None
+
+        self.__index_iter = -1
+
+
+    #----------------------------------------------------------------------
+    @property
+    def num_urls(self):
+        """
+        Number of URLs contained
+
+        :rtype: int
+        """
+        return len(self.__data)
+
+    #----------------------------------------------------------------------
+    @property
+    def average_level(self):
+        """Return average of levels
+
+        :rtype: float
+        """
+        if self.__level_average > 0:
+            return self.num_urls / self.__level_average
+        else:
+            return self.num_urls
+
+
+    #----------------------------------------------------------------------
+    def append(self, URL, risk, level):
+        """Add a new element
+
+        :param URL: URL of element
+        :type URL: str
+
+        :type risk: int
+        :type level: int
+        """
+        if URL and risk and level:
+            self.__data[URL] = (
+                risk,
+                level
+            )
+
+            self.__level_average += level
+
+
+    #----------------------------------------------------------------------
+    @property
+    def url(self):
+        """URL of current element"""
+        return self.__curr_url
+
+
+    #----------------------------------------------------------------------
+    @property
+    def risk(self):
+        """Risk of current element"""
+        return self.__curr_risk
+
+    #----------------------------------------------------------------------
+    @property
+    def level(self):
+        """Level of current element"""
+        return self.__curr_level
+
+
+
+    #----------------------------------------------------------------------
+    def __iter__(self):
+        """"""
+        return self
+
+    #----------------------------------------------------------------------
+    def next(self):
+        """"""
+        self.__index_iter += 1
+        if self.__index_iter < len(self.__data):
+            url, val = self.__data.popitem()
+            self.__curr_url = url
+            self.__curr_risk = val[0]
+            self.__curr_level = val[1]
+        else:
+            raise StopIteration
+
+
+
+
+
+
+
+
+
+#------------------------------------------------------------------------------
+class ParallelBruter(threading.Thread):
+    """
+
+    """
+
+    #----------------------------------------------------------------------
+    def __init__(self, wordlist, results_queue, net, method, base_error):
         """Constructor"""
         self.__wordlist = wordlist
-        self.__queue = queue
+        self.__results = results_queue
         self.__net = net
         self.__method = method
+        self.__lock = threading.Lock()
+        self.__base_error = base_error
         super(ParallelBruter,self).__init__()
 
     #----------------------------------------------------------------------
     def run(self):
         """"""
         # Test all URLs (deleting duplicates)
-        for l_name, l_iter in self.__wordlist.iteritems():
-            for l_url in l_iter:
+        #for l_name, l_iter in self.__wordlist.iteritems():
+        while True:
+            m_name = None
+            m_iter = None
 
+            try:
+                m_name, m_iter = self.__wordlist.popitem()
+            except KeyError,e:
+                return
+
+            for l_url in m_iter:
                 Logger.log_more_verbose("Bruteforcer - testing url: '%s'." % l_url)
 
                 # Ge URL
@@ -90,15 +218,13 @@ class ParallelBruter(threading.Thread):
                 if p and p.http_response_code == 200:
 
                     if self.__method != "GET":
-                        p = self.__name.get(l_url, cache=False, method="GET")
+                        p = self.__net.get(l_url, cache=False, method="GET")
 
-                    l_matching_level = get_matching_level(m_error_response, p.raw)
+                    l_matching_level = get_matching_level(self.__base_error, p.raw)
 
                     if l_matching_level < 0.52:
                         # Append to partial results
-                        #m_discovered_bind_url((l_url, m_severity_vectors[l_name])) # Url + level of criticality
-                        #m_discovered_bind_level(l_matching_level)
-                        self.__queue.put((l_url, m_severity_vectors[l_name]))
+                        self.__results.append(l_url, severity_vectors[m_name], l_matching_level)
 
                         Logger.log_more_verbose("Bruteforcer - Discovered partial url: '%s'!!" % l_url)
 
@@ -192,16 +318,6 @@ class BackupSearcher(TestingPlugin):
         # Get the request
         m_error_response = m_net_manager.get(m_error_url).raw
 
-
-        # Impact vectors. Available values: 0 - 3.
-        m_severity_vectors = {
-            "suffixes" : 4,
-            "prefixes" : 3,
-            "file_extensions": 3,
-            "permutations" : 3,
-            "predictables": 4
-        }
-
         #
         # Start with bruteforcing. Cases to try:
         #
@@ -249,11 +365,12 @@ class BackupSearcher(TestingPlugin):
         m_discovered_level = []
         m_discovered_bind_level = m_discovered_level.append
 
-        m_queue = Queue.Queue()
-
+        # Run multithread bruteforcer
+        #m_queue = Queue.Queue()
+        m_store_info = DiscoveredInfo()
         m_threads = list()
-        for i in xrange(10):
-            l_t = ParallelBruter(m_urls_to_test, m_queue, m_net_manager, m_http_method)
+        for i in xrange(5):
+            l_t = ParallelBruter(m_urls_to_test, m_store_info, m_net_manager, m_http_method, m_error_response)
             m_threads.append(l_t)
             l_t.start()
 
@@ -269,15 +386,16 @@ class BackupSearcher(TestingPlugin):
         # Calculate average
         m_results = []
 
-        if m_discovered_level:
+        if m_store_info.average_level > 0:
             #m_length = 1.1 if len(m_discovered_level) == 0 else len(m_discovered_level)
-            m_average = sum(m_discovered_level) / len(m_discovered_level)
+            m_average = m_store_info.average_level
 
             m_results_append = m_results.append
 
-            for i, l_level in enumerate(m_discovered_level):
-                l_value = l_level # Original value
-                l_value_deviation = l_level * 1.15 # 15% of deviation
+            #for i, l_level in enumerate(m_discovered_level):
+            for l_info in m_store_info:
+                l_value = l_info.level # Original value
+                l_value_deviation = l_value * 1.15 # 15% of deviation
 
                 # value < average < value * 5% => skip
                 if not (l_value < m_average and m_average < l_value_deviation):
@@ -287,9 +405,11 @@ class BackupSearcher(TestingPlugin):
                     #
                     # Send vulnerability
                     #
-                    l_vuln = UrlDisclosure(m_discovered_url[i][0])
+                    #l_vuln = UrlDisclosure(m_discovered_url[i][0])
+                    l_vuln = UrlDisclosure(l_info.url)
                     # Calculate impact
-                    l_vuln.risk = m_discovered_url[i][1]
+                    #l_vuln.risk = m_discovered_url[i][1]
+                    l_vuln.risk = l_info.risk
                     # Store
                     m_results_append(l_vuln)
                     #
