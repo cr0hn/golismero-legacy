@@ -405,11 +405,11 @@ class BackupSearcher(TestingPlugin):
                     #
                     # Send vulnerability
                     #
-                    #l_vuln = UrlDisclosure(m_discovered_url[i][0])
                     l_vuln = UrlDisclosure(l_info.url)
                     # Calculate impact
-                    #l_vuln.risk = m_discovered_url[i][1]
                     l_vuln.risk = l_info.risk
+                    # Link resource associated
+                    l_vuln.associated_resource = info.url
                     # Store
                     m_results_append(l_vuln)
                     #
