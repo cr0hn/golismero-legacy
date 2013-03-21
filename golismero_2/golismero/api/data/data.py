@@ -147,39 +147,36 @@ class Data(object):
 #------------------------------------------------------------------------------
 class ExtraData(Data):
     """
-    Super class for Information and Vulnerability types. This class add a method
-    to link this types of data with their resource.
+    Superclass for Information and Vulnerability types.
+    It adds methods to link resouces to this data types.
     """
 
+
     #----------------------------------------------------------------------
-    def __associated_resource_get(self):
-        """"""
-        if not hasattr(self, '_%s__associated_resource' % self.__class__.__name__):
-            return None
-        else:
+    @property
+    def associated_resource(self):
+        "Resource associated with this information."
+        try:
             return self.__associated_resource
+        except AttributeError:
+            self.__associated_resource = None
 
 
     #----------------------------------------------------------------------
-    def __associated_resource_set(self, value):
-        """"""
-        if isinstance(value, Resource):
-            self.__associated_resource = value
-
-    associated_resource = property(__associated_resource_get, __associated_resource_set, doc="Resource associated for this information.")
-
+    @associated_resource.setter
+    def associated_resource(self, value):
+        if not isinstance(value, Resource):
+            raise TypeError("Expected Resource, got %s instead" % type(value))
+        self.__associated_resource = value
 
 
     #----------------------------------------------------------------------
     @property
     def discovered_resources(self):
         """
-        This method return a list with the new resources discovered.
+        Returns a list with the new resources discovered.
 
-        :return: list with resources.
+        :return: List with resources.
         :rtype: list(Resource)
         """
-        return None
-
-
-
+        return []

@@ -117,21 +117,21 @@ class Url(Resource):
     @identity
     def url(self):
         """
-        str -- Raw URL
+        str -- Raw URL.
         """
         return self.__url
 
     @identity
     def method(self):
         """
-        str -- HTTP method
+        str -- HTTP method.
         """
         return self.__method
 
     @identity
     def post_params(self):
         """
-        dict(str) -- POST parameters
+        dict(str) -- POST parameters.
         """
         return self.__post_params
 
@@ -141,49 +141,49 @@ class Url(Resource):
     @property
     def parsed_url(self):
         """
-        str -- Parsed URL
+        str -- Parsed URL.
         """
         return urlparse(self.__url)
 
     @property
     def url_params(self):
         """
-        dict(str) -- URL parameters
+        dict(str) -- URL parameters.
         """
         return self.__url_params
 
     @property
     def is_https(self):
         """
-        bool -- True if it's HTTPS, False otherwise
+        bool -- True if it's HTTPS, False otherwise.
         """
         return self.__is_https
 
     @property
     def has_url_param(self):
         """
-        bool - True if there are URL params, False otherwise
+        bool - True if there are URL params, False otherwise.
         """
         return bool(self.url_params)
 
     @property
     def has_post_param(self):
         """
-        bool - True if there are POST params, False otherwise
+        bool - True if there are POST params, False otherwise.
         """
         return bool(self.post_params)
 
     @property
     def content_type(self):
         """
-        str - MIME content type
+        str - MIME content type.
         """
         return self.__content_type
 
     @property
     def request_type(self):
         """
-        int - One of the HTML.TYPE_* constants
+        int - One of the HTML.TYPE_* constants.
         """
         return self.__request_type
 
@@ -197,6 +197,6 @@ class Url(Resource):
     @property
     def referer(self):
         """
-        Get referer or this Url
+        str -- Referer for this Url.
         """
         return self.__referer

@@ -72,7 +72,6 @@ class Resource(Data):
         super(Resource, self).__init__()
 
 
-
     #----------------------------------------------------------------------
     def add_information(self, info):
         """
@@ -81,8 +80,10 @@ class Resource(Data):
         :param info: information subclass
         :type info: Information
         """
-        if isinstance(info, Information):
-            self.__info_elements[info.identity] = True
+        if not isinstance(info, Information):
+            raise TypeError("Expected Information, got %s instead" % type(info))
+        self.__info_elements[info.identity] = True
+
 
     #----------------------------------------------------------------------
     def add_vulnerability(self, vuln):
@@ -92,28 +93,30 @@ class Resource(Data):
         :param info: vulnerability subclass
         :type info: Vulnerability
         """
-        if isinstance(info, Vulnerability):
-            self.__info_elements[info.identity] = True
+        if isinstance(vuln, Vulnerability):
+            raise TypeError("Expected Vulnerability, got %s instead" % type(vuln))
+        self.__vuln_elements[vuln.identity] = True
 
 
     #----------------------------------------------------------------------
     @property
     def associated_vulnerabilities(self):
         """
-        Get a list with vulnerabilities associated with this resource.
+        Get a list with vulnerabilities associated to this resource.
 
-        :return: list with vulnerabilities
+        :return: List with vulnerabilities
         :rtype: list
         """
         return self.__vuln_elements.values()
+
 
     #----------------------------------------------------------------------
     @property
     def associated_informations(self):
         """
-        Get a list with informations associated with this resource.
+        Get a list with informations associated to this resource.
 
-        :return: list with informations
+        :return: List with informations
         :rtype: list
         """
         return self.__info_elements.values()
