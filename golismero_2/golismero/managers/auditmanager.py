@@ -31,6 +31,8 @@ __all__ = ["AuditManager", "Audit"]
 from .priscillapluginmanager import PriscillaPluginManager
 from ..api.data.data import Data
 from ..api.data.resource.url import Url
+from ..api.data.resource.domain import Domain
+from ..api.net.web_utils import parse_url
 from ..common import AuditConfig
 from ..database.datadb import DataDB
 from ..managers.reportmanager import ReportManager
@@ -330,10 +332,14 @@ class Audit (object):
 
         # Send a message to the orchestrator for each target URL
         for url in self.params.targets:
-            message = Message(message_info = Url(url),
-                              message_type = MessageType.MSG_TYPE_DATA,
-                              audit_name   = self.name)
-            self.orchestrator.dispatch_msg(message)
+            message_url    = Message(message_info = Url(url),
+                                     message_type = MessageType.MSG_TYPE_DATA,
+                                     audit_name   = self.name)
+            message_domain = Message(message_info = Domain(parse_url(url).host),
+                                     message_type = MessageType.MSG_TYPE_DATA,
+                                     audit_name   = self.name)
+            self.orchestrator.dispatch_msg(message_url)
+            self.orchestrator.dispatch_msg(message_domain)
 
 
     #----------------------------------------------------------------------
