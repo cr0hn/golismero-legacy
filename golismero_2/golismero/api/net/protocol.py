@@ -257,7 +257,14 @@ class Web (Protocol):
                     m_request_params["files"] = { 'file': (fname, fvalue) } # overloaded operator!
 
             # Select request type
-            m_url = request.url
+            #
+            # Fix URL: www.site.com -> http://www.site.com
+            #m_url = request.url if parse_url(request.url).scheme else "http://%s" % request.url
+            m_parsed_url = parse_url(request.url)
+            m_url = request.url if m_parsed_url.scheme is not None and m_parsed_url.scheme != "None" else "http://%s" % request.url
+            #m_b = "hooola" if parse_url(request.url).scheme is not None else "http://%s" % request.url
+            #print "original: " + request.url + " | filtrado: " + m_url + " | parseurl: " + str(parse_url(request.url))
+
             if m_method not in ("GET", "POST", "HEAD", "OPTIONS", "PUT", "PATCH", "DELETE"):
                 raise NotImplementedError("Method '%s' not allowed." % m_method)
 
@@ -309,7 +316,8 @@ class Web (Protocol):
         # Extract the raw URL when applicable
         m_referer = None
         try:
-            URL = URL.url
+            if isinstance(URL, Url):
+                URL = URL.url
 
             # Set referer option
             m_referer = URL.referer if URL.referer else ''
