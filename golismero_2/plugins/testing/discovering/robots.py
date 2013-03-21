@@ -30,6 +30,7 @@ from golismero.api.logger import Logger
 from golismero.api.net.protocol import NetworkAPI
 from golismero.api.plugin import TestingPlugin
 from golismero.api.data.resource.url import Url
+from golismero.api.data.resource.domain import Domain
 from golismero.api.net.web_utils import parse_url, convert_to_absolute_url
 
 from requests.exceptions import RequestException
@@ -58,18 +59,20 @@ class Robots(TestingPlugin):
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-        if not isinstance(info, Url):
+        if not isinstance(info, Domain):
             raise TypeError("Expected Url, got %s instead" % type(info))
 
+        m_url = info.name
+
         # Parse the url
-        m_parsed_url = parse_url(info.url)
+        m_parsed_url = parse_url(m_url)
 
         # Only work for the root url
         if (m_parsed_url.path and m_parsed_url.path != "/") or m_parsed_url.query or m_parsed_url.fragment:
             return
 
         # Get the url of hosts
-        m_url_robots_txt = "%s://%s/robots.txt" % (m_parsed_url.scheme, m_parsed_url.hostname)
+        m_url_robots_txt = "%s://%s/robots.txt" % (m_parsed_url.scheme if m_parsed_url.scheme else "http", m_parsed_url.hostname)
 
         # Only do this once per robots.txt file
 
@@ -137,7 +140,7 @@ class Robots(TestingPlugin):
                     continue
 
                 if m_key in ('disallow', 'allow', 'sitemap') and m_value:
-                    tmp_discovered = convert_to_absolute_url(info.url, m_value)
+                    tmp_discovered = convert_to_absolute_url(m_url, m_value)
                     Logger.log_more_verbose("Robots - discovered new url: %s" % tmp_discovered)
                     m_return_bind( Url(tmp_discovered) )
             except Exception,e:
@@ -149,4 +152,4 @@ class Robots(TestingPlugin):
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url.RESOURCE_URL]
+        return [Domain.RESOURCE_DOMAIN]

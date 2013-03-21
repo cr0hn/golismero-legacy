@@ -30,6 +30,7 @@ from golismero.api.logger import Logger
 from golismero.api.net.protocol import NetworkAPI
 from golismero.api.plugin import TestingPlugin
 from golismero.api.data.resource.url import Url
+from golismero.api.data.resource.domain import Domain
 from golismero.api.data.information.information import Information
 from golismero.api.config import Config
 from golismero.api.net.web_utils import parse_url, convert_to_absolute_urls, is_in_scope
@@ -58,11 +59,20 @@ class Spider(TestingPlugin):
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-        if not isinstance(info, Url):
+        m_url = None
+        m_deep = -1
+
+        # Extract data
+        if isinstance(info, Url):
+            m_url = info.url
+            m_deep = info.depth
+        elif isinstance(info, Domain):
+            m_url = info.name
+        else:
             raise TypeError("Expected Url, got %s instead" % type(info))
 
         # Check depth
-        if int(info.depth) > int(Config.audit_config.depth):
+        if int(m_deep) > int(Config.audit_config.depth):
             return
 
         m_return = []
@@ -73,21 +83,21 @@ class Spider(TestingPlugin):
         # Check if need follow first redirect
         p = None
         try:
-            if info.depth == 0 and Config.audit_config.follow_first_redirect:
-                p = m_manager.get(info, follow_redirect=True)
+            if m_deep == 0 and Config.audit_config.follow_first_redirect:
+                p = m_manager.get(m_url, follow_redirect=True)
             else:
-                p = m_manager.get(info)
+                p = m_manager.get(m_url)
         except ValueError,e:
-            Logger.log_more_verbose("Spider - value error while processing: '%s'. Error: %s" % (info.url, e.message))
+            Logger.log_more_verbose("Spider - value error while processing: '%s'. Error: %s" % (m_url, e.message))
         except RequestException:
-            Logger.log_more_verbose("Spider - timeout for url: '%s'." % info.url)
+            Logger.log_more_verbose("Spider - timeout for url: '%s'." % m_url)
 
         # If error p == None => return
         if not p:
             return
 
         # Alert for redirect, if recursive spidering is not enabled.
-        if info.depth == Config.audit_config.depth and p.http_response_code == 301:
+        if m_deep == Config.audit_config.depth and p.http_response_code == 301:
             Logger.log("==> Initial redirection detected, but NOT followed. Try increasing the depth with the '-r' option.")
 
         # Send back the HTTP reponse to the kernel
@@ -106,12 +116,12 @@ class Spider(TestingPlugin):
 
         # Get hostname and schema to fix URL
         try:
-            m_parsed_url = parse_url(info.url)
+            m_parsed_url = parse_url(m_url)
         except ValueError:
             # Error while parsing URL
             return [p, p.information]
 
-        Logger.log_verbose("Spidering URL: '%s'" % info.url)
+        Logger.log_verbose("Spidering URL: '%s'" % m_url)
 
         s1 = time()
 
@@ -151,7 +161,7 @@ class Spider(TestingPlugin):
                         m_links.append(t1[1][4:])
 
         # Create instances of Url, convert to absolute url, remove duplicates URL and check if URLs are in scope.
-        converted_urls = convert_to_absolute_urls(info.url, m_links)
+        converted_urls = convert_to_absolute_urls(m_url, m_links)
         if converted_urls:
             # Not followed URL that contains:
             m_no_follow = (
@@ -161,7 +171,7 @@ class Spider(TestingPlugin):
                 "sigout"
             )
 
-            m_return = map(lambda u: Url(url=u, depth=info.depth + 1, referer=info.url), filter(lambda x: is_in_scope(x) and x not in m_no_follow, converted_urls))
+            m_return = map(lambda u: Url(url=u, depth=m_deep + 1, referer=m_url), filter(lambda x: is_in_scope(x) and x not in m_no_follow, converted_urls))
 
         s2 = time()
         Logger.log_more_verbose("Spider: Time to process links: %ss" % (s2 - s1))
@@ -172,4 +182,4 @@ class Spider(TestingPlugin):
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url.RESOURCE_URL]
+        return [Url.RESOURCE_URL, Domain.RESOURCE_DOMAIN]
