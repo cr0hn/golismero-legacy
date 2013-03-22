@@ -165,9 +165,9 @@ class ExtraData(Data):
     #----------------------------------------------------------------------
     @associated_resource.setter
     def associated_resource(self, value):
-        if not isinstance(value, Resource):
-            raise TypeError("Expected Resource, got %s instead" % type(value))
-        self.__associated_resource = value
+        #if not isinstance(value, Resource):
+        #    raise TypeError("Expected Resource, got %s instead" % type(value))
+        self.__associated_resource = value.identity
 
 
     #----------------------------------------------------------------------

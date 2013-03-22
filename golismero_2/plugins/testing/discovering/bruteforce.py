@@ -268,7 +268,7 @@ class BackupSearcher(TestingPlugin):
         # Check if URL is in scope
         if not is_in_scope(info.url):
             return
-
+        return
 
         # Parse original URL
         m_parsed_url = None
@@ -409,7 +409,7 @@ class BackupSearcher(TestingPlugin):
                     # Calculate impact
                     l_vuln.risk = l_info.risk
                     # Link resource associated
-                    l_vuln.associated_resource = info.url
+                    l_vuln.associated_resource = info
                     # Store
                     m_results_append(l_vuln)
                     #
