@@ -52,14 +52,38 @@ class identity(property):
 
     @staticmethod
     def is_identity_property(other):
+
         # TODO: benchmark!!!
         ##return isinstance(other, identity)
         ##return getattr(other, "is_identity_property", None) is not None
         ##return hasattr(other, "is_identity_property")
+
         try:
             other.__get__
             other.is_identity_property
             return True
+        except AttributeError:
+            return False
+
+
+#------------------------------------------------------------------------------
+class mergeable(property):
+    """
+    Decorator that marks properties that can be merged safely.
+
+    It may not be combined with any other decorator, and may not be subclassed.
+    """
+
+    @staticmethod
+    def is_mergeable_property(other):
+
+        # TODO: benchmark!!!
+        ##return isinstance(other, mergeable) and other.fset is not None
+
+        try:
+            other.__get__
+            other.is_mergeable_property
+            return other.fset is not None
         except AttributeError:
             return False
 
@@ -88,8 +112,8 @@ class Data(object):
 
     data_type = TYPE_ANY
 
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     @property
     def identity(self):
         """
@@ -124,6 +148,7 @@ class Data(object):
     __identity = None
 
     # Protected method, we don't want outsiders calling it.
+    # Subclasses may need to override it, but let's hope not!
     def _collect_identity_properties(self):
         """
         Returns a dictionary of identity properties
@@ -137,11 +162,39 @@ class Data(object):
         clazz = self.__class__
         collection = {}
         for key in dir(self):
-            if not key.startswith("_"):
+            if not key.startswith("_") and key != "identity":
                 prop = getattr(clazz, key, None)
                 if prop is not None and is_identity_property(prop):
                     collection[key] = prop.__get__(self)
         return collection
+
+
+    #----------------------------------------------------------------------
+    def merge(self, other):
+        """
+        Merge another data object with this one.
+        """
+        if type(self) is not type(other):
+            raise TypeError("Can only merge data objects of the same type")
+        if self.identity != other.identity:
+            raise ValueError("Can only merge data objects of the same identity")
+
+        # Generic implementation using None as a sentinel value.
+        # Subclasses may need to override this with a custom implementation.
+        for key in dir(other):
+            if not key.startswith("_") and key != "identity":
+                self._merge_property(other, key)
+
+    def _merge_property(self, other, key):
+        prop = getattr(other.__class__, key, None)
+        if prop is None or mergeable.is_mergeable_property(prop):
+            value = getattr(self, key, None)
+            value = getattr(other, key, value)
+            if value is not None:
+                try:
+                    setattr(self, key, value)
+                except AttributeError:
+                    pass    # attribute is read only, ignore
 
 
 #------------------------------------------------------------------------------
@@ -153,7 +206,7 @@ class ExtraData(Data):
 
 
     #----------------------------------------------------------------------
-    @property
+    @mergeable
     def associated_resource(self):
         "Resource associated with this information."
         try:

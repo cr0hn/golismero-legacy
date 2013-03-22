@@ -61,15 +61,13 @@ class Resource(Data):
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """"""
-
-        # List of information elements associated
-        self.__info_elements = dict()
-
-        # List of vulnerability elements associated
-        self.__vuln_elements = dict()
-
         super(Resource, self).__init__()
+
+        # Identities of associated information elements.
+        self.__info_elements = set()
+
+        # Identities of associated vulnerability elements.
+        self.__vuln_elements = set()
 
 
     #----------------------------------------------------------------------
@@ -82,7 +80,7 @@ class Resource(Data):
         """
         if not isinstance(info, Information):
             raise TypeError("Expected Information, got %s instead" % type(info))
-        self.__info_elements[info.identity] = True
+        self.__info_elements.add(info.identity)
 
 
     #----------------------------------------------------------------------
@@ -95,7 +93,7 @@ class Resource(Data):
         """
         if isinstance(vuln, Vulnerability):
             raise TypeError("Expected Vulnerability, got %s instead" % type(vuln))
-        self.__vuln_elements[vuln.identity] = True
+        self.__vuln_elements.add(vuln.identity)
 
 
     #----------------------------------------------------------------------
@@ -107,7 +105,7 @@ class Resource(Data):
         :return: List with vulnerabilities
         :rtype: list
         """
-        return self.__vuln_elements.values()
+        return self.__vuln_elements
 
 
     #----------------------------------------------------------------------
@@ -119,4 +117,20 @@ class Resource(Data):
         :return: List with informations
         :rtype: list
         """
-        return self.__info_elements.values()
+        return self.__info_elements
+
+
+    #----------------------------------------------------------------------
+    def merge(self, other):
+        """
+        Merge another data object with this one.
+        """
+
+        # Merge all but the associations.
+        super(Resource, self).merge(other)
+
+        # Merge the associations.
+        for identity in other.associated_vulnerabilities:
+            self.add_vulnerability(identity)
+        for identity in other.associated_informations:
+            self.add_information(identity)
