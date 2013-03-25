@@ -84,12 +84,15 @@ class ScreenReport(ReportPlugin):
         count["url"] = db.count(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
         if count["url"] < 200:   # increase as you see fit...
             # fast but memory consuming method
-            urls = db.get_many( db.keys(Data.TYPE_RESOURCE, Resource.RESOURCE_URL) )
+            #urls = db.get_many( db.keys(Data.TYPE_RESOURCE, Resource.RESOURCE_URL) )
+            urls = db.get_many( db.keys(Data.TYPE_RESOURCE) )
         else:
             # slow but lean method
-            urls = db.iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
+            #urls = db.iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
+            urls = db.iterate(Data.TYPE_RESOURCE)
         for u in urls:
             print "+ %s" % str(u)
+            #print "+++ %s" % str(u.associated_vulnerabilities)
 
         #
         #

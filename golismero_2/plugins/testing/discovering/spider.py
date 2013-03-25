@@ -60,7 +60,7 @@ class Spider(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
         m_url = None
-        m_deep = -1
+        m_deep = 0
 
         # Extract data
         if isinstance(info, Url):
@@ -72,7 +72,7 @@ class Spider(TestingPlugin):
             raise TypeError("Expected Url, got %s instead" % type(info))
 
         # Check depth
-        if int(m_deep) > int(Config.audit_config.depth):
+        if m_deep > int(Config.audit_config.depth):
             return
 
         m_return = []
@@ -87,6 +87,11 @@ class Spider(TestingPlugin):
                 p = m_manager.get(m_url, follow_redirect=True)
             else:
                 p = m_manager.get(m_url)
+
+            # Associate the resource
+            p.associated_resource = info
+            p.information.associated_resource = info
+
         except ValueError,e:
             Logger.log_more_verbose("Spider - value error while processing: '%s'. Error: %s" % (m_url, e.message))
         except RequestException:

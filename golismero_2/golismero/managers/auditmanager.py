@@ -42,6 +42,7 @@ from ..messaging.notifier import AuditNotifier
 
 from datetime import datetime
 from multiprocessing import Queue
+from collections import Counter
 
 
 #--------------------------------------------------------------------------
@@ -276,6 +277,11 @@ class Audit (object):
         # Create the database.
         self.__database = DataDB(self.__name, auditParams.audit_db)
 
+        # To follow orphan info and vuln types
+        self.__orphan_data_attemps = Counter()
+        self.__orphan_data_resources = dict()
+
+
 
     @property
     def name(self):
@@ -375,11 +381,77 @@ class Audit (object):
         # Is it data?
         if message.message_type == MessageType.MSG_TYPE_DATA:
 
-            # Add the data to the database
-            is_new = self.database.add(message.message_info)
+            # ------------------------------------------------------
+            # Algorithm explanation:
+            #
+            # The structure for information are:
+            #
+            # Info_type <-----<> Resource <>------> Vuln_type
+            #
+            # For each type of message data we distinguish if
+            # data is an info, resource or vuln.
+            #
+            # If type of data is vuln or info, we search if the
+            # associated resource is already stored:
+            #
+            # - If not: put the info in queue until resource arrives.
+            #
+            # - Is stored: search in the database and extract the
+            #              resource associated and add the new info.
+            #
+            # ------------------------------------------------------
 
-            # Is it duplicated data?
-            if not is_new:
+            m_msg_data = message.message_info
+            m_msg_type = m_msg_data.data_type
+            m_is_new   = False # var to control if received data is new in database
+
+            # Checks if data has associated a resource
+            if (m_msg_type == Data.TYPE_INFORMATION or \
+                m_msg_type == Data.TYPE_VULNERABILITY) and \
+                not m_msg_data.associated_resource:
+                raise ValueError("Vulnerability o Information types must have a resource associated. Error data: '%s'" % str(m_msg_data))
+
+
+            # Add the data to the database
+            m_is_new = self.database.add(m_msg_data)
+
+            # Data is new in database
+            if m_is_new:
+                #
+                # Differenciate the type of data:
+                #
+                # Type: INFORMATION or VULNERABILITY
+                if m_msg_type == Data.TYPE_INFORMATION or \
+                   m_msg_type == Data.TYPE_VULNERABILITY:
+
+                    # Search in database for the associated resource
+                    m_tmp_resource = self.database.get(m_msg_data.associated_resource)
+
+                    if not m_tmp_resource:
+                        # Associated resource not found -> add as orphan data
+                        self.__orphan_data_attemps[m_msg_data.identity] += 1
+                        self.__orphan_data_resources[m_msg_data.identity] = m_msg_data.associated_resource
+                    else:
+                        # Update resource
+                        self.__update_resource(m_msg_type, m_tmp_resource, m_msg_data)
+
+                # When a resource arrives check if some of orphan data can be associted with them
+                elif m_msg_type == Data.TYPE_RESOURCE:
+
+                    # Check associated resource of any orphan data matches with received resource
+                    for l_info, l_resource in self.__orphan_data_resources.iteritems():
+                        if l_resource == m_msg_data.identity:
+                            self.__update_resource(m_msg_type, m_msg_data, l_info)
+                            break
+
+                    # Delete old orphan data
+                    for l_info, l_attemp in self.__orphan_data_attemps.iteritems():
+                        if l_attemp > 5:
+                            self.database.remove(l_info)
+
+
+            # Not new -> is it duplicated data?
+            else:
 
                 # Send the ACK to the queue to make sure all
                 # messages in-between are processed correctly.
@@ -402,6 +474,33 @@ class Audit (object):
         # Send the message to the plugins
         self.__expecting_ack += self.__notifier.notify(message)
         return True
+
+    #----------------------------------------------------------------------
+    def __update_resource(self, msg_type, resource, data):
+        """
+        Update an associated resource, from database, with a info o vuln type.
+
+        :param msg_type: type of data specified at data
+        :type msg_type: int
+
+        :param resource: the resource to update
+        :type resource: Resource
+
+        :param data: Information or Vulnerability data
+        :type data: Information | Vulnerability
+        """
+        # Associated resourse found -> add new info or vuln
+
+        # Info or result type?
+        m_bind_add = resource.add_information if msg_type == Data.TYPE_INFORMATION else resource.add_vulnerability
+
+        # Add the data
+        m_bind_add(data)
+
+        # Remove old resource from database
+        self.database.remove(data.associated_resource)
+        # Add modified resource
+        self.database.add(resource)
 
 
     #----------------------------------------------------------------------

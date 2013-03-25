@@ -66,7 +66,7 @@ class Domain(Resource):
     #----------------------------------------------------------------------
     def __str__(self):
         if self.addresses:
-            return "%s (%s)" % (
+            return "(Domain) %s (%s)" % (
                 self.name,
                 ", ".join(self.addresses),
             )
