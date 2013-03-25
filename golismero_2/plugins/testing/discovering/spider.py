@@ -168,12 +168,14 @@ class Spider(TestingPlugin):
         # Create instances of Url, convert to absolute url, remove duplicates URL and check if URLs are in scope.
         converted_urls = convert_to_absolute_urls(m_url, m_links)
         if converted_urls:
-            # Not followed URL that contains:
+
+            # Do not follow URLs that contain certain keywords.
             m_no_follow = (
                 "logout",
                 "logoff",
                 "exit",
-                "sigout"
+                "sigout",
+                "signout",
             )
 
             m_return = map(lambda u: Url(url=u, depth=m_deep + 1, referer=m_url), filter(lambda x: is_in_scope(x) and x not in m_no_follow, converted_urls))
