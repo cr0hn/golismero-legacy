@@ -70,7 +70,7 @@ class Domain(Resource):
                 self.name,
                 ", ".join(self.addresses),
             )
-        return self.name
+        return "(Domain) %s" % self.name
 
 
     #----------------------------------------------------------------------
