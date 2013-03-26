@@ -30,15 +30,27 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["is_in_scope", "convert_to_absolute_url", "convert_to_absolute_urls", 'detect_auth_method', 'get_auth_obj', 'check_auth', 'parse_url']
+__all__ = ["fix_url", "is_in_scope", "convert_to_absolute_url", "convert_to_absolute_urls", 'detect_auth_method', 'get_auth_obj', 'check_auth', 'parse_url']
 
 from requests import *
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests_ntlm import HttpNtlmAuth
 from ..config import Config
-
 from collections import namedtuple
+from repoze_lru import lru_cache
 
+#----------------------------------------------------------------------
+def fix_url(url):
+    """
+    Fix selected URL adding neccesary info to be complete URL, like:
+    www.site.com -> http://www.site.com
+
+    :param url: an URL
+    :type url: str
+    """
+    m_tmp_url = parse_url(url)
+
+    return url if m_tmp_url.scheme and m_tmp_url.scheme != "None" else "http://%s" % url
 
 #----------------------------------------------------------------------
 def check_auth(url, user, password):
@@ -308,6 +320,9 @@ def split_first(s, delims):
 
     return s[:min_idx], s[min_idx+1:], min_delim
 
+
+# Cache for parse url function
+@lru_cache(maxsize=50)
 def parse_url(url):
     """
     Given a url, return a parsed :class:`.Url` namedtuple. Best-effort is
