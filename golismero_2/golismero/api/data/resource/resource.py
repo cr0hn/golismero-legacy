@@ -65,9 +65,11 @@ class Resource(Data):
 
         # List of information elements associated
         self.__info_elements = dict()
+        self.__info_elements_by_category = dict()
 
         # List of vulnerability elements associated
         self.__vuln_elements = dict()
+        self.__vuln_elements_by_category = dict()
 
         super(Resource, self).__init__()
 
@@ -80,9 +82,22 @@ class Resource(Data):
         :param info: information subclass
         :type info: Information
         """
-        if not isinstance(info, Information):
+        # Store info
+        m_category = None
+        try:
+            m_category = info.information_type
+        except AttributeError:
             raise TypeError("Expected Information, got %s instead" % type(info))
+
+        # Add information
         self.__info_elements[info.identity] = True
+
+        # New category?
+        if m_category not in self.__info_elements_by_category:
+            self.__info_elements_by_category[m_category] = []
+
+        # Add information to their category
+        self.__info_elements_by_category[m_category].append(info.identity)
 
 
     #----------------------------------------------------------------------
@@ -93,9 +108,21 @@ class Resource(Data):
         :param info: vulnerability subclass
         :type info: Vulnerability
         """
-        #if isinstance(vuln, Vulnerability):
-        #    raise TypeError("Expected Vulnerability, got %s instead" % type(vuln))
+        m_category = None
+        try:
+            m_category = vuln.vulnerability_type
+        except AttributeError:
+            raise TypeError("Expected Vulnerability, got %s instead" % type(info))
+
+        # Add vuln to store
         self.__vuln_elements[vuln.identity] = True
+
+        # New category?
+        if m_category not in self.__vuln_elements_by_category:
+            self.__vuln_elements_by_category[m_category] = []
+
+        # Store info into their category
+        self.__vuln_elements_by_category[m_category].append(vuln.identity)
 
 
     #----------------------------------------------------------------------
@@ -120,3 +147,35 @@ class Resource(Data):
         :rtype: list
         """
         return self.__info_elements.values()
+
+
+    #----------------------------------------------------------------------
+    def associated_vulnerabilities_by_category(self, cat_name = None):
+        """
+        Get accociated vulnerabilites by one category
+
+        :param cat_name: category name
+        :type cat_name: str
+
+        :return: list with IDs with associated informations. Return empty list if category not exits.
+        """
+        if cat_name and cat_name in self.__info_elements_by_category:
+            return self.__info_elements_by_category.values()
+        else:
+            return []
+
+
+    #----------------------------------------------------------------------
+    def associated_informations_by_category(self, cat_name = None):
+        """
+        Get accociated information by one category
+
+        :param cat_name: category name
+        :type cat_name: str
+
+        :return: list with IDs with associated vulnerabilities. Return empty list if category not exits.
+        """
+        if cat_name and cat_name in self.__vuln_elements_by_category:
+            return self.__vuln_elements_by_category.values()
+        else:
+            return []
