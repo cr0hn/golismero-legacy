@@ -28,10 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["HTTP_Request", "HTTP_Response"]
 
-from ..data import mergeable
-from .information import *
-from .html import *
-from ..resource.url import *
+from .html import HTML
+from ..resource.url import Url
 from ...net.web_utils import parse_url
 from ....common import random
 
@@ -42,7 +40,7 @@ from re import findall
 
 
 #------------------------------------------------------------------------------
-class HTTP_Request (Information):
+class HTTP_Request (object):
     """
     HTTP request.
     """
@@ -81,6 +79,7 @@ class HTTP_Request (Information):
         "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-us) AppleWebKit/534.16+ (KHTML, like Gecko) Version/5.0.3 Safari/533.19.4",
         "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25"
     )
+
 
     #----------------------------------------------------------------------
     def __init__(self, url, method = 'GET', post_data = None, cache = True, follow_redirects = None, cookie = "", random_user_agent = False, request_type = 0):
@@ -127,11 +126,6 @@ class HTTP_Request (Information):
 
         # Id of request
         self.__request_id = None
-
-        #
-        # Parent constructor
-        #
-        super(HTTP_Request, self).__init__()
 
 
     #----------------------------------------------------------------------
@@ -225,7 +219,7 @@ class HTTP_Request (Information):
     #
     #----------------------------------------------------------------------
 
-    @mergeable
+    @property
     def hostname(self):
         "'Host' HTTP header"
         return self.__headers.get('Host')
@@ -236,7 +230,7 @@ class HTTP_Request (Information):
         self.__headers['Host'] = value
         self.__parsed_url.hostname = self.__headers['Host']
 
-    @mergeable
+    @property
     def user_agent(self):
         "'User-Agent' HTTP header"
         return self.__headers.get('User-Agent')
@@ -246,7 +240,7 @@ class HTTP_Request (Information):
         assert isinstance(value, basestring)
         self.__headers['User-Agent'] = value
 
-    @mergeable
+    @property
     def accept_language(self):
         "'Accept-Language' HTTP header"
         return self.__headers.get('Accept-Language')
@@ -256,7 +250,7 @@ class HTTP_Request (Information):
         assert isinstance(value, basestring)
         self.__headers['Accept-Language'] = value
 
-    @mergeable
+    @property
     def accept(self):
         "'Accept' HTTP header"
         return self.__headers.get('Accept')
@@ -266,7 +260,7 @@ class HTTP_Request (Information):
         assert isinstance(value, basestring)
         self.__headers['Accept'] = value
 
-    @mergeable
+    @property
     def referer(self):
         "'Referer' HTTP header"
         return self.__headers.get('Referer')
@@ -276,7 +270,7 @@ class HTTP_Request (Information):
         assert isinstance(value, basestring)
         self.__headers['Referer'] = value
 
-    @mergeable
+    @property
     def cookie(self):
         "'Cookie' HTTP header"
         return self.__headers.get('Cookie')
@@ -286,7 +280,7 @@ class HTTP_Request (Information):
         assert isinstance(value, basestring)
         self.__headers['Cookie'] = value
 
-    @mergeable
+    @property
     def content_type(self):
         "'Content-Type' HTTP header"
         return self.__headers.get('Content-Type')
@@ -296,7 +290,7 @@ class HTTP_Request (Information):
         assert isinstance(value, basestring)
         self.__headers['Content-Type'] = value
 
-    @mergeable
+    @property
     def post_data(self):
         "HTTP POST data"
         return self.__post_data
@@ -309,7 +303,7 @@ class HTTP_Request (Information):
             self.__post_data = value
         self.content_type = "application/x-www-form-urlencoded; charset=UTF-8"
 
-    @mergeable
+    @property
     def raw_headers(self):
         "Raw HTTP headers"
         return self.__headers
@@ -319,7 +313,7 @@ class HTTP_Request (Information):
         assert isinstance(value, dict)
         self.__headers.update(value)
 
-    @mergeable
+    @property
     def follow_redirects(self):
         """
         Redirect options for the request (True to follow redirects, False otherwise).
@@ -418,12 +412,10 @@ class HTTP_Request (Information):
 
 
 #------------------------------------------------------------------------------
-class HTTP_Response (Information):
+class HTTP_Response (object):
     """
     HTTP response.
     """
-
-    information_type = Information.INFORMATION_HTTP_RESPONSE
 
 
     #----------------------------------------------------------------------
