@@ -341,11 +341,7 @@ class Audit (object):
             message_url    = Message(message_info = Url(url),
                                      message_type = MessageType.MSG_TYPE_DATA,
                                      audit_name   = self.name)
-            #message_domain = Message(message_info = Domain(parse_url(url).host),
-            #                         message_type = MessageType.MSG_TYPE_DATA,
-            #                         audit_name   = self.name)
             self.orchestrator.dispatch_msg(message_url)
-            #self.orchestrator.dispatch_msg(message_domain)
 
 
     #----------------------------------------------------------------------
