@@ -62,21 +62,22 @@ class Url(Resource):
         :param deep: The deep of URL in relation with main site.
         :type deep: int
         """
+        super(Url, self).__init__()
 
         # URL
         assert isinstance(referer, basestring)
         self.__url = url
 
         # Method
-        self.__method = 'GET' if not method else method.upper()
+        self.__method = method.strip().upper() if method else "GET"
 
-        # Params in URL
+        # GET params
         self.__url_params = url_params if url_params else {}
 
-        # Params as post
+        # POST params
         self.__post_params = post_params if post_params else {}
 
-        # HTTPs?
+        # Encrypted?
         self.__is_https = url.lower().startswith("https://")
 
         # Content type
@@ -85,16 +86,13 @@ class Url(Resource):
         # Request type
         self.__request_type = request_type
 
-        # Dept of URL
+        # Depth
         assert type(depth) == int
         self.__depth = depth
 
-        # Set referer
+        # Referer
         assert isinstance(referer, basestring)
         self.__referer = referer
-
-        # Parent constructor
-        super(Url, self).__init__()
 
 
     #----------------------------------------------------------------------
