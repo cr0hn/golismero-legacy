@@ -154,3 +154,4 @@ class Spider(TestingPlugin):
     #----------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url.RESOURCE_URL]
+

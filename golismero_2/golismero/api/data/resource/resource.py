@@ -93,8 +93,8 @@ class Resource(Data):
         :param info: vulnerability subclass
         :type info: Vulnerability
         """
-        if isinstance(vuln, Vulnerability):
-            raise TypeError("Expected Vulnerability, got %s instead" % type(vuln))
+        #if isinstance(vuln, Vulnerability):
+        #    raise TypeError("Expected Vulnerability, got %s instead" % type(vuln))
         self.__vuln_elements[vuln.identity] = True
 
 

@@ -43,7 +43,10 @@ from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.text.wordlist_api import WordListAPI
 from golismero.api.net.web_utils import parse_url
-from golismero.api.text.text_utils import get_matching_level, generate_random_string
+from golismero.api.text.matching_analyzer import get_matching_level
+from golismero.api.text.text_utils import generate_random_string
+from golismero.api.config import Config
+
 
 from os.path import splitext, split, sep
 from os import getpid
@@ -302,6 +305,8 @@ class BackupSearcher(TestingPlugin):
         # Load wordlists
         #
         m_wordlist = self.load_wordlist()
+        #print m_wordlist
+        #return
 
         #
         # Generate an error in server to get an error page, using a random string
@@ -387,7 +392,6 @@ class BackupSearcher(TestingPlugin):
         m_results = []
 
         if m_store_info.average_level > 0:
-            #m_length = 1.1 if len(m_discovered_level) == 0 else len(m_discovered_level)
             m_average = m_store_info.average_level
 
             m_results_append = m_results.append
@@ -449,6 +453,7 @@ class BackupSearcher(TestingPlugin):
 
 
 
+
     #----------------------------------------------------------------------
     def load_wordlist(self):
         """
@@ -456,37 +461,30 @@ class BackupSearcher(TestingPlugin):
 
         :returns: dict -- A dict with wordlists
         """
-        m_wordlist = {}
+        m_wordlist = {
+            'suffixes' : [],
+            'prefixes' : [],
+            'extensions' : [],
+            'predictable_files' : []
+        }
 
-        # 1 - Suffixes
-        m_wordlist['suffixes'] = []
-        m_wordlist['suffixes'].append(WordListAPI().get_wordlist("fuzzdb_discovery_filenamebruteforce_extensions.backup.fuzz"))
-        m_wordlist['suffixes'].append(WordListAPI().get_wordlist("golismero_predictables_file-compressed-suffixes"))
+        # Load wordlist form config file
+        for wordlist_name, wordlist_path in Config.plugin_info.plugin_config.iteritems():
+            l_tmp_wordlist = None
+            if wordlist_name.startswith('wordlist_suffixes'):
+                l_tmp_wordlist = 'suffixes'
+            elif wordlist_name.startswith('wordlist_prefixes'):
+                l_tmp_wordlist = 'prefixes'
+            elif wordlist_name.startswith('wordlist_extensions'):
+                l_tmp_wordlist = 'extensions'
+            elif wordlist_name.startswith('wordlist_predictable_files'):
+                l_tmp_wordlist = 'predictable_files'
 
-        # 2 - Prefixes
-        m_wordlist['prefixes'] = []
-        m_wordlist['prefixes'].append(WordListAPI().get_wordlist("golismero_predictables_file-prefix"))
-        m_wordlist['prefixes'].append(WordListAPI().get_wordlist("fuzzdb_discovery_filenamebruteforce_copy_of.fuzz"))
+            if l_tmp_wordlist:
+                m_wordlist[l_tmp_wordlist].append(WordListAPI().get_wordlist(wordlist_path))
 
-        # 3 - File extensions
-        m_wordlist['extensions'] = []
-        m_wordlist['extensions'].append(WordListAPI().get_wordlist("golismero_predictables_java-file-extensions"))
-        m_wordlist['extensions'].append(WordListAPI().get_wordlist("golismero_predictables_microsoft-file-extensions"))
-        m_wordlist['extensions'].append(WordListAPI().get_wordlist("golismero_predictables_file-compressed-suffixes"))
-        m_wordlist['extensions'].append(WordListAPI().get_wordlist("golismero_predictables_microsoft-file-extensions"))
-
-        # 5 - Predictable filename and folders
-        m_wordlist['predictable_files'] = []
-        m_wordlist['predictable_files'].append(WordListAPI().get_wordlist("fuzzdb_discovery_predictableres_cgi_microsoft.fuzz"))
-        m_wordlist['predictable_files'].append(WordListAPI().get_wordlist("fuzzdb_discovery_predictableres_apache.fuzz"))
-        m_wordlist['predictable_files'].append(WordListAPI().get_wordlist("fuzzdb_discovery_predictableres_iis.fuzz"))
-        m_wordlist['predictable_files'].append(WordListAPI().get_wordlist("fuzzdb_discovery_predictableres_php.fuzz"))
-        #m_wordlist['predictable_files'].append(WordListAPI().get_wordlist("fuzzdb_discovery_predictableres_passwords.fuzz"))
-        m_wordlist['predictable_files'].append(WordListAPI().get_wordlist("fuzzdb_discovery_predictableres_oracle9i.fuzz"))
-        m_wordlist['predictable_files'].append(WordListAPI().get_wordlist("fuzzdb_discovery_predictableres_unixdotfiles.fuzz"))
 
         return m_wordlist
-
 
     #----------------------------------------------------------------------
     def make_url_with_suffixes(self, wordlist, url_parts):

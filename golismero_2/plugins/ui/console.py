@@ -86,7 +86,8 @@ class ConsoleUIPlugin(UIPlugin):
         # Processors functions
         funcs = {
             Resource.RESOURCE_URL : process_url,
-            'url_disclouse': process_url_disclosure
+            'url_disclouse': process_url_disclosure,
+            'information_disclosure/url_suspicious': process_url_suspicious
         }
 
         # Get verbosity level.
@@ -96,13 +97,19 @@ class ConsoleUIPlugin(UIPlugin):
 
             # Messages with vulnerability types
             if  info.data_type == Data.TYPE_VULNERABILITY:
-                Console.display("%s" % funcs[info.vulnerability_type](info))
+                try:
+                    Console.display("%s" % funcs[info.vulnerability_type](info))
+                except KeyError:
+                    raise ValueError("Not function to process vulnerability type: '%s'" % info.vulnerability_type)
 
         if Console.level >= Console.VERBOSE:
 
             # Messages with information types
             if  info.data_type == Data.TYPE_RESOURCE and info.data_type == Resource.RESOURCE_URL:
-                Console.display("+ %s" % funcs[info.RESOURCE_URL](info))
+                try:
+                    Console.display("+ %s" % funcs[info.RESOURCE_URL](info))
+                except KeyError:
+                    raise ValueError("Not function to process Resource type: '%s'" % info.vulnerability_type)
 
 
     #----------------------------------------------------------------------
@@ -174,6 +181,29 @@ def process_url(url):
     return "New URL: [%s] %s" % (
         url.method,
         colorize(url.url, 'info'),
+    )
+
+
+#----------------------------------------------------------------------
+def process_url_suspicious(url):
+    """Display URL discover"""
+    # Split parts
+    m_url = url.url
+    m_substr = url.substring
+    m_pos_discovered = m_url.find(m_substr)
+    m_prefix = m_url[:m_pos_discovered]
+    m_content = m_url[m_pos_discovered: m_pos_discovered + len(m_url)]
+    m_suffix = m_url[m_pos_discovered + len(m_substr):] if (m_pos_discovered + len(m_substr)) < len(m_url) else ""
+
+    m_url = "%s%s%s" % (
+        m_prefix,
+        colorize(m_content, 'red'),
+        m_suffix
+    )
+
+    return "%s: %s\n" % (
+        colorize("!! Suspicious URL", url.risk),
+        m_url
     )
 
 
