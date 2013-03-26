@@ -26,15 +26,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-# Acknowledgments:
-#
-#   We'd like to thank @capi_x for his idea on how
-#   to detect fake 200 responses from servers by
-#   issuing known good and bad queries and diffing
-#   them to calculate the deviation.
-#
-#   https://twitter.com/capi_x
-
 from golismero.api.logger import Logger
 from golismero.api.net.protocol import NetworkAPI
 from golismero.api.net.web_utils import convert_to_absolute_url, is_in_scope
@@ -47,7 +38,7 @@ from golismero.api.config import Config
 
 class SuspiciousURLPlugin(TestingPlugin):
     """
-    This plugin is used por testing purposes and as example of use of plugins
+    Find suspicious words in URLs.
     """
 
 
@@ -81,19 +72,10 @@ class SuspiciousURLPlugin(TestingPlugin):
 
         Logger.log_verbose("Suspicious - processing URL: '%s'" % m_url)
 
-        #
         # Load wordlists
-        #
         m_wordlist = WordListAPI().get_wordlist(Config.plugin_config['wordlist'])
 
-        m_results = []
-        m_results_append = m_results.append
-
-        # Looking for matches
-        for x in m_wordlist:
-            if m_url.find(x) != -1:
-                m_results_append(SuspiciousURL(m_url, x, associated_resource = info))
-
-        # Report
-        return m_results
-
+        # Return matching keywords
+        return [SuspiciousURL(m_url, x, associated_resource = info)
+                for x in m_wordlist
+                if x in m_url]
