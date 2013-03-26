@@ -30,7 +30,7 @@ from golismero.api.data.resource.resource import Resource
 from golismero.api.data.data import Data
 from golismero.messaging.codes import MessageType, MessageCode
 from golismero.messaging.message import Message
-from golismero.main.console import Console, colorize
+from golismero.main.console import Console, colorize, colorize_substring
 
 #
 # Verbosity levels:
@@ -187,44 +187,20 @@ def process_url(url):
 #----------------------------------------------------------------------
 def process_url_suspicious(url):
     """Display URL discover"""
-    # Split parts
-    m_url = url.url
-    m_substr = url.substring
-    m_pos_discovered = m_url.find(m_substr)
-    m_prefix = m_url[:m_pos_discovered]
-    m_content = m_url[m_pos_discovered: m_pos_discovered + len(m_url)]
-    m_suffix = m_url[m_pos_discovered + len(m_substr):] if (m_pos_discovered + len(m_substr)) < len(m_url) else ""
-
-    m_url = "%s%s%s" % (
-        m_prefix,
-        colorize(m_content, 'red'),
-        m_suffix
-    )
 
     return "%s: %s" % (
         colorize("!! Suspicious URL", url.risk),
-        m_url
+        colorize_substring(url.url, url.substring, 'red')
     )
 
 
 #----------------------------------------------------------------------
 def process_url_disclosure(url):
     """Display URL discover"""
-    # Split parts
-    m_pos_discovered = url.url.find(url.discovered)
-    m_prefix = url.url[:m_pos_discovered]
-    m_content = url.url[m_pos_discovered: m_pos_discovered + len(url.discovered)]
-    m_suffix = url.url[m_pos_discovered + len(url.discovered):] if (m_pos_discovered + len(url.discovered)) < len(url.url) else ""
-
-    m_url = "%s%s%s" % (
-        m_prefix,
-        colorize(m_content, url.risk),
-        m_suffix
-    )
 
     return "%s: %s\n| Method: %s\n%s|-%s" % (
         colorize("!! Discovered", url.risk),
-        m_url,
+        colorize_substring(url.url, url.discovered, url.risk),
         url.method,
         '| Referer <- %s\n' % url.referer if url.referer else '',
         "-" * len(url.url)
