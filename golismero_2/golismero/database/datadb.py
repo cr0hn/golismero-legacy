@@ -103,7 +103,7 @@ class BaseDataDB (BaseDB):
         :param data: Data to add.
         :type data: Data
 
-        :returns: bool -- True if the data was added, False if it was updated
+        :returns: bool -- True if the data was new, False if it was updated.
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -232,9 +232,11 @@ class DataMemoryDB (BaseDataDB):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
         identity = data.identity
-        is_new = identity not in self.__results
+        if identity in self.__results:
+            self.__results[identity].merge(data)
+            return False
         self.__results[identity] = data
-        return is_new
+        return True
 
 
     #----------------------------------------------------------------------
@@ -406,9 +408,13 @@ class DataFileDB (BaseDataDB):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
         identity = data.identity
-        is_new = identity not in self.__db
+        exists = identity in self.__db
+        if exists:
+            old_data = self.decode(self.__db[identity])
+            old_data.merge(data)
+            data = old_data
         self.__db[identity] = self.encode(data)
-        return is_new
+        return not exists
 
 
     #----------------------------------------------------------------------
@@ -660,10 +666,18 @@ class DataSQLiteDB (BaseDataDB):
                 data.data_type = Data.TYPE_INFORMATION
                 table = "information"
                 dtype = data.information_type
+                if dtype == Information.INFORMATION_UNKNOWN:
+                    warnings.warn(
+                        "Received %s object of subtype INFORMATION_UNKNOWN" % type(data),
+                        RuntimeWarning)
             elif isinstance(data, Resource):
                 data.data_type = Data.TYPE_RESOURCE
                 table = "resource"
                 dtype = data.resource_type
+                if dtype == Resource.RESOURCE_UNKNOWN:
+                    warnings.warn(
+                        "Received %s object of subtype RESOURCE_UNKNOWN" % type(data),
+                        RuntimeWarning)
             elif isinstance(data, Vulnerability):
                 data.data_type = Data.TYPE_VULNERABILITY
                 table = "vulnerability"
@@ -684,9 +698,11 @@ class DataSQLiteDB (BaseDataDB):
             raise TypeError("Expected Data, got %d instead" % type(data))
         table, dtype = self.__get_data_table_and_type(data)
         identity = data.identity
-        query = "SELECT COUNT(rowid) FROM %s WHERE identity = ? LIMIT 1;"
-        self.__cursor.execute(query % table, (identity,))
-        is_new = not bool(self.__cursor.fetchone()[0])
+        old_data = self.__get(identity, data.data_type)
+        is_new = old_data is None
+        if not is_new:
+            old_data.merge(data)
+            data = old_data
         query  = "INSERT OR REPLACE INTO %s VALUES (NULL, ?, ?, ?);" % table
         values = (identity, dtype, sqlite3.Binary(self.encode(data)))
         self.__cursor.execute(query, values)
@@ -741,6 +757,9 @@ class DataSQLiteDB (BaseDataDB):
     #----------------------------------------------------------------------
     @transactional
     def get(self, identity, data_type = None):
+        return self.__get(identity, data_type)
+
+    def __get(self, identity, data_type = None):
         if data_type is None:
             tables = ("information", "resource", "vulnerability")
         elif data_type == Data.TYPE_INFORMATION:
@@ -913,7 +932,7 @@ class DataSQLDB (BaseDataDB):
         """
         super(DataSQLDB, self).__init__(audit_name)
         #
-        # TODO add SQLAlchemy support
+        # TODO add Django ORM support
         #
         raise NotImplementedError("SQL databases not supported yet")
 
