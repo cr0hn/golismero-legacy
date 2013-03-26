@@ -38,6 +38,7 @@ from requests_ntlm import HttpNtlmAuth
 from ..config import Config
 from collections import namedtuple
 from repoze_lru import lru_cache
+from urlparse import urlparse
 
 #----------------------------------------------------------------------
 def fix_url(url):
@@ -321,8 +322,59 @@ def split_first(s, delims):
     return s[:min_idx], s[min_idx+1:], min_delim
 
 
+#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
+class ParsedURLItem(object):
+    """
+    Contains a parsed URL. Properties:
+
+    + scheme
+    + username
+    + password
+    + hostname
+    + port
+    + path
+    + query
+    + fragment
+
+    Where:
+
+    scheme://username:password@hostname:port/path?query
+
+    """
+    pass
+
 # Cache for parse url function
-@lru_cache(maxsize=50)
+@lru_cache(maxsize=100)
+def parse_url_(url):
+    """
+    Parse and URL and return a ParsedURLItem item
+
+    :param url: URL to parse.
+    :type url: str
+
+    :return: ParsedURLItem item
+    :rtype: ParsedURLItem
+    """
+    m_parsed_url = urlparse(url)
+
+    m_robj = ParsedURLItem()
+    m_robj.scheme   = m_parsed_url.scheme if m_parsed_url.scheme else None
+    m_robj.host     = m_parsed_url.hostname if m_parsed_url.hostname else ''
+    m_robj.hostname = m_robj.host # for compatibility and avoid errors.
+    m_robj.path     = m_parsed_url.path if m_parsed_url.path else None
+    m_robj.query    = m_parsed_url.query if m_parsed_url.query else None
+    m_robj.fragment = m_parsed_url.fragment if m_parsed_url.fragment else None
+    m_robj.port     = m_parsed_url.port if m_parsed_url.port else None
+    m_robj.username = m_parsed_url.username if m_parsed_url.username else None
+    m_robj.password = m_parsed_url.password if m_parsed_url.password else None
+
+    return m_robj
+
+
+
+
+@lru_cache(maxsize=100)
 def parse_url(url):
     """
     Given a url, return a parsed :class:`.Url` namedtuple. Best-effort is
@@ -381,7 +433,8 @@ def parse_url(url):
             host = _host
 
         if not port.isdigit():
-            raise ValueError("Error while parsing: %s" % url)
+            port = int(80)
+            #raise ValueError("Error while parsing: %s" % url)
 
         port = int(port)
 
