@@ -3,7 +3,7 @@ Name = Suspicious URL
 Module = suspicious_url.py
 
 [Documentation]
-Description = Find in URL suspicious words
+Description = Find suspicious words in URLs
 Author = Daniel Garcia Garcia (cr0hn)
 Version = 0.1
 Website = http://code.google.com/p/golismero/

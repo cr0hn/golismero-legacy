@@ -98,7 +98,7 @@ class ConsoleUIPlugin(UIPlugin):
             # Messages with vulnerability types
             if  info.data_type == Data.TYPE_VULNERABILITY:
                 try:
-                    Console.display("%s" % funcs[info.vulnerability_type](info))
+                    Console.display(funcs[info.vulnerability_type](info))
                 except KeyError:
                     raise ValueError("Not function to process vulnerability type: '%s'" % info.vulnerability_type)
 
