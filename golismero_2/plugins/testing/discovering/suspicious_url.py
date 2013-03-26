@@ -70,8 +70,6 @@ class SuspiciousURLPlugin(TestingPlugin):
         if not is_in_scope(m_url):
             return
 
-        Logger.log_verbose("Suspicious - processing URL: '%s'" % m_url)
-
         # Load wordlists
         m_wordlist = WordListAPI().get_wordlist(Config.plugin_config['wordlist'])
 

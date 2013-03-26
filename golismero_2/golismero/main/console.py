@@ -62,6 +62,41 @@ m_colors = {
     'yellow': 'yellow',
 }
 
+#----------------------------------------------------------------------
+def colorize_substring(text, substring, level_or_color):
+    """
+    Colorize a substring in a text depends of type of alert:
+    - Information
+    - Low
+    - Middle
+    - Hight
+    - Critical
+
+    :param text: orginal text
+    :type text: str
+
+    :param text: subtext to colorize.
+    :type text: int with level (0-4) or string with values: info, low, middle, high, critical.
+
+    :param level_or_color: color name or integer with level selected.
+    :type level_or_color: str or integer (0-4).
+
+    :returns: str -- string with information to print.
+    """
+    if text and substring and level_or_color:
+
+        m_pos = text.find(substring)
+        m_prefix = text[:m_pos]
+        m_content = text[m_pos: m_pos + len(substring)]
+        m_suffix = text[m_pos + len(substring):] if (m_pos + len(substring)) < len(text) else ""
+
+        return "%s%s%s" % (
+            m_prefix,
+            colored(m_content, m_colors[level_or_color]),
+            m_suffix
+            )
+    else:
+        return text
 
 #----------------------------------------------------------------------
 def colorize(text, level_or_color):
@@ -76,11 +111,8 @@ def colorize(text, level_or_color):
     :param text: text to colorize.
     :type text: int with level (0-4) or string with values: info, low, middle, high, critical.
 
-    :param level: color selected, by level.
-    :type level: str or integer (0-4).
-
-    :param color: indicates if output must be colorized or not.
-    :type color: bool.
+    :param level_or_color: color name or integer with level selected.
+    :type level_or_color: str or integer (0-4).
 
     :returns: str -- string with information to print.
     """
