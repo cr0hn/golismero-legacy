@@ -208,7 +208,7 @@ def cmdline_parser():
     gr_report.add_argument("-no", "--no-output", dest="reports", action=ResetListAction, help="do not output the results")
 
     gr_net = parser.add_argument_group("network options")
-    gr_net.add_argument("--max-connections", help="maximum number of concurrent connections per host [default: 4]", default=50)
+    gr_net.add_argument("--max-connections", help="maximum number of concurrent connections per host [default: 50]", default=50)
     gr_net.add_argument("--allow-subdomains", action="store_true", dest="include_subdomains", help="include subdomains in the target scope [default]", default=True)
     gr_net.add_argument("--forbid-subdomains", action="store_false", dest="include_subdomains", help="do not include subdomains in the target scope")
     gr_net.add_argument("--subdomain-regex", metavar="REGEX", help="filter subdomains using a regular expression", default="")
@@ -228,7 +228,7 @@ def cmdline_parser():
     gr_plugins = parser.add_argument_group("plugin options")
     gr_plugins.add_argument("-P", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load", default=["global", "testing", "report", "ui/console"])
     gr_plugins.add_argument("-NP", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load", default=["all"])
-    gr_plugins.add_argument("--max-process", metavar="N", type=int, help="maximum number of plugins to run concurrently [default: 2]", default=2)
+    gr_plugins.add_argument("--max-process", metavar="N", type=int, help="maximum number of plugins to run concurrently [default: 8]", default=8)
     gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
     gr_plugins.add_argument("--plugin-list", action="store_true", help="list available plugins and quit")
     gr_plugins.add_argument("--plugin-info", metavar="NAME", dest="plugin_name", help="show plugin info and quit")

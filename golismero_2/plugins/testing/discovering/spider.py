@@ -34,6 +34,7 @@ from golismero.api.data.resource.domain import Domain
 from golismero.api.data.information.information import Information
 from golismero.api.config import Config
 from golismero.api.net.web_utils import parse_url, convert_to_absolute_urls, is_in_scope
+from golismero.api.net.scraper import extract_from_html
 
 from requests.exceptions import RequestException
 from time import time
@@ -66,8 +67,6 @@ class Spider(TestingPlugin):
         if isinstance(info, Url):
             m_url = info.url
             m_deep = info.depth
-        elif isinstance(info, Domain):
-            m_url = info.name
         else:
             raise TypeError("Expected Url, got %s instead" % type(info))
 
@@ -75,7 +74,7 @@ class Spider(TestingPlugin):
         if m_deep > int(Config.audit_config.depth):
             return
 
-        m_return = []
+        Logger.log_verbose("Spidering URL: '%s'" % m_url)
 
         # Request this URL
         m_manager = NetworkAPI.get_connection()
@@ -108,6 +107,12 @@ class Spider(TestingPlugin):
         # Send back the HTTP reponse to the kernel
         self.send_info(p)
 
+        # If it's a 301 response, get the Location header
+        if p.http_response_code == 301:
+            m_location = p.http_headers.get("Location", "")
+            if m_location:
+                self.send_info(Url(url=m_location, depth=m_deep + 1, referer=m_url))
+
         # Stop if there's no embedded information
         if not p.information:
             return
@@ -119,72 +124,34 @@ class Spider(TestingPlugin):
         if p.information.information_type != Information.INFORMATION_HTML:
             return
 
-        # Get hostname and schema to fix URL
-        try:
-            m_parsed_url = parse_url(m_url)
-        except ValueError:
-            # Error while parsing URL
-            return [p, p.information]
-
-        Logger.log_verbose("Spidering URL: '%s'" % m_url)
-
         s1 = time()
 
-        m_links = []
+        # Get links from raw HTML
+        m_links = extract_from_html(p.information.raw_data, m_url)
 
-        # If is 301 response, get Location property
-        if p.http_response_code == 301:
-            try:
-                m_links.append(p.http_headers["Location"])
-            except KeyError:
-                pass
+        # Do not follow URLs that contain certain keywords
+        # TODO: put this in the plugin's configuration!
+        m_forbidden = (
+            "logout",
+            "logoff",
+            "exit",
+            "sigout",
+            "signout",
+        )
 
-        # Get links
-        m_links.extend([x.attrs['href'] for x in p.information.links if 'href' in x.attrs and not x.attrs["href"].startswith("#") and not x.attrs["href"].startswith("javascript")])
-
-        # Get links to css
-        m_links.extend([x.attrs['href'] for x in p.information.css_links if 'href' in x.attrs])
-
-        # Get javascript links
-        m_links.extend([x.attrs['src'] for x in p.information.javascript_links if 'src' in x.attrs])
-
-        # Get Action of forms
-        m_links.extend([x.attrs['src'] for x in p.information.forms if 'src' in x.attrs])
-
-        # Get links to objects
-        m_links.extend([x.attrs['param']['movie'] for x in p.information.objects if 'param' in x.attrs and 'movie' in x.attrs['param']])
-
-        # Get HTML redirections in meta
-        if p.information.metas:
-            # We are looking for content like: '...; url=XXXXX>'
-            if "content" in p.information.metas[0].attrs:
-                t1 = p.information.metas[0].attrs["content"].split(';')
-
-                # Must have at least 2 params
-                if len(t1) > 1:
-                    if t1[1].find("url") != -1 and len(t1[1]) > 5:
-                        m_links.append(t1[1][4:])
-
-        # Create instances of Url, convert to absolute url, remove duplicates URL and check if URLs are in scope.
-        converted_urls = convert_to_absolute_urls(m_url, m_links)
-        if converted_urls:
-            # Not followed URL that contains:
-            m_no_follow = (
-                "logout",
-                "logoff",
-                "exit",
-                "sigout"
-            )
-
-            m_return = map(lambda u: Url(url=u, depth=m_deep + 1, referer=m_url), filter(lambda x: is_in_scope(x) and x not in m_no_follow, converted_urls))
+        # Convert to Url data type and filter out out of scope and forbidden URLs
+        m_return = [ Url(url=u, depth=m_deep + 1, referer=m_url)
+                     for u in m_links
+                     if is_in_scope(u) and not any(x in u for x in m_forbidden) ]
 
         s2 = time()
         Logger.log_more_verbose("Spider: Time to process links: %ss" % (s2 - s1))
 
-        # Send info
+        # Send the URLs
         return m_return
 
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url.RESOURCE_URL] #, Domain.RESOURCE_DOMAIN]
+        return [Url.RESOURCE_URL]
+
