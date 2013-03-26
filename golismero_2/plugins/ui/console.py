@@ -201,7 +201,7 @@ def process_url_suspicious(url):
         m_suffix
     )
 
-    return "%s: %s\n" % (
+    return "%s: %s" % (
         colorize("!! Suspicious URL", url.risk),
         m_url
     )
