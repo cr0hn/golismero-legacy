@@ -64,7 +64,7 @@ def is_link(url, base_url):
     """
 
     # URLs that point to the same page in a different fragment are not links.
-    if urldefrag(url) == base_url:
+    if urldefrag(url)[0] == base_url:
         return False
 
     # Scripting and data URLs are not links.
@@ -103,7 +103,7 @@ def extract_from_text(text, base_url, only_links = True):
     add_result = result.add
 
     # Remove the fragment from the base URL.
-    base_url = urldefrag(base_url)
+    base_url = urldefrag(base_url)[0]
 
     # Look for URLs using a regular expression.
     for url in _re_url.findall(text):
@@ -112,7 +112,7 @@ def extract_from_text(text, base_url, only_links = True):
         url = urljoin(base_url, url.strip())
 
         # Discard URLs that are not links to other pages or resources.
-        if not only_links or is_link(url):
+        if not only_links or is_link(url, base_url = base_url):
 
             # Add the URL to the set.
             add_result(url)
@@ -153,7 +153,7 @@ def extract_from_html(raw_html, base_url, only_links = True):
     add_result = result.add
 
     # Remove the fragment from the base URL.
-    base_url = urldefrag(base_url)
+    base_url = urldefrag(base_url)[0]
 
     # Parse the raw HTML.
     bs = BeautifulSoup(raw_html,
@@ -193,7 +193,7 @@ def extract_from_html(raw_html, base_url, only_links = True):
         elif name == "base":
             url = tag.get("href", None)
             if url is not None:  # update the base url
-                base_url = urljoin(base_url, url.strip())
+                base_url = urljoin(base_url, url.strip(), allow_fragments = False)
 
         # If we found an URL in this tag...
         if url is not None:
@@ -202,7 +202,7 @@ def extract_from_html(raw_html, base_url, only_links = True):
             url = urljoin(base_url, url.strip())
 
             # Discard URLs that are not links to other pages or resources.
-            if not only_links or is_link(url):
+            if not only_links or is_link(url, base_url = base_url):
 
                 # Add the URL to the set.
                 add_result(url)

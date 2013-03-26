@@ -127,7 +127,7 @@ class Spider(TestingPlugin):
         s1 = time()
 
         # Get links from raw HTML
-        m_links = extract_from_html(p.information.raw_data)
+        m_links = extract_from_html(p.information.raw_data, m_url)
 
         # Do not follow URLs that contain certain keywords
         # TODO: put this in the plugin's configuration!
