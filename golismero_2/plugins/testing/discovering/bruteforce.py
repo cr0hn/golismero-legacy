@@ -43,7 +43,8 @@ from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.text.wordlist_api import WordListAPI
 from golismero.api.net.web_utils import parse_url
-from golismero.api.text.text_utils import get_matching_level, generate_random_string
+from golismero.api.text.matching_analyzer import get_matching_level
+from golismero.api.text.text_utils import generate_random_string
 from golismero.api.config import Config
 
 
@@ -391,7 +392,6 @@ class BackupSearcher(TestingPlugin):
         m_results = []
 
         if m_store_info.average_level > 0:
-            #m_length = 1.1 if len(m_discovered_level) == 0 else len(m_discovered_level)
             m_average = m_store_info.average_level
 
             m_results_append = m_results.append
