@@ -191,11 +191,13 @@ class Data(object):
         if self.identity != other.identity:
             raise ValueError("Can only merge data objects of the same identity")
 
-        # Generic implementation using None as a sentinel value.
-        # Subclasses may need to override this with a custom implementation.
+        # Merge the properties.
         for key in dir(other):
             if not key.startswith("_") and key != "identity":
                 self._merge_property(other, key)
+
+        # Merge the links.
+        self._merge_links(other)
 
     def _merge_property(self, other, key):
         prop = getattr(other.__class__, key, None)
@@ -208,17 +210,11 @@ class Data(object):
                 except AttributeError:
                     pass    # attribute is read only, ignore
 
-
-    #----------------------------------------------------------------------
-    @property
-    def discovered_resources(self):
-        """
-        Returns a list with the new resources discovered.
-
-        :return: List with resources.
-        :rtype: list(Resource)
-        """
-        return []
+    def _merge_links(self, other):
+        for data_type, subdict in other.__linked.iteritems():
+            my_subdict = self.__linked[data_type]
+            for data_subtype, identity_set in subdict.iteritems():
+                my_subdict[data_subtype].update(identity_set)
 
 
     #----------------------------------------------------------------------
@@ -280,3 +276,15 @@ class Data(object):
             self.__linked[other.data_type][other.vulnerability_type].add(identity)
         else:
             raise ValueError("Internal error! Unknown data_type: %r" % data_type)
+
+
+    #----------------------------------------------------------------------
+    @property
+    def discovered_resources(self):
+        """
+        Returns a list with the new resources discovered.
+
+        :return: List with resources.
+        :rtype: list(Resource)
+        """
+        return []
