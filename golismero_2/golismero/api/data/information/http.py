@@ -128,6 +128,11 @@ class HTTP_Request (Information):
         # Id of request
         self.__request_id = None
 
+        #
+        # Parent constructor
+        #
+        super(HTTP_Request, self).__init__()
+
 
     #----------------------------------------------------------------------
     #
@@ -466,6 +471,11 @@ class HTTP_Response (Information):
 
         # Total number of characters of body response
         self.__char_count = None
+
+        #
+        # Parent constructor
+        #
+        super(HTTP_Response, self).__init__()
 
 
     #----------------------------------------------------------------------

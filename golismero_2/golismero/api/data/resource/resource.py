@@ -61,13 +61,15 @@ class Resource(Data):
 
     #----------------------------------------------------------------------
     def __init__(self):
-        super(Resource, self).__init__()
 
         # Identities of associated information elements.
         self.__info_elements = set()
 
         # Identities of associated vulnerability elements.
         self.__vuln_elements = set()
+
+        # Parent constructor
+        super(Resource, self).__init__()
 
 
     #----------------------------------------------------------------------
