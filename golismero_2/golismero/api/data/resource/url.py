@@ -29,7 +29,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["Url"]
 
 from ..data import identity
+from .domain import Domain
 from .resource import Resource
+from ...net.web_utils import parse_url
 from urlparse import urlparse
 
 
@@ -63,9 +65,13 @@ class Url(Resource):
         :type deep: int
         """
 
-        # URL
         assert isinstance(referer, basestring)
-        self.__url = url
+
+        # Cache for parsed URL
+        self.__parsed_url = parse_url(url)
+
+        # Add and fix URL
+        self.__url = url if self.__parsed_url.scheme and self.__parsed_url.scheme != "None" else "http://%s" % url
 
         # Method
         self.__method = 'GET' if not method else method.upper()
@@ -95,6 +101,9 @@ class Url(Resource):
 
         # Parent constructor
         super(Url, self).__init__()
+
+        # Discovered resources
+        self.__discovered_resources = None
 
 
     #----------------------------------------------------------------------
@@ -143,7 +152,7 @@ class Url(Resource):
         """
         str -- Parsed URL.
         """
-        return urlparse(self.__url)
+        return self.__parsed_url
 
     @property
     def url_params(self):
@@ -200,3 +209,12 @@ class Url(Resource):
         str -- Referer for this Url.
         """
         return self.__referer
+
+    #----------------------------------------------------------------------
+    @property
+    def discovered_resources(self):
+        """Resources discovered"""
+        if not self.__discovered_resources:
+            self.__discovered_resources = [Domain(self.parsed_url.host)]
+
+        return self.__discovered_resources
