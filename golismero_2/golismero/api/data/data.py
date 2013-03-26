@@ -197,6 +197,18 @@ class Data(object):
                     pass    # attribute is read only, ignore
 
 
+    #----------------------------------------------------------------------
+    @property
+    def discovered_resources(self):
+        """
+        Returns a list with the new resources discovered.
+
+        :return: List with resources.
+        :rtype: list(Resource)
+        """
+        return []
+
+
 #------------------------------------------------------------------------------
 class ExtraData(Data):
     """
@@ -221,15 +233,3 @@ class ExtraData(Data):
         #if not isinstance(value, Resource):
         #    raise TypeError("Expected Resource, got %s instead" % type(value))
         self.__associated_resource = value.identity
-
-
-    #----------------------------------------------------------------------
-    @property
-    def discovered_resources(self):
-        """
-        Returns a list with the new resources discovered.
-
-        :return: List with resources.
-        :rtype: list(Resource)
-        """
-        return []

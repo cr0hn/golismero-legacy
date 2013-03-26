@@ -84,93 +84,11 @@ class HTMLElement (object):
 
 #------------------------------------------------------------------------------
 class HTML(Information):
-    """"""
+    """
+    HTML document.
+    """
 
     information_type = Information.INFORMATION_HTML
-
-
-    #----------------------------------------------------------------------
-    def __init__(self, data):
-        """Constructor
-
-        :param data: raw HTML data.
-        :type data: str
-        """
-
-        # Initialize the BeautifulSoup parser
-        self.__html_parser = HTMLBeautifulSoup(data)
-
-
-    #----------------------------------------------------------------------
-
-    @identity
-    def raw_data(self):
-        """Get raw HTML code"""
-        return self.__html_parser.raw_data
-
-    #----------------------------------------------------------------------
-
-    @property
-    def elements(self):
-        """Get all HTML elements"""
-        return self.__html_parser.elements
-
-    @property
-    def forms(self):
-        """Get forms from HTML"""
-        return self.__html_parser.forms
-
-    @property
-    def images(self):
-        """Get images from HTML"""
-        return self.__html_parser.images
-
-    @property
-    def links(self):
-        """Get links of HTML"""
-        return self.__html_parser.links
-
-    @property
-    def css_links(self):
-        """Get CSS links from HTML"""
-        return self.__html_parser.css_links
-
-    @property
-    def javascript_links(self):
-        """Get JavaScript links from HTML"""
-        return self.__html_parser.javascript_links
-
-    @property
-    def css_embedded(self):
-        """Get embedded CSS from HTML"""
-        return self.__html_parser.css_embedded
-
-    @property
-    def javascript_embedded(self):
-        """Get embedded JavaScript from HTML"""
-        return self.__html_parser.javascript_embedded
-
-    @property
-    def objects(self):
-        """Get object tags from HTML"""
-        return self.__html_parser.objects
-
-    @property
-    def metas(self):
-        """Get meta tags from HTML"""
-        return self.__html_parser.metas
-
-    @property
-    def title(self):
-        """Get title from HTML"""
-        return self.__html_parser.title
-
-
-#------------------------------------------------------------------------------
-class HTMLBeautifulSoup(object):
-    """
-    Wrapper for the BeautifulSoup HTML parser.
-    """
 
 
     #----------------------------------------------------------------------

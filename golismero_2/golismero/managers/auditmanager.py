@@ -341,11 +341,7 @@ class Audit (object):
             message_url    = Message(message_info = Url(url),
                                      message_type = MessageType.MSG_TYPE_DATA,
                                      audit_name   = self.name)
-            message_domain = Message(message_info = Domain(parse_url(url).host),
-                                     message_type = MessageType.MSG_TYPE_DATA,
-                                     audit_name   = self.name)
             self.orchestrator.dispatch_msg(message_url)
-            self.orchestrator.dispatch_msg(message_domain)
 
 
     #----------------------------------------------------------------------
@@ -401,6 +397,8 @@ class Audit (object):
             #
             # ------------------------------------------------------
 
+
+
             m_msg_data = message.message_info
             m_msg_type = m_msg_data.data_type
             m_is_new   = False # var to control if received data is new in database
@@ -414,6 +412,7 @@ class Audit (object):
 
             # Add the data to the database
             m_is_new = self.database.add(m_msg_data)
+            #print "### " + str(m_msg_data) + " | " + str(m_is_new)
 
             # Data is new in database
             if m_is_new:
@@ -465,14 +464,23 @@ class Audit (object):
                 # Drop the message.
                 return False
 
-            #
-            #
-            # XXX TODO: extract the domain names here
-            #
-            #
-
         # Send the message to the plugins
         self.__expecting_ack += self.__notifier.notify(message)
+
+        # Look for discovered resources in info:
+        #
+        if m_msg_data.discovered_resources:
+            for l_discovered in m_msg_data.discovered_resources:
+                # Check for correct type and also check if resource is already stored
+                if l_discovered.data_type == Data.TYPE_RESOURCE and \
+                   not self.database.has_key(l_discovered.identity):
+                    # Send to orchestrator
+                    #print "@@@ " + str(l_discovered)
+                    m = Message(message_info = l_discovered,
+                                message_type = MessageType.MSG_TYPE_DATA,
+                                audit_name   = self.name)
+                    self.orchestrator.dispatch_msg(m)
+
         return True
 
     #----------------------------------------------------------------------
@@ -497,8 +505,6 @@ class Audit (object):
         # Add the data
         m_bind_add(data)
 
-        # Remove old resource from database
-        self.database.remove(data.associated_resource)
         # Add modified resource
         self.database.add(resource)
 
