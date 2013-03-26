@@ -30,7 +30,9 @@ __all__ = ["Data", "identity"]
 
 from ...common import pickle
 
-import hashlib
+from collections import defaultdict
+from functools import partial
+from hashlib import md5
 
 
 #------------------------------------------------------------------------------
@@ -114,6 +116,19 @@ class Data(object):
 
 
     #----------------------------------------------------------------------
+    def __init__(self):
+
+        # Linked Data objects.
+        # + all links:                  None -> None -> set(identity)
+        # + links by type:              type -> None -> set(identity)
+        # + links by type and subtype:  type -> subtype -> set(identity)
+        self.__linked = defaultdict(partial(defaultdict, set))
+
+        # Identity hash cache.
+        self.__identity = None
+
+
+    #----------------------------------------------------------------------
     @property
     def identity(self):
         """
@@ -133,7 +148,7 @@ class Data(object):
         data = pickle.dumps(collection, protocol = 0)
 
         # Calculate the MD5 hash of the pickled data.
-        hash_sum = hashlib.md5(data)
+        hash_sum = md5(data)
 
         # Calculate the hexadecimal digest of the hash.
         hex_digest = hash_sum.hexdigest()
@@ -143,9 +158,6 @@ class Data(object):
 
         # Return it.
         return self.__identity
-
-    # Identity hash cache.
-    __identity = None
 
     # Protected method, we don't want outsiders calling it.
     # Subclasses may need to override it, but let's hope not!
@@ -209,27 +221,62 @@ class Data(object):
         return []
 
 
-#------------------------------------------------------------------------------
-class ExtraData(Data):
-    """
-    Superclass for Information and Vulnerability types.
-    It adds methods to link resouces to this data types.
-    """
+    #----------------------------------------------------------------------
+    @property
+    def links(self):
+        """set(str) -- Set of linked Data identities."""
+        return self.__linked[None][None]
 
 
     #----------------------------------------------------------------------
-    @mergeable
-    def associated_resource(self):
-        "Resource associated with this information."
-        try:
-            return self.__associated_resource
-        except AttributeError:
-            self.__associated_resource = None
+    def get_links(self, data_type = None, data_subtype = None):
+        """
+        Get the linked Data identities of the given data type.
+
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
+        :type data_type: int
+
+        :param data_subtype: Optional data subtype.
+        :type data_subtype: int | str
+
+        :returns: set(str) -- Set of identities.
+        :raises ValueError: Invalid data_type argument.
+        """
+        if data_type is None:
+            if data_subtype is not None:
+                raise NotImplementedError(
+                    "Can't filter by subtype for all types")
+        return self.__linked[data_type][data_subtype]
 
 
     #----------------------------------------------------------------------
-    @associated_resource.setter
-    def associated_resource(self, value):
-        #if not isinstance(value, Resource):
-        #    raise TypeError("Expected Resource, got %s instead" % type(value))
-        self.__associated_resource = value.identity
+    def add_link(self, other):
+        """
+        Link two Data instances together.
+
+        :param other: Another instance of Data.
+        :type other: Data
+        """
+        if not isinstance(other, Data):
+            raise TypeError("Expected Data, got %s instead" % type(other))
+        other._add_link(self)
+        self._add_link(other)
+
+    def _add_link(self, other):
+        """
+        Internal method to link two Data instances together. Do not call!
+
+        :param other: Another instance of Data.
+        :type other: Data
+        """
+        identity = other.identity
+        self.__linked[None][None].add(identity)
+        self.__linked[other.data_type][None].add(identity)
+        if data_type == self.TYPE_INFORMATION:
+            self.__linked[other.data_type][other.information_type].add(identity)
+        elif data_type == self.TYPE_RESOURCE:
+            self.__linked[other.data_type][other.resource_type].add(identity)
+        elif data_type == self.TYPE_VULNERABILITY:
+            self.__linked[other.data_type][other.vulnerability_type].add(identity)
+        else:
+            raise ValueError("Internal error! Unknown data_type: %r" % data_type)

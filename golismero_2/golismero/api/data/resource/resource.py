@@ -60,54 +60,15 @@ class Resource(Data):
 
 
     #----------------------------------------------------------------------
-    def __init__(self):
-
-        # Identities of associated information elements.
-        self.__info_elements = set()
-
-        # Identities of associated vulnerability elements.
-        self.__vuln_elements = set()
-
-        # Parent constructor
-        super(Resource, self).__init__()
-
-
-    #----------------------------------------------------------------------
-    def add_information(self, info):
-        """
-        Add information elements associated to an resource.
-
-        :param info: information subclass
-        :type info: Information
-        """
-        if not isinstance(info, Information):
-            raise TypeError("Expected Information, got %s instead" % type(info))
-        self.__info_elements.add(info.identity)
-
-
-    #----------------------------------------------------------------------
-    def add_vulnerability(self, vuln):
-        """
-        Add vulnerability elements associated to an resource.
-
-        :param info: vulnerability subclass
-        :type info: Vulnerability
-        """
-        if isinstance(vuln, Vulnerability):
-            raise TypeError("Expected Vulnerability, got %s instead" % type(vuln))
-        self.__vuln_elements.add(vuln.identity)
-
-
-    #----------------------------------------------------------------------
     @property
     def associated_vulnerabilities(self):
         """
         Get a list with vulnerabilities associated to this resource.
 
-        :return: List with vulnerabilities
+        :return: List with vulnerabilities.
         :rtype: list
         """
-        return self.__vuln_elements
+        return self.get_links(Data.TYPE_VULNERABILITY)
 
 
     #----------------------------------------------------------------------
@@ -116,23 +77,33 @@ class Resource(Data):
         """
         Get a list with informations associated to this resource.
 
-        :return: List with informations
+        :return: List with informations.
         :rtype: list
         """
-        return self.__info_elements
+        return self.get_links(Data.TYPE_INFORMATION)
 
 
     #----------------------------------------------------------------------
-    def merge(self, other):
+    def add_information(self, info):
         """
-        Merge another data object with this one.
+        Add information elements associated to a resource.
+
+        :param info: Information element.
+        :type info: Information
         """
+##        if not isinstance(info, Information):
+##            raise TypeError("Expected Information, got %s instead" % type(info))
+        self.add_link(info)
 
-        # Merge all but the associations.
-        super(Resource, self).merge(other)
 
-        # Merge the associations.
-        for identity in other.associated_vulnerabilities:
-            self.add_vulnerability(identity)
-        for identity in other.associated_informations:
-            self.add_information(identity)
+    #----------------------------------------------------------------------
+    def add_vulnerability(self, vuln):
+        """
+        Add vulnerability elements associated to a resource.
+
+        :param info: Vulnerability element.
+        :type info: Vulnerability
+        """
+##        if isinstance(vuln, Vulnerability):
+##            raise TypeError("Expected Vulnerability, got %s instead" % type(vuln))
+        self.add_link(vuln)
