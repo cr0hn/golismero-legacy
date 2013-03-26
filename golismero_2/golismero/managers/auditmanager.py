@@ -471,7 +471,7 @@ class Audit (object):
         # Send the message to the plugins
         self.__expecting_ack += self.__notifier.notify(message)
 
-        # Looking for discovered resources in info:
+        # Look for discovered resources in info:
         #
         if m_msg_data.discovered_resources:
             for l_discovered in m_msg_data.discovered_resources:
