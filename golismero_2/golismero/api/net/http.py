@@ -28,10 +28,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["HTTP_Request", "HTTP_Response"]
 
-from .html import HTML
-from ..resource.url import Url
-from ...net.web_utils import parse_url
-from ....common import random
+from .web_utils import parse_url
+from ..data.information.html import HTML
+from ..data.resource.url import Url
+from ...common import random
 
 from os.path import basename
 

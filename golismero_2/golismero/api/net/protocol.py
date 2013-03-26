@@ -33,9 +33,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ['NetworkAPI', 'NetworkException', 'Web']
 
 from .cache import NetworkCache
+from .http import HTTP_Request, HTTP_Response
 from .web_utils import *
 from ..config import Config
-from ..data.information.http import HTTP_Request, HTTP_Response
 from ..data.resource.url import Url
 from ..logger import Logger
 from ...messaging.codes import MessageCode

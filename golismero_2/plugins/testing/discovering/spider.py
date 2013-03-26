@@ -105,7 +105,7 @@ class Spider(TestingPlugin):
             Logger.log("==> Initial redirection detected, but NOT followed. Try increasing the depth with the '-r' option.")
 
         # Send back the HTTP reponse to the kernel
-        self.send_info(p)
+        ##self.send_info(p)
 
         # If it's a 301 response, get the Location header
         if p.http_response_code == 301:
@@ -154,4 +154,3 @@ class Spider(TestingPlugin):
     #----------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url.RESOURCE_URL]
-
