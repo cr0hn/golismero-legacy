@@ -140,7 +140,9 @@ class Data(object):
             if not key.startswith("_"):
                 prop = getattr(clazz, key, None)
                 if prop is not None and is_identity_property(prop):
-                    collection[key] = prop.__get__(self)
+                    # Use str first for bypassing problems with unicode
+                    collection[key] = str(prop.__get__(self))
+
         return collection
 
 
