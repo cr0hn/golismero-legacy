@@ -76,8 +76,8 @@ class Robots(TestingPlugin):
             Logger.log_more_verbose("Robots - value error while processing: '%s'. Error: %s" % (m_url_robots_txt, e.message))
 
         # Check for errors
-        if not p or not p.information and p.content_type == "text":
-            Logger.log_error("Robots - no robots.txt found.")
+        if not p or not p.information or not p.content_type == "text":
+            Logger.log_verbose("Robots - no robots.txt found.")
             return
 
         # Text with info
