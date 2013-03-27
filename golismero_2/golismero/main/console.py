@@ -85,6 +85,18 @@ def colorize_substring(text, substring, level_or_color):
     :returns: str -- string with information to print.
     """
 
+    #
+    # XXX TODO:
+    #
+    # We also probably need to parse existing ANSI escape codes
+    # to know what's the color of the surrounding text, otherwise
+    # we'll only properly colorize substrings in non colored text.
+    #
+    # Maybe we can settle with this: indicate a color for the text
+    # and a color for the substring. Should work in all situations
+    # we _currently_ need to handle.
+    #
+
     # Check for trivial cases.
     if text and substring and Console.use_colors:
 
@@ -130,7 +142,7 @@ def colorize(text, level_or_color):
     - Information
     - Low
     - Middle
-    - Hight
+    - High
     - Critical
 
     :param text: text to colorize.
