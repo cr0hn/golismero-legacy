@@ -213,7 +213,7 @@ def cmdline_parser():
     gr_net.add_argument("--forbid-subdomains", action="store_false", dest="include_subdomains", help="do not include subdomains in the target scope")
     gr_net.add_argument("--subdomain-regex", metavar="REGEX", help="filter subdomains using a regular expression", default="")
     gr_net.add_argument("-r", "--depth", type=int, help="depth level of spider [default: 0]", default=0)
-    gr_net.add_argument("-l", "--max-links", type=int, help="maximun number of links to analyze [default: 0 => infinte]", default=0)
+    gr_net.add_argument("-l", "--max-links", type=int, help="maximum number of links to analyze [default: 0 => infinite]", default=0)
     gr_net.add_argument("-f","--follow-redirects", action="store_true", dest="follow_redirects", help="follow redirects", default=False)
     gr_net.add_argument("-nf","--no-follow-redirects", action="store_false", dest="follow_redirects", help="do not follow redirects [default]")
     gr_net.add_argument("-ff","--follow-first", action="store_true", dest="follow_first_redirect", help="always follow a redirection on the target URL itself [default]", default=True)

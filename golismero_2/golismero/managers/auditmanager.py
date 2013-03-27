@@ -281,7 +281,7 @@ class Audit (object):
         self.__orphan_data_attemps = Counter()
         self.__orphan_data_resources = dict()
 
-        # Var to control the maximun number of links to follow
+        # Maximum number of links to follow
         self.__followed_resources = 0
 
 
