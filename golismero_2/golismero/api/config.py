@@ -62,14 +62,18 @@ class _Config (Singleton):
         "dict -- Plugin configuration."
         return self.__context.plugin_info.plugin_config
 
-    # The following two methods may only be used internally.
+    # The following properties may only be used internally.
 
-    def _get_context(self):
-        ":returns: Context"
+    @property
+    def _context(self):
+        ":returns: PluginContext"
         return self.__context
 
-    def _set_context(self, context):
-        ":type context: Context"
+    @_context.setter
+    def _context(self, context):
+        ":type context: PluginContext"
+        # TODO: check the call stack to make sure it's called only
+        #       from pre-approved places.
         self.__context = context
 
 Config = _Config()

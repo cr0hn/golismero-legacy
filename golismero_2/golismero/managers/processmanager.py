@@ -26,7 +26,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["ProcessManager", "Context"]
+__all__ = ["ProcessManager", "PluginContext"]
 
 from ..api.config import Config
 from ..api.logger import Logger
@@ -145,7 +145,7 @@ def _bootstrap(context, func, argv, argd):
             try:
 
                 # Configure the plugin
-                Config._set_context(context)
+                Config._context = context
 
                 # TODO: hook stdout and stderr to catch print statements
 
@@ -224,7 +224,7 @@ def _bootstrap(context, func, argv, argd):
 
 
 #------------------------------------------------------------------------------
-class Context (object):
+class PluginContext (object):
     """
     Serializable execution context for the plugins.
     """
@@ -471,7 +471,7 @@ class OOPObserver (object):
     def __init__(self, context):
         """
         :param context: Execution context for the OOP observer.
-        :type context: Context
+        :type context: PluginContext
         """
         super(OOPObserver, self).__init__()
         self.__context = context
@@ -546,7 +546,7 @@ class PluginPoolManager (object):
         Run a plugin in a pooled process.
 
         :param context: context for the OOP plugin execution
-        :type context: Context
+        :type context: PluginContext
 
         :param func: name of the method to execute
         :type func: str
@@ -565,11 +565,11 @@ class PluginPoolManager (object):
             return
 
         # Otherwise just call the plugin directly
-        old_context = Config._get_context()
+        old_context = Config._context
         try:
             return bootstrap(context, func, argv, argd)
         finally:
-            Config._set_context(old_context)
+            Config._context = old_context
 
 
     #----------------------------------------------------------------------
@@ -656,7 +656,7 @@ class PluginLauncher (object):
         Run a plugin in a pooled process.
 
         :param context: context for the OOP plugin execution
-        :type context: Context
+        :type context: PluginContext
 
         :param func: name of the method to execute
         :type func: str
@@ -755,7 +755,7 @@ class ProcessManager (object):
         Run a plugin in a pooled process.
 
         :param context: context for the OOP plugin execution
-        :type context: Context
+        :type context: PluginContext
 
         :param func: name of the method to execute
         :type func: str
@@ -772,11 +772,11 @@ class ProcessManager (object):
             return self.__launcher.run_plugin(context, func, argv, argd)
 
         # Otherwise just call the plugin directly
-        old_context = Config._get_context()
+        old_context = Config._context
         try:
             return bootstrap(context, func, argv, argd)
         finally:
-            Config._set_context(old_context)
+            Config._context = old_context
 
 
     #----------------------------------------------------------------------

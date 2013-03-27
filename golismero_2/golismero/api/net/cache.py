@@ -155,7 +155,7 @@ class NetworkCache(AbstractCache):
         if data is None:
 
             # If not found locally, query the global cache.
-            data = Config._get_context().remote_call(
+            data = Config._context.remote_call(
                                 MessageCode.MSG_RPC_CACHE_GET, key, protocol)
 
             # Store the global cache result locally.
@@ -191,7 +191,7 @@ class NetworkCache(AbstractCache):
         self.__cache[Config.audit_name][protocol][key] = data
 
         # Send the resource to the global cache.
-        Config._get_context().async_remote_call(
+        Config._context.async_remote_call(
                             MessageCode.MSG_RPC_CACHE_SET, key, protocol, data)
 
 
@@ -214,7 +214,7 @@ class NetworkCache(AbstractCache):
             pass
 
         # Remove the resource from the global cache.
-        Config._get_context().async_remote_call(
+        Config._context.async_remote_call(
                             MessageCode.MSG_RPC_CACHE_REMOVE, key, protocol)
 
 
@@ -234,7 +234,7 @@ class NetworkCache(AbstractCache):
 
         # If not found, check the global cache.
         if not found:
-            found = Config._get_context().remote_call(
+            found = Config._context.remote_call(
                                 MessageCode.MSG_RPC_CACHE_CHECK, key, protocol)
             found = bool(found)
 

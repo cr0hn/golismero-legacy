@@ -244,7 +244,7 @@ class AuditNotifier(Notifier):
         orchestrator = audit.orchestrator
 
         # Prepare the context for the OOP observer
-        context = orchestrator.get_context(audit.name, plugin)
+        context = orchestrator.build_plugin_context(audit.name, plugin)
 
         # Run the callback in a pooled process
         orchestrator.processManager.run_plugin(

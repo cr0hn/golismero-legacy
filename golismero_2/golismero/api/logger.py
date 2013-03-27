@@ -71,7 +71,7 @@ class Logger (object):
         :type message: str
         """
         if message:
-            Config._get_context().send_msg(
+            Config._context.send_msg(
                 message_type = MessageType.MSG_TYPE_CONTROL,
                 message_code = MessageCode.MSG_CONTROL_LOG,
                 message_info = (message, level, is_error),

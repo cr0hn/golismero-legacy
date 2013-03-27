@@ -35,7 +35,7 @@ from ..managers.auditmanager import AuditManager
 from ..managers.priscillapluginmanager import PriscillaPluginManager
 from ..managers.uimanager import UIManager
 from ..managers.rpcmanager import RPCManager
-from ..managers.processmanager import ProcessManager, Context
+from ..managers.processmanager import ProcessManager, PluginContext
 from ..managers.networkmanager import NetworkManager
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
@@ -92,13 +92,13 @@ class Orchestrator (object):
             self.__queue = self.__queue_manager.Queue()
 
         # Set the Orchestrator context
-        self.__context = Context( orchestrator_pid = getpid(),
+        self.__context = PluginContext( orchestrator_pid = getpid(),
                                          msg_queue = self.__queue,
                                       audit_config = self.__config )
-        Config._set_context(self.__context)
+        Config._context = self.__context
 
         # Within the Orchestrator process, keep a static reference to it
-        Context._orchestrator = self
+        PluginContext._orchestrator = self
 
         # Load the plugins
         self.__pluginManager = PriscillaPluginManager()
@@ -275,9 +275,9 @@ class Orchestrator (object):
 
 
     #----------------------------------------------------------------------
-    def get_context(self, audit_name, plugin):
+    def build_plugin_context(self, audit_name, plugin):
         """
-        Prepare a Context object to pass to the plugins.
+        Prepare a PluginContext object to pass to the plugins.
 
         :param audit_name: Name of the audit.
         :type audit_name: str
@@ -285,7 +285,7 @@ class Orchestrator (object):
         :param plugin: Plugin instance.
         :type plugin: Plugin
 
-        :returns: Context -- OOP plugin execution context
+        :returns: PluginContext -- OOP plugin execution context
         """
 
         # FIXME:
@@ -299,7 +299,7 @@ class Orchestrator (object):
         audit_config = self.__auditManager.get_audit(audit_name).params
 
         # Return the context instance
-        return Context(getpid(), self.__queue, info, audit_name, audit_config)
+        return PluginContext(getpid(), self.__queue, info, audit_name, audit_config)
 
 
     #----------------------------------------------------------------------
