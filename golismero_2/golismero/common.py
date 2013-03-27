@@ -493,6 +493,8 @@ class AuditConfig (Configuration):
 
         # Depth level for spider
         "depth": (int, 0),
+        # Limits
+        "max_links" : (int, 0), # 0 -> infinite
 
         # Follow redirects
         "follow_redirects": (bool, True),
@@ -589,3 +591,5 @@ class AuditConfig (Configuration):
                 compile(self.subdomain_regex)
             except error, e:
                 raise ValueError("Regular expression not valid: %s." % e.message)
+
+        # Validate number
