@@ -9,4 +9,4 @@ Version = 0.1
 Website = http://code.google.com/p/golismero/
 
 [Configuration]
-wordlist = golismero_warning_url
+wordlist = golismero/warning_url.txt

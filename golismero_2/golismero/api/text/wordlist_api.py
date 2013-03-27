@@ -69,8 +69,8 @@ class WordListAPI(Singleton):
 
         # Make sure the directory name is absolute and ends with a slash.
         currentDir = abspath(currentDir)
-        if not currentDir.endswith(path.sep):
-            currentDir += path.sep
+        if not currentDir.endswith(sep):
+            currentDir += sep
 
         # Iterate the directory recursively.
         for (dirpath, dirnames, filenames) in walk(currentDir):
