@@ -299,7 +299,7 @@ class Data(object):
 
 
 #----------------------------------------------------------------------
-class _TempDataStorage(Singleton):
+class _TempDataStorage(object):
     """
     Temporary storage for newly created objects.
     """

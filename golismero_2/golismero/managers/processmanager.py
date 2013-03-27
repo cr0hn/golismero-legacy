@@ -239,7 +239,7 @@ def _bootstrap(context, func, argv, argd):
                     context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                                      message_code = MessageCode.MSG_CONTROL_WARNING,
                                      message_info = plugin_warnings)
-                finally:
+                except Exception, e:
                     context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                                      message_code = MessageCode.MSG_CONTROL_ERROR,
                                      message_info = (e.message, format_exc()))
