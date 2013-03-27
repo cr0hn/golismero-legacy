@@ -62,6 +62,7 @@ m_colors = {
     'yellow': 'yellow',
 }
 
+
 #----------------------------------------------------------------------
 def colorize_substring(text, substring, level_or_color):
     """
@@ -83,23 +84,36 @@ def colorize_substring(text, substring, level_or_color):
 
     :returns: str -- string with information to print.
     """
-    if text and substring and level_or_color:
 
-        m_pos = text.find(substring)
-        if m_pos != -1:
-            m_prefix = text[:m_pos]
+    # Check trivial cases.
+    if text and substring and Console.use_colors:
+
+        # Loop for each occurrence of the substring.
+        m_pos = 0
+        while 1:
+
+            # Find the substring in the text.
+            m_pos = text.find(substring, m_pos)
+
+            # If not found, break out of the loop.
+            if m_pos < 0:
+                break
+
+            # Split the text where the substring was found.
+            m_prefix  = text[:m_pos]
             m_content = text[m_pos: m_pos + len(substring)]
-            m_suffix = text[m_pos + len(substring):] if (m_pos + len(substring)) < len(text) else ""
+            m_suffix  = text[m_pos + len(substring):]
 
-            return "%s%s%s" % (
-                m_prefix,
-                colored(m_content, m_colors[level_or_color]),
-                m_suffix
-                )
-        else: # Not substring in text
-            return text
-    else:
-        return text
+            # Patch the text to colorize the substring.
+            m_content = colorize(m_content, level_or_color)
+            text = "%s%s%s" % (m_prefix, m_content, m_suffix)
+
+            # Update the current position and keep searching.
+            m_pos = len(m_prefix) + len(m_content)
+
+    # Return the patched text.
+    return text
+
 
 #----------------------------------------------------------------------
 def colorize(text, level_or_color):
