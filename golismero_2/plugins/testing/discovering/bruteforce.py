@@ -161,7 +161,7 @@ class BackupSearcher(TestingPlugin):
         except ValueError:
             return
 
-        # If file is a javascript, css or imagen, not run
+        # If file is a javascript, css or image, do not run
         if m_url_parts.path_filename_ext[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg'):
             Logger.log_more_verbose("Bruteforcer - skipping URL '%s'." % m_url)
             return
@@ -216,7 +216,7 @@ class BackupSearcher(TestingPlugin):
 
             #
             #   3 - Changing extension of files
-            m_urls_to_test["fife_extensions"] = self.make_url_changing_extensions(m_wordlist, m_url_parts)
+            m_urls_to_test["file_extensions"] = self.make_url_changing_extensions(m_wordlist, m_url_parts)
 
             #
             #   4 - Permutation of file
@@ -314,7 +314,7 @@ class BackupSearcher(TestingPlugin):
 
 
         if not wordlist or not url_parts:
-            yield None
+            raise StopIteration()
 
         for l_wordlist in wordlist['suffixes']:
             # For errors
@@ -350,7 +350,7 @@ class BackupSearcher(TestingPlugin):
 
 
         if not wordlist or not url_parts:
-            yield None
+            raise StopIteration()
 
         # Making predictables
         for l_wordlist in wordlist_suffix['prefixes']:
@@ -385,10 +385,14 @@ class BackupSearcher(TestingPlugin):
         """
 
         if not wordlist or not url_parts:
-            yield None
+            raise StopIteration()
 
-        m_wordlist_predictable = set() if not wordlist['predictable_files'] else wordlist['predictable_files']
-        m_wordlist_suffix = set() if not wordlist['suffixes'] else wordlist['suffixes']
+        m_wordlist_predictable = wordlist['predictable_files']
+        if not m_wordlist_predictable:
+            m_wordlist_predictable = set()
+        m_wordlist_suffix = wordlist['suffixes']
+        if not m_wordlist_suffix:
+            m_wordlist_suffix = set()
 
         # Making predictables
         for l_wordlist in m_wordlist_predictable:
@@ -446,7 +450,7 @@ class BackupSearcher(TestingPlugin):
         """
 
         if not wordlist or not url_parts:
-            yield None
+            raise StopIteration()
 
         # Making predictables
         for l_wordlist in wordlist['extensions']:
@@ -475,7 +479,7 @@ class BackupSearcher(TestingPlugin):
         """
 
         if not url_parts:
-            yield None
+            raise StopIteration()
 
         m_base_string = "%s://%s%s" % (
                     url_parts.scheme,

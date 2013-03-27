@@ -30,54 +30,72 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["WordListAPI", "WordList"]
+
 from ..logger import Logger
 from ...common import Singleton
 
 from os import getcwd, walk
-from os.path import join, split, sep
+from os.path import join, split, sep, abspath
 
 
 #------------------------------------------------------------------------------
 class WordListAPI(Singleton):
-    """This class manager wordlist"""
+    """
+    Wordlist API.
+    """
 
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """Constructor"""
 
         # Store
         self.__store = {} # Pair with: (name, path)
 
         # Initial load
+        # XXX FIXME this is broken!!! :(
+        # It won't work unless you happen to be standing on the GoLismero folder!
         self.__load_wordlists(join(getcwd(), "wordlist"))
 
 
     #----------------------------------------------------------------------
     def __load_wordlists(self, currentDir):
-        """Load wordlist from currenDir arg"""
+        """
+        Find and load wordlists from the specified directory.
 
+        :param currentDir: Directory to look for wordlists.
+        :type currentDir: str
+        """
 
-        # The following levels belong to the plugins
+        # Make sure the directory name is absolute and ends with a slash.
+        currentDir = abspath(currentDir)
+        if not currentDir.endswith(path.sep):
+            currentDir += path.sep
+
+        # Iterate the directory recursively.
         for (dirpath, dirnames, filenames) in walk(currentDir):
 
-            # Look for text files
+            # Make sure the directory name is absolute.
+            dirpath = abspath(dirpath)
+
+            # Look for text files, skipping README files and disabled lists.
             for fname in filenames:
-                if fname.endswith(".txt") and not fname.startswith("_") and fname.find("readme") ==-1:
-                    try:
-                        key = join(dirpath[len(currentDir) + 1:], fname[:-4].lower()).replace(sep, "_").lower()
+                if fname.lower().endswith(".txt") and not fname.startswith("_") and fname.lower() != "readme.txt":
 
-                        self.__store[key] = join(dirpath,fname)
-
-                    except KeyError:
-                        pass
+                    # Map the relative filename to the absolute filename,
+                    # replacing \ for / on Windows.
+                    target = join(dirpath, fname)
+                    key = target[len(currentDir):]
+                    if sep != "/":
+                        key = key.replace(sep, "/")
+                    self.__store[key] = target
 
 
     #----------------------------------------------------------------------
     @property
     def all_wordlists(self):
         """
-        Get names of all wordlists.
+        Get the names of all the wordlists.
 
         :returns: list
         """
@@ -92,32 +110,23 @@ class WordListAPI(Singleton):
         :returns: iterator with wordlist.
         """
         try:
-            return WordList(self.__store[wordlist_name.lower()])
+            return WordList(self.__store[wordlist_name])
         except KeyError:
-            return ()
-
-
-#----------------------------------------------------------------------
-def TextWordList(wordlist_text):
-    """
-    iterable wordlist form a text
-    """
-    return tuple(wordlist_text)
+            raise KeyError("Wordlist file not found: %s" % wordlist_name)
 
 
 #------------------------------------------------------------------------------
 def WordList(wordlist_path):
-    """iterate wordlist from a file"""
+    """
+    Load a wordlist from a file and iterate its words.
+    """
 
     try:
+        with open(wordlist_path, "rU") as fd:
+            for line in fd:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    yield line
 
-        #f = open(wordlist_path, "U", buffering=1)
-        #while True:
-        for line in open(wordlist_path, "U", buffering=1):
-            if not line:
-                #f.close()
-                break
-            yield line.strip()
-
-    except IOError,e:
+    except IOError, e:
         Logger.log_error("Error opening wordlist %s: " % e.message)

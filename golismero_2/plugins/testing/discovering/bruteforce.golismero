@@ -9,25 +9,25 @@ Version = 0.1
 Website = http://code.google.com/p/golismero/
 
 [Configuration]
-wordlist_suffixes_1 = fuzzdb_discovery_filenamebruteforce_extensions.backup.fuzz
-wordlist_suffixes_2 = golismero_predictables_file-compressed-suffixes
+wordlist_suffixes_1 = fuzzdb/Discovery/FilenameBruteforce/Extensions.Backup.fuzz.txt
+wordlist_suffixes_2 = golismero/predictables/file-compressed-suffixes.txt
 
-wordlist_prefixes_1 = golismero_predictables_file-prefix
-wordlist_prefixes_2 = fuzzdb_discovery_filenamebruteforce_copy_of.fuzz
+wordlist_prefixes_1 = golismero/predictables/file-prefix.txt
+wordlist_prefixes_2 = fuzzdb/Discovery/FilenameBruteforce/copy_of.fuzz.txt
 
-wordlist_extensions_1 = golismero_predictables_java-file-extensions
-wordlist_extensions_2 = golismero_predictables_microsoft-file-extensions
-wordlist_extensions_3 = golismero_predictables_file-compressed-suffixes
+wordlist_extensions_1 = golismero/predictables/java-file-extensions.txt
+wordlist_extensions_2 = golismero/predictables/microsoft-file-extensions.txt
+wordlist_extensions_3 = golismero/predictables/file-compressed-suffixes.txt
 
-wordlist_file_extensions_1 = fuzzdb_discovery_predictableres_cgi_microsoft.fuzz
-wordlist_file_extensions_2 = fuzzdb_discovery_predictableres_apache.fuzz
-wordlist_file_extensions_3 = fuzzdb_discovery_predictableres_iis.fuzz
-wordlist_file_extensions_4 = fuzzdb_discovery_predictableres_php.fuzz
+wordlist_file_extensions_1 = fuzzdb/Discovery/PredictableRes/CGI_Microsoft.fuzz.txt
+wordlist_file_extensions_2 = fuzzdb/Discovery/PredictableRes/Apache.fuzz.txt
+wordlist_file_extensions_3 = fuzzdb/Discovery/PredictableRes/IIS.fuzz.txt
+wordlist_file_extensions_4 = fuzzdb/Discovery/PredictableRes/PHP.fuzz.txt
 
-wordlist_predictable_files_1 = fuzzdb_discovery_predictableres_cgi_microsoft.fuzz
-wordlist_predictable_files_2 = fuzzdb_discovery_predictableres_apache.fuzz
-wordlist_predictable_files_3 = fuzzdb_discovery_predictableres_iis.fuzz
-wordlist_predictable_files_4 = fuzzdb_discovery_predictableres_php.fuzz
-wordlist_predictable_files_5 = fuzzdb_discovery_predictableres_passwords.fuzz
-wordlist_predictable_files_6 = fuzzdb_discovery_predictableres_oracle9i.fuzz
-wordlist_predictable_files_7 = fuzzdb_discovery_predictableres_unixdotfiles.fuzz
+wordlist_predictable_files_1 = fuzzdb/Discovery/PredictableRes/CGI_Microsoft.fuzz.txt
+wordlist_predictable_files_2 = fuzzdb/Discovery/PredictableRes/Apache.fuzz.txt
+wordlist_predictable_files_3 = fuzzdb/Discovery/PredictableRes/IIS.fuzz.txt
+wordlist_predictable_files_4 = fuzzdb/Discovery/PredictableRes/PHP.fuzz.txt
+wordlist_predictable_files_5 = fuzzdb/Discovery/PredictableRes/Passwords.fuzz.txt
+wordlist_predictable_files_6 = fuzzdb/Discovery/PredictableRes/Oracle9i.fuzz.txt
+wordlist_predictable_files_7 = fuzzdb/Discovery/PredictableRes/UnixDotFiles.fuzz.txt
