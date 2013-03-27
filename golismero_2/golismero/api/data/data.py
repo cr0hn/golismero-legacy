@@ -166,9 +166,7 @@ class Data(object):
         Returns a dictionary of identity properties
         and their values for this data object.
 
-        Subclasses may override this method if very
-        special circumstances require it, but it's
-        generally discouraged.
+        :returns: dict -- Collected property names and values.
         """
         is_identity_property = identity.is_identity_property
         clazz = self.__class__
@@ -177,9 +175,14 @@ class Data(object):
             if not key.startswith("_") and key != "identity":
                 prop = getattr(clazz, key, None)
                 if prop is not None and is_identity_property(prop):
-                    # Use str first for bypassing problems with unicode
-                    collection[key] = str(prop.__get__(self))
-
+                    # ASCII or UTF-8 is assumed for all strings!
+                    value = prop.__get__(self)
+                    if isinstance(value, unicode):
+                        try:
+                            value = value.encode("UTF-8")
+                        except UnicodeError:
+                            pass
+                    collection[key] = value
         return collection
 
 
