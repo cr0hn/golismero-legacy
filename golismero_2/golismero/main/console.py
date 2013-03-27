@@ -85,8 +85,15 @@ def colorize_substring(text, substring, level_or_color):
     :returns: str -- string with information to print.
     """
 
-    # Check trivial cases.
+    # Check for trivial cases.
     if text and substring and Console.use_colors:
+
+        # XXX HACK
+        # Instead of calling colorize() it's faster
+        # to call colored() directly. That means we'll
+        # have to convert level_or_color to the value
+        # that colored() expects.
+        color = m_colors[level_or_color]
 
         # Loop for each occurrence of the substring.
         m_pos = 0
@@ -105,7 +112,8 @@ def colorize_substring(text, substring, level_or_color):
             m_suffix  = text[m_pos + len(substring):]
 
             # Patch the text to colorize the substring.
-            m_content = colorize(m_content, level_or_color)
+            ##m_content = colorize(m_content, level_or_color) # XXX HACK
+            m_content = colored(m_content, color)             # See above
             text = "%s%s%s" % (m_prefix, m_content, m_suffix)
 
             # Update the current position and keep searching.
