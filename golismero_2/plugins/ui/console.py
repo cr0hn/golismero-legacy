@@ -25,12 +25,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
-from golismero.api.plugin import UIPlugin
-from golismero.api.data.resource.resource import Resource
 from golismero.api.data.data import Data
+from golismero.api.data.resource.resource import Resource
+from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
+from golismero.api.data.vulnerability.information_disclosure.url_suspicious import SuspiciousURL
+from golismero.api.plugin import UIPlugin
+from golismero.main.console import Console, colorize, colorize_substring
 from golismero.messaging.codes import MessageType, MessageCode
 from golismero.messaging.message import Message
-from golismero.main.console import Console, colorize, colorize_substring
 
 #
 # Verbosity levels:
@@ -86,8 +88,9 @@ class ConsoleUIPlugin(UIPlugin):
         # Processors functions
         funcs = {
             Resource.RESOURCE_URL : process_url,
-            'information_disclosure/url_disclosure': process_url_disclosure,
-            'information_disclosure/url_suspicious': process_url_suspicious
+
+            UrlDisclosure.vulnerability_type: process_url_disclosure,
+            SuspiciousURL.vulnerability_type: process_url_suspicious,
         }
 
         # Get verbosity level.
