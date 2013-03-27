@@ -86,7 +86,7 @@ class ConsoleUIPlugin(UIPlugin):
         # Processors functions
         funcs = {
             Resource.RESOURCE_URL : process_url,
-            'url_disclouse': process_url_disclosure,
+            'information_disclosure/url_disclosure': process_url_disclosure,
             'information_disclosure/url_suspicious': process_url_suspicious
         }
 
