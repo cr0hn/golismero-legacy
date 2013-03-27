@@ -425,7 +425,7 @@ class HTTP_Response (object):
         self.__request = request
 
         # HTML code of response
-        self.__raw_data = raw_response.content if raw_response.content != None else ""
+        self.__raw_data = raw_response.content if raw_response.content else ""
 
         # HTTP response code
         self.__http_response_code = raw_response.status_code
@@ -485,6 +485,9 @@ class HTTP_Response (object):
                 m_return_content = HTML(data)
             elif m_content_type.startswith('text/plain'):
                 self.__content_type = "text"
+                m_return_content = data
+            else:
+                self.__content_type = "unknown"
                 m_return_content = data
         return m_return_content
 

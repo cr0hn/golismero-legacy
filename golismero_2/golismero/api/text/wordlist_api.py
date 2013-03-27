@@ -97,9 +97,17 @@ class WordListAPI(Singleton):
             return ()
 
 
+#----------------------------------------------------------------------
+def TextWordList(wordlist_text):
+    """
+    iterable wordlist form a text
+    """
+    return tuple(wordlist_text)
+
+
 #------------------------------------------------------------------------------
 def WordList(wordlist_path):
-    """iterate a wordlist"""
+    """iterate wordlist from a file"""
 
     try:
 

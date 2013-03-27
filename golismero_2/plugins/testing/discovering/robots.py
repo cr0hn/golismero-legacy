@@ -27,13 +27,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.logger import Logger
-from golismero.api.net.protocol import NetworkAPI
+from golismero.api.net.protocol import *
 from golismero.api.plugin import TestingPlugin
 from golismero.api.data.resource.url import Url
 from golismero.api.data.resource.domain import Domain
-from golismero.api.net.web_utils import parse_url, convert_to_absolute_url
-
-from requests.exceptions import RequestException
+from golismero.api.net.web_utils import *
+from golismero.api.text.matching_analyzer import *
 
 import codecs
 
@@ -62,19 +61,8 @@ class Robots(TestingPlugin):
         if not isinstance(info, Domain):
             raise TypeError("Expected Url, got %s instead" % type(info))
 
-        m_url = info.name
-
-        # Parse the url
-        m_parsed_url = parse_url(m_url)
-
-        # Only work for the root url
-        if (m_parsed_url.path and m_parsed_url.path != "/") or m_parsed_url.query or m_parsed_url.fragment:
-            return
-
         # Get the url of hosts
-        m_url_robots_txt = "%s://%s/robots.txt" % (m_parsed_url.scheme if m_parsed_url.scheme else "http", m_parsed_url.hostname)
-
-        # Only do this once per robots.txt file
+        m_url_robots_txt = "%s/robots.txt" % fix_url(info.name)
 
         # Request this URL
         m_manager = NetworkAPI.get_connection()
@@ -84,21 +72,16 @@ class Robots(TestingPlugin):
         p = None
         try:
             p = m_manager.get(m_url_robots_txt)
-        except ValueError,e:
+        except NetworkException,e:
             Logger.log_more_verbose("Robots - value error while processing: '%s'. Error: %s" % (m_url_robots_txt, e.message))
-        except RequestException:
-            Logger.log_more_verbose("Robots - timeout for url: '%s'." % m_url_robots_txt)
 
+        # Check for errors
         if not p or not p.information and p.content_type == "text":
             Logger.log_error("Robots - no robots.txt found.")
             return
 
         # Text with info
         m_robots_text = p.information
-        try:
-            m_robots_text = m_robots_text.raw_data
-        except AttributeError:
-            pass
 
         # Prepare for unicode
         try:
@@ -110,9 +93,9 @@ class Robots(TestingPlugin):
             Logger.log_error_verbose("Robots - error while parsing robots.txt: Unicode format error.")
             return
 
-        # Results
-        m_return = []
-        m_return_bind = m_return.append
+        # Extract URLs
+        m_discovered_urls = []
+        m_discovered_urls_append = m_discovered_urls.append
         tmp_discovered = None
         for rawline in m_robots_text.splitlines():
             m_line = rawline
@@ -142,12 +125,28 @@ class Robots(TestingPlugin):
                 if m_key in ('disallow', 'allow', 'sitemap') and m_value:
                     tmp_discovered = convert_to_absolute_url(m_url, m_value)
                     Logger.log_more_verbose("Robots - discovered new url: %s" % tmp_discovered)
-                    m_return_bind( Url(tmp_discovered) )
+                    m_discovered_urls_append( Url(tmp_discovered) )
             except Exception,e:
                 continue
 
+
+        #
+        # Filter results
+        #
+
+        # Generating error page
+        m_error_page = generate_error_page(m_url_robots_txt)
+        m_response_error_page = m_manager.get(m_error_page)
+
+        # Analyze results
+        m_analyzer = MatchingAnalyzer(m_response_error_page.raw)
+
+        # Add results for analyze
+        for l_url in m_discovered_urls:
+            m_analyzer.append(m_manager.get(l_url).raw)
+
         # Generate results
-        return m_return
+        return [r for i in m_analyzer.unique_texts]
 
 
     #----------------------------------------------------------------------

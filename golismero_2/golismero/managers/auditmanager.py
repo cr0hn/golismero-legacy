@@ -281,6 +281,9 @@ class Audit (object):
         self.__orphan_data_attemps = Counter()
         self.__orphan_data_resources = dict()
 
+        # Var to control the maximun number of links to follow
+        self.__followed_resources = 0
+
 
 
     @property
@@ -374,6 +377,19 @@ class Audit (object):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
+        # Maximun number of links reached?
+        if self.__followed_resources >= self.__params.max_links and \
+           self.__params.max_links != 0: # 0 = infinite
+
+            self.__expecting_ack += 1
+            m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
+                        message_code = MessageCode.MSG_CONTROL_ACK,
+                            priority = MessagePriority.MSG_PRIORITY_LOW,
+                        audit_name   = self.name)
+            self.orchestrator.dispatch_msg(m)
+
+            return False
+
         # Is it data?
         if message.message_type == MessageType.MSG_TYPE_DATA:
 
@@ -397,8 +413,6 @@ class Audit (object):
             #
             # ------------------------------------------------------
 
-
-
             m_msg_data = message.message_info
             m_msg_type = m_msg_data.data_type
             m_is_new   = False # var to control if received data is new in database
@@ -410,9 +424,12 @@ class Audit (object):
                 raise ValueError("Vulnerability o Information types must have a resource associated. Error data: '%s'" % str(m_msg_data))
 
 
+            # Increase the number of resources proccesed
+            if m_msg_type == Data.TYPE_RESOURCE:
+                self.__followed_resources += 1
+
             # Add the data to the database
             m_is_new = self.database.add(m_msg_data)
-            #print "### " + str(m_msg_data) + " | " + str(m_is_new)
 
             # Data is new in database
             if m_is_new:
@@ -475,7 +492,6 @@ class Audit (object):
                 if l_discovered.data_type == Data.TYPE_RESOURCE and \
                    not self.database.has_key(l_discovered.identity):
                     # Send to orchestrator
-                    #print "@@@ " + str(l_discovered)
                     m = Message(message_info = l_discovered,
                                 message_type = MessageType.MSG_TYPE_DATA,
                                 audit_name   = self.name)

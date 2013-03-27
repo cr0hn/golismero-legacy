@@ -30,10 +30,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["fix_url", "is_in_scope", "convert_to_absolute_url",
-           "convert_to_absolute_urls", "detect_auth_method",
-           "get_auth_obj", "check_auth", "parse_url",
-           "HTMLParser", "HTMLElement"]
+
+__all__ = ["DecomposedURL", "is_method_allowed", "decompose_url", "generate_error_page",
+    "fix_url", "is_in_scope", "convert_to_absolute_url",
+    "convert_to_absolute_urls", "detect_auth_method",
+    "get_auth_obj", "check_auth", "parse_url",
+    "HTMLParser", "HTMLElement"]
+
 
 from ..config import Config
 
@@ -41,10 +44,13 @@ from collections import namedtuple
 
 from BeautifulSoup import BeautifulSoup
 from repoze_lru import lru_cache
+from golismero.api.text.text_utils import generate_random_string
 from requests import *
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests_ntlm import HttpNtlmAuth
 
+from urlparse import urlparse
+from os.path import splitext, split
 
 #----------------------------------------------------------------------
 # Cached version of the parse_url() function from urllib3
@@ -58,6 +64,38 @@ except ImportError:
 def parse_url(url):
     return original_parse_url(url)
 
+#----------------------------------------------------------------------
+def is_method_allowed(method, url, network_conn):
+    """
+    Checks if method is allowed for this url.
+
+    if method is supported return True. False otherwise.
+
+    :param method: string with method to check
+    :type method: str
+
+    :param url: URL to test methods.
+    :type url: str.
+
+    :param network_conn: network connection.
+    :type network_conn: Protocol (Web).
+
+    :returns: bool -- True if method is allowed. False otherwise.
+    :rtype: bool
+    """
+    if not url or not network_conn or not method:
+        return False
+
+    try:
+        p = network_conn.get(url, method=method)
+    except:
+        return False
+
+    if p.http_response_code == 200: # and 'Content-Length' in p.http_headers:
+        return True
+    else:
+        return False
+
 
 #----------------------------------------------------------------------
 def fix_url(url):
@@ -70,7 +108,7 @@ def fix_url(url):
     """
     m_tmp_url = parse_url(url)
 
-    return url if m_tmp_url.scheme and m_tmp_url.scheme != "None" else "http://%s" % url
+    return url if m_tmp_url.scheme and m_tmp_url.scheme != "NoneType" and m_tmp_url.scheme != "None" else "http://%s" % url
 
 
 #----------------------------------------------------------------------
@@ -279,6 +317,129 @@ def convert_to_absolute_urls(base_url, relative_urls):
     return m_return
 
 
+
+#----------------------------------------------------------------------
+class DecomposedURL(object):
+    """
+    Decomposed URL in their parts, like:
+
+    http://www.site.com/folder/index.php?param1=val1&b
+
+    Where properties has the values:
+    + scheme                    = 'http'
+    + host                      = 'www.site.com'
+    + complete_path             = '/folder/index.php?param1=val1'
+    + relative_path             = '/folder/'
+    + path_filename             = 'index.php'
+    + path_filename_ext         = '.php'
+    + path_filename_without_ext = 'index'
+    + query                     = 'param1=val1&b'
+    + query_params              = { 'param1' : 'val1', 'b' : '' }
+
+    ** If any values are not present in URL, empty string are returned **NOT None TYPE**
+    """
+    #----------------------------------------------------------------------
+    def __init__(self):
+        """"""
+        self.scheme = ''
+        self.host = ''
+        self.complete_path = ''
+        self.relative_path = ''
+        self.path_filename = ''
+        self.path_filename_ext = ''
+        self.path_filename_without_ext = ''
+        self.query = ''
+        self.query_params = {}
+
+#----------------------------------------------------------------------
+@lru_cache(maxsize=50)
+def decompose_url(url):
+    """
+    Decompose URL in their parts and return DecomposedURL Object
+
+    :param url: URL to decompose.
+    :type url: str
+
+    :return: DecomposedURL object
+    :rtype: DecomposedURL
+    """
+    if url:
+
+        m_parsed_url = parse_url(url)
+
+        m_o = DecomposedURL()
+        m_o.scheme                    = m_parsed_url.scheme if m_parsed_url.scheme else ''
+        m_o.host                      = m_parsed_url.host if m_parsed_url.host else ''
+        #m_o.complete_path             = m_parsed_url.path if m_parsed_url.path.endswith("/") else m_parsed_url.path + "/" if m_parsed_url.path is not None and m_parsed_url.path != "NoneType" else ''
+        m_o.complete_path = None
+        if m_parsed_url.path and m_parsed_url.path != "NoneType":
+            m_o.complete_path = m_parsed_url.path if m_parsed_url.path.endswith("/") else m_parsed_url.path + "/"
+        else:
+            m_o.complete_path = ''
+
+        m_o.path_filename_ext         = splitext(m_o.complete_path)[1] if m_o.complete_path else ''
+        m_o.path_filename             = split(m_o.complete_path)[1] if m_o.complete_path and m_o.path_filename_ext else ''
+        m_o.path_filename_without_ext = splitext(m_o.path_filename)[0] if m_o.complete_path and m_o.path_filename else ''
+        m_o.query                     = m_parsed_url.query if m_parsed_url.query else ''
+
+
+
+        # Add query params
+        for t in m_o.query.split('&'):
+            l_sp_t = t.split("=")
+            if l_sp_t: # len > 0
+                l_key = l_sp_t[0]
+                l_val = '' if len(l_sp_t) == 1 else l_sp_t[1]
+                # Store
+                m_o.query_params[l_key] = l_val
+
+        # Fix path for values like:
+        # http://www.site.com/folder/value_id=0
+        m_path = m_o.complete_path
+        m_prev_folder = m_path[:m_path[:-1].rfind("/") + 1] # /folder/
+        m_last = m_path[m_path[:-1].rfind("/") + 1: -1] # value_id=0
+        if m_last.find("=") != -1:
+            m_o.complete_path = m_prev_folder
+        m_o.path_filename_without_ext = '/' if not m_prev_folder else m_prev_folder
+
+        # Partial path
+        m_o.relative_path = m_prev_folder
+
+        return m_o
+
+    else:
+        raise ValueError("Valid URL string espected; got '%s'" % type(url))
+
+
+#----------------------------------------------------------------------
+def generate_error_page(url):
+    """
+    Generates a random error page for selected URL:
+
+    http://www.site.com/index.php -> http://www.site.com/index.php.19ds_8vjX
+
+
+    :param url: original URL
+    :type  url: str
+
+    :return: error page generated.
+    :rtype: str
+    """
+
+
+    m_parsed_url = decompose_url(url)
+
+    return "%s://%s%s%s.%s%s" % (
+        m_parsed_url.scheme,
+        m_parsed_url.host,
+        m_parsed_url.relative_path if m_parsed_url.relative_path else '/',
+        m_parsed_url.path_filename,
+        generate_random_string(),
+        m_parsed_url.query
+    )
+
+
+
 #------------------------------------------------------------------------------
 class HTMLElement (object):
     """"""
@@ -304,7 +465,6 @@ class HTMLElement (object):
     def __str__(self):
         """"""
         return "%s:%s" % (self.__tag_name, str(self.__attrs))
-
 
     #----------------------------------------------------------------------
 
@@ -358,6 +518,11 @@ class HTMLParser(object):
         # HTML forms
         self.__html_forms = None
 
+#----------------------------------------------------------------------
+class ParsedURLItem(object):
+    """
+    Contains a parsed URL. Properties:
+
         # Images in HTML
         self.__html_images = None
 
@@ -384,6 +549,7 @@ class HTMLParser(object):
 
         # Title
         self.__html_title = None
+    """
 
 
     #----------------------------------------------------------------------
@@ -521,7 +687,6 @@ class HTMLParser(object):
             m_result_append_bind = m_result.append
 
             for obj in m_elem:
-
                 # Get attrs
                 m_ojb_attr = { v[0].encode("utf-8"): v[1].encode("utf-8") for v in obj.attrs }
 

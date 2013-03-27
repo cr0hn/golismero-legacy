@@ -86,15 +86,18 @@ def colorize_substring(text, substring, level_or_color):
     if text and substring and level_or_color:
 
         m_pos = text.find(substring)
-        m_prefix = text[:m_pos]
-        m_content = text[m_pos: m_pos + len(substring)]
-        m_suffix = text[m_pos + len(substring):] if (m_pos + len(substring)) < len(text) else ""
+        if m_pos != -1:
+            m_prefix = text[:m_pos]
+            m_content = text[m_pos: m_pos + len(substring)]
+            m_suffix = text[m_pos + len(substring):] if (m_pos + len(substring)) < len(text) else ""
 
-        return "%s%s%s" % (
-            m_prefix,
-            colored(m_content, m_colors[level_or_color]),
-            m_suffix
-            )
+            return "%s%s%s" % (
+                m_prefix,
+                colored(m_content, m_colors[level_or_color]),
+                m_suffix
+                )
+        else: # Not substring in text
+            return text
     else:
         return text
 

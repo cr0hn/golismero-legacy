@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.logger import Logger
-from golismero.api.net.protocol import NetworkAPI
+from golismero.api.net.protocol import *
 from golismero.api.plugin import TestingPlugin
 from golismero.api.data.resource.url import Url
 from golismero.api.data.resource.domain import Domain
@@ -36,7 +36,6 @@ from golismero.api.config import Config
 from golismero.api.net.web_utils import parse_url, convert_to_absolute_urls, is_in_scope
 from golismero.api.net.scraper import extract_from_html
 
-from requests.exceptions import RequestException
 from time import time
 from os import getpid
 
@@ -60,15 +59,13 @@ class Spider(TestingPlugin):
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-        m_url = None
-        m_deep = 0
 
         # Extract data
-        if isinstance(info, Url):
-            m_url = info.url
-            m_deep = info.depth
-        else:
+        if not isinstance(info, Url):
             raise TypeError("Expected Url, got %s instead" % type(info))
+
+        m_url = info.url
+        m_deep = info.depth
 
         # Check depth
         if m_deep > int(Config.audit_config.depth):
@@ -91,10 +88,8 @@ class Spider(TestingPlugin):
             p.associated_resource = info
             p.information.associated_resource = info
 
-        except ValueError,e:
+        except NetworkException,e:
             Logger.log_more_verbose("Spider - value error while processing: '%s'. Error: %s" % (m_url, e.message))
-        except RequestException:
-            Logger.log_more_verbose("Spider - timeout for url: '%s'." % m_url)
 
         # If error p == None => return
         if not p:
@@ -145,7 +140,6 @@ class Spider(TestingPlugin):
                      if is_in_scope(u) and not any(x in u for x in m_forbidden) ]
 
         s2 = time()
-        Logger.log_more_verbose("Spider: Time to process links: %ss" % (s2 - s1))
 
         # Send the URLs
         return m_return
