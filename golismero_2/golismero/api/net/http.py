@@ -28,11 +28,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["HTTP_Request", "HTTP_Response"]
 
-from .information import *
-from .html import *
-from ..resource.url import *
-from ...net.web_utils import parse_url
-from ....common import random
+from .web_utils import parse_url
+from ..data.information.html import HTML
+from ..data.resource.url import Url
+from ...common import random
 
 from os.path import basename
 
@@ -41,7 +40,7 @@ from re import findall
 
 
 #------------------------------------------------------------------------------
-class HTTP_Request (Information):
+class HTTP_Request (object):
     """
     HTTP request.
     """
@@ -80,6 +79,7 @@ class HTTP_Request (Information):
         "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-us) AppleWebKit/534.16+ (KHTML, like Gecko) Version/5.0.3 Safari/533.19.4",
         "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25"
     )
+
 
     #----------------------------------------------------------------------
     def __init__(self, url, method = 'GET', post_data = None, cache = True, follow_redirects = None, cookie = "", random_user_agent = False, request_type = 0):
@@ -219,85 +219,102 @@ class HTTP_Request (Information):
     #
     #----------------------------------------------------------------------
 
-
-    # Hostname
-    def __get_host(self):
+    @property
+    def hostname(self):
+        "'Host' HTTP header"
         return self.__headers.get('Host')
-    def __set_host(self, value):
+
+    @hostname.setter
+    def hostname(self, value):
         assert isinstance(value, basestring)
         self.__headers['Host'] = value
         self.__parsed_url.hostname = self.__headers['Host']
-    hostname = property(__get_host, __set_host, doc="'Host' HTTP header")
 
-    # User agent
-    def __get_user_agent(self):
+    @property
+    def user_agent(self):
+        "'User-Agent' HTTP header"
         return self.__headers.get('User-Agent')
-    def __set_user_agent(self, value):
+
+    @user_agent.setter
+    def user_agent(self, value):
         assert isinstance(value, basestring)
         self.__headers['User-Agent'] = value
-    user_agent = property(__get_user_agent, __set_user_agent, doc="'User-Agent' HTTP header")
 
-    # Accept language
-    def __get_accept_language(self):
+    @property
+    def accept_language(self):
+        "'Accept-Language' HTTP header"
         return self.__headers.get('Accept-Language')
-    def __set_accept_language(self, value):
+
+    @accept_language.setter
+    def accept_language(self, value):
         assert isinstance(value, basestring)
         self.__headers['Accept-Language'] = value
-    accept_language = property(__get_accept_language, __set_accept_language, doc="'Accept-Language' HTTP header")
 
-    # Content-type
-    def __get_accept(self):
+    @property
+    def accept(self):
+        "'Accept' HTTP header"
         return self.__headers.get('Accept')
-    def __set_accept(self, value):
+
+    @accept.setter
+    def accept(self, value):
         assert isinstance(value, basestring)
         self.__headers['Accept'] = value
-    accept = property(__get_accept, __set_accept, doc="'Accept' HTTP header")
 
-    # Referer
-    def __get_referer(self):
+    @property
+    def referer(self):
+        "'Referer' HTTP header"
         return self.__headers.get('Referer')
-    def __set_referer(self, value):
+
+    @referer.setter
+    def referer(self, value):
         assert isinstance(value, basestring)
         self.__headers['Referer'] = value
-    referer = property(__get_referer, __set_referer, doc="'Referer' HTTP header")
 
-    # Cookie
-    def __get_cookie(self):
+    @property
+    def cookie(self):
+        "'Cookie' HTTP header"
         return self.__headers.get('Cookie')
-    def __set_cookie(self, value):
+
+    @cookie.setter
+    def cookie(self, value):
         assert isinstance(value, basestring)
         self.__headers['Cookie'] = value
-    cookie = property(__get_cookie, __set_cookie, doc="'Cookie' HTTP header")
 
-    # Content type
-    def __get_content_type(self):
+    @property
+    def content_type(self):
+        "'Content-Type' HTTP header"
         return self.__headers.get('Content-Type')
-    def __set_content_type(self, value):
+
+    @content_type.setter
+    def content_type(self, value):
         assert isinstance(value, basestring)
         self.__headers['Content-Type'] = value
-    content_type = property(__get_content_type, __set_content_type, doc="'Content-Type' HTTP header")
 
-    # Post data
-    def __get_post_data(self):
+    @property
+    def post_data(self):
+        "HTTP POST data"
         return self.__post_data
-    def __set_post_data(self, value):
+
+    @post_data.setter
+    def post_data(self, value):
         if self.__post_data:
             self.__post_data.update(value)
         else:
             self.__post_data = value
         self.content_type = "application/x-www-form-urlencoded; charset=UTF-8"
-    post_data = property(__get_post_data, __set_post_data, doc="HTTP POST data")
 
-    # Raw headers
-    def __get_raw_headers(self):
+    @property
+    def raw_headers(self):
+        "Raw HTTP headers"
         return self.__headers
-    def __set_raw_headers(self, value):
+
+    @raw_headers.setter
+    def raw_headers(self, value):
         assert isinstance(value, dict)
         self.__headers.update(value)
-    raw_headers = property(__get_raw_headers, __set_raw_headers, doc="Raw HTTP headers")
 
-    # Follow redirects
-    def __get_follow_redirects(self):
+    @property
+    def follow_redirects(self):
         """
         Redirect options for the request (True to follow redirects, False otherwise).
 
@@ -305,15 +322,9 @@ class HTTP_Request (Information):
         """
         return self.__follow_redirects
 
-    # Follow redirects
-    def __set_follow_redirects(self, value):
-        """
-        Redirect options for the request (True to follow redirects, False otherwise).
-
-        :returns: None | bool. None if not set. Bool otherwise.
-        """
+    @follow_redirects.setter
+    def follow_redirects(self, value):
         self.__follow_redirects = value
-    follow_redirects = property(__get_follow_redirects, __set_follow_redirects, doc="Follow HTTP redirections")
 
 
     #----------------------------------------------------------------------
@@ -401,12 +412,10 @@ class HTTP_Request (Information):
 
 
 #------------------------------------------------------------------------------
-class HTTP_Response (Information):
+class HTTP_Response (object):
     """
     HTTP response.
     """
-
-    information_type = Information.INFORMATION_HTTP_RESPONSE
 
 
     #----------------------------------------------------------------------
@@ -454,6 +463,11 @@ class HTTP_Response (Information):
 
         # Total number of characters of body response
         self.__char_count = None
+
+        #
+        # Parent constructor
+        #
+        super(HTTP_Response, self).__init__()
 
 
     #----------------------------------------------------------------------

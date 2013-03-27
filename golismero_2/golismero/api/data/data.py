@@ -30,7 +30,9 @@ __all__ = ["Data", "identity"]
 
 from ...common import pickle
 
-import hashlib
+from collections import defaultdict
+from functools import partial
+from hashlib import md5
 
 
 #------------------------------------------------------------------------------
@@ -52,14 +54,38 @@ class identity(property):
 
     @staticmethod
     def is_identity_property(other):
+
         # TODO: benchmark!!!
         ##return isinstance(other, identity)
         ##return getattr(other, "is_identity_property", None) is not None
         ##return hasattr(other, "is_identity_property")
+
         try:
             other.__get__
             other.is_identity_property
             return True
+        except AttributeError:
+            return False
+
+
+#------------------------------------------------------------------------------
+class mergeable(property):
+    """
+    Decorator that marks properties that can be merged safely.
+
+    It may not be combined with any other decorator, and may not be subclassed.
+    """
+
+    @staticmethod
+    def is_mergeable_property(other):
+
+        # TODO: benchmark!!!
+        ##return isinstance(other, mergeable) and other.fset is not None
+
+        try:
+            other.__get__
+            other.is_mergeable_property
+            return other.fset is not None
         except AttributeError:
             return False
 
@@ -88,8 +114,21 @@ class Data(object):
 
     data_type = TYPE_ANY
 
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
+    def __init__(self):
+
+        # Linked Data objects.
+        # + all links:                  None -> None -> set(identity)
+        # + links by type:              type -> None -> set(identity)
+        # + links by type and subtype:  type -> subtype -> set(identity)
+        self.__linked = defaultdict(partial(defaultdict, set))
+
+        # Identity hash cache.
+        self.__identity = None
+
+
+    #----------------------------------------------------------------------
     @property
     def identity(self):
         """
@@ -109,7 +148,7 @@ class Data(object):
         data = pickle.dumps(collection, protocol = 0)
 
         # Calculate the MD5 hash of the pickled data.
-        hash_sum = hashlib.md5(data)
+        hash_sum = md5(data)
 
         # Calculate the hexadecimal digest of the hash.
         hex_digest = hash_sum.hexdigest()
@@ -120,10 +159,8 @@ class Data(object):
         # Return it.
         return self.__identity
 
-    # Identity hash cache.
-    __identity = None
-
     # Protected method, we don't want outsiders calling it.
+    # Subclasses may need to override it, but let's hope not!
     def _collect_identity_properties(self):
         """
         Returns a dictionary of identity properties
@@ -137,7 +174,7 @@ class Data(object):
         clazz = self.__class__
         collection = {}
         for key in dir(self):
-            if not key.startswith("_"):
+            if not key.startswith("_") and key != "identity":
                 prop = getattr(clazz, key, None)
                 if prop is not None and is_identity_property(prop):
                     # Use str first for bypassing problems with unicode
@@ -145,6 +182,102 @@ class Data(object):
 
         return collection
 
+
+    #----------------------------------------------------------------------
+    def merge(self, other):
+        """
+        Merge another data object with this one.
+        """
+        if type(self) is not type(other):
+            raise TypeError("Can only merge data objects of the same type")
+        if self.identity != other.identity:
+            raise ValueError("Can only merge data objects of the same identity")
+
+        # Merge the properties.
+        for key in dir(other):
+            if not key.startswith("_") and key != "identity":
+                self._merge_property(other, key)
+
+        # Merge the links.
+        self._merge_links(other)
+
+    def _merge_property(self, other, key):
+        prop = getattr(other.__class__, key, None)
+        if prop is None or mergeable.is_mergeable_property(prop):
+            value = getattr(self, key, None)
+            value = getattr(other, key, value)
+            if value is not None:
+                try:
+                    setattr(self, key, value)
+                except AttributeError:
+                    pass    # attribute is read only, ignore
+
+    def _merge_links(self, other):
+        for data_type, subdict in other.__linked.iteritems():
+            my_subdict = self.__linked[data_type]
+            for data_subtype, identity_set in subdict.iteritems():
+                my_subdict[data_subtype].update(identity_set)
+
+
+    #----------------------------------------------------------------------
+    @property
+    def links(self):
+        """set(str) -- Set of linked Data identities."""
+        return self.__linked[None][None]
+
+
+    #----------------------------------------------------------------------
+    def get_links(self, data_type = None, data_subtype = None):
+        """
+        Get the linked Data identities of the given data type.
+
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
+        :type data_type: int
+
+        :param data_subtype: Optional data subtype.
+        :type data_subtype: int | str
+
+        :returns: set(str) -- Set of identities.
+        :raises ValueError: Invalid data_type argument.
+        """
+        if data_type is None:
+            if data_subtype is not None:
+                raise NotImplementedError(
+                    "Can't filter by subtype for all types")
+        return self.__linked[data_type][data_subtype]
+
+
+    #----------------------------------------------------------------------
+    def add_link(self, other):
+        """
+        Link two Data instances together.
+
+        :param other: Another instance of Data.
+        :type other: Data
+        """
+        if not isinstance(other, Data):
+            raise TypeError("Expected Data, got %s instead" % type(other))
+        other._add_link(self)
+        self._add_link(other)
+
+    def _add_link(self, other):
+        """
+        Internal method to link two Data instances together. Do not call!
+
+        :param other: Another instance of Data.
+        :type other: Data
+        """
+        identity = other.identity
+        self.__linked[None][None].add(identity)
+        self.__linked[other.data_type][None].add(identity)
+        if data_type == self.TYPE_INFORMATION:
+            self.__linked[other.data_type][other.information_type].add(identity)
+        elif data_type == self.TYPE_RESOURCE:
+            self.__linked[other.data_type][other.resource_type].add(identity)
+        elif data_type == self.TYPE_VULNERABILITY:
+            self.__linked[other.data_type][other.vulnerability_type].add(identity)
+        else:
+            raise ValueError("Internal error! Unknown data_type: %r" % data_type)
 
 
     #----------------------------------------------------------------------
@@ -157,29 +290,3 @@ class Data(object):
         :rtype: list(Resource)
         """
         return []
-
-
-#------------------------------------------------------------------------------
-class ExtraData(Data):
-    """
-    Superclass for Information and Vulnerability types.
-    It adds methods to link resouces to this data types.
-    """
-
-
-    #----------------------------------------------------------------------
-    @property
-    def associated_resource(self):
-        "Resource associated with this information."
-        try:
-            return self.__associated_resource
-        except AttributeError:
-            self.__associated_resource = None
-
-
-    #----------------------------------------------------------------------
-    @associated_resource.setter
-    def associated_resource(self, value):
-        #if not isinstance(value, Resource):
-        #    raise TypeError("Expected Resource, got %s instead" % type(value))
-        self.__associated_resource = value.identity

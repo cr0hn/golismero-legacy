@@ -30,7 +30,7 @@ __all__ = ["Resource"]
 
 from ..data import Data
 from ..information.information import Information
-from ..vulnerability.vulnerability import Vulnerability
+##from ..vulnerability.vulnerability import Vulnerability
 
 
 #------------------------------------------------------------------------------
@@ -60,81 +60,15 @@ class Resource(Data):
 
 
     #----------------------------------------------------------------------
-    def __init__(self):
-        """"""
-
-        # List of information elements associated
-        self.__info_elements = dict()
-        self.__info_elements_by_category = dict()
-
-        # List of vulnerability elements associated
-        self.__vuln_elements = dict()
-        self.__vuln_elements_by_category = dict()
-
-        super(Resource, self).__init__()
-
-
-    #----------------------------------------------------------------------
-    def add_information(self, info):
-        """
-        Add information elements associated to an resource.
-
-        :param info: information subclass
-        :type info: Information
-        """
-        # Store info
-        m_category = None
-        try:
-            m_category = info.information_type
-        except AttributeError:
-            raise TypeError("Expected Information, got %s instead" % type(info))
-
-        # Add information
-        self.__info_elements[info.identity] = True
-
-        # New category?
-        if m_category not in self.__info_elements_by_category:
-            self.__info_elements_by_category[m_category] = []
-
-        # Add information to their category
-        self.__info_elements_by_category[m_category].append(info.identity)
-
-
-    #----------------------------------------------------------------------
-    def add_vulnerability(self, vuln):
-        """
-        Add vulnerability elements associated to an resource.
-
-        :param info: vulnerability subclass
-        :type info: Vulnerability
-        """
-        m_category = None
-        try:
-            m_category = vuln.vulnerability_type
-        except AttributeError:
-            raise TypeError("Expected Vulnerability, got %s instead" % type(info))
-
-        # Add vuln to store
-        self.__vuln_elements[vuln.identity] = True
-
-        # New category?
-        if m_category not in self.__vuln_elements_by_category:
-            self.__vuln_elements_by_category[m_category] = []
-
-        # Store info into their category
-        self.__vuln_elements_by_category[m_category].append(vuln.identity)
-
-
-    #----------------------------------------------------------------------
     @property
     def associated_vulnerabilities(self):
         """
         Get a list with vulnerabilities associated to this resource.
 
-        :return: List with vulnerabilities
+        :return: List with vulnerabilities.
         :rtype: list
         """
-        return self.__vuln_elements.values()
+        return self.get_links(Data.TYPE_VULNERABILITY)
 
 
     #----------------------------------------------------------------------
@@ -143,39 +77,66 @@ class Resource(Data):
         """
         Get a list with informations associated to this resource.
 
-        :return: List with informations
+        :return: List with informations.
         :rtype: list
         """
-        return self.__info_elements.values()
+        return self.get_links(Data.TYPE_INFORMATION)
 
 
     #----------------------------------------------------------------------
+    def add_information(self, info):
+        """
+        Add information elements associated to a resource.
+
+        :param info: Information element.
+        :type info: Information
+        """
+        if not isinstance(info, Information):
+            raise TypeError("Expected Information, got %s instead" % type(info))
+        self.add_link(info)
+
+
+    #----------------------------------------------------------------------
+    def add_vulnerability(self, vuln):
+        """
+        Add vulnerability elements associated to a resource.
+
+        :param info: Vulnerability element.
+        :type info: Vulnerability
+        """
+##        if isinstance(vuln, Vulnerability):
+##            raise TypeError("Expected Vulnerability, got %s instead" % type(vuln))
+        self.add_link(vuln)
+
+
+    #----------------------------------------------------------------------
+    @property
     def associated_vulnerabilities_by_category(self, cat_name = None):
         """
-        Get accociated vulnerabilites by one category
+        Get accociated vulnerabilites by category.
 
         :param cat_name: category name
         :type cat_name: str
 
-        :return: list with IDs with associated informations. Return empty list if category not exits.
+        :return: set -- Identities of associated informations. Returns an empty set if the category doesn't exist.
         """
-        if cat_name and cat_name in self.__info_elements_by_category:
-            return self.__info_elements_by_category.values()
-        else:
-            return []
+        return self.get_links(self.TYPE_VULNERABILITY, cat_name)
 
 
     #----------------------------------------------------------------------
-    def associated_informations_by_category(self, cat_name = None):
+    @property
+    def associated_informations_by_category(self, information_type = None):
         """
-        Get accociated information by one category
+        Get accociated information by category.
 
-        :param cat_name: category name
-        :type cat_name: str
+        :param information_type: One of the Information.INFORMATION_* constants.
+        :type information_type: int
 
-        :return: list with IDs with associated vulnerabilities. Return empty list if category not exits.
+        :return: set -- Identities of associated informations.
+        :raises ValueError: The specified information type is invalid.
         """
-        if cat_name and cat_name in self.__vuln_elements_by_category:
-            return self.__vuln_elements_by_category.values()
-        else:
-            return []
+        if type(information_type) is not int:
+            raise TypeError("Expected int, got %r instead" % type(information_type))
+        if not Information.INFORMATION_FIRST >= information_type >= Information.INFORMATION_LAST:
+            raise ValueError("Invalid information_type: %r" % information_type)
+        return self.get_links(self.TYPE_INFORMATION, information_type)

@@ -28,11 +28,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Information"]
 
-from ..data import Data, ExtraData
+from ..data import Data
 
 
 #------------------------------------------------------------------------------
-class Information(ExtraData):
+class Information(Data):
     """
     Base class for informational results.
     """
@@ -61,3 +61,53 @@ class Information(ExtraData):
 
     data_type = Data.TYPE_INFORMATION
     information_type = INFORMATION_UNKNOWN
+
+
+    #----------------------------------------------------------------------
+    @property
+    def associated_vulnerabilities(self):
+        """
+        Get a list with vulnerabilities associated to this information.
+
+        :return: List with vulnerabilities.
+        :rtype: list
+        """
+        return self.get_links(Data.TYPE_VULNERABILITY)
+
+
+    #----------------------------------------------------------------------
+    @property
+    def associated_resources(self):
+        """
+        Get a list with resources associated to this information.
+
+        :return: List with resources.
+        :rtype: list
+        """
+        return self.get_links(Data.TYPE_RESOURCE)
+
+
+    #----------------------------------------------------------------------
+    def add_resource(self, res):
+        """
+        Add resource elements associated to an information.
+
+        :param res: Resource element.
+        :type res: Resource
+        """
+##        if not isinstance(info, Resource):
+##            raise TypeError("Expected Resource, got %s instead" % type(res))
+        self.add_link(res)
+
+
+    #----------------------------------------------------------------------
+    def add_vulnerability(self, vuln):
+        """
+        Add vulnerability elements associated to an information.
+
+        :param info: Vulnerability element.
+        :type info: Vulnerability
+        """
+##        if isinstance(vuln, Vulnerability):
+##            raise TypeError("Expected Vulnerability, got %s instead" % type(vuln))
+        self.add_link(vuln)

@@ -64,8 +64,6 @@ class Url(Resource):
         :param deep: The deep of URL in relation with main site.
         :type deep: int
         """
-        super(Url, self).__init__()
-
         assert isinstance(referer, basestring)
 
         # Cache for parsed URL
@@ -102,6 +100,9 @@ class Url(Resource):
 
         # Discovered resources
         self.__discovered_resources = None
+
+        # Parent constructor
+        super(Url, self).__init__()
 
 
     #----------------------------------------------------------------------

@@ -30,18 +30,39 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["DecomposedURL", "is_method_allowed", "decompose_url", "generate_error_page", "fix_url", "is_in_scope", "convert_to_absolute_url", "convert_to_absolute_urls", 'detect_auth_method', 'get_auth_obj', 'check_auth', 'parse_url']
 
+__all__ = ["DecomposedURL", "is_method_allowed", "decompose_url", "generate_error_page",
+    "fix_url", "is_in_scope", "convert_to_absolute_url",
+    "convert_to_absolute_urls", "detect_auth_method",
+    "get_auth_obj", "check_auth", "parse_url",
+    "HTMLParser", "HTMLElement"]
+
+
+from ..config import Config
+
+from collections import namedtuple
+
+from BeautifulSoup import BeautifulSoup
+from repoze_lru import lru_cache
+from golismero.api.text.text_utils import generate_random_string
 from requests import *
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests_ntlm import HttpNtlmAuth
-from ..config import Config
-from collections import namedtuple
-from repoze_lru import lru_cache
-from golismero.api.text.text_utils import generate_random_string
 
 from urlparse import urlparse
 from os.path import splitext, split
+
+#----------------------------------------------------------------------
+# Cached version of the parse_url() function from urllib3
+
+try:
+    from requests.packages.urllib3.util import parse_url as original_parse_url
+except ImportError:
+    from urllib3.util import parse_url as original_parse_url
+
+@lru_cache(maxsize=50)
+def parse_url(url):
+    return original_parse_url(url)
 
 #----------------------------------------------------------------------
 def is_method_allowed(method, url, network_conn):
@@ -88,6 +109,7 @@ def fix_url(url):
     m_tmp_url = parse_url(url)
 
     return url if m_tmp_url.scheme and m_tmp_url.scheme != "NoneType" and m_tmp_url.scheme != "None" else "http://%s" % url
+
 
 #----------------------------------------------------------------------
 def check_auth(url, user, password):
@@ -417,195 +439,269 @@ def generate_error_page(url):
     )
 
 
-#----------------------------------------------------------------------
-#
-# THIS CODE HAS BEEN BORROWED FROM THE URLLIB3 PROJECT
-#
-#----------------------------------------------------------------------
-class Url(namedtuple('Url', ['scheme', 'auth', 'host', 'port', 'path', 'query', 'fragment'])):
-    """
-    Datastructure for representing an HTTP URL. Used as a return value for
-    :func:`parse_url`.
-    """
-    slots = ()
 
-    def __new__(cls, scheme=None, auth=None, host=None, port=None, path=None, query=None, fragment=None):
-        return super(Url, cls).__new__(cls, scheme, auth, host, port, path, query, fragment)
+#------------------------------------------------------------------------------
+class HTMLElement (object):
+    """"""
+
+
+    #----------------------------------------------------------------------
+    def __init__(self, tag_name, attrs, content):
+        """
+        Constructor.
+
+        :param attr: dict with parameters of HTML element.
+        :type attr: dict
+
+        :param childrens: raw HTML with sub elements of this HTML element
+        :type childrens: str
+        """
+        self.__tag_name = tag_name
+        self.__attrs = attrs
+        self.__content = HTML(content)
+
+
+    #----------------------------------------------------------------------
+    def __str__(self):
+        """"""
+        return "%s:%s" % (self.__tag_name, str(self.__attrs))
+
+    #----------------------------------------------------------------------
 
     @property
-    def hostname(self):
-        """For backwards-compatibility with urlparse. We're nice like that."""
-        return self.host
+    def tag_name(self):
+        """Name of HTML tag."""
+        return self.__tag_name
 
     @property
-    def request_uri(self):
-        """Absolute path including the query string."""
-        uri = self.path or '/'
+    def attrs(self):
+        """Attributes of HTML tag."""
+        return self.__attrs
 
-        if self.query is not None:
-            uri += '?' + self.query
+    @property
+    def content(self):
+        """Returns an HTML object nested into this HTML element.
 
-        return uri
+        :returns: and HTML object
+        """
+        return self.__content
 
-def split_first(s, delims):
+
+#------------------------------------------------------------------------------
+class HTMLParser(object):
     """
-    Given a string and an iterable of delimiters, split on the first found
-    delimiter. Return two split parts and the matched delimiter.
-
-    If not found, then the first part is the full input string.
-
-    Example: ::
-
-        >>> split_first('foo/bar?baz', '?/=')
-        ('foo', 'bar?baz', '/')
-        >>> split_first('foo/bar?baz', '123')
-        ('foo/bar?baz', '', None)
-
-    Scales linearly with number of delims. Not ideal for large number of delims.
+    HTML parser.
     """
-    min_idx = None
-    min_delim = None
-    for d in delims:
-        idx = s.find(d)
-        if idx < 0:
-            continue
 
-        if min_idx is None or idx < min_idx:
-            min_idx = idx
-            min_delim = d
 
-    if min_idx is None or min_idx < 0:
-        return s, '', None
+    #----------------------------------------------------------------------
+    def __init__(self, data):
+        """Constructor.
 
-    return s[:min_idx], s[min_idx+1:], min_delim
+        :param data: raw HTML content
+        :type data: str
+        """
 
+        # Raw HTML content
+        self.__raw_data = data
+
+        # Init parser
+        self.__html_parser = BeautifulSoup(data)
+
+        #
+        # Parsed HTML elementes
+        #
+
+        # All elements
+        self.__all_elements = None
+
+        # HTML forms
+        self.__html_forms = None
 
 #----------------------------------------------------------------------
 class ParsedURLItem(object):
     """
     Contains a parsed URL. Properties:
 
-    + scheme
-    + username
-    + password
-    + hostname
-    + port
-    + path
-    + query
-    + fragment
+        # Images in HTML
+        self.__html_images = None
 
-    Where:
+        # Links in HTML
+        self.__html_links = None
 
-    scheme://username:password@hostname:port/path?query
+        # CSS links
+        self.__html_css = None
 
-    """
-    pass
+        # CSS embedded
+        self.__html_css_embedded = None
 
-# Cache for parse url function
-@lru_cache(maxsize=100)
-def parse_url_(url):
-    """
-    Parse and URL and return a ParsedURLItem item
+        # Javascript
+        self.__html_javascript = None
 
-    :param url: URL to parse.
-    :type url: str
+        # Javascript embedded
+        self.__html_javascript_embedded = None
 
-    :return: ParsedURLItem item
-    :rtype: ParsedURLItem
-    """
-    m_parsed_url = urlparse(url)
+        # Objects
+        self.__html_objects = None
 
-    m_robj = ParsedURLItem()
-    m_robj.scheme   = m_parsed_url.scheme if m_parsed_url.scheme else None
-    m_robj.host     = m_parsed_url.hostname if m_parsed_url.hostname else ''
-    m_robj.hostname = m_robj.host # for compatibility and avoid errors.
-    m_robj.path     = m_parsed_url.path if m_parsed_url.path else None
-    m_robj.query    = m_parsed_url.query if m_parsed_url.query else None
-    m_robj.fragment = m_parsed_url.fragment if m_parsed_url.fragment else None
-    m_robj.port     = m_parsed_url.port if m_parsed_url.port else None
-    m_robj.username = m_parsed_url.username if m_parsed_url.username else None
-    m_robj.password = m_parsed_url.password if m_parsed_url.password else None
+        # Metas
+        self.__html_metas = None
 
-    return m_robj
-
-
-
-
-@lru_cache(maxsize=100)
-def parse_url(url):
-    """
-    Given a url, return a parsed :class:`.Url` namedtuple. Best-effort is
-    performed to parse incomplete urls. Fields not provided will be None.
-
-    Partly backwards-compatible with :mod:`urlparse`.
-
-    Example: ::
-
-        >>> parse_url('http://google.com/mail/')
-        Url(scheme='http', host='google.com', port=None, path='/', ...)
-        >>> parse_url('google.com:80')
-        Url(scheme=None, host='google.com', port=80, path=None, ...)
-        >>> parse_url('/foo?bar')
-        Url(scheme=None, host=None, port=None, path='/foo', query='bar', ...)
+        # Title
+        self.__html_title = None
     """
 
-    # While this code has overlap with stdlib's urlparse, it is much
-    # simplified for our needs and less annoying.
-    # Additionally, this imeplementations does silly things to be optimal
-    # on CPython.
 
-    scheme = None
-    auth = None
-    host = None
-    port = None
-    path = None
-    fragment = None
-    query = None
+    #----------------------------------------------------------------------
+    def __convert_to_HTMLElements(self, data):
+        """
+        Convert parser format to list of HTML Elements.
 
-    # Scheme
-    if '://' in url:
-        scheme, url = url.split('://', 1)
+        :return: list of HTMLElements
+        """
+        return [
+            HTMLElement(
+                x.name.encode("utf-8"),
+                { v[0].encode("utf-8"): v[1].encode("utf-8") for v in x.attrs},
+                "".join(( str(item) for item in x.contents if item != "\n"))
+                ) for x in data
+        ]
 
-    # Find the earliest Authority Terminator
-    # (http://tools.ietf.org/html/rfc3986#section-3.2)
-    url, path_, delim = split_first(url, ['/', '?', '#'])
 
-    if delim:
-        # Reassemble the path
-        path = delim + path_
+    #----------------------------------------------------------------------
+    @property
+    def raw_data(self):
+        """Get raw HTML code"""
+        return self.__raw_data
 
-    # Auth
-    if '@' in url:
-        auth, url = url.split('@', 1)
 
-    # IPv6
-    if url and url[0] == '[':
-        host, url = url[1:].split(']', 1)
+    #----------------------------------------------------------------------
+    @property
+    def elements(self):
+        """Get all HTML elements"""
+        if self.__all_elements is None:
+            m_result = self.__html_parser.findAll()
+            self.__all_elements = self.__convert_to_HTMLElements(m_result)
+        return self.__all_elements
 
-    # Port
-    if ':' in url:
-        _host, port = url.split(':', 1)
 
-        if not host:
-            host = _host
+    #----------------------------------------------------------------------
+    @property
+    def forms(self):
+        """Get forms from HTML"""
+        if self.__html_forms is None:
+            m_elem = self.__html_parser.findAll("form")
+            self.__html_forms = self.__convert_to_HTMLElements(m_elem)
+        return self.__html_forms
 
-        if not port.isdigit():
-            port = 80
 
-        port = int(port)
+    #----------------------------------------------------------------------
+    @property
+    def images(self):
+        """Get images from HTML"""
+        if self.__html_images is None:
+            m_elem = self.__html_parser.findAll("img")
+            self.__html_images = self.__convert_to_HTMLElements(m_elem)
+        return self.__html_images
 
-    elif not host and url:
-        host = url
 
-    if not path:
-        return Url(scheme, auth, host, port, path, query, fragment)
+    #----------------------------------------------------------------------
+    @property
+    def links(self):
+        """Get links from HTML"""
+        if self.__html_links is None:
+            m_elem = self.__html_parser.findAll("a")
+            self.__html_links = self.__convert_to_HTMLElements(m_elem)
+        return self.__html_links
 
-    # Fragment
-    if '#' in path:
-        path, fragment = path.split('#', 1)
 
-    # Query
-    if '?' in path:
-        path, query = path.split('?', 1)
+    #----------------------------------------------------------------------
+    @property
+    def css_links(self):
+        """Get CSS links from HTML"""
+        if self.__html_css is None:
+            m_elem = self.__html_parser.findAll(name="link", attrs={"rel":"stylesheet"})
+            self.__html_css = self.__convert_to_HTMLElements(m_elem)
+        return self.__html_css
 
-    return Url(scheme, auth, host, port, path, query, fragment)
+
+    #----------------------------------------------------------------------
+    @property
+    def javascript_links(self):
+        """Get JavaScript links from HTML"""
+        if self.__html_javascript is None:
+            m_elem = self.__html_parser.findAll(name="script", attrs={"src": True})
+            self.__html_javascript = self.__convert_to_HTMLElements(m_elem)
+        return self.__html_javascript
+
+
+    #----------------------------------------------------------------------
+    @property
+    def css_embedded(self):
+        """Get embedded CSS from HTML"""
+        if self.__html_css_embedded is None:
+            m_elem = self.__html_parser.findAll("style")
+            self.__html_css_embedded = self.__convert_to_HTMLElements(m_elem)
+        return self.__html_css_embedded
+
+
+    #----------------------------------------------------------------------
+    @property
+    def javascript_embedded(self):
+        """Get embedded JavaScript from HTML"""
+        if self.__html_javascript_embedded is None:
+            m_elem = self.__html_parser.findAll(name="script", attrs={"src": False})
+            self.__html_javascript_embedded = self.__convert_to_HTMLElements(m_elem)
+        return self.__html_javascript_embedded
+
+
+    #----------------------------------------------------------------------
+    @property
+    def metas(self):
+        """Get meta tags from HTML"""
+        if self.__html_metas is None:
+            m_elem = self.__html_parser.findAll(name="meta")
+            self.__html_metas = self.__convert_to_HTMLElements(m_elem)
+        return self.__html_metas
+
+
+    #----------------------------------------------------------------------
+    @property
+    def title(self):
+        """Get title from HTML"""
+        if self.__html_title is None:
+            m_elem = self.__html_parser.findAll(name="title", recursive=False, limit=1)
+            self.__html_title = m_elem.name.encode("utf-8")
+        return self.__html_title
+
+
+    #----------------------------------------------------------------------
+    @property
+    def objects(self):
+        """Get object tags from HTML"""
+
+        if self.__html_objects is None:
+            m_elem = self.__html_parser.findAll(name="object")
+
+            m_result = []
+            m_result_append_bind = m_result.append
+
+            for obj in m_elem:
+                # Get attrs
+                m_ojb_attr = { v[0].encode("utf-8"): v[1].encode("utf-8") for v in obj.attrs }
+
+                # Add param attr
+                m_ojb_attr["param"] = {}
+
+                # Add value for params
+                update = m_ojb_attr["param"].update
+                for param in obj.findAllNext("param"):
+                    update({ k[0].encode("utf-8"): k[1].encode("utf-8") for k in param.attrs})
+
+                m_raw_content = "".join((str(item) for item in obj.contents if item != "\n"))
+
+                m_result_append_bind(HTMLElement(obj.name.encode("utf-8"), m_ojb_attr, m_raw_content))
+
+            self.__html_objects = m_result
+
+        return self.__html_objects
