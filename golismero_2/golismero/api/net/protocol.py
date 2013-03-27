@@ -42,8 +42,22 @@ from ...messaging.codes import MessageCode
 
 from re import compile, match, IGNORECASE
 from requests import *
-from requests.exceptions import RequestException as NetworkException
+from requests.exceptions import RequestException
 from time import time
+
+#------------------------------------------------------------------------------
+class NetworkException(Exception):
+    """
+    Exception for net connections
+    """
+    pass
+
+#------------------------------------------------------------------------------
+class NetworkOutOfScope(Exception):
+    """
+    Exception for net connections
+    """
+    pass
 
 
 #------------------------------------------------------------------------------
@@ -216,7 +230,7 @@ class Web (Protocol):
         # Check if the URL is within scope of the audit.
         if not is_in_scope(request.url):
             Logger.log_verbose("Url '%s' out of scope. Skipping it." % request.url)
-            return
+            raise NetworkOutOfScope("'%s' is out of the scope." % URL)
 
         # If the URL is cached, return the cached contents.
         if request.is_cacheable and self._cache.exists(request.request_id, protocol=request.parsed_url.scheme):
@@ -259,11 +273,8 @@ class Web (Protocol):
             # Select request type
             #
             # Fix URL: www.site.com -> http://www.site.com
-            #m_url = request.url if parse_url(request.url).scheme else "http://%s" % request.url
             m_parsed_url = parse_url(request.url)
             m_url = request.url if m_parsed_url.scheme is not None and m_parsed_url.scheme != "None" else "http://%s" % request.url
-            #m_b = "hooola" if parse_url(request.url).scheme is not None else "http://%s" % request.url
-            #print "original: " + request.url + " | filtrado: " + m_url + " | parseurl: " + str(parse_url(request.url))
 
             if m_method not in ("GET", "POST", "HEAD", "OPTIONS", "PUT", "PATCH", "DELETE"):
                 raise NotImplementedError("Method '%s' not allowed." % m_method)
@@ -272,7 +283,10 @@ class Web (Protocol):
             t1 = time()
 
             # Issue the request
-            m_response = getattr(self.__http_pool_manager, m_method.lower())(m_url, **m_request_params)
+            try:
+                m_response = getattr(self.__http_pool_manager, m_method.lower())(m_url, **m_request_params)
+            except RequestException, e:
+                raise NetworkException(e.message)
 
             # Stop timing the request
             t2 = time()
@@ -328,7 +342,7 @@ class Web (Protocol):
         # Check for host matching
         if not is_in_scope(URL):
             Logger.log_verbose("[!] Url '%s' out of scope. Skipping it." % URL)
-            return
+            raise NetworkOutOfScope("'%s' is out of the scope." % URL)
 
         # Set redirect
         m_follow_redirects = follow_redirect if follow_redirect else self.__follow_redirects
