@@ -41,10 +41,10 @@ from collections import namedtuple
 
 from BeautifulSoup import BeautifulSoup
 from repoze_lru import lru_cache
-<<<<<<< HEAD
 from requests import *
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests_ntlm import HttpNtlmAuth
+
 
 #----------------------------------------------------------------------
 # Cached version of the parse_url() function from urllib3
@@ -58,9 +58,6 @@ except ImportError:
 def parse_url(url):
     return original_parse_url(url)
 
-=======
-from urlparse import urlparse
->>>>>>> 9ef2843d0b3722866d3fc52a93049ace64f1ad05
 
 #----------------------------------------------------------------------
 def fix_url(url):
