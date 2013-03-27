@@ -117,12 +117,12 @@ class ConnectionSlot (object):
         self.__host = hostname
 
     def __enter__(self):
-        self.__token = Config._get_context().remote_call(
+        self.__token = Config._context.remote_call(
             MessageCode.MSG_RPC_REQUEST_SLOT, self.hostname, 1
         )
 
     def __exit__(self, type, value, tb):
-        Config._get_context().remote_call(
+        Config._context.remote_call(
             MessageCode.MSG_RPC_RELEASE_SLOT, self.__token
         )
 

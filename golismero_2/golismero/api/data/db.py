@@ -54,7 +54,7 @@ class Database(Singleton):
 
         :returns: bool -- True if the data was added, False if it was updated
         """
-        return Config._get_context().remote_call(
+        return Config._context.remote_call(
             MessageCode.MSG_RPC_DATA_ADD, data)
 
 
@@ -66,7 +66,7 @@ class Database(Singleton):
         :param data: Data to add.
         :type data: Data
         """
-        Config._get_context().async_remote_call(
+        Config._context.async_remote_call(
             MessageCode.MSG_RPC_DATA_ADD, data)
 
 
@@ -86,7 +86,7 @@ class Database(Singleton):
 
         :returns: bool -- True if the object was removed, False if it didn't exist.
         """
-        return Config._get_context().remote_call(
+        return Config._context.remote_call(
             MessageCode.MSG_RPC_DATA_REMOVE, identity, data_type)
 
 
@@ -106,7 +106,7 @@ class Database(Singleton):
 
         :returns: bool -- True if the object was removed, False if it didn't exist.
         """
-        Config._get_context().async_remote_call(
+        Config._context.async_remote_call(
             MessageCode.MSG_RPC_DATA_REMOVE, identity, data_type)
 
 
@@ -124,7 +124,7 @@ class Database(Singleton):
 
         :returns: bool - True if the object is present, False otherwise.
         """
-        return Config._get_context().remote_call(
+        return Config._context.remote_call(
             MessageCode.MSG_RPC_DATA_CHECK, identity, data_type)
 
 
@@ -144,7 +144,7 @@ class Database(Singleton):
 
         :returns: Data | None
         """
-        return Config._get_context().remote_call(
+        return Config._context.remote_call(
             MessageCode.MSG_RPC_DATA_GET, identity, data_type)
 
 
@@ -161,7 +161,7 @@ class Database(Singleton):
 
         :returns: list(Data)
         """
-        return Config._get_context().bulk_remote_call(
+        return Config._context.bulk_remote_call(
             MessageCode.MSG_RPC_DATA_GET, identities)
 
 
@@ -183,7 +183,7 @@ class Database(Singleton):
             if data_subtype is not None:
                 raise NotImplementedError(
                     "Can't filter by subtype for all types")
-        return Config._get_context().remote_call(
+        return Config._context.remote_call(
             MessageCode.MSG_RPC_DATA_KEYS, data_type, data_subtype)
 
 
@@ -205,7 +205,7 @@ class Database(Singleton):
             if data_subtype is not None:
                 raise NotImplementedError(
                     "Can't filter by subtype for all types")
-        return Config._get_context().remote_call(
+        return Config._context.remote_call(
             MessageCode.MSG_RPC_DATA_COUNT, data_type, data_subtype)
 
 
