@@ -34,6 +34,8 @@ from golismero.main.console import Console, colorize, colorize_substring
 from golismero.messaging.codes import MessageType, MessageCode
 from golismero.messaging.message import Message
 
+import warnings
+
 #
 # Verbosity levels:
 #
@@ -152,6 +154,22 @@ class ConsoleUIPlugin(UIPlugin):
                 traceback = colorize(traceback, 'critical')
                 Console.display_error(text)
                 Console.display_error_more_verbose(traceback)
+
+            # Show plugin warnings
+            # (Only the description in verbose level,
+            # full traceback in more verbose level)
+            elif message.message_code == MessageCode.MSG_CONTROL_WARNING:
+                for w in message.message_info:
+                    if Console.level >= Console.MORE_VERBOSE:
+                        formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
+                    elif Console.level >= Console.VERBOSE:
+                        formatted = warnings.formatwarning(w.message, w.category)
+                    else:
+                        formatted = None
+                    if formatted:
+                        text = "[!] Plugin warning: " + str(formatted)
+                        text = colorize(text, 'low')
+                        Console.display_error(text)
 
 
     #----------------------------------------------------------------------

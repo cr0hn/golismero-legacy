@@ -26,7 +26,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["Data", "identity"]
+__all__ = ["Data", "identity", "mergeable", "TempDataStorage"]
 
 from ...common import pickle
 
@@ -126,6 +126,9 @@ class Data(object):
 
         # Identity hash cache.
         self.__identity = None
+
+        # Tell the temporary storage about this instance.
+        TempDataStorage.on_create(self)
 
 
     #----------------------------------------------------------------------
@@ -293,3 +296,127 @@ class Data(object):
         :rtype: list(Resource)
         """
         return []
+
+
+#----------------------------------------------------------------------
+class _TempDataStorage(Singleton):
+    """
+    Temporary storage for newly created objects.
+    """
+
+
+    #----------------------------------------------------------------------
+    def __init__(self):
+
+        # Map of identities to instances.
+        self.__new_data = {}
+
+        # Set of identities of referenced new instances.
+        self.__referenced = set()
+
+        # List of fresh instances, not yet fully initialized.
+        self.__fresh = list()
+
+
+    #----------------------------------------------------------------------
+    def on_run(self):
+        """
+        Called by the plugin bootstrap when a plugin is run.
+        """
+        self.__new_data = {}
+        self.__referenced = set()
+        self.__fresh = list()
+
+
+    #----------------------------------------------------------------------
+    def on_finish(self):
+        """
+        Called by the plugin bootstrap when a plugin finishes running.
+        """
+        self.__new_data = {}
+        self.__referenced = set()
+        self.__fresh = list()
+
+
+    #----------------------------------------------------------------------
+    def on_create(self, data):
+        """
+        Called by instances when being created.
+        """
+        self.__fresh.append(data)
+
+
+    #----------------------------------------------------------------------
+    def on_send(self, data):
+        """
+        Called by the OOP Observer when an instance
+        is sent to the Orchestrator.
+        """
+        self.update()
+        for ref in data.links:
+            if ref in self.__new_data:
+                self.__referenced.add(ref)
+        identity = data.identity
+        try:
+            del self.__new_data[identity]
+        except KeyError:
+            pass
+        try:
+            self.__referenced.remove(identity)
+        except KeyError:
+            pass
+
+
+    #----------------------------------------------------------------------
+    def update(self):
+        """
+        Process the fresh instances.
+        """
+        while self.__fresh:
+            data = self.__fresh.pop()
+            self.__new_data[data.identity] = data
+
+
+    #----------------------------------------------------------------------
+    def get(self, identity):
+        """
+        Fetch an unsent instance given its identity.
+        Returns None if the instance is not found.
+
+        :param identity: Identity to look for.
+        :type identity: str
+
+        :returns: Data | None
+        """
+        self.update()
+        return self.__new_data.get(identity, None)
+
+
+    #----------------------------------------------------------------------
+    @property
+    def pending(self):
+        """
+        New instances pending to be sent.
+
+        :returns: list(Data) -- List of instances.
+        """
+        self.update()
+        return [self.__new_data[ref] for ref in self.__referenced]
+
+
+    #----------------------------------------------------------------------
+    @property
+    def orphans(self):
+        """
+        Orphaned new instances.
+
+        :returns: list(Data) -- List of instances.
+        """
+        self.update()
+        return [data for data in self.__new_data.itervalues()
+                     if data.identity not in self.__referenced]
+
+
+#----------------------------------------------------------------------
+# Temporary storage for newly created objects.
+TempDataStorage = _TempDataStorage()

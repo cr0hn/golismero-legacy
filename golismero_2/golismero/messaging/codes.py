@@ -78,11 +78,12 @@ class MessageCode(object):
     # Global control
     MSG_CONTROL_ACK       = 0
     MSG_CONTROL_ERROR     = 1
-    MSG_CONTROL_LOG       = 2
-    MSG_CONTROL_START     = 3
-    MSG_CONTROL_STOP      = 4
-    #MSG_CONTROL_PAUSE    = 5
-    #MSG_CONTROL_CONTINUE = 6
+    MSG_CONTROL_WARNING   = 2
+    MSG_CONTROL_LOG       = 3
+    MSG_CONTROL_START     = 4
+    MSG_CONTROL_STOP      = 5
+    #MSG_CONTROL_PAUSE    = 6
+    #MSG_CONTROL_CONTINUE = 7
 
     # Audit control
     MSG_CONTROL_START_AUDIT     = 10
