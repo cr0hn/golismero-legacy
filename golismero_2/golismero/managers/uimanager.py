@@ -117,4 +117,4 @@ class UIManager (object):
         """
         message = Message(message_type = MessageType.MSG_TYPE_DATA,
                           message_info = information)
-        self.__orchestrator.dispatch_msg(message)
+        self.__orchestrator.enqueue_msg(message)

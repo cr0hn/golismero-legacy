@@ -274,7 +274,7 @@ class Web (Protocol):
             #
             # Fix URL: www.site.com -> http://www.site.com
             m_parsed_url = parse_url(request.url)
-            m_url = request.url if m_parsed_url.scheme is not None and m_parsed_url.scheme != "None" else "http://%s" % request.url
+            m_url = request.url
 
             if m_method not in ("GET", "POST", "HEAD", "OPTIONS", "PUT", "PATCH", "DELETE"):
                 raise NotImplementedError("Method '%s' not allowed." % m_method)
@@ -334,7 +334,7 @@ class Web (Protocol):
                 URL = URL.url
 
             # Set referer option
-            m_referer = URL.referer if URL.referer else ''
+            m_referer = URL.referer
 
         except AttributeError:
             pass

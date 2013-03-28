@@ -84,10 +84,6 @@ class Spider(TestingPlugin):
             else:
                 p = m_manager.get(m_url)
 
-            # Associate the resource
-            p.associated_resource = info
-            p.information.associated_resource = info
-
         except NetworkException,e:
             Logger.log_more_verbose("Spider - value error while processing: '%s'. Error: %s" % (m_url, e.message))
 

@@ -64,10 +64,10 @@ class Robots(TestingPlugin):
         # Get the url of hosts
         m_url_robots_txt = "%s/robots.txt" % fix_url(info.name)
 
+        Logger.log_verbose("Robots - looking for robots.txt in URL: '%s'" % m_url_robots_txt)
+
         # Request this URL
         m_manager = NetworkAPI.get_connection()
-
-        Logger.log_verbose("Robots - looking for robots.txt in URL: '%s'" % m_url_robots_txt)
 
         p = None
         try:
@@ -76,7 +76,7 @@ class Robots(TestingPlugin):
             Logger.log_more_verbose("Robots - value error while processing: '%s'. Error: %s" % (m_url_robots_txt, e.message))
 
         # Check for errors
-        if not p or not p.information or not p.content_type == "text":
+        if not p or not p.content_type == "text" or not p.information:  # order is important!
             Logger.log_verbose("Robots - no robots.txt found.")
             return
 

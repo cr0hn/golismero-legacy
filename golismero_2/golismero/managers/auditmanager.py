@@ -30,6 +30,7 @@ __all__ = ["AuditManager", "Audit"]
 
 from .priscillapluginmanager import PriscillaPluginManager
 from ..api.data.data import Data
+from ..api.data.resource.resource import Resource
 from ..api.data.resource.url import Url
 from ..api.data.resource.domain import Domain
 from ..api.net.web_utils import parse_url
@@ -207,7 +208,7 @@ class AuditManager (object):
                                         message_code = MessageCode.MSG_CONTROL_STOP_AUDIT,
                                         message_info = True,   # True for finished, False for user cancel
                                         audit_name   = message.audit_name)
-                            self.__orchestrator.dispatch_msg(m)
+                            self.__orchestrator.enqueue_msg(m)
 
             # Stop an audit if requested
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
@@ -277,12 +278,12 @@ class Audit (object):
         # Create the database.
         self.__database = DataDB(self.__name, auditParams.audit_db)
 
-        # To follow orphan info and vuln types
-        self.__orphan_data_attemps = Counter()
-        self.__orphan_data_resources = dict()
+        # Track orphan data objects.
+        self.__orphan_data = dict()  # identity -> instance
 
-        # Maximum number of links to follow
-        self.__followed_resources = 0
+        # Maximum number of links to follow.
+        self.__followed_links = 0
+        self.__show_max_links_warning = True
 
 
 
@@ -344,7 +345,7 @@ class Audit (object):
             message_url    = Message(message_info = Url(url),
                                      message_type = MessageType.MSG_TYPE_DATA,
                                      audit_name   = self.name)
-            self.orchestrator.dispatch_msg(message_url)
+            self.orchestrator.enqueue_msg(message_url)
 
 
     #----------------------------------------------------------------------
@@ -352,7 +353,34 @@ class Audit (object):
         """
         Got an ACK for a message sent from this audit to the plugins.
         """
+
+        # Decrease the expected ACK count.
+        # The audit manager will check when this reaches zero.
         self.__expecting_ack -= 1
+
+        # Is any orphan data no longer an orphan?
+        not_orphan_anymore = {ref for ref in self.__orphan_data.iterkeys()
+                              if self.database.has_key(ref)}
+        if not_orphan_anymore:
+
+            # We'll expect an ACK to be sent after the data.
+            self.__expecting_ack += 1
+
+            # Resend the orphan data to the Orchestrator.
+            try:
+                for ref in not_orphan_anymore:
+                    m = Message(message_type = MessageType.MSG_TYPE_DATA,
+                                message_info = self.__orphan_data.pop(ref),
+                                audit_name   = self.name)
+                    self.orchestrator.enqueue_msg(m)
+
+            # Send the ACK.
+            finally:
+                m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
+                            message_code = MessageCode.MSG_CONTROL_ACK,
+                                priority = MessagePriority.MSG_PRIORITY_LOW,
+                            audit_name   = self.name)
+                self.orchestrator.enqueue_msg(m)
 
 
     #----------------------------------------------------------------------
@@ -377,152 +405,129 @@ class Audit (object):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
-        # Maximun number of links reached?
-        if self.__followed_resources >= self.__params.max_links and \
-           self.__params.max_links != 0: # 0 = infinite
-
-            self.__expecting_ack += 1
-            m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
-                        message_code = MessageCode.MSG_CONTROL_ACK,
-                            priority = MessagePriority.MSG_PRIORITY_LOW,
-                        audit_name   = self.name)
-            self.orchestrator.dispatch_msg(m)
-
-            return False
+        #----------------------------------------------------------------------
+        #
+        # Orphan data algorithm
+        # ---------------------
+        #
+        # For the time being, we're only tracking vulnerabilities that contain
+        # references to resources not yet in the database. Such vulnerabilities
+        # are retained until all resources they link to are already committed
+        # in the database.
+        #
+        # That means, resources and informations get sent in a first-come,
+        # first-serve fashion, and vulnerabilities are always sent last.
+        #
+        # This assumes plugins will never try to access vulnerability or
+        # information links from resources or informations. It also assumes
+        # vulnerabilities only link to resources, and not to informations
+        # nor to each other. This is true now, but it might not be later on,
+        # especially when user contributed plugins come into play.
+        #
+        # In the future, we'll want to treat this as a more general problem.
+        # Any data that links to data not yet in the database is retained.
+        # Once we get a closed graph of data objects referencing each other,
+        # we commit the whole graph to the database and send the objects in
+        # whatever order - since then it won't matter anymore.
+        #
+        # In any case, the orphan data is only added here. We check if orphans
+        # are no longer orphans only when an ACK arrives, since that means a
+        # plugin has finished running. (In the future we might want to check
+        # exactly what plugin has finished running, too).
+        #
+        #----------------------------------------------------------------------
 
         # Is it data?
         if message.message_type == MessageType.MSG_TYPE_DATA:
+            data = message.message_info
 
-            # ------------------------------------------------------
-            # Algorithm explanation:
-            #
-            # The structure for information are:
-            #
-            # Info_type <-----<> Resource <>------> Vuln_type
-            #
-            # For each type of message data we distinguish if
-            # data is an info, resource or vuln.
-            #
-            # If type of data is vuln or info, we search if the
-            # associated resource is already stored:
-            #
-            # - If not: put the info in queue until resource arrives.
-            #
-            # - Is stored: search in the database and extract the
-            #              resource associated and add the new info.
-            #
-            # ------------------------------------------------------
+            # Does this data reference any other data we still don't have?
+            if  data.data_type == Data.TYPE_VULNERABILITY and (
+                data.identity in self.__orphan_data or
+                not all(self.database.has_key(ref) for ref in data.get_links(Data.TYPE_RESOURCE))
+            ):
 
-            m_msg_data = message.message_info
-            m_msg_type = m_msg_data.data_type
-            m_is_new   = False # var to control if received data is new in database
+                # Add this data to the orphans.
+                self.__orphan_data[data.identity] = data
 
-            # Checks if data has associated a resource
-            if (m_msg_type == Data.TYPE_INFORMATION or \
-                m_msg_type == Data.TYPE_VULNERABILITY) and \
-                not m_msg_data.associated_resource:
-                raise ValueError("Vulnerability o Information types must have a resource associated. Error data: '%s'" % str(m_msg_data))
+            # Increase the number of links followed.
+            if data.data_type == Data.TYPE_RESOURCE and data.resource_type == Resource.RESOURCE_URL:
+                self.__followed_links += 1
 
+                # Maximum number of links reached?
+                if self.__params.max_links > 0 and self.__followed_links >= self.__params.max_links:
 
-            # Increase the number of resources proccesed
-            if m_msg_type == Data.TYPE_RESOURCE:
-                self.__followed_resources += 1
+                    # Show a warning.
+                    if self.__show_max_links_warning:
+                        self.__show_max_links_warning = False
+                        w = "Maximum number of links (%d) reached! Audit: %s"
+                        w = w % (self.__params.max_links, self.name)
+                        m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
+                                    message_code = MessageCode.MSG_CONTROL_WARNING,
+                                    message_info = RuntimeWarning(w),
+                                    audit_name   = self.name)
+                        self.orchestrator.enqueue_msg(m)
 
-            # Add the data to the database
-            m_is_new = self.database.add(m_msg_data)
+                    # Drop the message. An ACK is still expected.
+                    self.__expecting_ack += 1
+                    m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
+                                message_code = MessageCode.MSG_CONTROL_ACK,
+                                    priority = MessagePriority.MSG_PRIORITY_LOW,
+                                audit_name   = self.name)
+                    self.orchestrator.enqueue_msg(m)
 
-            # Data is new in database
-            if m_is_new:
-                #
-                # Differenciate the type of data:
-                #
-                # Type: INFORMATION or VULNERABILITY
-                if m_msg_type == Data.TYPE_INFORMATION or \
-                   m_msg_type == Data.TYPE_VULNERABILITY:
+                    # Tell the Orchestrator we dropped the message.
+                    return False
 
-                    # Search in database for the associated resource
-                    m_tmp_resource = self.database.get(m_msg_data.associated_resource)
+            # Add the data to the database.
+            # This automatically merges the data if it already exists.
+            is_new = self.database.add(data)
 
-                    if not m_tmp_resource:
-                        # Associated resource not found -> add as orphan data
-                        self.__orphan_data_attemps[m_msg_data.identity] += 1
-                        self.__orphan_data_resources[m_msg_data.identity] = m_msg_data.associated_resource
-                    else:
-                        # Update resource
-                        self.__update_resource(m_msg_type, m_tmp_resource, m_msg_data)
+            # Was the data already present in the database?
+            if not m_is_new:
 
-                # When a resource arrives check if some of orphan data can be associted with them
-                elif m_msg_type == Data.TYPE_RESOURCE:
-
-                    # Check associated resource of any orphan data matches with received resource
-                    for l_info, l_resource in self.__orphan_data_resources.iteritems():
-                        if l_resource == m_msg_data.identity:
-                            self.__update_resource(m_msg_type, m_msg_data, l_info)
-                            break
-
-                    # Delete old orphan data
-                    for l_info, l_attemp in self.__orphan_data_attemps.iteritems():
-                        if l_attemp > 5:
-                            self.database.remove(l_info)
-
-
-            # Not new -> is it duplicated data?
-            else:
-
-                # Send the ACK to the queue to make sure all
-                # messages in-between are processed correctly.
+                # Drop the message. An ACK is still expected.
                 self.__expecting_ack += 1
                 m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                             message_code = MessageCode.MSG_CONTROL_ACK,
                                 priority = MessagePriority.MSG_PRIORITY_LOW,
                             audit_name   = self.name)
-                self.orchestrator.dispatch_msg(m)
+                self.orchestrator.enqueue_msg(m)
 
-                # Drop the message.
+                # Tell the Orchestrator we dropped the message.
                 return False
 
-        # Send the message to the plugins
+        # Send the message to the plugins, and track the expected ACKs.
         self.__expecting_ack += self.__notifier.notify(message)
 
-        # Look for discovered resources in info:
-        #
-        if m_msg_data.discovered_resources:
-            for l_discovered in m_msg_data.discovered_resources:
-                # Check for correct type and also check if resource is already stored
-                if l_discovered.data_type == Data.TYPE_RESOURCE and \
-                   not self.database.has_key(l_discovered.identity):
-                    # Send to orchestrator
-                    m = Message(message_info = l_discovered,
-                                message_type = MessageType.MSG_TYPE_DATA,
-                                audit_name   = self.name)
-                    self.orchestrator.dispatch_msg(m)
+        # Are there any embedded resources?
+        if data.discovered_resources:
 
+            # We'll expect an ACK to be sent after the resources.
+            self.__expecting_ack += 1
+
+            # Extract the embedded resources.
+            try:
+                for resource in data.discovered_resources:
+                    assert resource.data_type == Data.TYPE_RESOURCE
+
+                    # Send new resources to the Orchestrator.
+                    if self.database.has_key(resource.identity):
+                        m = Message(message_type = MessageType.MSG_TYPE_DATA,
+                                    message_info = resource,
+                                    audit_name   = self.name)
+                        self.orchestrator.enqueue_msg(m)
+
+            # Send the ACK.
+            finally:
+                m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
+                            message_code = MessageCode.MSG_CONTROL_ACK,
+                                priority = MessagePriority.MSG_PRIORITY_LOW,
+                            audit_name   = self.name)
+                self.orchestrator.enqueue_msg(m)
+
+        # Tell the Orchestrator we sent the message.
         return True
-
-    #----------------------------------------------------------------------
-    def __update_resource(self, msg_type, resource, data):
-        """
-        Update an associated resource, from database, with a info o vuln type.
-
-        :param msg_type: type of data specified at data
-        :type msg_type: int
-
-        :param resource: the resource to update
-        :type resource: Resource
-
-        :param data: Information or Vulnerability data
-        :type data: Information | Vulnerability
-        """
-        # Associated resourse found -> add new info or vuln
-
-        # Info or result type?
-        m_bind_add = resource.add_information if msg_type == Data.TYPE_INFORMATION else resource.add_vulnerability
-
-        # Add the data
-        m_bind_add(data)
-
-        # Add modified resource
-        self.database.add(resource)
 
 
     #----------------------------------------------------------------------

@@ -275,6 +275,19 @@ class Orchestrator (object):
 
 
     #----------------------------------------------------------------------
+    def enqueue_msg(self, message):
+        """
+        Put messages into the message queue.
+
+        :param message: incoming message
+        :type message: Message
+        """
+        if not isinstance(message, Message):
+            raise TypeError("Expected Message, got %s instead" % type(message))
+        self.__queue.put_nowait(message)
+
+
+    #----------------------------------------------------------------------
     def build_plugin_context(self, audit_name, plugin):
         """
         Prepare a PluginContext object to pass to the plugins.
@@ -327,7 +340,7 @@ class Orchestrator (object):
                             m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                                         message_code = MessageCode.MSG_CONTROL_STOP,
                                         message_info = True)  # True for finished, False for user cancel
-                            self.dispatch_msg(m)
+                            self.enqueue_msg(m)
 
                     # Wait for a message to arrive.
                     try:
@@ -335,8 +348,6 @@ class Orchestrator (object):
                     except Exception:
                         # If this fails, kill the Orchestrator.
                         exit(1)
-                    if not isinstance(message, Message):
-                        raise TypeError("Expected Message, got %s" % type(message))
 
                     # Dispatch the message.
                     self.dispatch_msg(message)
