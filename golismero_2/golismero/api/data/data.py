@@ -99,10 +99,7 @@ class Data(object):
 
 
     #--------------------------------------------------------------------------
-    #
-    # Types of data
-    #
-    #--------------------------------------------------------------------------
+    # Data types
 
     TYPE_ANY = 0      # not a real type! only used in get_accepted_info()
 
@@ -114,6 +111,16 @@ class Data(object):
     TYPE_LAST    = TYPE_RESOURCE       # constant for the last valid type
 
     data_type = TYPE_ANY
+
+
+    #----------------------------------------------------------------------
+    # Maximum number of linked objects per data type.
+    # Use None to enforce no limits.
+
+    max_data = None              # Maximum for all data types.
+    max_resources = None         # Maximum linked resources.
+    max_informations = None      # Maximum linked informations.
+    max_vulnerabilities = None   # Maximum linked vulnerabilities.
 
 
     #----------------------------------------------------------------------
@@ -311,28 +318,61 @@ class Data(object):
 
         :param other: Another instance of Data.
         :type other: Data
+
+        :raises:
         """
         if not isinstance(other, Data):
             raise TypeError("Expected Data, got %s instead" % type(other))
-        other._add_link(self)
-        self._add_link(other)
+        if self._can_link(other) and other._can_link(self):
+            other._add_link(self)
+            self._add_link(other)
+
+    def _can_link(self, other):
+        """
+        Internal method to check if adding a new link
+        of the requested type is allowed for this class.
+
+        Do not call! Use add_link() instead.
+
+        :param other: Another instance of Data.
+        :type other: Data
+
+        :returns: bool - True if permitted, False otherwise.
+        """
+        max_data = self.max_data
+        data_type = other.data_type
+        if data_type == self.TYPE_INFORMATION:
+            max_data_type = self.max_informations
+        elif data_type == self.TYPE_RESOURCE:
+            max_data_type = self.max_resources
+        elif data_type == self.TYPE_VULNERABILITY:
+            max_data_type = self.max_vulnerabilities
+        else:
+            raise ValueError("Internal error! Unknown data_type: %r" % data_type)
+        return (
+            (     max_data is None or      max_data < 0 or                len(self.links) <= max_data     ) and
+            (max_data_type is None or max_data_type < 0 or len(self.get_links(data_type)) <= max_data_type)
+        )
 
     def _add_link(self, other):
         """
-        Internal method to link two Data instances together. Do not call!
+        Internal method to link two Data instances together.
+
+        Do not call! Use add_link() instead.
 
         :param other: Another instance of Data.
         :type other: Data
         """
         identity = other.identity
+        data_type = other.data_type
         self.__linked[None][None].add(identity)
-        self.__linked[other.data_type][None].add(identity)
+        self.__linked[data_type][None].add(identity)
         if data_type == self.TYPE_INFORMATION:
-            self.__linked[other.data_type][other.information_type].add(identity)
+            self.__linked[data_type][other.information_type].add(identity)
         elif data_type == self.TYPE_RESOURCE:
-            self.__linked[other.data_type][other.resource_type].add(identity)
+            self.__linked[data_type][other.resource_type].add(identity)
         elif data_type == self.TYPE_VULNERABILITY:
-            self.__linked[other.data_type][other.vulnerability_type].add(identity)
+            self.__linked[data_type][other.vulnerability_type].add(identity)
         else:
             raise ValueError("Internal error! Unknown data_type: %r" % data_type)
 
