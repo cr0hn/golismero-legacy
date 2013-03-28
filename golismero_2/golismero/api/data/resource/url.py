@@ -32,7 +32,8 @@ from ..data import identity
 from .domain import Domain
 from .resource import Resource
 from ...net.web_utils import parse_url
-from urlparse import urlparse
+
+from urlparse import urlunparse
 
 
 #------------------------------------------------------------------------------
@@ -66,11 +67,19 @@ class Url(Resource):
         """
         assert isinstance(referer, basestring)
 
+        # Parse, verify and normalize the URL
+        parsed = parse_url(url)
+        if not parsed.hostname or not parsed.scheme:
+            raise ValueError("Only absolute URLs must be used!")
+        if not parsed.path:
+            parsed.path = "/"
+        url = urlunparse(parsed)
+
         # Cache for parsed URL
-        self.__parsed_url = parse_url(url)
+        self.__parsed_url = parsed
 
         # Add and fix URL
-        self.__url = url if self.__parsed_url.scheme and self.__parsed_url.scheme != "None" else "http://%s" % url
+        self.__url = url
 
         # Method
         self.__method = method.strip().upper() if method else "GET"
