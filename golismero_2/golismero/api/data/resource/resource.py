@@ -68,7 +68,7 @@ class Resource(Data):
         :return: List with vulnerabilities.
         :rtype: list
         """
-        return self.get_links(Data.TYPE_VULNERABILITY)
+        return self.get_linked_data(Data.TYPE_VULNERABILITY)
 
 
     #----------------------------------------------------------------------
@@ -80,7 +80,7 @@ class Resource(Data):
         :return: List with informations.
         :rtype: list
         """
-        return self.get_links(Data.TYPE_INFORMATION)
+        return self.get_linked_data(Data.TYPE_INFORMATION)
 
 
     #----------------------------------------------------------------------

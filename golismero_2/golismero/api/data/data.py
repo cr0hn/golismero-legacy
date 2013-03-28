@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Data", "identity", "mergeable", "TempDataStorage"]
 
+from .db import Database
 from ...common import pickle
 
 from collections import defaultdict
@@ -233,6 +234,13 @@ class Data(object):
 
 
     #----------------------------------------------------------------------
+    @property
+    def linked_data(self):
+        """set(str) -- Set of linked Data identities."""
+        return self._convert_links_to_data( self.__linked[None][None] )
+
+
+    #----------------------------------------------------------------------
     def get_links(self, data_type = None, data_subtype = None):
         """
         Get the linked Data identities of the given data type.
@@ -251,6 +259,49 @@ class Data(object):
                 raise NotImplementedError(
                     "Can't filter by subtype for all types")
         return self.__linked[data_type][data_subtype]
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def _convert_links_to_data(links):
+        """
+        Get the Data objects from a given set of identities.
+        This will include both new objects created by this plugins,
+        and old objects already stored in the database.
+
+        :param links: Set of identities to fetch.
+        :type links: set(str)
+
+        :returns: set(Data) -- Set of Data objects.
+        """
+        remote = set()
+        instances = set()
+        for ref in links:
+            data = TempDataStorage.get(ref)
+            if data is None:
+                remote.add(ref)
+            else:
+                instances.add(data)
+        instances.update( Database().get_many(remote) )
+        return instances
+
+
+    #----------------------------------------------------------------------
+    def get_linked_data(self, data_type = None, data_subtype = None):
+        """
+        Get the linked Data objects of the given data type.
+
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
+        :type data_type: int
+
+        :param data_subtype: Optional data subtype.
+        :type data_subtype: int | str
+
+        :returns: set(Data) -- Set of Data objects.
+        :raises ValueError: Invalid data_type argument.
+        """
+        links = self.get_links(data_type, data_subtype)
+        return self._convert_links_to_data(links)
 
 
     #----------------------------------------------------------------------

@@ -91,7 +91,7 @@ class ScreenReport(ReportPlugin):
 
         for u in urls:
             print "+ %s" % str(u)
-            for vuln in db.get_many(u.associated_vulnerabilities):
+            for vuln in u.associated_vulnerabilities:
                 print "  |- %s" % str(vuln)
 
         #
