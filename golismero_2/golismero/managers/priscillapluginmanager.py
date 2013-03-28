@@ -37,6 +37,7 @@ from ConfigParser import RawConfigParser
 
 import re
 import imp
+import warnings
 
 
 #----------------------------------------------------------------------
@@ -263,6 +264,7 @@ class PriscillaPluginManager (Singleton):
 
             # Skip missing folders
             if not path.isdir(category_folder):
+                warnings.warn("Missing plugin category folder: %s" % category_folder)
                 continue
 
             # The following levels belong to the plugins

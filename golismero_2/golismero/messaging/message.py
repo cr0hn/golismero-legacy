@@ -127,5 +127,5 @@ class Message (object):
     #----------------------------------------------------------------------
     def __repr__(self):
         s  = "<Message timestamp=%r, type=%r, code=%r, audit=%r, info=%r>"
-        s %= (self.timestamp, self.message_type, self.message_code, self.message_info)
+        s %= (self.timestamp, self.message_type, self.message_code, self.audit_name, self.message_info)
         return s

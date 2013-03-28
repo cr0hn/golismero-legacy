@@ -217,6 +217,9 @@ class AuditManager (object):
                 self.get_audit(message.audit_name).close()
                 self.remove_audit(message.audit_name)
 
+                # When stopping the audit, don't forward the STOP_AUDIT message itself.
+                return False
+
             # TODO: pause and resume audits, start new audits
 
         return True
@@ -342,10 +345,44 @@ class Audit (object):
 
         # Send a message to the orchestrator for each target URL
         for url in self.params.targets:
-            message_url    = Message(message_info = Url(url),
-                                     message_type = MessageType.MSG_TYPE_DATA,
-                                     audit_name   = self.name)
-            self.orchestrator.enqueue_msg(message_url)
+            self.send_info(Url(url))
+
+
+    #----------------------------------------------------------------------
+    def send_info(self, data):
+        """
+        Send data to the orchestrator.
+
+        :param data: Data to send
+        :type data: Data
+        """
+        return self.send_msg(message_type = MessageType.MSG_TYPE_DATA,
+                             message_info = data)
+
+
+    #----------------------------------------------------------------------
+    def send_msg(self, message_type = MessageType.MSG_TYPE_DATA,
+                       message_code = 0,
+                       message_info = None,
+                       priority = MessagePriority.MSG_PRIORITY_MEDIUM):
+        """
+        Send messages to the orchestrator.
+
+        :param message_type: specifies the type of message.
+        :type mesage_type: int -- specified in a constant of Message class.
+
+        :param message_code: specifies the code of message.
+        :type message_code: int -- specified in a constant of Message class.
+
+        :param message_info: the payload of the message.
+        :type message_info: object -- type must be resolved at run time.
+        """
+        m = Message(message_type = message_type,
+                    message_code = message_code,
+                    message_info = message_info,
+                      audit_name = self.name,
+                        priority = priority)
+        self.orchestrator.enqueue_msg(m)
 
 
     #----------------------------------------------------------------------
@@ -369,18 +406,13 @@ class Audit (object):
             # Resend the orphan data to the Orchestrator.
             try:
                 for ref in not_orphan_anymore:
-                    m = Message(message_type = MessageType.MSG_TYPE_DATA,
-                                message_info = self.__orphan_data.pop(ref),
-                                audit_name   = self.name)
-                    self.orchestrator.enqueue_msg(m)
+                    self.send_info(self.__orphan_data.pop(ref))
 
             # Send the ACK.
             finally:
-                m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
-                            message_code = MessageCode.MSG_CONTROL_ACK,
-                                priority = MessagePriority.MSG_PRIORITY_LOW,
-                            audit_name   = self.name)
-                self.orchestrator.enqueue_msg(m)
+                self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                              message_code = MessageCode.MSG_CONTROL_ACK,
+                                  priority = MessagePriority.MSG_PRIORITY_LOW)
 
 
     #----------------------------------------------------------------------
@@ -462,19 +494,15 @@ class Audit (object):
                         self.__show_max_links_warning = False
                         w = "Maximum number of links (%d) reached! Audit: %s"
                         w = w % (self.__params.max_links, self.name)
-                        m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
-                                    message_code = MessageCode.MSG_CONTROL_WARNING,
-                                    message_info = RuntimeWarning(w),
-                                    audit_name   = self.name)
-                        self.orchestrator.enqueue_msg(m)
+                        self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                                      message_code = MessageCode.MSG_CONTROL_WARNING,
+                                      message_info = RuntimeWarning(w))
 
                     # Drop the message. An ACK is still expected.
                     self.__expecting_ack += 1
-                    m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
-                                message_code = MessageCode.MSG_CONTROL_ACK,
-                                    priority = MessagePriority.MSG_PRIORITY_LOW,
-                                audit_name   = self.name)
-                    self.orchestrator.enqueue_msg(m)
+                    self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                                  message_code = MessageCode.MSG_CONTROL_ACK,
+                                      priority = MessagePriority.MSG_PRIORITY_LOW)
 
                     # Tell the Orchestrator we dropped the message.
                     return False
@@ -488,11 +516,9 @@ class Audit (object):
 
                 # Drop the message. An ACK is still expected.
                 self.__expecting_ack += 1
-                m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
-                            message_code = MessageCode.MSG_CONTROL_ACK,
-                                priority = MessagePriority.MSG_PRIORITY_LOW,
-                            audit_name   = self.name)
-                self.orchestrator.enqueue_msg(m)
+                self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                              message_code = MessageCode.MSG_CONTROL_ACK,
+                                  priority = MessagePriority.MSG_PRIORITY_LOW)
 
                 # Tell the Orchestrator we dropped the message.
                 return False
@@ -513,18 +539,13 @@ class Audit (object):
 
                     # Send new resources to the Orchestrator.
                     if self.database.has_key(resource.identity):
-                        m = Message(message_type = MessageType.MSG_TYPE_DATA,
-                                    message_info = resource,
-                                    audit_name   = self.name)
-                        self.orchestrator.enqueue_msg(m)
+                        self.send_info(resource)
 
             # Send the ACK.
             finally:
-                m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
-                            message_code = MessageCode.MSG_CONTROL_ACK,
-                                priority = MessagePriority.MSG_PRIORITY_LOW,
-                            audit_name   = self.name)
-                self.orchestrator.enqueue_msg(m)
+                self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                              message_code = MessageCode.MSG_CONTROL_ACK,
+                                  priority = MessagePriority.MSG_PRIORITY_LOW)
 
         # Tell the Orchestrator we sent the message.
         return True
@@ -535,10 +556,26 @@ class Audit (object):
         """
         Start the generation of all the requested reports for the audit.
         """
+
+        # Check if the report generation is already started.
         if self.__is_report_started:
             raise RuntimeError("Why are you asking for the report twice?")
-        self.__is_report_started = True
-        self.__expecting_ack += self.__report_manager.generate_reports(self.__notifier)
+
+        # An ACK is expected after launching the report plugins.
+        self.__expecting_ack += 1
+        try:
+
+            # Mark the report generation as started for this audit.
+            self.__is_report_started = True
+
+            # Start the report generation.
+            self.__expecting_ack += self.__report_manager.generate_reports(self.__notifier)
+
+        # Send the ACK after launching the report plugins.
+        finally:
+            self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                          message_code = MessageCode.MSG_CONTROL_ACK,
+                              priority = MessagePriority.MSG_PRIORITY_LOW)
 
 
     #----------------------------------------------------------------------

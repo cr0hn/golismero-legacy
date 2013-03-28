@@ -105,16 +105,3 @@ class UIManager (object):
         if  message.message_type != MessageType.MSG_TYPE_CONTROL or \
             message.message_code != MessageCode.MSG_CONTROL_ACK:
                 self.__notifier.notify(message)
-
-
-    #----------------------------------------------------------------------
-    def send_info(self, information):
-        """
-        Send information from the plugins back to the Orchestrator.
-
-        :param information: The information to send.
-        :type information: Data
-        """
-        message = Message(message_type = MessageType.MSG_TYPE_DATA,
-                          message_info = information)
-        self.__orchestrator.enqueue_msg(message)

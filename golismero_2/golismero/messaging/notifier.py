@@ -38,6 +38,7 @@ from ..managers.priscillapluginmanager import PriscillaPluginManager
 
 from collections import defaultdict
 from traceback import format_exc
+from warnings import warn
 
 
 class Notifier (object):
@@ -371,7 +372,16 @@ class UINotifier(Notifier):
 
         # Prepare the plugin execution context.
         if audit_name is not None:
-            context = self.__orchestrator.build_plugin_context(audit_name, plugin)
+            try:
+                audit = self.__orchestrator.auditManager.get_audit(audit_name)
+            except KeyError:
+                audit = None
+            if audit:
+                context = self.__orchestrator.build_plugin_context(audit_name, plugin)
+            else:
+                context = Config._context
+                warn("Received a message from a finished audit! %s" % payload,
+                     RuntimeWarning)
         else:
             context = Config._context
 

@@ -147,6 +147,9 @@ class BackupSearcher(TestingPlugin):
         if not isinstance(info, Url):
             raise TypeError("Expected Url, got %s instead" % type(info))
 
+        # XXX DEBUG
+        return
+
         # Check if URL is in scope
         if not is_in_scope(info.url):
             return
