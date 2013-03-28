@@ -72,7 +72,8 @@ class Orchestrator (object):
         # Configuration
         self.__config = config
 
-        # Set the color configuration
+        # Set the console configuration
+        Console.level = config.verbose
         Console.use_colors = config.colorize
 
         # Check the run mode

@@ -484,7 +484,7 @@ class Audit (object):
             is_new = self.database.add(data)
 
             # Was the data already present in the database?
-            if not m_is_new:
+            if not is_new:
 
                 # Drop the message. An ACK is still expected.
                 self.__expecting_ack += 1

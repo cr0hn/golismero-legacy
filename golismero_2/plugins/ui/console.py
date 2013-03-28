@@ -95,26 +95,25 @@ class ConsoleUIPlugin(UIPlugin):
             SuspiciousURL.vulnerability_type: process_url_suspicious,
         }
 
-        # Get verbosity level.
-        Console.level = Config.audit_config.verbose
-
         if Console.level >= Console.STANDARD:
 
             # Messages with vulnerability types
             if  info.data_type == Data.TYPE_VULNERABILITY:
                 try:
-                    Console.display(funcs[info.vulnerability_type](info))
+                    f = funcs[info.vulnerability_type]
                 except KeyError:
-                    raise ValueError("Not function to process vulnerability type: '%s'" % info.vulnerability_type)
+                    raise ValueError("No function available to process Vulnerability type: '%s'" % info.vulnerability_type)
+                Console.display(f(info))
 
         if Console.level >= Console.VERBOSE:
 
             # Messages with information types
             if  info.data_type == Data.TYPE_RESOURCE and info.data_type == Resource.RESOURCE_URL:
                 try:
-                    Console.display("+ %s" % funcs[info.RESOURCE_URL](info))
+                    f = funcs[info.RESOURCE_URL]
                 except KeyError:
-                    raise ValueError("Not function to process Resource type: '%s'" % info.vulnerability_type)
+                    raise ValueError("No function available to process Resource type: '%s'" % info.vulnerability_type)
+                Console.display("+ %s" % f(info))
 
 
     #----------------------------------------------------------------------
@@ -125,9 +124,6 @@ class ConsoleUIPlugin(UIPlugin):
 
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
-
-        # Set verbosity level.
-        Console.level = Config.audit_config.verbose
 
         # Process control messages
         if message.message_type == MessageType.MSG_TYPE_CONTROL:
@@ -206,23 +202,23 @@ def process_url(url):
 
 
 #----------------------------------------------------------------------
-def process_url_suspicious(url):
-    """Display URL discover"""
+def process_url_suspicious(vuln):
+    """Display suspicious URL"""
 
     return "%s: %s" % (
-        colorize("!! Suspicious URL", url.risk),
-        colorize_substring(url.url, url.substring, 'red')
+        colorize("!! Suspicious URL", vuln.risk),
+        colorize_substring(vuln.url.url, vuln.substring, 'red')
     )
 
 
 #----------------------------------------------------------------------
-def process_url_disclosure(url):
+def process_url_disclosure(vuln):
     """Display URL discover"""
 
     return "%s: %s\n| Method: %s\n%s|-%s" % (
-        colorize("!! Discovered", url.risk),
-        colorize_substring(url.url, url.discovered, url.risk),
-        url.method,
-        '| Referer <- %s\n' % url.referer if url.referer else '',
-        "-" * len(url.url)
+        colorize("!! Discovered", vuln.risk),
+        colorize_substring(vuln.url.url, vuln.discovered, vuln.risk),
+        vuln.method,
+        '| Referer <- %s\n' % str(vuln.referer) if vuln.referer else '',
+        "-" * len(vuln.url.url)
     )

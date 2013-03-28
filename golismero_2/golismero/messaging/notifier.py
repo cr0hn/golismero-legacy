@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["AuditNotifier", "UINotifier"]
 
+from ..api.config import Config
 from ..api.data.data import Data
 from ..api.logger import Logger
 from ..api.plugin import Plugin
@@ -148,7 +149,7 @@ class Notifier (object):
 
                 # Dispatch message info to each plugin
                 for plugin in m_plugins_to_notify:
-                    self.send_info(plugin, message.message_info)
+                    self.send_info(plugin, message.audit_name, message.message_info)
                     count += 1
 
             # Control messages are sent to the send_msg() method
@@ -159,27 +160,28 @@ class Notifier (object):
 
         # On error log the traceback
         except Exception:
-            Logger.log_error("Error sending message to plugins: %s" % format_exc())
+            ##Logger.log_error("Error sending message to plugins: %s" % format_exc())
+            raise
 
         # Return the count of messages sent
         return count
 
 
     #----------------------------------------------------------------------
-    def send_info(self, module, clazz, message_info):
+    def send_info(self, plugin, audit_name, message_info):
         """
         Send information to the plugins.
 
-        :param module: Module where the target plugin lives
-        :type module: str
+        :param plugin: Target plugin
+        :type plugin: Plugin
 
-        :param clazz: Class there the target plugin is defined
-        :type clazz: str
+        :param audit_name: Audit name.
+        :type audit_name: str
 
         :param message_info: Information to send to plugins
         :type message_info: Information
         """
-        raise NotImplementedError()
+        raise NotImplementedError("Subclasses MUST implement this method!")
 
 
     #----------------------------------------------------------------------
@@ -193,7 +195,7 @@ class Notifier (object):
         :param message: Message to send to plugins
         :type message: Message
         """
-        raise NotImplementedError()
+        raise NotImplementedError("Subclasses MUST implement this method!")
 
 
 #------------------------------------------------------------------------------
@@ -252,12 +254,15 @@ class AuditNotifier(Notifier):
 
 
     #----------------------------------------------------------------------
-    def send_info(self, plugin, message_info):
+    def send_info(self, plugin, audit_name, message_info):
         """
         Send information to the plugins.
 
         :param plugin: Target plugin
         :type plugin: Plugin
+
+        :param audit_name: Audit name.
+        :type audit_name: str
 
         :param message_info: Information to send to plugins
         :type message_info: Information
@@ -302,24 +307,32 @@ class UINotifier(Notifier):
 
 
     #----------------------------------------------------------------------
-    def send_info(self, plugin, message_info):
+    def __init__(self, orchestrator):
+        """
+        Constructor.
+
+        :param orchestrator: Orchestrator
+        :type orchestrator: Orchestrator
+        """
+        super(UINotifier, self).__init__()
+        self.__orchestrator = orchestrator
+
+
+    #----------------------------------------------------------------------
+    def send_info(self, plugin, audit_name, message_info):
         """
         Send information to the plugins.
 
         :param plugin: Target plugin
         :type plugin: Plugin
 
+        :param audit_name: Audit name.
+        :type audit_name: str
+
         :param message_info: Information to send to plugins
         :type message_info: Information
         """
-        # XXX this allows UI plugins to have state, do we really want this?
-        if hasattr(plugin, "recv_info"):
-            try:
-                plugin.recv_info(message_info)
-            except Exception, e:
-                msg = "Plugin %s raised an exception:\n%s"
-                msg = msg % (plugin.__class__.__name__, format_exc())
-                Logger.log_error(msg)
+        self.__run_plugin(plugin, audit_name, "recv_info", message_info)
 
 
     #----------------------------------------------------------------------
@@ -333,11 +346,48 @@ class UINotifier(Notifier):
         :param message: Message to send to plugins
         :type message: Message
         """
+        self.__run_plugin(plugin, message.audit_name, "recv_msg", message)
+
+
+    #----------------------------------------------------------------------
+    def __run_plugin(self, plugin, audit_name, method, payload):
+        """
+        Send messages or information to the plugins.
+
+        :param plugin: Target plugin
+        :type plugin: Plugin
+
+        :param method: Callback method name
+        :type method: str
+
+        :param payload: Message or information to send to plugins
+        :type payload: Message or data
+        """
+
+        # If the plugin doesn't support the callback method, drop the message.
+        # XXX FIXME: maybe we want to raise an exception here instead.
+        if not hasattr(plugin, method):
+            return
+
+        # Prepare the plugin execution context.
+        if audit_name is not None:
+            context = self.__orchestrator.build_plugin_context(audit_name, plugin)
+        else:
+            context = Config._context
+
+        # Run the callback directly in our process.
         # XXX this allows UI plugins to have state, do we really want this?
-        if hasattr(plugin, "recv_msg"):
+        try:
+            old_context = Config._context
             try:
-                plugin.recv_msg(message)
-            except Exception, e:
-                msg = "Plugin %s raised an exception:\n%s"
-                msg = msg % (plugin.__class__.__name__, format_exc())
-                Logger.log_error(msg)
+                Config._context = context
+                getattr(plugin, method)(payload)
+            finally:
+                Config._context = old_context
+
+        # Log exceptions thrown by the plugins.
+        except Exception, e:
+            raise
+            ##msg = "Plugin %s raised an exception:\n%s"
+            ##msg = msg % (plugin.__class__.__name__, format_exc())
+            ##Logger.log_error(msg)

@@ -57,7 +57,7 @@ class UIManager (object):
         self.__orchestrator = orchestrator
 
         # Init and start notifier
-        self.__notifier = UINotifier()
+        self.__notifier = UINotifier(orchestrator)
 
         # Load UI plugins
         m_plugins = PriscillaPluginManager().load_plugins(config.enabled_plugins,
