@@ -217,9 +217,6 @@ class AuditManager (object):
                 self.get_audit(message.audit_name).close()
                 self.remove_audit(message.audit_name)
 
-                # When stopping the audit, don't forward the STOP_AUDIT message itself.
-                return False
-
             # TODO: pause and resume audits, start new audits
 
         return True

@@ -249,6 +249,18 @@ class Orchestrator (object):
                 # The method now must return True because the message was sent.
                 return True
 
+            # If it's a stop audit message, dispatch it first to the UI,
+            # then to the audit manager (the opposite to the normal order).
+            if (message.message_type == MessageType.MSG_TYPE_CONTROL and \
+                message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT
+            ):
+                if self.__ui is not None:
+                    self.__ui.dispatch_msg(message)
+                self.__auditManager.dispatch_msg(message)
+
+                # The method now must return True because the message was sent.
+                return True
+
             # If it's a control or info message, dispatch it to the audits.
             if self.__auditManager.dispatch_msg(message):
 
