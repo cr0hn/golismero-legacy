@@ -442,8 +442,8 @@ class HTTP_Response (object):
         # Request time
         self.__request_time = request_time
 
-        # Generate information object
-        self.__information = self.__extract_information(self.__http_headers, self.__raw_data)
+        # Information object
+        self.__information = None
 
         # Wrapper for cookie
         self.__cookie = raw_response.cookies.get_dict()
@@ -587,6 +587,8 @@ class HTTP_Response (object):
 
         :returns: Information
         """
+        if self.__information is None:
+            self.__information = self.__extract_information(self.__http_headers, self.__raw_data)
         return self.__information
 
     @property
