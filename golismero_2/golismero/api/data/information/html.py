@@ -33,7 +33,6 @@ from ..data import identity
 from ...net.web_utils import HTMLParser
 
 
-
 #------------------------------------------------------------------------------
 class HTML(Information):
     """

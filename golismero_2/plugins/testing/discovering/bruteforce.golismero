@@ -30,4 +30,4 @@ wordlist_predictable_files_3 = fuzzdb/Discovery/PredictableRes/IIS.fuzz.txt
 wordlist_predictable_files_4 = fuzzdb/Discovery/PredictableRes/PHP.fuzz.txt
 wordlist_predictable_files_5 = fuzzdb/Discovery/PredictableRes/Passwords.fuzz.txt
 wordlist_predictable_files_6 = fuzzdb/Discovery/PredictableRes/Oracle9i.fuzz.txt
-wordlist_predictable_files_7 = fuzzdb/Discovery/PredictableRes/UnixDotFiles.fuzz.txt
+wordlist_predictable_files_7 = fuzzdb/Discovery/PredictableRes/UnixDotfiles.fuzz.txt

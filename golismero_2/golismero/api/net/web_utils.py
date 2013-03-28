@@ -317,7 +317,6 @@ def convert_to_absolute_urls(base_url, relative_urls):
     return m_return
 
 
-
 #----------------------------------------------------------------------
 class DecomposedURL(object):
     """
@@ -350,6 +349,7 @@ class DecomposedURL(object):
         self.path_filename_without_ext = ''
         self.query = ''
         self.query_params = {}
+
 
 #----------------------------------------------------------------------
 @lru_cache(maxsize=50)
@@ -439,10 +439,8 @@ def generate_error_page(url):
     )
 
 
-
 #------------------------------------------------------------------------------
 class HTMLElement (object):
-    """"""
 
 
     #----------------------------------------------------------------------
@@ -453,12 +451,12 @@ class HTMLElement (object):
         :param attr: dict with parameters of HTML element.
         :type attr: dict
 
-        :param childrens: raw HTML with sub elements of this HTML element
-        :type childrens: str
+        :param content: raw HTML with sub elements of this HTML element
+        :type content: str
         """
         self.__tag_name = tag_name
         self.__attrs = attrs
-        self.__content = HTML(content)
+        self.__content = content
 
 
     #----------------------------------------------------------------------
@@ -518,11 +516,6 @@ class HTMLParser(object):
         # HTML forms
         self.__html_forms = None
 
-#----------------------------------------------------------------------
-class ParsedURLItem(object):
-    """
-    Contains a parsed URL. Properties:
-
         # Images in HTML
         self.__html_images = None
 
@@ -549,7 +542,6 @@ class ParsedURLItem(object):
 
         # Title
         self.__html_title = None
-    """
 
 
     #----------------------------------------------------------------------
