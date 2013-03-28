@@ -74,6 +74,6 @@ class SuspiciousURLPlugin(TestingPlugin):
         m_wordlist = WordListAPI().get_wordlist(Config.plugin_config['wordlist'])
 
         # Return matching keywords
-        return [SuspiciousURL(m_url, x, associated_resource = info)
+        return [SuspiciousURL(info, x)
                 for x in m_wordlist
                 if x in m_url]

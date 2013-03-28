@@ -85,7 +85,7 @@ class ParallelBruter(threading.Thread):
             try:
                 m_name, m_iter = self.__wordlist.popitem()
             except KeyError,e:
-                return
+                break
 
             for l_url in m_iter:
                 Logger.log_more_verbose("Bruteforcer - testing url: '%s'." % l_url)
@@ -250,16 +250,18 @@ class BackupSearcher(TestingPlugin):
         m_results_append = m_results.append
 
         for l_match in m_store_info.unique_texts:
-            Logger.log_verbose("Bruteforcer - discovered URL: %s !!!" % l_match.url)
+            Logger.log_verbose("Bruteforcer - discovered URL: %s" % l_match.url)
 
             #
             # Set disclosure vulnerability
-            l_vuln = UrlDisclosure(l_match.url)
+            l_url = Url(l_match.url)
+            l_vuln = UrlDisclosure(l_url)
             # Set impact
             l_vuln.risk = l_match.risk
             # Link resource associated
             l_vuln.associated_resource = info
             # Store
+            m_results_append(l_url)
             m_results_append(l_vuln)
 
         # Send results
