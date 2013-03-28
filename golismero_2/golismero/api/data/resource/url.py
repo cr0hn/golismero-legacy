@@ -72,8 +72,10 @@ class Url(Resource):
         if not parsed.hostname or not parsed.scheme:
             raise ValueError("Only absolute URLs must be used!")
         if not parsed.path:
-            parsed.path = "/"
-        url = urlunparse(parsed)
+            parsed = (parsed.scheme, parsed.auth, parsed.hostname, parsed.port,
+                      "/", parsed.query, parsed.fragment)
+            url = urlunparse(parsed)
+            parsed = parse_url(url)
 
         # Cache for parsed URL
         self.__parsed_url = parsed
@@ -224,6 +226,6 @@ class Url(Resource):
         list -- Discovered resources.
         """
         if not self.__discovered_resources:
-            self.__discovered_resources = [Domain(self.parsed_url.host)]
+            self.__discovered_resources = [Domain(self.parsed_url.hostname)]
 
         return self.__discovered_resources

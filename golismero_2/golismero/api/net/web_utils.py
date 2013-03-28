@@ -350,6 +350,14 @@ class DecomposedURL(object):
         self.query = ''
         self.query_params = {}
 
+    @property
+    def hostname(self):
+        return self.host
+
+    @hostname.setter
+    def hostname(self, host):
+        self.host = host
+
 
 #----------------------------------------------------------------------
 @lru_cache(maxsize=50)
@@ -369,7 +377,7 @@ def decompose_url(url):
 
         m_o = DecomposedURL()
         m_o.scheme                    = m_parsed_url.scheme if m_parsed_url.scheme else ''
-        m_o.host                      = m_parsed_url.host if m_parsed_url.host else ''
+        m_o.host                      = m_parsed_url.hostname if m_parsed_url.hostname else ''
         #m_o.complete_path             = m_parsed_url.path if m_parsed_url.path.endswith("/") else m_parsed_url.path + "/" if m_parsed_url.path is not None and m_parsed_url.path != "NoneType" else ''
         m_o.complete_path = None
         if m_parsed_url.path and m_parsed_url.path != "NoneType":
@@ -431,7 +439,7 @@ def generate_error_page(url):
 
     return "%s://%s%s%s.%s%s" % (
         m_parsed_url.scheme,
-        m_parsed_url.host,
+        m_parsed_url.hostname,
         m_parsed_url.relative_path if m_parsed_url.relative_path else '/',
         m_parsed_url.path_filename,
         generate_random_string(),
