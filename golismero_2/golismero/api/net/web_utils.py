@@ -349,6 +349,8 @@ class DecomposedURL(object):
         :type base_url: str
         """
 
+        original_url = url
+
         self.__query_char = '?'
 
         scheme = ''
@@ -367,8 +369,10 @@ class DecomposedURL(object):
             scheme, url = url.split('://', 1)
             # we sanitize it here to prevent errors down below
             scheme = scheme.strip().lower()
+            if '%' in scheme or '+' in scheme:
+                scheme = unquote_plus(scheme)
             if scheme not in self.default_ports:
-                raise ValueError("Failed to parse: %s" % url)
+                raise ValueError("Failed to parse: %s" % original_url)
 
         # Find the earliest Authority Terminator
         # (http://tools.ietf.org/html/rfc3986#section-3.2)
@@ -397,7 +401,7 @@ class DecomposedURL(object):
                 port = unquote(port)
 
             if not port.isdigit():
-                raise ValueError("Failed to parse: %s" % url)
+                raise ValueError("Failed to parse: %s" % original_url)
 
             port = int(port)
 

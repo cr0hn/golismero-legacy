@@ -41,6 +41,7 @@ if __name__ == "__main__":
 from golismero.api.net.web_utils import DecomposedURL
 
 from pprint import pprint
+from timeit import Timer, default_repeat
 from unittest import TestCase, main
 
 
@@ -49,7 +50,7 @@ class Test_DecomposedURL (TestCase):
 
 
     #--------------------------------------------------------------------------
-    # Test case for "normal" URLs.
+    # Test cases for "normal" URLs.
 
     # Canonicalized URLs.
     __normal = (
@@ -71,7 +72,7 @@ class Test_DecomposedURL (TestCase):
 
 
     #--------------------------------------------------------------------------
-    # Test case for URL canonicalization.
+    # Test cases for URL canonicalization.
 
     __equivalent = (
 
@@ -110,6 +111,33 @@ class Test_DecomposedURL (TestCase):
             'http://example.com/path?orphan&query=string&param=value#fragment_id',
             'http://example.com/path?orphan=&query=string&param=value#fragment_id',
         ),
+
+        # Sanitization of pathological cases.
+        (
+            "http://user:name:password@example.com",    # broken
+            "http://user:name%3Apassword@example.com/", # sanitized
+        ),
+        (
+            "http://lala@pepe@example.com",    # broken
+            "http://lala@pepe%40example.com/", # sanitized
+        ),
+        (
+            "http://example.com/path%2Ffile", # broken
+            "http://example.com/path/file",   # sanitized
+        ),
+        (
+            "http://example%2Ecom/", # broken
+            "http://example.com/",   # sanitized
+        ),
+        (
+            "h%74%74p://example.com/", # broken
+            "http://example.com/",     # sanitized
+        ),
+        (
+            "http://example.com/file name with spaces", # broken
+            "http://example.com/file+name+with+spaces", # sanitized
+        ),
+
     )
 
     def test_equivalent(self):
@@ -121,8 +149,97 @@ class Test_DecomposedURL (TestCase):
             self.assertEqual(len(normalized), 1)
 
 
+    #--------------------------------------------------------------------------
+    # Test cases for relative URLs.
+
+    # Relative URLs, base: http://example.com/path/
+    __relative = (
+        ('/robots.txt', 'http://example.com/robots.txt'),
+        ('index.php?query=string', 'http://example.com/path/index.php?query=string'),
+        ('#fragment', 'http://example.com/path/#fragment'),
+    )
+
+    def test_relative(self):
+        for url in self.__normal:
+            ##pprint(DecomposedURL(url, 'http://example.com/path/').url)
+            self.assertEqual(DecomposedURL(url, 'http://example.com/path/').url, url)
+
+
+    #--------------------------------------------------------------------------
+    # Test cases for URL parsing errors.
+
+    __errors = (
+
+        # Unsupported scheme.
+        "bogus://example.com",
+        "data:11223344",
+        "javascript:alert('xss')",
+
+        # Broken scheme
+        "http:/example.com",
+        "http:example.com",
+    )
+
+    def __decompose_url(self, url):
+        return DecomposedURL(url).url
+
+    def test_errors(self):
+        for url in self.__errors:
+            self.assertRaises(ValueError, self.__decompose_url, url)
+
+
+#--------------------------------------------------------------------------
+def _benchmark():
+    return DecomposedURL('http://example.com/path?query=string&param=value&orphan#fragment_id').url
+
+# Some code borrowed from the timeit module.
+def benchmark(number = 0, precision = 3, verbose = True):
+    repeat = default_repeat
+    t = Timer(_benchmark)
+    if number == 0:
+        # determine number so that 0.2 <= total time < 2.0
+        for i in range(1, 10):
+            number = 10**i
+            try:
+                x = t.timeit(number)
+            except:
+                t.print_exc()
+                return 1
+            if verbose:
+                print "%d loops -> %.*g secs" % (number, precision, x)
+            if x >= 0.2:
+                break
+    try:
+        r = t.repeat(repeat, number)
+    except:
+        t.print_exc()
+        return 1
+    best = min(r)
+    if verbose:
+        print "raw times:", " ".join(["%.*g" % (precision, x) for x in r])
+    print "%d loops," % number,
+    usec = best * 1e6 / number
+    if usec < 1000:
+        print "best of %d: %.*g usec per loop" % (repeat, precision, usec)
+    else:
+        msec = usec / 1000
+        if msec < 1000:
+            print "best of %d: %.*g msec per loop" % (repeat, precision, msec)
+        else:
+            sec = msec / 1000
+            print "best of %d: %.*g sec per loop" % (repeat, precision, sec)
+    return None
+
+
 #--------------------------------------------------------------------------
 if __name__ == "__main__":
 
+    # Launch the benchmark tests.
+    print "----------------------------------------------------------------------"
+    print "Benchmark tests"
+    benchmark()
+
     # Lauch the unit tests.
+    print "----------------------------------------------------------------------"
+    print "Unit tests"
     main()
