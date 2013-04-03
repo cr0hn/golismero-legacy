@@ -588,19 +588,27 @@ class DecomposedURL(object):
     def query(self):
         if self.__query is not None:  # when it can't be parsed
             return self.__query
+        if not self.__query_params:
+            return ''
         return '&'.join( '%s=%s' % ( quote(k, safe=''), quote(v, safe='') )
-                         for (k, v) in self.__query_params.iteritems() )
+                         for (k, v) in sorted(self.__query_params.iteritems()) )
 
     @query.setter
     def query(self, query):
-        try:
-            # much faster than parse_qsl()
-            query_params = { map(unquote_plus, (token + '=').split('=', 2)[:2])
-                             for token in query.split('&') }
-            query = None
-        except Exception:
-            ##raise   # XXX DEBUG
-            query_params = None
+        if not query:
+            query_params = {}
+        else:
+            try:
+                # much faster than parse_qsl()
+                query_params = dict(( map(unquote_plus, (token + '=').split('=', 2)[:2])
+                                      for token in query.split('&') ))
+                if len(query_params) == 1 and not query_params.values()[0]:
+                    query_params = None
+                else:
+                    query = None
+            except Exception:
+                raise   # XXX DEBUG
+                query_params = None
         self.__query, self.__query_params = query, query_params
 
 
