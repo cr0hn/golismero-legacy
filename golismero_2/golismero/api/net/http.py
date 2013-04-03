@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["HTTP_Request", "HTTP_Response"]
 
-from .web_utils import parse_url
+from .web_utils import DecomposedURL
 from ..data.information.html import HTML
 from ..data.resource.url import Url
 from ...common import random
@@ -88,8 +88,8 @@ class HTTP_Request (object):
         self.__method = method.upper() if method else "GET"
 
         # Set url
-        self.__url = url
-        self.__parsed_url = parse_url(url)
+        self.__parsed_url = DecomposedURL(url)
+        self.__url = self.__parsed_url.url
 
         # Follow redirects
         self.__follow_redirects = follow_redirects
@@ -344,10 +344,9 @@ class HTTP_Request (object):
     @property
     def parsed_url(self):
         """
-        Returns named tuples in the same format as the parse_url() function
-        from the standard urlparse module.
+        Returns the URL split to its components.
 
-        :returns: named tuple
+        :returns: DecomposedURL
         """
         return self.__parsed_url
 

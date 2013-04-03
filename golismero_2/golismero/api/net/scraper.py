@@ -38,8 +38,12 @@ from urlparse import urldefrag, urljoin, urlparse
 import re
 
 #
-# TODO: a generic "extract" function that uses the appropriate helper
-#       function to extract URLs, based on the content-type header.
+# TODO:
+#
+# + Use DecomposedURL instead of urlparse.
+#
+# + A generic "extract" function that uses the appropriate helper
+#   function to extract URLs, based on the content-type header.
 #
 
 
@@ -57,7 +61,7 @@ def is_link(url, base_url):
     :param url: URL to test.
     :type url: str
 
-    :param base_url: Base URL for the current document.
+    :param base_url: Base URL for the current document. Must not contain a fragment.
     :type base_url: str
 
     :returns: bool -- True if the URL points to another page or resource, False otherwise.

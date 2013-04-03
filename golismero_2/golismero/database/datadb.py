@@ -36,7 +36,7 @@ from ..api.data.vulnerability.vulnerability import Vulnerability
 from ..messaging.codes import MessageCode
 from ..managers.rpcmanager import implementor
 
-import urlparse
+import urlparse  # cannot use DecomposeURL here!
 import warnings
 
 # Lazy imports
@@ -953,7 +953,7 @@ class DataDB (BaseDataDB):
         :param audit_db: Database connection string in URL format.
         :type audit_db: str
         """
-        parsed = urlparse.urlparse(audit_db)
+        parsed = urlparse.urlparse(audit_db)  # cannot use DecomposeURL here!
         scheme = parsed.scheme.lower()
 
         if scheme == "memory":

@@ -30,39 +30,43 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
-__all__ = ["DecomposedURL", "is_method_allowed", "decompose_url", "generate_error_page",
-    "fix_url", "is_in_scope", "convert_to_absolute_url",
-    "convert_to_absolute_urls", "detect_auth_method",
-    "get_auth_obj", "check_auth", "parse_url",
-    "HTMLParser", "HTMLElement"]
-
+__all__ = [
+    "is_method_allowed", "fix_url",
+    "check_auth", "get_auth_obj", "detect_auth_method",
+    "is_in_scope", "generate_error_page_url",
+    "DecomposedURL", "HTMLElement", "HTMLParser",
+]
 
 from ..config import Config
-
-from collections import namedtuple
+from ..text.text_utils import generate_random_string, split_first
 
 from BeautifulSoup import BeautifulSoup
+from copy import deepcopy
+from posixpath import join, splitext, split
 from repoze_lru import lru_cache
-from golismero.api.text.text_utils import generate_random_string
 from requests import *
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests_ntlm import HttpNtlmAuth
+from urllib import quote, quote_plus, unquote, unquote_plus
+from urlparse import urljoin
+from warnings import warn
 
-from urlparse import urlparse
-from os.path import splitext, split
 
 #----------------------------------------------------------------------
-# Cached version of the parse_url() function from urllib3
+# Cached version of the parse_url() function from urllib3,
+# and Url class renamed as Urllib3_Url to avoid confusion.
 
 try:
     from requests.packages.urllib3.util import parse_url as original_parse_url
+    from requests.packages.urllib3.util import Url as Urllib3_Url
 except ImportError:
     from urllib3.util import parse_url as original_parse_url
+    from urllib3.util import Url as Urllib3_Url
 
 @lru_cache(maxsize=50)
 def parse_url(url):
     return original_parse_url(url)
+
 
 #----------------------------------------------------------------------
 def is_method_allowed(method, url, network_conn):
@@ -101,14 +105,15 @@ def is_method_allowed(method, url, network_conn):
 def fix_url(url):
     """
     Fix selected URL adding neccesary info to be complete URL, like:
-    www.site.com -> http://www.site.com
+    www.site.com -> http://www.site.com/
 
-    :param url: an URL
+    :param url: URL
     :type url: str
     """
-    m_tmp_url = parse_url(url)
-
-    return url if m_tmp_url.scheme and m_tmp_url.scheme != "NoneType" and m_tmp_url.scheme != "None" else "http://%s" % url
+    parsed = DecomposedURL(url)
+    if not parsed.scheme:
+        parsed.scheme = 'http://'
+    return parsed.url
 
 
 #----------------------------------------------------------------------
@@ -218,16 +223,24 @@ def is_in_scope(url):
 
     :returns: bool -- True if is in scope. False otherwise.
     """
+
+    # Trivial case
     if not url:
         return False
 
-    # Scope options
-    m_include_subdomains = Config.audit_config.include_subdomains
+    # Use parse_url instead of DecomposedURL because it's faster and good enough for this
+    try:
+        p_url = parse_url(url)
+    except Exception, e:
+        warn("Error parsing URL (%s): %s" % (url, e.message))
+        return False
 
     # Set of domain names we're allowed to connect to
     m_audit_scope = set(parse_url(x).hostname.lower() for x in Config.audit_config.targets)
 
-    hostname = parse_url(url).hostname.lower()
+    # Check domains, and subdomains too when requested
+    m_include_subdomains = Config.audit_config.include_subdomains
+    hostname = p_url.hostname.lower()
     return hostname in m_audit_scope or (
         m_include_subdomains and
         any(hostname.endswith("." + domain) for domain in m_audit_scope)
@@ -235,192 +248,7 @@ def is_in_scope(url):
 
 
 #----------------------------------------------------------------------
-def convert_to_absolute_url(base_url, relative_url):
-    """
-    Convert 'relative_url' in absolute URL. 'base_url' is the base site
-    for the relative url.
-
-    :param base_url: base url.
-    :type base_url: str
-
-    :param relative_urls: URL to convert
-    :type relative_urls: str
-
-    :returns: str -- converted URL
-    """
-
-    m_return = convert_to_absolute_urls(base_url, (relative_url,))
-    return m_return.pop() if m_return else None
-
-
-#----------------------------------------------------------------------
-def convert_to_absolute_urls(base_url, relative_urls):
-    """
-    Convert URLs in the 'relative_urls' in absolute URL list and remove duplicates. 'base_url' is the base site
-    for the relative urls.
-
-    :param base_url: base url.
-    :type base_url: str
-
-    :param relative_urls: list with urls to remove duplicates
-    :type relative_urls: iterable
-
-    :returns: iterable with URLs, as string format.
-    """
-    if not base_url or not relative_urls:
-        return None
-
-
-    # Parsed base url
-    m_parsed_url = parse_url(base_url)
-
-
-    # Remove duplicates and fix URL
-    m_return = set()
-    m_bind_add = m_return.add
-    for u in relative_urls:
-        try:
-            l_parsed = parse_url(u)
-        except ValueError:
-            # Error while parsing URL
-            continue
-
-        if u == '':
-            continue
-
-        # Fix hostname
-        m_hostname = ""
-        if l_parsed.hostname is None:
-            m_hostname = m_parsed_url.hostname
-        else:
-            m_hostname = l_parsed.hostname
-
-        # Fix scheme
-        m_scheme = 'http' if not m_parsed_url.scheme else m_parsed_url.scheme if l_parsed.scheme is None else l_parsed.scheme
-
-        # Fix path
-        m_path = ""
-        if l_parsed.path:
-            m_path = '' if len(l_parsed.path) == 1 and l_parsed.path == "/" else l_parsed.path
-
-        # Fix params of query
-        m_query = l_parsed.query if l_parsed.query else ''
-
-        # Add complete URL
-        m_bind_add("%s://%s%s%s" % (
-            m_scheme,
-            m_hostname,
-            m_path,
-            m_query
-        ))
-
-    return m_return
-
-
-#----------------------------------------------------------------------
-class DecomposedURL(object):
-    """
-    Decomposed URL in their parts, like:
-
-    http://www.site.com/folder/index.php?param1=val1&b
-
-    Where properties has the values:
-    + scheme                    = 'http'
-    + host                      = 'www.site.com'
-    + complete_path             = '/folder/index.php?param1=val1'
-    + relative_path             = '/folder/'
-    + path_filename             = 'index.php'
-    + path_filename_ext         = '.php'
-    + path_filename_without_ext = 'index'
-    + query                     = 'param1=val1&b'
-    + query_params              = { 'param1' : 'val1', 'b' : '' }
-
-    ** If any values are not present in URL, empty string are returned **NOT None TYPE**
-    """
-    #----------------------------------------------------------------------
-    def __init__(self):
-        """"""
-        self.scheme = ''
-        self.host = ''
-        self.complete_path = ''
-        self.relative_path = ''
-        self.path_filename = ''
-        self.path_filename_ext = ''
-        self.path_filename_without_ext = ''
-        self.query = ''
-        self.query_params = {}
-
-    @property
-    def hostname(self):
-        return self.host
-
-    @hostname.setter
-    def hostname(self, host):
-        self.host = host
-
-
-#----------------------------------------------------------------------
-@lru_cache(maxsize=50)
-def decompose_url(url):
-    """
-    Decompose URL in their parts and return DecomposedURL Object
-
-    :param url: URL to decompose.
-    :type url: str
-
-    :return: DecomposedURL object
-    :rtype: DecomposedURL
-    """
-    if url:
-
-        m_parsed_url = parse_url(url)
-
-        m_o = DecomposedURL()
-        m_o.scheme                    = m_parsed_url.scheme if m_parsed_url.scheme else ''
-        m_o.host                      = m_parsed_url.hostname if m_parsed_url.hostname else ''
-        #m_o.complete_path             = m_parsed_url.path if m_parsed_url.path.endswith("/") else m_parsed_url.path + "/" if m_parsed_url.path is not None and m_parsed_url.path != "NoneType" else ''
-        m_o.complete_path = None
-        if m_parsed_url.path and m_parsed_url.path != "NoneType":
-            m_o.complete_path = m_parsed_url.path if m_parsed_url.path.endswith("/") else m_parsed_url.path + "/"
-        else:
-            m_o.complete_path = ''
-
-        m_o.path_filename_ext         = splitext(m_o.complete_path)[1] if m_o.complete_path else ''
-        m_o.path_filename             = split(m_o.complete_path)[1] if m_o.complete_path and m_o.path_filename_ext else ''
-        m_o.path_filename_without_ext = splitext(m_o.path_filename)[0] if m_o.complete_path and m_o.path_filename else ''
-        m_o.query                     = m_parsed_url.query if m_parsed_url.query else ''
-
-
-
-        # Add query params
-        for t in m_o.query.split('&'):
-            l_sp_t = t.split("=")
-            if l_sp_t: # len > 0
-                l_key = l_sp_t[0]
-                l_val = '' if len(l_sp_t) == 1 else l_sp_t[1]
-                # Store
-                m_o.query_params[l_key] = l_val
-
-        # Fix path for values like:
-        # http://www.site.com/folder/value_id=0
-        m_path = m_o.complete_path
-        m_prev_folder = m_path[:m_path[:-1].rfind("/") + 1] # /folder/
-        m_last = m_path[m_path[:-1].rfind("/") + 1: -1] # value_id=0
-        if m_last.find("=") != -1:
-            m_o.complete_path = m_prev_folder
-        m_o.path_filename_without_ext = '/' if not m_prev_folder else m_prev_folder
-
-        # Partial path
-        m_o.relative_path = m_prev_folder
-
-        return m_o
-
-    else:
-        raise ValueError("Valid URL string espected; got '%s'" % type(url))
-
-
-#----------------------------------------------------------------------
-def generate_error_page(url):
+def generate_error_page_url(url):
     """
     Generates a random error page for selected URL:
 
@@ -433,18 +261,451 @@ def generate_error_page(url):
     :return: error page generated.
     :rtype: str
     """
+    m_parsed_url = DecomposedURL(url)
+    m_parsed_url.path = m_parsed_url.path + generate_random_string()
+    return m_parsed_url.url
 
 
-    m_parsed_url = decompose_url(url)
+#----------------------------------------------------------------------
+class DecomposedURL(object):
+    """
+    Decomposed URL, that is, broken down to its parts.
 
-    return "%s://%s%s%s.%s%s" % (
-        m_parsed_url.scheme,
-        m_parsed_url.hostname,
-        m_parsed_url.relative_path if m_parsed_url.relative_path else '/',
-        m_parsed_url.path_filename,
-        generate_random_string(),
-        m_parsed_url.query
-    )
+    For example, the following URL:
+
+    http://user:pass@www.site.com/folder/index.php?param1=val1&b#anchor
+
+    Is broken down to the following properties:
+    + url          = 'http://user:pass@www.site.com/folder/index.php?param1=val1&b#anchor'
+    + request_uri  = '/folder/index.php?param1=val1&b#anchor'
+    + scheme       = 'http'
+    + host         = 'www.site.com'
+    + port         = 80
+    + username     = 'user'
+    + password     = 'pass'
+    + auth         = 'user:pass'
+    + netloc       = 'user:pass@www.site.com'
+    + path         = '/folder/index.php'
+    + directory    = '/folder/'
+    + filename     = 'index.php'
+    + filebase     = 'index'
+    + extension    = '.php'
+    + query        = 'param1=val1&b'
+    + query_params = { 'param1' : 'val1', 'b' : '' }
+
+    Changes to the values of these properties will be reflected in all
+    other relevant properties. The url and request_uri properties are
+    read-only, however.
+
+    Missing properties are returned as empty strings, except for the port
+    and query_params properties: port is an integer from 1 to 65535 when
+    found, or None when it's missing and can't be guessed; query_params is
+    a dictionary that may be empty when missing, or None when the query
+    string could not be parsed as standard key/value pairs.
+
+    Rebuilding the URL may result in a slightly different, but
+    equivalent URL, if the URL that was parsed originally had
+    unnecessary delimiters (for example, a ? with an empty query;
+    the RFC states that these are equivalent).
+
+    The url, request_uri, query, netloc and auth properties are URL-encoded.
+    All other properties are URL-decoded.
+
+    Unicode is currently NOT supported.
+    """
+
+    #----------------------------------------------------------------------
+    # TODO: for the time being we're using the buggy quote and unquote
+    # implementations from urllib, but we'll have to roll our own to
+    # properly support Unicode (urllib does a mess of it!).
+    #----------------------------------------------------------------------
+
+
+    #----------------------------------------------------------------------
+    # Bidirectional map of default port numbers per supported scheme.
+
+    default_ports = {
+        'http':   80,
+        'https':  443,
+        'ftp':    21,
+    }
+
+
+    #----------------------------------------------------------------------
+    # The constructor has code borrowed from the urllib3 project, then
+    # adapted and expanded to fit the needs of GoLismero.
+    #
+    # Urllib3 is copyright 2008-2012 Andrey Petrov and contributors (see
+    # CONTRIBUTORS.txt) and is released under the MIT License:
+    # http://www.opensource.org/licenses/mit-license.php
+    # http://raw.github.com/shazow/urllib3/master/CONTRIBUTORS.txt
+    #
+    def __init__(self, url, base_url = None):
+        """
+        :param url: URL to parse.
+        :type url: str
+
+        :param base_url: Optional base URL.
+        :type base_url: str
+        """
+
+        self.__query_char = '?'
+
+        scheme = ''
+        auth = ''
+        host = ''
+        port = None
+        path = ''
+        query = ''
+        fragment = ''
+
+        if base_url:
+            url = urljoin(base_url, url, allow_fragments=True)
+
+        # Scheme
+        if ':' in url:
+            scheme, url = url.split('://', 1)
+            # we sanitize it here to prevent errors down below
+            scheme = scheme.strip().lower()
+            if scheme not in self.default_ports:
+                raise ValueError("Failed to parse: %s" % url)
+
+        # Find the earliest Authority Terminator
+        # (http://tools.ietf.org/html/rfc3986#section-3.2)
+        url, path_, delim = split_first(url, ['/', '?', '#'])
+
+        if delim:
+            # Reassemble the path
+            path = delim + path_
+
+        # Auth
+        if '@' in url:
+            auth, url = url.split('@', 1)
+
+        # IPv6
+        if url and url[0] == '[':
+            host, url = url[1:].split(']', 1)
+
+        # Port
+        if ':' in url:
+            _host, port = url.split(':', 1)
+
+            if not host:
+                host = _host
+
+            if '%' in port:
+                port = unquote(port)
+
+            if not port.isdigit():
+                raise ValueError("Failed to parse: %s" % url)
+
+            port = int(port)
+
+        elif not host and url:
+            host = url
+
+        if path:
+
+            # Fragment
+            if '#' in path:
+                path, fragment = path.split('#', 1)
+
+            # Query
+            if '?' in path:
+                path, query = path.split('?', 1)
+            else:
+                # Fix path for values like:
+                # http://www.site.com/folder/value_id=0
+                p = path.rfind('/') + 1
+                if p > 0:
+                    _path = path[:p]
+                    _query = path[p:]
+                else:
+                    _path = '/'
+                    _query = path
+                if '=' in _query:
+                    path, query = _path, _query
+                    self.__query_char = '/'
+
+        if auth:
+            auth = unquote_plus(auth)
+        if host:
+            host = unquote_plus(host)
+        if path:
+            path = unquote_plus(path)
+        if fragment:
+            fragment = unquote_plus(fragment)
+
+        self.__scheme = scheme  # already sanitized
+        self.auth = auth
+        self.host = host
+        self.port = port
+        self.path = path
+        self.query = query
+        self.fragment = fragment
+
+
+    #----------------------------------------------------------------------
+    def __str__(self):
+        return self.url
+
+
+    #----------------------------------------------------------------------
+    def copy(self):
+        """
+        :returns: DecomposedURL -- A copy of this object.
+        """
+        return deepcopy(self)
+
+
+    #----------------------------------------------------------------------
+    def to_urlsplit(self):
+        """
+        Convert to a tuple that can be passed to urlparse.urlunstrip().
+        """
+        return (self.__scheme, self.netloc, self.__path, self.query, self.__fragment)
+
+
+    #----------------------------------------------------------------------
+    def to_urlparse(self):
+        """
+        Convert to a tuple that can be passed to urlparse.urlunparse().
+        """
+        return (self.__scheme, self.netloc, self.__path, None, self.query, self.__fragment)
+
+
+    #----------------------------------------------------------------------
+    def to_urllib3(self):
+        """
+        Convert to a named tuple as returned by urllib3.parse_url().
+        """
+        return Urllib3_Url(self.__scheme, self.auth, self.__host, self.port,
+                           self.__path, self.query, self.__fragment)
+
+
+    #----------------------------------------------------------------------
+    # Read-only properties.
+
+    @property
+    def url(self):
+        scheme = self.__scheme
+        fragment = self.__fragment
+        request_uri = self.request_uri
+        if scheme:
+            scheme = scheme + "://"
+        if fragment:
+            request_uri = "%s#%s" % (request_uri, quote(fragment, safe=''))
+        return "%s%s%s" % (scheme, self.netloc, request_uri)
+
+    @property
+    def request_uri(self):
+        path = quote_plus(self.__path, safe='/')
+        query = self.query
+        if query:
+            char = self.__query_char
+            if path.endswith(char):
+                path = path + query
+            else:
+                path = "%s%s%s" % (path, char, query)
+        return path
+
+
+    #----------------------------------------------------------------------
+    # Read-write properties.
+
+    @property
+    def scheme(self):
+        return self.__scheme
+
+    @scheme.setter
+    def scheme(self, scheme):
+        if scheme:
+            scheme = scheme.strip().lower()
+            if scheme.endswith('://'):
+                scheme = scheme[:-3].strip()
+            if scheme and scheme not in self.default_ports:
+                raise ValueError("URL scheme not supported: %s" % scheme)
+        else:
+            scheme = ''
+        self.__scheme = scheme
+
+    @property
+    def host(self):
+        return self.__host
+
+    @host.setter
+    def host(self, host):
+        self.__host = host.strip().lower() if host else ''
+
+    @property
+    def query_char(self):
+        return self.__query_char
+
+    @query_char.setter
+    def query_char(self, query_char):
+        if not query_char:
+            query_char = '?'
+        elif query_char not in ('?', '/'):
+            raise ValueError("Invalid query separator character: %r" % query_char)
+        self.__query_char = query_char
+
+    @property
+    def port(self):
+        port = self.__port
+        if not port:
+            port = self.default_ports.get(self.__scheme, None)
+        return port
+
+    @port.setter
+    def port(self, port):
+        if not port:
+            port = None
+        elif not 1 <= port <= 65535:
+            raise ValueError("Bad port number: %r" % port)
+        self.__port = port
+
+    @property
+    def path(self):
+        return self.__path
+
+    @path.setter
+    def path(self, path):
+        if not path:
+            path = '/'
+        self.__path = path
+
+    @property
+    def fragment(self):
+        return self.__fragment
+
+    @fragment.setter
+    def fragment(self, fragment):
+        if not fragment:
+            fragment = ''
+        self.__fragment = fragment
+
+    @property
+    def query(self):
+        if self.__query is not None:  # when it can't be parsed
+            return self.__query
+        return '&'.join( '%s=%s' % ( quote(k, safe=''), quote(v, safe='') )
+                         for (k, v) in self.__query_params.iteritems() )
+
+    @query.setter
+    def query(self, query):
+        try:
+            # much faster than parse_qsl()
+            query_params = { map(unquote_plus, (token + '=').split('=', 2)[:2])
+                             for token in query.split('&') }
+            query = None
+        except Exception:
+            ##raise   # XXX DEBUG
+            query_params = None
+        self.__query, self.__query_params = query, query_params
+
+
+    #----------------------------------------------------------------------
+    # Aliases.
+
+    @property
+    def directory(self):
+        return split(self.__path)[0]
+
+    @directory.setter
+    def directory(self, directory):
+        self.path = join(directory, self.filename)
+
+    hostname = host
+    folder = directory
+
+    @property
+    def filename(self):
+        return split(self.__path)[1]
+
+    @filename.setter
+    def filename(self, filename):
+        self.path = join(self.directory, filename)
+
+    @property
+    def filebase(self):
+        return splitext(self.filename)[0]
+
+    @filebase.setter
+    def filebase(self, filebase):
+        self.path = join(self.directory, filebase + self.extension)
+
+    @property
+    def extension(self):
+        return splitext(self.filename)[1]
+
+    @extension.setter
+    def extension(self, extension):
+        self.path = join(self.directory, self.filebase + extension)
+
+    @property
+    def netloc(self):
+        host = quote(self.__host, safe='')
+        port = self.port
+        auth = self.auth
+        if port and port in self.default_ports.values():
+            port = None
+        if auth:
+            host = "%s@%s" % (auth, host)
+        if port:
+            host = "%s:%s" % (host, port)
+        return host
+
+    @netloc.setter
+    def netloc(self, netloc):
+        if '@' in netloc:
+            auth, host = netloc.split('@', 1)
+        else:
+            auth, host = None, netloc
+        if host and host[0] == '[':
+            host, port = url[1:].split(']', 1)
+            if ':' in port:
+                _host, port = port.split(':', 1)
+                if not host:
+                    host = _host
+        elif ':' in host:
+            host, port = host.split(':', 1)
+        if '%' in port:
+            port = unquote(port)
+        if port:
+            port = int(port)
+        if host:
+            host = unquote_plus(host)
+        self.auth = auth  # TODO: roll back changes if it fails
+        self.host = host
+        self.port = port
+
+    @property
+    def auth(self):
+        auth = ''
+        username = self.__username
+        password = self.__password
+        if username:
+            if password:
+                auth = "%s:%s" % (quote(username, safe=''), quote(password, safe=''))
+            else:
+                auth = quote(username, safe='')
+        elif password:
+            auth = ":%s" % quote(password, safe='')
+        return auth
+
+    @auth.setter
+    def auth(self, auth):
+        if auth:
+            if ':' in auth:
+                username, password = auth.split(':', 1)
+                self.__username = unquote_plus(username)
+                self.__password = unquote_plus(password)
+            else:
+                self.__username = unquote_plus(auth)
+                self.__password = ''
+        else:
+            self.__username = ''
+            self.__password = ''
 
 
 #------------------------------------------------------------------------------

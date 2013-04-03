@@ -30,6 +30,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["generate_random_string", "split_first"]
+
 from random import choice
 from string import ascii_letters, digits
 
@@ -46,3 +48,44 @@ def generate_random_string(string_length=30):
     m_available_chars = ascii_letters + digits
 
     return ''.join(choice(m_available_chars) for _ in xrange(string_length))
+
+
+#----------------------------------------------------------------------
+# This function was borrowed from the urllib3 project.
+#
+# Urllib3 is copyright 2008-2012 Andrey Petrov and contributors (see
+# CONTRIBUTORS.txt) and is released under the MIT License:
+# http://www.opensource.org/licenses/mit-license.php
+# http://raw.github.com/shazow/urllib3/master/CONTRIBUTORS.txt
+#
+def split_first(s, delims):
+    """
+    Given a string and an iterable of delimiters, split on the first found
+    delimiter. Return two split parts and the matched delimiter.
+
+    If not found, then the first part is the full input string.
+
+    Example: ::
+
+        >>> split_first('foo/bar?baz', '?/=')
+        ('foo', 'bar?baz', '/')
+        >>> split_first('foo/bar?baz', '123')
+        ('foo/bar?baz', '', None)
+
+    Scales linearly with number of delims. Not ideal for large number of delims.
+    """
+    min_idx = None
+    min_delim = None
+    for d in delims:
+        idx = s.find(d)
+        if idx < 0:
+            continue
+
+        if min_idx is None or idx < min_idx:
+            min_idx = idx
+            min_delim = d
+
+    if min_idx is None or min_idx < 0:
+        return s, '', None
+
+    return s[:min_idx], s[min_idx+1:], min_delim

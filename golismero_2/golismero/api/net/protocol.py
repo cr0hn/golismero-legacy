@@ -273,8 +273,8 @@ class Web (Protocol):
             # Select request type
             #
             # Fix URL: www.site.com -> http://www.site.com
-            m_parsed_url = parse_url(request.url)
-            m_url = request.url
+            m_parsed_url = DecomposedURL(request.url)
+            m_url = m_parsed_url.url
 
             if m_method not in ("GET", "POST", "HEAD", "OPTIONS", "PUT", "PATCH", "DELETE"):
                 raise NotImplementedError("Method '%s' not allowed." % m_method)

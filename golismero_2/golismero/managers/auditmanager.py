@@ -33,7 +33,6 @@ from ..api.data.data import Data
 from ..api.data.resource.resource import Resource
 from ..api.data.resource.url import Url
 from ..api.data.resource.domain import Domain
-from ..api.net.web_utils import parse_url
 from ..common import AuditConfig
 from ..database.datadb import DataDB
 from ..managers.reportmanager import ReportManager

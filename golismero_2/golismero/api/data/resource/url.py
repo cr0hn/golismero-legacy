@@ -31,9 +31,7 @@ __all__ = ["Url"]
 from ..data import identity
 from .domain import Domain
 from .resource import Resource
-from ...net.web_utils import parse_url
-
-from urlparse import urlparse, urlunparse
+from ...net.web_utils import DecomposedURL
 
 
 #------------------------------------------------------------------------------
@@ -67,21 +65,17 @@ class Url(Resource):
         """
         assert isinstance(referer, basestring)
 
-        # Parse, verify and normalize the URL
-        parsed = urlparse(url)
-        if not parsed.netloc or not parsed.scheme:
+        # Parse, verify and canonicalize the URL
+        parsed = DecomposedURL(url)
+        if not parsed.host or not parsed.scheme:
             raise ValueError("Only absolute URLs must be used!")
-        if not parsed.path and not parsed.params and not parsed.query:
-            parsed = (parsed.scheme, parsed.netloc,
-                      "/", parsed.params, parsed.query, parsed.fragment)
-            url = urlunparse(parsed)
-            parsed = parse_url(url)
+        url = parsed.url
 
-        # Cache for parsed URL
-        self.__parsed_url = parse_url(url)
-
-        # Add and fix URL
+        # URL
         self.__url = url
+
+        # Parsed URL
+        self.__parsed_url = parsed
 
         # Method
         self.__method = method.strip().upper() if method else "GET"
