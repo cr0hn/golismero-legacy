@@ -50,7 +50,13 @@ import re
 #----------------------------------------------------------------------
 # URL detection regex, by John Gruber.
 # http://daringfireball.net/2010/07/improved_regex_for_matching_urls
-_re_url = re.compile("""(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))""", re.I)
+_re_url_readable = re.compile("""(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))""", re.I)
+
+
+#----------------------------------------------------------------------
+# Wrappers for URIs in plain text
+# http://www.w3.org/Addressing/URL/url-spec.txt
+_re_url_rfc = re.compile("""\\<([^\\>]+\\:\\/\\/[^\\>]+)\\>""", re.I)
 
 
 #----------------------------------------------------------------------
@@ -109,17 +115,18 @@ def extract_from_text(text, base_url, only_links = True):
     # Remove the fragment from the base URL.
     base_url = urldefrag(base_url)[0]
 
-    # Look for URLs using a regular expression.
-    for url in _re_url.findall(text):
+    # Look for URLs using regular expressions.
+    for regex in (_re_url_rfc, _re_url_readable):
+        for url in regex.findall(text):
 
-        # Canonicalize the URL.
-        url = urljoin(base_url, url.strip())
+            # Canonicalize the URL.
+            url = urljoin(base_url, url.strip())
 
-        # Discard URLs that are not links to other pages or resources.
-        if not only_links or is_link(url, base_url = base_url):
+            # Discard URLs that are not links to other pages or resources.
+            if not only_links or is_link(url, base_url = base_url):
 
-            # Add the URL to the set.
-            add_result(url)
+                # Add the URL to the set.
+                add_result(url)
 
     # Return the set of collected URLs.
     return result
