@@ -293,6 +293,11 @@ class DecomposedURL(object):
     + query        = 'param1=val1&b'
     + query_params = { 'param1' : 'val1', 'b' : '' }
 
+    The url property contains the normalized form of the URL, mostly
+    preserving semantics (the query parameters may be sorted, and empty
+    URL components are removed).
+    For more details see: https://en.wikipedia.org/wiki/URL_normalization
+
     Changes to the values of these properties will be reflected in all
     other relevant properties. The url and request_uri properties are
     read-only, however.
@@ -542,7 +547,9 @@ class DecomposedURL(object):
     def host(self, host):
         if not host:
             host = ''
-        elif not (host.startswith('[') and host.endswith(']')):
+        elif host.startswith('[') and host.endswith(']'):
+            host = host.upper()
+        else:
             host = host.strip().lower()
         self.__host = host
 
@@ -595,6 +602,10 @@ class DecomposedURL(object):
 
     @property
     def query(self):
+        # TODO: according to this: https://en.wikipedia.org/wiki/URL_normalization
+        # sorting the query parameters may break semantics. To fix this we may want
+        # to try to preserve the original order when possible. The problem then is
+        # we'll "see" URLs with the same parameters in different order as different.
         if self.__query is not None:  # when it can't be parsed
             return self.__query
         if not self.__query_params:
@@ -616,7 +627,7 @@ class DecomposedURL(object):
                 else:
                     query = None
             except Exception:
-                raise   # XXX DEBUG
+                ##raise   # XXX DEBUG
                 query_params = None
         self.__query, self.__query_params = query, query_params
 
@@ -663,7 +674,7 @@ class DecomposedURL(object):
     def netloc(self):
         host = self.__host
         if not (host.startswith('[') and host.endswith(']')):
-            host = quote(host, safe='')
+            host = quote(host, safe='.')
         port = self.port
         auth = self.auth
         if port and port in self.default_ports.values():

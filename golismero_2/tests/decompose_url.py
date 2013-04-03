@@ -75,7 +75,12 @@ class Test_DecomposedURL (TestCase):
         'http://example.com/path/query=string',
         'http://example.com/query=string',
 
+        # IPv4 hosts.
+        'http://192.168.1.1/',
+        'http://192.168.1.1/index.html',
+
         # IPv6 hosts.
+        # https://www.ietf.org/rfc/rfc2732.txt
         'http://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:81/index.html',
         'http://[1080:0:0:0:8:800:200C:417A]/index.html',
         'http://[3ffe:2a00:100:7031::1]/',
@@ -195,8 +200,10 @@ class Test_DecomposedURL (TestCase):
         "bogus://example.com",
         "data:11223344",
         "javascript:alert('xss')",
+        "mailto:test@example.com?subject=This+is+a+test",
+        "file://C:/Windows/System32/calc.exe",
 
-        # Broken scheme
+        # Broken scheme.
         "http:/example.com",
         "http:example.com",
     )
