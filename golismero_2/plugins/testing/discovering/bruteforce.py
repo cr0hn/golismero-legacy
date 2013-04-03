@@ -35,16 +35,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 #   https://twitter.com/capi_x
 
-from golismero.api.logger import Logger
-from golismero.api.net.protocol import *
-from golismero.api.net.web_utils import convert_to_absolute_url, is_in_scope, is_method_allowed, generate_error_page
-from golismero.api.plugin import TestingPlugin
+from golismero.api.config import Config
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
-from golismero.api.text.wordlist_api import WordListAPI
-from golismero.api.net.web_utils import parse_url, DecomposedURL, decompose_url, generate_error_page
+from golismero.api.logger import Logger
+from golismero.api.net.protocol import *
+from golismero.api.net.web_utils import DecomposedURL, is_in_scope, is_method_allowed, generate_error_page_url
+from golismero.api.plugin import TestingPlugin
 from golismero.api.text.matching_analyzer import *
-from golismero.api.config import Config
+from golismero.api.text.wordlist_api import WordListAPI
 
 import threading
 
@@ -62,21 +61,21 @@ severity_vectors = {
 #-------------------------------------------------------------------------
 class ParallelBruter(threading.Thread):
     """
-
+    Worker threads for the bruteforcer plugin.
     """
 
     #----------------------------------------------------------------------
     def __init__(self, wordlist, results, net, method):
-        """Constructor"""
         self.__wordlist = wordlist
         self.__results = results
         self.__net = net
         self.__method = method
         super(ParallelBruter,self).__init__()
 
+
     #----------------------------------------------------------------------
     def run(self):
-        """"""
+
         # Test all URLs (deleting duplicates)
         while True:
             m_name = None
@@ -121,8 +120,7 @@ class ParallelBruter(threading.Thread):
                         #    self.send_info(p.information)
 
 
-
-
+#----------------------------------------------------------------------
 class BackupSearcher(TestingPlugin):
 
 
@@ -158,14 +156,10 @@ class BackupSearcher(TestingPlugin):
         m_url = info.url
 
         # Parse original URL
-        m_url_parts = None
-        try:
-            m_url_parts = decompose_url(info.url)
-        except ValueError:
-            return
+        m_url_parts = info.parsed_url
 
         # If file is a javascript, css or image, do not run
-        if m_url_parts.path_filename_ext[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg'):
+        if m_url_parts.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg'):
             Logger.log_more_verbose("Bruteforcer - skipping URL '%s'." % m_url)
             return
 
@@ -183,13 +177,13 @@ class BackupSearcher(TestingPlugin):
         #
         # Load wordlists
         #
-        m_wordlist = self.load_wordlist()
+        m_wordlist = self.load_wordlists()
 
         #
         # Generate an error in server to get an error page, using a random string
         #
         # Make the URL
-        m_error_url = generate_error_page(m_url)
+        m_error_url = generate_error_page_url(m_url)
         # Get the request
         m_error_response = m_net_manager.get(m_error_url).raw
 
@@ -208,7 +202,7 @@ class BackupSearcher(TestingPlugin):
         # if URL looks like don't process suffixes:
         # - www.site.com/index.php
         #
-        if not self.is_url_folder_point(m_url_parts) and 1==2:
+        if not self.is_folder_url(m_url_parts) and 1==2:
             #
             #   1 - Suffixes
             m_urls_to_test["suffixes"] = self.make_url_with_suffixes(m_wordlist, m_url_parts)
@@ -223,7 +217,7 @@ class BackupSearcher(TestingPlugin):
 
             #
             #   4 - Permutation of file
-            m_urls_to_test["permutations"] = self.make_url_permutate_filename(m_url_parts)
+            m_urls_to_test["permutations"] = self.make_url_mutate_filename(m_url_parts)
 
 
         # if URL looks like don't process suffixes:
@@ -272,9 +266,9 @@ class BackupSearcher(TestingPlugin):
 
 
     #----------------------------------------------------------------------
-    def load_wordlist(self):
+    def load_wordlists(self):
         """
-        Load all wordlist
+        Load all wordlists.
 
         :returns: dict -- A dict with wordlists
         """
@@ -282,7 +276,7 @@ class BackupSearcher(TestingPlugin):
             'suffixes' : [],
             'prefixes' : [],
             'extensions' : [],
-            'predictable_files' : []
+            'predictable_files' : [],
         }
 
         # Load wordlist form config file
@@ -300,8 +294,8 @@ class BackupSearcher(TestingPlugin):
             if l_tmp_wordlist:
                 m_wordlist[l_tmp_wordlist].append(WordListAPI().get_wordlist(wordlist_path))
 
-
         return m_wordlist
+
 
     #----------------------------------------------------------------------
     def make_url_with_suffixes(self, wordlist, url_parts):
@@ -311,16 +305,19 @@ class BackupSearcher(TestingPlugin):
         :param wordlist: Wordlist iterator.
         :type wordlist: WordList
 
-        :param url_parts: Parsed URL to permute.
-        :type url_parts: dict
+        :param url_parts: Parsed URL to mutate.
+        :type url_parts: DecomposedURL
 
         :returns: iterator with urls.
         """
 
+        if not isinstance(url_parts, DecomposedURL):
+            raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
 
-        if not wordlist or not url_parts:
-            raise StopIteration()
+        if not wordlist:
+            raise ValueError("Internal error!")
 
+        m_new = url_parts.copy()
         for l_wordlist in wordlist['suffixes']:
             # For errors
             if not l_wordlist:
@@ -328,53 +325,42 @@ class BackupSearcher(TestingPlugin):
                 continue
 
             for l_suffix in l_wordlist:
-
-                yield "%s://%s%s%s.%s%s" % (
-                    url_parts.scheme,
-                    url_parts.host,
-                    url_parts.complete_path_without_filename,
-                    url_parts.path_filename,
-                    l_suffix,
-                    url_parts.query
-                )
+                m_new.extension = l_suffix
+                yield m_new.url
 
 
     #----------------------------------------------------------------------
-    def make_url_with_preffixes(self, wordlist, url_parts):
+    def make_url_with_prefixes(self, wordlist, url_parts):
         """
         Creates an iterator of URLs with prefixes.
 
         :param wordlist: Wordlist iterator.
         :type wordlist: WordList
 
-        :param url_parts: Parsed URL to permute.
-        :type url_parts: dict
+        :param url_parts: Parsed URL to mutate.
+        :type url_parts: DecomposedURL
 
         :returns: iterator with urls.
         """
 
+        if not isinstance(url_parts, DecomposedURL):
+            raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
 
-        if not wordlist or not url_parts:
-            raise StopIteration()
+        if not wordlist:
+            raise ValueError("Internal error!")
 
         # Making predictables
+        m_new = url_parts.copy()
+        m_filename = m_new.filename
         for l_wordlist in wordlist_suffix['prefixes']:
             # For errors
             if not l_wordlist:
                 Logger.log_error("Can't load wordlist for category: 'prefixes'.")
                 continue
 
-            for l_preffix in l_wordlist:
-
-                yield "%s://%s%s%s%s%s" % (
-                    url_parts.scheme,
-                    url_parts.host,
-                    url_parts.complete_path_without_filename,
-                    l_preffix,
-                    url_parts.path_filename,
-                    url_parts.query
-                )
-
+            for l_prefix in l_wordlist:
+                m_new.filename = l_prefix + m_filename
+                yield m_new.url
 
 
     #----------------------------------------------------------------------
@@ -385,12 +371,15 @@ class BackupSearcher(TestingPlugin):
         :param wordlist: Wordlist iterator.
         :type wordlist: WordList
 
-        :param url_parts: Parsed URL to permute.
-        :type url_parts: dict
+        :param url_parts: Parsed URL to mutate.
+        :type url_parts: DecomposedURL
         """
 
-        if not wordlist or not url_parts:
-            raise StopIteration()
+        if not isinstance(url_parts, DecomposedURL):
+            raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
+
+        if not wordlist:
+            raise ValueError("Internal error!")
 
         m_wordlist_predictable = wordlist['predictable_files']
         if not m_wordlist_predictable:
@@ -400,6 +389,7 @@ class BackupSearcher(TestingPlugin):
             m_wordlist_suffix = set()
 
         # Making predictables
+        m_new = url_parts.copy()
         for l_wordlist in m_wordlist_predictable:
             # For errors
             if not l_wordlist:
@@ -415,32 +405,25 @@ class BackupSearcher(TestingPlugin):
                 # Fix l_path
                 l_fixed_path = l_path[1:] if l_path.startswith("/") else l_path
 
-                yield "%s://%s%s%s" % (
-                    url_parts.scheme,
-                    url_parts.host,
-                    url_parts.complete_path_without_filename,
-                    l_fixed_path,
-                )
+                m_new.filename = l_fixed_path
+                yield m_new.url
 
         # For locations source code of application, like:
         # www.site.com/folder/app1/ -> www.site.com/folder/app1.war
         #
-        m_path = url_parts.complete_path
-        m_prev_folder = m_path[:m_path[:-1].rfind("/") + 1] # www.site.com/folder/
-        m_last_folder = m_path[m_path[:-1].rfind("/") + 1: -1] # app1
+        m_new = url_parts.copy()
+        m_path = m_new.directory
+        if m_path.endswith('/'):
+            m_path = m_path[:-1]
         for l_wordlist in m_wordlist_suffix:
             # For errors
             if not l_wordlist:
                 Logger.log_error("Can't load wordlist for category: 'suffixes'.")
                 continue
             for l_suffix in l_wordlist:
-                yield "%s://%s%s/%s%s." % (
-                    url_parts.scheme,
-                    url_parts.host,
-                    m_prev_folder,
-                    m_last_folder,
-                    l_suffix,
-                )
+                m_new.path = m_path + l_suffix
+                yield m_new.url
+
 
     #----------------------------------------------------------------------
     def make_url_changing_extensions(self, wordlist, url_parts):
@@ -450,80 +433,61 @@ class BackupSearcher(TestingPlugin):
         :param wordlist: Wordlist iterator.
         :type wordlist: WordList
 
-        :param url_parts: Parsed URL to permute.
-        :type url_parts: dict
+        :param url_parts: Parsed URL to mutate.
+        :type url_parts: DecomposedURL
         """
 
-        if not wordlist or not url_parts:
-            raise StopIteration()
+        if not isinstance(url_parts, DecomposedURL):
+            raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
+
+        if not wordlist:
+            raise ValueError("Internal error!")
 
         # Making predictables
+        m_new = url_parts.copy()
         for l_wordlist in wordlist['extensions']:
             # For errors
             if not l_wordlist:
                 Logger.log_error("Can't load wordlist for category: 'extensions'.")
                 continue
             for l_suffix in l_wordlist:
-                yield "%s://%s%s%s.%s%s" % (
-                    url_parts.scheme,
-                    url_parts.host,
-                    url_parts.complete_path_without_filename,
-                    url_parts.path_filename_without_ext,
-                    l_suffix,
-                    url_parts.query
-                )
+                m_new.extension = l_suffix
+                yield m_new.url
 
 
     #----------------------------------------------------------------------
-    def make_url_permutate_filename(self, url_parts):
+    def make_url_mutate_filename(self, url_parts):
         """
         Creates an iterator of URLs with mutated filenames.
 
-        :param url_parts: Parsed URL to permute.
-        :type url_parts: dict
+        :param url_parts: Parsed URL to mutate.
+        :type url_parts: DecomposedURL
         """
 
-        if not url_parts:
-            raise StopIteration()
-
-        m_base_string = "%s://%s%s" % (
-                    url_parts.scheme,
-                    url_parts.host,
-                    url_parts.complete_path_without_filename
-                )
+        if not isinstance(url_parts, DecomposedURL):
+            raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
 
         # Change extension to upper case
-        yield "%s%s%s%s" % (
-            m_base_string,
-            url_parts.path_filename_without_ext,
-            url_parts.path_filename_ext.upper(),
-            url_parts.query
-        )
+        m_new = url_parts.copy()
+        m_new.extension = m_new.extension.upper()
+        yield m_new.url
 
         # Adding numeric ends of filename
+        m_new = url_parts.copy()
+        filename = m_new.filename
         for n in xrange(5):
+
             # Format: index1.php
-            yield "%s%s%s%s%s" % (
-                m_base_string,
-                url_parts.path_filename_without_ext,
-                str(n),
-                url_parts.path_filename_ext,
-                url_parts.query
-            )
+            m_new.filename = filename + str(n)
+            yield m_new.url
 
             # Format: index_1.php
-            yield "%s%s_%s%s%s" % (
-                m_base_string,
-                url_parts.path_filename_without_ext,
-                str(n),
-                url_parts.path_filename_ext,
-                url_parts.query
-            )
-
+            m_new.filename = "%s_%s" % (filename, str(n))
+            yield m_new.url
 
 
     #----------------------------------------------------------------------
-    def is_url_folder_point(self, url_parts):
+    def is_folder_url(self, url_parts):
         """
         Determine if the given URL points to a folder or a file:
 
@@ -536,48 +500,13 @@ class BackupSearcher(TestingPlugin):
         if URL looks like:
         - www.site.com/index.php
         - www.site.com/index.php?id=1&name=bb
-
-        http://www.antpji.com/index.php/noticias/frontpage/6category_id=0
+        - www.site.com/index.php/id=1&name=bb
 
         then ==> Return False
 
         :param url_parts: Parsed URL to test.
-        :type url_parts: dict
+        :type url_parts: DecomposedURL
 
-        :return: bool -- True if it's a folder, False if not.
-
+        :return: bool -- True if it's a folder, False otherwise.
         """
-        return not (
-            (url_parts.complete_path or url_parts.query) and \
-            (url_parts.path_filename_ext or url_parts.query)
-        )
-    #----------------------------------------------------------------------
-    def split_url(self, parsed_url):
-        """Split URL in their parts"""
-
-        m_parsed_url = parsed_url
-
-        m_url_parts = {}
-        m_url_parts['scheme']                     = m_parsed_url.scheme if m_parsed_url.scheme else ''
-        m_url_parts['host']                       = m_parsed_url.host if m_parsed_url.host else ''
-        m_url_parts['complete_path']              = m_parsed_url.path if m_parsed_url.path else ''
-        # Fix path =
-        m_url_parts['complete_path']              = m_url_parts['complete_path'] if m_url_parts['complete_path'].endswith("/") else m_url_parts['complete_path'] + "/"
-        m_url_parts['path_filename_ext']          = splitext(m_parsed_url.path)[1] if m_parsed_url.path else ''
-        m_url_parts['path_filename']              = split(m_parsed_url.path)[1] if m_parsed_url.path and m_url_parts['path_filename_ext'] else ''
-        m_url_parts['path_filename_without_ext']  = splitext(m_url_parts['path_filename'])[0] if m_parsed_url.path and m_url_parts['path_filename'] else ''
-        m_url_parts['query']                      = m_parsed_url.query if m_parsed_url.query else ''
-
-        # Fix path for values like:
-        # http://www.site.com/folder/value_id=0
-        m_path = m_url_parts['complete_path']
-        m_prev_folder = m_path[:m_path[:-1].rfind("/") + 1] # www.site.com/folder/
-        m_last = m_path[m_path[:-1].rfind("/") + 1: -1] # value_id=0
-        if m_last.find("=") != -1:
-            m_url_parts['complete_path'] = m_prev_folder
-
-        m_url_parts['complete_path_without_filename'] = '/' if not m_prev_folder else m_prev_folder
-
-
-
-        return m_url_parts
+        return url_parts.path.endswith('/') and not url_parts.query_char == '/'

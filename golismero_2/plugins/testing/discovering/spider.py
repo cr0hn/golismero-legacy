@@ -33,7 +33,7 @@ from golismero.api.data.resource.url import Url
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.information.information import Information
 from golismero.api.config import Config
-from golismero.api.net.web_utils import parse_url, convert_to_absolute_urls, is_in_scope
+from golismero.api.net.web_utils import is_in_scope
 from golismero.api.net.scraper import extract_from_html
 
 from time import time
@@ -46,16 +46,22 @@ class Spider(TestingPlugin):
     This plugin is a web spider.
     """
 
+
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
-        """
-        """
         pass
+
 
     #----------------------------------------------------------------------
     def display_help(self):
         # TODO: this could default to the description found in the metadata.
         return self.__doc__
+
+
+    #----------------------------------------------------------------------
+    def get_accepted_info(self):
+        return [Url.RESOURCE_URL]
+
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
@@ -139,8 +145,3 @@ class Spider(TestingPlugin):
 
         # Send the URLs
         return m_return
-
-
-    #----------------------------------------------------------------------
-    def get_accepted_info(self):
-        return [Url.RESOURCE_URL]

@@ -35,6 +35,7 @@ from golismero.api.net.web_utils import *
 from golismero.api.text.matching_analyzer import *
 
 import codecs
+from urlparse import urljoin
 
 
 class Robots(TestingPlugin):
@@ -45,8 +46,6 @@ class Robots(TestingPlugin):
 
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
-        """
-        """
         pass
 
 
@@ -57,12 +56,18 @@ class Robots(TestingPlugin):
 
 
     #----------------------------------------------------------------------
+    def get_accepted_info(self):
+        return [Domain.RESOURCE_DOMAIN]
+
+
+    #----------------------------------------------------------------------
     def recv_info(self, info):
         if not isinstance(info, Domain):
             raise TypeError("Expected Url, got %s instead" % type(info))
 
         # Get the url of hosts
-        m_url_robots_txt = "%s/robots.txt" % fix_url(info.name)
+        m_url = fix_url(info.name)
+        m_url_robots_txt = urljoin(m_url, 'robots.txt')
 
         Logger.log_verbose("Robots - looking for robots.txt in URL: '%s'" % m_url_robots_txt)
 
@@ -123,7 +128,7 @@ class Robots(TestingPlugin):
                     continue
 
                 if m_key in ('disallow', 'allow', 'sitemap') and m_value:
-                    tmp_discovered = convert_to_absolute_url(m_url, m_value)
+                    tmp_discovered = urljoin(m_url, m_value)
                     Logger.log_more_verbose("Robots - discovered new url: %s" % tmp_discovered)
                     m_discovered_urls_append( Url(tmp_discovered) )
             except Exception,e:
@@ -135,7 +140,7 @@ class Robots(TestingPlugin):
         #
 
         # Generating error page
-        m_error_page = generate_error_page(m_url_robots_txt)
+        m_error_page = generate_error_page_url(m_url_robots_txt)
         m_response_error_page = m_manager.get(m_error_page)
 
         # Analyze results
@@ -147,8 +152,3 @@ class Robots(TestingPlugin):
 
         # Generate results
         return [r for i in m_analyzer.unique_texts]
-
-
-    #----------------------------------------------------------------------
-    def get_accepted_info(self):
-        return [Domain.RESOURCE_DOMAIN]
