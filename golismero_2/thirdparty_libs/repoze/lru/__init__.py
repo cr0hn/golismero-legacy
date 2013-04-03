@@ -1,6 +1,3 @@
-# Copyright (c) 2009 Agendaless Consulting and Contributors.
-# (http://www.agendaless.com), All Rights Reserved
-
 """ LRU caching class and decorator """
 from __future__ import with_statement
 
@@ -331,10 +328,10 @@ class CacheMaker(object):
             timeout = self._timeout
 
         return name, maxsize, timeout
-
+    
     def lrucache(self, name=None, maxsize=None):
         """Named arguments:
-
+        
         - name (optional) is a string, and should be unique amongst all caches
 
         - maxsize (optional) is an int, overriding any default value set by
@@ -353,15 +350,15 @@ class CacheMaker(object):
           the constructor
 
         - timeout (optional) is an int, overriding any default value set by
-          the constructor or the default value (%d seconds)
+          the constructor or the default value (%d seconds)  
         """ % _DEFAULT_TIMEOUT
         name, maxsize, timeout = self._resolve_setting(name, maxsize, timeout)
         cache = self._cache[name] = ExpiringLRUCache(maxsize, timeout)
         return lru_cache(maxsize, cache, timeout)
-
+    
     def clear(self, *names):
         """Clear the given cache(s).
-
+        
         If no 'names' are passed, clear all caches.
         """
         if len(names) == 0:

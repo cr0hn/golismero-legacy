@@ -43,7 +43,7 @@ from ..text.text_utils import generate_random_string, split_first
 from BeautifulSoup import BeautifulSoup
 from copy import deepcopy
 from posixpath import join, splitext, split
-from repoze_lru import lru_cache
+from repoze.lru import lru_cache
 from requests import *
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests_ntlm import HttpNtlmAuth
