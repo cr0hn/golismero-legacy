@@ -24,6 +24,19 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+# Fix the module load path.
+if __name__ == "__main__":
+    import os, sys
+    from os import path
+    root = path.split(path.abspath(__file__))[0]
+    if not root:  # if it fails use cwd instead
+        root = path.abspath(os.getcwd())
+    root = path.abspath(path.join(root, ".."))
+    thirdparty_libs = path.join(root, "thirdparty_libs")
+    if not path.exists(path.join(root, "golismero")):
+        raise RuntimeError("Can't find GoLismero!")
+    sys.path.insert(0, thirdparty_libs)
+    sys.path.insert(0, root)
 
 # Testing file
 
@@ -33,7 +46,8 @@ from golismero.api.data.information.http import *
 from golismero.main.commonstructures import GlobalParams
 from golismero.managers.priscillapluginmanager import PriscillaPluginManager
 from golismero.api.data.information.url import Url
-from thirdparty_libs.urllib3 import *
+
+from requests.packages.urllib3 import *
 
 import sys
 

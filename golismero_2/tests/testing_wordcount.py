@@ -1,18 +1,31 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+# Fix the module load path.
+if __name__ == "__main__":
+    import os, sys
+    from os import path
+    root = path.split(path.abspath(__file__))[0]
+    if not root:  # if it fails use cwd instead
+        root = path.abspath(os.getcwd())
+    root = path.abspath(path.join(root, ".."))
+    thirdparty_libs = path.join(root, "thirdparty_libs")
+    if not path.exists(path.join(root, "golismero")):
+        raise RuntimeError("Can't find GoLismero!")
+    sys.path.insert(0, thirdparty_libs)
+    sys.path.insert(0, root)
+
+
 text = """The loop in álines 13 and 14 is how we send the data off to the reducers. The WMR system for Python3 defines a class Wmr that includes a class method emit() for producing key-value pairs to be forwarded (via shuffling) to a reducer. Wmr.emit() requires two string arguments, so both foundword and counts[foundword] are being interpreted as strings in line 14.
 The loop in lines 13 and 14 is how we send the data off to the reducers. The WMR system for Python3 defines a class Wmr that includes a class method emit() for producing key-value pairs to be forwarded (via shuffling) to a reducer. Wmr.emit() requires two string arguments, so both foundword and counts[foundword] are being interpreted as strings in line 14.
 The loop in lines 13 and 14 is how we send the data off to the reducers. The WMR system for Python3 defines a class Wmr that includes a class method emit() for producing key-value pairs to be forwarded (via shuffling) to a reducer. Wmr.emit() requires two string arguments, so both foundword and counts[foundword] are being interpreted as strings in line 14.
 The loop in lines 13 and 14 is how we send the data off to the reducers. The WMR system for Python3 defines a class Wmr that includes a class method emit() for producing key-value pairs to be forwarded (via shuffling) to a reducer. Wmr.emit() requires two string arguments, so both foundword and counts[foundword] are being interpreted as strings in line 14."""
 
 
-
-
 from re import findall
 import timeit
 import difflib
-from thirdparty_libs.diff_match_patch import diff_match_patch
+from diff_match_patch import diff_match_patch
 
 def unotext():
     """"""
