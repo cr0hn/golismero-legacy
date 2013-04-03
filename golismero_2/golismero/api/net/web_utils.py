@@ -389,6 +389,7 @@ class DecomposedURL(object):
         # IPv6
         if url and url[0] == '[':
             host, url = url[1:].split(']', 1)
+            host = "[%s]" % host  # we need to remember it's IPv6
 
         # Port
         if ':' in url:
@@ -539,7 +540,11 @@ class DecomposedURL(object):
 
     @host.setter
     def host(self, host):
-        self.__host = host.strip().lower() if host else ''
+        if not host:
+            host = ''
+        elif not (host.startswith('[') and host.endswith(']')):
+            host = host.strip().lower()
+        self.__host = host
 
     @property
     def query_char(self):
@@ -656,7 +661,9 @@ class DecomposedURL(object):
 
     @property
     def netloc(self):
-        host = quote(self.__host, safe='')
+        host = self.__host
+        if not (host.startswith('[') and host.endswith(']')):
+            host = quote(host, safe='')
         port = self.port
         auth = self.auth
         if port and port in self.default_ports.values():
