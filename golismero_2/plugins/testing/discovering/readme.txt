@@ -1,0 +1,1 @@
+Discovery plugins go here. These plugins implement the information gathering phase of GoLismero.
