@@ -26,13 +26,19 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import os.path, sys
-where = path.split(path.abspath(__file__))[0]
-if not where:  # if it fails use cwd instead
-    where = path.abspath(os.getcwd())
-where = os.path.join(where, "..", "thirdparty_libs")
-where = os.path.abspath(where)
-sys.path.insert(0, where)
+# Fix the module load path.
+if __name__ == "__main__":
+    import os, sys
+    from os import path
+    root = path.split(path.abspath(__file__))[0]
+    if not root:  # if it fails use cwd instead
+        root = path.abspath(os.getcwd())
+    root = path.abspath(path.join(root, ".."))
+    thirdparty_libs = path.join(root, "thirdparty_libs")
+    if not path.exists(path.join(root, "golismero")):
+        raise RuntimeError("Can't find GoLismero!")
+    sys.path.insert(0, thirdparty_libs)
+    sys.path.insert(0, root)
 
 
 url = ["http://entretenimiento.terra.es/vuelve-alvaro-el-superman-de-gran-hermano-14,e676a7215295d310VgnVCM3000009acceb0aRCRD.html",
