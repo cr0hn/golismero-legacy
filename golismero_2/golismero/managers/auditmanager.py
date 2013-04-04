@@ -492,7 +492,7 @@ class Audit (object):
                         w = w % (self.__params.max_links, self.name)
                         self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                                       message_code = MessageCode.MSG_CONTROL_WARNING,
-                                      message_info = RuntimeWarning(w))
+                                      message_info = (RuntimeWarning(w),))
 
                     # Drop the message. An ACK is still expected.
                     self.__expecting_ack += 1

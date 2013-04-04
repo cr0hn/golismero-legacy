@@ -329,10 +329,11 @@ class DecomposedURL(object):
     #----------------------------------------------------------------------
     # Bidirectional map of default port numbers per supported scheme.
 
-    default_ports = {
-        'http':   80,
-        'https':  443,
-        'ftp':    21,
+    default_schemes = {
+        'http' :   80,
+        'https':   443,
+        'ftp'  :   21,
+        'mailto':   25
     }
 
 
@@ -371,12 +372,16 @@ class DecomposedURL(object):
 
         # Scheme
         if ':' in url:
-            scheme, url = url.split('://', 1)
+            if '://' in url:
+                scheme, url = url.split('://', 1)
+            else:
+                scheme, url = url.split(':', 1)
+
             # we sanitize it here to prevent errors down below
             scheme = scheme.strip().lower()
             if '%' in scheme or '+' in scheme:
                 scheme = unquote_plus(scheme)
-            if scheme not in self.default_ports:
+            if scheme not in self.default_schemes:
                 raise ValueError("Failed to parse: %s" % original_url)
 
         # Find the earliest Authority Terminator
@@ -533,7 +538,7 @@ class DecomposedURL(object):
             scheme = scheme.strip().lower()
             if scheme.endswith('://'):
                 scheme = scheme[:-3].strip()
-            if scheme and scheme not in self.default_ports:
+            if scheme and scheme not in self.default_schemes:
                 raise ValueError("URL scheme not supported: %s" % scheme)
         else:
             scheme = ''
@@ -569,7 +574,7 @@ class DecomposedURL(object):
     def port(self):
         port = self.__port
         if not port:
-            port = self.default_ports.get(self.__scheme, None)
+            port = self.default_schemes.get(self.__scheme, None)
         return port
 
     @port.setter
@@ -677,7 +682,7 @@ class DecomposedURL(object):
             host = quote(host, safe='.')
         port = self.port
         auth = self.auth
-        if port and port in self.default_ports.values():
+        if port and port in self.default_schemes.values():
             port = None
         if auth:
             host = "%s@%s" % (auth, host)

@@ -158,8 +158,10 @@ class ConsoleUIPlugin(UIPlugin):
                 for w in message.message_info:
                     if Console.level >= Console.MORE_VERBOSE:
                         formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
+                        #formatted = w
                     elif Console.level >= Console.VERBOSE:
                         formatted = warnings.formatwarning(w.message, w.category)
+                        #formatted = w
                     else:
                         formatted = None
                     if formatted:
