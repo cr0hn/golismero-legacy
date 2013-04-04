@@ -327,13 +327,15 @@ class DecomposedURL(object):
 
 
     #----------------------------------------------------------------------
-    # Bidirectional map of default port numbers per supported scheme.
+    # Dictionary of default port numbers per each supported scheme.
+    # The keys of this dictionary are also used to check if a given
+    # scheme is supported by this class.
 
-    default_schemes = {
-        'http' :   80,
-        'https':   443,
-        'ftp'  :   21,
-        'mailto':   25
+    default_ports = {
+        'http'  : 80,
+        'https' : 443,
+        'ftp'   : 21,
+        'mailto': 25,
     }
 
 
@@ -381,7 +383,7 @@ class DecomposedURL(object):
             scheme = scheme.strip().lower()
             if '%' in scheme or '+' in scheme:
                 scheme = unquote_plus(scheme)
-            if scheme not in self.default_schemes:
+            if scheme not in self.default_ports:
                 raise ValueError("Failed to parse: %s" % original_url)
 
         # Find the earliest Authority Terminator
@@ -538,7 +540,7 @@ class DecomposedURL(object):
             scheme = scheme.strip().lower()
             if scheme.endswith('://'):
                 scheme = scheme[:-3].strip()
-            if scheme and scheme not in self.default_schemes:
+            if scheme and scheme not in self.default_ports:
                 raise ValueError("URL scheme not supported: %s" % scheme)
         else:
             scheme = ''
@@ -574,7 +576,7 @@ class DecomposedURL(object):
     def port(self):
         port = self.__port
         if not port:
-            port = self.default_schemes.get(self.__scheme, None)
+            port = self.default_ports.get(self.__scheme, None)
         return port
 
     @port.setter
@@ -682,7 +684,7 @@ class DecomposedURL(object):
             host = quote(host, safe='.')
         port = self.port
         auth = self.auth
-        if port and port in self.default_schemes.values():
+        if port and port in self.default_ports.values():
             port = None
         if auth:
             host = "%s@%s" % (auth, host)

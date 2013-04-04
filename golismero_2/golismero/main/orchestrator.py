@@ -354,6 +354,7 @@ class Orchestrator (object):
                                         message_code = MessageCode.MSG_CONTROL_STOP,
                                         message_info = True)  # True for finished, False for user cancel
                             self.enqueue_msg(m)
+
                     # Wait for a message to arrive.
                     try:
                         message = self.__queue.get()

@@ -67,7 +67,6 @@ class Url(Resource):
 
         # Parse, verify and canonicalize the URL
         parsed = DecomposedURL(url)
-        print url
         if not parsed.host or not parsed.scheme:
             raise ValueError("Only absolute URLs must be used!")
         url = parsed.url
