@@ -115,10 +115,52 @@ class overwrite(property):
 
 
 #------------------------------------------------------------------------------
+class _data_metaclass(type):
+    "Metaclass to validate the definitions of Data subclasses."
+
+    def __init__(cls, name, bases, namespace):
+        super(_data_metaclass, cls).__init__(name, bases, namespace)
+
+        # Skip checks for the base classes.
+        if name in ("Data", "Information", "Resource", "Vulnerability"):
+            return
+
+        # Check the data_type is not TYPE_ANY.
+        if not cls.data_type:
+            raise TypeError("Subclasses of Data MUST define their data_type!")
+
+        # Check the information_type is not INFORMATION_UNKNOWN.
+        if cls.data_type == Data.TYPE_INFORMATION:
+            if not cls.information_type:
+                raise TypeError("Subclasses of Information MUST define their information_type!")
+
+        # Check the resource_type is not RESOURCE_UNKNOWN.
+        elif cls.data_type == Data.TYPE_RESOURCE:
+            if not cls.resource_type:
+                raise TypeError("Subclasses of Resource MUST define their resource_type!")
+
+        # Check the vulnerability_type is not "generic".
+        elif cls.data_type == Data.TYPE_VULNERABILITY:
+            if cls.vulnerability_type == "generic":
+                raise TypeError("Subclasses of Vulnerability MUST define their vulnerability_type!")
+
+        # Check all @merge and @overwrite properties have setters.
+        for name, prop in cls.__dict__.iteritems():
+            if merge.is_mergeable_property(prop):
+                if prop.fset is None:
+                    raise TypeError("Properties tagged with @merge MUST have a setter!")
+            elif overwrite.is_overwriteable_property(prop):
+                if prop.fset is None:
+                    raise TypeError("Properties tagged with @overwrite MUST have a setter!")
+
+
+#------------------------------------------------------------------------------
 class Data(object):
     """
     Base class for all data.
     """
+
+    __metaclass__ = _data_metaclass
 
 
     #--------------------------------------------------------------------------
@@ -289,7 +331,7 @@ class Data(object):
             value = getattr(self, key, None)
             value = getattr(other, key, value)
 
-            # Set the resulting value, ignore AttributeError exceptions.
+            # Set the resulting value.
             try:
                 setattr(self, key, my_value)
             except AttributeError:
