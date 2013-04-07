@@ -312,6 +312,16 @@ class PluginContext (object):
         return self.__msg_queue
 
     @property
+    def audit_name(self):
+        "str -- Name of the audit. | None -- Not running an audit."
+        return self.__audit_name
+
+    @property
+    def audit_config(self):
+        "AuditConfig -- Parameters of the audit. | None -- Not running an audit."
+        return self.__audit_config
+
+    @property
     def plugin_info(self):
         "PluginInfo -- Plugin information. | None -- Not running a plugin."
         return self.__plugin_info
@@ -339,16 +349,6 @@ class PluginContext (object):
         "dict -- Plugin configuration. | None -- Not running a plugin."
         if self.__plugin_info:
             return self.__plugin_info.plugin_config
-
-    @property
-    def audit_name(self):
-        "str -- Name of the audit. | None -- Not running an audit."
-        return self.__audit_name
-
-    @property
-    def audit_config(self):
-        "AuditConfig -- Parameters of the audit. | None -- Not running an audit."
-        return self.__audit_config
 
 
     #----------------------------------------------------------------------
