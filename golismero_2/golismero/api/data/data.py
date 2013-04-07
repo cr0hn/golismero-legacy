@@ -215,17 +215,45 @@ class Data(object):
         # Merge the links.
         self._merge_links(other)
 
+    # Merge a single property.
     def _merge_property(self, other, key):
+
+        # Determine if the property is mergeable, ignore otherwise.
         prop = getattr(other.__class__, key, None)
         if prop is None or mergeable.is_mergeable_property(prop):
-            value = getattr(self, key, None)
-            value = getattr(other, key, value)
-            if value is not None:
+
+            # Get the original value.
+            my_value = getattr(self, key, None)
+
+            # Get the new value.
+            their_value = getattr(other, key, None)
+
+            # None to us means "not set".
+            if their_value is not None:
+
+                # If the original value is not set, overwrite it always.
+                if my_value is None:
+                    my_value = their_value
+
+                # Combine sets, dictionaries, lists and tuples.
+                elif isinstance(their_value, (set, dict)):
+                    my_value.update(their_value)
+                elif isinstance(their_value, list):
+                    my_value.extend(their_value)
+                elif isinstance(their_value, tuple):
+                    my_value = my_value + their_value
+
+                # Overwrite all other types.
+                else:
+                    my_value = their_value
+
+                # Set the new value, ignore AttributeError exceptions.
                 try:
-                    setattr(self, key, value)
+                    setattr(self, key, my_value)
                 except AttributeError:
                     pass    # attribute is read only, ignore
 
+    # Merge links as the union of all links from both objects.
     def _merge_links(self, other):
         for data_type, subdict in other.__linked.iteritems():
             my_subdict = self.__linked[data_type]
