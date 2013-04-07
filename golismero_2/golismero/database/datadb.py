@@ -40,7 +40,6 @@ import urlparse  # cannot use DecomposeURL here!
 import warnings
 
 # Lazy imports
-anydbm  = None
 sqlite3 = None
 
 
@@ -350,201 +349,6 @@ class DataMemoryDB (BaseDataDB):
     #----------------------------------------------------------------------
     def close(self):
         self.__results = dict()
-
-
-#------------------------------------------------------------------------------
-class DataFileDB (BaseDataDB):
-    """
-    Stores Data objects in a DBM database file.
-    """
-
-
-    #----------------------------------------------------------------------
-    def __init__(self, audit_name, filename = None):
-        """
-        Constructor.
-
-        :param audit_name: Audit name.
-        :type audit_name: str
-
-        :param filename: Optional DBM database file name.
-        :type filename: str
-        """
-        super(DataFileDB, self).__init__(audit_name)
-        global anydbm
-        if anydbm is None:
-            import anydbm
-        if not filename:
-            filename = audit_name + ".dbm"
-        self.__db = anydbm.open(filename, "c", 0600)
-        self.__busy = False
-
-
-    #----------------------------------------------------------------------
-    def _atom(self, fn, argv, argd):
-        # this will fail for multithreaded accesses,
-        # but dbm implementations are usually not multithreaded either
-        if self.__busy:
-            raise RuntimeError("The database is busy")
-        self.__busy = True
-        try:
-            return fn(self, *argv, **argd)
-        finally:
-            self.__busy = False
-
-
-    #----------------------------------------------------------------------
-    @atomic
-    def close(self):
-        try:
-            self.__db.close()
-        except Exception:
-            pass
-
-
-    #----------------------------------------------------------------------
-    @atomic
-    def add(self, data):
-        if not isinstance(data, Data):
-            raise TypeError("Expected Data, got %d instead" % type(data))
-        identity = data.identity
-        exists = identity in self.__db
-        if exists:
-            old_data = self.decode(self.__db[identity])
-            old_data.merge(data)
-            data = old_data
-        self.__db[identity] = self.encode(data)
-        return not exists
-
-
-    #----------------------------------------------------------------------
-    @atomic
-    def remove(self, identity, data_type = None):
-        # XXX data_type is ignored because it'd be grossly inefficient
-        try:
-            del self.__db[identity]
-        except KeyError:
-            return False
-        return True
-
-
-    #----------------------------------------------------------------------
-    def has_key(self, identity, data_type = None):
-        # not using @atomic because we're calling self.get()
-        return self.get(identity, data_type) is not None
-
-
-    #----------------------------------------------------------------------
-    @atomic
-    def get(self, identity, data_type = None):
-        data = self.__db.get(identity, None)
-        if data_type is not None and data is not None and data.data_type != data_type:
-            data = None
-        return data
-
-
-    #----------------------------------------------------------------------
-    @atomic
-    def keys(self, data_type = None, data_subtype = None):
-
-        # This code is ugly, but there's not that much
-        # we can do when the dbm databases only support
-        # a subset of dictionary methods, and are only
-        # barely documented anyway. :(
-
-        # Validate the data type.
-        if data_type is None:
-            if data_subtype is not None:
-                raise NotImplementedError(
-                    "Can't filter by subtype for all types")
-        elif data_type not in (Data.TYPE_INFORMATION,
-                               Data.TYPE_RESOURCE,
-                               Data.TYPE_VULNERABILITY):
-            raise NotImplementedError(
-                "Unknown data type: %r" % data_type)
-
-        # Shortcut to get all identity hashes.
-        if data_type is None:
-            return set(self.__db)
-
-        # Build a set of identity hashes.
-        hashes = set()
-
-        # For each identity hash in the database...
-        for identity in self.__db:
-
-            # Get the data object.
-            data = self.__db[identity]
-
-            # If the data type doesn't match, skip it.
-            if data_type is not None and data.data_type != data_type:
-                continue
-
-            # If we need to filter by subtype...
-            if data_subtype is not None:
-
-                # Filter by information_type.
-                if data_type == Data.TYPE_INFORMATION:
-                    if data.information_type != data_subtype:
-                        continue
-
-                # Filter by resource_type.
-                if data_type == Data.TYPE_RESOURCE:
-                    if data.resource_type == data_subtype:
-                        continue
-
-                # Filter by vulnerability_type.
-                if data_type == Data.TYPE_VULNERABILITY:
-                    if data.vulnerability_type == data_subtype:
-                        continue
-
-            # Add the identity hash to the set.
-            hashes.add(identity)
-
-        # Return the set of identity hashes.
-        return hashes
-
-
-    #----------------------------------------------------------------------
-    def count(self, data_type = None, data_subtype = None):
-        # not using @atomic here!
-
-        # Shortcut to get the total count.
-        if data_type is None:
-            if data_subtype is not None:
-                raise NotImplementedError(
-                    "Can't filter by subtype for all types")
-            return len(self)
-
-        # Count the requested elements.
-        return len(self.keys(data_type, data_subtype))
-
-
-    #----------------------------------------------------------------------
-    @atomic
-    def __len__(self):
-        return len(self.__db)
-
-
-    #----------------------------------------------------------------------
-    @atomic
-    def __contains__(self, data):
-        if not isinstance(data, Data):
-            raise TypeError("Expected Data, got %d instead" % type(data))
-        return self.__db.has_key(data.identity)
-
-
-    #----------------------------------------------------------------------
-    def __iter__(self):
-        # we can't use @atomic here
-        if self.__busy:
-            raise RuntimeError("The database is busy")
-        self.__busy = True
-        try:
-            for identity in self.__db:
-                yield self.decode( self.__db[identity] )
-        finally:
-            self.__busy = False
 
 
 #------------------------------------------------------------------------------
@@ -959,7 +763,7 @@ class DataDB (BaseDataDB):
         if scheme == "memory":
             return DataMemoryDB(audit_name)
 
-        if scheme in ("dbm", "sqlite"):
+        if scheme == "sqlite":
 
             from os import path
             import posixpath
@@ -970,8 +774,6 @@ class DataDB (BaseDataDB):
             if filename.endswith(posixpath.sep):
                 filename = filename[:-1]
 
-            if scheme == "dbm":
-                return DataFileDB(audit_name, filename)
             return DataSQLiteDB(audit_name, filename)
 
         ##if any(map(scheme.startswith, ("mysql", "mssql", "plsql", "oracle"))):
