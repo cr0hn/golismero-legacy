@@ -49,22 +49,26 @@ class Message (object):
                        message_code = MessageCode.MSG_DATA_NEW,
                        message_info = None,
                          audit_name = None,
+                        plugin_name = None,
                            priority = MessagePriority.MSG_PRIORITY_MEDIUM):
         """
         :param message_type: specifies the type of message.
-        :type mesage_type: int -- specified in a constant of Message class.
+        :type mesage_type: int -- specified in a constant of the MessageType class.
 
-        :param message_code: specifies the code of message.
-        :type message_code: int -- specified in a constant of Message class.
+        :param message_code: specifies the code of the message.
+        :type message_code: int -- specified in a constant of the MessageCode class.
 
         :param message_info: the payload of the message.
         :type message_info: object -- type must be resolved at run time.
 
         :param audit_name: the name of the audit this message belongs to.
-        :type audit_name: str
+        :type audit_name: str | None
+
+        :param plugin_name: the name of the plugin that sent this message.
+        :type plugin_name: str | None
 
         :param priority: the priority level of the message.
-        :type priority: int
+        :type priority: int -- specified in a constant of the Message class.
         """
 
         # Validate the arguments
@@ -79,6 +83,8 @@ class Message (object):
                 raise ValueError("Invalid control message code: %d" % message_code)
         if audit_name is not None and type(audit_name) not in (str, unicode):
             raise TypeError("Expected int, got %s instead" % type(audit_name))
+        if plugin_name is not None and type(plugin_name) not in (str, unicode):
+            raise TypeError("Expected int, got %s instead" % type(plugin_name))
         if type(priority) != int:
             raise TypeError("Expected int, got %s instead" % type(priority))
         if priority not in MSG_PRIORITIES:
@@ -89,31 +95,43 @@ class Message (object):
         self.__message_code = message_code
         self.__message_info = message_info
         self.__audit_name   = audit_name
+        self.__plugin_name  = plugin_name
         self.__priority     = priority
         self.__timestamp    = time()
 
     @property
     def message_type(self):
+        "int -- type of message, specified in a constant of the MessageType class."
         return self.__message_type
 
     @property
     def message_code(self):
+        "int -- code of the message, specified in a constant of the MessageCode class."
         return self.__message_code
 
     @property
     def message_info(self):
+        "object -- payload of the message, type must be resolved at run time."
         return self.__message_info
 
     @property
     def audit_name(self):
+        "str -- the name of the audit this message belongs to. | None -- doesn't belong to an audit."
         return self.__audit_name
 
     @property
+    def plugin_name(self):
+        "str -- the name of the plugin that sent this message. | None -- not sent from a plugin."
+        return self.__plugin_name
+
+    @property
     def priority(self):
+        "int -- the priority level of the message, specified in a constant of the Message class."
         return self.__priority
 
     @property
     def timestamp(self):
+        "int -- POSIX timestamp for this message."
         return self.__timestamp
 
 
@@ -126,6 +144,7 @@ class Message (object):
 
     #----------------------------------------------------------------------
     def __repr__(self):
-        s  = "<Message timestamp=%r, type=%r, code=%r, audit=%r, info=%r>"
-        s %= (self.timestamp, self.message_type, self.message_code, self.audit_name, self.message_info)
+        s  = "<Message timestamp=%r, type=%r, code=%r, audit=%r, plugin=%r, info=%r>"
+        s %= (self.timestamp, self.message_type, self.message_code,
+              self.audit_name, self.plugin_name, self.message_info)
         return s

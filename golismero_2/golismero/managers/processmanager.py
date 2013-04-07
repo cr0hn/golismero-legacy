@@ -313,35 +313,41 @@ class PluginContext (object):
 
     @property
     def plugin_info(self):
-        "PluginInfo -- Plugin information."
+        "PluginInfo -- Plugin information. | None -- Not running a plugin."
         return self.__plugin_info
 
     @property
+    def plugin_name(self):
+        "str -- Plugin name. | None -- Not running a plugin."
+        if self.__plugin_info:
+            return self.__plugin_info.plugin_name
+
+    @property
     def plugin_module(self):
-        "str -- Module where the plugin is to be loaded from."
+        "str -- Module where the plugin is to be loaded from. | None -- Not running a plugin."
         if self.__plugin_info:
             return self.__plugin_info.plugin_module
 
     @property
     def plugin_class(self):
-        "str -- Class name of the plugin."
+        "str -- Class name of the plugin. | None -- Not running a plugin."
         if self.__plugin_info:
             return self.__plugin_info.plugin_class
 
     @property
     def plugin_config(self):
-        "dict -- Plugin configuration."
+        "dict -- Plugin configuration. | None -- Not running a plugin."
         if self.__plugin_info:
             return self.__plugin_info.plugin_config
 
     @property
     def audit_name(self):
-        "str -- Name of the audit."
+        "str -- Name of the audit. | None -- Not running an audit."
         return self.__audit_name
 
     @property
     def audit_config(self):
-        "AuditConfig -- Parameters of the audit."
+        "AuditConfig -- Parameters of the audit. | None -- Not running an audit."
         return self.__audit_config
 
 
@@ -389,6 +395,7 @@ class PluginContext (object):
                           message_code = message_code,
                           message_info = message_info,
                             audit_name = self.audit_name,
+                           plugin_name = self.plugin_name,
                               priority = priority)
         self.send_raw_msg(message)
 
