@@ -26,7 +26,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["Data", "identity", "mergeable", "TempDataStorage"]
+__all__ = ["Data", "identity", "merge", "overwrite", "TempDataStorage"]
 
 from .db import Database
 from ...common import pickle
@@ -70,7 +70,7 @@ class identity(property):
 
 
 #------------------------------------------------------------------------------
-class mergeable(property):
+class merge(property):
     """
     Decorator that marks properties that can be merged safely.
 
@@ -81,11 +81,33 @@ class mergeable(property):
     def is_mergeable_property(other):
 
         # TODO: benchmark!!!
-        ##return isinstance(other, mergeable) and other.fset is not None
+        ##return isinstance(other, merge) and other.fset is not None
 
         try:
             other.__get__
             other.is_mergeable_property
+            return other.fset is not None
+        except AttributeError:
+            return False
+
+
+#------------------------------------------------------------------------------
+class overwrite(property):
+    """
+    Decorator that marks properties that can be merged safely.
+
+    It may not be combined with any other decorator, and may not be subclassed.
+    """
+
+    @staticmethod
+    def is_overwriteable_property(other):
+
+        # TODO: benchmark!!!
+        ##return isinstance(other, overwrite) and other.fset is not None
+
+        try:
+            other.__get__
+            other.is_overwriteable_property
             return other.fset is not None
         except AttributeError:
             return False
@@ -215,12 +237,15 @@ class Data(object):
         # Merge the links.
         self._merge_links(other)
 
+
     # Merge a single property.
     def _merge_property(self, other, key):
 
-        # Determine if the property is mergeable, ignore otherwise.
+        # Determine if the property is mergeable or overwriteable, ignore otherwise.
         prop = getattr(other.__class__, key, None)
-        if prop is None or mergeable.is_mergeable_property(prop):
+
+        # Merge strategy.
+        if prop is None or merge.is_mergeable_property(prop):
 
             # Get the original value.
             my_value = getattr(self, key, None)
@@ -252,6 +277,20 @@ class Data(object):
                     setattr(self, key, my_value)
                 except AttributeError:
                     pass    # attribute is read only, ignore
+
+        # Overwrite strategy.
+        elif overwrite.is_overwriteable_property(prop):
+
+            # Get the resulting value.
+            value = getattr(self, key, None)
+            value = getattr(other, key, value)
+
+            # Set the resulting value, ignore AttributeError exceptions.
+            try:
+                setattr(self, key, my_value)
+            except AttributeError:
+                pass    # attribute is read only, ignore
+
 
     # Merge links as the union of all links from both objects.
     def _merge_links(self, other):
