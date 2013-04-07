@@ -34,6 +34,7 @@ from ...common import pickle
 from collections import defaultdict
 from functools import partial
 from hashlib import md5
+from warnings import warn
 
 
 #------------------------------------------------------------------------------
@@ -272,11 +273,14 @@ class Data(object):
                 else:
                     my_value = their_value
 
-                # Set the new value, ignore AttributeError exceptions.
+                # Set the new value.
                 try:
                     setattr(self, key, my_value)
                 except AttributeError:
-                    pass    # attribute is read only, ignore
+                    if prop is not None:
+                        msg = "Mergeable read-only properties make no sense! Ignoring: %s.%s"
+                        msg %= (self.__class__.__name__, key)
+                        warn(msg)
 
         # Overwrite strategy.
         elif overwrite.is_overwriteable_property(prop):
@@ -289,7 +293,9 @@ class Data(object):
             try:
                 setattr(self, key, my_value)
             except AttributeError:
-                pass    # attribute is read only, ignore
+                msg = "Overwriteable read-only properties make no sense! Ignoring: %s.%s"
+                msg %= (self.__class__.__name__, key)
+                warn(msg)
 
 
     # Merge links as the union of all links from both objects.
