@@ -434,13 +434,6 @@ class OrchestratorConfig (Configuration):
         if set(self.enabled_plugins).intersection(self.disabled_plugins):
             raise ValueError("Conflicting plugins selection, aborting execution.")
 
-        # Validate the UI plugin
-        from .managers.priscillapluginmanager import PriscillaPluginManager
-        try:
-            PriscillaPluginManager().get_plugin_by_name("ui/%s" % self.ui_mode)
-        except KeyError:
-            raise ValueError("No plugin found for UI mode: %r" % self.ui_mode)
-
 
 #----------------------------------------------------------------------
 #

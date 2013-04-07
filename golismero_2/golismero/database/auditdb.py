@@ -26,7 +26,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["DataDB"]
+__all__ = ["AuditDB"]
 
 from .common import BaseDB, atomic, transactional
 from ..api.data.data import Data
@@ -36,6 +36,7 @@ from ..api.data.vulnerability.vulnerability import Vulnerability
 from ..messaging.codes import MessageCode
 from ..managers.rpcmanager import implementor
 
+import collections
 import urlparse  # cannot use DecomposeURL here!
 import warnings
 
@@ -47,34 +48,54 @@ sqlite3 = None
 # RPC implementors for the database API.
 
 @implementor(MessageCode.MSG_RPC_DATA_ADD)
-def rpc_datadb_add(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.add(*argv, **argd)
+def rpc_data_db_add(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.add_data(*argv, **argd)
 
 @implementor(MessageCode.MSG_RPC_DATA_REMOVE)
-def rpc_datadb_remove(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.remove(*argv, **argd)
-
-@implementor(MessageCode.MSG_RPC_DATA_GET)
-def rpc_datadb_get(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.get(*argv, **argd)
-
-@implementor(MessageCode.MSG_RPC_DATA_KEYS)
-def rpc_datadb_keys(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.keys(*argv, **argd)
-
-@implementor(MessageCode.MSG_RPC_DATA_COUNT)
-def rpc_datadb_count(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.count(*argv, **argd)
+def rpc_data_db_remove(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.remove_data(*argv, **argd)
 
 @implementor(MessageCode.MSG_RPC_DATA_CHECK)
-def rpc_datadb_check(orchestrator, audit_name, identity):
-    return orchestrator.auditManager.get_audit(audit_name).database.has_key(identity)
+def rpc_data_db_check(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_data_key(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_DATA_GET)
+def rpc_data_db_get(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_data(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_DATA_KEYS)
+def rpc_data_db_keys(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_data_keys(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_DATA_COUNT)
+def rpc_data_db_count(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_data_count(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_STATE_ADD)
+def rpc_plugin_db_add(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.add_state_variable(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_STATE_REMOVE)
+def rpc_plugin_db_remove(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.remove_state_variable(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_STATE_CHECK)
+def rpc_plugin_db_check(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_state_variable(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_STATE_GET)
+def rpc_plugin_db_get(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_state_variable(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_STATE_KEYS)
+def rpc_plugin_db_keys(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_state_variable_names(*argv, **argd)
 
 
 #------------------------------------------------------------------------------
-class BaseDataDB (BaseDB):
+class BaseAuditDB (BaseDB):
     """
-    Storage of Data objects.
+    Storage of Audit results.
     """
 
 
@@ -95,7 +116,7 @@ class BaseDataDB (BaseDB):
 
 
     #----------------------------------------------------------------------
-    def add(self, data):
+    def add_data(self, data):
         """
         Add data to the database.
 
@@ -108,9 +129,9 @@ class BaseDataDB (BaseDB):
 
 
     #----------------------------------------------------------------------
-    def remove(self, identity, data_type = None):
+    def remove_data(self, identity, data_type = None):
         """
-        Remove an object given its identity hash.
+        Remove data given its identity hash.
 
         Optionally restrict the result by data type. Depending on the
         underlying database, this may result in a performance gain.
@@ -127,9 +148,9 @@ class BaseDataDB (BaseDB):
 
 
     #----------------------------------------------------------------------
-    def has_key(self, identity, data_type = None):
+    def has_data_key(self, identity, data_type = None):
         """
-        Check if an object with the given
+        Check if a data object with the given
         identity hash is present in the database.
 
         Optionally restrict the result by data type. Depending on the
@@ -144,7 +165,7 @@ class BaseDataDB (BaseDB):
 
 
     #----------------------------------------------------------------------
-    def get(self, identity, data_type = None):
+    def get_data(self, identity, data_type = None):
         """
         Get an object given its identity hash.
 
@@ -163,7 +184,7 @@ class BaseDataDB (BaseDB):
 
 
     #----------------------------------------------------------------------
-    def keys(self, data_type = None, data_subtype = None):
+    def get_data_keys(self, data_type = None, data_subtype = None):
         """
         Get a list of identity hashes for all objects of the requested
         type, optionally filtering by subtype.
@@ -180,7 +201,7 @@ class BaseDataDB (BaseDB):
 
 
     #----------------------------------------------------------------------
-    def count(self, data_type = None, data_subtype = None):
+    def get_data_count(self, data_type = None, data_subtype = None):
         """
         Count all objects of the requested type,
         optionally filtering by subtype.
@@ -197,37 +218,137 @@ class BaseDataDB (BaseDB):
 
 
     #----------------------------------------------------------------------
-    def __len__(self):
-        return self.count()
+    def add_state_variable(self, plugin_name, key, value):
+        """
+        Add a plugin state variable to the database.
+
+        :param plugin_name: Plugin name.
+        :type plugin_name: str
+
+        :param key: Variable name.
+        :type key: str
+
+        :param value: Variable value.
+        :type value: anything
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
 
 
     #----------------------------------------------------------------------
-    def __contains__(self, data):
-        if not isinstance(data, Data):
-            raise TypeError("Expected Data, got %d instead" % type(data))
-        return self.has_key(data.identity)
+    def remove_state_variable(self, plugin_name, key):
+        """
+        Remove a plugin state variable from the database.
+
+        :param plugin_name: Plugin name.
+        :type plugin_name: str
+
+        :param key: Variable name.
+        :type key: str
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
 
 
     #----------------------------------------------------------------------
-    def __iter__(self):
+    def has_state_variable(self, plugin_name, key):
+        """
+        Check if plugin state variable is present in the database.
+
+        :param plugin_name: Plugin name.
+        :type plugin_name: str
+
+        :param key: Variable name.
+        :type key: str
+
+        :returns: bool - True if the variable is present, False otherwise.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def get_state_variable(self, plugin_name, key):
+        """
+        Get the value of a plugin state variable given its name.
+
+        :param plugin_name: Plugin name.
+        :type plugin_name: str
+
+        :param key: Variable name.
+        :type key: str
+
+        :returns: anything -- Variable value.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def get_state_variable_names(self, plugin_name):
+        """
+        Get all plugin state variable names in the database.
+
+        :param plugin_name: Plugin name.
+        :type plugin_name: str
+
+        :returns: set(str) -- Variable names.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def mask_data_as_processed(self, identity, plugin_name):
+        """
+        Mark the data as having been processed by the plugin.
+
+        :param identity: Identity hash.
+        :type identity: str
+
+        :param plugin_name: Plugin name.
+        :type plugin_name: str
+
+        :returns: set(str) -- Set of names of plugins that processed the data.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def get_plugins_for_data(self, identity):
+        """
+        Get the plugins that have already processed the given data.
+
+        :param identity: Identity hash.
+        :type identity: str
+
+        :returns: set(str) -- Set of plugin names.
+        """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
 #------------------------------------------------------------------------------
-class DataMemoryDB (BaseDataDB):
+class AuditMemoryDB (BaseAuditDB):
     """
-    Stores Data objects in memory.
+    Stores Audit results in memory.
     """
 
 
     #----------------------------------------------------------------------
     def __init__(self, audit_name):
-        super(DataMemoryDB, self).__init__(audit_name)
+        super(AuditMemoryDB, self).__init__(audit_name)
         self.__results = dict()
+        self.__state = collections.defaultdict(dict)
+        self.__history = collections.defaultdict(set)
 
 
     #----------------------------------------------------------------------
-    def add(self, data):
+    def encode(self, data):
+        return data
+
+
+    #----------------------------------------------------------------------
+    def decode(self, data):
+        return data
+
+
+    #----------------------------------------------------------------------
+    def add_data(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
         identity = data.identity
@@ -239,7 +360,7 @@ class DataMemoryDB (BaseDataDB):
 
 
     #----------------------------------------------------------------------
-    def remove(self, identity, data_type = None):
+    def remove_data(self, identity, data_type = None):
         try:
             if data_type is None or self.__results[identity].data_type == data_type:
                 del self.__results[identity]
@@ -250,12 +371,12 @@ class DataMemoryDB (BaseDataDB):
 
 
     #----------------------------------------------------------------------
-    def has_key(self, identity, data_type = None):
-        return self.get(identity, data_type) is not None
+    def has_data_key(self, identity, data_type = None):
+        return self.get_data(identity, data_type) is not None
 
 
     #----------------------------------------------------------------------
-    def get(self, identity, data_type = None):
+    def get_data(self, identity, data_type = None):
         data = self.__results.get(identity, None)
         if data_type is not None and data is not None and data.data_type != data_type:
             data = None
@@ -263,7 +384,7 @@ class DataMemoryDB (BaseDataDB):
 
 
     #----------------------------------------------------------------------
-    def keys(self, data_type = None, data_subtype = None):
+    def get_data_keys(self, data_type = None, data_subtype = None):
 
         # Ugly but (hopefully) efficient code follows.
 
@@ -297,7 +418,7 @@ class DataMemoryDB (BaseDataDB):
 
 
     #----------------------------------------------------------------------
-    def count(self, data_type = None, data_subtype = None):
+    def get_data_count(self, data_type = None, data_subtype = None):
 
         # Ugly but (hopefully) efficient code follows.
 
@@ -330,32 +451,56 @@ class DataMemoryDB (BaseDataDB):
 
 
     #----------------------------------------------------------------------
-    def __len__(self):
-        return len(self.__results)
+    def add_state_variable(self, plugin_name, key, value):
+        self.__state[plugin_name][key] = value
 
 
     #----------------------------------------------------------------------
-    def __contains__(self, data):
-        if not isinstance(data, Data):
-            raise TypeError("Expected Data, got %d instead" % type(data))
-        return data.identity in self.__results
+    def remove_state_variable(self, plugin_name, key):
+        del self.__state[plugin_name][key]
 
 
     #----------------------------------------------------------------------
-    def __iter__(self):
-        return self.__results.itervalues()
+    def has_state_variable(self, plugin_name, key):
+        return key in self.__state[plugin_name]
+
+
+    #----------------------------------------------------------------------
+    def get_state_variable(self, plugin_name, key):
+        return self.__state[plugin_name][key]
+
+
+    #----------------------------------------------------------------------
+    def get_state_variable_names(self, plugin_name):
+        return set(self.__state[plugin_name].iterkeys())
+
+
+    #----------------------------------------------------------------------
+    def mask_data_as_processed(self, identity, plugin_name):
+        self.__history[identity].add(plugin_name)
+        return self.__history[identity]
+
+
+    #----------------------------------------------------------------------
+    def get_plugins_for_data(self, identity):
+        return self.__history[identity]
 
 
     #----------------------------------------------------------------------
     def close(self):
         self.__results = dict()
+        self.__state = collections.defaultdict(dict)
+        self.__history = collections.defaultdict(set)
 
 
 #------------------------------------------------------------------------------
-class DataSQLiteDB (BaseDataDB):
+class AuditSQLiteDB (BaseAuditDB):
     """
-    Stores Data objects in an SQLite database file.
+    Stores Audit results in a database file using SQLite.
     """
+
+    # The current schema version.
+    SCHEMA_VERSION = 1
 
 
     #----------------------------------------------------------------------
@@ -369,7 +514,7 @@ class DataSQLiteDB (BaseDataDB):
         :param filename: Optional SQLite database file name.
         :type filename: str
         """
-        super(DataSQLiteDB, self).__init__(audit_name)
+        super(AuditSQLiteDB, self).__init__(audit_name)
         global sqlite3
         if sqlite3 is None:
             import sqlite3
@@ -379,6 +524,16 @@ class DataSQLiteDB (BaseDataDB):
         self.__cursor = None
         self.__busy = False
         self.__create()
+
+
+    #----------------------------------------------------------------------
+    def encode(self, data):
+
+        # Encode the data.
+        data = super(AuditSQLiteDB, self).encode(data)
+
+        # Tell SQLite the encoded data is a BLOB and not a TEXT.
+        return sqlite3.Binary(data)
 
 
     #----------------------------------------------------------------------
@@ -424,30 +579,104 @@ class DataSQLiteDB (BaseDataDB):
         """
         Create the database schema if needed.
         """
-        self.__cursor.execute("""
-            CREATE TABLE IF NOT EXISTS information (
+
+        # Check if the schema is already created.
+        self.__cursor.execute((
+            "SELECT count(*) FROM sqlite_master"
+            " WHERE type = 'table' AND name = 'golismero';"))
+
+        # If it's already present...
+        if self.__cursor.fetchone()[0]:
+
+            # Check if the schema version and audit name match.
+            self.__cursor.execute(
+                "SELECT schema_version, audit_name FROM golismero LIMIT 1;")
+            row = self.__cursor.fetchone()
+            if not row:
+                raise IOError("Broken database!")
+            if row[0] != self.SCHEMA_VERSION:
+                raise IOError(
+                    "Incompatible schema version: %r != %r" % \
+                    (row[0], self.SCHEMA_VERSION))
+            if row[1] != self.audit_name:
+                raise IOError(
+                    "Database belongs to another audit: %r != %r" % \
+                    (row[0], self.audit_name))
+
+        # If not present...
+        else:
+
+            # Create the schema.
+            self.__cursor.executescript(
+            """
+
+            ----------------------------------------------------------
+            -- Table to store the file information.
+            -- There must only be one row in it.
+            ----------------------------------------------------------
+
+            CREATE TABLE golismero (
+                schema_version INTEGER NOT NULL,
+                audit_name STRING NOT NULL
+            );
+
+            ----------------------------------------------------------
+            -- Tables to store the data.
+            ----------------------------------------------------------
+
+            CREATE TABLE information (
                 rowid INTEGER PRIMARY KEY,
                 identity STRING UNIQUE NOT NULL,
                 type INTEGER NOT NULL,
                 data BLOB NOT NULL
             );
-        """)
-        self.__cursor.execute("""
-            CREATE TABLE IF NOT EXISTS resource (
+
+            CREATE TABLE resource (
                 rowid INTEGER PRIMARY KEY,
                 identity STRING UNIQUE NOT NULL,
                 type INTEGER NOT NULL,
                 data BLOB NOT NULL
             );
-        """)
-        self.__cursor.execute("""
-            CREATE TABLE IF NOT EXISTS vulnerability (
+
+            CREATE TABLE vulnerability (
                 rowid INTEGER PRIMARY KEY,
                 identity STRING UNIQUE NOT NULL,
                 type STRING NOT NULL,
                 data BLOB NOT NULL
             );
-        """)
+
+            ----------------------------------------------------------
+            -- Tables to store the plugin state and history.
+            ----------------------------------------------------------
+
+            CREATE TABLE plugin (
+                rowid INTEGER PRIMARY KEY,
+                name STRING UNIQUE NOT NULL
+            );
+
+            CREATE TABLE state (
+                rowid INTEGER PRIMARY KEY,
+                plugin_id INTEGER NOT NULL,
+                key STRING NOT NULL,
+                value BLOB NOT NULL,
+                FOREIGN KEY(plugin_id) REFERENCES(plugin.rowid),
+                UNIQUE(plugin_id, key) ON CONFLICT REPLACE
+            );
+
+            CREATE TABLE history (
+                rowid INTEGER PRIMARY KEY,
+                plugin_id INTEGER NOT NULL,
+                identity STRING NOT NULL,
+                FOREIGN KEY(plugin_id) REFERENCES(plugin.rowid),
+                UNIQUE(plugin_id, identity) ON CONFLICT IGNORE
+            );
+
+            """)
+
+            # Insert the file information.
+            self.__cursor.execute(
+                "INSERT INTO golismero VALUES (?, ?);",
+                (self.SCHEMA_VERSION, self.audit_name))
 
 
     #----------------------------------------------------------------------
@@ -497,7 +726,7 @@ class DataSQLiteDB (BaseDataDB):
 
     #----------------------------------------------------------------------
     @transactional
-    def add(self, data):
+    def add_data(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
         table, dtype = self.__get_data_table_and_type(data)
@@ -508,14 +737,14 @@ class DataSQLiteDB (BaseDataDB):
             old_data.merge(data)
             data = old_data
         query  = "INSERT OR REPLACE INTO %s VALUES (NULL, ?, ?, ?);" % table
-        values = (identity, dtype, sqlite3.Binary(self.encode(data)))
+        values = (identity, dtype, self.encode(data))
         self.__cursor.execute(query, values)
         return is_new
 
 
     #----------------------------------------------------------------------
     @transactional
-    def remove(self, identity, data_type = None):
+    def remove_data(self, identity, data_type = None):
         if data_type is None:
             tables = ("information", "resource", "vulnerability")
         elif data_type == Data.TYPE_INFORMATION:
@@ -537,7 +766,7 @@ class DataSQLiteDB (BaseDataDB):
 
     #----------------------------------------------------------------------
     @transactional
-    def has_key(self, identity, data_type = None):
+    def has_data_key(self, identity, data_type = None):
         if data_type is None:
             tables = ("information", "resource", "vulnerability")
         elif data_type == Data.TYPE_INFORMATION:
@@ -560,10 +789,10 @@ class DataSQLiteDB (BaseDataDB):
 
     #----------------------------------------------------------------------
     @transactional
-    def get(self, identity, data_type = None):
-        return self.__get(identity, data_type)
+    def get_data(self, identity, data_type = None):
+        return self.__get_data(identity, data_type)
 
-    def __get(self, identity, data_type = None):
+    def __get_data(self, identity, data_type = None):
         if data_type is None:
             tables = ("information", "resource", "vulnerability")
         elif data_type == Data.TYPE_INFORMATION:
@@ -585,7 +814,7 @@ class DataSQLiteDB (BaseDataDB):
 
     #----------------------------------------------------------------------
     @transactional
-    def keys(self, data_type = None, data_subtype = None):
+    def get_data_keys(self, data_type = None, data_subtype = None):
 
         # Get all the keys.
         if data_type is None:
@@ -621,7 +850,7 @@ class DataSQLiteDB (BaseDataDB):
 
     #----------------------------------------------------------------------
     @transactional
-    def count(self, data_type = None, data_subtype = None):
+    def get_data_count(self, data_type = None, data_subtype = None):
 
         # Count all the keys.
         if data_type is None:
@@ -656,54 +885,148 @@ class DataSQLiteDB (BaseDataDB):
 
     #----------------------------------------------------------------------
     @transactional
-    def __len__(self):
-        count = 0
-        for table in ("information", "resource", "vulnerability"):
-            self.__cursor.execute("SELECT COUNT(rowid) FROM %s;" % table)
-            count += int(self.__cursor.fetchone()[0])
-        return count
+    def add_state_variable(self, plugin_name, key, value):
+
+        # Fetch the plugin rowid, add it if missing.
+        self.__cursor.execute(
+            "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
+            (plugin_name,))
+        rows = self.__cursor.fetchone()
+        if rows:
+            plugin_id = rows[0]
+        else:
+            self.__cursor.execute(
+                "INSERT INTO plugin VALUES (NULL, ?);",
+                (plugin_name,))
+            plugin_id = self.__cursor.lastrowid
+            if plugin_id is None:
+                self.__cursor.execute(
+                    "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
+                    (plugin_name,))
+                rows = self.__cursor.fetchone()
+                plugin_id = rows[0]
+
+        # Save the state variable.
+        self.__cursor.execute(
+            "INSERT INTO state VALUES (NULL, ?, ?, ?);",
+            (plugin_id, key, self.encode(value)))
 
 
     #----------------------------------------------------------------------
     @transactional
-    def __contains__(self, data):
-        if not isinstance(data, Data):
-            raise TypeError("Expected Data, got %d instead" % type(data))
-        table, _ = self.__get_data_table_and_type(data)
-        query = "SELECT COUNT(rowid) FROM %s WHERE identity = ? LIMIT 1;"
-        self.__cursor.execute(query % table, (data.identity,))
+    def remove_state_variable(self, plugin_name, key):
+
+        # Fetch the plugin rowid, fail if missing.
+        self.__cursor.execute(
+            "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
+            (plugin_name,))
+        rows = self.__cursor.fetchone()
+        plugin_id = rows[0]
+
+        # Delete the state variable.
+        self.__cursor.execute(
+            "DELETE FROM state WHERE plugin_id = ? AND key = ?;",
+            (plugin_id, key))
+
+
+    #----------------------------------------------------------------------
+    @transactional
+    def has_state_variable(self, plugin_name, key):
+
+        # Fetch the plugin rowid, return False if missing.
+        self.__cursor.execute(
+            "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
+            (plugin_name,))
+        rows = self.__cursor.fetchone()
+        if not rows:
+            return False
+        plugin_id = rows[0]
+
+        # Check if the state variable is defined.
+        self.__cursor.execute((
+            "SELECT COUNT(rowid) FROM state"
+            " WHERE plugin_id = ? AND key = ? LIMIT 1"),
+            (plugin_id, key))
         return bool(self.__cursor.fetchone()[0])
 
 
     #----------------------------------------------------------------------
-    def __iter__(self):
-        # can't use @transactional or @atomic here!
-        try:
-            self.__busy = True
-            cursor = self.__db.cursor()
-            for table in ("information", "resource", "vulnerability"):
-                cursor.execute("SELECT data FROM %s;" % table)
-                while True:
-                    row = cursor.fetchone()
-                    if row is None:
-                        break
-                    yield self.decode(str(row[0]))
-        finally:
-            self.__busy = False
+    @transactional
+    def get_state_variable(self, plugin_name, key):
+
+        # Fetch the plugin rowid, fail if missing.
+        self.__cursor.execute(
+            "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
+            (plugin_name,))
+        rows = self.__cursor.fetchone()
+        plugin_id = rows[0]
+
+        # Get the state variable value, fail if missing.
+        self.__cursor.execute((
+            "SELECT value FROM state"
+            " WHERE plugin_id = ? AND key = ? LIMIT 1;"),
+            (plugin_id, key))
+        return self.decode(self.__cursor.fetchone()[0])
 
 
     #----------------------------------------------------------------------
-    @atomic
-    def dump(self, filename):
-        """
-        Dump the database in SQL format.
+    @transactional
+    def get_state_variable_names(self, plugin_name):
 
-        :param filename: Output filename.
-        :type filename: str
-        """
-        with open(filename, 'w') as f:
-            for line in self.__db.iterdump():
-                f.write(line + "\n")
+        # Fetch the plugin rowid, return an empty set if missing.
+        self.__cursor.execute(
+            "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
+            (plugin_name,))
+        rows = self.__cursor.fetchone()
+        if not rows:
+            return set()
+        plugin_id = rows[0]
+
+        # Get the state variable names.
+        self.__cursor.execute(
+            "SELECT key FROM state WHERE plugin_id = ?;",
+            (plugin_id,))
+        return set(self.__cursor.fetchall())
+
+
+    #----------------------------------------------------------------------
+    @transactional
+    def mask_data_as_processed(self, identity, plugin_name):
+
+        # Fetch the plugin rowid, add it if missing.
+        self.__cursor.execute(
+            "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
+            (plugin_name,))
+        rows = self.__cursor.fetchone()
+        if rows:
+            plugin_id = rows[0]
+        else:
+            self.__cursor.execute(
+                "INSERT INTO plugin VALUES (NULL, ?);",
+                (plugin_name,))
+            plugin_id = self.__cursor.lastrowid
+            if plugin_id is None:
+                self.__cursor.execute(
+                    "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
+                    (plugin_name,))
+                rows = self.__cursor.fetchone()
+                plugin_id = rows[0]
+
+        # Mark the data as processed by this plugin.
+        self.__cursor.execute(
+            "INSERT INTO history VALUES (NULL, ?, ?);",
+            (plugin_id, identity))
+
+
+    #----------------------------------------------------------------------
+    @transactional
+    def get_plugins_for_data(self, identity):
+        self.__cursor.execute((
+            "SELECT plugin.name FROM plugin, history"
+            " WHERE history.plugin_id = plugin.rowid AND"
+            "       history.identity = ?;"),
+            (identity,))
+        return set(self.__cursor.fetchall())
 
 
     #----------------------------------------------------------------------
@@ -711,7 +1034,7 @@ class DataSQLiteDB (BaseDataDB):
     def close(self):
         try:
             try:
-                self.__db.execute("PURGE;")
+                self.__db.execute("VACUUM;")
             finally:
                 self.__db.close()
         except Exception:
@@ -719,30 +1042,7 @@ class DataSQLiteDB (BaseDataDB):
 
 
 #------------------------------------------------------------------------------
-class DataSQLDB (BaseDataDB):
-    """
-    Stores Data objects in a SQL database.
-    """
-
-
-    #----------------------------------------------------------------------
-    def __init__(self, audit_name, audit_db):
-        """
-        :param audit_name: Audit name.
-        :type audit_name: str
-
-        :param audit_db: Database connection string in URL format.
-        :type audit_db: str
-        """
-        super(DataSQLDB, self).__init__(audit_name)
-        #
-        # TODO add Django ORM support
-        #
-        raise NotImplementedError("SQL databases not supported yet")
-
-
-#------------------------------------------------------------------------------
-class DataDB (BaseDataDB):
+class AuditDB (BaseAuditDB):
     """
     Stores Data objects in a database.
 
@@ -761,7 +1061,7 @@ class DataDB (BaseDataDB):
         scheme = parsed.scheme.lower()
 
         if scheme == "memory":
-            return DataMemoryDB(audit_name)
+            return AuditMemoryDB(audit_name)
 
         if scheme == "sqlite":
 
@@ -774,9 +1074,6 @@ class DataDB (BaseDataDB):
             if filename.endswith(posixpath.sep):
                 filename = filename[:-1]
 
-            return DataSQLiteDB(audit_name, filename)
-
-        ##if any(map(scheme.startswith, ("mysql", "mssql", "plsql", "oracle"))):
-        ##    return DataSQLDB(audit_name, audit_db)
+            return AuditSQLiteDB(audit_name, filename)
 
         raise ValueError("Unsupported database type: %r" % scheme)

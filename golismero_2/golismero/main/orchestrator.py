@@ -84,6 +84,26 @@ class Orchestrator (object):
         if config.run_mode != config.RUN_MODE.standalone:
             raise ValueError("Invalid run mode: %r" % options.run_mode)
 
+        # Load the plugins
+        self.__pluginManager = PriscillaPluginManager()
+        success, failure = self.__pluginManager.find_plugins(self.__config.plugins_folder)
+        if not success:
+            raise RuntimeError("Failed to find any plugins!")
+        for category in self.__pluginManager.CATEGORIES:
+            if category != "ui":
+                self.__pluginManager.load_plugins(self.__config.enabled_plugins,
+                                                  self.__config.disabled_plugins,
+                                                  category = category)
+        self.__pluginManager.load_plugins(["ui/%s" % self.__config.ui_mode],
+                                          ["all"],
+                                          category = "ui")
+
+        # Validate the UI plugin
+        try:
+            self.__pluginManager.get_plugin_by_name("ui/%s" % self.__config.ui_mode)
+        except KeyError:
+            raise ValueError("No plugin found for UI mode: %r" % self.ui_mode)
+
         # Incoming message queue
         if getattr(config, "max_process", 0) <= 0:
             from Queue import Queue
@@ -100,17 +120,6 @@ class Orchestrator (object):
 
         # Within the Orchestrator process, keep a static reference to it
         PluginContext._orchestrator = self
-
-        # Load the plugins
-        self.__pluginManager = PriscillaPluginManager()
-        success, failure = self.__pluginManager.find_plugins(self.__config.plugins_folder)
-        if not success:
-            raise RuntimeError("Failed to find any plugins!")
-        for category in self.__pluginManager.CATEGORIES:
-            if category != "ui":
-                self.__pluginManager.load_plugins(self.__config.enabled_plugins,
-                                                  self.__config.disabled_plugins,
-                                                  category = category)
 
         # Network connection manager
         self.__netManager = NetworkManager(self.__config)
