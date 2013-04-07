@@ -363,6 +363,9 @@ class OrchestratorConfig (Configuration):
         # Run mode
         "run_mode": (str, "standalone"),
 
+        # UI mode
+        "ui_mode": (str, "console"),
+
         # Verbosity level
         "verbose": (int, 1),
 
@@ -430,6 +433,13 @@ class OrchestratorConfig (Configuration):
             raise ValueError("No plugins selected for execution.")
         if set(self.enabled_plugins).intersection(self.disabled_plugins):
             raise ValueError("Conflicting plugins selection, aborting execution.")
+
+        # Validate the UI plugin
+        from .managers.priscillapluginmanager import PriscillaPluginManager
+        try:
+            PriscillaPluginManager().get_plugin_by_name("ui/%s" % self.ui_mode)
+        except KeyError:
+            raise ValueError("No plugin found for UI mode: %r" % self.ui_mode)
 
 
 #----------------------------------------------------------------------

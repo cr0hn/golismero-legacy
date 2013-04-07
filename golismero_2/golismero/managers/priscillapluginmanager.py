@@ -490,7 +490,10 @@ class PriscillaPluginManager (Singleton):
             return instance
 
         # Get the plugin info
-        info = self.__plugins[name]
+        try:
+            info = self.__plugins[name]
+        except KeyError:
+            raise KeyError("Plugin not found: %r" % name)
 
         # Get the plugin module file
         source = info.plugin_module

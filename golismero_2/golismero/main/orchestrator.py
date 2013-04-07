@@ -106,9 +106,11 @@ class Orchestrator (object):
         success, failure = self.__pluginManager.find_plugins(self.__config.plugins_folder)
         if not success:
             raise RuntimeError("Failed to find any plugins!")
-        self.__pluginManager.load_plugins(self.__config.enabled_plugins,
-                                          self.__config.disabled_plugins,
-                                          category = "all")
+        for category in self.__pluginManager.CATEGORIES:
+            if category != "ui":
+                self.__pluginManager.load_plugins(self.__config.enabled_plugins,
+                                                  self.__config.disabled_plugins,
+                                                  category = category)
 
         # Network connection manager
         self.__netManager = NetworkManager(self.__config)
