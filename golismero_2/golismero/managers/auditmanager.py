@@ -34,7 +34,7 @@ from ..api.data.resource.resource import Resource
 from ..api.data.resource.url import Url
 from ..api.data.resource.domain import Domain
 from ..common import AuditConfig
-from ..database.datadb import DataDB
+from ..database.auditdb import AuditDB
 from ..managers.reportmanager import ReportManager
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
@@ -275,7 +275,7 @@ class Audit (object):
         self.__report_manager = ReportManager(auditParams, orchestrator)
 
         # Create the database.
-        self.__database = DataDB(self.__name, auditParams.audit_db)
+        self.__database = AuditDB(self.__name, auditParams.audit_db)
 
         # Track orphan data objects.
         self.__orphan_data = dict()  # identity -> instance
@@ -393,7 +393,7 @@ class Audit (object):
 
         # Is any orphan data no longer an orphan?
         not_orphan_anymore = {ref for ref in self.__orphan_data.iterkeys()
-                              if self.database.has_key(ref)}
+                              if self.database.has_data_key(ref)}
         if not_orphan_anymore:
 
             # We'll expect an ACK to be sent after the data.
@@ -472,7 +472,7 @@ class Audit (object):
             # Does this data reference any other data we still don't have?
             if  data.data_type == Data.TYPE_VULNERABILITY and (
                 data.identity in self.__orphan_data or
-                not all(self.database.has_key(ref) for ref in data.get_links(Data.TYPE_RESOURCE))
+                not all(self.database.has_data_key(ref) for ref in data.get_links(Data.TYPE_RESOURCE))
             ):
 
                 # Add this data to the orphans.
@@ -505,7 +505,7 @@ class Audit (object):
 
             # Add the data to the database.
             # This automatically merges the data if it already exists.
-            is_new = self.database.add(data)
+            is_new = self.database.add_data(data)
 
             # Was the data already present in the database?
             if not is_new:
@@ -534,7 +534,7 @@ class Audit (object):
                     assert resource.data_type == Data.TYPE_RESOURCE
 
                     # Send new resources to the Orchestrator.
-                    if self.database.has_key(resource.identity):
+                    if self.database.has_data_key(resource.identity):
                         self.send_info(resource)
 
             # Send the ACK.

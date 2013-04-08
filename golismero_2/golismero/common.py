@@ -363,6 +363,9 @@ class OrchestratorConfig (Configuration):
         # Run mode
         "run_mode": (str, "standalone"),
 
+        # UI mode
+        "ui_mode": (str, "console"),
+
         # Verbosity level
         "verbose": (int, 1),
 

@@ -26,7 +26,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["Data", "identity", "mergeable", "TempDataStorage"]
+__all__ = ["Data", "identity", "merge", "overwrite", "TempDataStorage"]
 
 from .db import Database
 from ...common import pickle
@@ -34,6 +34,7 @@ from ...common import pickle
 from collections import defaultdict
 from functools import partial
 from hashlib import md5
+from warnings import warn
 
 
 #------------------------------------------------------------------------------
@@ -70,7 +71,7 @@ class identity(property):
 
 
 #------------------------------------------------------------------------------
-class mergeable(property):
+class merge(property):
     """
     Decorator that marks properties that can be merged safely.
 
@@ -81,7 +82,7 @@ class mergeable(property):
     def is_mergeable_property(other):
 
         # TODO: benchmark!!!
-        ##return isinstance(other, mergeable) and other.fset is not None
+        ##return isinstance(other, merge) and other.fset is not None
 
         try:
             other.__get__
@@ -92,10 +93,74 @@ class mergeable(property):
 
 
 #------------------------------------------------------------------------------
+class overwrite(property):
+    """
+    Decorator that marks properties that can be merged safely.
+
+    It may not be combined with any other decorator, and may not be subclassed.
+    """
+
+    @staticmethod
+    def is_overwriteable_property(other):
+
+        # TODO: benchmark!!!
+        ##return isinstance(other, overwrite) and other.fset is not None
+
+        try:
+            other.__get__
+            other.is_overwriteable_property
+            return other.fset is not None
+        except AttributeError:
+            return False
+
+
+#------------------------------------------------------------------------------
+class _data_metaclass(type):
+    "Metaclass to validate the definitions of Data subclasses."
+
+    def __init__(cls, name, bases, namespace):
+        super(_data_metaclass, cls).__init__(name, bases, namespace)
+
+        # Skip checks for the base classes.
+        if name in ("Data", "Information", "Resource", "Vulnerability"):
+            return
+
+        # Check the data_type is not TYPE_ANY.
+        if not cls.data_type:
+            raise TypeError("Subclasses of Data MUST define their data_type!")
+
+        # Check the information_type is not INFORMATION_UNKNOWN.
+        if cls.data_type == Data.TYPE_INFORMATION:
+            if not cls.information_type:
+                raise TypeError("Subclasses of Information MUST define their information_type!")
+
+        # Check the resource_type is not RESOURCE_UNKNOWN.
+        elif cls.data_type == Data.TYPE_RESOURCE:
+            if not cls.resource_type:
+                raise TypeError("Subclasses of Resource MUST define their resource_type!")
+
+        # Check the vulnerability_type is not "generic".
+        elif cls.data_type == Data.TYPE_VULNERABILITY:
+            if cls.vulnerability_type == "generic":
+                raise TypeError("Subclasses of Vulnerability MUST define their vulnerability_type!")
+
+        # Check all @merge and @overwrite properties have setters.
+        for name, prop in cls.__dict__.iteritems():
+            if merge.is_mergeable_property(prop):
+                if prop.fset is None:
+                    raise TypeError("Properties tagged with @merge MUST have a setter!")
+            elif overwrite.is_overwriteable_property(prop):
+                if prop.fset is None:
+                    raise TypeError("Properties tagged with @overwrite MUST have a setter!")
+
+
+#------------------------------------------------------------------------------
 class Data(object):
     """
     Base class for all data.
     """
+
+    __metaclass__ = _data_metaclass
 
 
     #--------------------------------------------------------------------------
@@ -215,17 +280,67 @@ class Data(object):
         # Merge the links.
         self._merge_links(other)
 
+
+    # Merge a single property.
     def _merge_property(self, other, key):
+
+        # Determine if the property is mergeable or overwriteable, ignore otherwise.
         prop = getattr(other.__class__, key, None)
-        if prop is None or mergeable.is_mergeable_property(prop):
+
+        # Merge strategy.
+        if prop is None or merge.is_mergeable_property(prop):
+
+            # Get the original value.
+            my_value = getattr(self, key, None)
+
+            # Get the new value.
+            their_value = getattr(other, key, None)
+
+            # None to us means "not set".
+            if their_value is not None:
+
+                # If the original value is not set, overwrite it always.
+                if my_value is None:
+                    my_value = their_value
+
+                # Combine sets, dictionaries, lists and tuples.
+                elif isinstance(their_value, (set, dict)):
+                    my_value.update(their_value)
+                elif isinstance(their_value, list):
+                    my_value.extend(their_value)
+                elif isinstance(their_value, tuple):
+                    my_value = my_value + their_value
+
+                # Overwrite all other types.
+                else:
+                    my_value = their_value
+
+                # Set the new value.
+                try:
+                    setattr(self, key, my_value)
+                except AttributeError:
+                    if prop is not None:
+                        msg = "Mergeable read-only properties make no sense! Ignoring: %s.%s"
+                        msg %= (self.__class__.__name__, key)
+                        warn(msg)
+
+        # Overwrite strategy.
+        elif overwrite.is_overwriteable_property(prop):
+
+            # Get the resulting value.
             value = getattr(self, key, None)
             value = getattr(other, key, value)
-            if value is not None:
-                try:
-                    setattr(self, key, value)
-                except AttributeError:
-                    pass    # attribute is read only, ignore
 
+            # Set the resulting value.
+            try:
+                setattr(self, key, my_value)
+            except AttributeError:
+                msg = "Overwriteable read-only properties make no sense! Ignoring: %s.%s"
+                msg %= (self.__class__.__name__, key)
+                warn(msg)
+
+
+    # Merge links as the union of all links from both objects.
     def _merge_links(self, other):
         for data_type, subdict in other.__linked.iteritems():
             my_subdict = self.__linked[data_type]

@@ -38,18 +38,18 @@ class _Config (Singleton):
     """
     Current plugin configuration.
 
-    Whenever a plugin instances this object it will receive its own
+    Whenever a plugin accesses this object it will receive its own
     configuration, including the current audit's name and settings.
     """
 
     @property
     def audit_name(self):
-        "str -- Audit name."
+        "str -- Name of the audit."
         return self.__context.audit_name
 
     @property
     def audit_config(self):
-        "GlobalConfig -- Audit config."
+        "AuditConfig -- Parameters of the audit."
         return self.__context.audit_config
 
     @property
@@ -58,9 +58,24 @@ class _Config (Singleton):
         return self.__context.plugin_info
 
     @property
+    def plugin_name(self):
+        "str -- Plugin name."
+        return self.plugin_info.plugin_name
+
+    @property
+    def plugin_module(self):
+        "str -- Module where the plugin was loaded from."
+        return self.plugin_info.plugin_module
+
+    @property
+    def plugin_class(self):
+        "str -- Class name of the plugin."
+        return self.plugin_info.plugin_class
+
+    @property
     def plugin_config(self):
         "dict -- Plugin configuration."
-        return self.__context.plugin_info.plugin_config
+        return self.plugin_info.plugin_config
 
     # The following properties may only be used internally.
 

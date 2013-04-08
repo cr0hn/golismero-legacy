@@ -47,6 +47,11 @@ class PluginInfo (object):
     """
 
     @property
+    def plugin_name(self):
+        "Plugin name."
+        return self.__plugin_name
+
+    @property
     def descriptor_file(self):
         "Plugin descriptor file name."
         return self.__descriptor_file
@@ -103,9 +108,12 @@ class PluginInfo (object):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, descriptor_file):
+    def __init__(self, plugin_name, descriptor_file):
         """
         Load a plugin descriptor file.
+
+        :param plugin_name: Plugin name.
+        :type plugin_name: str
 
         :param descriptor_file: Descriptor file (with ".golismero" extension).
         :type descriptor_file: str
@@ -115,6 +123,9 @@ class PluginInfo (object):
         # TODO: Make sure no extra sections or variables are defined,
         # since most likely that means there's a typo in the file.
         #
+
+        # Store the plugin name
+        self.__plugin_name = plugin_name
 
         # Make sure the descriptor filename is an absolute path
         descriptor_file = path.abspath(descriptor_file)
@@ -293,7 +304,7 @@ class PriscillaPluginManager (Singleton):
 
                     # Parse the plugin descriptor file
                     try:
-                        plugin_info = PluginInfo(fname)
+                        plugin_info = PluginInfo(plugin_name, fname)
 
                         # Collect the plugin info
                         self.__plugins[plugin_name] = plugin_info
@@ -479,7 +490,10 @@ class PriscillaPluginManager (Singleton):
             return instance
 
         # Get the plugin info
-        info = self.__plugins[name]
+        try:
+            info = self.__plugins[name]
+        except KeyError:
+            raise KeyError("Plugin not found: %r" % name)
 
         # Get the plugin module file
         source = info.plugin_module

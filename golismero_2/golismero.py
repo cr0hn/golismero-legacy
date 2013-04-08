@@ -194,6 +194,7 @@ def cmdline_parser():
 
     gr_main = parser.add_argument_group("main options")
     gr_main.add_argument("-M", "--run-mode", metavar="MODE", help="run mode [default: standalone]", default="standalone", choices=OrchestratorConfig.RUN_MODE._values.keys())
+    gr_main.add_argument("--ui-mode", metavar="MODE", help="UI mode [default: console]", default="console")
     gr_main.add_argument("-v", "--verbose", action="count", default=1, help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
     gr_main.add_argument("--color", action="store_true", dest="colorize", help="use colors in console output [default]", default=True)
@@ -227,8 +228,8 @@ def cmdline_parser():
     gr_net.add_argument("--volatile-cache", action="store_false", dest="use_cache_db", help="use a volatile network cache [default in standalone mode]")
 
     gr_plugins = parser.add_argument_group("plugin options")
-    gr_plugins.add_argument("-P", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load", default=["global", "testing", "report", "ui/console"])
-    gr_plugins.add_argument("-NP", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load", default=["all"])
+    gr_plugins.add_argument("-P", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load", default=["all"])
+    gr_plugins.add_argument("-NP", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load", default=[])
     gr_plugins.add_argument("--max-process", metavar="N", type=int, help="maximum number of plugins to run concurrently [default: 8]", default=8)
     gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
     gr_plugins.add_argument("--plugin-list", action="store_true", help="list available plugins and quit")

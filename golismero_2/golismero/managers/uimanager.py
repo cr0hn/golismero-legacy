@@ -59,15 +59,12 @@ class UIManager (object):
         # Init and start notifier
         self.__notifier = UINotifier(orchestrator)
 
-        # Load UI plugins
-        m_plugins = PriscillaPluginManager().load_plugins(config.enabled_plugins,
-                                                          config.disabled_plugins,
-                                                          category = "ui")
+        # Load the selected UI plugin
+        p = PriscillaPluginManager().load_plugin_by_name("ui/%s" % config.ui_mode)
 
-        # Configure plugins to be it own the target of messages and add to notifier
-        for p in m_plugins.itervalues():
-            p._set_observer(self)
-            self.__notifier.add_plugin(p)
+        # Configure plugin to be its own the target of messages and add to notifier
+        p._set_observer(self)
+        self.__notifier.add_plugin(p)
 
 
     #----------------------------------------------------------------------

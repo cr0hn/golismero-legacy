@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Domain"]
 
-from ..data import identity, mergeable
+from ..data import identity, merge
 from .resource import Resource
 
 
@@ -89,7 +89,7 @@ class Domain(Resource):
         return self.__name
 
     #----------------------------------------------------------------------
-    @mergeable
+    @merge
     def addresses(self):
         """
         tuple(str) -- IP addresses
