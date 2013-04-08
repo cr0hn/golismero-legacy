@@ -6,7 +6,7 @@ __license__="""
 GoLismero 2.0 - The web knife.
 
 Authors:
-  Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
+  Daniel Garcia Garcia a.k.a cr0hn | cr0hn@cr0hn.com
   Mario Vilas | mvilas@gmail.com
 
 Golismero project site: http://code.google.com/p/golismero/
@@ -33,7 +33,7 @@ __all__ = ["launcher", "show_banner"]
 #----------------------------------------------------------------------
 # Metadata
 
-__author__ = "Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel) - dani@iniqua.com"
+__author__ = "Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel) - cr0hn@cr0hn.com"
 __copyright__ = "Copyright 2011-2013 - GoLismero Project"
 __credits__ = ["Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel)", "Mario Vilas (@Mario_Vilas)"]
 __maintainer__ = "cr0hn"

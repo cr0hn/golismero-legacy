@@ -4,7 +4,7 @@
 __license__="""
 GoLismero 2.0 - The web knife.
 
-Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
+Copyright (C) 2011-2013 - Daniel Garcia Garcia a.k.a cr0hn | cr0hn@cr0hn.com
 
 Golismero project site: http://code.google.com/p/golismero/
 Golismero project mail: golismero.project@gmail.com

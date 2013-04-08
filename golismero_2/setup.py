@@ -5,7 +5,7 @@ __license__="""
 GoLismero 2.0 - The web knife.
 
 Authors:
-  Daniel Garcia Garcia a.k.a cr0hn | dani@iniqua.com
+  Daniel Garcia Garcia a.k.a cr0hn | cr0hn@cr0hn.com
   Mario Vilas | mvilas@gmail.com
 
 Golismero project site: http://code.google.com/p/golismero/
