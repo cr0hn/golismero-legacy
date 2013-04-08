@@ -1,3 +1,8 @@
+# Dirs
+contrib/
+golismero_0.6.3/
+golismero_2/TODO.txt
+
 # Python and IDE extensions
 *.py[cod]
 *.wpu
