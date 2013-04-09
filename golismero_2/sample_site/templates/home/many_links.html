@@ -19,10 +19,12 @@
 							</tr>
 						</thead>
 						<tbody>
+							{% for l in urls %}
 							<tr>
-								<td><span class="label">Link1</span></td>
-								<td><a href="">aaa</a></td>
+								<td><span class="label">{{ l.0 }}</span></td>
+								<td><a href="{{l.1}}">{{l.1}}</a></td>
 							</tr>
+							{% endfor %}
 						</tbody>
 					</table>
 					</div>

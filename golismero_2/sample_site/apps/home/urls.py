@@ -35,6 +35,7 @@ urlpatterns = patterns('',
     url(r'^home/$', 'apps.home.views.home', name='home_alias'),
     url(r'^home/many_links/$', 'apps.home.views.many_links', name='home_many_links'),
     url(r'^home/dir_listing/$', 'apps.home.views.dir_listing', name='home_dir_listing'),
+    url(r'^home/links/', 'apps.home.views.phantom_links', name='home_phantom_links'),
 
     # Examples:
     # url(r'^$', 'sample_site.views.home', name='home'),
