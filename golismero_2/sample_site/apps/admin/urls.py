@@ -28,13 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 
-
-if __name__=='__main__':
-	pass
 from django.conf.urls import patterns, include, url
 
-urlpatterns = patterns('root',
-    url(r'^', include('apps.home.urls')),
-    url(r'^', include('apps.root_files.urls')),
-    url(r'^', include('apps.admin.urls')),
+urlpatterns = patterns('',
+    url(r'^admin/', 'apps.admin.views.admin_home', name='admin_home'),
 )

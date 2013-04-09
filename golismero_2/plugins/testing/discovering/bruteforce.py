@@ -280,7 +280,7 @@ class BackupSearcher(TestingPlugin):
         }
 
         # Load wordlist form config file
-        for wordlist_name, wordlist_path in Config.plugin_info.plugin_config.iteritems():
+        for wordlist_name, wordlist_path in Config.plugin_config.iteritems():
             l_tmp_wordlist = None
             if wordlist_name.startswith('wordlist_suffixes'):
                 l_tmp_wordlist = 'suffixes'
