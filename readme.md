@@ -1,3 +1,7 @@
+#### *We are looking for your suggestions and ideas for new versions of GoLismero. Any suggestions are welcome and considered!*
+
+*Contact us at: golismero.project@gmail.com*
+
 What is GoLISMERO?
 ==================
 
