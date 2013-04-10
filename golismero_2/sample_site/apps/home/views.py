@@ -45,7 +45,7 @@ def home(request):
 
 #----------------------------------------------------------------------
 def many_links(request):
-    """"""
+    """Generate view for 'many links' option menu."""
     ctx = {"option": "home", "suboption": "many_link"}
 
     ctx['urls'] = generate_random_url("/home/links/", randint(10,500))
@@ -54,7 +54,7 @@ def many_links(request):
 
 #----------------------------------------------------------------------
 def phantom_links(request):
-    """"""
+    """Receive the on-fly created links"""
     # Generator for random texts
     m_random_text = TextRandom(example_texs)
 
@@ -76,7 +76,7 @@ def phantom_links(request):
 
 #----------------------------------------------------------------------
 def dir_listing(request):
-    """"""
+    """Generate view for 'dir listing' option menu."""
     # Generate random links and files
     m_types = [
         ('  ' , 'unknown.gif'),

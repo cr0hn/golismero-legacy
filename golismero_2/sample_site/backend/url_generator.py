@@ -28,6 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from random import choice, randint
 from string import ascii_letters, digits
+from collections import OrderedDict
+
 
 #----------------------------------------------------------------------
 def generate_random_url(base, number=10, with_payload = True):
@@ -55,8 +57,7 @@ def generate_random_url(base, number=10, with_payload = True):
 	# Url extensions
 	m_extenstion = ["", ".asp", ".aspx", ".php", ".php3", ".jsp", ".do"]
 
-	m_return = []
-	m_return_append = m_return.append
+	m_return = OrderedDict()
 
 	# Generate
 	for i in xrange(number):
@@ -79,17 +80,11 @@ def generate_random_url(base, number=10, with_payload = True):
 
 		# Make the url
 		m_name_file = ''.join(choice(ascii_letters + digits) for i in xrange(randint(0,15)))
-		m_return_append(
-		    (
-		        i,
-		        "%s%s%s%s" %
-		        (
+		m_return[i] = "%s%s%s%s" % (
 		            base,
 		            m_name_file,
 		            choice(m_extenstion) if m_name_file else '',
 		            '?%s' % '&'.join(l_payload) if l_payload else ''
 		        )
-		    )
-		)
 
 	return m_return

@@ -19,10 +19,10 @@
 							</tr>
 						</thead>
 						<tbody>
-							{% for l in urls %}
+							{% for index, link in urls.items %}
 							<tr>
-								<td><span class="label">{{ l.0 }}</span></td>
-								<td><a href="{{l.1}}">{{l.1}}</a></td>
+								<td><span class="label">{{ index }}</span></td>
+								<td><a href="{{ link }}">{{ link }}</a></td>
 							</tr>
 							{% endfor %}
 						</tbody>
