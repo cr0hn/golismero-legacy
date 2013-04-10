@@ -1,9 +1,0 @@
-[Core]
-Name = Server Fingerprinting plugin
-Module = server_fingerprinting.py
-
-[Documentation]
-Description = Fingerprinter for server
-Author = Daniel Garcia Garcia (cr0hn)
-Version = 0.1
-Website = http://code.google.com/p/golismero/

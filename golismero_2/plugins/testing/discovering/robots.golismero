@@ -1,9 +1,0 @@
-[Core]
-Name = Robots.txt Analyzer
-Module = robots.py
-
-[Documentation]
-Description = Analyzes robots.txt files and extracts their links.
-Author = Daniel Garcia Garcia (cr0hn)
-Version = 0.1
-Website = http://code.google.com/p/golismero/
