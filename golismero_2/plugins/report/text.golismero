@@ -1,9 +1,0 @@
-[Core]
-Name = Text Report
-Module = text.py
-
-[Documentation]
-Description = Plugin to generate text reports
-Author = Daniel Garcia Garcia (cr0hn)
-Version = 0.1
-Website = http://code.google.com/p/golismero/

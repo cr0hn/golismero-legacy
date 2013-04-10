@@ -1,1 +1,0 @@
-All of the GoLismero plugins go here.

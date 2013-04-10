@@ -1,9 +1,0 @@
-[Core]
-Name = Web Spider
-Module = spider.py
-
-[Documentation]
-Description = Web spider plugin
-Author = Daniel Garcia Garcia (cr0hn)
-Version = 0.1
-Website = http://code.google.com/p/golismero/

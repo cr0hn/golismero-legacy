@@ -1,9 +1,0 @@
-[Core]
-Name = On Screen Report
-Module = screen.py
-
-[Documentation]
-Description = Plugin to display reports on screen.
-Author = Daniel Garcia Garcia (cr0hn)
-Version = 0.1
-Website = http://code.google.com/p/golismero/
