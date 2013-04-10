@@ -27,13 +27,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.plugin import ReportPlugin
-
-from golismero.api.data.data import Data
 from golismero.api.data.db import Database
+
+# Data types
+from golismero.api.data.data import Data
+from golismero.api.data.resource.url import Url
 from golismero.api.data.resource.resource import Resource
 
 # XXX HACK
-from golismero.main.console import colorize
+from golismero.main.console import colorize, colorize_substring
 
 from collections import defaultdict
 
@@ -69,9 +71,6 @@ class ScreenReport(ReportPlugin):
         # Get access to the database API.
         db = Database()
 
-        # Dictionary where to keep all the counters.
-        count = defaultdict(int)
-
         # ----------------------------------------
         # Header
         # ----------------------------------------
@@ -80,9 +79,10 @@ class ScreenReport(ReportPlugin):
         # ----------------------------------------
         # Discovered URLs
         # ----------------------------------------
-        print "\n- %s - \n"% colorize("Spidered URLs", "yellow")
-        count["url"] = db.count(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
-        if count["url"] < 200:   # increase as you see fit...
+        print "\n- %s - \n"% colorize("URLs", "yellow")
+        # Get each resourcd
+        m_len_urls = db.count(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
+        if m_len_urls < 200:   # increase as you see fit...
             # fast but memory consuming method
             urls = db.get_many( db.keys(Data.TYPE_RESOURCE, Resource.RESOURCE_URL) )
         else:
@@ -90,7 +90,45 @@ class ScreenReport(ReportPlugin):
             urls = db.iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
 
         for u in urls:
-            print "+ %s" % str(u)
+            # Format to print:
+            # [ 1 ] www.website.com/Param1=Value1&Param2=Value2
+            #       | Method: GET              |
+            #       |------PARAMS--------------|
+            #       | Param1  = Value1         |
+            #       | Param2  = Value2         |
+            #       |------VULNERABILITES------|
+            #       |-----------SQLi-----------|
+            #       | Vulnerable param: Param2 |
+            #       | Payload: or 1=1          |
+            #       |__________________________|
+            #
+            # [ 2 ] www.website.com/Param1
+            #       | Method: GET      |
+            #       |------PARAMS------|
+            #       | Param1  = Value1 |
+            #       | Param2  = Value2 |
+            #       |__________________|
+            #
+            #
+            if not isinstance(u, Url):
+                continue
+
+            l_url = None # Url to print
+
+            # If vulnerability type 'url_suspicious' exits:
+            # - If there is only one vuln, it replace the URL.
+            # - If there is more than one, vuln will be treated as
+            #   normal vuln
+            l_url_suspicious = u.associated_vulnerabilities_by_category(cat_name="information_disclosure/url_disclosure")
+            if not l_url_suspicious and len(l_url_suspicious) == 0: # There is 'url_suspicious' vulns and only one result
+                print "aa"
+                l_url = colorize_substring(l_url_suspicious[0].url, l_url_suspicious[0].substring, l_url_suspicious[0].severity)
+            else:
+                l_url = u.url
+
+            #
+            #
+            print "+ %s" % str(l_url)
             for vuln in u.associated_vulnerabilities:
                 print "  |- %s" % str(vuln)
 
@@ -106,4 +144,4 @@ class ScreenReport(ReportPlugin):
         print "\n- %s -\n" % colorize("Summary", "yellow")
 
         # Urls
-        print "+ Total URLs: %s\n\n" % colorize(str(count['url']), "yellow")
+        print "+ Total URLs: %s\n\n" % colorize(str(m_len_urls), "yellow")
