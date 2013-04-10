@@ -74,8 +74,13 @@ class _Config (Singleton):
 
     @property
     def plugin_config(self):
-        "dict -- Plugin configuration."
+        "dict(str -> str) -- Plugin configuration."
         return self.plugin_info.plugin_config
+
+    @property
+    def plugin_extra_config(self):
+        "dict(dict(str -> str)) -- Plugin extra configuration."
+        return self.plugin_info.plugin_extra_config
 
     # The following properties may only be used internally.
 
