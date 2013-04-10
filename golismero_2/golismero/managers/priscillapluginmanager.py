@@ -72,6 +72,11 @@ class PluginInfo (object):
         return self.__plugin_config
 
     @property
+    def plugin_extra_config(self):
+        "Plugin extra configuration."
+        return self.__plugin_extra_config
+
+    @property
     def display_name(self):
         "Display name to be shown to the user."
         return self.__display_name
@@ -176,6 +181,14 @@ class PluginInfo (object):
             self.__plugin_config = dict( parser.items("Configuration") )
         except Exception:
             self.__plugin_config = dict()
+
+        # Load the plugin extra configuration
+        self.__plugin_extra_config = dict()
+        for section in parser.sections():
+            section = section.title()
+            if section not in ("Core", "Documentation", "Configuration"):
+                options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
+                self.__plugin_extra_config[section] = options
 
         # Sanitize the plugin module pathname
         if not plugin_module.endswith(".py"):
