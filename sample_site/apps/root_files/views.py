@@ -27,13 +27,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-from django.shortcuts import render_to_response
+from backend.http import render_to_response_random_server
 from django.template import RequestContext
 
 def robots_txt(request):
 
-    return render_to_response('root_files/robots.txt', context_instance=RequestContext(request))
+    return render_to_response_random_server('root_files/robots.txt', context_instance=RequestContext(request))
 
 def error_log(request):
 
-    return render_to_response('root_files/error_log', context_instance=RequestContext(request))
+    return render_to_response_random_server('root_files/error_log', context_instance=RequestContext(request))

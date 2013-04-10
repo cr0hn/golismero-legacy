@@ -27,20 +27,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-
+from backend.http import render_to_response_random_server
 from backend.url_generator import generate_random_url
 from backend.text import TextRandom, example_texs
-from random import randint, random
-#from datetime.datetime import fromtimestamp
+from random import Random, randint, random
 import datetime
 
 def home(request):
     ctx = {"option": "home", "suboption": "home"}
 
-    return render_to_response('home/home.html', ctx, context_instance=RequestContext(request))
+    return render_to_response_random_server('home/home.html', ctx, context_instance=RequestContext(request))
 
 
 #----------------------------------------------------------------------
@@ -50,7 +48,7 @@ def many_links(request):
 
     ctx['urls'] = generate_random_url("/home/links/", randint(10,500))
 
-    return render_to_response('home/many_links.html', ctx, context_instance=RequestContext(request))
+    return render_to_response_random_server('home/many_links.html', ctx, context_instance=RequestContext(request))
 
 #----------------------------------------------------------------------
 def phantom_links(request):
@@ -72,7 +70,7 @@ def phantom_links(request):
 
     ctx = {"option": "home", "suboption": "many_link", 'random_texts' : m_texts, 'cols': m_cols, 'spans': 12/len(m_cols)}
 
-    return render_to_response('home/phantom_links.html', ctx, context_instance=RequestContext(request))
+    return render_to_response_random_server('home/phantom_links.html', ctx, context_instance=RequestContext(request))
 
 #----------------------------------------------------------------------
 def dir_listing(request):
@@ -87,19 +85,23 @@ def dir_listing(request):
 
     m_urls = []
     m_urls_append = m_urls.append
-    for x in xrange(randint(2,50)):
-        l_type = randint(0,len(m_types) - 1)
+    m_rand = Random()
+    for x in xrange(m_rand.randint(2,50)):
+        l_type = m_rand.randint(0,len(m_types) - 1)
         # [IMG, ALT, URL, DATE, SIZE]
+        l_date = datetime.datetime.fromtimestamp(m_rand.randint(10000000,1350000000)).strftime("%Y-%m-%d %H:%M")
+        l_url = generate_random_url("/home/links/", 1 , False)[0]
+
         m_urls_append(
             [
                 m_types[l_type][1],
                 m_types[l_type][0],
-                generate_random_url("/home/links/", 1 , False)[0][1],
-                datetime.datetime.fromtimestamp(randint(0,135) + 100000000).strftime("%Y-%m-%d %H:%M"),
-                '{:.2f}'.format(random() * 10)
+                l_url,
+                l_date,
+                '{:.2f}'.format(m_rand.random() * 10)
             ]
         )
 
     ctx = {'urls':m_urls}
 
-    return render_to_response('home/dir_listing.html', ctx, context_instance=RequestContext(request))
+    return render_to_response_random_server('home/dir_listing.html', ctx, context_instance=RequestContext(request))
