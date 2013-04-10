@@ -13,8 +13,7 @@ Every time we face a *new URL*, would not it be great to have *easily* and *quic
 Learning with examples
 ======================
 
-*Remember: For execute GoLismero you need python 2.7.X or abobe.*
------------------------------------------------------------------
+### *Remember: For execute GoLismero you need python 2.7.X or abobe.*
 
 Below are several examples and case studies, which are the best way to learn to use a security tool.
 
