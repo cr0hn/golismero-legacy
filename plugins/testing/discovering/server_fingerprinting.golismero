@@ -8,5 +8,24 @@ Author = Daniel Garcia Garcia (cr0hn)
 Version = 0.1
 Website = http://code.google.com/p/golismero/
 
-[Wordlist]
-wordlist = golismero/webserver_banners.txt
+[Wordlists]
+accept-range            = accept-range.fdb
+banner                  = banner.fdb
+cache-control           = cache-control.fdb
+connection              = connection.fdb
+content-type            = content-type.fdb
+etag-legth              = etag-legth.fdb
+etag-quotes             = etag-quotes.fdb
+header-capitalafterdash = header-capitalafterdash.fdb
+header-order            = header-order.fdb
+header-space            = header-space.fdb
+htaccess-realm          = htaccess-realm.fdb
+pragma                  = pragma.fdb
+protocol-name           = protocol-name.fdb
+protocol-version        = protocol-version.fdb
+statuscode              = statuscode.fdb
+statustext              = statustext.fdb
+vary-capitalize         = vary-capitalize.fdb
+vary-delimiter          = vary-delimiter.fdb
+vary-order              = vary-order.fdb
+x-powered-by            = x-powered-by.fdb

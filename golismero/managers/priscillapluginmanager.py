@@ -181,11 +181,10 @@ class PluginInfo (object):
             self.__plugin_config = {}
             for sec in parser.sections():
                 l_sec = sec.lower()
-                if l_sec == "documentation" or l_sec == "core":
+                if l_sec not in ("documentation" , "core"):
                     continue
                 self.__plugin_config[sec] = dict( parser.items(sec) )
         except Exception, e:
-            print e.message
             self.__plugin_config = dict()
 
         # Load the plugin extra configuration
