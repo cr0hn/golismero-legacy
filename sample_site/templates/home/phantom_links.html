@@ -14,5 +14,19 @@
 		</div>
 		{% endfor %}
 	</div>
+	<br />
+	<div class="container">
+
+		<ul class="thumbnails">
+		{% for i in imgs %}
+			<li class="span{{imgspans}}">
+					<img src="/static/images/phantom/nasa{{i}}.jpg" alt="Twitter">
+			</li>
+		{% endfor %}
+		</ul>
+
+		<p>* Images from NASA</p>
+
+	</div>
 
 {% endblock %}

@@ -65,10 +65,20 @@ def phantom_links(request):
     # Generate columns
     m_cols = []
     m_cols_append = m_cols.append
-    for i in xrange(randint(1,6)):
-        m_cols_append(m_random_text.generate(randint(2,10)))
+    m_cols_num = randint(0,8)
+    for i in xrange(m_cols_num):
+        m_cols_append(m_random_text.generate(randint(2,60/m_cols_num)))
+    m_cols_num = m_cols_num if m_cols_num > 0 else 1
 
-    ctx = {"option": "home", "suboption": "many_link", 'random_texts' : m_texts, 'cols': m_cols, 'spans': 12/len(m_cols)}
+    # Generate image columns
+    m_imgs = []
+    m_imgs_append = m_imgs.append
+    m_imgs_num = randint(0,8)
+    for i in xrange(m_imgs_num):
+        m_imgs_append(randint(1,9))
+    m_imgs_num = m_imgs_num if m_imgs_num > 0 else 1
+
+    ctx = {"option": "home", "suboption": "many_link", 'random_texts' : m_texts, 'cols': m_cols, 'spans': 12/m_cols_num, 'imgs': m_imgs, 'imgspans' : 12/m_imgs_num}
 
     return render_to_response_random_server('home/phantom_links.html', ctx, context_instance=RequestContext(request))
 
