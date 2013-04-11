@@ -77,8 +77,9 @@ def phantom_links(request):
     for i in xrange(m_imgs_num):
         m_imgs_append(randint(1,9))
     m_imgs_num = m_imgs_num if m_imgs_num > 0 else 1
+    m_image_borders = ["rounded", "circle", "polaroid"]
 
-    ctx = {"option": "home", "suboption": "many_link", 'random_texts' : m_texts, 'cols': m_cols, 'spans': 12/m_cols_num, 'imgs': m_imgs, 'imgspans' : 12/m_imgs_num}
+    ctx = {"option": "home", "suboption": "many_link", 'random_texts' : m_texts, 'cols': m_cols, 'spans': 12/m_cols_num, 'imgs': m_imgs, 'imgspans' : 12/m_imgs_num, 'img_borders': m_image_borders}
 
     return render_to_response_random_server('home/phantom_links.html', ctx, context_instance=RequestContext(request))
 

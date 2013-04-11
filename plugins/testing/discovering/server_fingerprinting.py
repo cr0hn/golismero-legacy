@@ -64,3 +64,9 @@ class ServerFingerprinting(TestingPlugin):
             raise TypeError("Expected Domain, got %s instead" % type(info))
 
         return
+        # Load wordlists
+        m_wordlist = WordListAPI().get_wordlist(Config.plugin_config['wordlist'])
+
+        #
+
+        return

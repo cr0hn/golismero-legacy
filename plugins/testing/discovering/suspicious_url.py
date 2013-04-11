@@ -69,6 +69,7 @@ class SuspiciousURLPlugin(TestingPlugin):
         # Check if URL is in scope
         if not is_in_scope(m_url):
             return
+        return
 
         # Load wordlists
         m_wordlist = WordListAPI().get_wordlist(Config.plugin_config['wordlist'])
