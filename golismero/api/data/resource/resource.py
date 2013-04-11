@@ -110,7 +110,6 @@ class Resource(Data):
 
 
     #----------------------------------------------------------------------
-    @property
     def associated_vulnerabilities_by_category(self, cat_name = None):
         """
         Get accociated vulnerabilites by category.
@@ -124,7 +123,6 @@ class Resource(Data):
 
 
     #----------------------------------------------------------------------
-    @property
     def associated_informations_by_category(self, information_type = None):
         """
         Get accociated information by category.
