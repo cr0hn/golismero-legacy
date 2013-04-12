@@ -328,8 +328,8 @@ class Data(object):
         elif overwrite.is_overwriteable_property(prop):
 
             # Get the resulting value.
-            value = getattr(self, key, None)
-            value = getattr(other, key, value)
+            my_value = getattr(self, key, None)
+            my_value = getattr(other, key, my_value)
 
             # Set the resulting value.
             try:
