@@ -176,16 +176,10 @@ class PluginInfo (object):
         except Exception:
             self.__website     = "http://code.google.com/p/golismero/"
 
-        # Load the plugin configuration"
+        # Load the plugin configuration
         try:
-            self.__plugin_config = {}
-            for sec in parser.sections():
-                l_sec = sec.lower()
-                if l_sec == "documentation" or l_sec == "core":
-                    continue
-                self.__plugin_config[sec] = dict( parser.items(sec) )
-        except Exception, e:
-            print e.message
+            self.__plugin_config = dict( parser.items("Configuration") )
+        except Exception:
             self.__plugin_config = dict()
 
         # Load the plugin extra configuration

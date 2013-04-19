@@ -114,10 +114,10 @@ class ParallelBruter(threading.Thread):
                         Logger.log_more_verbose("Bruteforcer - Discovered partial url: '%s'!!" % l_url)
 
                         # Send_ response, HTML and URL to kernel.
-                        #self.send_info(Url(l_url))
-                        #self.send_info(p)
-                        #if not p.information:
-                        #    self.send_info(p.information)
+                        #m_return = [Url(l_url), p]
+                        #if p.information:
+                        #    m_return.append(p.information)
+                        #return m_return
 
 
 #----------------------------------------------------------------------

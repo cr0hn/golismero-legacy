@@ -115,7 +115,7 @@ class Notifier (object):
     #----------------------------------------------------------------------
     def notify(self, message):
         """
-        Dispatch message information to the plugins. Ignore other message types.
+        Dispatch messages to the plugins.
 
         :param message: A message to send to plugins
         :type message: Message
@@ -123,53 +123,56 @@ class Notifier (object):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
-        # Keep count of how many messages are sent
+        # Keep count of how many messages are sent.
         count = 0
 
         try:
 
-            # Info messages are sent to the send_info() method
+            # Info messages are sent to the send_info() method.
             if message.message_type == MessageType.MSG_TYPE_DATA:
-                m_plugins_to_notify = set()
+                audit_name = message.audit_name
+                for data in message.message_info:
+                    m_plugins_to_notify = set()
 
-                # Plugins that expect all types of info
-                m_plugins_to_notify.update(self._notification_info_all)
+                    # Plugins that expect all types of info.
+                    m_plugins_to_notify.update(self._notification_info_all)
 
-                # Plugins that expect this type of info
-                # TODO: should vulnerability types be processed like trees?
-                m_type = None
-                if message.message_info.data_type == Data.TYPE_INFORMATION:
-                    m_type = message.message_info.information_type
-                elif message.message_info.data_type == Data.TYPE_RESOURCE:
-                    m_type = message.message_info.resource_type
-                elif message.message_info.data_type == Data.TYPE_VULNERABILITY:
-                    m_type = message.message_info.vulnerability_type
+                    # Plugins that expect this type of info.
+                    # TODO: should vulnerability types be processed like trees?
+                    m_type = None
+                    data_type = data.data_type
+                    if data_type == Data.TYPE_INFORMATION:
+                        m_type = data.information_type
+                    elif data_type == Data.TYPE_RESOURCE:
+                        m_type = data.resource_type
+                    elif data_type == Data.TYPE_VULNERABILITY:
+                        m_type = data.vulnerability_type
 
-                if m_type in self._notification_info_map:
-                    m_plugins_to_notify.update(self._notification_info_map[m_type])
+                    if m_type in self._notification_info_map:
+                        m_plugins_to_notify.update(self._notification_info_map[m_type])
 
-                # Dispatch message info to each plugin
-                for plugin in m_plugins_to_notify:
-                    self.send_info(plugin, message.audit_name, message.message_info)
-                    count += 1
+                    # Dispatch message info to each plugin.
+                    for plugin in m_plugins_to_notify:
+                        self.dispatch_info(plugin, audit_name, data)
+                        count += 1
 
-            # Control messages are sent to the send_msg() method
+            # Control messages are sent to the send_msg() method.
             else:
                 for plugin in self._notification_msg_list:
-                    self.send_msg(plugin, message)
+                    self.dispatch_msg(plugin, message)
                     count += 1
 
-        # On error log the traceback
+        # On error log the traceback.
         except Exception:
             ##Logger.log_error("Error sending message to plugins: %s" % format_exc())
             raise
 
-        # Return the count of messages sent
+        # Return the count of messages sent.
         return count
 
 
     #----------------------------------------------------------------------
-    def send_info(self, plugin, audit_name, message_info):
+    def dispatch_info(self, plugin, audit_name, message_info):
         """
         Send information to the plugins.
 
@@ -186,7 +189,7 @@ class Notifier (object):
 
 
     #----------------------------------------------------------------------
-    def send_msg(self, plugin, message):
+    def dispatch_msg(self, plugin, message):
         """
         Send messages to the plugins.
 
@@ -255,7 +258,7 @@ class AuditNotifier(Notifier):
 
 
     #----------------------------------------------------------------------
-    def send_info(self, plugin, audit_name, message_info):
+    def dispatch_info(self, plugin, audit_name, message_info):
         """
         Send information to the plugins.
 
@@ -272,7 +275,7 @@ class AuditNotifier(Notifier):
 
 
     #----------------------------------------------------------------------
-    def send_msg(self, plugin, message):
+    def dispatch_msg(self, plugin, message):
         """
         Send messages to the plugins.
 
@@ -320,7 +323,7 @@ class UINotifier(Notifier):
 
 
     #----------------------------------------------------------------------
-    def send_info(self, plugin, audit_name, message_info):
+    def dispatch_info(self, plugin, audit_name, message_info):
         """
         Send information to the plugins.
 
@@ -337,7 +340,7 @@ class UINotifier(Notifier):
 
 
     #----------------------------------------------------------------------
-    def send_msg(self, plugin, message):
+    def dispatch_msg(self, plugin, message):
         """
         Send messages to the plugins.
 

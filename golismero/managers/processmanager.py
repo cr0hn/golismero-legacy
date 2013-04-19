@@ -36,7 +36,8 @@ from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 
 from imp import load_source
-from multiprocessing import Manager, Process
+from multiprocessing import Manager
+from multiprocessing import Process as _Original_Process
 from multiprocessing.pool import Pool
 from os import getpid
 from warnings import catch_warnings, warn
@@ -45,7 +46,7 @@ from sys import exit, stdout, stderr   # the real std handles, not hooked
 
 
 #------------------------------------------------------------------------------
-class Process(Process):
+class Process(_Original_Process):
     """
     A customized process that forces the 'daemon' property to False.
     """
@@ -137,112 +138,79 @@ def _bootstrap(context, func, argv, argd):
     try:
         try:
             try:
+                plugin_warnings = []
+                try:
 
-                # Catch all warnings.
-                with catch_warnings(record=True) as plugin_warnings:
+                    # Catch all warnings.
+                    with catch_warnings(record=True) as plugin_warnings:
 
-                    # Configure the plugin.
-                    Config._context = context
+                        # Configure the plugin.
+                        Config._context = context
 
-                    # TODO: hook stdout and stderr to catch print statements
+                        # TODO: hook stdout and stderr to catch print statements
 
-                    # Clear the local network cache for this process.
-                    NetworkCache()._clear_local_cache()
+                        # Clear the local network cache for this process.
+                        NetworkCache()._clear_local_cache()
 
-                    # Initialize the temporary data storage for this run.
-                    TempDataStorage.on_run()
+                        # Initialize the temporary data storage for this run.
+                        TempDataStorage.on_run()
 
-                    # Create the OOP observer so the plugin can talk back.
-                    observer = OOPObserver(context)
-
-                    # Try to get the plugin from the cache.
-                    cache_key = (context.plugin_module, context.plugin_class)
-                    try:
-                        cls = plugin_class_cache[cache_key]
-
-                    # If not in the cache, load the class.
-                    except KeyError:
-
-                        # Load the plugin module.
-                        mod = load_source(
-                            "_plugin_tmp_" + context.plugin_class.replace(".", "_"),
-                            context.plugin_module)
-
-                        # Get the plugin class.
-                        cls = getattr(mod, context.plugin_class)
-
-                        # Cache the plugin class.
-                        plugin_class_cache[cache_key] = cls
-
-                    # Instance the plugin.
-                    instance = cls()
-
-                    # Set the OOP observer for the plugin.
-                    instance._set_observer(observer)
-
-                    # Call the callback method.
-                    try:
-                        retval = getattr(instance, func)(*argv, **argd)
-
-                        # If there's a return value, assume it's a list of data.
-                        if retval is not None:
-                            for data in retval:
-                                try:
-                                    instance.send_info(data)
-                                except Exception, e:
-                                    context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                                     message_code = MessageCode.MSG_CONTROL_ERROR,
-                                                     message_info = (e.message, format_exc()))
-
-                    # If there are pending data objects, send them.
-                    finally:
+                        # Try to get the plugin from the cache.
+                        cache_key = (context.plugin_module, context.plugin_class)
                         try:
-                            failed = set()
-                            while True:
-                                pending = TempDataStorage.pending
-                                if failed:
-                                    pending = set(pending)
-                                    pending.difference_update(failed)
-                                if not pending:
-                                    break
-                                for data in pending:
+                            cls = plugin_class_cache[cache_key]
+
+                        # If not in the cache, load the class.
+                        except KeyError:
+
+                            # Load the plugin module.
+                            mod = load_source(
+                                "_plugin_tmp_" + context.plugin_class.replace(".", "_"),
+                                context.plugin_module)
+
+                            # Get the plugin class.
+                            cls = getattr(mod, context.plugin_class)
+
+                            # Cache the plugin class.
+                            plugin_class_cache[cache_key] = cls
+
+                        # Instance the plugin.
+                        instance = cls()
+
+                        # Call the callback method.
+                        result = None
+                        try:
+                            result = getattr(instance, func)(*argv, **argd)
+                        finally:
+
+                            # Return value is a list of data for recv_info().
+                            if func == "recv_info":
+
+                                # Validate and sanitize the result data.
+                                result = TempDataStorage.on_finish(result)
+
+                                # Send the result data to the Orchestrator.
+                                if result:
                                     try:
-                                        instance.send_info(data)
+                                        context.send_msg(message_type = MessageType.MSG_TYPE_DATA,
+                                                         message_code = MessageCode.MSG_DATA,
+                                                         message_info = result)
                                     except Exception, e:
-                                        failed.add(data)
                                         context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                                                          message_code = MessageCode.MSG_CONTROL_ERROR,
                                                          message_info = (e.message, format_exc()))
-                            del failed
-
-                        # Warn about orphan data objects.
-                        # TODO: maybe save them somewhere?
-                        finally:
-                            try:
-                                try:
-                                    orphans = TempDataStorage.orphans
-                                    if orphans:
-                                        message = "\n\t".join(str(data) for data in orphans)
-                                        message = "Data objects created but not sent:\n\t%s" % message
-                                        warn(message, RuntimeWarning)
-                                except Exception, e:
-                                    context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                                     message_code = MessageCode.MSG_CONTROL_ERROR,
-                                                     message_info = (e.message, format_exc()))
-
-                            # Clear the temp data storage.
-                            finally:
-                                TempDataStorage.on_finish()
 
                 # Send plugin warnings to the Orchestrator.
-                try:
-                    context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                     message_code = MessageCode.MSG_CONTROL_WARNING,
-                                     message_info = plugin_warnings)
-                except Exception, e:
-                    context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                     message_code = MessageCode.MSG_CONTROL_ERROR,
-                                     message_info = (e.message, format_exc()))
+                finally:
+                    if plugin_warnings:
+                        try:
+                            context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                                             message_code = MessageCode.MSG_CONTROL_WARNING,
+                                             message_info = plugin_warnings)
+                        except Exception, e:
+                            context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                                             message_code = MessageCode.MSG_CONTROL_ERROR,
+                                             message_info = (e.message, format_exc()))
 
             # Tell the Orchestrator there's been an error.
             except Exception, e:
@@ -250,11 +218,20 @@ def _bootstrap(context, func, argv, argd):
                                  message_code = MessageCode.MSG_CONTROL_ERROR,
                                  message_info = (e.message, format_exc()))
 
-        # No matter what happens, send back an ACK.
+        # Send back an ACK.
         finally:
-            context.send_ack()
+            ack_identity = None
+            try:
+                if func == "recv_info":
+                    if argv:
+                        ack_identity = argv[0]
+                    else:
+                        ack_identity = argd["information"]
+            except Exception, e:
+                warn(e.message, RuntimeWarning)
+            context.send_ack(ack_identity)
 
-    # Tell the Orchestrator we need to stop.
+    # On keyboard interrupt or fatal error, tell the Orchestrator we need to stop.
     except:
 
         # Send a message to the Orchestrator to stop.
@@ -352,17 +329,21 @@ class PluginContext (object):
 
 
     #----------------------------------------------------------------------
-    def send_ack(self):
+    def send_ack(self, ack_identity = None):
         """
         Send ACK messages from the plugins to the orchestrator.
+
+        :param ack_identity: Optional, identity hash of the data being acknowledged.
+        :type ack_identity: str | None
         """
         self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                       message_code = MessageCode.MSG_CONTROL_ACK,
+                      message_info = ack_identity,
                       priority = MessagePriority.MSG_PRIORITY_LOW)
 
 
     #----------------------------------------------------------------------
-    def send_msg(self, message_type = MessageType.MSG_TYPE_DATA,
+    def send_msg(self, message_type = 0,
                        message_code = 0,
                        message_info = None,
                        priority = MessagePriority.MSG_PRIORITY_MEDIUM):
@@ -408,10 +389,6 @@ class PluginContext (object):
         :param message: Message to send
         :type message: Message
         """
-
-        # Notify of sent data to the temporary data storage.
-        if message.message_type == MessageType.MSG_TYPE_DATA:
-            TempDataStorage.on_send(message.message_info)
 
         # Hack for urgent messages: if we're in the same process
         # as the Orchestrator, skip the queue and dispatch them now.
@@ -522,61 +499,6 @@ class PluginContext (object):
 
         # Send the MSG_RPC_BULK call.
         self.async_remote_call(MessageCode.MSG_RPC_BULK, rpc_code, *arguments)
-
-
-#------------------------------------------------------------------------------
-class OOPObserver (object):
-    """
-    Observer that proxies messages across different processes.
-    """
-
-    def __init__(self, context):
-        """
-        :param context: Execution context for the OOP observer.
-        :type context: PluginContext
-        """
-        super(OOPObserver, self).__init__()
-        self.__context = context
-
-    def send_info(self, data):
-        """
-        Send data from the plugins to the orchestrator.
-
-        :param data: Data to send
-        :type data: Data
-        """
-        return self.send_msg(message_type = MessageType.MSG_TYPE_DATA,
-                             message_info = data)
-
-    def send_msg(self, message_type = MessageType.MSG_TYPE_DATA,
-                       message_code = 0,
-                       message_info = None,
-                       priority = MessagePriority.MSG_PRIORITY_MEDIUM):
-        """
-        Send messages from the plugins to the orchestrator.
-
-        :param message_type: specifies the type of message.
-        :type mesage_type: int -- specified in a constant of Message class.
-
-        :param message_code: specifies the code of message.
-        :type message_code: int -- specified in a constant of Message class.
-
-        :param message_info: the payload of the message.
-        :type message_info: object -- type must be resolved at run time.
-        """
-        return self.__context.send_msg(message_type = message_type,
-                                       message_code = message_code,
-                                       message_info = message_info,
-                                           priority = priority)
-
-    def send_raw_msg(self, message):
-        """
-        Send raw messages from the plugins to the orchestrator.
-
-        :param message: Message to send
-        :type message: Message
-        """
-        return self.__context.send_raw_msg(message)
 
 
 #------------------------------------------------------------------------------

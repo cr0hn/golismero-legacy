@@ -63,7 +63,7 @@ class Plugin (object):
         :param inputParams: input parameters to check
         :type inputParams: AuditConfig
         """
-        raise NotImplementedError("All plugins must implement this method!")
+        raise NotImplementedError("Plugin must implement this method!")
 
 
     #----------------------------------------------------------------------
@@ -71,7 +71,7 @@ class Plugin (object):
         """Get the help message for this plugin."""
         text = Config.plugin_info.description
         if not text:
-            raise NotImplementedError("All plugins must implement this method!")
+            raise NotImplementedError("Plugin must implement this method!")
         return text
 
 
@@ -99,7 +99,7 @@ class InformationPlugin (Plugin):
         :param info: input info to process
         :type info: Data
         """
-        raise NotImplementedError("All plugins must implement this method!")
+        raise NotImplementedError("Plugin must implement this method!")
 
 
     #----------------------------------------------------------------------
@@ -112,7 +112,27 @@ class InformationPlugin (Plugin):
 
         :returns: list -- list with constants
         """
-        raise NotImplementedError("All plugins must implement this method!")
+        raise NotImplementedError("Plugin must implement this method!")
+
+
+#------------------------------------------------------------------------------
+class AdvancedPlugin (InformationPlugin):
+    """
+    Advanced plugins are tipically internal plugins, either of the UI type
+    or the Global type. These are not usually coded by users, but only
+    shipped with GoLismero itself.
+    """
+
+
+    #----------------------------------------------------------------------
+    def recv_msg(self, message):
+        """
+        Callback method to receive control messages to be processed.
+
+        :param message: incoming message to process
+        :type message: Message
+        """
+        raise NotImplementedError("Plugin must implement this method!")
 
 
     #----------------------------------------------------------------------
@@ -124,16 +144,13 @@ class InformationPlugin (Plugin):
 
 
     #----------------------------------------------------------------------
-    def send_info(self, information):
+    def send_msg(self, message):
         """
-        Plugins call this method to send information back to GoLismero.
+        Plugins call this method to send messages back to GoLismero.
 
         Do not override this method!
         """
-        if not isinstance(information, Data):
-            raise ValueError("Expected Data, got %r instead" % type(information))
-
-        self.__observer_ref.send_info(information)
+        self.__observer_ref.send_msg(message)
 
 
 #------------------------------------------------------------------------------
@@ -148,7 +165,7 @@ class TestingPlugin (InformationPlugin):
 
 
 #------------------------------------------------------------------------------
-class UIPlugin (InformationPlugin):
+class UIPlugin (AdvancedPlugin):
     """
     User Interface plugins control the way in which the user interacts with GoLismero.
 
@@ -158,19 +175,8 @@ class UIPlugin (InformationPlugin):
     PLUGIN_TYPE = Plugin.PLUGIN_TYPE_UI
 
 
-    #----------------------------------------------------------------------
-    def recv_msg(self, message):
-        """
-        Callback method to receive control messages to be processed.
-
-        :param message: incoming message to process
-        :type message: Message
-        """
-        raise NotImplementedError("All UI plugins must implement this method!")
-
-
 #------------------------------------------------------------------------------
-class GlobalPlugin (InformationPlugin):
+class GlobalPlugin (AdvancedPlugin):
     """
     Global plugins can control all stages of an audit.
 
@@ -180,17 +186,6 @@ class GlobalPlugin (InformationPlugin):
     """
 
     PLUGIN_TYPE = Plugin.PLUGIN_TYPE_GLOBAL
-
-
-    #----------------------------------------------------------------------
-    def recv_msg(self, message):
-        """
-        Callback method to receive control messages to be processed.
-
-        :param message: incoming message to process
-        :type message: Message
-        """
-        raise NotImplementedError("All UI plugins must implement this method!")
 
 
 #------------------------------------------------------------------------------
@@ -212,7 +207,7 @@ class ReportPlugin (Plugin):
 
         :returns: bool - True if this plugin supports the format, False otherwise.
         """
-        raise NotImplementedError("All report plugins must implement this method!")
+        raise NotImplementedError("Plugin must implement this method!")
 
 
     #----------------------------------------------------------------------
@@ -223,4 +218,4 @@ class ReportPlugin (Plugin):
         :param output_file: Output file to generate.
         :type output_file: str | None
         """
-        raise NotImplementedError("All report plugins must implement this method!")
+        raise NotImplementedError("Plugin must implement this method!")

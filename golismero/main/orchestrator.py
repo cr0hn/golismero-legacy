@@ -149,7 +149,7 @@ class Orchestrator (object):
             self.__ui = None
 
         # Signal handler to catch Ctrl-C
-        self.__old_signal_action = signal(SIGINT, self.__signal_handler)
+        self.__old_signal_action = signal(SIGINT, self.__control_c_handler)
 
         # Log the plugins that failed to load
         Logger.log_more_verbose("Found %d plugins" % len(success))
@@ -192,7 +192,7 @@ class Orchestrator (object):
 
 
     #----------------------------------------------------------------------
-    def __signal_handler(self, signum, frame):
+    def __control_c_handler(self, signum, frame):
         """
         Signal handler to catch Control-C interrupts.
         """
@@ -209,6 +209,25 @@ class Orchestrator (object):
                                   priority = MessagePriority.MSG_PRIORITY_HIGH)
             try:
                 self.__queue.put_nowait(message)
+            except Exception:
+                exit(1)
+
+        finally:
+
+            # Only do this once, the next time just PANIC.
+            signal(SIGINT, self.__panic_control_c_handler)
+
+
+    #----------------------------------------------------------------------
+    def __panic_control_c_handler(self, signum, frame):
+        """
+        Emergency signal handler to catch Control-C interrupts.
+        """
+        try:
+
+            # Kill all subprocesses.
+            try:
+                self.processManager.stop()
             except Exception:
                 exit(1)
 
@@ -380,6 +399,7 @@ class Orchestrator (object):
                 # just log the exception and continue.
                 except Exception:
                     Logger.log_error("Error processing message!\n%s" % format_exc())
+                    raise   # XXX FIXME
 
         finally:
 

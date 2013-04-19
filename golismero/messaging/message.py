@@ -45,8 +45,8 @@ class Message (object):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, message_type = MessageType.MSG_TYPE_DATA,
-                       message_code = MessageCode.MSG_DATA_NEW,
+    def __init__(self, message_type = 0,
+                       message_code = 0,
                        message_info = None,
                          audit_name = None,
                         plugin_name = None,
@@ -148,3 +148,13 @@ class Message (object):
         s %= (self.timestamp, self.message_type, self.message_code,
               self.audit_name, self.plugin_name, self.message_info)
         return s
+
+
+    #----------------------------------------------------------------------
+    def _update_data(self, datalist):
+        """
+        Called internally during message processing. Do not call anywhere else!
+        """
+        if not self.message_type == MessageType.MSG_TYPE_DATA:
+            raise TypeError("Cannot update data of non-data message!")
+        self.__message_info = datalist

@@ -188,7 +188,7 @@ class AuditManager (object):
             if message.message_code == MessageCode.MSG_CONTROL_ACK:
                 if message.audit_name:
                     audit = self.get_audit(message.audit_name)
-                    audit.acknowledge()
+                    audit.acknowledge(message)
 
                     # Check for audit termination.
                     #
@@ -277,9 +277,6 @@ class Audit (object):
         # Create the database.
         self.__database = AuditDB(self.__name, auditParams.audit_db)
 
-        # Track orphan data objects.
-        self.__orphan_data = dict()  # identity -> instance
-
         # Maximum number of links to follow.
         self.__followed_links = 0
         self.__show_max_links_warning = True
@@ -314,11 +311,11 @@ class Audit (object):
     #----------------------------------------------------------------------
     def __generateAuditName(self):
         """
-        Get a random name for an audit.
+        Get a default name for an audit.
 
         :returns: str -- generated name for the audit.
         """
-        return "golismero-" + datetime.now().strftime("%Y-%m-%d-%H_%M")
+        return "golismero-" + datetime.now().strftime("%Y-%m-%d-%H_%M_%S")
 
 
     #----------------------------------------------------------------------
@@ -353,7 +350,7 @@ class Audit (object):
         :type data: Data
         """
         return self.send_msg(message_type = MessageType.MSG_TYPE_DATA,
-                             message_info = data)
+                             message_info = [data])
 
 
     #----------------------------------------------------------------------
@@ -382,33 +379,17 @@ class Audit (object):
 
 
     #----------------------------------------------------------------------
-    def acknowledge(self):
+    def acknowledge(self, message):
         """
         Got an ACK for a message sent from this audit to the plugins.
+
+        :param message: The message with the ACK.
+        :type message: Message
         """
 
         # Decrease the expected ACK count.
         # The audit manager will check when this reaches zero.
         self.__expecting_ack -= 1
-
-        # Is any orphan data no longer an orphan?
-        not_orphan_anymore = {ref for ref in self.__orphan_data.iterkeys()
-                              if self.database.has_data_key(ref)}
-        if not_orphan_anymore:
-
-            # We'll expect an ACK to be sent after the data.
-            self.__expecting_ack += 1
-
-            # Resend the orphan data to the Orchestrator.
-            try:
-                for ref in not_orphan_anymore:
-                    self.send_info(self.__orphan_data.pop(ref))
-
-            # Send the ACK.
-            finally:
-                self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                              message_code = MessageCode.MSG_CONTROL_ACK,
-                                  priority = MessagePriority.MSG_PRIORITY_LOW)
 
 
     #----------------------------------------------------------------------
@@ -433,82 +414,64 @@ class Audit (object):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
-        #----------------------------------------------------------------------
-        #
-        # Orphan data algorithm
-        # ---------------------
-        #
-        # For the time being, we're only tracking vulnerabilities that contain
-        # references to resources not yet in the database. Such vulnerabilities
-        # are retained until all resources they link to are already committed
-        # in the database.
-        #
-        # That means, resources and informations get sent in a first-come,
-        # first-serve fashion, and vulnerabilities are always sent last.
-        #
-        # This assumes plugins will never try to access vulnerability or
-        # information links from resources or informations. It also assumes
-        # vulnerabilities only link to resources, and not to informations
-        # nor to each other. This is true now, but it might not be later on,
-        # especially when user contributed plugins come into play.
-        #
-        # In the future, we'll want to treat this as a more general problem.
-        # Any data that links to data not yet in the database is retained.
-        # Once we get a closed graph of data objects referencing each other,
-        # we commit the whole graph to the database and send the objects in
-        # whatever order - since then it won't matter anymore.
-        #
-        # In any case, the orphan data is only added here. We check if orphans
-        # are no longer orphans only when an ACK arrives, since that means a
-        # plugin has finished running. (In the future we might want to check
-        # exactly what plugin has finished running, too).
-        #
-        #----------------------------------------------------------------------
-
         # Is it data?
         if message.message_type == MessageType.MSG_TYPE_DATA:
-            data = message.message_info
 
-            # Does this data reference any other data we still don't have?
-            if  data.data_type == Data.TYPE_VULNERABILITY and (
-                data.identity in self.__orphan_data or
-                not all(self.database.has_data_key(ref) for ref in data.get_links(Data.TYPE_RESOURCE))
-            ):
+            # Here we'll store the data to be resent to the plugins.
+            data_for_plugins = []
 
-                # Add this data to the orphans.
-                self.__orphan_data[data.identity] = data
+            # For each data object sent...
+            if isinstance(message.message_info, Data):
+                message.message_info = [message.message_info]
+            for data in message.message_info:
 
-            # Increase the number of links followed.
-            if data.data_type == Data.TYPE_RESOURCE and data.resource_type == Resource.RESOURCE_URL:
-                self.__followed_links += 1
+                # Add the data to the database.
+                # This automatically merges the data if it already exists.
+                is_new = self.database.add_data(data)
 
-                # Maximum number of links reached?
-                if self.__params.max_links > 0 and self.__followed_links >= self.__params.max_links:
+                # Mark it as processed by this plugin.
+                if message.plugin_name:
+                    self.database.mark_data_as_processed(data.identity, message.plugin_name)
 
-                    # Show a warning.
-                    if self.__show_max_links_warning:
-                        self.__show_max_links_warning = False
-                        w = "Maximum number of links (%d) reached! Audit: %s"
-                        w = w % (self.__params.max_links, self.name)
-                        self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                      message_code = MessageCode.MSG_CONTROL_WARNING,
-                                      message_info = (RuntimeWarning(w),))
+                # Is the data new?
+                if is_new:
 
-                    # Drop the message. An ACK is still expected.
-                    self.__expecting_ack += 1
-                    self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                  message_code = MessageCode.MSG_CONTROL_ACK,
-                                      priority = MessagePriority.MSG_PRIORITY_LOW)
+                    # Maximum number of links reached?
+                    if self.__params.max_links > 0 and self.__followed_links >= self.__params.max_links:
 
-                    # Tell the Orchestrator we dropped the message.
-                    return False
+                        # Show a warning.
+                        if self.__show_max_links_warning:
+                            self.__show_max_links_warning = False
+                            w = "Maximum number of links (%d) reached! Audit: %s"
+                            w = w % (self.__params.max_links, self.name)
+                            self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                                          message_code = MessageCode.MSG_CONTROL_WARNING,
+                                          message_info = (RuntimeWarning(w),))
+                    else:
 
-            # Add the data to the database.
-            # This automatically merges the data if it already exists.
-            is_new = self.database.add_data(data)
+                        # The data will be sent to the plugins.
+                        data_for_plugins.append(data)
 
-            # Was the data already present in the database?
-            if not is_new:
+                        # Process the embedded resources too, if any.
+                        for resource in data.discovered_resources:
+                            is_new = self.database.add_data(resource)
+                            if is_new:
+                                data_for_plugins.append(resource)
+
+            # If we have data to be sent...
+            if data_for_plugins:
+
+                # Modify the message in-place with the filtered list of data objects.
+                message._update_data(data_for_plugins)
+
+                # Send the message to the plugins, and track the expected ACKs.
+                self.__expecting_ack += self.__notifier.notify(message)
+
+                # Tell the Orchestrator we sent the message.
+                return True
+
+            # If we don't have data to be sent...
+            else:
 
                 # Drop the message. An ACK is still expected.
                 self.__expecting_ack += 1
@@ -518,33 +481,6 @@ class Audit (object):
 
                 # Tell the Orchestrator we dropped the message.
                 return False
-
-        # Send the message to the plugins, and track the expected ACKs.
-        self.__expecting_ack += self.__notifier.notify(message)
-
-        # Are there any embedded resources?
-        if data.discovered_resources:
-
-            # We'll expect an ACK to be sent after the resources.
-            self.__expecting_ack += 1
-
-            # Extract the embedded resources.
-            try:
-                for resource in data.discovered_resources:
-                    assert resource.data_type == Data.TYPE_RESOURCE
-
-                    # Send new resources to the Orchestrator.
-                    if self.database.has_data_key(resource.identity):
-                        self.send_info(resource)
-
-            # Send the ACK.
-            finally:
-                self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                              message_code = MessageCode.MSG_CONTROL_ACK,
-                                  priority = MessagePriority.MSG_PRIORITY_LOW)
-
-        # Tell the Orchestrator we sent the message.
-        return True
 
 
     #----------------------------------------------------------------------
