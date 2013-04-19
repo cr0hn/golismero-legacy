@@ -425,6 +425,10 @@ class Audit (object):
                 message.message_info = [message.message_info]
             for data in message.message_info:
 
+                # Increase the number of links followed.
+                if data.data_type == Data.TYPE_RESOURCE and data.resource_type == Resource.RESOURCE_URL:
+                    self.__followed_links += 1
+
                 # Add the data to the database.
                 # This automatically merges the data if it already exists.
                 is_new = self.database.add_data(data)
