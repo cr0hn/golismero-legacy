@@ -303,8 +303,6 @@ class BaseAuditDB (BaseDB):
 
         :param plugin_name: Plugin name.
         :type plugin_name: str
-
-        :returns: set(str) -- Set of names of plugins that processed the data.
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -478,7 +476,6 @@ class AuditMemoryDB (BaseAuditDB):
     #----------------------------------------------------------------------
     def mark_data_as_processed(self, identity, plugin_name):
         self.__history[identity].add(plugin_name)
-        return self.__history[identity]
 
 
     #----------------------------------------------------------------------
