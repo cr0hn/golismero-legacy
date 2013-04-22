@@ -104,6 +104,9 @@ class Orchestrator (object):
         except KeyError:
             raise ValueError("No plugin found for UI mode: %r" % self.ui_mode)
 
+        # Calculate the plugin dependencies
+        self.__pluginManager.calculate_dependencies()
+
         # Incoming message queue
         if getattr(config, "max_process", 0) <= 0:
             from Queue import Queue

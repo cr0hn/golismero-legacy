@@ -57,6 +57,11 @@ class PluginInfo (object):
         return self.__descriptor_file
 
     @property
+    def dependencies(self):
+        "Plugin dependencies."
+        return self.__dependencies
+
+    @property
     def plugin_module(self):
         "Plugin module file name."
         return self.__plugin_module
@@ -96,15 +101,15 @@ class PluginInfo (object):
         "Author of this plugin."
         return self.__author
 
-    ##@property
-    ##def copyright(self):
-    ##    "Copyright of this plugin."
-    ##    return self.__copyright
+    @property
+    def copyright(self):
+        "Copyright of this plugin."
+        return self.__copyright
 
-    ##@property
-    ##def license(self):
-    ##    "License for this plugin."
-    ##    return self.__license
+    @property
+    def license(self):
+        "License for this plugin."
+        return self.__license
 
     @property
     def website(self):
@@ -123,11 +128,6 @@ class PluginInfo (object):
         :param descriptor_file: Descriptor file (with ".golismero" extension).
         :type descriptor_file: str
         """
-
-        #
-        # TODO: Make sure no extra sections or variables are defined,
-        # since most likely that means there's a typo in the file.
-        #
 
         # Store the plugin name
         self.__plugin_name = plugin_name
@@ -149,46 +149,10 @@ class PluginInfo (object):
             plugin_class       = parser.get("Core", "Class")
         except Exception:
             plugin_class       = None
-
-        # Read the "[Description]" section
         try:
-            self.__description = parser.get("Documentation", "Description")
+            dependencies       = parser.get("Core", "Dependencies")
         except Exception:
-            self.__description = self.__display_name
-        try:
-            self.__version     = parser.get("Documentation", "Version")
-        except Exception:
-            self.__version     = "?.?"
-        try:
-            self.__author      = parser.get("Documentation", "Author")
-        except Exception:
-            self.__author      = "Anonymous"
-        ##try:
-        ##    self.__copyright   = parser.get("Documentation", "Copyright")
-        ##except Exception:
-        ##    self.__copyright   = "No copyright information"
-        ##try:
-        ##    self.__license   = parser.get("Documentation", "License")
-        ##except Exception:
-        ##    self.__license   = "GNU Public License"
-        try:
-            self.__website     = parser.get("Documentation", "Website")
-        except Exception:
-            self.__website     = "http://code.google.com/p/golismero/"
-
-        # Load the plugin configuration
-        try:
-            self.__plugin_config = dict( parser.items("Configuration") )
-        except Exception:
-            self.__plugin_config = dict()
-
-        # Load the plugin extra configuration
-        self.__plugin_extra_config = dict()
-        for section in parser.sections():
-            section = section.title()
-            if section not in ("Core", "Documentation", "Configuration"):
-                options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
-                self.__plugin_extra_config[section] = options
+            dependencies       = None
 
         # Sanitize the plugin module pathname
         if not plugin_module.endswith(".py"):
@@ -215,16 +179,58 @@ class PluginInfo (object):
         self.__plugin_module = plugin_module
         self.__plugin_class  = plugin_class
 
+        # Parse the list of dependencies
+        if not dependencies:
+            self.__dependencies = ()
+        else:
+            self.__dependencies = tuple(sorted( {x.strip() for x in dependencies.split(",")} ))
 
+        # Read the "[Description]" section
+        try:
+            self.__description = parser.get("Documentation", "Description")
+        except Exception:
+            self.__description = self.__display_name
+        try:
+            self.__version     = parser.get("Documentation", "Version")
+        except Exception:
+            self.__version     = "?.?"
+        try:
+            self.__author      = parser.get("Documentation", "Author")
+        except Exception:
+            self.__author      = "Anonymous"
+        try:
+            self.__copyright   = parser.get("Documentation", "Copyright")
+        except Exception:
+            self.__copyright   = "No copyright information"
+        try:
+            self.__license   = parser.get("Documentation", "License")
+        except Exception:
+            self.__license   = "No license information"
+        try:
+            self.__website     = parser.get("Documentation", "Website")
+        except Exception:
+            self.__website     = "http://code.google.com/p/golismero/"
+
+        # Load the plugin configuration
+        try:
+            self.__plugin_config = dict( parser.items("Configuration") )
+        except Exception:
+            self.__plugin_config = dict()
+
+        # Load the plugin extra configuration
+        self.__plugin_extra_config = dict()
+        for section in parser.sections():
+            section = section.title()
+            if section not in ("Core", "Documentation", "Configuration"):
+                options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
+                self.__plugin_extra_config[section] = options
+
+
+    #----------------------------------------------------------------------
     # Protected method to update the class name if found during plugin load
     # (Assumes it's always valid, so no sanitization is performed)
     def _fix_classname(self, plugin_class):
         self.__plugin_class = plugin_class
-        # TODO: maybe update the .golismero file too?
-        # parser = RawConfigParser()
-        # parser.read(self.__descriptor_file)
-        # parser.set("Core", "Class", plugin_class)
-        # parser.write(self.__descriptor_file)
 
 
 #----------------------------------------------------------------------
@@ -245,10 +251,13 @@ class PriscillaPluginManager (Singleton):
     def __init__(self):
 
         # Dictionary to collect the info for each plugin found
-        self.__plugins = dict()    # plugin name -> plugin info
+        self.__plugins = {}    # plugin name -> plugin info
 
         # Dictionary to cache the plugin instances
-        self.__cache = dict()
+        self.__cache = {}
+
+        # Batches of plugins
+        self.__batches = []
 
 
     #----------------------------------------------------------------------
@@ -588,3 +597,62 @@ class PriscillaPluginManager (Singleton):
         for (name, value) in self.__cache.iteritems():
             if value is instance:
                 return (name, self.__plugins[name])
+
+
+    #----------------------------------------------------------------------
+    def calculate_dependencies(self):
+        """
+        Generate a dependency graph for all plugins found, and calculate
+        the batches of plugins that can be run concurrently.
+
+        :raises ValueError: The dependencies are broken.
+        """
+
+        # Build the dependency graph.
+        # Raise an exception for missing dependencies.
+        graph = {}
+        all_names = set(self.__plugins.iterkeys())
+        for name, info in self.__plugins.iteritems():
+            deps = set(info.dependencies)
+            if not deps.issubset(all_names):
+                msg = "Plugin %s depends on missing plugin(s): %s"
+                msg %= (name, ", ".join(sorted(deps.difference(all_names))))
+                raise ValueError(msg)
+            graph[name] = deps
+
+        # Calculate the plugin batches.
+        # Raise an exception for circular dependencies.
+        batches = []
+        while graph:
+            ready = {name for name, deps in graph.iteritems() if not deps}
+            if not ready:
+                msg = "Circular dependencies found in plugins: "
+                keys = graph.keys()
+                keys.sort()
+                raise ValueError(msg + ", ".join(keys))
+            for name in ready:
+                del graph[name]
+            for deps in graph.itervalues():
+                deps.difference_update(ready)
+            batches.append(ready)
+
+        # Store the plugin batches.
+        self.__batches = batches
+
+
+    #----------------------------------------------------------------------
+    def next_plugins(self, past_plugins):
+        """
+        Based on the previously executed plugins, get the next plugins
+        to execute.
+
+        :param past_plugins: Previously executed plugins.
+        :type past_plugins: set(str)
+
+        :returns: set(str) -- Next plugins to execute.
+        """
+        for batch in self.__batches:
+            batch = batch.difference(past_plugins)
+            if batch:
+                return batch
+        return set()
