@@ -149,8 +149,7 @@ class HTTP_Request (object):
         :param alt_filename: if you set it, filename used for http post will be set to this.
         :type alt_filename: str
         """
-        if path_to_file and param_name:
-            self.add_file_from_object(basename(path_to_file), open(path_to_file, "rb").read(), alt_filename)
+        self.add_file_from_object(basename(path_to_file), open(path_to_file, "rb").read(), alt_filename)
 
 
     #----------------------------------------------------------------------
@@ -166,21 +165,20 @@ class HTTP_Request (object):
         :param alt_filename: if you set it, filename used for http post will be set to this.
         :type alt_filename: str
         """
-        if param_name and obj:
 
-            # Create dict, if not exits
-            if not self.__files_attached:
-                self.__files_attached = {}
+        # Create dict, if not exits
+        if not self.__files_attached:
+            self.__files_attached = {}
 
-            # Fix method, if it's GET
-            if self.__method == "GET":
-                self.__method = "POST"
+        # Fix method, if it's GET
+        if self.__method == "GET":
+            self.__method = "POST"
 
-            # Add data with true filename or alt filename
-            if alt_filename:
-                self.__files_attached[file_name] = obj
-            else:
-                self.__files_attached[param_name] = obj
+        # Add data with true filename or alt filename
+        if alt_filename:
+            self.__files_attached[alt_filename] = obj
+        else:
+            self.__files_attached[param_name] = obj
 
 
     #----------------------------------------------------------------------
@@ -567,7 +565,7 @@ class HTTP_Response (object):
         :returns: str
         """
         if not self.__http_headers_raw:
-            self.__http_headers_raw = ''.join(("%s: %s\n" % (k,v) for k,v in raw_response.headers.iteritems()))
+            self.__http_headers_raw = ''.join(("%s: %s\n" % (k,v) for k,v in self.__http_headers_raw.headers.iteritems()))
         return self.__http_headers_raw
 
     @property

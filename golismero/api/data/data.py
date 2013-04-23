@@ -361,7 +361,7 @@ class Data(object):
                 except AttributeError:
                     if prop is not None:
                         msg = "Mergeable read-only properties make no sense! Ignoring: %s.%s"
-                        msg %= (self.__class__.__name__, key)
+                        msg %= (cls.__name__, key)
                         warn(msg)
 
         # Overwrite strategy.
@@ -377,7 +377,7 @@ class Data(object):
                 setattr(target_data, key, my_value)
             except AttributeError:
                 msg = "Overwriteable read-only properties make no sense! Ignoring: %s.%s"
-                msg %= (self.__class__.__name__, key)
+                msg %= (cls.__name__, key)
                 warn(msg)
 
 

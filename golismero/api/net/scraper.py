@@ -198,7 +198,8 @@ def extract_from_html(raw_html, base_url, only_links = True):
         elif name == "meta":
             name = tag.get("name", "").lower().strip()
             if name == "http-equiv":
-                p = tag.get("content", "").find(";")
+                content = tag.get("content", "")
+                p = content.find(";")
                 if p >= 0:
                     url = content[ p + 1 : ]
         elif name == "base":

@@ -82,7 +82,7 @@ class Orchestrator (object):
         if config.run_mode == config.RUN_MODE.slave:
             raise NotImplementedError("Slave mode not yet implemented!")
         if config.run_mode != config.RUN_MODE.standalone:
-            raise ValueError("Invalid run mode: %r" % options.run_mode)
+            raise ValueError("Invalid run mode: %r" % config.run_mode)
 
         # Load the plugins
         self.__pluginManager = PriscillaPluginManager()

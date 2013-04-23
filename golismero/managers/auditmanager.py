@@ -282,7 +282,6 @@ class Audit (object):
         self.__show_max_links_warning = True
 
 
-
     @property
     def name(self):
         return self.__name
@@ -333,8 +332,7 @@ class Audit (object):
                                                                 category = "testing")
 
         # Register plugins with the notifier
-        for l_plugin in m_audit_plugins.itervalues():
-            self.__notifier.add_plugin(l_plugin)
+        self.__notifier.add_multiple_plugins(m_audit_plugins)
 
         # Send a message to the orchestrator for each target URL
         for url in self.params.targets:
@@ -390,6 +388,9 @@ class Audit (object):
         # Decrease the expected ACK count.
         # The audit manager will check when this reaches zero.
         self.__expecting_ack -= 1
+
+        # Tell the notifier about this ACK.
+        self.__notifier.acknowledge(message)
 
 
     #----------------------------------------------------------------------
