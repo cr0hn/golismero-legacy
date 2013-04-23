@@ -256,7 +256,7 @@ class AuditNotifier(Notifier):
         """
         super(AuditNotifier, self).__init__()
         self.__audit = audit
-        self.__running = defaultdict(int)
+        self.__processing = defaultdict(set)
 
 
     #----------------------------------------------------------------------
@@ -268,9 +268,24 @@ class AuditNotifier(Notifier):
         :type message: Message
         """
 
-        # Decrease the count of times this plugin is currently running.
-        if message.plugin_name:
-            self.__running[message.plugin_name] -= 1
+        # Get the identity and the plugin name.
+        identity = message.message_info
+        plugin_name = message.plugin_name
+
+        # Ignore if either is not set.
+        # This may happen for internal messages (not sent by plugins),
+        # or messages not related to data objects.
+        if identity and plugin_name:
+
+            # Add the plugin to the already processed set.
+            self.__audit.database.mark_data_as_processed(identity, plugin_name)
+
+            # Remove the plugin from the currently processing data map.
+            try:
+                self.__processing[identity].remove(plugin_name)
+            except KeyError:
+                msg = "Got an unexpected ACK for data ID %s from plugin %s"
+                warn(msg % (identity, plugin_name))
 
 
     #----------------------------------------------------------------------
@@ -285,11 +300,10 @@ class AuditNotifier(Notifier):
 
         # Filter out plugins not belonging to the current batch.
         m_plugins_to_notify.intersection_update(
-            PriscillaPluginManager().next_plugins(past_plugins))
+            PriscillaPluginManager().next_plugins(past_plugins, m_plugins_to_notify))
 
         # Filter out the currently running plugins.
-        m_plugins_to_notify.difference_update(
-            name for (name, count) in self.__running.iteritems() if count > 0)
+        m_plugins_to_notify.difference_update(self.__processing[data.identity])
 
         # Return the remanining plugins.
         return m_plugins_to_notify
@@ -324,10 +338,9 @@ class AuditNotifier(Notifier):
         # Prepare the context for the OOP observer
         context = orchestrator.build_plugin_context(audit.name, plugin)
 
-        # Increase the count of times this plugin is currently running.
-        plugin_name = context.plugin_name
-        if plugin_name:
-            self.__running[plugin_name] += 1
+        # Add the plugin to the currently processing data map.
+        if method == "recv_info":
+            self.__processing[payload.identity].add(context.plugin_name)
 
         # Run the callback in a pooled process
         orchestrator.processManager.run_plugin(

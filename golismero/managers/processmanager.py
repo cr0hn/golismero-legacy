@@ -224,9 +224,9 @@ def _bootstrap(context, func, argv, argd):
             try:
                 if func == "recv_info":
                     if argv:
-                        ack_identity = argv[0]
+                        ack_identity = argv[0].identity
                     else:
-                        ack_identity = argd["information"]
+                        ack_identity = argd["information"].identity
             except Exception, e:
                 warn(e.message, RuntimeWarning)
             context.send_ack(ack_identity)

@@ -608,11 +608,14 @@ class PriscillaPluginManager (Singleton):
         :raises ValueError: The dependencies are broken.
         """
 
+        # Get all the plugins that support dependencies.
+        plugins = self.get_plugins("testing")
+        all_names = set(plugins.iterkeys())
+
         # Build the dependency graph.
         # Raise an exception for missing dependencies.
         graph = {}
-        all_names = set(self.__plugins.iterkeys())
-        for name, info in self.__plugins.iteritems():
+        for name, info in plugins.iteritems():
             deps = set(info.dependencies)
             if not deps.issubset(all_names):
                 msg = "Plugin %s depends on missing plugin(s): %s"
@@ -641,7 +644,7 @@ class PriscillaPluginManager (Singleton):
 
 
     #----------------------------------------------------------------------
-    def next_plugins(self, past_plugins):
+    def next_plugins(self, past_plugins, candidate_plugins):
         """
         Based on the previously executed plugins, get the next plugins
         to execute.
@@ -649,10 +652,14 @@ class PriscillaPluginManager (Singleton):
         :param past_plugins: Previously executed plugins.
         :type past_plugins: set(str)
 
+        :param candidate_plugins: Plugins we may want to execute.
+        :type candidate_plugins: set(str)
+
         :returns: set(str) -- Next plugins to execute.
         """
         for batch in self.__batches:
             batch = batch.difference(past_plugins)
+            batch.intersection_update(candidate_plugins)
             if batch:
                 return batch
         return set()
