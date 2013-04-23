@@ -80,7 +80,8 @@ class Notifier (object):
         :param plugins: Map of plugin names to plugin instances.
         :type plugins: dict(str -> Plugin)
         """
-        map(self.add_plugin, plugins.iteritems())
+        for name, plugin in plugins.iteritems():
+            self.add_plugin(name, plugin)
 
 
     #----------------------------------------------------------------------
