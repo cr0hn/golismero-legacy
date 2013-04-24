@@ -180,6 +180,16 @@ class Data(object):
 
 
     #----------------------------------------------------------------------
+    # Minimum number of linked objects per data type.
+    # Use None to enforce no limits.
+
+    min_data = None              # Minimum for all data types.
+    min_resources = None         # Minimum linked resources.
+    min_informations = None      # Minimum linked informations.
+    min_vulnerabilities = None   # Minimum linked vulnerabilities.
+
+
+    #----------------------------------------------------------------------
     # Maximum number of linked objects per data type.
     # Use None to enforce no limits.
 
@@ -542,6 +552,39 @@ class Data(object):
 
 
     #----------------------------------------------------------------------
+    def validate_link_minimums(self):
+        """
+        Validates the link minimum constraints. Raises an exception if not met.
+
+        Note: The maximums are already checked when creating the links.
+
+        This method is called after plugins return the data.
+
+        :raises ValueError: The minimum link constraints are not met.
+        """
+
+        # Check the total link minimum.
+        min_data = self.min_data
+        if min_data is not None and min_data >= 0:
+            found_data = len(self.links)
+            if found_data < min_data:
+                msg = "Not enough linked Data objects: %d required but %d found"
+                raise ValueError(msg % (min_data, found_data))
+
+        # Check the link minimum for each type.
+        for data_type, s_type, min_data in (
+            (self.TYPE_INFORMATION,   "Information",   self.min_informations),
+            (self.TYPE_RESOURCE,      "Resource",      self.min_resources),
+            (self.TYPE_VULNERABILITY, "Vulnerability", self.min_vulnerabilities),
+        ):
+            if min_data is not None and min_data >= 0:
+                found_data = len(self.get_links(data_type))
+                if found_data < min_data:
+                    msg = "Not enough linked %s objects: %d required but %d found"
+                    raise ValueError(msg % (s_type, min_data, found_data))
+
+
+    #----------------------------------------------------------------------
     @property
     def discovered_resources(self):
         """
@@ -640,6 +683,7 @@ class _TempDataStorage(object):
             graph = {}
             merged = []
             for data in result:
+                data.validate_link_minimums() # raises ValueError on bad data
                 identity = data.identity
                 old_data = graph.get(identity, None)
                 if old_data is not None:
