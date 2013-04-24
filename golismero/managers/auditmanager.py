@@ -434,10 +434,6 @@ class Audit (object):
                 # This automatically merges the data if it already exists.
                 is_new = self.database.add_data(data)
 
-                # Mark it as processed by this plugin.
-                if message.plugin_name:
-                    self.database.mark_data_as_processed(data.identity, message.plugin_name)
-
                 # Is the data new?
                 if is_new:
 
