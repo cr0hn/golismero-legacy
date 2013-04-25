@@ -28,7 +28,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["AuditManager", "Audit"]
 
-from .priscillapluginmanager import PriscillaPluginManager
 from ..api.data.data import Data
 from ..api.data.resource.resource import Resource
 from ..api.data.resource.url import Url
@@ -190,25 +189,6 @@ class AuditManager (object):
                     audit = self.get_audit(message.audit_name)
                     audit.acknowledge(message)
 
-                    # Check for audit termination.
-                    #
-                    # NOTE: This code assumes messages always arrive in order,
-                    #       and ACKs are always sent AFTER responses from plugins.
-                    #
-                    if not audit.expecting_ack:
-
-                        # Generate reports
-                        if not audit.is_report_started:
-                            audit.generate_reports()
-
-                        # Send finish message
-                        else:
-                            m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
-                                        message_code = MessageCode.MSG_CONTROL_STOP_AUDIT,
-                                        message_info = True,   # True for finished, False for user cancel
-                                        audit_name   = message.audit_name)
-                            self.__orchestrator.enqueue_msg(m)
-
             # Stop an audit if requested
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
                 if not message.audit_name:
@@ -265,6 +245,9 @@ class Audit (object):
             self.__name = self.__generateAuditName()
             self.__params.audit_name = self.__name
 
+        # Set the current stage to 0.
+        self.__current_stage = 0
+
         # Initialize the "report started" flag.
         self.__is_report_started = False
 
@@ -303,6 +286,10 @@ class Audit (object):
         return self.__report_manager
 
     @property
+    def current_stage(self):
+        return self.__current_stage
+
+    @property
     def is_report_started(self):
         return self.__is_report_started
 
@@ -327,9 +314,10 @@ class Audit (object):
         self.__expecting_ack = 0
 
         # Load testing plugins
-        m_audit_plugins = PriscillaPluginManager().load_plugins(self.params.enabled_plugins,
-                                                                self.params.disabled_plugins,
-                                                                category = "testing")
+        m_audit_plugins = self.orchestrator.pluginManager.load_plugins(
+            self.params.enabled_plugins,
+            self.params.disabled_plugins,
+            category = "testing")
 
         # Register plugins with the notifier
         self.__notifier.add_multiple_plugins(m_audit_plugins)
@@ -384,13 +372,51 @@ class Audit (object):
         :param message: The message with the ACK.
         :type message: Message
         """
+        try:
 
-        # Decrease the expected ACK count.
-        # The audit manager will check when this reaches zero.
-        self.__expecting_ack -= 1
+            # Decrease the expected ACK count.
+            # The audit manager will check when this reaches zero.
+            self.__expecting_ack -= 1
 
-        # Tell the notifier about this ACK.
-        self.__notifier.acknowledge(message)
+            # Tell the notifier about this ACK.
+            self.__notifier.acknowledge(message)
+
+        finally:
+
+            # Check for audit stage termination.
+            #
+            # NOTE: This code assumes messages always arrive in order,
+            #       and ACKs are always sent AFTER responses from plugins.
+            #
+            if not self.expecting_ack:
+
+                # If the reports are finished...
+                if self.__is_report_started:
+
+                    # Send the audit end message.
+                    m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
+                                message_code = MessageCode.MSG_CONTROL_STOP_AUDIT,
+                                message_info = True,   # True for finished, False for user cancel
+                                audit_name   = self.name)
+                    self.orchestrator.enqueue_msg(m)
+
+                # If the reports are not yet launched...
+                else:
+
+##                    # Move to the next stage.
+##                    self.__current_stage += 1
+##
+##                    # If we reached the last stage...
+##                    if self.__current_stage >= self.orchestrator.pluginManager.max_stage:
+##
+                        # Launch the report generation.
+                        self.generate_reports()
+##
+##                    # If we're still in the testing stages...
+##                    else:
+##
+##                        # Process all existing data for the new stage.
+##                        # TODO
 
 
     #----------------------------------------------------------------------

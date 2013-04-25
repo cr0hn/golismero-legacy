@@ -33,6 +33,7 @@ from ..common import Singleton
 
 from os import path, walk
 from keyword import iskeyword
+from collections import defaultdict
 from ConfigParser import RawConfigParser
 
 import re
@@ -55,6 +56,11 @@ class PluginInfo (object):
     def descriptor_file(self):
         "Plugin descriptor file name."
         return self.__descriptor_file
+
+    @property
+    def stage(self):
+        "Plugin stage."
+        return self.__stage
 
     @property
     def dependencies(self):
@@ -149,6 +155,10 @@ class PluginInfo (object):
             plugin_class       = parser.get("Core", "Class")
         except Exception:
             plugin_class       = None
+        try:
+            self.__stage       = int(parser.get("Core", "Stage"))
+        except Exception:
+            self.__stage       = 0
         try:
             dependencies       = parser.get("Core", "Dependencies")
         except Exception:
@@ -612,10 +622,15 @@ class PriscillaPluginManager (Singleton):
         plugins = self.get_plugins("testing")
         all_names = set(plugins.iterkeys())
 
-        # Build the dependency graph.
+        # Build the dependency graph, and group plugins by stage.
         # Raise an exception for missing dependencies.
-        graph = {}
+        graph = defaultdict(set)
+        stages = defaultdict(set)
         for name, info in plugins.iteritems():
+            stage = info.stage
+            if not stage or stage < 0:
+                stage = 0
+            stages[stage] = name
             deps = set(info.dependencies)
             if not deps.issubset(all_names):
                 msg = "Plugin %s depends on missing plugin(s): %s"
@@ -623,28 +638,51 @@ class PriscillaPluginManager (Singleton):
                 raise ValueError(msg)
             graph[name] = deps
 
+        # Remove empty stages.
+        stages = { k : v for (k, v) in stages.iteritems() if v }
+
+        # Compact the stage numbers, removing gaps.
+        # (This converts the dictionary into a list.)
+        stage_numbers = sorted(stages.keys())
+        max_stage = len(stage_numbers) - 1
+        stages = [ stages[stage_numbers[n]] for n in xrange(max_stage + 1) ]
+
+        # Add the implicit dependencies defined by the stages into the graph.
+        # (We're creating dummy bridge nodes to reduce the number of edges.)
+        for n in xrange(max_stage):
+            bridge = "* stage %d" % n
+            graph[bridge] = set(stages[n])
+            for node in stages[n + 1]:
+                graph[node].add(bridge)
+
         # Calculate the plugin batches.
         # Raise an exception for circular dependencies.
         batches = []
         while graph:
             ready = {name for name, deps in graph.iteritems() if not deps}
             if not ready:
+                # TODO: find each circle in the graph and show it,
+                #       instead of dumping the remaining graph
                 msg = "Circular dependencies found in plugins: "
-                keys = graph.keys()
+                keys = [ k for k in graph.iterkeys() if not k.startswith("*") ]
                 keys.sort()
                 raise ValueError(msg + ", ".join(keys))
             for name in ready:
                 del graph[name]
             for deps in graph.itervalues():
                 deps.difference_update(ready)
-            batches.append(ready)
+            ready = {k for k in ready if not k.startswith("*")}
+            if ready:
+                batches.append(ready)
 
-        # Store the plugin batches.
+        # Store the plugin batches and stages.
         self.__batches = batches
+        self.__stages = stages
+        self.__max_stage = max_stage
 
 
     #----------------------------------------------------------------------
-    def next_plugins(self, past_plugins, candidate_plugins):
+    def next_plugins(self, past_plugins, candidate_plugins, current_stage):
         """
         Based on the previously executed plugins, get the next plugins
         to execute.
@@ -655,11 +693,29 @@ class PriscillaPluginManager (Singleton):
         :param candidate_plugins: Plugins we may want to execute.
         :type candidate_plugins: set(str)
 
+        :param current_stage: Current execution stage.
+        :type current_stage: int
+
         :returns: set(str) -- Next plugins to execute.
         """
+        ##candidate_plugins = candidate_plugins.intersection(self.__stages[current_stage])
         for batch in self.__batches:
             batch = batch.difference(past_plugins)
             batch.intersection_update(candidate_plugins)
             if batch:
                 return batch
         return set()
+
+
+    #----------------------------------------------------------------------
+    @property
+    def batches(self):
+        return self.__batches
+
+    @property
+    def stages(self):
+        return self.__stages
+
+    @property
+    def max_stage(self):
+        return self.__max_stage

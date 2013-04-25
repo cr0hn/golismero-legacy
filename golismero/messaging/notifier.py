@@ -299,8 +299,10 @@ class AuditNotifier(Notifier):
         m_plugins_to_notify.difference_update(past_plugins)
 
         # Filter out plugins not belonging to the current batch.
+        audit = self.__audit
+        pluginManager = audit.orchestrator.pluginManager
         m_plugins_to_notify.intersection_update(
-            PriscillaPluginManager().next_plugins(past_plugins, m_plugins_to_notify))
+            pluginManager.next_plugins(past_plugins, m_plugins_to_notify, audit.current_stage))
 
         # Filter out the currently running plugins.
         m_plugins_to_notify.difference_update(self.__processing[data.identity])
