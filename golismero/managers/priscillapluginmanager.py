@@ -156,6 +156,10 @@ class PluginInfo (object):
         except Exception:
             plugin_class       = None
         try:
+            # TODO: the stages should be parsed differently,
+            #       instead of / in addition to using an arbitrary
+            #       integer value, we should be using predefined names,
+            #       possibly defaulting them to the plugin subcategory.
             self.__stage       = int(parser.get("Core", "Stage"))
         except Exception:
             self.__stage       = 0
