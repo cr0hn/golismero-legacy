@@ -260,6 +260,29 @@ class AuditNotifier(Notifier):
 
 
     #----------------------------------------------------------------------
+
+    @property
+    def audit(self):
+        return self.__audit
+
+    @property
+    def orchestrator(self):
+        return self.__audit.orchestrator
+
+    @property
+    def pluginManager(self):
+        return self.__audit.orchestrator.pluginManager
+
+    @property
+    def current_stage(self):
+        return self.__audit.current_stage
+
+    @property
+    def database(self):
+        return self.__audit.database
+
+
+    #----------------------------------------------------------------------
     def acknowledge(self, message):
         """
         Got an ACK for a message sent from this audit to the plugins.
@@ -272,35 +295,70 @@ class AuditNotifier(Notifier):
         identity = message.message_info
         plugin_name = message.plugin_name
 
-        # Ignore if either is not set.
-        # This may happen for internal messages (not sent by plugins),
-        # or messages not related to data objects.
-        if identity and plugin_name:
+        # Only ACKs for data messages carry the identity.
+        if identity:
 
-            # Add the plugin to the already processed set.
-            self.__audit.database.mark_plugin_finished(identity, plugin_name)
+            # Only ACKs for plugin messages carry the plugin name.
+            if plugin_name:
 
-            # Remove the plugin from the currently processing data map.
-            try:
-                self.__processing[identity].remove(plugin_name)
-            except KeyError:
-                msg = "Got an unexpected ACK for data ID %s from plugin %s"
-                warn(msg % (identity, plugin_name))
+                # Add the plugin to the already processed set.
+                self.database.mark_plugin_finished(identity, plugin_name)
+
+                # Remove the plugin from the currently processing data map.
+                try:
+                    self.__processing[identity].remove(plugin_name)
+                except KeyError:
+                    msg = "Got an unexpected ACK for data ID %s from plugin %s"
+                    warn(msg % (identity, plugin_name))
+
+            # If the stage was finished, mark it so.
+            if self._has_finished_stage(identity):
+                self.database.mark_stage_finished(identity, self.current_stage)
 
 
     #----------------------------------------------------------------------
-    def _get_plugins_to_notify(self, data):
+    def _has_finished_stage(self, identity):
+
+        # XXX FIXME this is very inefficient!
+        # this may be fixed by using just the data type
+        # instead of the whole data object
+
+        # Get the data object.
+        data = self.database.get_data(identity)
+
+        # Get the candidate plugins.
+        pending_plugins = self._get_candidate_plugins(data)
+
+        # Filter out plugins that don't belong to the current stage.
+        stage_plugins = self.pluginManager.stages[self.current_stage]
+        pending_plugins.intersection_update(stage_plugins)
+
+        # If there are no plugins pending execution, we finished the stage.
+        return not pending_plugins
+
+
+    #----------------------------------------------------------------------
+    def _get_candidate_plugins(self, data):
 
         # Get the whole set of plugins that can handle this data.
         next_plugins = super(AuditNotifier, self)._get_plugins_to_notify(data)
 
         # Filter out plugins that already received this data.
-        past_plugins = self.__audit.database.get_past_plugins(data.identity)
+        past_plugins = self.database.get_past_plugins(data.identity)
         next_plugins.difference_update(past_plugins)
 
+        # Return them.
+        return next_plugins
+
+
+    #----------------------------------------------------------------------
+    def _get_plugins_to_notify(self, data):
+
+        # Get the candidate plugins.
+        next_plugins = self._get_candidate_plugins(data)
+
         # Filter out plugins not belonging to the current batch.
-        next_plugins = self.__audit.orchestrator.pluginManager.next_plugins(
-                                    next_plugins, self.__audit.current_stage)
+        next_plugins = self.pluginManager.next_plugins(next_plugins, self.current_stage)
 
         # Filter out the currently running plugins.
         next_plugins.difference_update(self.__processing[data.identity])

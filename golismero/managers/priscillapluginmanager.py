@@ -179,7 +179,7 @@ class PluginInfo (object):
                 subcategory  = plugin_name.split("/")[1].lower()
                 self.__stage = PriscillaPluginManager.STAGES[subcategory]
             except Exception:
-                self.__stage = 0
+                self.__stage = 1
         else:
             try:
                 self.__stage = PriscillaPluginManager.STAGES[stage.lower()]
@@ -287,12 +287,17 @@ class PriscillaPluginManager (Singleton):
 
     # Testing plugin execution stages by name.
     STAGES = {
-        "recon"   : 0,    # Reconaissance stage.
-        "scan"    : 1,    # Scanning (non-intrusive) stage.
-        "exploit" : 2,    # Exploitation (intrusive) stage.
-        "post"    : 3,    # Post-exploitation stage.
-        "cleanup" : 4,    # Cleanup stage.
+        "recon"   : 1,    # Reconaissance stage.
+        "scan"    : 2,    # Scanning (non-intrusive) stage.
+        "exploit" : 3,    # Exploitation (intrusive) stage.
+        "post"    : 4,    # Post-exploitation stage.
+        "cleanup" : 5,    # Cleanup stage.
     }
+
+    # Minimum and maximum stage numbers.
+    min_stage = min(*STAGES.values())
+    max_stage = max(*STAGES.values())
+##    assert sorted(STAGES.itervalues()) == range(min_stage, max_stage + 1)
 
 
     #----------------------------------------------------------------------
@@ -707,7 +712,6 @@ class PriscillaPluginManager (Singleton):
         # Store the plugin batches and stages.
         self.__batches = batches
         self.__stages = stages
-        self.__max_stage = max_stage
 
 
     #----------------------------------------------------------------------
@@ -741,7 +745,3 @@ class PriscillaPluginManager (Singleton):
     @property
     def stages(self):
         return self.__stages
-
-    @property
-    def max_stage(self):
-        return self.__max_stage

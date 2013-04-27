@@ -1105,7 +1105,7 @@ class AuditSQLiteDB (BaseAuditDB):
     def get_pending_data(self, stage):
         self.__cursor.execute(
             "SELECT identity FROM stages WHERE stage < ?;",
-            (identity,))
+            (stage,))
         return set(self.__cursor.fetchall())
 
 

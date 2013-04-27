@@ -42,6 +42,7 @@ from ..messaging.notifier import AuditNotifier
 from datetime import datetime
 from multiprocessing import Queue
 from collections import Counter
+from warnings import warn
 
 
 #--------------------------------------------------------------------------
@@ -245,8 +246,8 @@ class Audit (object):
             self.__name = self.__generateAuditName()
             self.__params.audit_name = self.__name
 
-        # Set the current stage to 0.
-        self.__current_stage = 0
+        # Set the current stage to the first stage.
+        self.__current_stage = orchestrator.pluginManager.min_stage
 
         # Initialize the "report started" flag.
         self.__is_report_started = False
@@ -322,9 +323,11 @@ class Audit (object):
         # Register plugins with the notifier
         self.__notifier.add_multiple_plugins(m_audit_plugins)
 
-        # Send a message to the orchestrator for each target URL
-        for url in self.params.targets:
-            self.send_info(Url(url))
+        # Send a message to the orchestrator with all target URLs
+        self.send_msg(
+            message_type = MessageType.MSG_TYPE_DATA,
+            message_info = [ Url(url) for url in self.params.targets ]
+        )
 
 
     #----------------------------------------------------------------------
@@ -384,39 +387,59 @@ class Audit (object):
         finally:
 
             # Check for audit stage termination.
-            #
-            # NOTE: This code assumes messages always arrive in order,
-            #       and ACKs are always sent AFTER responses from plugins.
-            #
-            if not self.expecting_ack:
+            self.update_stage()
 
-                # If the reports are finished...
-                if self.__is_report_started:
 
-                    # Send the audit end message.
-                    m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
-                                message_code = MessageCode.MSG_CONTROL_STOP_AUDIT,
-                                message_info = True,   # True for finished, False for user cancel
-                                audit_name   = self.name)
-                    self.orchestrator.enqueue_msg(m)
+    #----------------------------------------------------------------------
+    def update_stage(self):
+        """
+        Checks for stage termination and moves to the next stage when needed.
+        When the last stage is completed, sends the audit stop message.
+        """
 
-                # If the reports are not yet launched...
-                else:
+        # NOTE: This code assumes messages always arrive in order,
+        #       and ACKs are always sent AFTER responses from plugins.
 
-##                    # Move to the next stage.
-##                    self.__current_stage += 1
-##
-##                    # If we reached the last stage...
-##                    if self.__current_stage >= self.orchestrator.pluginManager.max_stage:
-##
-                        # Launch the report generation.
-                        self.generate_reports()
-##
-##                    # If we're still in the testing stages...
-##                    else:
-##
-##                        # Process all existing data for the new stage.
-##                        # TODO
+        # If we finished running a stage...
+        if not self.expecting_ack:
+
+            # If the reports are finished...
+            if self.__is_report_started:
+
+                # Send the audit end message.
+                self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                              message_code = MessageCode.MSG_CONTROL_STOP_AUDIT,
+                              message_info = True)   # True for finished, False for user cancel
+
+            # If the reports are not yet launched...
+            else:
+
+                # Get the database and the plugin manager.
+                database = self.database
+                pluginManager = self.orchestrator.pluginManager
+
+                # Look for the earliest stage with pending data.
+                self.__current_stage = pluginManager.max_stage + 1
+                for stage in xrange(pluginManager.min_stage, pluginManager.max_stage + 1):
+                    pending = database.get_pending_data(stage)
+                    if pending:
+
+                        # Set it as the current stage.
+                        self.__current_stage = stage
+
+                        # Send the pending data.
+                        # XXX FIXME possible performance problem here!
+                        self.send_msg(
+                            message_type = MessageType.MSG_TYPE_DATA,
+                            message_info = map(database.get_data, pending)
+                        )
+
+                        # We're done, return.
+                        return
+
+                # If we reached this point, we finished the last stage.
+                # Launch the report generation.
+                self.generate_reports()
 
 
     #----------------------------------------------------------------------
@@ -451,39 +474,43 @@ class Audit (object):
             if isinstance(message.message_info, Data):
                 message.message_info = [message.message_info]
             for data in message.message_info:
+                if not isinstance(data, Data):
+                    warn("TypeError: Expected Data, got %r instead" % type(data), RuntimeWarning)
+                    continue
 
-                # Increase the number of links followed.
-                if data.data_type == Data.TYPE_RESOURCE and data.resource_type == Resource.RESOURCE_URL:
-                    self.__followed_links += 1
+                # Is the data new?
+                if self.database.has_data(data.identity):
+
+                    # Increase the number of links followed.
+                    if data.data_type == Data.TYPE_RESOURCE and data.resource_type == Resource.RESOURCE_URL:
+                        self.__followed_links += 1
+
+                        # Maximum number of links reached?
+                        if self.__params.max_links > 0 and self.__followed_links >= self.__params.max_links:
+
+                            # Show a warning, but only once.
+                            if self.__show_max_links_warning:
+                                self.__show_max_links_warning = False
+                                w = "Maximum number of links (%d) reached! Audit: %s"
+                                w = w % (self.__params.max_links, self.name)
+                                self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                                              message_code = MessageCode.MSG_CONTROL_WARNING,
+                                              message_info = (RuntimeWarning(w),))
+
+                            # Skip this data object.
+                            continue
 
                 # Add the data to the database.
                 # This automatically merges the data if it already exists.
-                is_new = self.database.add_data(data)
+                self.database.add_data(data)
 
-                # Is the data new?
-                if is_new:
+                # The data will be sent to the plugins.
+                data_for_plugins.append(data)
 
-                    # Maximum number of links reached?
-                    if self.__params.max_links > 0 and self.__followed_links >= self.__params.max_links:
-
-                        # Show a warning.
-                        if self.__show_max_links_warning:
-                            self.__show_max_links_warning = False
-                            w = "Maximum number of links (%d) reached! Audit: %s"
-                            w = w % (self.__params.max_links, self.name)
-                            self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                          message_code = MessageCode.MSG_CONTROL_WARNING,
-                                          message_info = (RuntimeWarning(w),))
-                    else:
-
-                        # The data will be sent to the plugins.
-                        data_for_plugins.append(data)
-
-                        # Process the embedded resources too, if any.
-                        for resource in data.discovered_resources:
-                            is_new = self.database.add_data(resource)
-                            if is_new:
-                                data_for_plugins.append(resource)
+                # Process the embedded resources too, if any.
+                for resource in data.discovered_resources:
+                    self.database.add_data(resource)
+                    data_for_plugins.append(resource)
 
             # If we have data to be sent...
             if data_for_plugins:
