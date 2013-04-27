@@ -294,7 +294,7 @@ class BaseAuditDB (BaseDB):
 
 
     #----------------------------------------------------------------------
-    def mark_data_as_processed(self, identity, plugin_name):
+    def mark_plugin_finished(self, identity, plugin_name):
         """
         Mark the data as having been processed by the plugin.
 
@@ -308,7 +308,21 @@ class BaseAuditDB (BaseDB):
 
 
     #----------------------------------------------------------------------
-    def get_plugins_for_data(self, identity):
+    def mark_stage_finished(self, identity, stage):
+        """
+        Mark the data as having completed the stage.
+
+        :param identity: Identity hash.
+        :type identity: str
+
+        :param stage: Stage.
+        :type stage: int
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def get_past_plugins(self, identity):
         """
         Get the plugins that have already processed the given data.
 
@@ -316,6 +330,20 @@ class BaseAuditDB (BaseDB):
         :type identity: str
 
         :returns: set(str) -- Set of plugin names.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def get_pending_data(self, stage):
+        """
+        Get the identities of the data objects that haven't yet completed
+        the requested stage.
+
+        :param stage: Stage.
+        :type stage: int
+
+        :returns: set(str) -- Set of identities.
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -333,6 +361,7 @@ class AuditMemoryDB (BaseAuditDB):
         self.__results = dict()
         self.__state = collections.defaultdict(dict)
         self.__history = collections.defaultdict(set)
+        self.__stages = collections.defaultdict(int)
 
 
     #----------------------------------------------------------------------
@@ -474,13 +503,27 @@ class AuditMemoryDB (BaseAuditDB):
 
 
     #----------------------------------------------------------------------
-    def mark_data_as_processed(self, identity, plugin_name):
+    def mark_plugin_finished(self, identity, plugin_name):
         self.__history[identity].add(plugin_name)
 
 
     #----------------------------------------------------------------------
-    def get_plugins_for_data(self, identity):
+    def mark_stage_finished(self, identity, stage):
+        self.__stages[identity] = stage
+
+
+    #----------------------------------------------------------------------
+    def get_past_plugins(self, identity):
         return self.__history[identity]
+
+
+    #----------------------------------------------------------------------
+    def get_pending_data(self, stage):
+        pending = {i for i,n in self.__stages.iteritems() if n < stage}
+        missing = set(self.__results.iterkeys())
+        missing.difference_update(self.__stages.iterkeys())
+        pending.update(missing)
+        return pending
 
 
     #----------------------------------------------------------------------
@@ -666,6 +709,13 @@ class AuditSQLiteDB (BaseAuditDB):
                 identity STRING NOT NULL,
                 FOREIGN KEY(plugin_id) REFERENCES plugin(rowid),
                 UNIQUE(plugin_id, identity) ON CONFLICT IGNORE
+            );
+
+            CREATE TABLE stages (
+                rowid INTEGER PRIMARY KEY,
+                identity STRING NOT NULL,
+                stage INTEGER NOT NULL DEFAULT 0,
+                UNIQUE(identity) ON CONFLICT REPLACE
             );
 
             """)
@@ -988,7 +1038,7 @@ class AuditSQLiteDB (BaseAuditDB):
 
     #----------------------------------------------------------------------
     @transactional
-    def mark_data_as_processed(self, identity, plugin_name):
+    def mark_plugin_finished(self, identity, plugin_name):
 
         # Fetch the plugin rowid, add it if missing.
         self.__cursor.execute(
@@ -1017,11 +1067,44 @@ class AuditSQLiteDB (BaseAuditDB):
 
     #----------------------------------------------------------------------
     @transactional
-    def get_plugins_for_data(self, identity):
+    def mark_stage_finished(self, identity, stage):
+
+        # Get the previous value of the last completed stage for this data.
+        self.__cursor.execute(
+            "SELECT stage FROM stages WHERE identity = ? LIMIT 1;",
+            (identity,)
+            )
+        row = self.__cursor.fetchone()
+        if row:
+            prev_stage = row[0]
+        else:
+            prev_stage = 0
+
+        # If the new stage is greater than the old one...
+        if stage > prev_stage:
+
+            # Update the last completed stage value for this data.
+            self.__cursor.execute(
+                "INSERT INTO stages VALUES (NULL, ?, ?);",
+                (identity, stage))
+
+
+    #----------------------------------------------------------------------
+    @transactional
+    def get_past_plugins(self, identity):
         self.__cursor.execute((
             "SELECT plugin.name FROM plugin, history"
             " WHERE history.plugin_id = plugin.rowid AND"
             "       history.identity = ?;"),
+            (identity,))
+        return set(self.__cursor.fetchall())
+
+
+    #----------------------------------------------------------------------
+    @transactional
+    def get_pending_data(self, stage):
+        self.__cursor.execute(
+            "SELECT identity FROM stages WHERE stage < ?;",
             (identity,))
         return set(self.__cursor.fetchall())
 

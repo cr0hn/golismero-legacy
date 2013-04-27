@@ -278,7 +278,7 @@ class AuditNotifier(Notifier):
         if identity and plugin_name:
 
             # Add the plugin to the already processed set.
-            self.__audit.database.mark_data_as_processed(identity, plugin_name)
+            self.__audit.database.mark_plugin_finished(identity, plugin_name)
 
             # Remove the plugin from the currently processing data map.
             try:
@@ -292,23 +292,21 @@ class AuditNotifier(Notifier):
     def _get_plugins_to_notify(self, data):
 
         # Get the whole set of plugins that can handle this data.
-        m_plugins_to_notify = super(AuditNotifier, self)._get_plugins_to_notify(data)
+        next_plugins = super(AuditNotifier, self)._get_plugins_to_notify(data)
 
         # Filter out plugins that already received this data.
-        past_plugins = self.__audit.database.get_plugins_for_data(data.identity)
-        m_plugins_to_notify.difference_update(past_plugins)
+        past_plugins = self.__audit.database.get_past_plugins(data.identity)
+        next_plugins.difference_update(past_plugins)
 
         # Filter out plugins not belonging to the current batch.
-        audit = self.__audit
-        pluginManager = audit.orchestrator.pluginManager
-        m_plugins_to_notify.intersection_update(
-            pluginManager.next_plugins(past_plugins, m_plugins_to_notify, audit.current_stage))
+        next_plugins = self.__audit.orchestrator.pluginManager.next_plugins(
+                                    next_plugins, self.__audit.current_stage)
 
         # Filter out the currently running plugins.
-        m_plugins_to_notify.difference_update(self.__processing[data.identity])
+        next_plugins.difference_update(self.__processing[data.identity])
 
-        # Return the remanining plugins.
-        return m_plugins_to_notify
+        # Return the remanining plugins, if any.
+        return next_plugins
 
 
     #----------------------------------------------------------------------

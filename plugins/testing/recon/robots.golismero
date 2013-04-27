@@ -1,9 +1,10 @@
 [Core]
-Name = Web Spider
-Module = spider.py
+Name = Robots.txt Analyzer
+Module = robots.py
+Stage = Recon
 
 [Documentation]
-Description = Web spider plugin
+Description = Analyzes robots.txt files and extracts their links.
 Author = Daniel Garcia Garcia (cr0hn)
 Version = 0.1
 Website = http://code.google.com/p/golismero/

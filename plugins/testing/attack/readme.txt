@@ -1,1 +1,1 @@
-Attack plugins go here. These plugins implement the vulnerability assessment phase of GoLismero.
+These plugins implement the vulnerability exploitation (intrusive) phase of GoLismero.

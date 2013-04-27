@@ -58,6 +58,11 @@ class PluginInfo (object):
         return self.__descriptor_file
 
     @property
+    def category(self):
+        "Plugin category."
+        return self.__plugin_name.split("/")[0].lower()
+
+    @property
     def stage(self):
         "Plugin stage."
         return self.__stage
@@ -135,40 +140,59 @@ class PluginInfo (object):
         :type descriptor_file: str
         """
 
-        # Store the plugin name
+        # Store the plugin name.
         self.__plugin_name = plugin_name
 
-        # Make sure the descriptor filename is an absolute path
+        # Make sure the descriptor filename is an absolute path.
         descriptor_file = path.abspath(descriptor_file)
 
-        # Store the descriptor filename
+        # Store the descriptor filename.
         self.__descriptor_file = descriptor_file
 
-        # Parse the descriptor file
+        # Parse the descriptor file.
         parser = RawConfigParser()
         parser.read(descriptor_file)
 
-        # Read the "[Core]" section
-        self.__display_name    = parser.get("Core", "Name")
-        plugin_module          = parser.get("Core", "Module")
+        # Read the "[Core]" section.
+        self.__display_name = parser.get("Core", "Name")
+        plugin_module       = parser.get("Core", "Module")
         try:
-            plugin_class       = parser.get("Core", "Class")
+            plugin_class    = parser.get("Core", "Class")
         except Exception:
-            plugin_class       = None
+            plugin_class    = None
         try:
             # TODO: the stages should be parsed differently,
             #       instead of / in addition to using an arbitrary
             #       integer value, we should be using predefined names,
             #       possibly defaulting them to the plugin subcategory.
-            self.__stage       = int(parser.get("Core", "Stage"))
+            stage           = parser.get("Core", "Stage")
         except Exception:
-            self.__stage       = 0
+            stage           = None
         try:
-            dependencies       = parser.get("Core", "Dependencies")
+            dependencies    = parser.get("Core", "Dependencies")
         except Exception:
-            dependencies       = None
+            dependencies    = None
 
-        # Sanitize the plugin module pathname
+        # Parse the stage name to get the number.
+        if not stage:
+            try:
+                subcategory  = plugin_name.split("/")[1].lower()
+                self.__stage = PriscillaPluginManager.STAGES[subcategory]
+            except Exception:
+                self.__stage = 0
+        else:
+            try:
+                self.__stage = PriscillaPluginManager.STAGES[stage.lower()]
+            except KeyError:
+                try:
+                    self.__stage = int(stage)
+                    if self.__stage not in PriscillaPluginManager.STAGES.values():
+                        raise ValueError()
+                except Exception:
+                    msg = "Error parsing %r: invalid execution stage: %s"
+                    raise ValueError(msg % (descriptor_file, stage))
+
+        # Sanitize the plugin module pathname.
         if not plugin_module.endswith(".py"):
             plugin_module += ".py"
         if path.sep != "/":
@@ -182,24 +206,24 @@ class PluginInfo (object):
             msg = "Error parsing %r: plugin module is located outside its plugin folder"
             raise ValueError(msg % descriptor_file)
 
-        # Sanitize the plugin classname
+        # Sanitize the plugin classname.
         if plugin_class is not None:
             plugin_class = re.sub("\W|^(?=\d)", "_", plugin_class.strip())
             if iskeyword(plugin_class):
                 msg = "Error parsing %r: plugin class (%s) is a Python reserved keyword"
                 raise ValueError(msg % (plugin_class, descriptor_file))
 
-        # Store the plugin module and class
+        # Store the plugin module and class.
         self.__plugin_module = plugin_module
         self.__plugin_class  = plugin_class
 
-        # Parse the list of dependencies
+        # Parse the list of dependencies.
         if not dependencies:
             self.__dependencies = ()
         else:
             self.__dependencies = tuple(sorted( {x.strip() for x in dependencies.split(",")} ))
 
-        # Read the "[Description]" section
+        # Read the "[Description]" section.
         try:
             self.__description = parser.get("Documentation", "Description")
         except Exception:
@@ -225,13 +249,13 @@ class PluginInfo (object):
         except Exception:
             self.__website     = "http://code.google.com/p/golismero/"
 
-        # Load the plugin configuration
+        # Load the plugin configuration.
         try:
             self.__plugin_config = dict( parser.items("Configuration") )
         except Exception:
             self.__plugin_config = dict()
 
-        # Load the plugin extra configuration
+        # Load the plugin extra configuration.
         self.__plugin_extra_config = dict()
         for section in parser.sections():
             section = section.title()
@@ -242,7 +266,7 @@ class PluginInfo (object):
 
     #----------------------------------------------------------------------
     # Protected method to update the class name if found during plugin load
-    # (Assumes it's always valid, so no sanitization is performed)
+    # (Assumes it's always valid, so no sanitization is performed).
     def _fix_classname(self, plugin_class):
         self.__plugin_class = plugin_class
 
@@ -252,12 +276,22 @@ class PriscillaPluginManager (Singleton):
     """Priscilla Plugin Manager."""
 
 
-    # Plugin categories and their base classes
+    # Plugin categories and their base classes.
     CATEGORIES = {
         "testing" : TestingPlugin,
         "report"  : ReportPlugin,
         "ui"      : UIPlugin,
         "global"  : GlobalPlugin,
+    }
+
+
+    # Testing plugin execution stages by name.
+    STAGES = {
+        "recon"   : 0,    # Reconaissance stage.
+        "scan"    : 1,    # Scanning (non-intrusive) stage.
+        "exploit" : 2,    # Exploitation (intrusive) stage.
+        "post"    : 3,    # Post-exploitation stage.
+        "cleanup" : 4,    # Cleanup stage.
     }
 
 
@@ -292,63 +326,63 @@ class PriscillaPluginManager (Singleton):
         :returns: tuple(list, list) -- A list of plugins loaded, and a list of plugins that failed to load.
         """
 
-        # Make sure the plugins folder is an absolute path
+        # Make sure the plugins folder is an absolute path.
         plugins_folder = path.abspath(plugins_folder)
 
-        # Raise an exception if the plugins folder doesn't exist or isn't a folder
+        # Raise an exception if the plugins folder doesn't exist or isn't a folder.
         if not path.isdir(plugins_folder):
             raise ValueError("Invalid plugin folder: %s" % plugins_folder)
 
-        # List to collect the plugins that loaded successfully
+        # List to collect the plugins that loaded successfully.
         success = list()
 
-        # List to collect the plugins that failed to load
+        # List to collect the plugins that failed to load.
         failure = list()
 
-        # The first directory level is the category
+        # The first directory level is the category.
         for category, base_class in self.CATEGORIES.iteritems():
             category_folder = path.join(plugins_folder, category)
 
-            # Skip missing folders
+            # Skip missing folders.
             if not path.isdir(category_folder):
                 warnings.warn("Missing plugin category folder: %s" % category_folder)
                 continue
 
-            # The following levels belong to the plugins
+            # The following levels belong to the plugins.
             for (dirpath, dirnames, filenames) in walk(category_folder):
 
-                # Look for plugin descriptor files
+                # Look for plugin descriptor files.
                 for fname in filenames:
                     if not fname.endswith(".golismero"):
                         continue
 
-                    # Convert the plugin descriptor filename to an absolute path
+                    # Convert the plugin descriptor filename to an absolute path.
                     fname = path.abspath(path.join(dirpath, fname))
 
                     # The plugin name is the relative path + filename without extension,
-                    # where the path separator is always "/" regardless of the current OS
+                    # where the path separator is always "/" regardless of the current OS.
                     plugin_name = path.splitext(fname)[0][len(plugins_folder):]
                     if plugin_name[0] == path.sep:
                         plugin_name = plugin_name[1:]
                     if path.sep != "/":
                         plugin_name = plugin_name.replace(path.sep, "/")
 
-                    # If the plugin name already exists, skip it
+                    # If the plugin name already exists, skip it.
                     if plugin_name in self.__plugins:
                         failure.append(plugin_name)
                         continue
 
-                    # Parse the plugin descriptor file
+                    # Parse the plugin descriptor file.
                     try:
                         plugin_info = PluginInfo(plugin_name, fname)
 
-                        # Collect the plugin info
+                        # Collect the plugin info.
                         self.__plugins[plugin_name] = plugin_info
 
-                        # Add the plugin name to the success list
+                        # Add the plugin name to the success list.
                         success.append(plugin_name)
 
-                    # On error add the plugin name to the list of failures
+                    # On error add the plugin name to the list of failures.
                     except Exception:
                         failure.append(plugin_name)
 
@@ -367,18 +401,18 @@ class PriscillaPluginManager (Singleton):
         :raises: KeyError -- The requested category doesn't exist.
         """
 
-        # Make sure the category is lowercase
+        # Make sure the category is lowercase.
         category = category.lower()
 
-        # If not filtering for category, just return the whole dictionary
+        # If not filtering for category, just return the whole dictionary.
         if category == "all":
             return self.__plugins
 
-        # Make sure the category exists, otherwise raise an exception
+        # Make sure the category exists, otherwise raise an exception.
         if category not in self.CATEGORIES:
             raise KeyError("Unknown plugin category: %r" % category)
 
-        # Get only the plugins that match the category
+        # Get only the plugins that match the category.
         category = category + "/"
         return { plugin: self.__plugins[plugin] for plugin in self.__plugins if plugin.startswith(category) }
 
@@ -433,17 +467,17 @@ class PriscillaPluginManager (Singleton):
         :raises: Exception -- Plugins may throw exceptions if they fail to load.
         """
 
-        # Sanitize the category
+        # Sanitize the category.
         category = category.strip().lower()
 
-        # Make sure the category exists, otherwise raise an exception
+        # Make sure the category exists, otherwise raise an exception.
         if category != "all" and category not in self.CATEGORIES:
             raise KeyError("Unknown plugin category: %r" % category)
 
-        # Get the list of all plugins for the requested category
+        # Get the list of all plugins for the requested category.
         plugins = self.get_plugin_names(category)
 
-        # Remove duplicates in black and white lists
+        # Remove duplicates in black and white lists.
         if "all" in enabled_plugins:
             enabled_plugins  = {"all"}
         if "all" in disabled_plugins:
@@ -451,13 +485,13 @@ class PriscillaPluginManager (Singleton):
         enabled_plugins  = set(enabled_plugins)
         disabled_plugins = set(disabled_plugins)
 
-        # Convert categories to plugin names
+        # Convert categories to plugin names.
         for cat in self.CATEGORIES:
             if cat in disabled_plugins:
                 if cat in enabled_plugins:
                     raise ValueError("Conflicting black and white lists!")
                 if cat == category:   # if the requested category is disabled,
-                    return {}         # just return an empty set now
+                    return {}         # just return an empty set now.
                 disabled_plugins.remove(cat)
                 if category == "all":
                     disabled_plugins.update(self.get_plugin_names(cat))
@@ -468,13 +502,13 @@ class PriscillaPluginManager (Singleton):
                 if category == "all" or cat == category:
                     enabled_plugins.update(self.get_plugin_names(cat))
 
-        # Check for consistency in black and white lists
+        # Check for consistency in black and white lists.
         if enabled_plugins.intersection(disabled_plugins):
             raise ValueError("Conflicting black and white lists!")
         if "all" not in enabled_plugins and "all" not in disabled_plugins:
             disabled_plugins = set()
 
-        # Make sure all the plugins in the whitelist exist
+        # Make sure all the plugins in the whitelist exist.
         all_plugins = self.get_plugin_names()
         missing_plugins = enabled_plugins.difference(all_plugins)
         if "all" in missing_plugins:
@@ -484,7 +518,7 @@ class PriscillaPluginManager (Singleton):
                 raise KeyError("Missing plugins: %s" % ", ".join(sorted(missing_plugins)))
             raise KeyError("Missing plugin: %s" % missing_plugins.pop())
 
-        # Make sure all the plugins in the blacklist exist
+        # Make sure all the plugins in the blacklist exist.
         missing_plugins = disabled_plugins.difference(all_plugins)
         if "all" in missing_plugins:
             missing_plugins.remove("all")
@@ -493,15 +527,15 @@ class PriscillaPluginManager (Singleton):
                 raise KeyError("Unknown plugins: %s" % ", ".join(sorted(missing_plugins)))
             raise KeyError("Unknown plugin: %s" % missing_plugins.pop())
 
-        # Blacklist approach
+        # Blacklist approach.
         if "all" in enabled_plugins:
             plugins.difference_update(disabled_plugins)
 
-        # Whitelist approach
+        # Whitelist approach.
         else:
             plugins.intersection_update(enabled_plugins)
 
-        # Load each requested plugin
+        # Load each requested plugin.
         return { name : self.load_plugin_by_name(name) for name in plugins }
 
 
@@ -520,41 +554,41 @@ class PriscillaPluginManager (Singleton):
         :raises: Exception -- Plugins may throw exceptions if they fail to load.
         """
 
-        # If the plugin was already loaded, return the instance from the cache
+        # If the plugin was already loaded, return the instance from the cache.
         instance = self.__cache.get(name, None)
         if instance is not None:
             return instance
 
-        # Get the plugin info
+        # Get the plugin info.
         try:
             info = self.__plugins[name]
         except KeyError:
             raise KeyError("Plugin not found: %r" % name)
 
-        # Get the plugin module file
+        # Get the plugin module file.
         source = info.plugin_module
 
-        # Import the plugin module
+        # Import the plugin module.
         module_fake_name = "plugin_" + re.sub("\W|^(?=\d)", "_", name)
         module = imp.load_source(module_fake_name, source)
 
-        # Get the plugin classname
+        # Get the plugin classname.
         classname = info.plugin_class
 
-        # If we know the plugin classname, get the class
+        # If we know the plugin classname, get the class.
         if classname:
             try:
                 clazz = getattr(module, classname)
             except Exception:
                 raise ImportError("Plugin class %s not found in file: %s" % (classname, source))
 
-        # If we don't know the plugin classname, we need to find it
+        # If we don't know the plugin classname, we need to find it.
         else:
 
-            # Get the plugin base class for its category
+            # Get the plugin base class for its category.
             base_class = self.CATEGORIES[ name[ : name.find("/") ] ]
 
-            # Get all public symbols from the module
+            # Get all public symbols from the module.
             public_symbols = [getattr(module, symbol) for symbol in getattr(module, "__all__", [])]
             if not public_symbols:
                 public_symbols = [value for (symbol, value) in module.__dict__.iteritems()
@@ -562,7 +596,7 @@ class PriscillaPluginManager (Singleton):
                 if not public_symbols:
                     raise ImportError("Plugin class not found in file: %s" % source)
 
-            # Find all public classes that derive from the base class
+            # Find all public classes that derive from the base class.
             # NOTE: it'd be faster to stop on the first match,
             #       but then we can't check for ambiguities (see below)
             candidates = []
@@ -574,7 +608,7 @@ class PriscillaPluginManager (Singleton):
                 except TypeError:
                     pass
 
-            # There should be only one candidate, if not raise an exception
+            # There should be only one candidate, if not raise an exception.
             if not candidates:
                 raise ImportError("Plugin class not found in file: %s" % source)
             if len(candidates) > 1:
@@ -582,19 +616,19 @@ class PriscillaPluginManager (Singleton):
                 msg = msg % (source, ", ".join(c.__name__ for c in candidates))
                 raise ImportError(msg)
 
-            # Get the plugin class
+            # Get the plugin class.
             clazz = candidates.pop()
 
-            # Add the classname to the plugin info
+            # Add the classname to the plugin info.
             info._fix_classname(clazz.__name__)
 
-        # Instance the plugin class
+        # Instance the plugin class.
         instance = clazz()
 
-        # Add it to the cache
+        # Add it to the cache.
         self.__cache[name] = instance
 
-        # Return the instance
+        # Return the instance.
         return instance
 
 
@@ -642,20 +676,11 @@ class PriscillaPluginManager (Singleton):
                 raise ValueError(msg)
             graph[name] = deps
 
-        # Remove empty stages.
-        stages = { k : v for (k, v) in stages.iteritems() if v }
-
-        # Compact the stage numbers, removing gaps.
-        # (This converts the dictionary into a list.)
-        stage_numbers = sorted(stages.keys())
-        max_stage = len(stage_numbers) - 1
-        stages = [ stages[stage_numbers[n]] for n in xrange(max_stage + 1) ]
-
         # Add the implicit dependencies defined by the stages into the graph.
         # (We're creating dummy bridge nodes to reduce the number of edges.)
         for n in xrange(max_stage):
             bridge = "* stage %d" % n
-            graph[bridge] = set(stages[n])
+            graph[bridge] = set(stages[n]) # make a copy
             for node in stages[n + 1]:
                 graph[node].add(bridge)
 
@@ -686,13 +711,10 @@ class PriscillaPluginManager (Singleton):
 
 
     #----------------------------------------------------------------------
-    def next_plugins(self, past_plugins, candidate_plugins, current_stage):
+    def next_plugins(self, candidate_plugins, current_stage):
         """
         Based on the previously executed plugins, get the next plugins
         to execute.
-
-        :param past_plugins: Previously executed plugins.
-        :type past_plugins: set(str)
 
         :param candidate_plugins: Plugins we may want to execute.
         :type candidate_plugins: set(str)
@@ -702,12 +724,12 @@ class PriscillaPluginManager (Singleton):
 
         :returns: set(str) -- Next plugins to execute.
         """
-        ##candidate_plugins = candidate_plugins.intersection(self.__stages[current_stage])
-        for batch in self.__batches:
-            batch = batch.difference(past_plugins)
-            batch.intersection_update(candidate_plugins)
-            if batch:
-                return batch
+        candidate_plugins = candidate_plugins.intersection(self.__stages[current_stage])
+        if candidate_plugins:
+            for batch in self.__batches:
+                batch = batch.intersection(candidate_plugins)
+                if batch:
+                    return batch
         return set()
 
 

@@ -1,6 +1,7 @@
 [Core]
 Name = Bruteforce URL discovery
 Module = bruteforce.py
+Stage = Scan
 
 [Documentation]
 Description = Tries to discover URLs not linked anywhere in the page using a brute force approach.
