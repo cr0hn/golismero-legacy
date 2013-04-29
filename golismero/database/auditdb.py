@@ -786,6 +786,10 @@ class AuditSQLiteDB (BaseAuditDB):
         query  = "INSERT OR REPLACE INTO %s VALUES (NULL, ?, ?, ?);" % table
         values = (identity, dtype, self.encode(data))
         self.__cursor.execute(query, values)
+        if is_new:
+            self.__cursor.execute(
+                "INSERT INTO stages (identity) VALUES (?);",
+                (identity,))
         return is_new
 
 
@@ -804,9 +808,19 @@ class AuditSQLiteDB (BaseAuditDB):
             raise NotImplementedError(
                 "Unknown data type %r!" % data_type)
         for table in tables:
-            query  = "DELETE FROM identity WHERE identity = ?;" % table
-            self.__cursor.execute(query, (identity,))
+            self.__cursor.execute(
+                "DELETE FROM %s WHERE identity = ?;" % table,
+                (identity,)
+            )
             if self.__cursor.rowcount:
+                self.__cursor.execute(
+                    "DELETE FROM history WHERE identity = ?;",
+                    (identity,)
+                )
+                self.__cursor.execute(
+                    "DELETE FROM stages WHERE identity = ?;",
+                    (identity,)
+                )
                 return True
         return False
 
