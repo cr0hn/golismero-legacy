@@ -249,17 +249,19 @@ class PluginInfo (object):
         except Exception:
             self.__website     = "http://code.google.com/p/golismero/"
 
-        # Load the plugin configuration.
+        # Load the plugin configuration as a Python dictionary.
+        # This section is optional.
         try:
             self.__plugin_config = dict( parser.items("Configuration") )
         except Exception:
             self.__plugin_config = dict()
 
-        # Load the plugin extra configuration.
+        # Load the plugin extra configuration sections as a dict of dicts.
+        # All sections not parsed above will be included here.
         self.__plugin_extra_config = dict()
         for section in parser.sections():
             section = section.title()
-            if section not in ("Core", "Documentation"):
+            if section not in ("Core", "Documentation", "Configuration"):
                 options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
                 self.__plugin_extra_config[section] = options
 
