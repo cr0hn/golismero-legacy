@@ -43,17 +43,18 @@ class Information(Data):
     # Types of Infomation results
     #
     #--------------------------------------------------------------------------
-    INFORMATION_UNKNOWN       = 0
-    INFORMATION_IMAGE         = 1
-    INFORMATION_DOCUMENT      = 2
-    INFORMATION_BINARY        = 3
-    INFORMATION_MAIL          = 4
-    INFORMATION_HTML          = 5
-    INFORMATION_HTTP_REQUEST  = 6
-    INFORMATION_HTTP_RESPONSE = 7
-    INFORMATION_PLAIN_TEXT    = 8
+    INFORMATION_UNKNOWN       = 0     # Not a real value!
+    INFORMATION_HTTP_REQUEST  = 1001  # Raw HTTP request
+    INFORMATION_HTTP_RESPONSE = 1002  # Raw HTTP response
+    INFORMATION_HTML          = 1003  # HTML source code
+    INFORMATION_PLAIN_TEXT    = 1004  # Text file
+    INFORMATION_BINARY        = 1005  # Binary file of unknown type
+    INFORMATION_EXECUTABLE    = 1006  # Executable file (various platforms)
+    INFORMATION_IMAGE         = 1007  # Image file
+    INFORMATION_PDF           = 1008  # PDF file
+    INFORMATION_DOCUMENT      = 1009  # Document file (various formats)
 
-    INFORMATION_FIRST = INFORMATION_UNKNOWN
+    INFORMATION_FIRST = INFORMATION_HTTP_REQUEST
     INFORMATION_LAST  = INFORMATION_PLAIN_TEXT
 
 
