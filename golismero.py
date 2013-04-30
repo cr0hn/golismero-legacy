@@ -47,7 +47,7 @@ def show_banner():
     print
     print "|--------------------------------------------------|"
     print "| GoLismero - The Web Knife                        |"
-    print "| Contact: golismero.project@gmail.com             |"
+    print "| Contact: golismero.project<@>gmail.com           |"
     print "|                                                  |"
     print "| Daniel Garcia a.k.a cr0hn (@ggdaniel)            |"
     print "| Mario Vilas (@mario_vilas)                       |"
