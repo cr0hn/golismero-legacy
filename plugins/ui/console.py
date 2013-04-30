@@ -45,10 +45,50 @@ import warnings
 # More verbose: Verbose + errors with tracebacks, unimportant actions of plugins
 #
 
+
+#----------------------------------------------------------------------
+def process_url(url):
+    """Display URL info"""
+    return "New URL: [%s] %s" % (
+        url.method,
+        colorize(url.url, 'info'),
+    )
+
+
+#----------------------------------------------------------------------
+def process_url_suspicious(vuln):
+    """Display suspicious URL"""
+
+    return "%s: %s" % (
+        colorize("!! Suspicious URL", vuln.risk),
+        colorize_substring(vuln.url.url, vuln.substring, 'red')
+    )
+
+
+#----------------------------------------------------------------------
+def process_url_disclosure(vuln):
+    """Display URL discover"""
+
+    return "%s: %s\n| Method: %s\n%s|-%s" % (
+        colorize("!! Discovered", vuln.risk),
+        colorize_substring(vuln.url.url, vuln.discovered, vuln.risk),
+        vuln.method,
+        '| Referer <- %s\n' % str(vuln.referer) if vuln.referer else '',
+        "-" * len(vuln.url.url)
+    )
+
 class ConsoleUIPlugin(UIPlugin):
     """
     Console UI plugin.
     """
+
+    # Processors functions
+    funcs = {
+        Resource.RESOURCE_URL : process_url,
+
+        UrlDisclosure.vulnerability_type: process_url_disclosure,
+        SuspiciousURL.vulnerability_type: process_url_suspicious,
+    }
 
 
     #----------------------------------------------------------------------
@@ -87,20 +127,12 @@ class ConsoleUIPlugin(UIPlugin):
         # Display in console
         #
 
-        # Processors functions
-        funcs = {
-            Resource.RESOURCE_URL : process_url,
-
-            UrlDisclosure.vulnerability_type: process_url_disclosure,
-            SuspiciousURL.vulnerability_type: process_url_suspicious,
-        }
-
         if Console.level >= Console.STANDARD:
 
             # Messages with vulnerability types
             if  info.data_type == Data.TYPE_VULNERABILITY:
                 try:
-                    f = funcs[info.vulnerability_type]
+                    f = self.funcs[info.vulnerability_type]
                 except KeyError:
                     raise ValueError("No function available to process Vulnerability type: '%s'" % info.vulnerability_type)
                 Console.display(f(info))
@@ -108,9 +140,9 @@ class ConsoleUIPlugin(UIPlugin):
         if Console.level >= Console.VERBOSE:
 
             # Messages with information types
-            if  info.data_type == Data.TYPE_RESOURCE and info.data_type == Resource.RESOURCE_URL:
+            if  info.data_type == Data.TYPE_RESOURCE and info.resource_type == Resource.RESOURCE_URL:
                 try:
-                    f = funcs[info.RESOURCE_URL]
+                    f = self.funcs[info.resource_type]
                 except KeyError:
                     raise ValueError("No function available to process Resource type: '%s'" % info.vulnerability_type)
                 Console.display("+ %s" % f(info))
@@ -190,35 +222,3 @@ class ConsoleUIPlugin(UIPlugin):
         #     return list(Resource.RESOURCE_URL, Injection.XSS_REFLECTED)
         #
         return None
-
-
-#----------------------------------------------------------------------
-def process_url(url):
-    """Display URL info"""
-    return "New URL: [%s] %s" % (
-        url.method,
-        colorize(url.url, 'info'),
-    )
-
-
-#----------------------------------------------------------------------
-def process_url_suspicious(vuln):
-    """Display suspicious URL"""
-
-    return "%s: %s" % (
-        colorize("!! Suspicious URL", vuln.risk),
-        colorize_substring(vuln.url.url, vuln.substring, 'red')
-    )
-
-
-#----------------------------------------------------------------------
-def process_url_disclosure(vuln):
-    """Display URL discover"""
-
-    return "%s: %s\n| Method: %s\n%s|-%s" % (
-        colorize("!! Discovered", vuln.risk),
-        colorize_substring(vuln.url.url, vuln.discovered, vuln.risk),
-        vuln.method,
-        '| Referer <- %s\n' % str(vuln.referer) if vuln.referer else '',
-        "-" * len(vuln.url.url)
-    )
