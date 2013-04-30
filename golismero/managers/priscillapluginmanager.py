@@ -259,7 +259,7 @@ class PluginInfo (object):
         self.__plugin_extra_config = dict()
         for section in parser.sections():
             section = section.title()
-            if section not in ("Core", "Documentation"):
+            if section not in ("Core", "Documentation", "Configuration"):
                 options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
                 self.__plugin_extra_config[section] = options
 
