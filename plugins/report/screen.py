@@ -122,7 +122,6 @@ class ScreenReport(ReportPlugin):
             l_url_suspicious = u.associated_vulnerabilities_by_category(cat_name="information_disclosure/url_suspicious")
             print "### " + str(len(l_url_suspicious))
             if l_url_suspicious and len(l_url_suspicious) == 1: # There is 'url_suspicious' vulns and only one result
-                print "aaa"
                 l_val = iter(l_url_suspicious).next()
                 l_url = colorize_substring(l_val.url, l_val.substring, l_val.severity)
             else:
