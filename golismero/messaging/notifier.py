@@ -51,51 +51,62 @@ class Notifier (object):
     def __init__(self):
         """Constructor."""
 
-        # Call superclass constructor
+        # Call the superclass constructor.
         super(Notifier, self).__init__()
 
         # Info message notification list for plugins
-        # that receive all information types
-        # list(Plugin_instance)
-        self._notification_info_all = list()
+        # that receive all information types.
+        # list(str)
+        self._notification_info_all = []
 
-        # Info message notification mapping for plugins
-        # (info_type, list(Plugin_instance))
+        # Info message notification mapping for plugins.
+        # dict(info_type -> list(str))
         self._notification_info_map = defaultdict(list)
 
-        # Control message notification mapping for plugins
-        # list(Plugin_instance)
-        self._notification_msg_list = list()
+        # Control message notification mapping for plugins.
+        # list(Plugin)
+        self._notification_msg_list = []
+
+        # Map of plugin names to plugin instances.
+        # dict(str -> Plugin)
+        self._map_name_to_plugin = {}
 
 
     #----------------------------------------------------------------------
-    def add_multiple_plugins(self, plugin_list):
+    def add_multiple_plugins(self, plugins):
         """
-        Add a list of plugins.
+        Add multiple plugins.
 
-        :param plugin: list of plugins to add
-        :type plugin: list(Plugin)
+        :param plugins: Map of plugin names to plugin instances.
+        :type plugins: dict(str -> Plugin)
         """
-        map(self.add_plugin, plugin)
+        for name, plugin in plugins.iteritems():
+            self.add_plugin(name, plugin)
 
 
     #----------------------------------------------------------------------
-    def add_plugin(self, plugin):
+    def add_plugin(self, name, plugin):
         """
-        Add a plugin to manage.
+        Add a plugin.
 
-        :param plugin: a Plugin type to manage
+        :param name: The plugin name.
+        :type name: str
+
+        :param plugin: The plugin instance.
         :type plugin: Plugin
         """
         if not isinstance(plugin, Plugin):
             raise TypeError("Expected Plugin, got %s instead" % type(plugin))
+
+        # Add the plugin to the names map.
+        self._map_name_to_plugin[name] = plugin
 
         # Get the info types accepted by this plugin.
         m_message_types = plugin.get_accepted_info()
 
         # Special value 'None' means all information types.
         if m_message_types is None:
-            self._notification_info_all.append(plugin)
+            self._notification_info_all.append(name)
 
         # Otherwise, it's a list of information types.
         else:
@@ -105,7 +116,7 @@ class Notifier (object):
 
             # Register the plugin for each accepted info type.
             for l_type in m_message_types:
-                self._notification_info_map[l_type].append(plugin)
+                self._notification_info_map[l_type].append(name)
 
         # UI and Global plugins can receive control messages.
         if plugin.PLUGIN_TYPE in (Plugin.PLUGIN_TYPE_UI, Plugin.PLUGIN_TYPE_UI):
@@ -115,7 +126,7 @@ class Notifier (object):
     #----------------------------------------------------------------------
     def notify(self, message):
         """
-        Dispatch message information to the plugins. Ignore other message types.
+        Dispatch messages to the plugins.
 
         :param message: A message to send to plugins
         :type message: Message
@@ -123,53 +134,78 @@ class Notifier (object):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
-        # Keep count of how many messages are sent
+        # Keep count of how many messages are sent.
         count = 0
 
         try:
 
-            # Info messages are sent to the send_info() method
+            # Info messages are sent to the send_info() method.
             if message.message_type == MessageType.MSG_TYPE_DATA:
-                m_plugins_to_notify = set()
+                audit_name = message.audit_name
+                for data in message.message_info:
 
-                # Plugins that expect all types of info
-                m_plugins_to_notify.update(self._notification_info_all)
+                    # Get the set of plugins to notify.
+                    m_plugins_to_notify = self._get_plugins_to_notify(data)
 
-                # Plugins that expect this type of info
-                # TODO: should vulnerability types be processed like trees?
-                m_type = None
-                if message.message_info.data_type == Data.TYPE_INFORMATION:
-                    m_type = message.message_info.information_type
-                elif message.message_info.data_type == Data.TYPE_RESOURCE:
-                    m_type = message.message_info.resource_type
-                elif message.message_info.data_type == Data.TYPE_VULNERABILITY:
-                    m_type = message.message_info.vulnerability_type
+                    # Dispatch message info to each plugin.
+                    for plugin_name in m_plugins_to_notify:
+                        plugin = self._map_name_to_plugin[plugin_name]
+                        self.dispatch_info(plugin, audit_name, data)
+                        count += 1
 
-                if m_type in self._notification_info_map:
-                    m_plugins_to_notify.update(self._notification_info_map[m_type])
-
-                # Dispatch message info to each plugin
-                for plugin in m_plugins_to_notify:
-                    self.send_info(plugin, message.audit_name, message.message_info)
-                    count += 1
-
-            # Control messages are sent to the send_msg() method
+            # Control messages are sent to the send_msg() method.
             else:
                 for plugin in self._notification_msg_list:
-                    self.send_msg(plugin, message)
+                    self.dispatch_msg(plugin, message)
                     count += 1
 
-        # On error log the traceback
+        # On error log the traceback.
         except Exception:
             ##Logger.log_error("Error sending message to plugins: %s" % format_exc())
             raise
 
-        # Return the count of messages sent
+        # Return the count of messages sent.
         return count
 
 
     #----------------------------------------------------------------------
-    def send_info(self, plugin, audit_name, message_info):
+    def _get_plugins_to_notify(self, data):
+        """
+        Determine which plugins should receive this data object.
+
+        :param data: Data object
+        :type data: Data
+
+        :returns: set(str) -- Set of plugin names.
+        """
+
+        m_plugins_to_notify = set()
+
+        # Plugins that expect all types of info.
+        m_plugins_to_notify.update(self._notification_info_all)
+
+        # Plugins that expect this type of info.
+        # TODO: should vulnerability types be processed like trees?
+        m_type = None
+        data_type = data.data_type
+        if data_type == Data.TYPE_INFORMATION:
+            m_type = data.information_type
+        elif data_type == Data.TYPE_RESOURCE:
+            m_type = data.resource_type
+        elif data_type == Data.TYPE_VULNERABILITY:
+            m_type = data.vulnerability_type
+        else:
+            warn("Data type not handled by notifier: %r" % data_type)
+        if m_type in self._notification_info_map:
+            m_plugins_to_notify.update(self._notification_info_map[m_type])
+        ##else:  # XXX DEBUG
+        ##    warn("Data type not handled by any plugins: %r" % data_type)
+
+        return m_plugins_to_notify
+
+
+    #----------------------------------------------------------------------
+    def dispatch_info(self, plugin, audit_name, message_info):
         """
         Send information to the plugins.
 
@@ -186,7 +222,7 @@ class Notifier (object):
 
 
     #----------------------------------------------------------------------
-    def send_msg(self, plugin, message):
+    def dispatch_msg(self, plugin, message):
         """
         Send messages to the plugins.
 
@@ -220,6 +256,59 @@ class AuditNotifier(Notifier):
         """
         super(AuditNotifier, self).__init__()
         self.__audit = audit
+        self.__processing = defaultdict(set)
+
+
+    #----------------------------------------------------------------------
+    def acknowledge(self, message):
+        """
+        Got an ACK for a message sent from this audit to the plugins.
+
+        :param message: The message with the ACK.
+        :type message: Message
+        """
+
+        # Get the identity and the plugin name.
+        identity = message.message_info
+        plugin_name = message.plugin_name
+
+        # Ignore if either is not set.
+        # This may happen for internal messages (not sent by plugins),
+        # or messages not related to data objects.
+        if identity and plugin_name:
+
+            # Add the plugin to the already processed set.
+            self.__audit.database.mark_data_as_processed(identity, plugin_name)
+
+            # Remove the plugin from the currently processing data map.
+            try:
+                self.__processing[identity].remove(plugin_name)
+            except KeyError:
+                msg = "Got an unexpected ACK for data ID %s from plugin %s"
+                warn(msg % (identity, plugin_name))
+
+
+    #----------------------------------------------------------------------
+    def _get_plugins_to_notify(self, data):
+
+        # Get the whole set of plugins that can handle this data.
+        m_plugins_to_notify = super(AuditNotifier, self)._get_plugins_to_notify(data)
+
+        # Filter out plugins that already received this data.
+        past_plugins = self.__audit.database.get_plugins_for_data(data.identity)
+        m_plugins_to_notify.difference_update(past_plugins)
+
+        # Filter out plugins not belonging to the current batch.
+        audit = self.__audit
+        pluginManager = audit.orchestrator.pluginManager
+        m_plugins_to_notify.intersection_update(
+            pluginManager.next_plugins(past_plugins, m_plugins_to_notify, audit.current_stage))
+
+        # Filter out the currently running plugins.
+        m_plugins_to_notify.difference_update(self.__processing[data.identity])
+
+        # Return the remanining plugins.
+        return m_plugins_to_notify
 
 
     #----------------------------------------------------------------------
@@ -235,12 +324,14 @@ class AuditNotifier(Notifier):
 
         :param payload: Message or information to send to plugins
         :type payload: Message or data
+
+        :raises RuntimeError: The plugin doesn't support the method.
         """
 
         # If the plugin doesn't support the callback method, drop the message
-        # XXX FIXME: maybe we want to raise an exception here instead
         if not hasattr(plugin, method):
-            return
+            msg = "Tried to run plugin %r but it has no method %r"
+            raise RuntimeError(msg % (plugin, method))
 
         # Get the Audit and Orchestrator instances
         audit        = self.__audit
@@ -249,13 +340,17 @@ class AuditNotifier(Notifier):
         # Prepare the context for the OOP observer
         context = orchestrator.build_plugin_context(audit.name, plugin)
 
+        # Add the plugin to the currently processing data map.
+        if method == "recv_info":
+            self.__processing[payload.identity].add(context.plugin_name)
+
         # Run the callback in a pooled process
         orchestrator.processManager.run_plugin(
             context, method, (payload,), {})
 
 
     #----------------------------------------------------------------------
-    def send_info(self, plugin, audit_name, message_info):
+    def dispatch_info(self, plugin, audit_name, message_info):
         """
         Send information to the plugins.
 
@@ -268,11 +363,17 @@ class AuditNotifier(Notifier):
         :param message_info: Information to send to plugins
         :type message_info: Information
         """
+
+        # Validate the audit name.
+        if audit_name is not None and audit_name != self.__audit.name:
+            raise ValueError("Wrong audit! %r != %r" % (audit_name, self.__audit.name))
+
+        # Run the plugin.
         self.__run_plugin(plugin, "recv_info", message_info)
 
 
     #----------------------------------------------------------------------
-    def send_msg(self, plugin, message):
+    def dispatch_msg(self, plugin, message):
         """
         Send messages to the plugins.
 
@@ -320,7 +421,7 @@ class UINotifier(Notifier):
 
 
     #----------------------------------------------------------------------
-    def send_info(self, plugin, audit_name, message_info):
+    def dispatch_info(self, plugin, audit_name, message_info):
         """
         Send information to the plugins.
 
@@ -337,7 +438,7 @@ class UINotifier(Notifier):
 
 
     #----------------------------------------------------------------------
-    def send_msg(self, plugin, message):
+    def dispatch_msg(self, plugin, message):
         """
         Send messages to the plugins.
 

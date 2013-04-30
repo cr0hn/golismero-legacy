@@ -82,7 +82,7 @@ class Orchestrator (object):
         if config.run_mode == config.RUN_MODE.slave:
             raise NotImplementedError("Slave mode not yet implemented!")
         if config.run_mode != config.RUN_MODE.standalone:
-            raise ValueError("Invalid run mode: %r" % options.run_mode)
+            raise ValueError("Invalid run mode: %r" % config.run_mode)
 
         # Load the plugins
         self.__pluginManager = PriscillaPluginManager()
@@ -103,6 +103,9 @@ class Orchestrator (object):
             self.__pluginManager.get_plugin_by_name("ui/%s" % self.__config.ui_mode)
         except KeyError:
             raise ValueError("No plugin found for UI mode: %r" % self.ui_mode)
+
+        # Calculate the plugin dependencies
+        self.__pluginManager.calculate_dependencies()
 
         # Incoming message queue
         if getattr(config, "max_process", 0) <= 0:
@@ -149,7 +152,7 @@ class Orchestrator (object):
             self.__ui = None
 
         # Signal handler to catch Ctrl-C
-        self.__old_signal_action = signal(SIGINT, self.__signal_handler)
+        self.__old_signal_action = signal(SIGINT, self.__control_c_handler)
 
         # Log the plugins that failed to load
         Logger.log_more_verbose("Found %d plugins" % len(success))
@@ -192,7 +195,7 @@ class Orchestrator (object):
 
 
     #----------------------------------------------------------------------
-    def __signal_handler(self, signum, frame):
+    def __control_c_handler(self, signum, frame):
         """
         Signal handler to catch Control-C interrupts.
         """
@@ -209,6 +212,25 @@ class Orchestrator (object):
                                   priority = MessagePriority.MSG_PRIORITY_HIGH)
             try:
                 self.__queue.put_nowait(message)
+            except Exception:
+                exit(1)
+
+        finally:
+
+            # Only do this once, the next time just PANIC.
+            signal(SIGINT, self.__panic_control_c_handler)
+
+
+    #----------------------------------------------------------------------
+    def __panic_control_c_handler(self, signum, frame):
+        """
+        Emergency signal handler to catch Control-C interrupts.
+        """
+        try:
+
+            # Kill all subprocesses.
+            try:
+                self.processManager.stop()
             except Exception:
                 exit(1)
 
@@ -380,6 +402,7 @@ class Orchestrator (object):
                 # just log the exception and continue.
                 except Exception:
                     Logger.log_error("Error processing message!\n%s" % format_exc())
+                    raise   # XXX FIXME
 
         finally:
 

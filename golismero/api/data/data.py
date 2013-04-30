@@ -34,6 +34,7 @@ from ...common import pickle
 from collections import defaultdict
 from functools import partial
 from hashlib import md5
+from uuid import uuid4
 from warnings import warn
 
 
@@ -179,6 +180,16 @@ class Data(object):
 
 
     #----------------------------------------------------------------------
+    # Minimum number of linked objects per data type.
+    # Use None to enforce no limits.
+
+    min_data = None              # Minimum for all data types.
+    min_resources = None         # Minimum linked resources.
+    min_informations = None      # Minimum linked informations.
+    min_vulnerabilities = None   # Minimum linked vulnerabilities.
+
+
+    #----------------------------------------------------------------------
     # Maximum number of linked objects per data type.
     # Use None to enforce no limits.
 
@@ -219,6 +230,20 @@ class Data(object):
         # marked as part of the identity.
         collection = self._collect_identity_properties()
 
+        # If there are identity properties, add the class name too.
+        # That way two objects of different classes will never have
+        # the same identity hash.
+        if collection:
+            classname = self.__class__.__name__
+            if '.' in classname:
+                classname = classname[ classname.rfind('.') + 1 : ]
+            collection[""] = classname
+
+        # If there are no identity properties, use a random UUID instead.
+        # This makes all unidentifiable objects unique.
+        else:
+            collection = uuid4()
+
         # Pickle the data with the compatibility protocol.
         # This produces always the same result for the same input data.
         data = pickle.dumps(collection, protocol = 0)
@@ -234,6 +259,7 @@ class Data(object):
 
         # Return it.
         return self.__identity
+
 
     # Protected method, we don't want outsiders calling it.
     # Subclasses may need to override it, but let's hope not!
@@ -266,35 +292,53 @@ class Data(object):
     def merge(self, other):
         """
         Merge another data object with this one.
+
+        This is the old data, and the other object is the new data.
         """
-        if type(self) is not type(other):
+        self._merge_objects(self, other, reverse = False)
+
+
+    def reverse_merge(self, other):
+        """
+        Reverse merge another data object with this one.
+
+        This is the new data, and the other object is the old data.
+        """
+        self._merge_objects(other, self, reverse = True)
+
+
+    # Merge objects in any order.
+    @classmethod
+    def _merge_objects(cls, old_data, new_data, reverse = False):
+        if type(old_data) is not type(new_data):
             raise TypeError("Can only merge data objects of the same type")
-        if self.identity != other.identity:
+        if old_data.identity != new_data.identity:
             raise ValueError("Can only merge data objects of the same identity")
 
         # Merge the properties.
-        for key in dir(other):
+        for key in dir(new_data):
             if not key.startswith("_") and key != "identity":
-                self._merge_property(other, key)
+                cls._merge_property(old_data, new_data, key, reverse = reverse)
 
         # Merge the links.
-        self._merge_links(other)
+        cls._merge_links(old_data, new_data, reverse = reverse)
 
 
     # Merge a single property.
-    def _merge_property(self, other, key):
+    @classmethod
+    def _merge_property(cls, old_data, new_data, key, reverse = False):
 
         # Determine if the property is mergeable or overwriteable, ignore otherwise.
-        prop = getattr(other.__class__, key, None)
+        prop = getattr(new_data.__class__, key, None)
 
         # Merge strategy.
         if prop is None or merge.is_mergeable_property(prop):
 
             # Get the original value.
-            my_value = getattr(self, key, None)
+            my_value = getattr(old_data, key, None)
 
             # Get the new value.
-            their_value = getattr(other, key, None)
+            their_value = getattr(new_data, key, None)
 
             # None to us means "not set".
             if their_value is not None:
@@ -305,9 +349,14 @@ class Data(object):
 
                 # Combine sets, dictionaries, lists and tuples.
                 elif isinstance(their_value, (set, dict)):
+                    if reverse:
+                        my_value = my_value.copy()
                     my_value.update(their_value)
                 elif isinstance(their_value, list):
-                    my_value.extend(their_value)
+                    if reverse:
+                        my_value = my_value + their_value
+                    else:
+                        my_value.extend(their_value)
                 elif isinstance(their_value, tuple):
                     my_value = my_value + their_value
 
@@ -316,36 +365,46 @@ class Data(object):
                     my_value = their_value
 
                 # Set the new value.
+                target_data = new_data if reverse else old_data
                 try:
-                    setattr(self, key, my_value)
+                    setattr(target_data, key, my_value)
                 except AttributeError:
                     if prop is not None:
                         msg = "Mergeable read-only properties make no sense! Ignoring: %s.%s"
-                        msg %= (self.__class__.__name__, key)
+                        msg %= (cls.__name__, key)
                         warn(msg)
 
         # Overwrite strategy.
         elif overwrite.is_overwriteable_property(prop):
 
             # Get the resulting value.
-            value = getattr(self, key, None)
-            value = getattr(other, key, value)
+            my_value = getattr(old_data, key, None)
+            my_value = getattr(new_data, key, my_value)
 
             # Set the resulting value.
+            target_data = new_data if reverse else old_data
             try:
-                setattr(self, key, my_value)
+                setattr(target_data, key, my_value)
             except AttributeError:
                 msg = "Overwriteable read-only properties make no sense! Ignoring: %s.%s"
-                msg %= (self.__class__.__name__, key)
+                msg %= (cls.__name__, key)
                 warn(msg)
 
 
     # Merge links as the union of all links from both objects.
-    def _merge_links(self, other):
-        for data_type, subdict in other.__linked.iteritems():
-            my_subdict = self.__linked[data_type]
-            for data_subtype, identity_set in subdict.iteritems():
-                my_subdict[data_subtype].update(identity_set)
+    @classmethod
+    def _merge_links(cls, old_data, new_data, reverse = False):
+        if reverse:
+            for data_type, new_subdict in new_data.__linked.items():
+                target_subdict = old_data.__linked[data_type].copy()
+                for data_subtype, identity_set in new_subdict.iteritems():
+                    target_subdict[data_subtype] = target_subdict[data_subtype].union(identity_set)
+                new_data.__linked[data_type] = target_subdict
+        else:
+            for data_type, new_subdict in new_data.__linked.iteritems():
+                my_subdict = old_data.__linked[data_type]
+                for data_subtype, identity_set in new_subdict.iteritems():
+                    my_subdict[data_subtype].update(identity_set)
 
 
     #----------------------------------------------------------------------
@@ -493,6 +552,39 @@ class Data(object):
 
 
     #----------------------------------------------------------------------
+    def validate_link_minimums(self):
+        """
+        Validates the link minimum constraints. Raises an exception if not met.
+
+        Note: The maximums are already checked when creating the links.
+
+        This method is called after plugins return the data.
+
+        :raises ValueError: The minimum link constraints are not met.
+        """
+
+        # Check the total link minimum.
+        min_data = self.min_data
+        if min_data is not None and min_data >= 0:
+            found_data = len(self.links)
+            if found_data < min_data:
+                msg = "Not enough linked Data objects: %d required but %d found"
+                raise ValueError(msg % (min_data, found_data))
+
+        # Check the link minimum for each type.
+        for data_type, s_type, min_data in (
+            (self.TYPE_INFORMATION,   "Information",   self.min_informations),
+            (self.TYPE_RESOURCE,      "Resource",      self.min_resources),
+            (self.TYPE_VULNERABILITY, "Vulnerability", self.min_vulnerabilities),
+        ):
+            if min_data is not None and min_data >= 0:
+                found_data = len(self.get_links(data_type))
+                if found_data < min_data:
+                    msg = "Not enough linked %s objects: %d required but %d found"
+                    raise ValueError(msg % (s_type, min_data, found_data))
+
+
+    #----------------------------------------------------------------------
     @property
     def discovered_resources(self):
         """
@@ -514,14 +606,11 @@ class _TempDataStorage(object):
     #----------------------------------------------------------------------
     def __init__(self):
 
-        # Map of identities to instances.
+        # Map of identities to newly created instances.
         self.__new_data = {}
 
-        # Set of identities of referenced new instances.
-        self.__referenced = set()
-
         # List of fresh instances, not yet fully initialized.
-        self.__fresh = list()
+        self.__fresh = []
 
 
     #----------------------------------------------------------------------
@@ -530,18 +619,7 @@ class _TempDataStorage(object):
         Called by the plugin bootstrap when a plugin is run.
         """
         self.__new_data = {}
-        self.__referenced = set()
-        self.__fresh = list()
-
-
-    #----------------------------------------------------------------------
-    def on_finish(self):
-        """
-        Called by the plugin bootstrap when a plugin finishes running.
-        """
-        self.__new_data = {}
-        self.__referenced = set()
-        self.__fresh = list()
+        self.__fresh = []
 
 
     #----------------------------------------------------------------------
@@ -550,27 +628,6 @@ class _TempDataStorage(object):
         Called by instances when being created.
         """
         self.__fresh.append(data)
-
-
-    #----------------------------------------------------------------------
-    def on_send(self, data):
-        """
-        Called by the OOP Observer when an instance
-        is sent to the Orchestrator.
-        """
-        self.update()
-        for ref in data.links:
-            if ref in self.__new_data:
-                self.__referenced.add(ref)
-        identity = data.identity
-        try:
-            del self.__new_data[identity]
-        except KeyError:
-            pass
-        try:
-            self.__referenced.remove(identity)
-        except KeyError:
-            pass
 
 
     #----------------------------------------------------------------------
@@ -599,28 +656,97 @@ class _TempDataStorage(object):
 
 
     #----------------------------------------------------------------------
-    @property
-    def pending(self):
+    def on_finish(self, result):
         """
-        New instances pending to be sent.
-
-        :returns: list(Data) -- List of instances.
+        Called by the plugin bootstrap when a plugin finishes running.
         """
-        self.update()
-        return [self.__new_data[ref] for ref in self.__referenced]
+        try:
+            self.update()
 
+            # No results.
+            if result is None:
+                result = []
 
-    #----------------------------------------------------------------------
-    @property
-    def orphans(self):
-        """
-        Orphaned new instances.
+            # Single result.
+            if isinstance(result, Data):
+                result = [result]
 
-        :returns: list(Data) -- List of instances.
-        """
-        self.update()
-        return [data for data in self.__new_data.itervalues()
-                     if data.identity not in self.__referenced]
+            # Multiple results.
+            else:
+                result = list(result)
+                for data in result:
+                    if not isinstance(data, Data):
+                        msg = "recv_info() returned an invalid data type: %r"
+                        raise TypeError(msg % type(data))
+
+            # Merge duplicates.
+            graph = {}
+            merged = []
+            for data in result:
+                data.validate_link_minimums() # raises ValueError on bad data
+                identity = data.identity
+                old_data = graph.get(identity, None)
+                if old_data is not None:
+                    if old_data is not data:
+                        old_data.merge(data)
+                        merged.append(data)
+                else:
+                    graph[identity] = data
+            if merged:
+                msg = "recv_info() returned duplicated results"
+                try:
+                    msg += ":\n\t" + "\n\t".join(repr(data) for data in merged)
+                except Exception:
+                    pass
+                warn(msg, RuntimeWarning)
+
+            # Grab missing results.
+            visited = set()
+            missing = []
+            queue = list(graph.iterkeys())
+            while queue:
+                identity = queue.pop()
+                if identity not in visited:
+                    visited.add(identity)
+                    if identity not in graph:
+                        data = self.__new_data.get(identity, None)
+                        if data is not None:
+                            missing.append(data)
+                            graph[identity] = data
+                            queue.extend(data.links)
+            if missing:
+                msg = ("Data created and referenced by plugin,"
+                       " but not returned by recv_info()")
+                try:
+                    msg += ":\n\t" + "\n\t".join(
+                        repr(data) for data in missing)
+                except Exception:
+                    pass
+                warn(msg, RuntimeWarning)
+
+            # TO DO: check if the data object passed to
+            # recv_info() as parameter was modified.
+
+            # Warn for data being instanced but not returned or referenced.
+            orphan = set(self.__new_data.iterkeys())
+            orphan.difference_update(graph.iterkeys())
+            if orphan:
+                msg = ("Data created by plugin, but not referenced"
+                       " nor returned by recv_info()")
+                try:
+                    msg += ":\n\t" + "\n\t".join(
+                        repr(self.__new_data[identity]) for identity in orphan)
+                except Exception:
+                    pass
+                warn(msg, Warning)
+
+            # Return the results.
+            return graph.values()
+
+        # Clean up before returning.
+        finally:
+            self.__new_data = {}
+            self.__fresh = []
 
 
 #----------------------------------------------------------------------

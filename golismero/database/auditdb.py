@@ -294,7 +294,7 @@ class BaseAuditDB (BaseDB):
 
 
     #----------------------------------------------------------------------
-    def mask_data_as_processed(self, identity, plugin_name):
+    def mark_data_as_processed(self, identity, plugin_name):
         """
         Mark the data as having been processed by the plugin.
 
@@ -303,8 +303,6 @@ class BaseAuditDB (BaseDB):
 
         :param plugin_name: Plugin name.
         :type plugin_name: str
-
-        :returns: set(str) -- Set of names of plugins that processed the data.
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -476,9 +474,8 @@ class AuditMemoryDB (BaseAuditDB):
 
 
     #----------------------------------------------------------------------
-    def mask_data_as_processed(self, identity, plugin_name):
+    def mark_data_as_processed(self, identity, plugin_name):
         self.__history[identity].add(plugin_name)
-        return self.__history[identity]
 
 
     #----------------------------------------------------------------------
@@ -659,7 +656,7 @@ class AuditSQLiteDB (BaseAuditDB):
                 plugin_id INTEGER NOT NULL,
                 key STRING NOT NULL,
                 value BLOB NOT NULL,
-                FOREIGN KEY(plugin_id) REFERENCES(plugin.rowid),
+                FOREIGN KEY(plugin_id) REFERENCES plugin(rowid),
                 UNIQUE(plugin_id, key) ON CONFLICT REPLACE
             );
 
@@ -667,7 +664,7 @@ class AuditSQLiteDB (BaseAuditDB):
                 rowid INTEGER PRIMARY KEY,
                 plugin_id INTEGER NOT NULL,
                 identity STRING NOT NULL,
-                FOREIGN KEY(plugin_id) REFERENCES(plugin.rowid),
+                FOREIGN KEY(plugin_id) REFERENCES plugin(rowid),
                 UNIQUE(plugin_id, identity) ON CONFLICT IGNORE
             );
 
@@ -731,7 +728,7 @@ class AuditSQLiteDB (BaseAuditDB):
             raise TypeError("Expected Data, got %d instead" % type(data))
         table, dtype = self.__get_data_table_and_type(data)
         identity = data.identity
-        old_data = self.__get(identity, data.data_type)
+        old_data = self.__get_data(identity, data.data_type)
         is_new = old_data is None
         if not is_new:
             old_data.merge(data)
@@ -991,7 +988,7 @@ class AuditSQLiteDB (BaseAuditDB):
 
     #----------------------------------------------------------------------
     @transactional
-    def mask_data_as_processed(self, identity, plugin_name):
+    def mark_data_as_processed(self, identity, plugin_name):
 
         # Fetch the plugin rowid, add it if missing.
         self.__cursor.execute(

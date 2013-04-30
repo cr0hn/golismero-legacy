@@ -66,6 +66,8 @@ class Spider(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
+        m_return = []
+
         # Extract data
         if not isinstance(info, Url):
             raise TypeError("Expected Url, got %s instead" % type(info))
@@ -75,7 +77,7 @@ class Spider(TestingPlugin):
 
         # Check depth
         if m_deep > int(Config.audit_config.depth):
-            return
+            return m_return
 
         Logger.log_verbose("Spidering URL: '%s'" % m_url)
 
@@ -95,31 +97,31 @@ class Spider(TestingPlugin):
 
         # If error p == None => return
         if not p:
-            return
+            return m_return
 
         # Alert for redirect, if recursive spidering is not enabled.
         if m_deep == Config.audit_config.depth and p.http_response_code == 301:
             Logger.log("==> Initial redirection detected, but NOT followed. Try increasing the depth with the '-r' option.")
 
         # Send back the HTTP reponse to the kernel
-        ##self.send_info(p)
+        ##m_return.append(p)
 
         # If it's a 301 response, get the Location header
         if p.http_response_code == 301:
             m_location = p.http_headers.get("Location", "")
             if m_location:
-                self.send_info(Url(url=m_location, depth=m_deep + 1, referer=m_url))
+                m_return.append(Url(url=m_location, depth=m_deep + 1, referer=m_url))
 
         # Stop if there's no embedded information
         if not p.information:
-            return
+            return m_return
 
-        # Send back the embedded information to the kernel
-        self.send_info(p.information)
+        # If there's embedded information, it will be sent as a result
+        m_return.append( p.information )
 
         # Stop if the embedded information is not HTML
         if p.information.information_type != Information.INFORMATION_HTML:
-            return
+            return m_return
 
         s1 = time()
 
@@ -137,11 +139,12 @@ class Spider(TestingPlugin):
         )
 
         # Convert to Url data type and filter out out of scope and forbidden URLs
-        m_return = [ Url(url=u, depth=m_deep + 1, referer=m_url)
-                     for u in m_links
-                     if is_in_scope(u) and not any(x in u for x in m_forbidden) ]
+        m_return.extend(
+            Url(url=u, depth=m_deep + 1, referer=m_url)
+            for u in m_links
+            if is_in_scope(u) and not any(x in u for x in m_forbidden) )
 
         s2 = time()
 
-        # Send the URLs
+        # Send the results
         return m_return

@@ -422,11 +422,11 @@ class OrchestratorConfig (Configuration):
 
         # Validate the network connections limit
         if self.max_connections < 1:
-            raise ValueError("Number of connections must be greater than 0, got %i." % params.max_connections)
+            raise ValueError("Number of connections must be greater than 0, got %i." % self.max_connections)
 
         # Validate the number of concurrent processes
         if self.max_process < 0:
-            raise ValueError("Number of processes cannot be a negative number, got %i." % params.max_process)
+            raise ValueError("Number of processes cannot be a negative number, got %i." % self.max_process)
 
         # Validate the list of plugins
         if not self.enabled_plugins:

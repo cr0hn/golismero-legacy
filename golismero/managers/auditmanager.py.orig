@@ -5,8 +5,13 @@ __license__="""
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
+<<<<<<< HEAD
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
+=======
+  Daniel Garcia Garcia a.k.a cr0hn | cr0hn@cr0hn.com
+  Mario Vilas | mvilas@gmail.com
+>>>>>>> 5bdfe4ccfa3d666ec12ccdcf03e778a13ac9b003
 
 Golismero project site: http://code.google.com/p/golismero/
 Golismero project mail: golismero.project@gmail.com

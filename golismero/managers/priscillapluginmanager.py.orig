@@ -166,7 +166,30 @@ class PluginInfo (object):
         try:
             dependencies       = parser.get("Core", "Dependencies")
         except Exception:
+<<<<<<< HEAD
+            self.__website     = "http://code.google.com/p/golismero/"
+
+        # Load the plugin configuration"
+        try:
+            self.__plugin_config = {}
+            for sec in parser.sections():
+                l_sec = sec.lower()
+                if l_sec in ("documentation" , "core"):
+                    continue
+                self.__plugin_config[sec] = dict( parser.items(sec) )
+        except Exception, e:
+            self.__plugin_config = dict()
+
+        # Load the plugin extra configuration
+        self.__plugin_extra_config = dict()
+        for section in parser.sections():
+            section = section.title()
+            if section not in ("Core", "Documentation"):
+                options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
+                self.__plugin_extra_config[section] = options
+=======
             dependencies       = None
+>>>>>>> 5bdfe4ccfa3d666ec12ccdcf03e778a13ac9b003
 
         # Sanitize the plugin module pathname
         if not plugin_module.endswith(".py"):
@@ -235,7 +258,7 @@ class PluginInfo (object):
         self.__plugin_extra_config = dict()
         for section in parser.sections():
             section = section.title()
-            if section not in ("Core", "Documentation"):
+            if section not in ("Core", "Documentation", "Configuration"):
                 options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
                 self.__plugin_extra_config[section] = options
 

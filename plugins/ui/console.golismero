@@ -7,3 +7,5 @@ Description = Console interface
 Author = Daniel Garcia Garcia (cr0hn)
 Version = 0.1
 Website = http://code.google.com/p/golismero/
+Copyright = Copyright (C) 2011-2013 GoLismero Project
+License = GNU Public License

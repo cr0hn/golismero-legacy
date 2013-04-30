@@ -272,7 +272,8 @@ def main(args):
         plugins_folder = path.dirname(plugins_folder)
         plugins_folder = path.join(plugins_folder, "plugins")
         if not path.isdir(plugins_folder):
-            plugins_folder = path.abspath(golismero.common.__file__)
+            from golismero import common
+            plugins_folder = path.abspath(common.__file__)
             plugins_folder = path.dirname(plugins_folder)
             plugins_folder = path.join(plugins_folder, "plugins")
             if not path.isdir(plugins_folder):
