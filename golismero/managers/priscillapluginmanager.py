@@ -673,7 +673,7 @@ class PriscillaPluginManager (Singleton):
             stage = info.stage
             if not stage or stage < 0:
                 stage = 0
-            stages[stage] = name
+            stages[stage].add(name)
             deps = set(info.dependencies)
             if not deps.issubset(all_names):
                 msg = "Plugin %s depends on missing plugin(s): %s"
@@ -683,9 +683,14 @@ class PriscillaPluginManager (Singleton):
 
         # Add the implicit dependencies defined by the stages into the graph.
         # (We're creating dummy bridge nodes to reduce the number of edges.)
-        for n in xrange(max_stage):
+        stage_numbers = sorted(self.STAGES.itervalues())
+        for n in stage_numbers:
+            this_stage = "* stage %d" % n
+            next_stage = "* stage %d" % (n + 1)
+            graph[next_stage].add(this_stage)
+        for n in stage_numbers:
             bridge = "* stage %d" % n
-            graph[bridge] = set(stages[n]) # make a copy
+            graph[bridge].update(stages[n])
             for node in stages[n + 1]:
                 graph[node].add(bridge)
 
@@ -715,7 +720,7 @@ class PriscillaPluginManager (Singleton):
 
 
     #----------------------------------------------------------------------
-    def next_plugins(self, candidate_plugins, current_stage):
+    def next_concurrent_plugins(self, candidate_plugins):
         """
         Based on the previously executed plugins, get the next plugins
         to execute.
@@ -723,12 +728,8 @@ class PriscillaPluginManager (Singleton):
         :param candidate_plugins: Plugins we may want to execute.
         :type candidate_plugins: set(str)
 
-        :param current_stage: Current execution stage.
-        :type current_stage: int
-
         :returns: set(str) -- Next plugins to execute.
         """
-        candidate_plugins = candidate_plugins.intersection(self.__stages[current_stage])
         if candidate_plugins:
             for batch in self.__batches:
                 batch = batch.intersection(candidate_plugins)

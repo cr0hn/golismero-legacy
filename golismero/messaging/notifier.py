@@ -327,18 +327,25 @@ class AuditNotifier(Notifier):
         data = self.database.get_data(identity)
 
         # Get the candidate plugins.
-        pending_plugins = self._get_candidate_plugins(data)
-
-        # Filter out plugins that don't belong to the current stage.
-        stage_plugins = self.pluginManager.stages[self.current_stage]
-        pending_plugins.intersection_update(stage_plugins)
+        pending_plugins = self.get_candidate_plugins(data)
 
         # If there are no plugins pending execution, we finished the stage.
         return not pending_plugins
 
 
     #----------------------------------------------------------------------
-    def _get_candidate_plugins(self, data):
+    def get_candidate_plugins(self, data):
+        """
+        Get the set of names of plugins that may handle this data object
+        at the current execution stage.
+
+        This ignores the plugin-to-plugin dependencies.
+
+        :param data: Data object to find candidate plugins for.
+        :type data: Data
+
+        :returns: set(str) -- Set of candidate plugin names.
+        """
 
         # Get the whole set of plugins that can handle this data.
         next_plugins = super(AuditNotifier, self)._get_plugins_to_notify(data)
@@ -347,18 +354,64 @@ class AuditNotifier(Notifier):
         past_plugins = self.database.get_past_plugins(data.identity)
         next_plugins.difference_update(past_plugins)
 
+        # Filter out plugins that don't belong to the current stage.
+        stage_plugins = self.pluginManager.stages[self.current_stage]
+        next_plugins.intersection_update(stage_plugins)
+
         # Return them.
         return next_plugins
+
+
+    #----------------------------------------------------------------------
+    def is_runnable_stage(self, datalist, stage):
+        """
+        Determine if the given stage has any plugins that can handle the
+        pending data.
+
+        :param datalist: List of pending data.
+        :type datalist: list(Data)
+
+        :param stage: Current stage.
+        :type stage: int
+
+        :returns: bool
+        """
+
+        # Early exit if the list of data objects is empty.
+        if not datalist:
+            return False
+
+        # Make a copy of the set of plugin names for this stage.
+        available = set( self.pluginManager.stages[stage] )
+
+        # Early exit if the stage is empty.
+        if not available:
+            return False
+
+        # For each data object...
+        for data in datalist:
+
+            # If we have plugins in this stage that can handle this data,
+            # then we can run this stage.
+            candidates = self.get_candidate_plugins(data)
+            if candidates.intersection(available):
+                return True
+
+        # If we reached this point that means we don't have any plugins
+        # that can handle any of the data, so we skip the stage.
+        return False
 
 
     #----------------------------------------------------------------------
     def _get_plugins_to_notify(self, data):
 
         # Get the candidate plugins.
-        next_plugins = self._get_candidate_plugins(data)
+        next_plugins = self.get_candidate_plugins(data)
+
+        # NOTE: the order of the following to filters is important!
 
         # Filter out plugins not belonging to the current batch.
-        next_plugins = self.pluginManager.next_plugins(next_plugins, self.current_stage)
+        next_plugins = self.pluginManager.next_concurrent_plugins(next_plugins)
 
         # Filter out the currently running plugins.
         next_plugins.difference_update(self.__processing[data.identity])

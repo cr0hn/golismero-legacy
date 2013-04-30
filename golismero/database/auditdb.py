@@ -1111,7 +1111,10 @@ class AuditSQLiteDB (BaseAuditDB):
             " WHERE history.plugin_id = plugin.rowid AND"
             "       history.identity = ?;"),
             (identity,))
-        return set(self.__cursor.fetchall())
+        rows = self.__cursor.fetchall()
+        if rows:
+            return { x[0] for x in rows }
+        return set()
 
 
     #----------------------------------------------------------------------
@@ -1120,7 +1123,10 @@ class AuditSQLiteDB (BaseAuditDB):
         self.__cursor.execute(
             "SELECT identity FROM stages WHERE stage < ?;",
             (stage,))
-        return set(self.__cursor.fetchall())
+        rows = self.__cursor.fetchall()
+        if rows:
+            return { x[0] for x in rows }
+        return set()
 
 
     #----------------------------------------------------------------------

@@ -329,6 +329,10 @@ class Audit (object):
             message_info = [ Url(url) for url in self.params.targets ]
         )
 
+        # TODO: instead of this, add the targets to the database if
+        # missing, then call update_stage(). That way we get the "resume"
+        # feature almost for free. :)
+
 
     #----------------------------------------------------------------------
     def send_info(self, data):
@@ -387,59 +391,73 @@ class Audit (object):
         finally:
 
             # Check for audit stage termination.
-            self.update_stage()
+            #
+            # NOTE: This check assumes messages always arrive in order,
+            #       and ACKs are always sent AFTER responses from plugins.
+            #
+            if not self.expecting_ack:
+
+                # Update the current stage.
+                self.update_stage()
 
 
     #----------------------------------------------------------------------
     def update_stage(self):
         """
-        Checks for stage termination and moves to the next stage when needed.
+        Sets the current stage to the minimum needed to process pending data.
         When the last stage is completed, sends the audit stop message.
         """
 
-        # NOTE: This code assumes messages always arrive in order,
-        #       and ACKs are always sent AFTER responses from plugins.
+        # If the reports are finished...
+        if self.__is_report_started:
 
-        # If we finished running a stage...
-        if not self.expecting_ack:
+            # Send the audit end message.
+            self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                          message_code = MessageCode.MSG_CONTROL_STOP_AUDIT,
+                          message_info = True)   # True for finished, False for user cancel
 
-            # If the reports are finished...
-            if self.__is_report_started:
+        # If the reports are not yet launched...
+        else:
 
-                # Send the audit end message.
-                self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                              message_code = MessageCode.MSG_CONTROL_STOP_AUDIT,
-                              message_info = True)   # True for finished, False for user cancel
+            # Get the database and the plugin manager.
+            database = self.database
+            pluginManager = self.orchestrator.pluginManager
 
-            # If the reports are not yet launched...
-            else:
+            # Look for the earliest stage with pending data.
+            self.__current_stage = pluginManager.max_stage + 1
+            for stage in xrange(pluginManager.min_stage, pluginManager.max_stage + 1):
+                pending = database.get_pending_data(stage)
+                if pending:
 
-                # Get the database and the plugin manager.
-                database = self.database
-                pluginManager = self.orchestrator.pluginManager
+                    # Get the pending data.
+                    # XXX FIXME possible performance problem here!
+                    datalist = map(database.get_data, pending)
 
-                # Look for the earliest stage with pending data.
-                self.__current_stage = pluginManager.max_stage + 1
-                for stage in xrange(pluginManager.min_stage, pluginManager.max_stage + 1):
-                    pending = database.get_pending_data(stage)
-                    if pending:
+                    # If we don't have any suitable plugins for this data...
+                    if not self.__notifier.is_runnable_stage(datalist, stage):
 
-                        # Set it as the current stage.
-                        self.__current_stage = stage
+                        # Mark all data as having finished this stage.
+                        for identity in pending:
+                            database.mark_stage_finished(identity, stage)
 
-                        # Send the pending data.
-                        # XXX FIXME possible performance problem here!
-                        self.send_msg(
-                            message_type = MessageType.MSG_TYPE_DATA,
-                            message_info = map(database.get_data, pending)
-                        )
+                        # Skip to the next stage.
+                        continue
 
-                        # We're done, return.
-                        return
+                    # Set it as the current stage.
+                    self.__current_stage = stage
 
-                # If we reached this point, we finished the last stage.
-                # Launch the report generation.
-                self.generate_reports()
+                    # Send the pending data.
+                    self.send_msg(
+                        message_type = MessageType.MSG_TYPE_DATA,
+                        message_info = datalist,
+                    )
+
+                    # We're done, return.
+                    return
+
+            # If we reached this point, we finished the last stage.
+            # Launch the report generation.
+            self.generate_reports()
 
 
     #----------------------------------------------------------------------
@@ -479,7 +497,7 @@ class Audit (object):
                     continue
 
                 # Is the data new?
-                if self.database.has_data(data.identity):
+                if not self.database.has_data_key(data.identity):
 
                     # Increase the number of links followed.
                     if data.data_type == Data.TYPE_RESOURCE and data.resource_type == Resource.RESOURCE_URL:
