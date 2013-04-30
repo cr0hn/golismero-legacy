@@ -149,7 +149,7 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
-    def get_many(self, identities):
+    def get_many(self, identities, data_type = None):
         """
         Get an object given its identity hash.
 
@@ -161,8 +161,8 @@ class Database(Singleton):
 
         :returns: list(Data)
         """
-        return Config._context.bulk_remote_call(
-            MessageCode.MSG_RPC_DATA_GET, identities)
+        return Config._context.remote_call(
+            MessageCode.MSG_RPC_DATA_GET_MANY, identities, data_type)
 
 
     #----------------------------------------------------------------------

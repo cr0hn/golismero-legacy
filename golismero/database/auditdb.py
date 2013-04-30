@@ -63,6 +63,10 @@ def rpc_data_db_check(orchestrator, audit_name, *argv, **argd):
 def rpc_data_db_get(orchestrator, audit_name, *argv, **argd):
     return orchestrator.auditManager.get_audit(audit_name).database.get_data(*argv, **argd)
 
+@implementor(MessageCode.MSG_RPC_DATA_GET_MANY)
+def rpc_data_db_get_many(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_many_data(*argv, **argd)
+
 @implementor(MessageCode.MSG_RPC_DATA_KEYS)
 def rpc_data_db_keys(orchestrator, audit_name, *argv, **argd):
     return orchestrator.auditManager.get_audit(audit_name).database.get_data_keys(*argv, **argd)
@@ -179,6 +183,25 @@ class BaseAuditDB (BaseDB):
         :type data_type: int
 
         :returns: Data | None
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def get_many_data(self, identities, data_type = None):
+        """
+        Get multiple objects given their identity hashes.
+
+        Optionally restrict the results by data type. Depending on the
+        underlying database, this may result in a performance gain.
+
+        :param identities: Identity hashes.
+        :type identities: set(str)
+
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
+        :type data_type: int
+
+        :returns: list(Data) -- Data objects.
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -408,6 +431,12 @@ class AuditMemoryDB (BaseAuditDB):
         if data_type is not None and data is not None and data.data_type != data_type:
             data = None
         return data
+
+
+    #----------------------------------------------------------------------
+    def get_many_data(self, identities, data_type = None):
+        result = ( self.get_data(identity, data_type) for identity in identities )
+        return [ data for data in result if data ]
 
 
     #----------------------------------------------------------------------
@@ -852,6 +881,11 @@ class AuditSQLiteDB (BaseAuditDB):
     @transactional
     def get_data(self, identity, data_type = None):
         return self.__get_data(identity, data_type)
+
+    @transactional
+    def get_many_data(self, identities, data_type = None):
+        result = ( self.__get_data(identity, data_type) for identity in identities )
+        return [ data for data in result if data ]
 
     def __get_data(self, identity, data_type = None):
         if data_type is None:
