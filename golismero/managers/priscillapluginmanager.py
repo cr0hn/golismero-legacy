@@ -5,8 +5,8 @@ __license__="""
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
-  Daniel Garcia Garcia a.k.a cr0hn | cr0hn@cr0hn.com
-  Mario Vilas | mvilas@gmail.com
+  Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
+  Mario Vilas | mvilas<@>gmail.com
 
 Golismero project site: http://code.google.com/p/golismero/
 Golismero project mail: golismero.project@gmail.com
@@ -181,7 +181,7 @@ class PluginInfo (object):
             self.__plugin_config = {}
             for sec in parser.sections():
                 l_sec = sec.lower()
-                if l_sec not in ("documentation" , "core"):
+                if l_sec in ("documentation" , "core"):
                     continue
                 self.__plugin_config[sec] = dict( parser.items(sec) )
         except Exception, e:
@@ -191,7 +191,7 @@ class PluginInfo (object):
         self.__plugin_extra_config = dict()
         for section in parser.sections():
             section = section.title()
-            if section not in ("Core", "Documentation", "Configuration"):
+            if section not in ("Core", "Documentation"):
                 options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
                 self.__plugin_extra_config[section] = options
 

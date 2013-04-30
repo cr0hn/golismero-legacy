@@ -7,8 +7,8 @@
 	<meta name="description" content="">
 	<meta name="author" content="">
 
-	<link rel="stylesheet" href="/static/css/bootstrap.min.css" type="text/css" media="all">
-	<link rel="stylesheet" href="/static/css/bootstrap-responsive.min.css" type="text/css" >
+	<link rel="stylesheet" href="/static/css/home/bootstrap.min.css" type="text/css" media="all">
+	<link rel="stylesheet" href="/static/css/home/bootstrap-responsive.min.css" type="text/css" >
 	<!-- Le styles -->
 	<style type="text/css">
 		body { padding-top: 60px; padding-bottom: 40px; }
@@ -49,8 +49,7 @@
 						<li {{home}}><a href="{% url "home" %}">Home</a></li>
 						<li {{about}}><a href="#about">About</a></li>
 						<li {{contac}}><a href="#contact">Contact</a></li>
-						<li {{login}}><a href="#contact">Login</a></li>
-						<li><a href="{% url "admin_home" %}">Admin</a></li>
+						<li {{login}}><a href="{% url "users_home" %}?{{sessionid_name}}={{sessionid_value}}">Login</a></li>
 					</ul>
 				</div><!--/.nav-collapse -->
 			</div>

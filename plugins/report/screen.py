@@ -5,8 +5,8 @@ __license__="""
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
-  Daniel Garcia Garcia a.k.a cr0hn | cr0hn@cr0hn.com
-  Mario Vilas | mvilas@gmail.com
+  Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
+  Mario Vilas | mvilas<@>gmail.com
 
 Golismero project site: http://code.google.com/p/golismero/
 Golismero project mail: golismero.project@gmail.com
@@ -119,10 +119,12 @@ class ScreenReport(ReportPlugin):
             # - If there is only one vuln, it replace the URL.
             # - If there is more than one, vuln will be treated as
             #   normal vuln
-            l_url_suspicious = u.associated_vulnerabilities_by_category(cat_name="information_disclosure/url_disclosure")
-            if not l_url_suspicious and len(l_url_suspicious) == 0: # There is 'url_suspicious' vulns and only one result
-                print "aa"
-                l_url = colorize_substring(l_url_suspicious[0].url, l_url_suspicious[0].substring, l_url_suspicious[0].severity)
+            l_url_suspicious = u.associated_vulnerabilities_by_category(cat_name="information_disclosure/url_suspicious")
+            print "### " + str(len(l_url_suspicious))
+            if l_url_suspicious and len(l_url_suspicious) == 1: # There is 'url_suspicious' vulns and only one result
+                print "aaa"
+                l_val = iter(l_url_suspicious).next()
+                l_url = colorize_substring(l_val.url, l_val.substring, l_val.severity)
             else:
                 l_url = u.url
 
