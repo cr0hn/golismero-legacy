@@ -224,6 +224,20 @@ class BaseAuditDB (BaseDB):
 
 
     #----------------------------------------------------------------------
+    def get_data_types(self, identities):
+        """
+        Get a set of data types and subtypes for all objects
+        of the requested identities.
+
+        :param identities: Identity hashes.
+        :type identities: set(str)
+
+        :returns: set( (int, int | str) ) -- Set of data types and subtypes found.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #----------------------------------------------------------------------
     def get_data_count(self, data_type = None, data_subtype = None):
         """
         Count all objects of the requested type,
@@ -471,6 +485,29 @@ class AuditMemoryDB (BaseAuditDB):
                      and data.vulnerability_type == data_subtype }
         raise NotImplementedError(
             "Unknown data type: %r" % data_type)
+
+
+    #----------------------------------------------------------------------
+    def get_data_types(self, identities):
+        result = { self.__get_data_type(identity) for identity in identities }
+        try:
+            result.remove(None)
+        except KeyError:
+            pass
+        return result
+
+    def __get_data_type(self, identity):
+        data = self.__results.get(identity, None)
+        if data is None:
+            return None
+        data_type = data.data_type
+        if data_type == Data.TYPE_INFORMATION:
+            return data_type, data.information_type
+        if data_type == Data.TYPE_RESOURCE:
+            return data_type, data.resource_type
+        if data_type == Data.TYPE_VULNERABILITY:
+            return data_type, data.vulnerability_type
+        return None
 
 
     #----------------------------------------------------------------------
@@ -884,6 +921,9 @@ class AuditSQLiteDB (BaseAuditDB):
 
     @transactional
     def get_many_data(self, identities, data_type = None):
+        # TODO: optimize by checking multiple identities in the same query,
+        #       but beware of the maximum SQL query length limit.
+        #       See: http://www.sqlite.org/limits.html
         result = ( self.__get_data(identity, data_type) for identity in identities )
         return [ data for data in result if data ]
 
@@ -941,6 +981,33 @@ class AuditSQLiteDB (BaseAuditDB):
             values = (data_subtype,)
         self.__cursor.execute(query, values)
         return { row[0] for row in self.__cursor.fetchall() }
+
+
+    #----------------------------------------------------------------------
+    @transactional
+    def get_data_types(self, identities):
+        # TODO: optimize by checking multiple identities in the same query,
+        #       but beware of the maximum SQL query length limit.
+        #       See: http://www.sqlite.org/limits.html
+        result = { self.__get_data_type(identity) for identity in identities }
+        try:
+            result.remove(None)
+        except KeyError:
+            pass
+        return result
+
+    def __get_data_type(self, identity):
+        for table, data_type in (
+            ("information",   Data.TYPE_INFORMATION),
+            ("resource",      Data.TYPE_RESOURCE),
+            ("vulnerability", Data.TYPE_VULNERABILITY),
+        ):
+            query  = "SELECT type FROM %s WHERE identity = ? LIMIT 1;" % table
+            values = (identity,)
+            self.__cursor.execute(query, values)
+            row = self.__cursor.fetchone()
+            if row:
+                return data_type, row[0]
 
 
     #----------------------------------------------------------------------
