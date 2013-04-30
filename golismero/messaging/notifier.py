@@ -145,7 +145,7 @@ class Notifier (object):
                 for data in message.message_info:
 
                     # Get the set of plugins to notify.
-                    m_plugins_to_notify = self._get_plugins_to_notify(data)
+                    m_plugins_to_notify = self.get_plugins_to_notify(data)
 
                     # Dispatch message info to each plugin.
                     for plugin_name in m_plugins_to_notify:
@@ -169,7 +169,7 @@ class Notifier (object):
 
 
     #----------------------------------------------------------------------
-    def _get_plugins_to_notify(self, data):
+    def get_plugins_to_notify(self, data):
         """
         Determine which plugins should receive this data object.
 
@@ -312,12 +312,12 @@ class AuditNotifier(Notifier):
                     warn(msg % (identity, plugin_name))
 
             # If the stage was finished, mark it so.
-            if self._has_finished_stage(identity):
+            if self.__has_finished_stage(identity):
                 self.database.mark_stage_finished(identity, self.current_stage)
 
 
     #----------------------------------------------------------------------
-    def _has_finished_stage(self, identity):
+    def __has_finished_stage(self, identity):
 
         # XXX FIXME this is very inefficient!
         # this may be fixed by using just the data type
@@ -348,7 +348,7 @@ class AuditNotifier(Notifier):
         """
 
         # Get the whole set of plugins that can handle this data.
-        next_plugins = super(AuditNotifier, self)._get_plugins_to_notify(data)
+        next_plugins = super(AuditNotifier, self).get_plugins_to_notify(data)
 
         # Filter out plugins that already received this data.
         past_plugins = self.database.get_past_plugins(data.identity)
@@ -403,7 +403,7 @@ class AuditNotifier(Notifier):
 
 
     #----------------------------------------------------------------------
-    def _get_plugins_to_notify(self, data):
+    def get_plugins_to_notify(self, data):
 
         # Get the candidate plugins.
         next_plugins = self.get_candidate_plugins(data)
