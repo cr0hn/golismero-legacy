@@ -75,7 +75,7 @@ class SuspiciousURLPlugin(TestingPlugin):
             return
 
         # Load wordlists
-        m_wordlist = WordListAPI().get_wordlist(Config.plugin_config['Configuration']['wordlist'])
+        m_wordlist = WordListAPI().get_wordlist(Config.plugin_config['wordlist'])
         db = Database()
         # Return matching keywords
         r =  [SuspiciousURL(info, x)
