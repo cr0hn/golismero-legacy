@@ -5,8 +5,8 @@ __license__="""
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
-  Daniel Garcia Garcia a.k.a cr0hn | cr0hn@cr0hn.com
-  Mario Vilas | mvilas@gmail.com
+  Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
+  Mario Vilas | mvilas<@>gmail.com
 
 Golismero project site: http://code.google.com/p/golismero/
 Golismero project mail: golismero.project@gmail.com
@@ -25,6 +25,10 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
+
+### TEMPORAL FIX:
+from golismero.api.data.db import Database
+###
 
 from golismero.api.config import Config
 from golismero.api.data.resource.url import Url
@@ -69,12 +73,18 @@ class SuspiciousURLPlugin(TestingPlugin):
         # Check if URL is in scope
         if not is_in_scope(m_url):
             return
-        return
 
         # Load wordlists
-        m_wordlist = WordListAPI().get_wordlist(Config.plugin_config['wordlist'])
-
+        m_wordlist = WordListAPI().get_wordlist(Config.plugin_config['Configuration']['wordlist'])
+        db = Database()
         # Return matching keywords
-        return [SuspiciousURL(info, x)
+        r =  [SuspiciousURL(info, x)
                 for x in m_wordlist
                 if x in m_url]
+
+        map(db.add, r)
+
+
+
+
+

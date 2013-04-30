@@ -5,8 +5,8 @@
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
-  Daniel Garcia Garcia a.k.a cr0hn | cr0hn@cr0hn.com
-  Mario Vilas | mvilas@gmail.com
+  Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
+  Mario Vilas | mvilas<@>gmail.com
 
 Golismero project site: http://code.google.com/p/golismero/
 Golismero project mail: golismero.project@gmail.com
@@ -36,7 +36,9 @@ from random import Random, randint, random
 import datetime
 
 def home(request):
-    ctx = {"option": "home", "suboption": "home"}
+    ctx = {"option": "home", "suboption": "home",'sessionid_name': 'jsessionid', 'sessionid_value': randint(100000000,999999999999)}
+
+
 
     return render_to_response_random_server('home/home.html', ctx, context_instance=RequestContext(request))
 
