@@ -6,6 +6,6 @@ Module = console
 Description = Console interface
 Author = Daniel Garcia Garcia (cr0hn)
 Version = 0.1
-Website = http://code.google.com/p/golismero/
+Website = https://github.com/cr0hn/golismero/
 Copyright = Copyright (C) 2011-2013 GoLismero Project
 License = GNU Public License

@@ -6,8 +6,8 @@ GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Author: Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
 
-Golismero project site: http://code.google.com/p/golismero/
-Golismero project mail: golismero.project@gmail.com
+Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License

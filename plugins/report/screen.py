@@ -8,8 +8,8 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: http://code.google.com/p/golismero/
-Golismero project mail: golismero.project@gmail.com
+Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -119,6 +119,8 @@ class ScreenReport(ReportPlugin):
             # - If there is only one vuln, it replace the URL.
             # - If there is more than one, vuln will be treated as
             #   normal vuln
+            print "Associated vulns:"
+            print u.associated_vulnerabilities
             l_url_suspicious = u.associated_vulnerabilities_by_category(cat_name="information_disclosure/url_suspicious")
             print "### " + str(len(l_url_suspicious))
             if l_url_suspicious and len(l_url_suspicious) == 1: # There is 'url_suspicious' vulns and only one result

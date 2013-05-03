@@ -8,8 +8,8 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: http://code.google.com/p/golismero/
-Golismero project mail: golismero.project@gmail.com
+Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -247,7 +247,7 @@ class PluginInfo (object):
         try:
             self.__website     = parser.get("Documentation", "Website")
         except Exception:
-            self.__website     = "http://code.google.com/p/golismero/"
+            self.__website     = "https://github.com/cr0hn/golismero/"
 
         # Load the plugin configuration as a Python dictionary.
         # This section is optional.
