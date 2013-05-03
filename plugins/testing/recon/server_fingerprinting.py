@@ -184,14 +184,55 @@ class ServerFingerprinting(TestingPlugin):
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
+        main_server_fingerprint(info)
+        #if not isinstance(info, Domain):
+        #    raise TypeError("Expected Domain, got %s instead" % type(info))
 
-        if not isinstance(info, Domain):
-            raise TypeError("Expected Domain, got %s instead" % type(info))
+        print "bbb"
 
-        return
-        # Load wordlists
-        m_wordlist = WordListAPI().get_wordlist(Config.plugin_config['Wordlists'])
-
-        #
 
         return
+
+
+#----------------------------------------------------------------------
+def main_server_fingerprint(domain):
+    """
+    Main function for server fingerprint. Get an URL and return the fingerprint results.
+
+    :param domain: Domain resource instance.
+    :type domain: Domain
+
+    :return: Fingerprint type
+    """
+    # Load wordlists
+    m_wordlists_names = [
+        "accept-range",
+        "banner",
+        "cache-control"
+    ]
+
+    m_wordlist_types = [
+        "Wordlist"
+    ]
+
+    print "aaa"
+
+    # Load wordlists
+    for w_n in m_wordlists_names:
+        for w_t in m_wordlist_types:
+
+            # Generate concrete wordlist
+            l_wordlist          = Config.plugin_config[w_n][w_t]
+
+            # Load
+            l_wordlist_instance = WordListAPI().get_wordlist(l_wordlist)
+
+            # Display
+            for l_w in l_wordlist_instance:
+                print l_w
+
+    #
+    #
+    #
+
+    #

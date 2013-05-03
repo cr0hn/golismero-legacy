@@ -119,10 +119,8 @@ class ScreenReport(ReportPlugin):
             # - If there is only one vuln, it replace the URL.
             # - If there is more than one, vuln will be treated as
             #   normal vuln
-            print "Associated vulns:"
-            print u.associated_vulnerabilities
             l_url_suspicious = u.associated_vulnerabilities_by_category(cat_name="information_disclosure/url_suspicious")
-            print "### " + str(len(l_url_suspicious))
+
             if l_url_suspicious and len(l_url_suspicious) == 1: # There is 'url_suspicious' vulns and only one result
                 l_val = iter(l_url_suspicious).next()
                 l_url = colorize_substring(l_val.url, l_val.substring, l_val.severity)
