@@ -30,7 +30,7 @@ from golismero.api.logger import Logger
 from golismero.api.net.protocol import *
 from golismero.api.plugin import TestingPlugin
 from golismero.api.data.resource.url import Url
-from golismero.api.data.resource.domain import Domain
+from golismero.api.data.resource.baseurl import BaseUrl
 from golismero.api.net.web_utils import *
 from golismero.api.text.matching_analyzer import *
 
@@ -57,16 +57,16 @@ class Robots(TestingPlugin):
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Domain.RESOURCE_DOMAIN]
+        return [BaseUrl.RESOURCE_BASE_URL]
 
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-        if not isinstance(info, Domain):
+        if not isinstance(info, BaseUrl):
             raise TypeError("Expected Url, got %s instead" % type(info))
 
         # Get the url of hosts
-        m_url = fix_url(info.name)
+        m_url = info.url
         m_url_robots_txt = urljoin(m_url, 'robots.txt')
 
         Logger.log_verbose("Robots - looking for robots.txt in URL: '%s'" % m_url_robots_txt)
