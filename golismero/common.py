@@ -82,6 +82,7 @@ from os import path
 
 import os
 import hashlib
+import urlparse
 
 
 #--------------------------------------------------------------------------
@@ -187,9 +188,9 @@ class Configuration (object):
     #----------------------------------------------------------------------
     # Here's where subclasses define the options.
     #
-    # It's a list of tuples of the following format:
+    # It's a dictionary of tuples of the following format:
     #
-    #   ( name, parser, default )
+    #   name: ( parser, default )
     #
     # Where "name" is the option name, "parser" is an optional
     # callback to parse the input values, and "default" is an
@@ -550,6 +551,22 @@ class AuditConfig (Configuration):
     #----------------------------------------------------------------------
 
     @property
+    def audit_db(self):
+        return self._audit_db
+
+    @audit_db.setter
+    def audit_db(self, audit_db):
+        if not audit_db:
+            audit_db = "memory://"
+        elif not "://" in audit_db:
+            audit_db = "sqlite://" + audit_db
+        urlparse.urlparse(audit_db)  # check validity of URL syntax
+        self._audit_db = audit_db
+
+
+    #----------------------------------------------------------------------
+
+    @property
     def cookie(self):
         return self._cookie
 
@@ -594,5 +611,3 @@ class AuditConfig (Configuration):
                 compile(self.subdomain_regex)
             except error, e:
                 raise ValueError("Regular expression not valid: %s." % e.message)
-
-        # Validate number
