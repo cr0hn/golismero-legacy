@@ -724,9 +724,6 @@ class _TempDataStorage(object):
                     pass
                 warn(msg, RuntimeWarning)
 
-            # TO DO: check if the data object passed to
-            # recv_info() as parameter was modified.
-
             # Warn for data being instanced but not returned or referenced.
             orphan = set(self.__new_data.iterkeys())
             orphan.difference_update(graph.iterkeys())

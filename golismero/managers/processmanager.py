@@ -186,8 +186,17 @@ def _bootstrap(context, func, argv, argd):
                             # Return value is a list of data for recv_info().
                             if func == "recv_info":
 
+                                # Get the data sent to the plugin.
+                                try:
+                                    input_data = argd["info"]
+                                except KeyError:
+                                    input_data = argv[0]
+
                                 # Validate and sanitize the result data.
                                 result = TempDataStorage.on_finish(result)
+
+                                # Always send back the input data as a result.
+                                result.append(input_data)
 
                                 # Send the result data to the Orchestrator.
                                 if result:
