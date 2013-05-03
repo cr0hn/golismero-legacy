@@ -117,9 +117,9 @@ class Resource(Data):
         :param cat_name: category name
         :type cat_name: str
 
-        :return: set -- Identities of associated informations. Returns an empty set if the category doesn't exist.
+        :return: set(Data) -- Set of associated informations. Returns an empty set if the category doesn't exist.
         """
-        return self.get_links(self.TYPE_VULNERABILITY, cat_name)
+        return self.get_linked_data(self.TYPE_VULNERABILITY, cat_name)
 
 
     #----------------------------------------------------------------------
@@ -130,11 +130,11 @@ class Resource(Data):
         :param information_type: One of the Information.INFORMATION_* constants.
         :type information_type: int
 
-        :return: set -- Identities of associated informations.
+        :return: set(Data) -- Set of associated informations.
         :raises ValueError: The specified information type is invalid.
         """
         if type(information_type) is not int:
             raise TypeError("Expected int, got %r instead" % type(information_type))
         if not Information.INFORMATION_FIRST >= information_type >= Information.INFORMATION_LAST:
             raise ValueError("Invalid information_type: %r" % information_type)
-        return self.get_links(self.TYPE_INFORMATION, information_type)
+        return self.get_linked_data(self.TYPE_INFORMATION, information_type)
