@@ -81,7 +81,7 @@ class Spider(TestingPlugin):
 
         Logger.log_verbose("Spidering URL: '%s'" % m_url)
 
-        # Request this URL
+        # Get a connection pool
         m_manager = NetworkAPI.get_connection()
 
         # Check if need follow first redirect
