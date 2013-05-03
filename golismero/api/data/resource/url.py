@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["Url"]
 
 from ..data import identity
+from .baseurl import BaseUrl
 from .domain import Domain
 from .resource import Resource
 from ...net.web_utils import DecomposedURL
@@ -154,7 +155,7 @@ class Url(Resource):
     @property
     def parsed_url(self):
         """
-        str -- Parsed URL.
+        DecomposedURL -- Parsed URL.
         """
         return self.__parsed_url
 
@@ -203,23 +204,23 @@ class Url(Resource):
     @property
     def depth(self):
         """
-        int - The deep of URL in relation with main site.
+        int - The recursion depth reached to find this URL.
         """
         return self.__depth
 
     @property
     def referer(self):
         """
-        str -- Referer for this Url.
+        str -- Referer for this URL.
         """
         return self.__referer
 
     @property
     def discovered_resources(self):
         """
-        list -- Discovered resources.
+        list(Data) -- Discovered resources.
         """
         if not self.__discovered_resources:
-            self.__discovered_resources = [Domain(self.parsed_url.hostname)]
+            self.__discovered_resources = [Domain(self.parsed_url.hostname), BaseUrl(self.url)]
 
         return self.__discovered_resources
