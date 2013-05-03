@@ -707,7 +707,7 @@ class AuditSQLiteDB (BaseAuditDB):
             if row[1] != self.audit_name:
                 raise IOError(
                     "Database belongs to another audit: %r != %r" % \
-                    (row[0], self.audit_name))
+                    (row[1], self.audit_name))
 
         # If not present...
         else:
