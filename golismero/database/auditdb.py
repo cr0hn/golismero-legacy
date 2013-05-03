@@ -702,11 +702,11 @@ class AuditSQLiteDB (BaseAuditDB):
                 raise IOError("Broken database!")
             if row[0] != self.SCHEMA_VERSION:
                 raise IOError(
-                    "Incompatible schema version: %r != %r" % \
+                    "Incompatible schema version: %s != %s" % \
                     (row[0], self.SCHEMA_VERSION))
             if row[1] != self.audit_name:
                 raise IOError(
-                    "Database belongs to another audit: %r != %r" % \
+                    "Database belongs to another audit:\n\t\"%s\" vs. \"%s\"" % \
                     (row[1], self.audit_name))
 
         # If not present...

@@ -103,6 +103,7 @@ if __name__ == "__main__" or __name__ == "golismero_launcher":
 import argparse
 import datetime
 import textwrap
+import traceback
 
 from os import getenv
 
@@ -392,6 +393,7 @@ def main(args):
     #------------------------------------------------------------
     # Launch GoLismero
 
+    Console.level = cmdParams.verbose
     Console.display("GoLismero started at %s" % datetime.datetime.now())
     try:
         from golismero.api.net.web_utils import detect_auth_method, check_auth
@@ -401,7 +403,7 @@ def main(args):
             for t in auditParams.targets:
                 auth, realm = detect_auth_method(t)
                 if auth:
-                    Console.display("[!] '%s' authentication is needed for '%s'. Specify using syntax: http://user:pass@target.com." % (auth, t))
+                    Console.display_error("[!] '%s' authentication is needed for '%s'. Specify using syntax: http://user:pass@target.com." % (auth, t))
                     exit(1)
 
         # Detect auth in proxy, if specified.
@@ -411,14 +413,16 @@ def main(args):
             else:
                 auth, realm = detect_auth_method(auditParams.proxy_addr)
                 if auth:
-                    Console.display("[!] Authentication is needed for '%s' proxy. Use '--proxy-user' and '--proxy-pass' to specify them." % cmdParams.proxy_addr)
+                    Console.display_error("[!] Authentication is needed for '%s' proxy. Use '--proxy-user' and '--proxy-pass' to specify them." % cmdParams.proxy_addr)
                     exit(1)
 
         # Launch GoLismero.
         try:
             launcher(cmdParams, auditParams)
         except Exception, e:
-            parser.error(e.message)  # implicit call to exit()
+            Console.display_error("[!] Fatal error: %s" % e.message)
+            Console.display_error_more_verbose(traceback.format_exc())
+            exit(1)
 
     except KeyboardInterrupt:
         Console.display("GoLismero cancelled by the user at %s" % datetime.datetime.now())
