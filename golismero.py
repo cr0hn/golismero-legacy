@@ -415,7 +415,10 @@ def main(args):
                     exit(1)
 
         # Launch GoLismero.
-        launcher(cmdParams, auditParams)
+        try:
+            launcher(cmdParams, auditParams)
+        except Exception, e:
+            parser.error(e.message)  # implicit call to exit()
 
     except KeyboardInterrupt:
         Console.display("GoLismero cancelled by the user at %s" % datetime.datetime.now())
