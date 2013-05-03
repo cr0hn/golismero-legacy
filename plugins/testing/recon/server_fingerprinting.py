@@ -27,12 +27,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.logger import Logger
-from golismero.api.net.protocol import NetworkAPI
+from golismero.api.net.protocol import *
 from golismero.api.plugin import TestingPlugin
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.vulnerability.information_disclosure.url_suspicious import SuspiciousURL
 from golismero.api.text.wordlist_api import WordListAPI
 from golismero.api.config import Config
+from urlparse import urljoin
 
 #
 # !!!!!!!!!!!!!
@@ -179,17 +180,15 @@ class ServerFingerprinting(TestingPlugin):
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Domain.data_type]
+        return [Domain.RESOURCE_DOMAIN]
 
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
+        if not isinstance(info, Domain):
+            raise TypeError("Expected Domain, got %s instead" % type(info))
+
         main_server_fingerprint(info)
-        #if not isinstance(info, Domain):
-        #    raise TypeError("Expected Domain, got %s instead" % type(info))
-
-        print "bbb"
-
 
         return
 
@@ -204,35 +203,126 @@ def main_server_fingerprint(domain):
 
     :return: Fingerprint type
     """
-    # Load wordlists
-    m_wordlists_names = [
-        "accept-range",
-        "banner",
-        "cache-control"
+
+    m_main_url = domain.name
+
+    # Load wordlist directly related with a HTTP fields.
+    # { HTTP_HEADER_FIELD : [wordlists] }
+    m_wordlists_HTTP_fields = {
+        "Accept-Ranges"              : [ "accept-range" ],
+        "Server"                     : [ "banner" ],
+        "Cache-Control"              : [ "cache-control" ],
+        "Connection"                 : [ "connection" ],
+        "Content-Type"               : [ "content-type" ],
+        "ETag"                       : [ "etag-quotes", "etag-legth" ],
+        "WWW-Authenticate"           : [ "htaccess-realm" ]
+        "Pragma"                     : [ "pragma" ],
+        "Vary"                       : [ "vary-order", "vary-capitalize", "vary-delimiter" ],
+        "X-Powered-By"               = [ "x-powered-by" ]
+    }
+
+    # Wordlists not directly related with HTTP fields.
+    m_wordlists_HTTP_properties = [
+        "header-capitalafterdash",
+        "header-order",
+        "header-space",
+        "statuscode",
+        "statustext",
+        "protocol-name",
+        "protocol-version "
     ]
 
+
+    # Wordlists for each type of action
     m_wordlist_types = [
-        "Wordlist"
+        "Wordlist_get"
     ]
 
-    print "aaa"
+    m_actions = {
+        'GET'        : { 'method' : 'GET'      , 'payload': '/' },
+        'LONG_GET'   : { 'method' : 'GET'      , 'payload': '%s%s' % ('/', 'a' * 200) },
+        'NOT_FOUND'  : { 'method' : 'GET'      , 'payload': '/404_NOFOUND__X02KAS' },
+        'HEAD'       : { 'method' : 'HEAD'     , 'payload': '/' },
+        'OPTIONS'    : { 'method' : 'OPTIONS'  , 'payload': '/' },
+        'DELETE'     : { 'method' : 'DELETE'   , 'payload': '/' },
+        'TEST'       : { 'method' : 'TEST'     , 'payload': '/' },
+        'ATTACK'     : { 'method' : 'GET'      , 'payload': "/etc/passwd?format=%%%%&xss=\x22><script>alert('xss');</script>&traversal=../../&sql='%20OR%201;"}
+    }
 
-    # Load wordlists
-    for w_n in m_wordlists_names:
+    # Get a connection pool
+    m_conn = NetworkAPI.get_connection()
+
+    #
+    # Store structures. Format:
+    #
+    # { SERVER_NAME: int }
+    #
+    # Where:
+    # - SERVER_NAME -> Discovered server name
+    # - int         -> Number of wordlist that matches this server
+    #
+    # Store results for HTTP directly related fields
+    m_results_http_fields = {}
+    # Store results for others HTTP params
+    m_results_http_others = {}
+
+    # start
+    # Do the actions
+    for m, v in m_actions.iteritems():
+        l_method  = v.method
+        l_payload = v.payload
+
+        # Make the URL
+        l_url     = urljoin(m_main_url, l_payload)
+
+        # Do the connection
+        l_response = None
+        try:
+            l_response = m_conn.get( l_url,
+                                     method=l_method,
+                                     follow_redirect=True,
+                                     cache=True)
+        except NetworkException,e:
+            Logger.log_more_verbose("Server-Fingerprint plugin: No response for URL '%s'. Message: " % (l_url, e.message))
+            continue
+
+        if not l_response:
+            Logger.log_more_verbose("No response for URL '%s'." % l_url)
+            continue
+
+        # Analyze for each wordlist
         for w_t in m_wordlist_types:
 
-            # Generate concrete wordlist
-            l_wordlist          = Config.plugin_config[w_n][w_t]
+            #
+            # HTTP directly related
+            #
+            for l_http_header_name, l_wordlists in m_wordlists_HTTP_fields:
 
-            # Load
-            l_wordlist_instance = WordListAPI().get_wordlist(l_wordlist)
+                # Check if HTTP header field is in response
+                if l_http_header_name not in l_response.http_headers:
+                    continue
 
-            # Display
-            for l_w in l_wordlist_instance:
-                print l_w
+                # Generate concrete wordlist name
+                l_wordlist          = Config.plugin_extra_config[w_t][w_n]
 
-    #
-    #
-    #
+                # Load words for the wordlist
+                l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(l_wordlist)
 
-    #
+                # Looking for matches
+                l_matches           = l_wordlist_instance.matches_by_value("")
+                print l_matches
+
+                if l_matches:
+                    try:
+                        m_results_http_fields[l_matches] += 1
+                    except KeyError:
+                        m_results_http_fields[l_matches]  = 0
+                        m_results_http_fields[l_matches] += 1
+
+            #
+            # HTTP INdirectly related
+            #
+            for l_val in m_wordlists_HTTP_properties:
+                pass
+
+

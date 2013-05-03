@@ -81,7 +81,7 @@ class WordListAPI(Singleton):
 
             # Look for text files, skipping README files and disabled lists.
             for fname in filenames:
-                if fname.lower().endswith(".txt") and not fname.startswith("_") and fname.lower() != "readme.txt":
+                if not fname.startswith("_") and fname.lower() != "readme.txt":
 
                     # Map the relative filename to the absolute filename,
                     # replacing \ for / on Windows.
@@ -125,6 +125,19 @@ class WordListAPI(Singleton):
         """
         try:
             return AdvancedWordlist(self.__store[wordlist_name])
+        except KeyError:
+            raise KeyError("Wordlist file not found: %s" % wordlist_name)
+
+    #----------------------------------------------------------------------
+    @lru_cache(maxsize=20)
+    def get_advanced_wordlist_as_dict(self, wordlist_name, separator=";"):
+        """
+        Get an iterator with the selected wordlist.
+
+        :returns: iterator with wordlist.
+        """
+        try:
+            return AdvancedDicWordlist(self.__store[wordlist_name], separator)
         except KeyError:
             raise KeyError("Wordlist file not found: %s" % wordlist_name)
 
@@ -276,7 +289,7 @@ class AdvancedDicWordlist:
         if not word:
             return [[]]
 
-        return [ {i:v} for i, v in self.__wordlist.iterkeys if word in i]
+        return [ {i:v} for i, v in self.__wordlist.iteritems() if word in i]
 
 
     #----------------------------------------------------------------------
@@ -295,6 +308,42 @@ class AdvancedDicWordlist:
             return []
 
         return [x for x in self.__wordlist if word in x]
+
+    #----------------------------------------------------------------------
+    def matches_by_value(self, word):
+        """
+        Search a word passed as parameter in the keys's wordlist and return a list of lists with
+        matches found.
+
+        :param word: word to search.
+        :type word: str.
+
+        :return: a list with matches.
+        :rtype: list(list(KEY, VALUE))
+        """
+        if not word:
+            return [[]]
+
+        return [ {i:v} for i, v in self.__wordlist.iteritems() if word in v]
+
+
+    #----------------------------------------------------------------------
+    def matches_by_value_with_level(self, word):
+        """
+        Search a word passed as parameter in keys's wordlist and return a list of dicts with
+        matches and level of correspondence.
+
+        :param word: word to search.
+        :type word: str.
+
+        :return: a list with matches and correpondences.
+        :rtype: list(list(KEY, VALUE, LEVEL))
+        """
+        if not word:
+            return []
+
+        return [x for x in self.__wordlist.itervalues() if word in x]
+
 
     #----------------------------------------------------------------------
     def binary_search(self, word):

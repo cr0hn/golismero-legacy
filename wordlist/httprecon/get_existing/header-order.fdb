@@ -1,4 +1,3 @@
-Test;Date,Server,Vary,Connection,Transfer-Encoding,Content-Type
 0W 0.8c;Date,Server,Content-Type,Content-Length,Accept-Ranges,Last-Modified
 4D WebSTAR 2.0;MIME-Version,Server,Message-ID,Date,Last-Modified,Content-type,Content-length
 4D WebSTAR 2.1.1;MIME-Version,Server,Message-ID,Connection,Last-Modified,Content-type,Content-length
