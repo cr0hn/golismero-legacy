@@ -89,7 +89,7 @@ class ScreenReport(ReportPlugin):
             # slow but lean method
             urls = db.iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
 
-        for u in urls:
+        for i, u in enumerate(urls):
             # Format to print:
             # [ 1 ] www.website.com/Param1=Value1&Param2=Value2
             #       | Method: GET              |
@@ -122,7 +122,6 @@ class ScreenReport(ReportPlugin):
             l_url_suspicious = u.associated_vulnerabilities_by_category(cat_name="information_disclosure/url_suspicious")
 
             if l_url_suspicious and len(l_url_suspicious) == 1: # There is 'url_suspicious' vulns and only one result
-                #print l_url_suspicious
                 l_val = iter(l_url_suspicious).next()
 
                 l_url = colorize_substring(l_val.url.url, l_val.substring, l_val.severity)
@@ -131,10 +130,24 @@ class ScreenReport(ReportPlugin):
                 l_url = u.url
 
             #
+            # Display URL
             #
+            print "[%s] %s" % (colorize('{:^4}'.format(i), "Blue"), l_url)
+
+            #
+            # Display method
+            #
+
+
+            #
+            # Display params
+            #
+            m_sep_lenght = 0
+
+
             print "+ %s" % str(l_url)
             for vuln in u.associated_vulnerabilities:
-                print "  |- %s" % str(vuln)
+                print "  |- (%s) %s" % (vuln.vulnerability_type, str(vuln))
 
         #
         #
