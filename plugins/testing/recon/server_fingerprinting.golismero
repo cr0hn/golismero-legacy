@@ -11,7 +11,7 @@ Website = https://github.com/cr0hn/golismero/
 Copyright = Copyright (C) 2011-2013 GoLismero Project
 License = GNU Public License
 
-[Wordlist_get]
+[Wordlist_Get]
 accept-range            = httprecon/get_existing/accept-range.fdb
 banner                  = httprecon/get_existing/banner.fdb
 cache-control           = httprecon/get_existing/cache-control.fdb
