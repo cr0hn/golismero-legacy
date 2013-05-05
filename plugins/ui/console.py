@@ -94,6 +94,11 @@ class ConsoleUIPlugin(UIPlugin):
 
 
     #----------------------------------------------------------------------
+    def __init__(self):
+        self.already_seen_info = set()
+
+
+    #----------------------------------------------------------------------
     def display_help(self):
         #
         # Put here extended information, and usage details, to display when
@@ -128,6 +133,11 @@ class ConsoleUIPlugin(UIPlugin):
         #
         # Display in console
         #
+
+        # Ignore already seen data
+        if info.identity in self.already_seen_info:
+            return
+        self.already_seen_info.add(info.identity)
 
         if Console.level >= Console.STANDARD:
 
