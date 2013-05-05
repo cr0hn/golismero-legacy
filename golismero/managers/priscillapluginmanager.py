@@ -161,10 +161,6 @@ class PluginInfo (object):
         except Exception:
             plugin_class    = None
         try:
-            # TODO: the stages should be parsed differently,
-            #       instead of / in addition to using an arbitrary
-            #       integer value, we should be using predefined names,
-            #       possibly defaulting them to the plugin subcategory.
             stage           = parser.get("Core", "Stage")
         except Exception:
             stage           = None
@@ -260,7 +256,6 @@ class PluginInfo (object):
         # All sections not parsed above will be included here.
         self.__plugin_extra_config = dict()
         for section in parser.sections():
-            section = section.title()
             if section not in ("Core", "Documentation", "Configuration"):
                 options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
                 self.__plugin_extra_config[section] = options
