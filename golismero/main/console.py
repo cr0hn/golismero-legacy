@@ -41,25 +41,25 @@ from colorizer import colored
 m_colors = {
 
     # String log levels to color names
-    'info': 'green',
-    'low': 'cyan',
-    'middle': 'white',
-    'high' :'red',
-    'critical' : 'yellow',
+    'info'      : 'blue',
+    'low'       : 'cyan',
+    'middle'    : 'white',
+    'high'      : 'red',
+    'critical'  : 'yellow',
 
     # Integer log levels to color names
-    0: 'green',
-    1: 'cyan',
-    2: 'magenta',
-    3: 'red',
-    4: 'yellow',
+    0           : 'blue',
+    1           : 'cyan',
+    2           : 'white',
+    3           : 'red',
+    4           : 'yellow',
 
     # Color names mapped to themselves
-    'green': 'green',
-    'cyan': 'cyan',
-    'magenta': 'magenta',
-    'red': 'red',
-    'yellow': 'yellow',
+    'green'     : 'blue',
+    'cyan'      : 'cyan',
+    'magenta'   : 'magenta',
+    'red'       : 'red',
+    'yellow'    : 'yellow',
 }
 
 
