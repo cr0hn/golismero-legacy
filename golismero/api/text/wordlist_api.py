@@ -319,12 +319,12 @@ class AdvancedDicWordlist:
         :type word: str.
 
         :return: a list with matches.
-        :rtype: list(list(KEY, VALUE))
+        :rtype: dict(KEY, VALUE)
         """
         if not word:
             return [[]]
 
-        return [ {i:v} for i, v in self.__wordlist.iteritems() if word in v]
+        return { i:v for i, v in self.__wordlist.iteritems() if word in v}
 
 
     #----------------------------------------------------------------------
