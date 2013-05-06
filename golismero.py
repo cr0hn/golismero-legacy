@@ -208,6 +208,7 @@ def cmdline_parser():
     gr_report = parser.add_argument_group("report options")
     gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", default=[None], help="write the results of the audit to this file [default: stdout]")
     gr_report.add_argument("-no", "--no-output", dest="reports", action=ResetListAction, help="do not output the results")
+    gr_report.add_argument("--only-vulns", action="store_true", dest="only_vulns", help="display only vulnerable resources", default=False)
 
     gr_net = parser.add_argument_group("network options")
     gr_net.add_argument("--max-connections", help="maximum number of concurrent connections per host [default: 50]", default=50)

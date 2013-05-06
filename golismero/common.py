@@ -465,6 +465,9 @@ class AuditConfig (Configuration):
         #
         "reports": (list, []),
 
+        # Only display resources with vulns associated
+        "only_vulns": (bool, False),
+
         #
         # Audit options
         #
