@@ -55,11 +55,20 @@ m_colors = {
     4           : 'yellow',
 
     # Color names mapped to themselves
-    'green'     : 'blue',
+    'Blue'      : 'blue',
+    'blue'      : 'blue',
+    'Green'     : 'green',
+    'green'     : 'green',
+    'Cyan'      : 'cyan',
     'cyan'      : 'cyan',
+    'Magenta'   : 'magenta',
     'magenta'   : 'magenta',
+    'Red'       : 'red',
     'red'       : 'red',
     'yellow'    : 'yellow',
+    'Yellow'    : 'yellow',
+    'white'     : 'white',
+    'White'     : 'white'
 }
 
 
