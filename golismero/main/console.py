@@ -55,11 +55,15 @@ m_colors = {
     4           : 'yellow',
 
     # Color names mapped to themselves
-    'green'     : 'blue',
-    'cyan'      : 'cyan',
-    'magenta'   : 'magenta',
+    'grey'      : 'grey',
     'red'       : 'red',
+    'green'     : 'green',
     'yellow'    : 'yellow',
+    'blue'      : 'blue',
+    'magenta'   : 'magenta',
+    'cyan'      : 'cyan',
+    'white'     : 'white',
+
 }
 
 
@@ -154,6 +158,10 @@ def colorize(text, level_or_color):
     :returns: str -- string with information to print.
     """
     if Console.use_colors:
+        try:
+            level_or_color = level_or_color.lower()
+        except AttributeError:
+            pass
         return colored(text, m_colors[level_or_color])
     else:
         return text
