@@ -565,7 +565,7 @@ class HTTP_Response (object):
         :returns: str
         """
         if not self.__http_headers_raw:
-            self.__http_headers_raw = ''.join(("%s: %s\n" % (k,v) for k,v in self.__http_headers_raw.headers.iteritems()))
+            self.__http_headers_raw = ''.join(("%s:%s\n" % (k,v) for k,v in self.__http_headers.iteritems()))
         return self.__http_headers_raw
 
     @property
