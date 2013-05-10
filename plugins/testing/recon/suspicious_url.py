@@ -71,9 +71,22 @@ class SuspiciousURLPlugin(TestingPlugin):
             return
 
         # Load wordlists
-        m_wordlist = WordListAPI().get_wordlist(Config.plugin_config['wordlist'])
+        m_wordlist_middle     = WordListAPI().get_wordlist(Config.plugin_extra_config['Wordlist_middle']['wordlist'])
+        m_wordlist_extensions = WordListAPI().get_wordlist(Config.plugin_extra_config['Wordlist_extensions']['wordlist'])
 
-        # Return matching keywords
-        return [SuspiciousURL(info, x)
-                for x in m_wordlist
-                if x in m_url]
+
+        # Results store
+        m_results          = []
+        m_results_extend   = m_results.extend
+
+        # Add matching keywords at any positions of URL
+        m_results_extend([SuspiciousURL(info, x)
+                          for x in m_wordlist_middle
+                          if x in m_url])
+
+        # Add matching keywords at any positions of URL
+        m_results_extend([SuspiciousURL(info, x)
+                          for x in m_wordlist_extensions
+                          if m_url.endswith(x)])
+
+        return m_results
