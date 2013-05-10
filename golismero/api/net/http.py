@@ -36,6 +36,7 @@ from ...common import random
 from os.path import basename
 
 import hashlib
+from dicti import *
 from re import findall
 
 
@@ -414,52 +415,31 @@ class HTTP_Response (object):
     HTTP response.
     """
 
-
-    #----------------------------------------------------------------------
-    def __init__(self, raw_response, request_time, request):
-
-        # Request that produced this response
-        self.__request = request
-
-        # HTML code of response
-        self.__raw_data = raw_response.content if raw_response.content else ""
-
-        # HTTP response code
-        self.__http_response_code = raw_response.status_code
-
-        # HTTP response reason
-        self.__http_response_code_reason = raw_response.reason
-
-        # HTTP headers
-        self.__http_headers = raw_response.headers
-
-        # HTTP headers in raw format
-        self.__http_headers_raw = None
-
-        # Request time
-        self.__request_time = request_time
-
-        # Information object
-        self.__information = None
-
-        # Wrapper for cookie
-        self.__cookie = raw_response.cookies.get_dict()
+    def __init__(self):
 
         # Content type
-        self.__content_type = None
+        self.__content_type              = None
+
+        # HTTP headers in raw format
+        self.__http_headers_raw          = None
+
+        # Information object
+        self.__information               = None
+
+        self.__raw_response              = None
 
         #
         # Counters
         #
 
         # Total number of words of body response
-        self.__word_count = None
+        self.__word_count                = None
 
         # Total number of lines of body response
-        self.__lines_count = None
+        self.__lines_count               = None
 
         # Total number of characters of body response
-        self.__char_count = None
+        self.__char_count                = None
 
         #
         # Parent constructor
@@ -468,25 +448,93 @@ class HTTP_Response (object):
 
 
     #----------------------------------------------------------------------
-    def __extract_information(self, headers, data):
+    @classmethod
+    def from_custom_request(cls, raw_response, request_time, request):
         """
-        Get an information object from a raw response.
-        """
-        m_return_content = None
-        if headers:
-            m_content_type = headers.get("content-type", "text/html")
+        This method make an HTTP Response object from a Request library.
 
-            # Parse HTML
-            if m_content_type.startswith('text/html'):
-                self.__content_type = "html"
-                m_return_content = HTML(data)
-            elif m_content_type.startswith('text/plain'):
-                self.__content_type = "text"
-                #m_return_content = data
-            else:
-                self.__content_type = "unknown"
-                #m_return_content = data
-        return m_return_content
+        Using this method, raw response are not available.
+
+        :param raw_response: HTTPResponse object, from Request library.
+        :type raw_response: HTTPResponse
+
+        :param request_time: time that the response was take.
+        :type request_time: float
+
+        :param request: The original request for this response.
+        :para request: HTTP_Request
+        """
+        instance = cls()
+        # Request time
+        instance.__request_time              = request_time
+
+        # Request that produced this response
+        instance.__request                   = request
+
+        # Raw response of server
+        instance.__raw_response              = ""
+
+        # HTML code of response
+        instance.__raw_data                  = raw_response.content if raw_response.content else ""
+
+        # HTTP response code
+        instance.__http_response_code        = raw_response.status_code
+
+        # HTTP response reason
+        instance.__http_response_code_reason = raw_response.reason
+
+        # HTTP headers
+        instance.__http_headers              = dicti(raw_response.headers)
+
+        # Wrapper for cookie
+        instance.__cookie                    = raw_response.cookies.get_dict()
+
+        return instance
+
+    #----------------------------------------------------------------------
+    @classmethod
+    def from_raw_request(cls, raw_response, request_time, request):
+        """
+        This method make an HTTP Response object from a raw parse of HTTP response.
+
+        :param raw_response: HttpParser object with the info.
+        :type raw_response: HttpParse
+
+        :param request_time: time that the response was take.
+        :type request_time: float
+
+        :param request: the original request for this response.
+        :para request: str
+        """
+
+        instance = cls()
+        # Request time
+        instance.__request_time              = request_time
+
+        # Request that produced this response
+        instance.__request                   = request
+
+        # Raw response of server
+        instance.__raw_response              = raw_response.raw_response
+
+        # HTML code of response
+        instance.__raw_data                  = raw_response.response_content
+
+        # HTTP response code
+        instance.__http_response_code        = raw_response.response_status_code
+
+        # HTTP response reason
+        instance.__http_response_code_reason = raw_response.response_reason
+
+        # HTTP headers
+        instance.__http_headers              = dicti(raw_response.response_http_headers)
+        instance.__http_headers_raw          = raw_response.response_http_headers_raw
+
+        # Wrapper for cookie
+        instance.__cookie                    = raw_response.response_cookie
+
+        return instance
+
 
 
     #----------------------------------------------------------------------
@@ -500,13 +548,24 @@ class HTTP_Response (object):
         return self.__request
 
     @property
-    def raw(self):
+    def raw_content(self):
         """
         Get raw information from the HTTP response.
 
         :returns: str
         """
         return self.__raw_data
+
+    #----------------------------------------------------------------------
+    @property
+    def raw_response(self):
+        """
+        Get the complete raw response of server.
+
+        :return: str
+        """
+        return self.__raw_response
+
 
     @property
     def content_length(self):
@@ -558,7 +617,7 @@ class HTTP_Response (object):
         return self.__http_headers
 
     @property
-    def http_raw_headers(self):
+    def http_headers_raw(self):
         """
         Raw HTTP response headers.
 
@@ -585,7 +644,15 @@ class HTTP_Response (object):
         :returns: Information
         """
         if self.__information is None:
-            self.__information = self.__extract_information(self.__http_headers, self.__raw_data)
+
+            m_contents = {
+                "text/html": HTML,
+            }
+
+            if self.content_type == "text/plain" or self.content_type == "unknown":
+                self.__information = self.raw_content
+            else:
+                self.__information = m_contents[self.content_type](self.raw_content)
         return self.__information
 
     @property
@@ -599,6 +666,10 @@ class HTTP_Response (object):
         - html
         - text
         """
+        if not self.__content_type:
+            self.__content_type = self.http_headers.get("Content-Type").split(";")[0]
+            if not self.__content_type:
+                self.__content_type = "unknown"
         return self.__content_type
 
 
