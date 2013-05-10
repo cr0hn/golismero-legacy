@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #-----------------------------------------------------------------------
@@ -263,16 +263,25 @@ class AdvancedDicWordlist:
         if not separator:
             raise ValueError("Empty separator got")
 
-        self.__wordlist_path = wordlist
         m_tmp_wordlist = None
         try:
             m_tmp_wordlist = open(wordlist, mode='rU').readlines()
         except IOError,e:
             raise IOError("Error when try to open wordlist: '%s'" % wordlist)
 
-        self.__wordlist = dict(b.strip().split(separator,1) for b in m_tmp_wordlist)
+        #self.__wordlist = { k: dict([v.replace("\n","").replace("\r","").split(separator,1)])  for k, v in enumerate(m_tmp_wordlist)}
+        #self.__wordlist = [dict([v.replace("\n","").replace("\r","").split(separator,1)])  for k, v in enumerate(m_tmp_wordlist)]
 
-        # Close file
+        self.__wordlist = {}
+        for k in m_tmp_wordlist:
+            v = k.replace("\n","").replace("\r","").split(separator,1)
+            try:
+                self.__wordlist[v[0]].append(v[1])
+            except KeyError:
+                self.__wordlist[v[0]] = []
+                self.__wordlist[v[0]].append(v[1])
+
+        del m_tmp_wordlist
 
     #----------------------------------------------------------------------
     def matches_by_keys(self, word):
@@ -284,12 +293,21 @@ class AdvancedDicWordlist:
         :type word: str.
 
         :return: a list with matches.
-        :rtype: list(list(KEY, VALUE))
+        :rtype: dict(KEY, VALUE)
         """
         if not word:
-            return [[]]
+            return {}
 
-        return [ {i:v} for i, v in self.__wordlist.iteritems() if word in i]
+        word = str(word)
+
+        #
+        #
+        # TODO: FIX WITH NEW FORMAT!!!!
+        #
+        #
+
+
+        return { i:v for i, v in self.__wordlist.iteritems() if word == i}
 
 
     #----------------------------------------------------------------------
@@ -307,7 +325,15 @@ class AdvancedDicWordlist:
         if not word:
             return []
 
-        return [x for x in self.__wordlist if word in x]
+        word = str(word)
+
+        #
+        #
+        # TODO: FIX WITH NEW FORMAT!!!!
+        #
+        #
+
+        return [x for x in self.__wordlist if word == x]
 
     #----------------------------------------------------------------------
     def matches_by_value(self, word):
@@ -322,9 +348,17 @@ class AdvancedDicWordlist:
         :rtype: dict(KEY, VALUE)
         """
         if not word:
-            return [[]]
+            return {}
 
-        return { i:v for i, v in self.__wordlist.iteritems() if word in v}
+        word = str(word)
+
+        m_return = {}
+        for k, v in self.__wordlist.iteritems():
+            for l in v:
+                if word == l:
+                    m_return[k] = l
+
+        return m_return
 
 
     #----------------------------------------------------------------------
@@ -342,7 +376,16 @@ class AdvancedDicWordlist:
         if not word:
             return []
 
-        return [x for x in self.__wordlist.itervalues() if word in x]
+        word = str(word)
+
+        #
+        #
+        # TODO: FIX WITH NEW FORMAT!!!!
+        #
+        #
+
+
+        return [x for x in self.__wordlist.itervalues() if word == x]
 
 
     #----------------------------------------------------------------------
