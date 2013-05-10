@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #-----------------------------------------------------------------------
@@ -48,7 +48,7 @@ from requests import *
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests_ntlm import HttpNtlmAuth
 from urllib import quote, quote_plus, unquote, unquote_plus
-from urlparse import urljoin
+from urlparse import urldefrag, urljoin
 from warnings import warn
 
 
@@ -102,18 +102,36 @@ def is_method_allowed(method, url, network_conn):
 
 
 #----------------------------------------------------------------------
-def fix_url(url):
+def fix_url(url, base_url=None):
     """
     Fix selected URL adding neccesary info to be complete URL, like:
     www.site.com -> http://www.site.com/
 
+    If base_url is provided, then a canonized and fixed url will return:
+    in  -> (url=/contact, base_url=www.site.com)
+    out -> http://www.site.com/contact
+
     :param url: URL
     :type url: str
+
+    :param base_url: base url for canonize process.
+    :type base_url: str
+
+    :return: fixed and canonized url.
+    :rtype: str
+
     """
     parsed = DecomposedURL(url)
     if not parsed.scheme:
         parsed.scheme = 'http://'
-    return parsed.url
+
+    if base_url:
+        # Remove the fragment from the base URL.
+        base_url = urldefrag(base_url)[0]
+        # Canonicalize the URL.
+        return urljoin(base_url, parsed.url.strip())
+    else:
+        return parsed.url
 
 
 #----------------------------------------------------------------------
