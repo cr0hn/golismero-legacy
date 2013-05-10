@@ -81,7 +81,7 @@ class Robots(TestingPlugin):
             Logger.log_more_verbose("Robots - value error while processing: '%s'. Error: %s" % (m_url_robots_txt, e.message))
 
         # Check for errors
-        if not p or not p.content_type == "text" or not p.information:  # order is important!
+        if not p or not p.content_type == "text/plain" or not p.information:  # order is important!
             Logger.log_verbose("Robots - no robots.txt found.")
             return
 
@@ -99,9 +99,9 @@ class Robots(TestingPlugin):
             return
 
         # Extract URLs
-        m_discovered_urls = []
+        m_discovered_urls        = []
         m_discovered_urls_append = m_discovered_urls.append
-        tmp_discovered = None
+        tmp_discovered           = None
         for rawline in m_robots_text.splitlines():
             m_line = rawline
 
@@ -130,7 +130,7 @@ class Robots(TestingPlugin):
                 if m_key in ('disallow', 'allow', 'sitemap') and m_value:
                     tmp_discovered = urljoin(m_url, m_value)
                     Logger.log_more_verbose("Robots - discovered new url: %s" % tmp_discovered)
-                    m_discovered_urls_append( Url(tmp_discovered) )
+                    m_discovered_urls_append( tmp_discovered )
             except Exception,e:
                 continue
 
@@ -140,15 +140,32 @@ class Robots(TestingPlugin):
         #
 
         # Generating error page
-        m_error_page = generate_error_page_url(m_url_robots_txt)
+        m_error_page          = generate_error_page_url(m_url_robots_txt)
         m_response_error_page = m_manager.get(m_error_page)
 
         # Analyze results
-        m_analyzer = MatchingAnalyzer(m_response_error_page.raw)
+        m_analyzer            = MatchingAnalyzer(m_response_error_page.raw_content)
+
+        m_return              = []
+        m_return_append       = m_return.append
+        m_return_extend       = m_return.extend
 
         # Add results for analyze
-        for l_url in m_discovered_urls:
-            m_analyzer.append(m_manager.get(l_url).raw)
+        for l_url in set(m_discovered_urls):
+            l_p = m_manager.get(fix_url(l_url, m_url))
+
+            #
+            # ¡¡¡¡ FIX !!!!
+            #
+            # HTTP_Response also must me added!
+
+            # Append response to results
+            #m_return_append(l_p)
+
+            # Add for analyze
+            m_analyzer.append(l_p.raw_content, url=l_url)
 
         # Generate results
-        return [r for i in m_analyzer.unique_texts]
+        m_return_extend([Url(i.url, referer=m_url) for i in m_analyzer.unique_texts])
+
+        return m_return
