@@ -110,7 +110,7 @@ class ParallelBruter(threading.Thread):
                         p = self.__net.get(l_url, cache=False, method="GET")
 
                     # Append for analyzate and display info if is accepted
-                    if self.__results.append(p.raw,url=l_url,risk = severity_vectors[m_name]):
+                    if self.__results.append(p.raw_content,url=l_url,risk = severity_vectors[m_name]):
                         Logger.log_more_verbose("Bruteforcer - Discovered partial url: '%s'!!" % l_url)
 
                         # Send_ response, HTML and URL to kernel.
@@ -185,7 +185,7 @@ class BackupSearcher(TestingPlugin):
         # Make the URL
         m_error_url = generate_error_page_url(m_url)
         # Get the request
-        m_error_response = m_net_manager.get(m_error_url).raw
+        m_error_response = m_net_manager.get(m_error_url).raw_content
 
         #
         # Start with bruteforcing. Cases to try:
