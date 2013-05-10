@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #-----------------------------------------------------------------------
@@ -39,8 +39,8 @@ from diff_match_patch import diff_match_patch
 #----------------------------------------------------------------------
 def get_matching_level(text1, text2):
     """
-    Compare two text and return a value between 0-100 with the level of
-    difference. 0 is lowest and 100 the highest.
+    Compare two text and return a value between 0-1 with the level of
+    difference. 0 is lowest and 1 the highest.
 
     - If text1 is more similar to text2, value will be near to 100.
     - If text1 is more different to text2, value will be near to 0.
@@ -51,10 +51,10 @@ def get_matching_level(text1, text2):
     :param text2: Text to comarpe text1.
     :type text2: str
 
-    :returns: float - An integer between 0-1
+    :returns: float - Value between 0-1
     """
     if not text1 and not text2:
-        return 100 # If two text are empty => are equals
+        return 1 # If two text are empty => are equals
 
     m_difference = abs(len(text1) - len(text2))
 
@@ -72,10 +72,10 @@ def get_matching_level(text1, text2):
 
     else:
         # Google method
-        l_differ = diff_match_patch()
+        l_differ       = diff_match_patch()
         # Levenshtein comparation value
         l_google_value = float(l_differ.diff_levenshtein(l_differ.diff_main(text1, text2)))
-        l_len_text2 = len(text2)
+        l_len_text2    = len(text2)
         # Calculate
         m_return_value = abs( (l_len_text2 - l_google_value) / l_len_text2 )
 
@@ -155,7 +155,6 @@ class MatchingAnalyzer:
         """
         if text:
             l_matching_level = get_matching_level(self.__base_text, text)
-
             if l_matching_level < self.__matching_level:
                 # Set to new data received
                 self.__new_data = True
@@ -210,8 +209,6 @@ class MatchingAnalyzer:
         """
         if self.level_average:
             m_average = self.level_average
-            m_results_append = self.__unique_strings
-
             m_unique_strings_append = self.__unique_strings.append
 
             for l_key, l_info in self.__results_matching_level.iteritems():
