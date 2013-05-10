@@ -423,9 +423,6 @@ class HTTP_Response (object):
         # HTTP headers in raw format
         self.__http_headers_raw          = None
 
-        # Information object
-        self.__information               = None
-
         self.__raw_response              = None
 
         #
@@ -449,7 +446,7 @@ class HTTP_Response (object):
 
     #----------------------------------------------------------------------
     @classmethod
-    def from_custom_request(cls, raw_response, request_time, request):
+    def from_custom_request(cls, raw_response, request_time):
         """
         This method make an HTTP Response object from a Request library.
 
@@ -467,9 +464,6 @@ class HTTP_Response (object):
         instance = cls()
         # Request time
         instance.__request_time              = request_time
-
-        # Request that produced this response
-        instance.__request                   = request
 
         # Raw response of server
         instance.__raw_response              = ""
@@ -493,7 +487,7 @@ class HTTP_Response (object):
 
     #----------------------------------------------------------------------
     @classmethod
-    def from_raw_request(cls, raw_response, request_time, request):
+    def from_raw_request(cls, raw_response, request_time):
         """
         This method make an HTTP Response object from a raw parse of HTTP response.
 
@@ -502,17 +496,11 @@ class HTTP_Response (object):
 
         :param request_time: time that the response was take.
         :type request_time: float
-
-        :param request: the original request for this response.
-        :para request: str
         """
 
         instance = cls()
         # Request time
         instance.__request_time              = request_time
-
-        # Request that produced this response
-        instance.__request                   = request
 
         # Raw response of server
         instance.__raw_response              = raw_response.raw_response
@@ -534,18 +522,6 @@ class HTTP_Response (object):
         instance.__cookie                    = raw_response.response_cookie
 
         return instance
-
-
-
-    #----------------------------------------------------------------------
-    @property
-    def request_from(self):
-        """
-        Original request that generated this response.
-
-        :returns: An HTTP_Request object.
-        """
-        return self.__request
 
     @property
     def raw_content(self):
@@ -587,7 +563,7 @@ class HTTP_Response (object):
 
         :returns: str
         """
-        return self.__request.cookie
+        return self.__cookie
 
     @property
     def http_response_code(self):
@@ -643,17 +619,19 @@ class HTTP_Response (object):
 
         :returns: Information
         """
-        if self.__information is None:
 
-            m_contents = {
-                "text/html": HTML,
-            }
+        m_return = None
 
-            if self.content_type == "text/plain" or self.content_type == "unknown":
-                self.__information = self.raw_content
-            else:
-                self.__information = m_contents[self.content_type](self.raw_content)
-        return self.__information
+        m_contents = {
+            "text/html": HTML,
+        }
+
+        if self.content_type == "text/plain" or self.content_type == "unknown":
+            m_return = self.raw_content
+        else:
+            m_return = m_contents[self.content_type](self.raw_content)
+
+        return m_return
 
     @property
     def content_type(self):
