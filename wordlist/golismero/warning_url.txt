@@ -3,7 +3,6 @@ password
 auth
 session
 admin
-old
 .~
 backup
 .jar
