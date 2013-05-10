@@ -66,7 +66,7 @@ def show_banner():
 import sys
 from sys import version_info, exit
 if __name__ == "__main__":
-    if version_info < (2, 7) or version_info > (3, 0):
+    if version_info < (2, 7) or version_info >= (3, 0):
         show_banner()
         print "[!] You must use Python version 2.7"
         exit(1)
