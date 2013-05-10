@@ -67,141 +67,227 @@ class ScreenReport(ReportPlugin):
         :type output_file: str | None
         """
 
+        #
+        # Plugin vars
+        #
+
         # Get access to the database API.
-        db = Database()
+        m_db = Database()
 
-        # Vulneravility functions
-        VULN_DISPLAYER = {
-            'url_suspicious' : display_url_suspicious
-        }
-
+        # Display all URLs or only vulns?
+        m_only_vulns = Config.audit_config.only_vulns
 
         # ----------------------------------------
         # Header
         # ----------------------------------------
         print "\n\n--= %s =--" % colorize("Report", "cyan")
 
-        # ----------------------------------------
-        # Discovered URLs
-        # ----------------------------------------
-        print "\n- %s - "% colorize("URLs", "yellow")
-        # Get each resourcd
-        m_len_urls = db.count(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
-        if m_len_urls < 200:   # increase as you see fit...
-            # fast but memory consuming method
-            urls = db.get_many( db.keys(Data.TYPE_RESOURCE, Resource.RESOURCE_URL) )
+        #
+        # Displayers
+        #
+        if m_only_vulns:
+            display_only_vulns(m_db)
         else:
-            # slow but lean method
-            urls = db.iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
+            display_all(m_db)
 
-        # Format to print:
-        # [ 1 ] www.website.com/Param1=Value1&Param2=Value2
-        #       | Method: GET              |
-        #       |------PARAMS--------------|
-        #       | Param1  = Value1         |
-        #       | Param2  = Value2         |
-        #       |------VULNERABILITES------|
-        #       |-----------SQLi-----------|
-        #       | Vulnerable param: Param2 |
-        #       | Payload: or 1=1          |
-        #       |__________________________|
+
+#----------------------------------------------------------------------
+#
+# Display modes
+#
+#----------------------------------------------------------------------
+def display_only_vulns(db):
+    """"""
+
+    # ----------------------------------------
+    # Discovered URLs
+    # ----------------------------------------
+    print "\n- %s - "% colorize("Vulnerabilities", "yellow")
+
+
+    # Get each resourcd
+    urls       = None
+    m_len_urls = db.count(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
+    if m_len_urls < 200:   # increase as you see fit...
+        # fast but memory consuming method
+        urls   = db.get_many( db.keys(Data.TYPE_RESOURCE, Resource.RESOURCE_URL) )
+    else:
+        # slow but lean method
+        urls   = db.iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
+
+    i = 0
+
+    for u in urls:
+
+        # Initial vars
+        i             += 1
+        l_screen       = StringIO()
+        l_pre_spaces   = " " * 6
+        l_max_word     = len(u.url)
+        # Url to print
+        l_url          = l_url = colorize(u.url, "white")
+
         #
-        # [ 2 ] www.website.com/Param1
-        #       | Method: GET      |
-        #       |------PARAMS------|
-        #       | Param1  = Value1 |
-        #       | Param2  = Value2 |
-        #       |__________________|
+        # Display URL and method
         #
+        l_screen.write("\n[%s] (%s) %s" % (colorize('{:^3}'.format(i), "Blue"), u.method, l_url))
+
         #
-        i = 0
-        l_only_vulns = Config.audit_config.only_vulns
+        # Display URL params
+        #
+        # GET
+        if u.has_url_param:
+            l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("GET PARAMS")))
+            for p,v in u.url_params().iteritems():
+                l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
 
-        for u in urls:
+        # POST
+        if u.has_post_param:
+            l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("POST PARAMS")))
+            for p,v in u.post_params().iteritems():
+                l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
 
-            if l_only_vulns and not u.associated_vulnerabilities:
-                continue
+        #
+        # Display vulns
+        #
+        if u.associated_vulnerabilities:
+            # Display de line in the box
+            l_screen.write("\n%s| %s" % (l_pre_spaces, '{:-^40}'.format(" Vulnerabilities ")))
 
-            # Initial vars
-            i             += 1
-            l_screen       = StringIO()
-            l_pre_spaces   = " " * 6
-            l_max_word     = len(u.url)
-            l_url          = None # Url to print
+            for vuln in u.associated_vulnerabilities:
+                l_vuln_name = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
 
-
-            # If vulnerability type 'url_suspicious' exits:
-            # - If there is only one vuln, it replace the URL.
-            # - If there is more than one, vuln will be treated as
-            #   normal vuln
-            l_url_suspicious = u.associated_vulnerabilities_by_category(cat_name="information_disclosure/url_suspicious")
-
-            if l_url_suspicious and len(l_url_suspicious) == 1: # There is 'url_suspicious' vulns and only one result
-                l_val = iter(l_url_suspicious).next()
-
-                l_url = colorize_substring(l_val.url.url, l_val.substring, "red")
-            else:
-                l_url = colorize(u.url, "white")
-
-            #
-            # Display URL and method
-            #
-            l_screen.write("\n[%s] (%s) %s" % (colorize('{:^3}'.format(i), "Blue"), u.method, l_url))
-
-            #
-            # Display URL params
-            #
-            # GET
-            if u.has_url_param:
-                l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("GET PARAMS")))
-                for p,v in u.url_params().iteritems():
-                    l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
-
-            # POST
-            if u.has_post_param:
-                l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("POST PARAMS")))
-                for p,v in u.post_params().iteritems():
-                    l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
-
-
-            # Display vulns
-            #
-            if u.associated_vulnerabilities:
                 # Display de line in the box
-                l_screen.write("\n%s| %s" % (l_pre_spaces, '{:-^40}'.format(" Vulnerabilities ")))
+                l_screen.write("\n%s| %s " % (l_pre_spaces, '{:=^40}'.format(" %s " % l_vuln_name.replace("_", " ").capitalize())))
 
-                for vuln in u.associated_vulnerabilities:
-                    l_vuln_name = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
+                # Call to the funcition resposible to display the vuln info
+                if l_vuln_name in VULN_DISPLAYER:
+                    l_screen.write(VULN_DISPLAYER[l_vuln_name](vuln, l_pre_spaces, 40))
+                else:
+                    print "Function to display '%s' function are not available" % l_vuln_name
 
-                    # Display de line in the box
-                    l_screen.write("\n%s| %s " % (l_pre_spaces, '{:=^40}'.format(" %s " % l_vuln_name.replace("_", " ").capitalize())))
+            # Close vulnerabilites box
+            l_screen.write("\n%s|%s" % (l_pre_spaces, "_" * 41 ))
 
-                    # Call to the funcition resposible to display the vuln info
-                    if l_vuln_name in VULN_DISPLAYER:
-                        l_screen.write(VULN_DISPLAYER[l_vuln_name](vuln, l_pre_spaces, 40))
-                    else:
-                        print "Function to display '%s' function are not available" % l_vuln_name
+        # Diplay info
+        print l_screen.getvalue(),
 
-                # Close vulnerabilites box
-                l_screen.write("\n%s|%s" % (l_pre_spaces, "_" * 41 ))
+    # ----------------------------------------
+    # Summary
+    # ----------------------------------------
+    print "\n\n- %s -\n" % colorize("Summary", "yellow")
 
-            # Diplay info
-            print l_screen.getvalue(),
+    # Urls
+    print "+ Total URLs: %s\n\n" % colorize(str(i), "yellow")
 
+#----------------------------------------------------------------------
+def display_all(db):
+    """
+    This function display the results like this:
+
+    [ 1 ] www.website.com/Param1=Value1&Param2=Value2
+          | Method: GET              |
+          |------PARAMS--------------|
+          | Param1  = Value1         |
+          | Param2  = Value2         |
+          |------VULNERABILITES------|
+          |-----------SQLi-----------|
+          | Vulnerable param: Param2 |
+          | Payload: or 1=1          |
+          |__________________________|
+
+    [ 2 ] www.website.com/contact/
+    [ 3 ] www.website.com/Param1
+          | Method: GET      |
+          |------PARAMS------|
+          | Param1  = Value1 |
+          | Param2  = Value2 |
+          |__________________|
+
+    """
+
+    # ----------------------------------------
+    # Discovered URLs
+    # ----------------------------------------
+    print "\n- %s - "% colorize("URLs", "yellow")
+
+
+    # Get each resourcd
+    urls       = None
+    m_len_urls = db.count(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
+    if m_len_urls < 200:   # increase as you see fit...
+        # fast but memory consuming method
+        urls   = db.get_many( db.keys(Data.TYPE_RESOURCE, Resource.RESOURCE_URL) )
+    else:
+        # slow but lean method
+        urls   = db.iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
+
+    i = 0
+
+    for u in urls:
+
+        # Initial vars
+        i             += 1
+        l_screen       = StringIO()
+        l_pre_spaces   = " " * 7
+        l_max_word     = len(u.url)
+        # Url to print
+        l_url          = l_url = colorize(u.url, "white")
 
         #
+        # Display URL and method
         #
-        # XXX TODO
-        #
-        #
+        l_screen.write("\n[%s] (%s) %s" % (colorize('{:^5}'.format(i), "Blue"), u.method, l_url))
 
-        # ----------------------------------------
-        # Summary
-        # ----------------------------------------
-        print "\n\n- %s -\n" % colorize("Summary", "yellow")
+        #
+        # Display URL params
+        #
+        # GET
+        if u.has_url_param:
+            l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("GET PARAMS")))
+            for p,v in u.url_params().iteritems():
+                l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
 
-        # Urls
-        print "+ Total URLs: %s\n\n" % colorize(str(i), "yellow")
+        # POST
+        if u.has_post_param:
+            l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("POST PARAMS")))
+            for p,v in u.post_params().iteritems():
+                l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
+
+        #
+        # Display vulns
+        #
+        if u.associated_vulnerabilities:
+            # Display de line in the box
+            l_screen.write("\n%s| %s" % (l_pre_spaces, '{:-^40}'.format(" Vulnerabilities ")))
+
+            for vuln in u.associated_vulnerabilities:
+                l_vuln_name = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
+
+                # Display de line in the box
+                l_screen.write("\n%s| %s " % (l_pre_spaces, '{:=^40}'.format(" %s " % l_vuln_name.replace("_", " ").capitalize())))
+
+                # Call to the funcition resposible to display the vuln info
+                if l_vuln_name in VULN_DISPLAYER:
+                    l_screen.write(VULN_DISPLAYER[l_vuln_name](vuln, l_pre_spaces, 40))
+                else:
+                    print "Function to display '%s' function are not available" % l_vuln_name
+
+            # Close vulnerabilites box
+            l_screen.write("\n%s|%s" % (l_pre_spaces, "_" * 41 ))
+
+        # Diplay info
+        print l_screen.getvalue(),
+
+
+
+    # ----------------------------------------
+    # Summary
+    # ----------------------------------------
+    print "\n\n- %s -\n" % colorize("Summary", "yellow")
+
+    # Urls
+    print "+ Total URLs: %s\n\n" % colorize(str(i), "yellow")
 
 
 #----------------------------------------------------------------------
@@ -210,8 +296,6 @@ class ScreenReport(ReportPlugin):
 #
 # All functions must return an string
 #
-#----------------------------------------------------------------------
-
 #----------------------------------------------------------------------
 def display_url_suspicious(vuln, init_spaces = 6, line_width = 40):
     """"""
@@ -222,3 +306,12 @@ def display_url_suspicious(vuln, init_spaces = 6, line_width = 40):
 
 
     return m_return.getvalue()
+
+
+
+#
+# Vulneravility functions
+#
+VULN_DISPLAYER = {
+    'url_suspicious' : display_url_suspicious
+}
