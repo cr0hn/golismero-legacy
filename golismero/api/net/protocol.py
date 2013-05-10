@@ -41,9 +41,14 @@ from ..logger import Logger
 from ...messaging.codes import MessageCode
 
 from re import compile, match, IGNORECASE
+from httpparser.httpparser import *
 from requests import *
 from requests.exceptions import RequestException
 from time import time
+from cStringIO import StringIO
+import socket, select
+import hashlib
+
 
 #------------------------------------------------------------------------------
 class NetworkException(Exception):
@@ -216,11 +221,14 @@ class Web (Protocol):
 
 
     #----------------------------------------------------------------------
-    def get_custom(self, request):
+    def get_custom(self, request, timeout = 5):
         """Get an HTTP response from a custom HTTP Request object.
 
         :param request: An HTTP request object.
         :type request: HTTP_request
+
+        :param timeout: timeout in seconds.
+        :type timeout: int
 
         :returns: HTTP_Response -- HTTP response object | None
         """
@@ -259,6 +267,7 @@ class Web (Protocol):
             m_request_params = {
                 'allow_redirects' : request.follow_redirects,
                 'headers' : request.raw_headers,
+                #'timeout' : timeout
             }
 
             # HTTP method
@@ -284,7 +293,7 @@ class Web (Protocol):
 
             # Issue the request
             try:
-                m_response = getattr(self.__http_pool_manager, m_method.lower())(m_url, **m_request_params)
+                m_response = getattr(self.__http_pool_manager, m_method.lower())(m_url, timeout = timeout, **m_request_params)
             except RequestException, e:
                 raise NetworkException(e.message)
 
@@ -295,7 +304,8 @@ class Web (Protocol):
             m_time = t2 - t1
 
             # Parse the response
-            m_response = HTTP_Response(m_response, m_time, request)
+            #m_response = HTTP_Response(m_time)
+            m_response = HTTP_Response.from_custom_request(m_response, m_time, request)
 
             # Cache the response if enabled
             if request.is_cacheable:
@@ -308,7 +318,7 @@ class Web (Protocol):
 
 
     #----------------------------------------------------------------------
-    def get(self, URL, method = "GET", post_data = None, follow_redirect = None, cache = True):
+    def get(self, URL, method = "GET", timeout = 5, post_data = None, follow_redirect = None, cache = True):
         """
         Get response for an input URL.
 
@@ -321,6 +331,9 @@ class Web (Protocol):
         :param redirect: If you want to follow HTTP redirect.
         :type redirect: bool
 
+        :param timeout: timeout in seconds.
+        :type timeout: int
+
         :returns: HTTPResponse instance or None if any error or URL out of scope.
 
         :raises: TypeError
@@ -331,10 +344,14 @@ class Web (Protocol):
         m_referer = None
         try:
             if isinstance(URL, Url):
-                URL = URL.url
-
-            # Set referer option
-            m_referer = URL.referer
+                URL       = URL.url
+                m_referer = URL.referer
+            elif isinstance(URL, basestring):
+                URL       = URL
+                # Parse, verify and canonicalize the URL
+                parsed = DecomposedURL(URL)
+                if not parsed.host or not parsed.scheme:
+                    raise ValueError("Only absolute URLs must be used!")
 
         except AttributeError:
             pass
@@ -360,4 +377,120 @@ class Web (Protocol):
         if m_referer:
             m_request.referer = m_referer
 
-        return self.get_custom(m_request)
+        return self.get_custom(m_request, timeout= timeout)
+
+
+    #----------------------------------------------------------------------
+    def get_raw(self, host, request_content, timeout = 2, port=80, proto="HTTP", cache = True):
+        """
+        This method allow you to make raw connections to a host.
+
+        You need to provide the data that you want to send to the server. You're the responsible to manage the
+        data that will be send to the server.
+
+        ¡¡¡ CURRENTLY THIS METHOD ONLY RETURNS HTTP HEADERS!!!!
+
+        ¡¡¡ CURRENTLY THIS METHOD **NOT** USE THE HTTP CACHE !!!!
+
+        :param timeout: timeout in seconds.
+        :type timeout: int
+
+        """
+        # Check if the URL is within scope of the audit.
+        if not is_in_scope(host):
+            Logger.log_verbose("Url '%s' out of scope. Skipping it." % host)
+            raise NetworkOutOfScope("'%s' is out of the scope." % host)
+
+        # Create data for key
+        m_string = "%s|%s" % (host, ''.join(( "%s:%s" % (v.split(":")[0], v.split(":")[1]) if ":" in v else '' for v in request_content.splitlines() ) if request_content else ''))
+
+        # Make the hash
+        m_request_id = hashlib.md5(m_string).hexdigest()
+
+        # If the URL is cached, return the cached contents.
+        #if cache and self._cache.exists(m_request_id, protocol=proto):
+        #    return self._cache.get(m_request_id, protocol=proto)
+
+
+        #
+        # TODO:
+        #
+        # CONTROL ConnectionSlot !!!!!!
+        #
+        #
+        #with ConnectionSlot(host):
+
+        # Start timing the request
+
+        #
+        # Get URL
+        #
+        t1 = time()
+
+        # Issue the request
+        try:
+            # Connect to the server
+            s = socket.socket()
+            s.settimeout(timeout)
+            s.connect((host, port))
+
+            # Send an HTTP request
+            s.send(request_content)
+            m_response = StringIO()
+
+            buffer        = s.recv(1)
+            m_response.write( buffer )
+
+            m_counter     = 0
+            if buffer == '\n' or buffer == '\r':
+                m_counter += 1
+
+            # Get HTTP header
+            while True:
+                buffer = s.recv(1)
+                m_response.write( buffer )
+                m_counter = m_counter + 1 if buffer == '\n' or buffer == '\r' else 0
+                if m_counter == 4: # End of HTTP header
+                    break
+
+
+            # Parse the HTTP header and get the Content-Length
+            m_parser      = HttpParser.from_raw_http_headers(m_response.getvalue())
+            #if "Content-Length" in m_parser.response_http_headers:
+                #m_body_length = int(m_parser.response_http_headers.get("Content-Length"))
+
+            #
+            #
+            # TODO!!!!!
+            #
+            # When response of HEAD, with "Content-Length" header, but without data
+            # is received, then the connection is locked.
+            #
+            #m_response.write(s.recv(m_body_length))
+
+            s.close()
+        except socket.error, e:
+            raise NetworkException(e.message)
+
+        # Stop timing the request
+        t2 = time()
+
+        # Calculate the request time
+        m_time = t2 - t1
+
+        # Parse the response
+        m_response     = HTTP_Response.from_raw_request(m_parser, m_time, request_content)
+
+        # Cache the response if enabled
+        #
+        # ¡¡¡¡¡ FIX !!!!!
+        #
+        # If cache are enabled, the program stops here
+        #
+        #if cache:
+            #self._cache.set(m_request_id, m_response,
+                            #protocol  = proto,
+                            #timestamp = t1)
+
+        # Return the response
+        return m_response
