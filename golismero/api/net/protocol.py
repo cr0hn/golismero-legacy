@@ -412,7 +412,6 @@ class Web (Protocol):
             return self._cache.get(m_request_id, protocol=proto)
 
         with ConnectionSlot(host):
-            print 2
 
             # Start timing the request
 
