@@ -139,6 +139,10 @@ class ConnectionSlot (object):
         self.__token = Config._context.remote_call(
             MessageCode.MSG_RPC_REQUEST_SLOT, self.hostname, 1
         )
+        if not self.__token:
+            # XXX FIXME
+            # This should block, not throw an error...
+            raise IOError("Connection slots limit exceeded, try again later")
 
     def __exit__(self, type, value, tb):
         Config._context.remote_call(
@@ -388,10 +392,6 @@ class Web (Protocol):
         You need to provide the data that you want to send to the server. You're the responsible to manage the
         data that will be send to the server.
 
-        ¡¡¡ CURRENTLY THIS METHOD ONLY RETURNS HTTP HEADERS!!!!
-
-        ¡¡¡ CURRENTLY THIS METHOD **NOT** USE THE HTTP CACHE !!!!
-
         :param timeout: timeout in seconds.
         :type timeout: int
 
@@ -408,72 +408,66 @@ class Web (Protocol):
         m_request_id = hashlib.md5(m_string).hexdigest()
 
         # If the URL is cached, return the cached contents.
-        #if cache and self._cache.exists(m_request_id, protocol=proto):
-        #    return self._cache.get(m_request_id, protocol=proto)
+        if cache and self._cache.exists(m_request_id, protocol=proto):
+            return self._cache.get(m_request_id, protocol=proto)
 
+        with ConnectionSlot(host):
+            print 2
 
-        #
-        # TODO:
-        #
-        # CONTROL ConnectionSlot !!!!!!
-        #
-        #
-        #with ConnectionSlot(host):
+            # Start timing the request
 
-        # Start timing the request
+            #
+            # Get URL
+            #
+            t1 = time()
 
-        #
-        # Get URL
-        #
-        t1 = time()
+            # Issue the request
+            try:
+                # Connect to the server
+                s = socket.socket()
+                s.settimeout(timeout)
+                s.connect((host, port))
 
-        # Issue the request
-        try:
-            # Connect to the server
-            s = socket.socket()
-            s.settimeout(timeout)
-            s.connect((host, port))
+                # Send an HTTP request
+                s.send(request_content)
+                m_response = StringIO()
 
-            # Send an HTTP request
-            s.send(request_content)
-            m_response = StringIO()
-
-            buffer        = s.recv(1)
-            m_response.write( buffer )
-
-            m_counter     = 0
-            if buffer == '\n' or buffer == '\r':
-                m_counter += 1
-
-            # Get HTTP header
-            while True:
-                buffer = s.recv(1)
+                buffer        = s.recv(1)
                 m_response.write( buffer )
-                m_counter = m_counter + 1 if buffer == '\n' or buffer == '\r' else 0
-                if m_counter == 4: # End of HTTP header
-                    break
+
+                m_counter     = 0
+                if buffer == '\n' or buffer == '\r':
+                    m_counter += 1
+
+                # Get HTTP header
+                while True:
+                    buffer = s.recv(1)
+                    m_response.write( buffer )
+                    m_counter = m_counter + 1 if buffer == '\n' or buffer == '\r' else 0
+                    if m_counter == 4: # End of HTTP header
+                        break
 
 
-            # Parse the HTTP header and get the Content-Length
-            m_parser      = HttpParser.from_raw_http_headers(m_response.getvalue())
-            #if "Content-Length" in m_parser.response_http_headers:
-                #m_body_length = int(m_parser.response_http_headers.get("Content-Length"))
+                # Parse the HTTP header and get the Content-Length
+                m_parser      = HttpParser.from_raw_http_headers(m_response.getvalue())
+                #if "Content-Length" in m_parser.response_http_headers:
+                    #m_body_length = int(m_parser.response_http_headers.get("Content-Length"))
 
-            #
-            #
-            # TODO!!!!!
-            #
-            # When response of HEAD, with "Content-Length" header, but without data
-            # is received, then the connection is locked.
-            #
-            #m_response.write(s.recv(m_body_length))
+                #
+                #
+                # TODO!!!!!
+                #
+                # When response of HEAD, with "Content-Length" header, but without data
+                # is received, then the connection is locked.
+                #
+                #m_response.write(s.recv(m_body_length))
 
-            s.close()
-        except socket.error, e:
-            raise NetworkException(e.message)
+                s.close()
+            except socket.error, e:
+                raise NetworkException(e.message)
 
-        # Stop timing the request
-        t2 = time()
+            # Stop timing the request
+            t2 = time()
 
         # Calculate the request time
         m_time = t2 - t1
@@ -482,15 +476,10 @@ class Web (Protocol):
         m_response     = HTTP_Response.from_raw_request(m_parser, m_time, request_content)
 
         # Cache the response if enabled
-        #
-        # ¡¡¡¡¡ FIX !!!!!
-        #
-        # If cache are enabled, the program stops here
-        #
-        #if cache:
-            #self._cache.set(m_request_id, m_response,
-                            #protocol  = proto,
-                            #timestamp = t1)
+        if cache:
+            self._cache.set(m_request_id, m_response,
+                            protocol  = proto,
+                            timestamp = t1)
 
         # Return the response
         return m_response
