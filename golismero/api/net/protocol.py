@@ -305,7 +305,7 @@ class Web (Protocol):
 
             # Parse the response
             #m_response = HTTP_Response(m_time)
-            m_response = HTTP_Response.from_custom_request(m_response, m_time, request)
+            m_response = HTTP_Response.from_custom_request(m_response, m_time)
 
             # Cache the response if enabled
             if request.is_cacheable:
