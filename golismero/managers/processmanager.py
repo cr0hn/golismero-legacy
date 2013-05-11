@@ -411,7 +411,7 @@ class PluginContext (object):
             self.msg_queue.put_nowait(message)
 
         # If we reached this point we can assume the parent process is dead.
-        except:
+        except IOError:
             exit(1)
 
 
