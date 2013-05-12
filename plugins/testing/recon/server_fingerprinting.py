@@ -243,11 +243,11 @@ def basic_platform_detection(main_url, conn):
 	:rtype: str
 	"""
 	m_forbidden = (
-		"logout",
-		"logoff",
-		"exit",
-		"sigout",
-		"signout",
+	    "logout",
+	    "logoff",
+	    "exit",
+	    "sigout",
+	    "signout",
 	)
 
 	# Get the main web page
@@ -318,39 +318,39 @@ def http_analyzers(main_url, conn, number_of_entries=10):
 	# Load wordlist directly related with a HTTP fields.
 	# { HTTP_HEADER_FIELD : [wordlists] }
 	m_wordlists_HTTP_fields = {
-		"Accept-Ranges"              : "accept-range",
-		"Server"                     : "banner",
-		"Cache-Control"              : "cache-control",
-		"Connection"                 : "connection",
-		"Content-Type"               : "content-type",
-		"WWW-Authenticate"           : "htaccess-realm",
-		"Pragma"                     : "pragma",
-		"X-Powered-By"               : "x-powered-by"
+	    "Accept-Ranges"              : "accept-range",
+	    "Server"                     : "banner",
+	    "Cache-Control"              : "cache-control",
+	    "Connection"                 : "connection",
+	    "Content-Type"               : "content-type",
+	    "WWW-Authenticate"           : "htaccess-realm",
+	    "Pragma"                     : "pragma",
+	    "X-Powered-By"               : "x-powered-by"
 	}
 
 	m_HTTP_fields_weight = {
-		"accept-ranges"                : 1,
-		"server"                       : 3,
-		"cache-control"                : 2,
-		"connection"                   : 2,
-		"content-type"                 : 1,
-		"etag-length"                  : 3,
-		"etag-qoutes"                  : 2,
-		"header-capitalizedafterdush"  : 2,
-		"header-order"                 : 5,
-		"header-space"                 : 2,
-		"www-authenticate"             : 3,
-		"pragma"                       : 2,
-		"proto-name"                   : 1,
-		"proto-version"                : 2,
-		"statuscode"                   : 4,
-		"statustext"                   : 4,
-		"vary-capitalize"              : 2,
-		"vary-delimiter"               : 2,
-		"vary-order"                   : 3,
-		"x-powered-by"                 : 3,
-		"options-allow"                : 1,
-		"options-public"               : 2,
+	    "accept-ranges"                : 1,
+	    "server"                       : 3,
+	    "cache-control"                : 2,
+	    "connection"                   : 2,
+	    "content-type"                 : 1,
+	    "etag-length"                  : 3,
+	    "etag-qoutes"                  : 2,
+	    "header-capitalizedafterdush"  : 2,
+	    "header-order"                 : 5,
+	    "header-space"                 : 2,
+	    "www-authenticate"             : 3,
+	    "pragma"                       : 2,
+	    "proto-name"                   : 1,
+	    "proto-version"                : 2,
+	    "statuscode"                   : 4,
+	    "statustext"                   : 4,
+	    "vary-capitalize"              : 2,
+	    "vary-delimiter"               : 2,
+	    "vary-order"                   : 3,
+	    "x-powered-by"                 : 3,
+	    "options-allow"                : 1,
+	    "options-public"               : 2,
 	}
 
 
@@ -380,15 +380,15 @@ def http_analyzers(main_url, conn, number_of_entries=10):
 	#}
 
 	m_actions = {
-		'GET'        : { 'wordlist' : 'Wordlist_get'            , 'weight' : 1 , 'protocol' : 'HTTP/1.1', 'method' : 'GET'      , 'payload': '/' },
-		'LONG_GET'   : { 'wordlist' : 'Wordlist_get_long'       , 'weight' : 1 , 'protocol' : 'HTTP/1.1', 'method' : 'GET'      , 'payload': '/%s' % ('a' * 200) },
-		'NOT_FOUND'  : { 'wordlist' : 'Wordlist_get_notfound'   , 'weight' : 3 , 'protocol' : 'HTTP/1.1', 'method' : 'GET'      , 'payload': '/404_NOFOUND__X02KAS' },
-		'HEAD'       : { 'wordlist' : 'Wordlist_head'           , 'weight' : 2 , 'protocol' : 'HTTP/1.1', 'method' : 'HEAD'     , 'payload': '/' },
-		'OPTIONS'    : { 'wordlist' : 'Wordlist_options'        , 'weight' : 2 , 'protocol' : 'HTTP/1.1', 'method' : 'OPTIONS'  , 'payload': '/' },
-		'DELETE'     : { 'wordlist' : 'Wordlist_delete'         , 'weight' : 3 , 'protocol' : 'HTTP/1.1', 'method' : 'DELETE'   , 'payload': '/' },
-		'TEST'       : { 'wordlist' : 'Wordlist_attack'         , 'weight' : 3 , 'protocol' : 'HTTP/1.1', 'method' : 'TEST'     , 'payload': '/' },
-		'INVALID'    : { 'wordlist' : 'Wordlist_wrong_method'   , 'weight' : 3 , 'protocol' : 'HTTP/9.8', 'method' : 'GET'      , 'payload': '/' },
-		'ATTACK'     : { 'wordlist' : 'Wordlist_wrong_version'  , 'weight' : 1 , 'protocol' : 'HTTP/1.1', 'method' : 'GET'      , 'payload': "/etc/passwd?format=%%%%&xss=\x22><script>alert('xss');</script>&traversal=../../&sql='%20OR%201;"}
+	    'GET'        : { 'wordlist' : 'Wordlist_get'            , 'weight' : 1 , 'protocol' : 'HTTP/1.1', 'method' : 'GET'      , 'payload': '/' },
+	    'LONG_GET'   : { 'wordlist' : 'Wordlist_get_long'       , 'weight' : 1 , 'protocol' : 'HTTP/1.1', 'method' : 'GET'      , 'payload': '/%s' % ('a' * 200) },
+	    'NOT_FOUND'  : { 'wordlist' : 'Wordlist_get_notfound'   , 'weight' : 3 , 'protocol' : 'HTTP/1.1', 'method' : 'GET'      , 'payload': '/404_NOFOUND__X02KAS' },
+	    'HEAD'       : { 'wordlist' : 'Wordlist_head'           , 'weight' : 2 , 'protocol' : 'HTTP/1.1', 'method' : 'HEAD'     , 'payload': '/' },
+	    'OPTIONS'    : { 'wordlist' : 'Wordlist_options'        , 'weight' : 2 , 'protocol' : 'HTTP/1.1', 'method' : 'OPTIONS'  , 'payload': '/' },
+	    'DELETE'     : { 'wordlist' : 'Wordlist_delete'         , 'weight' : 3 , 'protocol' : 'HTTP/1.1', 'method' : 'DELETE'   , 'payload': '/' },
+	    'TEST'       : { 'wordlist' : 'Wordlist_attack'         , 'weight' : 3 , 'protocol' : 'HTTP/1.1', 'method' : 'TEST'     , 'payload': '/' },
+	    'INVALID'    : { 'wordlist' : 'Wordlist_wrong_method'   , 'weight' : 3 , 'protocol' : 'HTTP/9.8', 'method' : 'GET'      , 'payload': '/' },
+	    'ATTACK'     : { 'wordlist' : 'Wordlist_wrong_version'  , 'weight' : 1 , 'protocol' : 'HTTP/1.1', 'method' : 'GET'      , 'payload': "/etc/passwd?format=%%%%&xss=\x22><script>alert('xss');</script>&traversal=../../&sql='%20OR%201;"}
 	}
 
 	#
@@ -430,14 +430,14 @@ def http_analyzers(main_url, conn, number_of_entries=10):
 		# Make the raw request
 		#l_raw_request = "%(method)s %(payload)s %(protocol)s\r\nHost: %(host)s:%(port)s\r\nConnection: Close\r\n\r\n" % (
 		l_raw_request = "%(method)s %(payload)s %(protocol)s\r\nHost: %(host)s\r\n\r\n" % (
-			        {
-			                "method"     : l_method,
-			                "payload"    : l_payload,
-			                "protocol"   : l_proto,
-			                "host"       : m_hostname,
-			                "port"       : m_port
-			        }
-			)
+		    {
+		        "method"     : l_method,
+		        "payload"    : l_payload,
+		        "protocol"   : l_proto,
+		        "host"       : m_hostname,
+		        "port"       : m_port
+		    }
+		)
 		if _debug:
 			print "REQUEST"
 			print l_raw_request
@@ -447,9 +447,9 @@ def http_analyzers(main_url, conn, number_of_entries=10):
 		try:
 			# PONER AQUI LA PETICION CON GET_RAW
 			l_response = conn.get_raw( host            = m_hostname,
-				                                       port            = m_port,
-				                                       request_content = l_raw_request,
-				                                       cache           = True)
+			                           port            = m_port,
+			                           request_content = l_raw_request,
+			                           cache           = True)
 		except NetworkException,e:
 			Logger.log_more_verbose("Server-Fingerprint plugin: No response for URL '%s'. Message: " % (e.message))
 			continue
