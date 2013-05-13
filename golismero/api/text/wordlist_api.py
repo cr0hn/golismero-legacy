@@ -275,11 +275,17 @@ class AdvancedDicWordlist:
         self.__wordlist = {}
         for k in m_tmp_wordlist:
             v = k.replace("\n","").replace("\r","").split(separator,1)
+
+            if len(v) < 2:
+                Logger.log_error("Wordlist error: value '%s' can't be splited with separator '%s'." % (v, separator))
+                continue
+
             try:
                 self.__wordlist[v[0]].append(v[1])
             except KeyError:
                 self.__wordlist[v[0]] = []
                 self.__wordlist[v[0]].append(v[1])
+
 
         del m_tmp_wordlist
 
