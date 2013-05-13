@@ -194,7 +194,7 @@ class ServerFingerprinting(TestingPlugin):
 		if not isinstance(info, BaseUrl):
 			raise TypeError("Expected Url, got %s instead" % type(info))
 
-		#main_server_fingerprint(info)
+		main_server_fingerprint(info)
 
 		return
 
@@ -226,7 +226,9 @@ def main_server_fingerprint(base_url):
 	#
 	# Analyze HTTP protocol
 	#
-	#a, b = http_analyzers(m_main_url, m_conn)
+	a, b = http_analyzers(m_main_url, m_conn)
+
+	Logger.log_more_verbose("Fingerprint - Probable web server: %s" % b[0][0])
 
 	#print a
 	Logger.log_more_verbose("Fingerprint ends for url: %s" % m_main_url)
@@ -408,7 +410,7 @@ def http_analyzers(main_url, conn, number_of_entries=10):
 	m_d                   = DecomposedURL(main_url)
 	m_hostname            = m_d.hostname
 	m_port                = m_d.port
-	_debug                = True
+	_debug                = False
 
 	for l_action, v in m_actions.iteritems():
 		if _debug:
@@ -830,7 +832,7 @@ def http_analyzers(main_url, conn, number_of_entries=10):
 						m_results_score[server] += m_HTTP_fields_weight["options-public"]
 
 
-
+	if _debug:
 		print "Common score"
 		print m_results_score.most_common(20)
 		print "Common count"
