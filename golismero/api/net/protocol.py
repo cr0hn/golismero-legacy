@@ -428,7 +428,7 @@ class Web (Protocol):
 				# Connect to the server
 				s = socket.socket()
 				s.settimeout(timeout)
-				s.connect((host, port))
+				s.connect((socket.gethostbyname(host), port))
 
 				# Send an HTTP request
 				s.send(request_content)
