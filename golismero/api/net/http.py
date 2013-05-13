@@ -36,8 +36,9 @@ from ...common import random
 from os.path import basename
 
 import hashlib
-from dicti import *
 from re import findall
+from cStringIO import StringIO
+from mimetools import Message
 
 
 #------------------------------------------------------------------------------
@@ -478,7 +479,8 @@ class HTTP_Response (object):
         instance.__http_response_code_reason = raw_response.reason
 
         # HTTP headers
-        instance.__http_headers              = dicti(raw_response.headers)
+        instance.__http_headers              = raw_response.headers
+        instance.__http_headers_raw          = ''.join(raw_response.headers)
 
         # Wrapper for cookie
         instance.__cookie                    = raw_response.cookies.get_dict()
@@ -502,24 +504,24 @@ class HTTP_Response (object):
         # Request time
         instance.__request_time              = request_time
 
-        # Raw response of server
-        instance.__raw_response              = raw_response.raw_response
+        # Content of response
+        instance.__raw_data                  = raw_response["content"]
 
-        # HTML code of response
-        instance.__raw_data                  = raw_response.response_content
+        # Raw response
+        instance.__raw_response              = raw_response["raw_content"]
 
         # HTTP response code
-        instance.__http_response_code        = raw_response.response_status_code
+        instance.__http_response_code        = raw_response["statuscode"]
 
         # HTTP response reason
-        instance.__http_response_code_reason = raw_response.response_reason
+        instance.__http_response_code_reason = raw_response["statustext"]
 
         # HTTP headers
-        instance.__http_headers              = dicti(raw_response.response_http_headers)
-        instance.__http_headers_raw          = raw_response.response_http_headers_raw
+        instance.__http_headers              = raw_response["headers"]
+        instance.__http_headers_raw          = ''.join(raw_response["headers"].headers)
 
         # Wrapper for cookie
-        instance.__cookie                    = raw_response.response_cookie
+        instance.__cookie                    = raw_response.get("cookie") if raw_response.get("cookie") else raw_response.get("set-cookie") # Thus, 2 cookie modes are covered.
 
         return instance
 
