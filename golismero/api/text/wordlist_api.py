@@ -342,7 +342,7 @@ class AdvancedDicWordlist:
         return [x for x in self.__wordlist if word == x]
 
     #----------------------------------------------------------------------
-    def matches_by_value(self, word):
+    def matches_by_value(self, word, debug = False):
         """
         Search a word passed as parameter in the keys's wordlist and return a list of lists with
         matches found.
@@ -359,7 +359,10 @@ class AdvancedDicWordlist:
         word = str(word)
 
         m_return = {}
+
         for k, v in self.__wordlist.iteritems():
+            if debug:
+                print self.__wordlist
             for l in v:
                 if word == l:
                     m_return[k] = l
