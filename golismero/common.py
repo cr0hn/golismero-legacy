@@ -532,7 +532,7 @@ class AuditConfig (Configuration):
         self._targets = getattr(self, "_targets", [])
         if targets:
             self._targets.extend(
-                (x if x.startswith("http://") else "http://" + x)
+                (x if x.startswith("http") else "http://" + x)
                 for x in targets)
 
 
