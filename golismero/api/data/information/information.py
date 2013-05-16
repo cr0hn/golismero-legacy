@@ -43,19 +43,25 @@ class Information(Data):
     # Types of Infomation results
     #
     #--------------------------------------------------------------------------
-    INFORMATION_UNKNOWN       = 0     # Not a real value!
-    INFORMATION_HTTP_REQUEST  = 1001  # Raw HTTP request
-    INFORMATION_HTTP_RESPONSE = 1002  # Raw HTTP response
-    INFORMATION_HTML          = 1003  # HTML source code
-    INFORMATION_PLAIN_TEXT    = 1004  # Text file
-    INFORMATION_BINARY        = 1005  # Binary file of unknown type
-    INFORMATION_EXECUTABLE    = 1006  # Executable file (various platforms)
-    INFORMATION_IMAGE         = 1007  # Image file
-    INFORMATION_PDF           = 1008  # PDF file
-    INFORMATION_DOCUMENT      = 1009  # Document file (various formats)
+    INFORMATION_UNKNOWN                     = 0     # Not a real value!
+    INFORMATION_HTTP_REQUEST                = 1001  # Raw HTTP request
+    INFORMATION_HTTP_RESPONSE               = 1002  # Raw HTTP response
+    INFORMATION_HTML                        = 1003  # HTML source code
+    INFORMATION_PLAIN_TEXT                  = 1004  # Text file
+    INFORMATION_BINARY                      = 1005  # Binary file of unknown type
+    INFORMATION_EXECUTABLE                  = 1006  # Executable file (various platforms)
+    INFORMATION_IMAGE                       = 1007  # Image file
+    INFORMATION_PDF                         = 1008  # PDF file
+    INFORMATION_DOCUMENT                    = 1009  # Document file (various formats)
+
+
+    # Fingerprint information
+    INFORMATION_WEB_SERVER_FINGERPRINT      = 2001
+    INFORMATION_WEB_HOST_FINGERPRINT        = 2002
+    INFORMATION_WEB_APP_FINGERPRINT         = 2003
 
     INFORMATION_FIRST = INFORMATION_HTTP_REQUEST
-    INFORMATION_LAST  = INFORMATION_PLAIN_TEXT
+    INFORMATION_LAST  = INFORMATION_WEB_APP_FINGERPRINT
 
 
     #----------------------------------------------------------------------
