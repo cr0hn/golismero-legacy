@@ -277,7 +277,7 @@ class AdvancedDicWordlist:
             v = k.replace("\n","").replace("\r","").split(separator,1)
 
             if len(v) < 2:
-                Logger.log_error("Wordlist error: value '%s' can't be splited with separator '%s'." % (v, separator))
+                #Logger.log_error_more_verbose("Wordlist error: value '%s' can't be splited with separator '%s'." % (v, separator))
                 continue
 
             try:
