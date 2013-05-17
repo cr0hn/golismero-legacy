@@ -40,6 +40,7 @@ from golismero.main.console import colorize, colorize_substring
 
 from cStringIO import StringIO
 
+
 class ScreenReport(ReportPlugin):
     """
     This plugin to display reports on screen
@@ -88,8 +89,127 @@ class ScreenReport(ReportPlugin):
         if m_only_vulns:
             display_only_vulns(m_db)
         else:
-            display_all(m_db)
+            display_by_resource(m_db)
 
+
+
+#----------------------------------------------------------------------
+#
+# Common functions
+#
+#----------------------------------------------------------------------
+def display_summary(database):
+    """Display the summary of scan"""
+
+#----------------------------------------------------------------------
+def display_web_resources(database):
+    """Display the results of web analysis"""
+
+    print "aa"
+    return
+    # Get resources
+    resource = get_resources(db, Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
+
+    i = 0
+
+    for u in resource:
+
+        # Initial vars
+        i             += 1
+        l_screen       = StringIO()
+        l_pre_spaces   = " " * 7
+        l_max_word     = len(u.url)
+        # Url to print
+        l_url          = l_url = colorize(u.url, "white")
+
+        #
+        # Display URL and method
+        #
+        l_screen.write("\n[%s] (%s) %s" % (colorize('{:^5}'.format(i), "Blue"), u.method, l_url))
+
+        #
+        # Display URL params
+        #
+        # GET
+        if u.has_url_param:
+            l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("GET PARAMS")))
+            for p,v in u.url_params().iteritems():
+                l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
+
+        # POST
+        if u.has_post_param:
+            l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("POST PARAMS")))
+            for p,v in u.post_params().iteritems():
+                l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
+
+        #
+        # Display vulns
+        #
+        if u.associated_vulnerabilities:
+            # Display de line in the box
+            l_screen.write("\n%s| %s" % (l_pre_spaces, '{:-^40}'.format(" Vulnerabilities ")))
+
+            for vuln in u.associated_vulnerabilities:
+                l_vuln_name = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
+
+                # Display de line in the box
+                l_screen.write("\n%s| %s " % (l_pre_spaces, '{:=^40}'.format(" %s " % l_vuln_name.replace("_", " ").capitalize())))
+
+                # Call to the funcition resposible to display the vuln info
+                if l_vuln_name in VULN_DISPLAYER:
+                    l_screen.write(VULN_DISPLAYER[l_vuln_name](vuln, l_pre_spaces, 40))
+                else:
+                    print "Function to display '%s' function are not available" % l_vuln_name
+
+            # Close vulnerabilites box
+            l_screen.write("\n%s|%s" % (l_pre_spaces, "_" * 41 ))
+
+        # Diplay info
+        print l_screen.getvalue(),
+
+
+
+    # ----------------------------------------
+    # Summary
+    # ----------------------------------------
+    print "\n\n- %s -\n" % colorize("Summary", "yellow")
+
+    # Urls
+    print "+ Total URLs: %s\n\n" % colorize(str(i), "yellow")
+
+#----------------------------------------------------------------------
+def display_vulns_results(database):
+    """Display the list of vulns"""
+
+#----------------------------------------------------------------------
+def display_vuln(vuln):
+    """Display information for one vuln"""
+
+#----------------------------------------------------------------------
+def get_resources(db, data_type, resource_type):
+    """Get a resource as optimous as possible.
+
+    :return: a resouce list.
+    """
+    # Get each resource
+    m_resource = None
+    m_len_urls = db.count(data_type, data_type)
+    if m_len_urls < 200:   # increase as you see fit...
+        # fast but memory consuming method
+        m_resource   = db.get_many( db.keys(data_type, resource_type) )
+    else:
+        # slow but lean method
+        m_resource   = db.iterate(data_type, resource_type)
+
+    return m_resource
+
+
+
+
+
+RESOURCE_DISPLAYER = {
+    Resource.RESOURCE_URL : display_web_resources # Urls
+}
 
 #----------------------------------------------------------------------
 #
@@ -181,7 +301,7 @@ def display_only_vulns(db):
     print "+ Total URLs: %s\n\n" % colorize(str(i), "yellow")
 
 #----------------------------------------------------------------------
-def display_all(db):
+def display_by_resource(db):
     """
     This function display the results like this:
 
@@ -206,88 +326,30 @@ def display_all(db):
 
     """
 
+
+    if not isinstance(db, Database):
+        raise ValueError("Espected 'Database' type, got %s." % type(db))
+
+
     # ----------------------------------------
-    # Discovered URLs
+    # Discovered resources
     # ----------------------------------------
     print "\n- %s - "% colorize("URLs", "yellow")
 
-
-    # Get each resourcd
-    urls       = None
-    m_len_urls = db.count(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
-    if m_len_urls < 200:   # increase as you see fit...
-        # fast but memory consuming method
-        urls   = db.get_many( db.keys(Data.TYPE_RESOURCE, Resource.RESOURCE_URL) )
-    else:
-        # slow but lean method
-        urls   = db.iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
-
-    i = 0
-
-    for u in urls:
-
-        # Initial vars
-        i             += 1
-        l_screen       = StringIO()
-        l_pre_spaces   = " " * 7
-        l_max_word     = len(u.url)
-        # Url to print
-        l_url          = l_url = colorize(u.url, "white")
-
-        #
-        # Display URL and method
-        #
-        l_screen.write("\n[%s] (%s) %s" % (colorize('{:^5}'.format(i), "Blue"), u.method, l_url))
-
-        #
-        # Display URL params
-        #
-        # GET
-        if u.has_url_param:
-            l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("GET PARAMS")))
-            for p,v in u.url_params().iteritems():
-                l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
-
-        # POST
-        if u.has_post_param:
-            l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("POST PARAMS")))
-            for p,v in u.post_params().iteritems():
-                l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
-
-        #
-        # Display vulns
-        #
-        if u.associated_vulnerabilities:
-            # Display de line in the box
-            l_screen.write("\n%s| %s" % (l_pre_spaces, '{:-^40}'.format(" Vulnerabilities ")))
-
-            for vuln in u.associated_vulnerabilities:
-                l_vuln_name = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
-
-                # Display de line in the box
-                l_screen.write("\n%s| %s " % (l_pre_spaces, '{:=^40}'.format(" %s " % l_vuln_name.replace("_", " ").capitalize())))
-
-                # Call to the funcition resposible to display the vuln info
-                if l_vuln_name in VULN_DISPLAYER:
-                    l_screen.write(VULN_DISPLAYER[l_vuln_name](vuln, l_pre_spaces, 40))
-                else:
-                    print "Function to display '%s' function are not available" % l_vuln_name
-
-            # Close vulnerabilites box
-            l_screen.write("\n%s|%s" % (l_pre_spaces, "_" * 41 ))
-
-        # Diplay info
-        print l_screen.getvalue(),
-
-
-
     # ----------------------------------------
-    # Summary
+    # Get the resource list
     # ----------------------------------------
-    print "\n\n- %s -\n" % colorize("Summary", "yellow")
+    m_all_resources = db.get_many(db.keys(data_type=Data.TYPE_RESOURCE))
 
-    # Urls
-    print "+ Total URLs: %s\n\n" % colorize(str(i), "yellow")
+    # Select the resource handler
+    for rs in m_all_resources:
+        try:
+            RESOURCE_DISPLAYER[rs.resource_type](db)
+        except KeyError,e:
+            print e.message
+
+
+
 
 
 #----------------------------------------------------------------------
@@ -315,3 +377,5 @@ def display_url_suspicious(vuln, init_spaces = 6, line_width = 40):
 VULN_DISPLAYER = {
     'url_suspicious' : display_url_suspicious
 }
+
+
