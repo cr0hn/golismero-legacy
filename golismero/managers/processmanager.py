@@ -28,8 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["ProcessManager", "PluginContext"]
 
-from ..api.data.data import TempDataStorage
 from ..api.config import Config
+from ..api.data import TempDataStorage
 from ..api.logger import Logger
 from ..api.net.cache import NetworkCache
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
