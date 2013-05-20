@@ -35,10 +35,14 @@ from ..data import identity
 #------------------------------------------------------------------------------
 class WebServerFingerprint(Information):
     """
-    Fingerprint information for a concrete host and web server
+    Fingerprint information for a concrete host and web server.
     """
 
     information_type = Information.INFORMATION_WEB_SERVER_FINGERPRINT
+
+    #----------------------------------------------------------------------
+    # TODO: we may want to add a list of default servers and descriptions.
+    #----------------------------------------------------------------------
 
 
     #----------------------------------------------------------------------
@@ -89,17 +93,18 @@ class WebServerFingerprint(Information):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def complete_desc(self):
         """Web server complete description"""
         return self.__complete_desc
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def others(self):
         """Other web servers probabilites detected for this web server."""
         return self.__others
+
 
     #----------------------------------------------------------------------
     def __repr__(self):
