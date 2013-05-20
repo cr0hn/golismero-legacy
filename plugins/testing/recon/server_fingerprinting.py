@@ -235,13 +235,13 @@ def main_server_fingerprint(base_url):
 	#
 	m_server_name, m_server_version, m_webserver_complete_desc, m_others = http_analyzers(m_main_url, m_conn)
 
-	Logger.log_more_verbose("Fingerprint - Server: %s | Version: %s (%s%% prob)" % (m_server_name, m_server_version, m_others.values()[1]))
+	Logger.log_more_verbose("Fingerprint - Server: %s | Version: %s" % (m_server_name, m_server_version))
 
 	m_return = WebServerFingerprint(m_server_name, m_server_version, m_webserver_complete_desc, m_others)
 
 	# Associate resource
-	m_return.associated_resources(base_url)
-	#base_url.add_information(m_return)
+	#m_return.associated_resources.add(base_url)
+	base_url.add_information(m_return)
 
 	return m_return
 
@@ -322,7 +322,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
 	:param number_of_entries: number of resutls tu return for most probable web servers detected.
 	:type number_of_entries: int
 
-	:return: Web server family, Web server version, Web server complete description, others web server with their probabilities, like: dict(CONCRETE_WEB_SERVER, PROBABILITY)
+	:return: Web server family, Web server version, Web server complete description, others web server with their probabilities like: dict(CONCRETE_WEB_SERVER, PROBABILITY)
 	"""
 
 	if not isinstance(conn, Web):
@@ -626,13 +626,8 @@ def http_analyzers(main_url, conn, number_of_entries=4):
 			l_var_delimiter     = ", " if l_vary_header.find(", ") else ","
 			l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["vary-delimiter"])
 			l_matches           = l_wordlist_instance.matches_by_value(l_var_delimiter)
-			if l_matches:
-				if m_debug:
-					print "Vary delimiter: " + l_var_delimiter
-				for server in l_matches:
-					#m_results_http_fields[server] += 2 * l_weight
-					m_results_count[server] += 1
-					m_results_score[server] += m_HTTP_fields_weight["vary-delimiter"]
+
+			m_counters.inc(l_matches, l_action, l_weight, "vary-delimiter", message="Vary delimiter: " + l_var_delimiter)
 
 			#
 			# Vary capitalizer
@@ -646,13 +641,8 @@ def http_analyzers(main_url, conn, number_of_entries=4):
 			l_vary_capitalizer  = str(0 if l_vary_header == l_vary_header.lower() else 1)
 			l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["vary-capitalize"])
 			l_matches           = l_wordlist_instance.matches_by_value(l_vary_capitalizer)
-			if l_matches:
-				if m_debug:
-					print "Vary capitalizer: " + l_vary_capitalizer
-				for server in l_matches:
-					#m_results_http_fields[server] += 2 * l_weight
-					m_results_count[server] += 1
-					m_results_score[server] += m_HTTP_fields_weight["vary-capitalize"]
+
+			m_counters.inc(l_matches, l_action, l_weight, "vary-capitalize", message="Vary capitalizer: " + l_vary_capitalizer)
 
 
 			#
@@ -666,13 +656,8 @@ def http_analyzers(main_url, conn, number_of_entries=4):
 			#
 			l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["vary-order"])
 			l_matches           = l_wordlist_instance.matches_by_value(l_vary_header)
-			if l_matches:
-				if m_debug:
-					print "Vary order: " + l_vary_header
-				for server in l_matches:
-					#m_results_http_fields[server] += 2 * l_weight
-					m_results_count[server] += 1
-					m_results_score[server] += m_HTTP_fields_weight["vary-order"]
+
+			m_counters.inc(l_matches, l_action, l_weight, "vary-order", message="Vary order: " + l_vary_header)
 
 
 		#
