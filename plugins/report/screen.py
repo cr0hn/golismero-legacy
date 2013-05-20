@@ -37,6 +37,7 @@ from golismero.api.data.resource.resource import Resource
 
 # XXX HACK
 from golismero.main.console import colorize, colorize_substring
+from prettytable import *
 
 from cStringIO import StringIO
 
@@ -87,9 +88,9 @@ class ScreenReport(ReportPlugin):
         # Displayers
         #
         if m_only_vulns:
-            display_only_vulns(m_db)
+            general_display_only_vulns(m_db)
         else:
-            display_by_resource(m_db)
+            general_display_by_resource(m_db)
 
 
 
@@ -98,19 +99,81 @@ class ScreenReport(ReportPlugin):
 # Common functions
 #
 #----------------------------------------------------------------------
-def display_summary(database):
+def common_display_general_summary(database):
     """Display the summary of scan"""
 
+    # ----------------------------------------
+    # Discovered resources
+    # ----------------------------------------
+    print "\n-# %s #- \n"% colorize("Summary", "yellow")
+
+    m_table = PrettyTable(hrules=ALL)
+    m_table.header = False
+    m_table.padding_width = 3
+
+    # Fingerprint
+    m_table.add_row(["Web server fingerprint", colorize("Apache", "yellow")])
+
+    # Vhosts
+    m_table.add_row(["Vhosts", colorize("1", "yellow")])
+    m_table.add_row(["+  Vhosts2", colorize("1", "yellow")])
+
+    # Audited hosts
+    m_table.add_row(["Hosts audited", colorize("1", "yellow")])
+
+    # Total vulns
+    m_table.add_row(["Total vulns", "1"])
+
+    # Set align
+    m_table.align = "l"
+    print m_table
+
+    """Display information for one vuln"""
+
 #----------------------------------------------------------------------
-def display_web_resources(database):
+def common_get_resources(db, data_type, resource_type):
+    """Get a list of resources as optimous as possible.
+
+    :return: a resouce list.
+    """
+    # Get each resource
+    m_resource = None
+    m_len_urls = db.count(data_type, data_type)
+    if m_len_urls < 200:   # increase as you see fit...
+        # fast but memory consuming method
+        m_resource   = db.get_many( db.keys(data_type, resource_type) )
+    else:
+        # slow but lean method
+        m_resource   = db.iterate(data_type, resource_type)
+
+    return m_resource
+
+
+
+
+
+
+
+#----------------------------------------------------------------------
+#
+# Concrete displayers
+#
+#----------------------------------------------------------------------
+def concrete_display_web_resources(database):
     """Display the results of web analysis"""
 
-    print "aa"
-    return
-    # Get resources
-    resource = get_resources(db, Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
+    # Get resources URL resources
+    resource = common_get_resources(database, Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
+
+    # ----------------------------------------
+    # Discovered resources
+    # ----------------------------------------
+    print "\n- %s - \n"% colorize("Web", "yellow")
 
     i = 0
+
+    #left_padding_width
+
 
     for u in resource:
 
@@ -132,40 +195,27 @@ def display_web_resources(database):
         #
         # GET
         if u.has_url_param:
-            l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("GET PARAMS")))
+            #l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("GET PARAMS")))
+            l_table = PrettyTable(["Params type", "GET"])
             for p,v in u.url_params().iteritems():
-                l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
+                #l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
+                l_table.add_row([p,v])
 
         # POST
         if u.has_post_param:
-            l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("POST PARAMS")))
+            #l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("POST PARAMS")))
+            l_table = PrettyTable(["Params type", "GET"])
             for p,v in u.post_params().iteritems():
-                l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
+                #l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
+                l_table.add_row([p,v])
 
-        #
-        # Display vulns
-        #
-        if u.associated_vulnerabilities:
-            # Display de line in the box
-            l_screen.write("\n%s| %s" % (l_pre_spaces, '{:-^40}'.format(" Vulnerabilities ")))
+        #vuln_genereral_displayer(u.associated_vulnerabilities)
 
-            for vuln in u.associated_vulnerabilities:
-                l_vuln_name = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
 
-                # Display de line in the box
-                l_screen.write("\n%s| %s " % (l_pre_spaces, '{:=^40}'.format(" %s " % l_vuln_name.replace("_", " ").capitalize())))
-
-                # Call to the funcition resposible to display the vuln info
-                if l_vuln_name in VULN_DISPLAYER:
-                    l_screen.write(VULN_DISPLAYER[l_vuln_name](vuln, l_pre_spaces, 40))
-                else:
-                    print "Function to display '%s' function are not available" % l_vuln_name
-
-            # Close vulnerabilites box
-            l_screen.write("\n%s|%s" % (l_pre_spaces, "_" * 41 ))
+        print l_table
 
         # Diplay info
-        print l_screen.getvalue(),
+        #print l_screen.getvalue(),
 
 
 
@@ -178,45 +228,22 @@ def display_web_resources(database):
     print "+ Total URLs: %s\n\n" % colorize(str(i), "yellow")
 
 #----------------------------------------------------------------------
-def display_vulns_results(database):
+def concrete_display_vulns_results(database):
     """Display the list of vulns"""
-
-#----------------------------------------------------------------------
-def display_vuln(vuln):
-    """Display information for one vuln"""
-
-#----------------------------------------------------------------------
-def get_resources(db, data_type, resource_type):
-    """Get a resource as optimous as possible.
-
-    :return: a resouce list.
-    """
-    # Get each resource
-    m_resource = None
-    m_len_urls = db.count(data_type, data_type)
-    if m_len_urls < 200:   # increase as you see fit...
-        # fast but memory consuming method
-        m_resource   = db.get_many( db.keys(data_type, resource_type) )
-    else:
-        # slow but lean method
-        m_resource   = db.iterate(data_type, resource_type)
-
-    return m_resource
 
 
 
 
 
 RESOURCE_DISPLAYER = {
-    Resource.RESOURCE_URL : display_web_resources # Urls
+    Resource.RESOURCE_URL : concrete_display_web_resources # Urls
 }
-
 #----------------------------------------------------------------------
 #
-# Display modes
+# General display modes
 #
 #----------------------------------------------------------------------
-def display_only_vulns(db):
+def general_display_only_vulns(db):
     """"""
 
     # ----------------------------------------
@@ -301,7 +328,7 @@ def display_only_vulns(db):
     print "+ Total URLs: %s\n\n" % colorize(str(i), "yellow")
 
 #----------------------------------------------------------------------
-def display_by_resource(db):
+def general_display_by_resource(db):
     """
     This function display the results like this:
 
@@ -330,11 +357,11 @@ def display_by_resource(db):
     if not isinstance(db, Database):
         raise ValueError("Espected 'Database' type, got %s." % type(db))
 
+    # ----------------------------------------
+    # General summary
+    # ----------------------------------------
+    common_display_general_summary(db)
 
-    # ----------------------------------------
-    # Discovered resources
-    # ----------------------------------------
-    print "\n- %s - "% colorize("URLs", "yellow")
 
     # ----------------------------------------
     # Get the resource list
@@ -354,12 +381,62 @@ def display_by_resource(db):
 
 #----------------------------------------------------------------------
 #
-# These funcions are the responsible of display info for each vuln.
+# Concrete vulnerability displayers
 #
 # All functions must return an string
 #
 #----------------------------------------------------------------------
-def display_url_suspicious(vuln, init_spaces = 6, line_width = 40):
+def vuln_genereral_displayer(vulns, init_spaces = 7 ):
+    """This functions is the responsible to display the vulns"""
+    if not vulns:
+        print "No vulnerabilities associated"
+        return
+    #
+    # Common vars
+    #
+    # Prefix spaces
+    pre_spaces = " " * init_spaces if init_spaces > 0 else 0
+    # Displayer buffer
+    m_screen   = StringIO()
+    # Max string length
+    m_max_len  = 0
+
+    #
+    # Display the info
+    #
+    # Title
+    m_title_text = "\n%s| %s" % (pre_spaces, '{:-^40}'.format(" Vulnerabilities "))
+
+    m_vulns      = {}
+    for vuln in vulns:
+        # Vuln name as raw format
+        l_vuln_name      = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
+        # Vuln name as display mode
+        l_vuln_name_text = l_vuln_name.replace("_", " ").capitalize()
+
+        # Display vuln name
+        #m_screen.write("\n%s| %s " % (
+            #pre_spaces, # Prefix spaces
+            #'{:=^40}'.format(" %s " % )) # Vulnerability name capitalized
+
+        # Call to the function resposible to display the vuln info
+        try:
+            # String value of handler
+            l_func_ret = VULN_DISPLAYER[l_vuln_name](vuln, pre_spaces, 40)
+
+            # Calculate the max length
+            m_max_len = len(l_vuln_name) if len(l_func_ret) > m_max_len else m_max_len
+
+            # Save to buffer
+            m_screen.write(l_func_ret)
+        except KeyError:
+            print "Function to display '%s' function are not available" % l_vuln_name
+            continue
+
+    # Close box
+    m_footer_text("\n%s|%s" % (pre_spaces, "_" * 41 ))
+
+def vuln_display_url_suspicious(vuln, init_spaces = 6, line_width = 40):
     """"""
     m_return = StringIO()
     m_return.write("\n")
@@ -375,7 +452,5 @@ def display_url_suspicious(vuln, init_spaces = 6, line_width = 40):
 # Vulneravility functions
 #
 VULN_DISPLAYER = {
-    'url_suspicious' : display_url_suspicious
+    'url_suspicious' : vuln_display_url_suspicious
 }
-
-
