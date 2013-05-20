@@ -77,15 +77,21 @@ if __name__ == "__main__":
 
 import os
 from os import path
-if __name__ == "__main__" or __name__ == "golismero_launcher":
-    try:
-        _FIXED_PATH_
-    except NameError:
-        here = path.split(path.abspath(__file__))[0]
-        if not here:  # if it fails use cwd instead
-            here = path.abspath(os.getcwd())
-        thirdparty_libs = path.join(here, "thirdparty_libs")
-        if path.exists(thirdparty_libs):
+try:
+    _FIXED_PATH_
+except NameError:
+    here = path.split(path.abspath(__file__))[0]
+    if not here:  # if it fails use cwd instead
+        here = path.abspath(os.getcwd())
+    thirdparty_libs = path.join(here, "thirdparty_libs")
+    if path.exists(thirdparty_libs):
+        has_here = here in sys.path
+        has_thirdparty_libs = thirdparty_libs in sys.path
+        if not (has_here and has_thirdparty_libs):
+            if has_here:
+                sys.path.remove(here)
+            if has_thirdparty_libs:
+                sys.path.remove(thirdparty_libs)
             if __name__ == "__main__":
                 # As a portable script: use our versions always
                 sys.path.insert(0, thirdparty_libs)
@@ -94,7 +100,7 @@ if __name__ == "__main__" or __name__ == "golismero_launcher":
                 # When installing: prefer system version to ours
                 sys.path.insert(0, here)
                 sys.path.append(thirdparty_libs)
-        _FIXED_PATH_ = True
+    _FIXED_PATH_ = True
 
 
 #----------------------------------------------------------------------
