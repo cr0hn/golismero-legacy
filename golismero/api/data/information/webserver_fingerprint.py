@@ -62,16 +62,16 @@ class WebServerFingerprint(Information):
         :type others: list( tuple(str, float) )
         """
 
-        # Server name.
+        # Web server name.
         self.__name    = name
 
-        # Server version.
+        # Web server version.
         self.__version = version
 
-        # Server banner.
+        # Web server banner.
         self.__banner  = banner
 
-        # Other servers.
+        # Other possibilities for this web server.
         self.__others  = others
 
         # Parent constructor.
@@ -102,7 +102,7 @@ class WebServerFingerprint(Information):
     #----------------------------------------------------------------------
     @identity
     def others(self):
-        """Other possibilities for this web servers."""
+        """Other possibilities for this web server."""
         return self.__others
 
 
