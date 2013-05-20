@@ -46,7 +46,7 @@ class WebServerFingerprint(Information):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, name, version, complete_desc, prob_list= None):
+    def __init__(self, name, version, complete_desc, others = None):
         """Constructor.
 
         :param name: Web server name. F.E: "Apache"
@@ -58,61 +58,58 @@ class WebServerFingerprint(Information):
         :param complete_desc: Complete description for web server. F.E: "Apache 2.2.23 ((Unix) mod_ssl/2.2.23 OpenSSL/1.0.1e-fips)"
         :type complete_desc: str
 
-        :param prob_list: List with other web servers detects and their probabilities.
-        :type prob_list: list(server_name, prob)
+        :param others: List of tuples with other possible web servers and their probabilities of being correct.
+        :type others: list( tuple(str, float) )
         """
 
-        # Server name
-        self.__name          = name
+        # Server name.
+        self.__name    = name
 
-        # Server version
-        self.__version       = version
+        # Server version.
+        self.__version = version
 
-        # Server complete desc
-        self.__complete_desc = complete_desc
+        # Server banner.
+        self.__banner  = banner
 
-        # Other servers
-        self.__others        = prob_list
+        # Other servers.
+        self.__others  = others
 
-        # Parent constructor
+        # Parent constructor.
         super(WebServerFingerprint, self).__init__()
 
 
     #----------------------------------------------------------------------
     @identity
     def name(self):
-        """Web server name"""
+        """Web server name."""
         return self.__name
 
 
     #----------------------------------------------------------------------
     @identity
     def version(self):
-        """Web server version"""
+        """Web server version."""
         return self.__version
 
 
     #----------------------------------------------------------------------
     @identity
-    def complete_desc(self):
-        """Web server complete description"""
-        return self.__complete_desc
+    def banner(self):
+        """Web server banner."""
+        return self.__banner
 
 
     #----------------------------------------------------------------------
     @identity
     def others(self):
-        """Other web servers probabilites detected for this web server."""
+        """Other possibilities for this web servers."""
         return self.__others
 
 
     #----------------------------------------------------------------------
     def __repr__(self):
-        """"""
-        m_return = "<WebServerFingerprint Web server='%s-%s' Complete desc='%s'>" % (
+        return "<WebServerFingerprint server='%s-%s' banner='%s'>" % (
             self.__name,
             self.__version,
-            self.__complete_desc
+            self.__banner,
         )
-
-        return m_return
