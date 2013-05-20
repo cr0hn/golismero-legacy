@@ -42,7 +42,7 @@ from ..messaging.notifier import AuditNotifier
 from datetime import datetime
 from multiprocessing import Queue
 from collections import Counter
-from warnings import warn
+from warnings import catch_warnings, warn
 
 
 #--------------------------------------------------------------------------
@@ -511,9 +511,11 @@ class Audit (object):
                                 self.__show_max_links_warning = False
                                 w = "Maximum number of links (%d) reached! Audit: %s"
                                 w = w % (self.__params.max_links, self.name)
+                                with catch_warnings(record=True) as wlist:
+                                    warn(w, RuntimeWarning)
                                 self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                                               message_code = MessageCode.MSG_CONTROL_WARNING,
-                                              message_info = (RuntimeWarning(w),))
+                                              message_info = wlist)
 
                             # Skip this data object.
                             continue
