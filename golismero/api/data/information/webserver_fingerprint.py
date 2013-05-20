@@ -46,7 +46,7 @@ class WebServerFingerprint(Information):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, name, version, complete_desc, others = None):
+    def __init__(self, name, version, banner, others = None):
         """Constructor.
 
         :param name: Web server name. F.E: "Apache"
@@ -55,8 +55,8 @@ class WebServerFingerprint(Information):
         :param version: Web server sersion. F.E: "2.4"
         :type version: str
 
-        :param complete_desc: Complete description for web server. F.E: "Apache 2.2.23 ((Unix) mod_ssl/2.2.23 OpenSSL/1.0.1e-fips)"
-        :type complete_desc: str
+        :param banner: Complete description for web server. F.E: "Apache 2.2.23 ((Unix) mod_ssl/2.2.23 OpenSSL/1.0.1e-fips)"
+        :type banner: str
 
         :param others: List of tuples with other possible web servers and their probabilities of being correct.
         :type others: list( tuple(str, float) )

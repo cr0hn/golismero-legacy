@@ -29,9 +29,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.logger import Logger
 from golismero.api.net.protocol import *
 from golismero.api.plugin import TestingPlugin
+from golismero.api.data.information import Information
 from golismero.api.data.resource.url import Url
 from golismero.api.data.resource.domain import Domain
-from golismero.api.data.information.information import Information
 from golismero.api.config import Config
 from golismero.api.net.web_utils import is_in_scope
 from golismero.api.net.scraper import extract_from_html
