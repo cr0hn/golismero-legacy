@@ -391,8 +391,8 @@ if __name__=='__main__':
     print
     print "'Request' library time: %s s" % str(timeit.timeit(request_test, number=1))
     print
-    print "'urllib2' library time: %s s" % str(timeit.timeit("urllib2_test()", setup="from __main__ import urllib2_test", number=1))
+    print "'urllib2' library time: %s s" % str(timeit.timeit(urllib2_test, number=1))
     print
-    print "'httplib2' library time: %s s" % str(timeit.timeit("httplib2_test()", setup="from __main__ import httplib2_test", number=1))
+    print "'httplib2' library time: %s s" % str(timeit.timeit(httplib2_test, number=1))
     print
-    print "'urllib3' library time: %s s" % str(timeit.timeit("urllib3_test()", setup="from __main__ import urllib3_test", number=1))
+    print "'urllib3' library time: %s s" % str(timeit.timeit(urllib3_test, number=1))
