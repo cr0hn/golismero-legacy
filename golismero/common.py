@@ -608,9 +608,9 @@ class AuditConfig (Configuration):
 
         # Validate the regular expresion
         if self.subdomain_regex:
-            from re import compile, error
+            import re
 
             try:
-                compile(self.subdomain_regex)
-            except error, e:
+                re.compile(self.subdomain_regex)
+            except re.error, e:
                 raise ValueError("Regular expression not valid: %s." % e.message)

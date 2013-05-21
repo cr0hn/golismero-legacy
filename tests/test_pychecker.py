@@ -57,7 +57,7 @@ if __name__ == "__main__":
     import pychecker.checker # Not included in thirdparty_libs on purpose!
 
     # Capture the output and error logs.
-    with open(path.join(here, "pychecker.log"), "a") as fd:
+    with open(path.join(here, "pychecker.log"), "w+") as fd:
         old_out, old_err = sys.stdout, sys.stderr
         try:
             sys.stdout, sys.stderr = fd, fd
