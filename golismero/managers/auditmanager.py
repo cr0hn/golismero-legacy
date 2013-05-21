@@ -31,7 +31,6 @@ __all__ = ["AuditManager", "Audit"]
 from ..api.data import Data
 from ..api.data.resource import Resource
 from ..api.data.resource.url import Url
-from ..api.data.resource.domain import Domain
 from ..common import AuditConfig
 from ..database.auditdb import AuditDB
 from ..managers.reportmanager import ReportManager
@@ -40,8 +39,6 @@ from ..messaging.message import Message
 from ..messaging.notifier import AuditNotifier
 
 from datetime import datetime
-from multiprocessing import Queue
-from collections import Counter
 from warnings import catch_warnings, warn
 
 

@@ -34,8 +34,6 @@ import hashlib
 from difflib import SequenceMatcher
 from diff_match_patch import diff_match_patch
 
-from ..logger import Logger
-
 
 #----------------------------------------------------------------------
 def get_matching_level(text1, text2):

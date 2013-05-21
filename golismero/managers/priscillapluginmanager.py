@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["PriscillaPluginManager", "PluginInfo"]
 
-from ..api.plugin import Plugin, TestingPlugin, ReportPlugin, UIPlugin, GlobalPlugin
+from ..api.plugin import TestingPlugin, ReportPlugin, UIPlugin, GlobalPlugin
 from ..common import Singleton
 
 from os import path, walk

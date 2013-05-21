@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["ReportManager"]
 
 from ..api.logger import Logger
-from .priscillapluginmanager import *
+from .priscillapluginmanager import PriscillaPluginManager
 
 from traceback import format_exc
 

@@ -30,7 +30,6 @@ __all__ = ["ProcessManager", "PluginContext"]
 
 from ..api.config import Config
 from ..api.data import TempDataStorage
-from ..api.logger import Logger
 from ..api.net.cache import NetworkCache
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message

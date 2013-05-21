@@ -30,10 +30,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["WordListAPI", "WordList", "AdvancedWordlist"]
+__all__ = ["WordListAPI", "SimpleWordList", "AdvancedWordlist", "AdvancedDicWordlist"]
 
 from os import getcwd, walk
-from os.path import join, split, sep, abspath
+from os.path import join, sep, abspath
 
 from repoze.lru import lru_cache
 
@@ -162,7 +162,7 @@ def SimpleWordList(wordlist_path):
 
 
 #------------------------------------------------------------------------------
-class AdvancedWordlist:
+class AdvancedWordlist(object):
     """
     Advanced wordlist that allow to do some operations with wordlists:
     - Search matches of a word in the wordlist.
@@ -240,7 +240,7 @@ class AdvancedWordlist:
 
 
 #------------------------------------------------------------------------------
-class AdvancedDicWordlist:
+class AdvancedDicWordlist(object):
     """
     Advanced wordlist that load a wordlist with a separated character as a dict, like:
 
@@ -266,8 +266,8 @@ class AdvancedDicWordlist:
         m_tmp_wordlist = None
         try:
             m_tmp_wordlist = open(wordlist, mode='rU').readlines()
-        except IOError,e:
-            raise IOError("Error when try to open wordlist: '%s'" % wordlist)
+        except IOError:
+            raise IOError("Error when trying to open wordlist: '%s'" % wordlist)
 
         #self.__wordlist = { k: dict([v.replace("\n","").replace("\r","").split(separator,1)])  for k, v in enumerate(m_tmp_wordlist)}
         #self.__wordlist = [dict([v.replace("\n","").replace("\r","").split(separator,1)])  for k, v in enumerate(m_tmp_wordlist)]

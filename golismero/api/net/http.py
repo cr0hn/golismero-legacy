@@ -30,15 +30,12 @@ __all__ = ["HTTP_Request", "HTTP_Response"]
 
 from .web_utils import DecomposedURL
 from ..data.information.html import HTML
-from ..data.resource.url import Url
 from ...common import random
 
 from os.path import basename
 
 import hashlib
 from re import findall
-from cStringIO import StringIO
-from mimetools import Message
 
 
 #------------------------------------------------------------------------------

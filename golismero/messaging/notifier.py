@@ -605,7 +605,7 @@ class UINotifier(Notifier):
                 Config._context = old_context
 
         # Log exceptions thrown by the plugins.
-        except Exception, e:
+        except Exception:
             raise
             ##msg = "Plugin %s raised an exception:\n%s"
             ##msg = msg % (plugin.__class__.__name__, format_exc())

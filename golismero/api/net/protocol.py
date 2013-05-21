@@ -46,7 +46,7 @@ from requests.exceptions import RequestException
 from time import time
 from StringIO import StringIO # Use StringIO instead of cStringIO because cStringIO can't be pickled
 from mimetools import Message
-import socket, select
+import socket
 import hashlib
 
 
