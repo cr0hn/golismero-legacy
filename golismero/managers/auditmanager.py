@@ -28,8 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["AuditManager", "Audit"]
 
-from ..api.data.data import Data
-from ..api.data.resource.resource import Resource
+from ..api.data import Data
+from ..api.data.resource import Resource
 from ..api.data.resource.url import Url
 from ..api.data.resource.domain import Domain
 from ..common import AuditConfig

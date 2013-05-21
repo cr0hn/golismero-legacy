@@ -241,8 +241,7 @@ def main_server_fingerprint(base_url):
 	m_return = WebServerFingerprint(m_server_name, m_server_version, m_webserver_complete_desc, m_others)
 
 	# Associate resource
-	#m_return.associated_resources.add(base_url)
-	base_url.add_information(m_return)
+	m_return.add_resource(base_url)
 
 	return m_return
 
@@ -300,12 +299,6 @@ def basic_platform_detection(main_url, conn):
 	else:
 		m_return = "*NIX"
 
-
-	# Delete created objects
-	del m_response_orig
-	del m_response_upper
-	del m_first_link
-	del m_r
 
 	return m_return
 
@@ -407,7 +400,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
 						               request_content = l_raw_request,
 						               cache           = True)
 		except NetworkException,e:
-			Logger.log_more_verbose("Server-Fingerprint plugin: No response for URL '%s'. Message: " % (e.message))
+			Logger.log_more_verbose("Server-Fingerprint plugin: No response for URL '%s'. Message: %s" % (l_url, e.message))
 			continue
 
 		if not l_response:
@@ -815,7 +808,7 @@ def ttl_platform_detection(main_url):
 		else:
 			return {}
 	except EnvironmentError,e:
-		Logger.log_error("! Yout can't make the platform detection if you're not root.")
+		Logger.log_error("! You can't make the platform detection if you're not root.")
 		return {}
 	except Exception, e:
 		return {}

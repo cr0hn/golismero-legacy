@@ -28,8 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Domain"]
 
-from ..data import identity, merge
-from .resource import Resource
+from .. import identity, merge
+from . import Resource
 
 
 #------------------------------------------------------------------------------

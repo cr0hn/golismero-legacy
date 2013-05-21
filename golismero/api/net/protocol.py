@@ -40,7 +40,6 @@ from ..data.resource.url import Url
 from ..logger import Logger
 from ...messaging.codes import MessageCode
 
-from re import compile, match, IGNORECASE
 from httpparser.httpparser import *
 from requests import *
 from requests.exceptions import RequestException

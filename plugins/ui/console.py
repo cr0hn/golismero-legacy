@@ -27,8 +27,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
-from golismero.api.data.data import Data
-from golismero.api.data.resource.resource import Resource
+from golismero.api.data import Data
+from golismero.api.data.resource import Resource
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.data.vulnerability.information_disclosure.url_suspicious import SuspiciousURL
 from golismero.api.plugin import UIPlugin
@@ -207,7 +207,10 @@ class ConsoleUIPlugin(UIPlugin):
                     else:
                         formatted = None
                     if formatted:
-                        text = "[!] Plugin warning: " + str(formatted)
+                        if message.plugin_name:
+                            text = "[!] Warning from plugin %s: %s" % (message.plugin_name, str(formatted))
+                        else:
+                            text = "[!] Warning: " + str(formatted)
                         text = colorize(text, 'low')
                         Console.display_error(text)
 
@@ -226,11 +229,11 @@ class ConsoleUIPlugin(UIPlugin):
         #
         # 1 - Include libraries, at top of this file:
         #
-        #     from golismero.api.data.information.information import Information
-        #     from golismero.api.data.injection.injection import Injection
+        #     from golismero.api.data.resource import Resource
+        #     from golismero.api.data.resource.url import Url
         #
         # 2 - Make the list with the info we want receive:
         #
-        #     return list(Resource.RESOURCE_URL, Injection.XSS_REFLECTED)
+        #     return list(Resource.RESOURCE_URL)
         #
         return None

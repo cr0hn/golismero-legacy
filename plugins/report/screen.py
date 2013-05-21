@@ -31,9 +31,9 @@ from golismero.api.data.db import Database
 from golismero.api.config import Config
 
 # Data types
-from golismero.api.data.data import Data
+from golismero.api.data import Data
+from golismero.api.data.resource import Resource
 from golismero.api.data.resource.url import Url
-from golismero.api.data.resource.resource import Resource
 
 # XXX HACK
 from golismero.main.console import colorize, colorize_substring

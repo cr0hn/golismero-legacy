@@ -29,10 +29,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["AuditDB"]
 
 from .common import BaseDB, atomic, transactional
-from ..api.data.data import Data
-from ..api.data.information.information import Information
-from ..api.data.resource.resource import Resource
-from ..api.data.vulnerability.vulnerability import Vulnerability
+from ..api.data import Data
+from ..api.data.information import Information
+from ..api.data.resource import Resource
+from ..api.data.vulnerability import Vulnerability
 from ..messaging.codes import MessageCode
 from ..managers.rpcmanager import implementor
 
@@ -804,9 +804,9 @@ class AuditSQLiteDB (BaseAuditDB):
         elif data_type == Data.TYPE_VULNERABILITY:
             table = "vulnerability"
             dtype = data.vulnerability_type
-        elif data_type == Data.TYPE_ANY:
+        elif data_type == Data.TYPE_UNKNOWN:
             warnings.warn(
-                "Received %s object of type TYPE_ANY" % type(data),
+                "Received %s object of type TYPE_UNKNOWN" % type(data),
                 RuntimeWarning)
             if   isinstance(data, Information):
                 data.data_type = Data.TYPE_INFORMATION

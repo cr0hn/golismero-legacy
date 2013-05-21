@@ -30,10 +30,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from golismero.api.logger import Logger
 import hashlib
 from difflib import SequenceMatcher
 from diff_match_patch import diff_match_patch
+
+from ..logger import Logger
 
 
 #----------------------------------------------------------------------
@@ -82,17 +83,15 @@ def get_matching_level(text1, text2):
     return m_return_value
 
 
-
-
-
 #------------------------------------------------------------------------------
-class MatchingAnalyzerElement:
-    """"""
+class MatchingAnalyzerElement (object):
+
 
     #----------------------------------------------------------------------
     def __init__(self, attrs):
         """Constructor"""
         self.__attrs = attrs
+
 
     #----------------------------------------------------------------------
     def __getattr__(self, name):
@@ -100,18 +99,15 @@ class MatchingAnalyzerElement:
         return self.__attrs[name]
 
 
-
-
-
-
 #------------------------------------------------------------------------------
-class MatchingAnalyzer:
+class MatchingAnalyzer (object):
     """
     Text analyzer and comparer texts.
 
     Compare an undetermined number of text from a base text and generates
     an iterator with those that are sufficiently different.
     """
+
 
     #----------------------------------------------------------------------
     def __init__(self, base_text, matching_level = 0.52, deviation = 1.15):
@@ -135,7 +131,6 @@ class MatchingAnalyzer:
     def base_text(self):
         """Base text for compare rest of strings"""
         return self.__base_text
-
 
 
     #----------------------------------------------------------------------
@@ -182,6 +177,7 @@ class MatchingAnalyzer:
         for ut in self.__unique_strings:
             yield ut
 
+
     #----------------------------------------------------------------------
     @property
     def level_average(self):
@@ -197,6 +193,7 @@ class MatchingAnalyzer:
                 self.__average_level = 0.0
 
         return self.__average_level
+
 
     #----------------------------------------------------------------------
     def __calculate(self):

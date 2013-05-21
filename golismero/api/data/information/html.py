@@ -28,8 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["HTML"]
 
-from .information import Information
-from ..data import identity
+from . import Information
+from .. import identity
 from ...net.web_utils import HTMLParser
 
 
@@ -67,75 +67,75 @@ class HTML(Information):
     #----------------------------------------------------------------------
     @property
     def elements(self):
-        """Get all HTML elements"""
+        """All HTML elements."""
         return HTMLParser(self.raw_data).elements
 
 
     #----------------------------------------------------------------------
     @property
     def forms(self):
-        """Get forms from HTML"""
+        """HTML form tags."""
         return HTMLParser(self.raw_data).forms
 
 
     #----------------------------------------------------------------------
     @property
     def images(self):
-        """Get images from HTML"""
+        """Image tags."""
         return HTMLParser(self.raw_data).images
 
 
     #----------------------------------------------------------------------
     @property
     def links(self):
-        """Get links from HTML"""
+        """Links."""
         return HTMLParser(self.raw_data).links
 
 
     #----------------------------------------------------------------------
     @property
     def css_links(self):
-        """Get CSS links from HTML"""
+        """CSS links."""
         return HTMLParser(self.raw_data).css_links
 
 
     #----------------------------------------------------------------------
     @property
     def javascript_links(self):
-        """Get JavaScript links from HTML"""
+        """JavaScript links."""
         return HTMLParser(self.raw_data).javascript_links
 
 
     #----------------------------------------------------------------------
     @property
     def css_embedded(self):
-        """Get embedded CSS from HTML"""
+        """Embedded CSS."""
         return HTMLParser(self.raw_data).css_embedded
 
 
     #----------------------------------------------------------------------
     @property
     def javascript_embedded(self):
-        """Get embedded JavaScript from HTML"""
+        """Embedded JavaScript."""
         return HTMLParser(self.raw_data).javascript_embedded
 
 
     #----------------------------------------------------------------------
     @property
     def metas(self):
-        """Get meta tags from HTML"""
+        """Meta tags."""
         return HTMLParser(self.raw_data).metas
 
 
     #----------------------------------------------------------------------
     @property
     def title(self):
-        """Get title from HTML"""
+        """Document title."""
         return HTMLParser(self.raw_data).title
 
 
     #----------------------------------------------------------------------
     @property
     def objects(self):
-        """Get object tags from HTML"""
+        """Object tags."""
         return HTMLParser(self.raw_data).objects

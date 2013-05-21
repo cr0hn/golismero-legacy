@@ -28,8 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["BaseUrl"]
 
-from ..data import identity
-from .resource import Resource
+from .. import identity
+from . import Resource
 from ...net.web_utils import DecomposedURL
 
 

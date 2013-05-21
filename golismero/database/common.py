@@ -31,7 +31,6 @@ __all__ = ["BaseDB", "atomic", "transactional"]
 from ..common import pickle, decorator
 
 import zlib
-import functools
 
 
 #------------------------------------------------------------------------------

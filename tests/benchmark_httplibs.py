@@ -35,13 +35,13 @@ if __name__ == "__main__":
         root = path.abspath(os.getcwd())
     root = path.abspath(path.join(root, ".."))
     thirdparty_libs = path.join(root, "thirdparty_libs")
-    if not path.exists(path.join(root, "golismero")):
-        raise RuntimeError("Can't find GoLismero!")
-    sys.path.insert(0, thirdparty_libs)
-    sys.path.insert(0, root)
+    if path.exists(thirdparty_libs):
+        sys.path.insert(0, thirdparty_libs)
+        sys.path.insert(0, root)
 
 
-url = ["http://entretenimiento.terra.es/vuelve-alvaro-el-superman-de-gran-hermano-14,e676a7215295d310VgnVCM3000009acceb0aRCRD.html",
+url = [
+"http://entretenimiento.terra.es/vuelve-alvaro-el-superman-de-gran-hermano-14,e676a7215295d310VgnVCM3000009acceb0aRCRD.html",
 "http://deportes.terra.es/equipos/seleccion",
 "http://noticias.terra.es/mundo/renuncia-y-sucesor-de-benedicto-xvi/la-eleccion-del-papa-con-terra-desde-dentro-y-al-minuto,e4657913b045d310VgnVCM5000009ccceb0aRCRD.html",
 "http://www.terra.es/chat/",
@@ -289,21 +289,16 @@ url = ["http://entretenimiento.terra.es/vuelve-alvaro-el-superman-de-gran-herman
 "http://deportes.terra.es/ciclismo/laurent-jalabert-gravemente-herido-tras-un-accidente,81a9bdad2995d310VgnVCM3000009acceb0aRCRD.html",
 "http://deportes.terra.es/barcelona/las-remontadas-mas-magicas-en-el-camp-nou,0ab8664c1395d310VgnVCM3000009acceb0aRCRD.html",
 "http://www.telefonicaonline.com/on/pub/servicios/onTOEntrada/0,,entrada%2Baviso_legal%2Bv_segmento%2BAHOG%2Bv_idioma%2Bes%2BambitoAcceso%2Bpub,00.htmlv_segmento=AHOG&v_idioma=es&v_pagina=HO&v_hueco=MCR&v_posicion=1&v_procede=home",
-"http://vidayestilo.terra.es/living-in/londres/blog/2013/03/10/%C2%A1felicidades-mamas/"]
+"http://vidayestilo.terra.es/living-in/londres/blog/2013/03/10/%C2%A1felicidades-mamas/",
+]
 
 
 import timeit
-import urllib2
-from urllib3 import PoolManager
-from httplib2 import *
-from requests import *
-#import httplib2
-import os
 
 
 #----------------------------------------------------------------------
 def urllib2_test():
-    """"""
+    import urllib2
 
     errors = 0
     oks = 0
@@ -318,14 +313,15 @@ def urllib2_test():
             errors += 1
             continue
 
-        #print ".",
+        print ".",
     print
     print "Errors: %s | Oks: %s." % (str(errors), str(oks))
 
 
 #----------------------------------------------------------------------
 def request_test():
-    """"""
+    from requests import Request, Session
+
     errors = 0
     oks = 0
     for a in url:
@@ -340,14 +336,15 @@ def request_test():
             errors += 1
             continue
 
-        #print ".",
+        print ".",
     print
     print "Errors: %s | Oks: %s." % (str(errors), str(oks))
 
 
 #----------------------------------------------------------------------
 def urllib3_test():
-    """"""
+    from urllib3 import PoolManager
+
     errors = 0
     oks = 0
     p = PoolManager(20)
@@ -359,14 +356,15 @@ def urllib3_test():
             errors += 1
             continue
 
-        #print ".",
+        print ".",
     print
     print "Errors: %s | Oks: %s." % (str(errors), str(oks))
 
 
 #----------------------------------------------------------------------
 def httplib2_test():
-    """"""
+    from httplib2 import Http
+
     errors = 0
     oks = 0
     for a in url:
@@ -377,7 +375,7 @@ def httplib2_test():
         except:
             errors += 1
             continue
-        #print ".",
+        print ".",
 
     print
     print "Errors: %s | Oks: %s." % (str(errors), str(oks))
@@ -391,10 +389,10 @@ if __name__=='__main__':
     print "Each library will request '%s' URLs." % len(url)
 
     print
-    print "'Request' library time: %s s" % str(timeit.timeit("request_test()", setup="from __main__ import request_test", number=1))
+    print "'Request' library time: %s s" % str(timeit.timeit(request_test, number=1))
     print
-    print "'urllib2' library time: %s s" % str(timeit.timeit("urllib2_test()", setup="from __main__ import urllib2_test", number=1))
+    print "'urllib2' library time: %s s" % str(timeit.timeit(urllib2_test, number=1))
     print
-    print "'httplib2' library time: %s s" % str(timeit.timeit("httplib2_test()", setup="from __main__ import httplib2_test", number=1))
+    print "'httplib2' library time: %s s" % str(timeit.timeit(httplib2_test, number=1))
     print
-    print "'urllib3' library time: %s s" % str(timeit.timeit("urllib3_test()", setup="from __main__ import urllib3_test", number=1))
+    print "'urllib3' library time: %s s" % str(timeit.timeit(urllib3_test, number=1))

@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
+__license__="""
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
@@ -26,52 +26,38 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["Text"]
 
+from . import Information
+from .. import identity
 
-
-if __name__=='__main__':
-	pass
 
 #------------------------------------------------------------------------------
-class itero(object):
-	""""""
+class Text(Information):
+    """
+    Plain text data.
+    """
 
-	#----------------------------------------------------------------------
-	def __init__(self):
-		"""Constructor"""
-		self.a = list(xrange(10))
-		self.index = -1
-
-	#----------------------------------------------------------------------
-	def __iter__(self):
-		""""""
-		return self
-
-	#----------------------------------------------------------------------
-	def next(self):
-		""""""
-		self.index+=1
-		if self.index < len(self.a):
-			return self.a[self.index]
-		else:
-			raise StopIteration
+    information_type = Information.INFORMATION_PLAIN_TEXT
 
 
-	#----------------------------------------------------------------------
-	def hola_get(self):
-		""""""
-		if not hasattr(self, '_%s__associated_url' % self.__class__.__name__):
-			return None
-		else:
-			return self.__associated_url
+    #----------------------------------------------------------------------
+    def __init__(self, data):
+        """Constructor.
+
+        :param data: Plain text data.
+        :type data: str
+        """
+
+        # Text.
+        self.__raw_data = data
+
+        # Parent constructor.
+        super(Text, self).__init__()
 
 
-	#----------------------------------------------------------------------
-	def hola_set(self, value):
-		""""""
-		self.__associated_url = value
-
-	hola = property(hola_get, hola_set)
-
-
-from urllib import url
+    #----------------------------------------------------------------------
+    @identity
+    def raw_data(self):
+        """Plain text data."""
+        return self.__raw_data
