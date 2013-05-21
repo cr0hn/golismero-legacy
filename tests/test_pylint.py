@@ -43,15 +43,10 @@ def test_pylint():
     pythonpath.insert(0, golismero)
     os.environ['PYTHONPATH'] = path.pathsep.join(pythonpath)
 
-    # Run PyLint against the sources.
-    from pylint import epylint as lint
-    (pylint_stdout, pylint_stderr) = lint.py_run('golismero', True)
-
-    # Save the logs.
-    with open("pylint_out.log", "w+") as fd:
-        fd.write("".join(pylint_stdout))
-    with open("pylint_err.log", "w+") as fd:
-        fd.write("".join(pylint_stderr))
+    # Run PyLint against the sources and save the log.
+    with open("pylint.log", "w+") as fd:
+        from pylint import epylint as lint
+        lint.py_run('golismero', False, fd, fd)
 
 # Run the test from the command line.
 if __name__ == "__main__":
