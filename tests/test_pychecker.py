@@ -51,9 +51,12 @@ if __name__ == "__main__":
     colorizer.deinit()
 
     # This automatically begins testing every module imported from now on.
-    os.environ['PYCHECKER'] = ('--stdlib --keepgoing --tuple --members '
-                               '--var --initattr --unreachable --changetypes '
-                               '--limit 500 --blacklist distutils,decorator')
+    os.environ['PYCHECKER'] = ('--stdlib --keepgoing --limit 500 '
+                               '--blacklist BeautifulSoup,colorizer'
+                               ',decorator,diff_match_patch,distutils,django'
+                               ',httpparser,nltk,ping,prettytable,repoze'
+                               ',requests,requests_ntlm,_socket,ssl,_ssl'
+                               ',select,_tkinter,yaml')
     import pychecker.checker # Not included in thirdparty_libs on purpose!
 
     # Capture the output and error logs.
@@ -65,7 +68,7 @@ if __name__ == "__main__":
             # Look for Python files.
             sources = path.join(golismero, "golismero")
             sources = path.abspath(sources)
-            print >>old_out, "Looking for modules in %s" % sources
+            print >>old_out, "Target: %s" % sources
             assert path.isdir(sources)
             for root, folders, files in os.walk(sources):
                 for name in files:
@@ -87,7 +90,7 @@ if __name__ == "__main__":
                     name = "golismero." + name
                     if name.endswith("."):
                         name = name[:-1]
-                    print >>old_out, "Loading %s" % name
+                    print >>old_out, "Analyzing %s" % name
 
                     # Load the module. This triggers PyChecker.
                     module = __import__(name, globals(), locals(), ['*'])

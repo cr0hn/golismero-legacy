@@ -44,12 +44,14 @@ from BeautifulSoup import BeautifulSoup
 from copy import deepcopy
 from posixpath import join, splitext, split
 from repoze.lru import lru_cache
-from requests import *
+from requests import Request, Session
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests_ntlm import HttpNtlmAuth
 from urllib import quote, quote_plus, unquote, unquote_plus
 from urlparse import urldefrag, urljoin
 from warnings import warn
+
+import re
 
 
 #----------------------------------------------------------------------
@@ -221,7 +223,7 @@ def detect_auth_method(url):
 
     if 'www-authenticate' in r.headers:
         authline = r.headers['www-authenticate']
-        authobj = compile(r'''(?:\s*www-authenticate\s*:)?\s*(\w*)\s+realm=['"]([^'"]+)['"]''',IGNORECASE)
+        authobj = re.compile(r'''(?:\s*www-authenticate\s*:)?\s*(\w*)\s+realm=['"]([^'"]+)['"]''',re.IGNORECASE)
         matchobj = authobj.match(authline)
         if not matchobj:
             return None, None

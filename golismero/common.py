@@ -81,7 +81,6 @@ from keyword import iskeyword
 from os import path
 
 import os
-import hashlib
 import urlparse
 
 
