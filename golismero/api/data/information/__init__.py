@@ -44,28 +44,30 @@ class Information(Data):
     #
     #--------------------------------------------------------------------------
 
-    INFORMATION_UNKNOWN                     = 0     # Not a real value!
+    INFORMATION_UNKNOWN = 0  # Not a real value!
 
     # Data
-    INFORMATION_HTTP_REQUEST                = 1000  # Raw HTTP request
-    INFORMATION_HTTP_RESPONSE               = 1001  # Raw HTTP response
-    INFORMATION_HTML                        = 1002  # HTML source code
-    INFORMATION_PLAIN_TEXT                  = 1003  # Text file
-    INFORMATION_BINARY                      = 1004  # Binary file of unknown type
-    #INFORMATION_EXECUTABLE                  = 1005  # Executable file (various platforms)
-    #INFORMATION_IMAGE                       = 1006  # Image file
-    #INFORMATION_PDF                         = 1007  # PDF file
-    #INFORMATION_DOCUMENT                    = 1008  # Document file (various formats)
-
+    INFORMATION_HTTP_REQUEST  = 1000  # Raw HTTP request
+    INFORMATION_HTTP_RESPONSE = 1001  # Raw HTTP response
+    INFORMATION_HTML          = 1002  # HTML source code
+    INFORMATION_PLAIN_TEXT    = 1003  # Text file
+    INFORMATION_BINARY        = 1004  # Binary file of unknown type
+    #INFORMATION_EXECUTABLE    = 1005  # Executable file (various platforms)
+    #INFORMATION_IMAGE         = 1006  # Image file
+    #INFORMATION_PDF           = 1007  # PDF file
+    #INFORMATION_DOCUMENT      = 1008  # Document file (various formats)
+    #INFORMATION_PERSON        = 1009  # Online avatar of a person
+    #INFORMATION_CREDENTIALS   = 1010  # Login credentials (user and/or pass)
 
     # Fingerprints
-    INFORMATION_WEB_SERVER_FINGERPRINT      = 2000
-    INFORMATION_WEB_HOST_FINGERPRINT        = 2001
-    INFORMATION_WEB_APP_FINGERPRINT         = 2002
+    INFORMATION_WEB_SERVER_FINGERPRINT = 2000  # HTTP server fingerprint
+    #INFORMATION_WEB_APP_FINGERPRINT    = 2001  # Web application fingerprint
+    #INFORMATION_NETWORK_FINGERPRINT    = 2002  # Network fingerprint
+    #INFORMATION_OS_FINGERPRINT         = 2003  # Operating system fingerprint
 
 
     INFORMATION_FIRST = INFORMATION_HTTP_REQUEST
-    INFORMATION_LAST  = INFORMATION_WEB_APP_FINGERPRINT
+    INFORMATION_LAST  = INFORMATION_WEB_SERVER_FINGERPRINT
 
 
     #----------------------------------------------------------------------
