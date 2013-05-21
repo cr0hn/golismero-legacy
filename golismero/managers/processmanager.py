@@ -374,11 +374,12 @@ class PluginContext (object):
         # calls using messages, because we'd deadlock
         # against ourselves, since the producer and
         # the consumer would be the same process.
-        if message_type == MessageType.MSG_TYPE_RPC and \
-           self.__orchestrator_pid == getpid():
-                self._orchestrator.rpcManager.execute_rpc(
-                            self.audit_name, message_code, *message_info)
-                return
+        if (message_type == MessageType.MSG_TYPE_RPC and
+           self.__orchestrator_pid == getpid()
+        ):
+            self._orchestrator.rpcManager.execute_rpc(
+                        self.audit_name, message_code, *message_info)
+            return
 
         # Send the raw message.
         message = Message(message_type = message_type,
@@ -401,10 +402,11 @@ class PluginContext (object):
 
         # Hack for urgent messages: if we're in the same process
         # as the Orchestrator, skip the queue and dispatch them now.
-        if message.priority >= MessagePriority.MSG_PRIORITY_HIGH and \
-           self.__orchestrator_pid == getpid():
-                self._orchestrator.dispatch_msg(message)
-                return
+        if (message.priority >= MessagePriority.MSG_PRIORITY_HIGH and
+            self.__orchestrator_pid == getpid()
+        ):
+            self._orchestrator.dispatch_msg(message)
+            return
 
         # Put the message in the queue.
         try:

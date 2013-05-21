@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from .console import Console
 from ..api.config import Config
 from ..api.logger import Logger
-from ..common import OrchestratorConfig, AuditConfig
+from ..common import OrchestratorConfig
 from ..database.cachedb import PersistentNetworkCache, VolatileNetworkCache
 from ..managers.auditmanager import AuditManager
 from ..managers.priscillapluginmanager import PriscillaPluginManager
@@ -102,7 +102,7 @@ class Orchestrator (object):
         try:
             self.__pluginManager.get_plugin_by_name("ui/%s" % self.__config.ui_mode)
         except KeyError:
-            raise ValueError("No plugin found for UI mode: %r" % self.ui_mode)
+            raise ValueError("No plugin found for UI mode: %r" % self.__config.ui_mode)
 
         # Calculate the plugin dependencies
         self.__pluginManager.calculate_dependencies()
@@ -128,12 +128,13 @@ class Orchestrator (object):
         self.__netManager = NetworkManager(self.__config)
 
         # Network cache
-        if  self.__config.use_cache_db or (
+        if (self.__config.use_cache_db or (
             self.__config.use_cache_db is None and
-            self.__config.run_mode != OrchestratorConfig.RUN_MODE.standalone):
-                self.__cache = PersistentNetworkCache()
+            self.__config.run_mode != OrchestratorConfig.RUN_MODE.standalone)
+        ):
+            self.__cache = PersistentNetworkCache()
         else:
-                self.__cache = VolatileNetworkCache()
+            self.__cache = VolatileNetworkCache()
 
         # RPC manager
         self.__rpcManager = RPCManager(self)
@@ -381,12 +382,13 @@ class Orchestrator (object):
                 try:
 
                     # In standalone mode, if all audits have finished we have to stop.
-                    if  self.__config.run_mode == OrchestratorConfig.RUN_MODE.standalone and \
-                        not self.__auditManager.has_audits():
-                            m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
-                                        message_code = MessageCode.MSG_CONTROL_STOP,
-                                        message_info = True)  # True for finished, False for user cancel
-                            self.enqueue_msg(m)
+                    if (self.__config.run_mode == OrchestratorConfig.RUN_MODE.standalone and
+                        not self.__auditManager.has_audits()
+                    ):
+                        m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
+                                    message_code = MessageCode.MSG_CONTROL_STOP,
+                                    message_info = True)  # True for finished, False for user cancel
+                        self.enqueue_msg(m)
 
                     # Wait for a message to arrive.
                     try:

@@ -265,6 +265,9 @@ class Audit (object):
         self.__followed_links = 0
         self.__show_max_links_warning = True
 
+        # Number of unacknowledged messages
+        self.__expecting_ack = 0
+
 
     @property
     def name(self):

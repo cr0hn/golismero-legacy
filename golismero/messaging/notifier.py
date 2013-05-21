@@ -30,14 +30,13 @@ __all__ = ["AuditNotifier", "UINotifier"]
 
 from ..api.config import Config
 from ..api.data import Data
-from ..api.logger import Logger
+##from ..api.logger import Logger
 from ..api.plugin import Plugin
 from .message import Message
 from .codes import MessageType
-from ..managers.priscillapluginmanager import PriscillaPluginManager
 
 from collections import defaultdict
-from traceback import format_exc
+##from traceback import format_exc
 from warnings import warn
 
 

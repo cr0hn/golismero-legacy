@@ -30,7 +30,7 @@ __all__ = ["PersistentNetworkCache", "VolatileNetworkCache"]
 
 from .common import BaseDB, atomic, transactional
 
-from ..common import get_user_settings_folder, Singleton
+from ..common import get_user_settings_folder
 from ..managers.rpcmanager import implementor
 from ..messaging.codes import MessageCode
 

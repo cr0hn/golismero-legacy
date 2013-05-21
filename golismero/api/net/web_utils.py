@@ -44,7 +44,7 @@ from BeautifulSoup import BeautifulSoup
 from copy import deepcopy
 from posixpath import join, splitext, split
 from repoze.lru import lru_cache
-from requests import Request, Session
+from requests import Request, Session, codes
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests_ntlm import HttpNtlmAuth
 from urllib import quote, quote_plus, unquote, unquote_plus
@@ -719,7 +719,7 @@ class DecomposedURL(object):
         else:
             auth, host = None, netloc
         if host and host[0] == '[':
-            host, port = url[1:].split(']', 1)
+            host, port = host[1:].split(']', 1)
             if ':' in port:
                 _host, port = port.split(':', 1)
                 if not host:

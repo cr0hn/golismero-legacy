@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Message"]
 
-from .codes import *
+from .codes import *  # this is ok
 
 from time import time
 
@@ -78,9 +78,10 @@ class Message (object):
             raise ValueError("Invalid message type: %d" % message_type)
         if message_type != MessageType.MSG_TYPE_DATA and type(message_code) != int:
             raise TypeError("Expected int, got %s instead" % type(message_code))
-        if  message_type == MessageType.MSG_TYPE_CONTROL and \
-            not message_code in MSG_CONTROL_CODES:
-                raise ValueError("Invalid control message code: %d" % message_code)
+        if (message_type == MessageType.MSG_TYPE_CONTROL and
+            not message_code in MSG_CONTROL_CODES
+        ):
+            raise ValueError("Invalid control message code: %d" % message_code)
         if audit_name is not None and type(audit_name) not in (str, unicode):
             raise TypeError("Expected int, got %s instead" % type(audit_name))
         if plugin_name is not None and type(plugin_name) not in (str, unicode):
