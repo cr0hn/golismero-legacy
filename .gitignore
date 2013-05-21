@@ -32,5 +32,5 @@ golismero_2/TODO.txt
 */dist/
 */*/build/
 
-# PyChecker log files
-pychecker.log
+# Log files
+*.log
