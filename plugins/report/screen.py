@@ -158,7 +158,7 @@ def common_get_resources(db, data_type, resource_type):
 
 #----------------------------------------------------------------------
 #
-# Concrete displayers
+# Concrete displayers each type of resource
 #
 #----------------------------------------------------------------------
 def concrete_display_web_resources(database):
@@ -208,7 +208,12 @@ def concrete_display_web_resources(database):
 
             print l_table
 
-        vuln_genereral_displayer(u.associated_vulnerabilities)
+        if u.associated_vulnerabilities:
+            # Title
+            print "+%s+" % ("-" * (len("Vulnerabilities") + 3))
+            print "| %s  |" % colorize("Vulnerabilities", "Red")
+
+            vuln_genereral_displayer(u.associated_vulnerabilities)
 
 
 
@@ -224,11 +229,6 @@ def concrete_display_web_resources(database):
 
     print m_table
 
-#----------------------------------------------------------------------
-def concrete_display_vulns_results(database):
-    """Display the list of vulns"""
-
-
 
 
 
@@ -243,86 +243,25 @@ RESOURCE_DISPLAYER = {
 def general_display_only_vulns(db):
     """"""
 
-    # ----------------------------------------
-    # Discovered URLs
-    # ----------------------------------------
-    print "\n- %s - "% colorize("Vulnerabilities", "yellow")
-
-
-    # Get each resourcd
-    urls       = None
-    m_len_urls = db.count(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
-    if m_len_urls < 200:   # increase as you see fit...
-        # fast but memory consuming method
-        urls   = db.get_many( db.keys(Data.TYPE_RESOURCE, Resource.RESOURCE_URL) )
-    else:
-        # slow but lean method
-        urls   = db.iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
-
-    i = 0
-
-    for u in urls:
-
-        # Initial vars
-        i             += 1
-        l_screen       = StringIO()
-        l_pre_spaces   = " " * 6
-        l_max_word     = len(u.url)
-        # Url to print
-        l_url          = l_url = colorize(u.url, "white")
-
-        #
-        # Display URL and method
-        #
-        l_screen.write("\n[%s] (%s) %s" % (colorize('{:^3}'.format(i), "Blue"), u.method, l_url))
-
-        #
-        # Display URL params
-        #
-        # GET
-        if u.has_url_param:
-            l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("GET PARAMS")))
-            for p,v in u.url_params().iteritems():
-                l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
-
-        # POST
-        if u.has_post_param:
-            l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("POST PARAMS")))
-            for p,v in u.post_params().iteritems():
-                l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
-
-        #
-        # Display vulns
-        #
-        if u.associated_vulnerabilities:
-            # Display de line in the box
-            l_screen.write("\n%s| %s" % (l_pre_spaces, '{:-^40}'.format(" Vulnerabilities ")))
-
-            for vuln in u.associated_vulnerabilities:
-                l_vuln_name = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
-
-                # Display de line in the box
-                l_screen.write("\n%s| %s " % (l_pre_spaces, '{:=^40}'.format(" %s " % l_vuln_name.replace("_", " ").capitalize())))
-
-                # Call to the funcition resposible to display the vuln info
-                if l_vuln_name in VULN_DISPLAYER:
-                    l_screen.write(VULN_DISPLAYER[l_vuln_name](vuln, l_pre_spaces, 40))
-                else:
-                    print "Function to display '%s' function are not available" % l_vuln_name
-
-            # Close vulnerabilites box
-            l_screen.write("\n%s|%s" % (l_pre_spaces, "_" * 41 ))
-
-        # Diplay info
-        print l_screen.getvalue(),
+    if not isinstance(db, Database):
+        raise ValueError("Espected 'Database' type, got %s." % type(db))
 
     # ----------------------------------------
-    # Summary
+    # General summary
     # ----------------------------------------
-    print "\n\n- %s -\n" % colorize("Summary", "yellow")
+    common_display_general_summary(db)
 
-    # Urls
-    print "+ Total URLs: %s\n\n" % colorize(str(i), "yellow")
+    print "\n- %s - \n"% colorize("Vulnerabilities", "yellow")
+
+    # Title
+    print "+%s+" % ("-" * (len("Vulnerabilities") + 3))
+    print "| %s  |" % colorize("Vulnerabilities", "Red")
+    print "+%s+" % ("-" * (len("Vulnerabilities") + 3))
+    print
+
+    vuln_genereral_displayer(db.get_many(db.keys(data_type=Data.TYPE_VULNERABILITY)))
+
+
 
 #----------------------------------------------------------------------
 def general_display_by_resource(db):
@@ -385,10 +324,6 @@ def vuln_genereral_displayer(vulns):
     #
     # Display the info
     #
-    # Title
-    print "+%s+" % ("-" * (len("Vulnerabilities") + 3))
-    print "| %s  |" % colorize("Vulnerabilities", "Red")
-
     m_vulns      = {}
     for vuln in vulns:
         # Vuln name as raw format
