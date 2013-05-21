@@ -201,6 +201,8 @@ def concrete_display_web_resources(database):
                 #l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
                 l_table.add_row([p,v])
 
+            print l_table
+
         # POST
         if u.has_post_param:
             #l_screen.write("\n%s|%s" % (l_pre_spaces, '{:-^20}'.format("POST PARAMS")))
@@ -209,10 +211,10 @@ def concrete_display_web_resources(database):
                 #l_screen.write("\n%s| %s = %s" % (l_pre_spaces, p, v))
                 l_table.add_row([p,v])
 
+            print l_table
+
         #vuln_genereral_displayer(u.associated_vulnerabilities)
 
-
-        print l_table
 
         # Diplay info
         #print l_screen.getvalue(),
