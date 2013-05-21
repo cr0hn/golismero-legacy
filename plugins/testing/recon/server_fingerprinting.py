@@ -214,6 +214,7 @@ def main_server_fingerprint(base_url):
 
 	:return: Fingerprint type
 	"""
+	return
 
 	m_main_url = base_url.url
 
