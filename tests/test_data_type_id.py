@@ -145,17 +145,20 @@ def test_data_types_have_id():
         if issubclass(clazz, Information):
             assert clazz.data_type == Data.TYPE_INFORMATION
             assert type(clazz.information_type) == int
-            assert clazz.information_type != Information.INFORMATION_UNKNOWN
-            assert Information.INFORMATION_FIRST <= clazz.information_type <= Information.INFORMATION_LAST
+            if clazz.__module__ != "golismero.api.data.information":
+                assert clazz.information_type != Information.INFORMATION_UNKNOWN
+                assert Information.INFORMATION_FIRST <= clazz.information_type <= Information.INFORMATION_LAST
         elif issubclass(clazz, Resource):
             assert clazz.data_type == Data.TYPE_RESOURCE
             assert type(clazz.resource_type) == int
-            assert clazz.resource_type != Resource.RESOURCE_UNKNOWN
-            assert Resource.RESOURCE_FIRST <= clazz.resource_type <= Resource.RESOURCE_LAST
+            if clazz.__module__ != "golismero.api.data.resource":
+                assert clazz.resource_type != Resource.RESOURCE_UNKNOWN
+                assert Resource.RESOURCE_FIRST <= clazz.resource_type <= Resource.RESOURCE_LAST
         elif issubclass(clazz, Vulnerability):
             assert clazz.data_type == Data.TYPE_VULNERABILITY
             assert type(clazz.vulnerability_type) == str
-            assert clazz.vulnerability_type != "generic"
+            if clazz.__module__ != "golismero.api.data.vulnerability":
+                assert clazz.vulnerability_type != "generic"
         else:
             assert False  # A new base data class?
 

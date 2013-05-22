@@ -123,7 +123,12 @@ class _data_metaclass(type):
         super(_data_metaclass, cls).__init__(name, bases, namespace)
 
         # Skip checks for the base classes.
-        if name in ("Data", "Information", "Resource", "Vulnerability"):
+        if cls.__module__ in (
+            "golismero.api.data",
+            "golismero.api.data.information",
+            "golismero.api.data.resource",
+            "golismero.api.data.vulnerability",
+        ):
             return
 
         # Check the data_type is not TYPE_UNKNOWN.
