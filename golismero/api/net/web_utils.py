@@ -234,6 +234,21 @@ def detect_auth_method(url):
 
 
 #----------------------------------------------------------------------
+@lru_cache(maxsize=100, timeout=1*60*60)
+# The "audit_name" parameter is required for the cache.
+# No matter what PyLint says, don't remove it!
+def get_audit_scope(audit_name):
+    """
+    :param audit_name: Name of the current audit.
+    :type audit_name: str
+
+    :return: Domain names we're allowed to connect to.
+    :rtype: set(str)
+    """
+    return {parse_url(x).hostname.lower() for x in Config.audit_config.targets}
+
+
+#----------------------------------------------------------------------
 def is_in_scope(url):
     """
     Checks if an URL is ins scope of an audit
@@ -244,21 +259,22 @@ def is_in_scope(url):
     :returns: bool -- True if is in scope. False otherwise.
     """
 
-    # Trivial case
+    # Trivial case.
     if not url:
         return False
 
-    # Use parse_url instead of DecomposedURL because it's faster and good enough for this
+    # Use parse_url instead of DecomposedURL because it's faster and good enough for this.
     try:
         p_url = parse_url(url)
     except Exception, e:
         warn("Error parsing URL (%s): %s" % (url, e.message))
         return False
 
-    # Set of domain names we're allowed to connect to
-    m_audit_scope = set(parse_url(x).hostname.lower() for x in Config.audit_config.targets)
+    # Set of domain names we're allowed to connect to.
+    m_audit_scope = get_audit_scope(Config.audit_name)
 
-    # Check domains, and subdomains too when requested
+    # Check domains, and subdomains too when requested.
+    # FIXME: IPv4 and IPv6 addresses are not handled!
     m_include_subdomains = Config.audit_config.include_subdomains
     hostname = p_url.hostname.lower()
     return hostname in m_audit_scope or (
@@ -273,7 +289,6 @@ def generate_error_page_url(url):
     Generates a random error page for selected URL:
 
     http://www.site.com/index.php -> http://www.site.com/index.php.19ds_8vjX
-
 
     :param url: original URL
     :type  url: str
@@ -352,10 +367,15 @@ class DecomposedURL(object):
     # scheme is supported by this class.
 
     default_ports = {
-        'http'  : 80,
-        'https' : 443,
-        'ftp'   : 21,
-        'mailto': 25,
+        'http'      : 80,        # http://www.example.com/
+        'https'     : 443,       # https://secure.example.com/
+        'ftp'       : 21,        # ftp://ftp.example.com/file.txt
+        'mailto'    : 25,        # mailto://user@example.com?subject=Hi!
+        ##'file'      : None,      # file://C:\Windows\System32\calc.exe
+        ##'data'      : None,      # data:data:image/png;base64,iVBORw0KGgoA...
+        ##'javascript': None,      # javascript:alert('XSS')
+        ##'vbscript'  : None,      # vbscript:alert('XSS')
+        ##'magnet'    : None,      # magnet:?xt=urn:sha1:YNCKHTQCWBTRNJIV4WN...
     }
 
 
@@ -806,7 +826,7 @@ class HTMLElement (object):
     def content(self):
         """Returns an HTML object nested into this HTML element.
 
-        :returns: and HTML object
+        :returns: an HTML object
         """
         return self.__content
 

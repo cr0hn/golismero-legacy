@@ -30,7 +30,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["NetworkCache"]
+__all__ = ["AbstractCache", "AbstractDictCache", "NetworkCache"]
 
 from ..config import Config
 from ...common import Singleton
@@ -45,18 +45,6 @@ class AbstractCache(Singleton):
     """
     Abstract class for caches.
     """
-
-
-##    #----------------------------------------------------------------------
-##    # Python operators mapped to the cache operations.
-##    def __getitem__(self, key):
-##        return self.get(key)
-##    def __setitem__(self, key, data):
-##        return self.set(key, data)
-##    def __delitem__(self, key):
-##        return self.remove(key)
-##    def __contains__(self, key):
-##        return self.exists(key)
 
 
     #----------------------------------------------------------------------
@@ -111,6 +99,25 @@ class AbstractCache(Singleton):
 
 
 #------------------------------------------------------------------------------
+class AbstractDictCache(AbstractCache):
+    """
+    Abstract class for caches that behave somewhat like dictionaries.
+    """
+
+    #----------------------------------------------------------------------
+    # Python operators mapped to the cache operations.
+
+    def __getitem__(self, key):
+        return self.get(key)
+    def __setitem__(self, key, data):
+        return self.set(key, data)
+    def __delitem__(self, key):
+        return self.remove(key)
+    def __contains__(self, key):
+        return self.exists(key)
+
+
+#------------------------------------------------------------------------------
 class NetworkCache(AbstractCache):
     """
     Cache for network resources, separated by protocol.
@@ -137,7 +144,7 @@ class NetworkCache(AbstractCache):
 
 
     #----------------------------------------------------------------------
-    def get(self, key, protocol="http"):
+    def get(self, key, protocol):
         """
         Get a network resource from the cache.
 
@@ -167,7 +174,7 @@ class NetworkCache(AbstractCache):
 
 
     #----------------------------------------------------------------------
-    def set(self, key, data, protocol="http", timestamp=None, lifespan=None):
+    def set(self, key, data, protocol, timestamp=None, lifespan=None):
         """
         Store a network resource in the cache.
 
@@ -196,7 +203,7 @@ class NetworkCache(AbstractCache):
 
 
     #----------------------------------------------------------------------
-    def remove(self, audit, key, protocol="http"):
+    def remove(self, audit, key, protocol):
         """
         Remove a network resource from the cache.
 
@@ -219,7 +226,7 @@ class NetworkCache(AbstractCache):
 
 
     #----------------------------------------------------------------------
-    def exists(self, key, protocol="http"):
+    def exists(self, key, protocol):
         """
         Verify if the given key exists in the cache.
 
