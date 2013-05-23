@@ -454,6 +454,7 @@ class Web (Protocol):
                         if buffer == "<":
                             raise NetworkException("Server has closed the connection")
 
+
                         # Get HTTP headers
                         while True:
                             buffer = s.recv(1)
@@ -464,9 +465,15 @@ class Web (Protocol):
 
                     # Clean up the socket
                     finally:
-                        s.shutdown(2)
+                        try:
+                            s.shutdown(2)
+                        except:
+                            pass
                 finally:
-                    s.close()
+                    try:
+                        s.close()
+                    except:
+                        pass
 
                 # Parse the HTTP headers and get the Content-Length
                 #if "Content-Length" in m_parser.response_http_headers:
