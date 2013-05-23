@@ -108,7 +108,11 @@ def colorize_substring(text, substring, level_or_color):
         # to call colored() directly. That means we'll
         # have to convert level_or_color to the value
         # that colored() expects.
-        color = m_colors[level_or_color.lower()]
+
+        # To avoid types problems
+        level_or_color = level_or_color if str(level_or_color).isdigit() else level_or_color.lower()
+
+        color          = m_colors[level_or_color]
 
         # Loop for each occurrence of the substring.
         m_pos = 0
