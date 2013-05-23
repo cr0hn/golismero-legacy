@@ -30,11 +30,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+
+__all__ = ["get_matching_level", "MatchingAnalyzerElement", "MatchingAnalyzer", "HTTP_response_headers_comparer"]
+
 import hashlib
 from difflib import SequenceMatcher
 from diff_match_patch import diff_match_patch
 
-
+#----------------------------------------------------------------------
+#
+# Text comparer
+#
 #----------------------------------------------------------------------
 def get_matching_level(text1, text2):
     """
@@ -148,6 +154,7 @@ class MatchingAnalyzer (object):
         """
         if text:
             l_matching_level = get_matching_level(self.__base_text, text)
+
             if l_matching_level < self.__matching_level:
                 # Set to new data received
                 self.__new_data = True
@@ -215,3 +222,38 @@ class MatchingAnalyzer (object):
                     m_unique_strings_append(MatchingAnalyzerElement(self.__results_other_args[l_key]))
 
             self.__new_data = False
+
+
+#----------------------------------------------------------------------
+#
+# HTTP Response comparer
+#
+#----------------------------------------------------------------------
+def HTTP_response_headers_comparer(response_header_1, response_header_2):
+    """
+    Does a HTTP comparison to determinate if two HTTP response matches with the
+    same content without need the body content. To do that, remove some HTTP headers
+    (like Date or Cache info).
+
+    Return a value between 0-1 with the level of difference. 0 is lowest and 1 the highest.
+
+    - If response_header_1 is more similar to response_header_2, value will be near to 100.
+    - If response_header_1 is more different to response_header_2, value will be near to 0.
+
+    :param response_header_1: text with http response headers.
+    :type response_header_1: str
+
+    :param response_header_2: text with http response headers.
+    :type response_header_2: str
+    """
+    m_non_valid_headers = [
+        "Date",
+        "Expires",
+        "Last-Modified"
+    ]
+
+
+    m_res1 = ''.join(["%s:%s" % (k,v) for k,v in response_header_1.iteritems() if k not in m_non_valid_headers  ])
+    m_res2 = ''.join(["%s:%s" % (k,v) for k,v in response_header_2.iteritems() if k not in m_non_valid_headers  ])
+
+    return get_matching_level(m_res1, m_res2)
