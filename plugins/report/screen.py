@@ -33,6 +33,7 @@ from golismero.api.config import Config
 # Data types
 from golismero.api.data import Data
 from golismero.api.data.resource import Resource
+from golismero.api.data.information import Information
 from golismero.api.data.resource.url import Url
 
 # XXX HACK
@@ -95,12 +96,31 @@ class ScreenReport(ReportPlugin):
         print
 
 
-
 #----------------------------------------------------------------------
 #
 # Common functions
 #
 #----------------------------------------------------------------------
+def common_get_resources(db, data_type=None, data_subtype=None):
+    """Get a list of resources as optimous as possible.
+
+    :return: a resouce list.
+    """
+    # Get each resource
+    m_resource = None
+    m_len_urls = db.count(data_type, data_type)
+    if m_len_urls < 200:   # increase as you see fit...
+        # fast but memory consuming method
+        m_resource   = db.get_many( db.keys(data_type=data_type, data_subtype=data_subtype))
+    else:
+        # slow but lean method
+        m_resource   = db.iterate(data_type=data_type, data_subtype=data_subtype)
+
+    return m_resource
+
+
+
+
 def common_display_general_summary(database):
     """Display the summary of scan"""
 
@@ -109,12 +129,21 @@ def common_display_general_summary(database):
     # ----------------------------------------
     print "\n-# %s #- \n"% colorize("Summary", "yellow")
 
-    m_table = PrettyTable(hrules=ALL)
-    m_table.header = False
-    m_table.padding_width = 3
 
     # Fingerprint
-    m_table.add_row(["Web server fingerprint", colorize("Apache", "yellow")])
+    print "\n-- %s -- \n"% colorize("Fingerprinting results", "yellow")
+    m_table = common_get_table_without(with_header=False)
+
+    m_tmp_data = common_get_resources(database, data_type=Data.TYPE_INFORMATION, data_subtype=Information.INFORMATION_WEB_SERVER_FINGERPRINT)
+
+
+    if m_tmp_data: # There are data
+        for i in m_tmp_data:
+            l_host = Database.get(i)
+            print l_host.associated_resources
+            m_table.add_row(["Web server fingerprint", colorize("Apache", "yellow")])
+    else:
+        m_table.add_row(["Main web server:", colorize("Unknown", "yellow")])
 
     # Vhosts
     m_table.add_row(["Vhosts", colorize("1", "yellow")])
@@ -133,25 +162,100 @@ def common_display_general_summary(database):
     """Display information for one vuln"""
 
 #----------------------------------------------------------------------
-def common_get_resources(db, data_type, resource_type):
-    """Get a list of resources as optimous as possible.
-
-    :return: a resouce list.
+def common_get_table_without(main_cols = [], with_header=True, with_hrules=True):
     """
-    # Get each resource
-    m_resource = None
-    m_len_urls = db.count(data_type, data_type)
-    if m_len_urls < 200:   # increase as you see fit...
-        # fast but memory consuming method
-        m_resource   = db.get_many( db.keys(data_type, resource_type) )
-    else:
-        # slow but lean method
-        m_resource   = db.iterate(data_type, resource_type)
+    Get PrettyTable with params:
 
-    return m_resource
+    :param main_cols: cols of header.
+    :type main_cols: list
+
+    :param with_header: set the table header or not.
+    :type with_header: bool
+
+    :param with_hrules: set rules at each row.
+    :type with_hrules: bool
+
+    :return: a PrettyTable object
+    :rtype: PrettyTable
+
+    """
+    m_table = PrettyTable(main_cols, hrules=(ALL if with_hrules else None))
+    m_table.header = with_header
+    m_table.padding_width = 3
+
+    return m_table
+
+
+#----------------------------------------------------------------------
+#
+# Main display modes
+#
+#----------------------------------------------------------------------
+def general_display_only_vulns(db):
+    """"""
+
+    if not isinstance(db, Database):
+        raise ValueError("Espected 'Database' type, got %s." % type(db))
+
+    # ----------------------------------------
+    # General summary
+    # ----------------------------------------
+    common_display_general_summary(db)
+
+    print "\n- %s - \n"% colorize("Vulnerabilities", "yellow")
+
+    # Title
+    print "+%s+" % ("-" * (len("Vulnerabilities") + 3))
+    print "| %s  |" % colorize("Vulnerabilities", "Red")
+    print "+%s+" % ("-" * (len("Vulnerabilities") + 3))
+    print
+
+
+    common_get_resources(db, data_type=Data.TYPE_VULNERABILITY)
 
 
 
+#----------------------------------------------------------------------
+def general_display_by_resource(db):
+    """
+    This function display the results like this:
+
+    [ 1 ] www.website.com/Param1=Value1&Param2=Value2
+    +-----------------+
+    | Vulnerabilities |
+    +------------------+-----------------------------+
+    |   Vuln name:     |        Url suspicious       |
+    +------------------+-----------------------------+
+    |       URL:       | http://website.com/admin    |
+    | Suspicius text:  |            admin            |
+    +------------------+-----------------------------+
+
+    [ 2 ] www.website.com/contact/
+    [ 3 ] www.website.com/Param1
+
+    """
+
+
+    if not isinstance(db, Database):
+        raise ValueError("Espected 'Database' type, got %s." % type(db))
+
+    # ----------------------------------------
+    # General summary
+    # ----------------------------------------
+    common_display_general_summary(db)
+
+
+    # ----------------------------------------
+    # Get the resource list
+    # ----------------------------------------
+    m_all_resources = set([x.resource_type for x in common_get_resources(db, data_type=Data.TYPE_RESOURCE)])
+
+    # There are some types that calls the same function for process it. To avoid to call 2 o more times the same
+    # function, filter it:
+    m_functions_to_call = set([RESOURCE_DISPLAYER[f] for f in m_all_resources if f in RESOURCE_DISPLAYER])
+
+    for x in m_functions_to_call:
+        x(db)
 
 
 
@@ -210,8 +314,8 @@ def concrete_display_web_resources(database):
 
         if u.associated_vulnerabilities:
             # Title
-            print "+%s+" % ("-" * (len("Vulnerabilities") + 3))
-            print "| %s  |" % colorize("Vulnerabilities", "Red")
+            print "%s+%s+" % (" " * 8,"-" * (len("Vulnerabilities") + 3))
+            print "%s| %s  |" % (" " * 8, colorize("Vulnerabilities", "Red"))
 
             vuln_genereral_displayer(u.associated_vulnerabilities)
 
@@ -233,82 +337,10 @@ def concrete_display_web_resources(database):
 
 
 RESOURCE_DISPLAYER = {
-    Resource.RESOURCE_URL : concrete_display_web_resources # Urls
+    # Web related: URL + Base_URL
+    Resource.RESOURCE_URL          : concrete_display_web_resources,
+    Resource.RESOURCE_BASE_URL     : concrete_display_web_resources
 }
-#----------------------------------------------------------------------
-#
-# General display modes
-#
-#----------------------------------------------------------------------
-def general_display_only_vulns(db):
-    """"""
-
-    if not isinstance(db, Database):
-        raise ValueError("Espected 'Database' type, got %s." % type(db))
-
-    # ----------------------------------------
-    # General summary
-    # ----------------------------------------
-    common_display_general_summary(db)
-
-    print "\n- %s - \n"% colorize("Vulnerabilities", "yellow")
-
-    # Title
-    print "+%s+" % ("-" * (len("Vulnerabilities") + 3))
-    print "| %s  |" % colorize("Vulnerabilities", "Red")
-    print "+%s+" % ("-" * (len("Vulnerabilities") + 3))
-    print
-
-    vuln_genereral_displayer(db.get_many(db.keys(data_type=Data.TYPE_VULNERABILITY)))
-
-
-
-#----------------------------------------------------------------------
-def general_display_by_resource(db):
-    """
-    This function display the results like this:
-
-    [ 1 ] www.website.com/Param1=Value1&Param2=Value2
-    +-----------------+
-    | Vulnerabilities |
-    +------------------+-----------------------------+
-    |   Vuln name:     |        Url suspicious       |
-    +------------------+-----------------------------+
-    |       URL:       | http://website.com/admin    |
-    | Suspicius text:  |            admin            |
-    +------------------+-----------------------------+
-
-    [ 2 ] www.website.com/contact/
-    [ 3 ] www.website.com/Param1
-
-    """
-
-
-    if not isinstance(db, Database):
-        raise ValueError("Espected 'Database' type, got %s." % type(db))
-
-    # ----------------------------------------
-    # General summary
-    # ----------------------------------------
-    common_display_general_summary(db)
-
-
-    # ----------------------------------------
-    # Get the resource list
-    # ----------------------------------------
-    m_all_resources = set([x.resource_type for x in db.get_many(db.keys(data_type=Data.TYPE_RESOURCE))])
-
-    for rs in m_all_resources:
-        try:
-            RESOURCE_DISPLAYER[rs](db)
-        except KeyError,e:
-            pass
-            #print "[!] No function to parse resources '%s'" % str(e.message)
-
-
-
-
-
 #----------------------------------------------------------------------
 #
 # Concrete vulnerability displayers
@@ -339,22 +371,30 @@ def vuln_genereral_displayer(vulns):
             l_func_ret = VULN_DISPLAYER[l_vuln_name](vuln, l_table)
 
             # Display the table
-            print l_table
+            #print l_table
+            print '\n'.join([ "        " + x for x in l_table.get_string().splitlines()])
 
         except KeyError:
             print "Function to display '%s' function are not available" % l_vuln_name
             continue
 
+#----------------------------------------------------------------------
 def vuln_display_url_suspicious(vuln, table):
-    """"""
-
+    """Diplay the vuln: URL Suspicious"""
     table.add_row(["URL:", colorize_substring(vuln.url.url, vuln.substring, "red")])
     table.add_row(["Suspicius text: ", colorize(vuln.substring, "red")])
+
+#----------------------------------------------------------------------
+def vuln_display_url_disclosure(vuln, table):
+    """Diplay the vuln: URL Disclosure"""
+    table.add_row(["URL:", colorize_substring(vuln.url.url, vuln.discovered, "red")])
+    table.add_row(["Path discovered: ", colorize(vuln.discovered, "red")])
 
 
 #
 # Vulneravility functions
 #
 VULN_DISPLAYER = {
-    'url_suspicious' : vuln_display_url_suspicious
+    'url_suspicious' : vuln_display_url_suspicious,
+    'url_disclosure' : vuln_display_url_disclosure
 }
