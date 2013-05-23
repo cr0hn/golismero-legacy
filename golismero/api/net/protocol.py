@@ -48,7 +48,7 @@ from StringIO import StringIO # Use StringIO instead of cStringIO because cStrin
 from mimetools import Message
 import socket
 import hashlib
-
+from select import select
 
 #------------------------------------------------------------------------------
 class NetworkException(Exception):
@@ -429,12 +429,18 @@ class Web (Protocol):
                 s = socket.socket()
                 try:
                     s.settimeout(timeout)
-                    s.connect((socket.gethostbyname(host), port))
+                    s.connect((host, port))
                     try:
 
                         # Send an HTTP request
                         s.send(request_content)
-                        m_temp_response = StringIO()
+                        m_temp_response   = StringIO()
+
+                        m_select_response = select([s], [], [], timeout)
+
+                        if not m_select_response[0]:
+                            s.close()
+                            raise NetworkException("Timeout")
 
                         buffer          = s.recv(1)
                         m_temp_response.write( buffer )
@@ -442,6 +448,11 @@ class Web (Protocol):
                         m_counter       = 0
                         if buffer == '\n' or buffer == '\r':
                             m_counter += 1
+
+                        # When server close the remote connection send, in ASCII, the
+                        # character "<"
+                        if buffer == "<":
+                            raise NetworkException("Server has closed the connection")
 
                         # Get HTTP headers
                         while True:
