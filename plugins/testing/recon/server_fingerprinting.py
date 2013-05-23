@@ -214,8 +214,7 @@ def main_server_fingerprint(base_url):
 
 	:return: Fingerprint type
 	"""
-	return
-
+	#return
 	m_main_url = base_url.url
 
 	Logger.log_more_verbose("Starting fingerprinting plugin for site: %s" % m_main_url)
@@ -243,7 +242,7 @@ def main_server_fingerprint(base_url):
 	# Associate resource
 	m_return.add_resource(base_url)
 
-	return m_return
+	return [m_return]
 
 
 #----------------------------------------------------------------------
@@ -400,11 +399,11 @@ def http_analyzers(main_url, conn, number_of_entries=4):
 						               request_content = l_raw_request,
 						               cache           = True)
 		except NetworkException,e:
-			Logger.log_more_verbose("Server-Fingerprint plugin: No response for URL '%s'. Message: %s" % (l_url, e.message))
+			Logger.log_error_more_verbose("Server-Fingerprint plugin: No response for URL (%s) '%s'. Message: %s" % (l_method, l_url, e.message))
 			continue
 
 		if not l_response:
-			Logger.log_more_verbose("No response for URL '%s'." % l_url)
+			Logger.log_error_more_verbose("No response for URL '%s'." % l_url)
 			continue
 		l_original_headers = {v.split(":")[0]:v.split(":")[1] for v in l_response.http_headers_raw.splitlines()}
 
@@ -744,29 +743,44 @@ def http_analyzers(main_url, conn, number_of_entries=4):
 	m_servers_prob = OrderedDict() # { WEB_SERVER, PROBABILITY }
 
 	# Get web server family. F.E: Apache
-	m_web_server      = m_counters.results_score.most_common(1)[0][0]
-	m_server_family   = m_web_server.split("-")[0]
-	m_server_version  = m_web_server.split("-")[1]
+
+	m_web_server      = None
+	m_server_family   = None
+	m_server_version  = None
 	m_server_complete = None
 
-	# Get concrete versions and the probability
-	m_base_percent = m_counters.results_score_complete.most_common(1)[0][1] # base value used for calculate percents
-	for v in m_counters.results_score_complete.most_common(40):
-		l_server_name    = v[0]
-		l_server_prob    = v[1]
+	# If fingerprint found
+	if m_counters.results_score.most_common():
 
-		if not l_server_name.startswith(m_server_family):
-			continue
+		m_web_server      = m_counters.results_score.most_common(1)[0][0]
+		m_server_family   = m_web_server.split("-")[0]
+		m_server_version  = m_web_server.split("-")[1]
 
-		# Asociate complete web server info with most probable result
-		if not m_server_complete and m_server_version in l_server_name:
-			m_server_complete = l_server_name
+		# Get concrete versions and the probability
+		m_base_percent = m_counters.results_score_complete.most_common(1)[0][1] # base value used for calculate percents
+		for v in m_counters.results_score_complete.most_common(40):
+			l_server_name    = v[0]
+			l_server_prob    = v[1]
 
-		m_servers_prob[l_server_name] = '{:0.2f}'.format((float(l_server_prob)/float(m_base_percent)) * 100.0)
+			if not l_server_name.startswith(m_server_family):
+				continue
 
-		# Get only 4 results
-		if len(m_servers_prob) >= number_of_entries:
-			break
+			# Asociate complete web server info with most probable result
+			if not m_server_complete and m_server_version in l_server_name:
+				m_server_complete = l_server_name
+
+			m_servers_prob[l_server_name] = '{:0.2f}'.format((float(l_server_prob)/float(m_base_percent)) * 100.0)
+
+			# Get only 4 results
+			if len(m_servers_prob) >= number_of_entries:
+				break
+	else:
+
+		m_web_server      = "Unknown"
+		m_server_family   = ""
+		m_server_version  = "Unknown web server"
+		m_server_complete = []
+
 
 	return m_server_family, m_server_version, m_server_complete, m_servers_prob
 
