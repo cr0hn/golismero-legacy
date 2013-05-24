@@ -390,11 +390,19 @@ def vuln_display_url_disclosure(vuln, table):
     table.add_row(["URL:", colorize_substring(vuln.url.url, vuln.discovered, "red")])
     table.add_row(["Path discovered: ", colorize(vuln.discovered, "red")])
 
+#----------------------------------------------------------------------
+def vuln_display_default_error_page(vuln, table):
+    """Diplay the vuln: URL Disclosure"""
+
+    table.add_row(["URL:", colorize_substring(vuln.url.url, vuln.discovered, "red")])
+    table.add_row(["Default error page for server: ", colorize(vuln.server_name, "red")])
+
 
 #
 # Vulneravility functions
 #
 VULN_DISPLAYER = {
-    'url_suspicious' : vuln_display_url_suspicious,
-    'url_disclosure' : vuln_display_url_disclosure
+    'url_suspicious'          : vuln_display_url_suspicious,
+    'url_disclosure'          : vuln_display_url_disclosure,
+    'default_error_page'      : vuln_display_default_error_page
 }
