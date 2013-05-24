@@ -79,10 +79,15 @@ def get_matching_level(text1, text2):
         # Google method
         l_differ       = diff_match_patch()
         # Levenshtein comparation value
-        l_google_value = float(l_differ.diff_levenshtein(l_differ.diff_main(text1, text2)))
+        #l_google_value = float(l_differ.diff_levenshtein(l_differ.diff_main(text1, text2)))
+        p = l_differ.diff_main(text1, text2)
+        l_google_value = float(l_differ.diff_levenshtein(p))
+        l_google_value = 1 if l_google_value == 0 else l_google_value
+
         l_len_text2    = len(text2)
+        l_len_text1    = len(text1)
         # Calculate
-        m_return_value = abs( (l_len_text2 - l_google_value) / l_len_text2 )
+        m_return_value = abs( 1 - ((l_len_text1 - l_len_text2) / l_google_value ))
 
     return m_return_value
 
