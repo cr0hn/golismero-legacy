@@ -35,7 +35,7 @@ from golismero.api.config import Config
 from golismero.api.text.matching_analyzer import get_matching_level
 from golismero.api.net.web_utils import is_in_scope, DecomposedURL
 from golismero.api.net.scraper import extract_from_html
-from golismero.api.data.information.webserver_fingerprint import *
+from golismero.api.data.information.webserver_fingerprint import WebServerFingerprint
 from repoze.lru import lru_cache
 from ping import *
 
