@@ -30,6 +30,7 @@ from golismero.api.config import Config
 from golismero.api.data import Data
 from golismero.api.data.resource import Resource
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
+from golismero.api.data.vulnerability.information_disclosure.default_error_page import DefaulErrorPage
 from golismero.api.data.vulnerability.information_disclosure.url_suspicious import SuspiciousURL
 from golismero.api.plugin import UIPlugin
 from golismero.main.console import Console, colorize, colorize_substring
@@ -79,6 +80,15 @@ def process_url_disclosure(vuln):
         "-" * len(vuln.url.url)
     )
 
+#----------------------------------------------------------------------
+def process_default_error_page(vuln):
+    """Display default error page"""
+    return "%s: %s\n|%s" % (
+        colorize("!! Default error page", vuln.risk),
+        colorize_substring(vuln.url.url, vuln.server_name, vuln.risk),
+        "-" * len(vuln.url.url)
+    )
+
 class ConsoleUIPlugin(UIPlugin):
     """
     Console UI plugin.
@@ -90,6 +100,7 @@ class ConsoleUIPlugin(UIPlugin):
 
         UrlDisclosure.vulnerability_type: process_url_disclosure,
         SuspiciousURL.vulnerability_type: process_url_suspicious,
+        DefaulErrorPage.vulnerability_type: process_default_error_page,
     }
 
 
