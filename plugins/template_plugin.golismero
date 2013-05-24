@@ -1,0 +1,12 @@
+[Core]
+Name = Template for develop plugins
+Module = template_plugin.py
+Stage = Recon
+
+[Documentation]
+Description = [DESCRIPTION OF NEW PLUGIN]
+Author = [AUTHOR OF PLUGIN]
+Version = [VERSION]
+Website = [AUTHOR WEB SITE]
+Copyright = Copyright (C) 2011-2013 GoLismero Project
+License = GNU Public License
