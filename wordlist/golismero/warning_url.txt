@@ -1,6 +1,7 @@
 login
 password
 auth
+manage
 session
 admin
 .~
