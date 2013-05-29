@@ -199,9 +199,9 @@ class ServerFingerprinting(TestingPlugin):
 		if not isinstance(info, BaseUrl):
 			raise TypeError("Expected Url, got %s instead" % type(info))
 
-		main_server_fingerprint(info)
+		return main_server_fingerprint(info)
 
-		return
+
 
 
 #----------------------------------------------------------------------
