@@ -97,3 +97,9 @@ class _Config (Singleton):
         self.__context = context
 
 Config = _Config()
+"""
+Public var to access to configuration system.
+
+.. warning::
+   You must use this var to access to the configuration params of _Config Class
+"""

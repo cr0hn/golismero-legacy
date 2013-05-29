@@ -38,7 +38,15 @@ from ..messaging.codes import MessageType, MessageCode, MessagePriority
 
 class Logger (object):
     """
-    Simple logging mechanism.
+Simple logger mechanism implementation. This send log/debug info to internal system.
+
+You should use this class instead of a simple `print` or other mechanism because GoLismero works with a message system and otherwise, the information can't be sent.
+
+Example of use ::
+
+   >>> Logger.log("My log message with information")
+   >>> Logger.log_error("My log with error information")
+   >>> Logger.log_more_verbose("Log message to display when more debug flag is set")
     """
 
 

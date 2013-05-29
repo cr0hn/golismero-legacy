@@ -383,8 +383,8 @@ class HTTP_Request (object):
         """
         Get a dictionary with filenames attached, in the following format:
         {
-          'file_name_1' : raw_object_1,
-          'file_name_2' : raw_object_2,
+        'file_name_1' : raw_object_1,
+        'file_name_2' : raw_object_2,
         }
 
         :returns: dict

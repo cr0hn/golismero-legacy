@@ -1,0 +1,40 @@
+Data API
+========
+
+GoLismero has 3 types os data:
+
+.. toctree::
+
+   Information structures details<data/information>
+   Resources structures details<data/resource>
+   Vulnerabilities structures details<data/vulnerabilities>
+
+Each type of data respresent a particular information.
+
+Common interfaces
+=================
+
+Cada tipo de información tiene una interfaz común, que hay a continuación:
+
+
+Information types
+-----------------
+
+El formato general de los tipo de información es:
+
+.. automodule:: golismero.api.data.information
+   :members:
+
+
+Resource types
+--------------
+
+.. automodule:: golismero.api.data.resource
+   :members:
+
+
+Vulnerability types
+-------------------
+
+.. automodule:: golismero.api.data.vulnerability
+   :members:
