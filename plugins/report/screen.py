@@ -138,10 +138,11 @@ def common_display_general_summary(database):
 
 
     if m_tmp_data: # There are data
-        for i in m_tmp_data:
-            l_host = Database.get(i)
-            print l_host.associated_resources
-            m_table.add_row(["Web server fingerprint", colorize("Apache", "yellow")])
+        # For each host
+        for l_host in m_tmp_data:
+            for l_res in l_host.associated_resources:
+                if hasattr(l_res, "url"):
+                    m_table.add_row(["Fingerprint: %s" % l_res.url, colorize("Apache", "yellow")])
     else:
         m_table.add_row(["Main web server:", colorize("Unknown", "yellow")])
 
