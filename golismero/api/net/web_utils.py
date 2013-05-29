@@ -37,6 +37,8 @@ __all__ = [
     "DecomposedURL", "HTMLElement", "HTMLParser",
 ]
 
+
+
 from ..config import Config
 from ..text.text_utils import generate_random_string, split_first
 
@@ -67,15 +69,41 @@ except ImportError:
 
 @lru_cache(maxsize=50)
 def parse_url(url):
+    """
+    .. warning:
+       This method is only a wrapper of the original urllib3 function with de particularity that the **result will be cached for improve the performance**.
+
+    Given a url, return a parsed :class:`.Url` namedtuple. Best-effort is
+    performed to parse incomplete urls. Fields not provided will be None.
+
+    Partly backwards-compatible with :mod:`urlparse`.
+
+    Example: ::
+
+        >>> parse_url('http://google.com/mail/')
+        Url(scheme='http', host='google.com', port=None, path='/', ...)
+        >>> parse_url('google.com:80')
+        Url(scheme=None, host='google.com', port=80, path=None, ...)
+        >>> parse_url('/foo?bar')
+        Url(scheme=None, host=None, port=None, path='/foo', query='bar', ...)
+    """
     return original_parse_url(url)
 
 
 #----------------------------------------------------------------------
 def is_method_allowed(method, url, network_conn):
     """
-    Checks if method is allowed for this url.
+    Checks if method as parameter is allowed for this url.
 
     if method is supported return True. False otherwise.
+
+    Example:
+
+    >>> from golismero.net.web_utils import is_method_allowed
+    >>> is_method_allowed("GET", "www.site.com", connection_object)
+    True
+    >>> is_method_allowed("OPTIONS", "www.site.com", connection_object)
+    False
 
     :param method: string with method to check
     :type method: str
@@ -107,11 +135,25 @@ def is_method_allowed(method, url, network_conn):
 def fix_url(url, base_url=None):
     """
     Fix selected URL adding neccesary info to be complete URL, like:
-    www.site.com -> http://www.site.com/
+
+    * www.site.com -> http://www.site.com/
+
+    Example:
+
+    >>> from golismero.net.web_utils import fix_url
+    >>> fix_url("www.site.com")
+    http://www.site.com
 
     If base_url is provided, then a canonized and fixed url will return:
-    in  -> (url=/contact, base_url=www.site.com)
-    out -> http://www.site.com/contact
+
+    * in  -> (url=/contact, base_url=www.site.com)
+    * out -> http://www.site.com/contact
+
+    Example:
+
+    >>> from golismero.net.web_utils import fix_url
+    >>> fix_url(url="/contact", base_url="www.site.com")
+    http://www.site.com/contact
 
     :param url: URL
     :type url: str
@@ -177,7 +219,12 @@ def check_auth(url, user, password):
 
 #----------------------------------------------------------------------
 def get_auth_obj(method, user, password):
-    """Generates an authentication code
+    """
+    Generates an authentication code object depending of method as parameter:
+
+    * "basic"
+    * "digest"
+    * "ntlm"
 
     :param method: Auth method: basic, digest, ntlm.
     :type method: str
@@ -208,7 +255,7 @@ def get_auth_obj(method, user, password):
 #------------------------------------------------------------------------------
 def detect_auth_method(url):
     """
-    Detects authentication method.
+    Detects authentication method/type for an URL.
 
     :param url: url to test authentication.
     :type url: str.
@@ -239,6 +286,10 @@ def detect_auth_method(url):
 # No matter what PyLint says, don't remove it!
 def get_audit_scope(audit_name):
     """
+    Gets the scope for the audit that are executing. In practice, get all of hosts included to scan.
+
+    **For improve the performance, all the check are cached**
+
     :param audit_name: Name of the current audit.
     :type audit_name: str
 
@@ -252,6 +303,15 @@ def get_audit_scope(audit_name):
 def is_in_scope(url):
     """
     Checks if an URL is ins scope of an audit
+
+    Example:
+
+    If you're auditing the site: www.mysite.com:
+
+    >>> from golismero.api.web_utils import is_in_scope
+    >>> url_to_check="www.other_site.com"
+    >>> is_in_scope(url_to_check)
+    False
 
     :param url: string with url to check.
     :type url: str
@@ -288,7 +348,12 @@ def generate_error_page_url(url):
     """
     Generates a random error page for selected URL:
 
-    http://www.site.com/index.php -> http://www.site.com/index.php.19ds_8vjX
+    Example:
+
+    >>> from golismero.api.web_utils import generate_error_page_url
+    >>> original_url = "http://www.site.com/index.php"
+    >>> generate_error_page_url(original_url)
+    'http://www.site.com/index.php.19ds_8vjX'
 
     :param url: original URL
     :type  url: str
@@ -349,10 +414,23 @@ class DecomposedURL(object):
     unnecessary delimiters (for example, a ? with an empty query;
     the RFC states that these are equivalent).
 
-    .. warning:
+    Example:
+
+    >>> from golismero.api.web_utils import DecomposedURL
+    >>> url="http://user:pass@www.site.com/folder/index.php?param1=val1&b#anchor"
+    >>> r = DecomposedURL(url)
+    >>> r.scheme
+    'http'
+    >>> r.filename
+    'index.php'
+    >>> r.hostname
+    'www.site.com'
+
+
+    .. warning::
        The url, request_uri, query, netloc and auth properties are URL-encoded. All other properties are URL-decoded.
 
-    .. warning:
+    .. warning::
        Unicode is currently NOT supported.
     """
 

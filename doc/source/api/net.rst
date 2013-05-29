@@ -3,13 +3,6 @@ Networking API
 
 Here the Networking API functions:
 
-
-Cache
------
-
-.. automodule:: golismero.api.net.cache
-   :members:
-
 HTTP
 -----
 
@@ -20,9 +13,8 @@ Protocol
 --------
 
 .. automodule:: golismero.api.net.protocol
-   :members:
+   :members: NetworkException, NetworkOutOfScope, NetworkAPI, Web
    :show-inheritance:
-   :inherited-members:
 
 
 scrapper

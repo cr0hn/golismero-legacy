@@ -59,167 +59,6 @@
   <div class="section" id="networking-api">
 <h1>Networking API<a class="headerlink" href="#networking-api" title="Permalink to this headline">¶</a></h1>
 <p>Here the Networking API functions:</p>
-<div class="section" id="module-golismero.api.net.cache">
-<span id="cache"></span><h2>Cache<a class="headerlink" href="#module-golismero.api.net.cache" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="golismero.api.net.cache.AbstractCache">
-<em class="property">class </em><tt class="descclassname">golismero.api.net.cache.</tt><tt class="descname">AbstractCache</tt><a class="headerlink" href="#golismero.api.net.cache.AbstractCache" title="Permalink to this definition">¶</a></dt>
-<dd><p>Abstract class for caches.</p>
-<dl class="method">
-<dt id="golismero.api.net.cache.AbstractCache.exists">
-<tt class="descname">exists</tt><big>(</big><em>key</em><big>)</big><a class="headerlink" href="#golismero.api.net.cache.AbstractCache.exists" title="Permalink to this definition">¶</a></dt>
-<dd><p>Verify if the given key exists in the cache.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> (<em>str</em>) &#8211; key to reference the data</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if the data is in the cache, False otherwise.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="golismero.api.net.cache.AbstractCache.get">
-<tt class="descname">get</tt><big>(</big><em>key</em><big>)</big><a class="headerlink" href="#golismero.api.net.cache.AbstractCache.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get data from the cache.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> (<em>str</em>) &#8211; key to reference the data</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">object &#8211; data from the cache | None</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="golismero.api.net.cache.AbstractCache.remove">
-<tt class="descname">remove</tt><big>(</big><em>key</em><big>)</big><a class="headerlink" href="#golismero.api.net.cache.AbstractCache.remove" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove data from the cache.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> (<em>str</em>) &#8211; key to reference the network resource</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="golismero.api.net.cache.AbstractCache.set">
-<tt class="descname">set</tt><big>(</big><em>key</em>, <em>data</em><big>)</big><a class="headerlink" href="#golismero.api.net.cache.AbstractCache.set" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add data to the cache.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>key</strong> (<em>str</em>) &#8211; key to reference the data</li>
-<li><strong>data</strong> (<em>object</em>) &#8211; data to store in the cache</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="golismero.api.net.cache.AbstractDictCache">
-<em class="property">class </em><tt class="descclassname">golismero.api.net.cache.</tt><tt class="descname">AbstractDictCache</tt><a class="headerlink" href="#golismero.api.net.cache.AbstractDictCache" title="Permalink to this definition">¶</a></dt>
-<dd><p>Abstract class for caches that behave somewhat like dictionaries.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="golismero.api.net.cache.NetworkCache">
-<em class="property">class </em><tt class="descclassname">golismero.api.net.cache.</tt><tt class="descname">NetworkCache</tt><a class="headerlink" href="#golismero.api.net.cache.NetworkCache" title="Permalink to this definition">¶</a></dt>
-<dd><p>Cache for network resources, separated by protocol.</p>
-<dl class="method">
-<dt id="golismero.api.net.cache.NetworkCache.exists">
-<tt class="descname">exists</tt><big>(</big><em>key</em>, <em>protocol</em><big>)</big><a class="headerlink" href="#golismero.api.net.cache.NetworkCache.exists" title="Permalink to this definition">¶</a></dt>
-<dd><p>Verify if the given key exists in the cache.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> (<em>str</em>) &#8211; key to reference the network resource</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if the resource is in the cache, False otherwise.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="golismero.api.net.cache.NetworkCache.get">
-<tt class="descname">get</tt><big>(</big><em>key</em>, <em>protocol</em><big>)</big><a class="headerlink" href="#golismero.api.net.cache.NetworkCache.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a network resource from the cache.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>key</strong> (<em>str</em>) &#8211; key to reference the network resource</li>
-<li><strong>protocol</strong> (<em>str</em>) &#8211; network protocol</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">object &#8211; resource from the cache | None</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="golismero.api.net.cache.NetworkCache.remove">
-<tt class="descname">remove</tt><big>(</big><em>audit</em>, <em>key</em>, <em>protocol</em><big>)</big><a class="headerlink" href="#golismero.api.net.cache.NetworkCache.remove" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove a network resource from the cache.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>key</strong> (<em>str</em>) &#8211; key to reference the network resource</li>
-<li><strong>protocol</strong> (<em>str</em>) &#8211; network protocol</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="golismero.api.net.cache.NetworkCache.set">
-<tt class="descname">set</tt><big>(</big><em>key</em>, <em>data</em>, <em>protocol</em>, <em>timestamp=None</em>, <em>lifespan=None</em><big>)</big><a class="headerlink" href="#golismero.api.net.cache.NetworkCache.set" title="Permalink to this definition">¶</a></dt>
-<dd><p>Store a network resource in the cache.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>key</strong> (<em>str</em>) &#8211; key to reference the network resource</li>
-<li><strong>data</strong> (<em>object</em>) &#8211; data to store in the cache</li>
-<li><strong>protocol</strong> (<em>str</em>) &#8211; network protocol</li>
-<li><strong>timestamp</strong> (<em>int</em>) &#8211; timestamp for this network resource</li>
-<li><strong>lifespan</strong> (<em>int</em>) &#8211; time to live in the cache</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-</div>
 <div class="section" id="module-golismero.api.net.http">
 <span id="http"></span><h2>HTTP<a class="headerlink" href="#module-golismero.api.net.http" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -668,7 +507,15 @@
 <dt id="golismero.api.net.protocol.NetworkException">
 <em class="property">exception </em><tt class="descclassname">golismero.api.net.protocol.</tt><tt class="descname">NetworkException</tt><a class="headerlink" href="#golismero.api.net.protocol.NetworkException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
-<p>Exception for net connections</p>
+<p>General exception for net connections</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="golismero.api.net.protocol.NetworkOutOfScope">
+<em class="property">exception </em><tt class="descclassname">golismero.api.net.protocol.</tt><tt class="descname">NetworkOutOfScope</tt><a class="headerlink" href="#golismero.api.net.protocol.NetworkOutOfScope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+<p>Exception for net connections.</p>
+<p>This exception means that an Url is out of audit scope.</p>
 </dd></dl>
 
 <dl class="class">
@@ -676,10 +523,51 @@
 <em class="property">class </em><tt class="descclassname">golismero.api.net.protocol.</tt><tt class="descname">Web</tt><big>(</big><em>http_pool</em>, <em>config</em><big>)</big><a class="headerlink" href="#golismero.api.net.protocol.Web" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">golismero.api.net.protocol.Protocol</span></tt></p>
 <p>Web protocols handler (HTTP, HTTPS).</p>
+<p>This class allow you to do HTTP/HTTPS requests with some different methods, providing a way to
+interact with the &#8216;Web&#8217; protocol easily.</p>
+<dl class="method">
+<dt id="golismero.api.net.protocol.Web.close">
+<tt class="descname">close</tt><big>(</big><big>)</big><a class="headerlink" href="#golismero.api.net.protocol.Web.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close an active connection.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This method has not the same objective than in sockets libraries. <strong>Do not call this method manually</strong>.</p>
+</div>
+</dd></dl>
+
 <dl class="method">
 <dt id="golismero.api.net.protocol.Web.get">
 <tt class="descname">get</tt><big>(</big><em>URL</em>, <em>method='GET'</em>, <em>timeout=5</em>, <em>post_data=None</em>, <em>follow_redirect=None</em>, <em>cache=True</em><big>)</big><a class="headerlink" href="#golismero.api.net.protocol.Web.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get response for an input URL.</p>
+<dd><p>Get response for an input URL. The URL parameter can be a string or an URL instance.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You should use this method for normal or habitual requests.</p>
+</div>
+<p>Example with string:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.net.protocol</span> <span class="kn">import</span> <span class="n">Web</span><span class="p">,</span> <span class="n">NetworkAPI</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">NetworkAPI</span><span class="o">.</span><span class="n">get_connection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;www.mysite.com&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">follow_redirect</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span><span class="o">.</span><span class="n">http_headers_raw</span>
+<span class="go">HTTP/1.0 200 OK</span>
+<span class="go">Date: Wed, 29 May 2013 18:44:54 GMT</span>
+<span class="go">Server: Apache 2.2</span>
+<span class="go">Content-Type: text/html; charset=utf-8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span><span class="o">.</span><span class="n">lines_count</span>
+<span class="go">4</span>
+</pre></div>
+</div>
+<p>Example with Url instance:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.net.protocol</span> <span class="kn">import</span> <span class="n">Web</span><span class="p">,</span> <span class="n">NetworkAPI</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.data.resource.url</span> <span class="kn">import</span> <span class="n">Url</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">NetworkAPI</span><span class="o">.</span><span class="n">get_connection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">Url</span><span class="p">(</span><span class="s">&quot;www.mysite.com&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span><span class="o">.</span><span class="n">request_time</span>
+<span class="go">0.2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span><span class="o">.</span><span class="n">content_type</span>
+<span class="go">&quot;text/html&quot;</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -695,7 +583,7 @@
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">HTTPResponse instance or None if any error or URL out of scope.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last">TypeError</p>
+<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last">AttributeError, ValueError, TypeError, NetworkOutOfScope</p>
 </td>
 </tr>
 </tbody>
@@ -706,6 +594,31 @@
 <dt id="golismero.api.net.protocol.Web.get_custom">
 <tt class="descname">get_custom</tt><big>(</big><em>request</em>, <em>timeout=5</em><big>)</big><a class="headerlink" href="#golismero.api.net.protocol.Web.get_custom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get an HTTP response from a custom HTTP Request object.</p>
+<p>The HTTP Request object can be customized to do advanced requests.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For more info about HTTP Request objects you can read <tt class="xref py py-class docutils literal"><span class="pre">HTTP_Request</span></tt></p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You should use this method <strong>only if you want advanced resquest</strong>.</p>
+</div>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.net.protocol</span> <span class="kn">import</span> <span class="n">Web</span><span class="p">,</span> <span class="n">NetworkAPI</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.net.http</span> <span class="kn">import</span> <span class="n">HTTP_Request</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">NetworkAPI</span><span class="o">.</span><span class="n">get_connection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resquest</span> <span class="o">=</span> <span class="n">HTTP_Request</span><span class="p">(</span><span class="s">&quot;www.mysite.com&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">request</span><span class="o">.</span><span class="n">accept</span> <span class="o">=</span> <span class="s">&quot;application/x-javascript&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">request</span><span class="o">.</span><span class="n">post_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="s">&#39;param1&#39;</span> <span class="p">:</span> <span class="s">&#39;value1&#39;</span><span class="p">,</span> <span class="s">&#39;param2&#39;</span> <span class="p">:</span> <span class="s">&#39;value2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">requeat</span><span class="o">.</span><span class="n">add_file_from_file</span><span class="p">(</span><span class="s">&quot;PATH_TO_MY_FILE&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">get_custom</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span><span class="o">.</span><span class="n">http_headers_raw</span>
+<span class="go">HTTP/1.0 200 OK</span>
+<span class="go">Date: Wed, 29 May 2013 18:44:54 GMT</span>
+<span class="go">Server: Apache 2.2</span>
+<span class="go">Content-Type: text/html; charset=utf-8</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -716,7 +629,13 @@
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">HTTP_Response &#8211; HTTP response object | None</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">HTTP_Response &#8211; HTTP response object | None</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">HTTPResponse instance or None if any error or URL out of scope.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last">TypeError, NetworkOutOfScope</p>
 </td>
 </tr>
 </tbody>
@@ -727,15 +646,35 @@
 <dt id="golismero.api.net.protocol.Web.get_raw">
 <tt class="descname">get_raw</tt><big>(</big><em>host</em>, <em>request_content</em>, <em>timeout=2</em>, <em>port=80</em>, <em>proto='HTTP'</em>, <em>cache=True</em><big>)</big><a class="headerlink" href="#golismero.api.net.protocol.Web.get_raw" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method allow you to make raw connections to a host.</p>
-<p>You need to provide the data that you want to send to the server. You&#8217;re the responsible to manage the
+<p>You must to provide the data that you want to send to the server. You&#8217;re the responsible to manage the
 data that will be send to the server.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This method only returns the HTTP response headers, <strong>NOT THE CONTENT</strong>.</p>
+</div>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.net.protocol</span> <span class="kn">import</span> <span class="n">Web</span><span class="p">,</span> <span class="n">NetworkAPI</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">request</span> <span class="o">=</span> <span class="s">&quot;GET / HTTP/1.1</span><span class="se">\r\n</span><span class="s">Host: www.mysite.com</span><span class="se">\r\n\r\n</span><span class="s">&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">NetworkAPI</span><span class="o">.</span><span class="n">get_connection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">get_raw</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span><span class="o">.</span><span class="n">http_headers_raw</span>
+<span class="go">HTTP/1.0 200 OK</span>
+<span class="go">Date: Wed, 29 May 2013 18:44:54 GMT</span>
+<span class="go">Server: Apache 2.2</span>
+<span class="go">Content-Type: text/html; charset=utf-8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span><span class="o">.</span><span class="n">lines_count</span>
+<span class="go">4</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>timeout</strong> (<em>int</em>) &#8211; timeout in seconds.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict as format: {&#8216;protocol&#8217; : &#8220;HTTP&#8221;, &#8220;version&#8221;: &#8220;x.x&#8221;, &#8220;statuscode&#8221;: &#8220;XXX&#8221;, &#8220;statustext&#8221;: &#8220;XXXXX&#8221;, &#8216;headers&#8217;: Message()}</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">HTTPResponse instance or None if any error or URL out of scope.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">HTTPResponse</td>
 </tr>
 </tbody>
 </table>
@@ -826,8 +765,16 @@ any major browser.</li>
 <dl class="function">
 <dt id="golismero.api.net.web_utils.is_method_allowed">
 <tt class="descclassname">golismero.api.net.web_utils.</tt><tt class="descname">is_method_allowed</tt><big>(</big><em>method</em>, <em>url</em>, <em>network_conn</em><big>)</big><a class="headerlink" href="#golismero.api.net.web_utils.is_method_allowed" title="Permalink to this definition">¶</a></dt>
-<dd><p>Checks if method is allowed for this url.</p>
+<dd><p>Checks if method as parameter is allowed for this url.</p>
 <p>if method is supported return True. False otherwise.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.net.web_utils</span> <span class="kn">import</span> <span class="n">is_method_allowed</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_method_allowed</span><span class="p">(</span><span class="s">&quot;GET&quot;</span><span class="p">,</span> <span class="s">&quot;www.site.com&quot;</span><span class="p">,</span> <span class="n">connection_object</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_method_allowed</span><span class="p">(</span><span class="s">&quot;OPTIONS&quot;</span><span class="p">,</span> <span class="s">&quot;www.site.com&quot;</span><span class="p">,</span> <span class="n">connection_object</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -852,11 +799,27 @@ any major browser.</li>
 <dl class="function">
 <dt id="golismero.api.net.web_utils.fix_url">
 <tt class="descclassname">golismero.api.net.web_utils.</tt><tt class="descname">fix_url</tt><big>(</big><em>url</em>, <em>base_url=None</em><big>)</big><a class="headerlink" href="#golismero.api.net.web_utils.fix_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fix selected URL adding neccesary info to be complete URL, like:
-www.site.com -&gt; <a class="reference external" href="http://www.site.com/">http://www.site.com/</a></p>
-<p>If base_url is provided, then a canonized and fixed url will return:
-in  -&gt; (url=/contact, base_url=www.site.com)
-out -&gt; <a class="reference external" href="http://www.site.com/contact">http://www.site.com/contact</a></p>
+<dd><p>Fix selected URL adding neccesary info to be complete URL, like:</p>
+<ul class="simple">
+<li>www.site.com -&gt; <a class="reference external" href="http://www.site.com/">http://www.site.com/</a></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.net.web_utils</span> <span class="kn">import</span> <span class="n">fix_url</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fix_url</span><span class="p">(</span><span class="s">&quot;www.site.com&quot;</span><span class="p">)</span>
+<span class="go">http://www.site.com</span>
+</pre></div>
+</div>
+<p>If base_url is provided, then a canonized and fixed url will return:</p>
+<ul class="simple">
+<li>in  -&gt; (url=/contact, base_url=www.site.com)</li>
+<li>out -&gt; <a class="reference external" href="http://www.site.com/contact">http://www.site.com/contact</a></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.net.web_utils</span> <span class="kn">import</span> <span class="n">fix_url</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fix_url</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s">&quot;/contact&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="s">&quot;www.site.com&quot;</span><span class="p">)</span>
+<span class="go">http://www.site.com/contact</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -902,7 +865,12 @@ out -&gt; <a class="reference external" href="http://www.site.com/contact">http:
 <dl class="function">
 <dt id="golismero.api.net.web_utils.get_auth_obj">
 <tt class="descclassname">golismero.api.net.web_utils.</tt><tt class="descname">get_auth_obj</tt><big>(</big><em>method</em>, <em>user</em>, <em>password</em><big>)</big><a class="headerlink" href="#golismero.api.net.web_utils.get_auth_obj" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates an authentication code</p>
+<dd><p>Generates an authentication code object depending of method as parameter:</p>
+<ul class="simple">
+<li>&#8220;basic&#8221;</li>
+<li>&#8220;digest&#8221;</li>
+<li>&#8220;ntlm&#8221;</li>
+</ul>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -924,7 +892,7 @@ out -&gt; <a class="reference external" href="http://www.site.com/contact">http:
 <dl class="function">
 <dt id="golismero.api.net.web_utils.detect_auth_method">
 <tt class="descclassname">golismero.api.net.web_utils.</tt><tt class="descname">detect_auth_method</tt><big>(</big><em>url</em><big>)</big><a class="headerlink" href="#golismero.api.net.web_utils.detect_auth_method" title="Permalink to this definition">¶</a></dt>
-<dd><p>Detects authentication method.</p>
+<dd><p>Detects authentication method/type for an URL.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -941,6 +909,14 @@ out -&gt; <a class="reference external" href="http://www.site.com/contact">http:
 <dt id="golismero.api.net.web_utils.is_in_scope">
 <tt class="descclassname">golismero.api.net.web_utils.</tt><tt class="descname">is_in_scope</tt><big>(</big><em>url</em><big>)</big><a class="headerlink" href="#golismero.api.net.web_utils.is_in_scope" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks if an URL is ins scope of an audit</p>
+<p>Example:</p>
+<p>If you&#8217;re auditing the site: www.mysite.com:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.web_utils</span> <span class="kn">import</span> <span class="n">is_in_scope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">url_to_check</span><span class="o">=</span><span class="s">&quot;www.other_site.com&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_in_scope</span><span class="p">(</span><span class="n">url_to_check</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -957,7 +933,13 @@ out -&gt; <a class="reference external" href="http://www.site.com/contact">http:
 <dt id="golismero.api.net.web_utils.generate_error_page_url">
 <tt class="descclassname">golismero.api.net.web_utils.</tt><tt class="descname">generate_error_page_url</tt><big>(</big><em>url</em><big>)</big><a class="headerlink" href="#golismero.api.net.web_utils.generate_error_page_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a random error page for selected URL:</p>
-<p><a class="reference external" href="http://www.site.com/index.php">http://www.site.com/index.php</a> -&gt; <a class="reference external" href="http://www.site.com/index.php.19ds_8vjX">http://www.site.com/index.php.19ds_8vjX</a></p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.web_utils</span> <span class="kn">import</span> <span class="n">generate_error_page_url</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">original_url</span> <span class="o">=</span> <span class="s">&quot;http://www.site.com/index.php&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_error_page_url</span><span class="p">(</span><span class="n">original_url</span><span class="p">)</span>
+<span class="go">&#39;http://www.site.com/index.php.19ds_8vjX&#39;</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1013,6 +995,26 @@ string could not be parsed as standard key/value pairs.</p>
 equivalent URL, if the URL that was parsed originally had
 unnecessary delimiters (for example, a ? with an empty query;
 the RFC states that these are equivalent).</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.web_utils</span> <span class="kn">import</span> <span class="n">DecomposedURL</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">url</span><span class="o">=</span><span class="s">&quot;http://user:pass@www.site.com/folder/index.php?param1=val1&amp;b#anchor&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">DecomposedURL</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">scheme</span>
+<span class="go">&#39;http&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">filename</span>
+<span class="go">&#39;index.php&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">hostname</span>
+<span class="go">&#39;www.site.com&#39;</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The url, request_uri, query, netloc and auth properties are URL-encoded. All other properties are URL-decoded.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Unicode is currently NOT supported.</p>
+</div>
 <dl class="method">
 <dt id="golismero.api.net.web_utils.DecomposedURL.copy">
 <tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#golismero.api.net.web_utils.DecomposedURL.copy" title="Permalink to this definition">¶</a></dt>
@@ -1136,7 +1138,6 @@ the RFC states that these are equivalent).</p>
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Networking API</a><ul>
-<li><a class="reference internal" href="#module-golismero.api.net.cache">Cache</a></li>
 <li><a class="reference internal" href="#module-golismero.api.net.http">HTTP</a></li>
 <li><a class="reference internal" href="#module-golismero.api.net.protocol">Protocol</a></li>
 <li><a class="reference internal" href="#module-golismero.api.net.scraper">scrapper</a></li>

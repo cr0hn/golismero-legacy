@@ -53,14 +53,16 @@ from select import select
 #------------------------------------------------------------------------------
 class NetworkException(Exception):
     """
-    Exception for net connections
+    General exception for net connections
     """
     pass
 
 #------------------------------------------------------------------------------
 class NetworkOutOfScope(Exception):
     """
-    Exception for net connections
+    Exception for net connections.
+
+    This exception means that an Url is out of audit scope.
     """
     pass
 
@@ -200,6 +202,10 @@ class Protocol (object):
 class Web (Protocol):
     """
     Web protocols handler (HTTP, HTTPS).
+
+    This class allow you to do HTTP/HTTPS requests with some different methods, providing a way to
+    interact with the 'Web' protocol easily.
+
     """
 
 
@@ -221,12 +227,46 @@ class Web (Protocol):
 
     #----------------------------------------------------------------------
     def close(self):
+        """
+        Close an active connection.
+
+        .. warning::
+            This method has not the same objective than in sockets libraries. **Do not call this method manually**.
+
+        """
         self.__http_pool_manager.clear()
 
 
     #----------------------------------------------------------------------
     def get_custom(self, request, timeout = 5):
-        """Get an HTTP response from a custom HTTP Request object.
+        """
+        Get an HTTP response from a custom HTTP Request object.
+
+        The HTTP Request object can be customized to do advanced requests.
+
+        .. note::
+           For more info about HTTP Request objects you can read :py:class:`HTTP_Request`
+
+        .. note::
+           You should use this method **only if you want advanced resquest**.
+
+
+        Example:
+
+        >>> from golismero.api.net.protocol import Web, NetworkAPI
+        >>> from golismero.api.net.http import HTTP_Request
+        >>> con = NetworkAPI.get_connection()
+        >>> resquest = HTTP_Request("www.mysite.com")
+        >>> request.accept = "application/x-javascript"
+        >>> request.post_data = dict('param1' : 'value1', 'param2' : 'value2')
+        >>> requeat.add_file_from_file("PATH_TO_MY_FILE")
+        >>> response = con.get_custom(request)
+        >>> response.http_headers_raw
+        HTTP/1.0 200 OK
+        Date: Wed, 29 May 2013 18:44:54 GMT
+        Server: Apache 2.2
+        Content-Type: text/html; charset=utf-8
+
 
         :param request: An HTTP request object.
         :type request: HTTP_request
@@ -235,6 +275,11 @@ class Web (Protocol):
         :type timeout: int
 
         :returns: HTTP_Response -- HTTP response object | None
+
+        :returns: HTTPResponse instance or None if any error or URL out of scope.
+
+        :raises: TypeError, NetworkOutOfScope
+
         """
         if not isinstance(request, HTTP_Request):
             raise TypeError("Expected HTTP_Request, got %s instead" % type(URL))
@@ -324,7 +369,37 @@ class Web (Protocol):
     #----------------------------------------------------------------------
     def get(self, URL, method = "GET", timeout = 5, post_data = None, follow_redirect = None, cache = True):
         """
-        Get response for an input URL.
+        Get response for an input URL. The URL parameter can be a string or an URL instance.
+
+        .. note::
+           You should use this method for normal or habitual requests.
+
+
+        Example with string:
+
+        >>> from golismero.api.net.protocol import Web, NetworkAPI
+        >>> con = NetworkAPI.get_connection()
+        >>> response = con.get("www.mysite.com", timeout=2, follow_redirect=True)
+        >>> response.http_headers_raw
+        HTTP/1.0 200 OK
+        Date: Wed, 29 May 2013 18:44:54 GMT
+        Server: Apache 2.2
+        Content-Type: text/html; charset=utf-8
+        >>> response.lines_count
+        4
+
+        Example with Url instance:
+
+        >>> from golismero.api.net.protocol import Web, NetworkAPI
+        >>> from golismero.api.data.resource.url import Url
+        >>> con = NetworkAPI.get_connection()
+        >>> u = Url("www.mysite.com")
+        >>> response = con.get(u)
+        >>> response.request_time
+        0.2
+        >>> response.content_type
+        "text/html"
+
 
         :param URL: string with URL or Url instance
         :type URL: str or Url
@@ -340,7 +415,7 @@ class Web (Protocol):
 
         :returns: HTTPResponse instance or None if any error or URL out of scope.
 
-        :raises: TypeError
+        :raises: AttributeError, ValueError, TypeError, NetworkOutOfScope
         """
 
 
@@ -389,13 +464,31 @@ class Web (Protocol):
         """
         This method allow you to make raw connections to a host.
 
-        You need to provide the data that you want to send to the server. You're the responsible to manage the
+        You must to provide the data that you want to send to the server. You're the responsible to manage the
         data that will be send to the server.
+
+        .. warning::
+           This method only returns the HTTP response headers, **NOT THE CONTENT**.
+
+        Example:
+
+        >>> from golismero.api.net.protocol import Web, NetworkAPI
+        >>> request = "GET / HTTP/1.1\\r\\nHost: www.mysite.com\\r\\n\\r\\n\"
+        >>> con = NetworkAPI.get_connection()
+        >>> response = con.get_raw(request)
+        >>> response.http_headers_raw
+        HTTP/1.0 200 OK
+        Date: Wed, 29 May 2013 18:44:54 GMT
+        Server: Apache 2.2
+        Content-Type: text/html; charset=utf-8
+        >>> response.lines_count
+        4
 
         :param timeout: timeout in seconds.
         :type timeout: int
 
-        :return: dict as format: {'protocol' : "HTTP", "version": "x.x", "statuscode": "XXX", "statustext": "XXXXX", 'headers': Message()}
+        :return: HTTPResponse instance or None if any error or URL out of scope.
+        :rtype: HTTPResponse
 
         """
 
