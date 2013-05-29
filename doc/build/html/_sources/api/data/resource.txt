@@ -1,0 +1,2 @@
+Details for resource types
+=============================

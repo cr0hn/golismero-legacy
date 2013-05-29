@@ -36,6 +36,10 @@ from ..common import Singleton
 
 class _Config (Singleton):
     """
+    .. warning::
+       DO NOT USE THIS CLASS DIRECTLY. USE **Config** VAR INSTEAD.
+
+
     Current plugin configuration.
 
     Whenever a plugin accesses this object it will receive its own
@@ -44,54 +48,63 @@ class _Config (Singleton):
 
     @property
     def audit_name(self):
-        "str -- Name of the audit."
+        """str -- Name of the audit."""
         return self.__context.audit_name
 
     @property
     def audit_config(self):
-        "AuditConfig -- Parameters of the audit."
+        """AuditConfig -- Parameters of the audit."""
         return self.__context.audit_config
 
     @property
     def plugin_info(self):
-        "PluginInfo -- Plugin information."
+        """PluginInfo -- Plugin information."""
         return self.__context.plugin_info
 
     @property
     def plugin_name(self):
-        "str -- Plugin name."
+        """str -- Plugin name."""
         return self.plugin_info.plugin_name
 
     @property
     def plugin_module(self):
-        "str -- Module where the plugin was loaded from."
+        """str -- Module where the plugin was loaded from."""
         return self.plugin_info.plugin_module
 
     @property
     def plugin_class(self):
-        "str -- Class name of the plugin."
+        """str -- Class name of the plugin."""
         return self.plugin_info.plugin_class
 
     @property
     def plugin_config(self):
-        "dict(str -> str) -- Plugin configuration."
+        """dict(str -> str) -- Plugin configuration."""
         return self.plugin_info.plugin_config
 
     @property
     def plugin_extra_config(self):
-        "dict(dict(str -> str)) -- Plugin extra configuration."
+        """
+        dict(dict(str -> str)) -- Plugin extra configuration.
+
+        All information, in plugin configuration file, that are not the tags:
+
+        * [Core]
+        * [Documentation]
+
+        Will be stored at this dict.
+        """
         return self.plugin_info.plugin_extra_config
 
     # The following properties may only be used internally.
 
     @property
     def _context(self):
-        ":returns: PluginContext"
+        """:returns: PluginContext"""
         return self.__context
 
     @_context.setter
     def _context(self, context):
-        ":type context: PluginContext"
+        """:type context: PluginContext"""
         # TODO: check the call stack to make sure it's called only
         #       from pre-approved places.
         self.__context = context
@@ -102,4 +115,14 @@ Public var to access to configuration system.
 
 .. warning::
    You must use this var to access to the configuration params of _Config Class
+
+
+To access to the Configuration system, you can do:
+
+Example:
+
+    >>> from golismero.api.config import Config
+    >>> Config.plugin_name
+    'my_plugin_name'
+
 """

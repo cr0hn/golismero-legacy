@@ -1,0 +1,531 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Details for information types &mdash; GoLismero 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="GoLismero 2.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Data API" href="../data.html" />
+    <link rel="next" title="Details for resource types" href="resource.html" />
+    <link rel="prev" title="Data API" href="../data.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="resource.html" title="Details for resource types"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../data.html" title="Data API"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../api.html" >API</a> &raquo;</li>
+          <li><a href="../data.html" accesskey="U">Data API</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-golismero.api.data.information.text">
+<span id="details-for-information-types"></span><h1>Details for information types<a class="headerlink" href="#module-golismero.api.data.information.text" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="golismero.api.data.information.text.Text">
+<em class="property">class </em><tt class="descclassname">golismero.api.data.information.text.</tt><tt class="descname">Text</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.text.Text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../data.html#golismero.api.data.information.Information" title="golismero.api.data.information.Information"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.information.Information</span></tt></a></p>
+<p>Plain text data.</p>
+<dl class="method">
+<dt id="golismero.api.data.information.text.Text.add_link">
+<tt class="descname">add_link</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.text.Text.add_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Link two Data instances together.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> (<em>Data</em>) &#8211; Another instance of Data.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.information.text.Text.add_resource">
+<tt class="descname">add_resource</tt><big>(</big><em>res</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.text.Text.add_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add resource elements associated to an information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>res</strong> (<em>Resource</em>) &#8211; Resource element.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.information.text.Text.add_vulnerability">
+<tt class="descname">add_vulnerability</tt><big>(</big><em>vuln</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.text.Text.add_vulnerability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add vulnerability elements associated to an information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>info</strong> (<em>Vulnerability</em>) &#8211; Vulnerability element.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.text.Text.associated_resources">
+<tt class="descname">associated_resources</tt><a class="headerlink" href="#golismero.api.data.information.text.Text.associated_resources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list with resources associated to this information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List with resources.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.text.Text.associated_vulnerabilities">
+<tt class="descname">associated_vulnerabilities</tt><a class="headerlink" href="#golismero.api.data.information.text.Text.associated_vulnerabilities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list with vulnerabilities associated to this information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List with vulnerabilities.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.text.Text.discovered_resources">
+<tt class="descname">discovered_resources</tt><a class="headerlink" href="#golismero.api.data.information.text.Text.discovered_resources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list with the new resources discovered.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List with resources.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(Resource)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.information.text.Text.get_linked_data">
+<tt class="descname">get_linked_data</tt><big>(</big><em>data_type=None</em>, <em>data_subtype=None</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.text.Text.get_linked_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the linked Data objects of the given data type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data_type</strong> (<em>int</em>) &#8211; Optional data type. One of the Data.TYPE_* values.</li>
+<li><strong>data_subtype</strong> (<em>int | str</em>) &#8211; Optional data subtype.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">set(Data) &#8211; Set of Data objects.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises ValueError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first last">Invalid data_type argument.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.information.text.Text.get_links">
+<tt class="descname">get_links</tt><big>(</big><em>data_type=None</em>, <em>data_subtype=None</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.text.Text.get_links" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the linked Data identities of the given data type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data_type</strong> (<em>int</em>) &#8211; Optional data type. One of the Data.TYPE_* values.</li>
+<li><strong>data_subtype</strong> (<em>int | str</em>) &#8211; Optional data subtype.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">set(str) &#8211; Set of identities.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises ValueError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first last">Invalid data_type argument.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.text.Text.identity">
+<tt class="descname">identity</tt><a class="headerlink" href="#golismero.api.data.information.text.Text.identity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the identity hash of this object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.text.Text.linked_data">
+<tt class="descname">linked_data</tt><a class="headerlink" href="#golismero.api.data.information.text.Text.linked_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>set(str) &#8211; Set of linked Data identities.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.text.Text.links">
+<tt class="descname">links</tt><a class="headerlink" href="#golismero.api.data.information.text.Text.links" title="Permalink to this definition">¶</a></dt>
+<dd><p>set(str) &#8211; Set of linked Data identities.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.information.text.Text.merge">
+<tt class="descname">merge</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.text.Text.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge another data object with this one.</p>
+<p>This is the old data, and the other object is the new data.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.text.Text.raw_data">
+<tt class="descname">raw_data</tt><a class="headerlink" href="#golismero.api.data.information.text.Text.raw_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plain text data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.information.text.Text.reverse_merge">
+<tt class="descname">reverse_merge</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.text.Text.reverse_merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reverse merge another data object with this one.</p>
+<p>This is the new data, and the other object is the old data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.information.text.Text.validate_link_minimums">
+<tt class="descname">validate_link_minimums</tt><big>(</big><big>)</big><a class="headerlink" href="#golismero.api.data.information.text.Text.validate_link_minimums" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates the link minimum constraints. Raises an exception if not met.</p>
+<p>Note: The maximums are already checked when creating the links.</p>
+<p>This method is called after plugins return the data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises ValueError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">The minimum link constraints are not met.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-golismero.api.data.information.binary"></span><dl class="class">
+<dt id="golismero.api.data.information.binary.Binary">
+<em class="property">class </em><tt class="descclassname">golismero.api.data.information.binary.</tt><tt class="descname">Binary</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.binary.Binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../data.html#golismero.api.data.information.Information" title="golismero.api.data.information.Information"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.information.Information</span></tt></a></p>
+<p>Binary data.</p>
+<dl class="method">
+<dt id="golismero.api.data.information.binary.Binary.add_link">
+<tt class="descname">add_link</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.binary.Binary.add_link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Link two Data instances together.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> (<em>Data</em>) &#8211; Another instance of Data.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.information.binary.Binary.add_resource">
+<tt class="descname">add_resource</tt><big>(</big><em>res</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.binary.Binary.add_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add resource elements associated to an information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>res</strong> (<em>Resource</em>) &#8211; Resource element.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.information.binary.Binary.add_vulnerability">
+<tt class="descname">add_vulnerability</tt><big>(</big><em>vuln</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.binary.Binary.add_vulnerability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add vulnerability elements associated to an information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>info</strong> (<em>Vulnerability</em>) &#8211; Vulnerability element.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.binary.Binary.associated_resources">
+<tt class="descname">associated_resources</tt><a class="headerlink" href="#golismero.api.data.information.binary.Binary.associated_resources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list with resources associated to this information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List with resources.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.binary.Binary.associated_vulnerabilities">
+<tt class="descname">associated_vulnerabilities</tt><a class="headerlink" href="#golismero.api.data.information.binary.Binary.associated_vulnerabilities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list with vulnerabilities associated to this information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List with vulnerabilities.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.binary.Binary.discovered_resources">
+<tt class="descname">discovered_resources</tt><a class="headerlink" href="#golismero.api.data.information.binary.Binary.discovered_resources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list with the new resources discovered.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List with resources.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(Resource)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.information.binary.Binary.get_linked_data">
+<tt class="descname">get_linked_data</tt><big>(</big><em>data_type=None</em>, <em>data_subtype=None</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.binary.Binary.get_linked_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the linked Data objects of the given data type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data_type</strong> (<em>int</em>) &#8211; Optional data type. One of the Data.TYPE_* values.</li>
+<li><strong>data_subtype</strong> (<em>int | str</em>) &#8211; Optional data subtype.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">set(Data) &#8211; Set of Data objects.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises ValueError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first last">Invalid data_type argument.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.information.binary.Binary.get_links">
+<tt class="descname">get_links</tt><big>(</big><em>data_type=None</em>, <em>data_subtype=None</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.binary.Binary.get_links" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the linked Data identities of the given data type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data_type</strong> (<em>int</em>) &#8211; Optional data type. One of the Data.TYPE_* values.</li>
+<li><strong>data_subtype</strong> (<em>int | str</em>) &#8211; Optional data subtype.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">set(str) &#8211; Set of identities.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises ValueError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><p class="first last">Invalid data_type argument.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.binary.Binary.identity">
+<tt class="descname">identity</tt><a class="headerlink" href="#golismero.api.data.information.binary.Binary.identity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the identity hash of this object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.binary.Binary.linked_data">
+<tt class="descname">linked_data</tt><a class="headerlink" href="#golismero.api.data.information.binary.Binary.linked_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>set(str) &#8211; Set of linked Data identities.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.binary.Binary.links">
+<tt class="descname">links</tt><a class="headerlink" href="#golismero.api.data.information.binary.Binary.links" title="Permalink to this definition">¶</a></dt>
+<dd><p>set(str) &#8211; Set of linked Data identities.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.information.binary.Binary.merge">
+<tt class="descname">merge</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.binary.Binary.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge another data object with this one.</p>
+<p>This is the old data, and the other object is the new data.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.binary.Binary.raw_data">
+<tt class="descname">raw_data</tt><a class="headerlink" href="#golismero.api.data.information.binary.Binary.raw_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raw bytes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.information.binary.Binary.reverse_merge">
+<tt class="descname">reverse_merge</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.binary.Binary.reverse_merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reverse merge another data object with this one.</p>
+<p>This is the new data, and the other object is the old data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.information.binary.Binary.validate_link_minimums">
+<tt class="descname">validate_link_minimums</tt><big>(</big><big>)</big><a class="headerlink" href="#golismero.api.data.information.binary.Binary.validate_link_minimums" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates the link minimum constraints. Raises an exception if not met.</p>
+<p>Note: The maximums are already checked when creating the links.</p>
+<p>This method is called after plugins return the data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises ValueError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">The minimum link constraints are not met.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../data.html"
+                        title="previous chapter">Data API</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="resource.html"
+                        title="next chapter">Details for resource types</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/api/data/information.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="resource.html" title="Details for resource types"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../data.html" title="Data API"
+             >previous</a> |</li>
+        <li><a href="../../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../api.html" >API</a> &raquo;</li>
+          <li><a href="../data.html" >Data API</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, GoLismero Project.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

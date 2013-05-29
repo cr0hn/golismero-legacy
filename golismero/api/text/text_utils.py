@@ -41,6 +41,17 @@ def generate_random_string(string_length=30):
     """
     Generates a random string with length as parameter.
 
+    The key space used to generate random strings are:
+
+    * All ASCII letters (lowercase and uppercase letters).
+    * Digits from 0-9.
+
+    >>> from golismero.text.text_utils import generate_random_string
+    >>> generate_random_string(10)
+    Asi91Ujsn5
+    >>> generate_random_string(30)
+    8KNLs981jc0h1ls8b2ks01bc7slgu2
+
     :param string_length: length of string generated
     :type string_length: int
     """
@@ -60,6 +71,8 @@ def generate_random_string(string_length=30):
 #
 def split_first(s, delims):
     """
+    **This function was borrowed from the urllib3 project.**
+
     Given a string and an iterable of delimiters, split on the first found
     delimiter. Return two split parts and the matched delimiter.
 

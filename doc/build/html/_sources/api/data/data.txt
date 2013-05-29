@@ -5,9 +5,9 @@ GoLismero has 3 types os data:
 
 .. toctree::
 
-   Information structures details<data/information>
-   Resources structures details<data/resource>
-   Vulnerabilities structures details<data/vulnerabilities>
+   Information structures details<information>
+   Resources structures details<resource>
+   Vulnerabilities structures details<vulnerabilities>
 
 Each type of data respresent a particular information.
 
@@ -24,21 +24,17 @@ El formato general de los tipo de información es:
 
 .. automodule:: golismero.api.data.information
    :members:
-   :show-inheritance:
-   :inherited-members:
+
 
 Resource types
 --------------
 
 .. automodule:: golismero.api.data.resource
    :members:
-   :show-inheritance:
-   :inherited-members:
+
 
 Vulnerability types
 -------------------
 
 .. automodule:: golismero.api.data.vulnerability
    :members:
-   :show-inheritance:
-   :inherited-members:

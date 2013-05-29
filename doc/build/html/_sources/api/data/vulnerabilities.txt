@@ -1,0 +1,3 @@
+Details for vulnerability types
+===============================
+

@@ -311,6 +311,7 @@ class DecomposedURL(object):
     http://user:pass@www.site.com/folder/index.php?param1=val1&b#anchor
 
     Is broken down to the following properties:
+
     + url          = 'http://user:pass@www.site.com/folder/index.php?param1=val1&b#anchor'
     + request_uri  = '/folder/index.php?param1=val1&b#anchor'
     + scheme       = 'http'
@@ -337,7 +338,7 @@ class DecomposedURL(object):
     other relevant properties. The url and request_uri properties are
     read-only, however.
 
-    Missing properties are returned as empty strings, except for the port
+    **Missing properties are returned as empty strings**, except for the port
     and query_params properties: port is an integer from 1 to 65535 when
     found, or None when it's missing and can't be guessed; query_params is
     a dictionary that may be empty when missing, or None when the query
@@ -348,10 +349,11 @@ class DecomposedURL(object):
     unnecessary delimiters (for example, a ? with an empty query;
     the RFC states that these are equivalent).
 
-    The url, request_uri, query, netloc and auth properties are URL-encoded.
-    All other properties are URL-decoded.
+    .. warning:
+       The url, request_uri, query, netloc and auth properties are URL-encoded. All other properties are URL-decoded.
 
-    Unicode is currently NOT supported.
+    .. warning:
+       Unicode is currently NOT supported.
     """
 
     #----------------------------------------------------------------------

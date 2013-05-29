@@ -93,7 +93,7 @@ def get_matching_level(text1, text2):
 
 
 #------------------------------------------------------------------------------
-class MatchingAnalyzerElement (object):
+class MatchingAnalyzerElement(object):
 
 
     #----------------------------------------------------------------------
@@ -109,7 +109,7 @@ class MatchingAnalyzerElement (object):
 
 
 #------------------------------------------------------------------------------
-class MatchingAnalyzer (object):
+class MatchingAnalyzer(object):
     """
     Text analyzer and comparer texts.
 
@@ -146,13 +146,13 @@ class MatchingAnalyzer (object):
     def append(self, text, **kargs):
         """
         If the matching level is accepted store it and the others params in
-        **kargs.
+        \*\*kargs.
 
         :param text: text to compare.
         :type text: str
 
-        :param **kargs: undefined numbre of params.
-        :type **kargs: special param.
+        :param \*\*kargs: undefined numbre of params.
+        :type \*\*kargs: special param.
 
         :return: True if text is accepted. False otherwise.
         :retype: bool

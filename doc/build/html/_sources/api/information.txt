@@ -3,10 +3,6 @@ Details for information types
 
 .. automodule:: golismero.api.data.information.text
    :members:
-   :show-inheritance:
-   :inherited-members:
 
 .. automodule:: golismero.api.data.information.binary
    :members:
-   :show-inheritance:
-   :inherited-members:

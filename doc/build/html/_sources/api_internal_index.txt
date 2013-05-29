@@ -1,0 +1,6 @@
+API
+===
+
+.. toctree::
+   "API" <api/data>
+   "Internal" <internal>
