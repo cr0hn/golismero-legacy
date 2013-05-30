@@ -20,5 +20,5 @@ Text utils
 Wordlist utils
 --------------
 
-.. automodule:: golismero.api.text.text_utils
+.. automodule:: golismero.api.text.wordlist_api
    :members:
