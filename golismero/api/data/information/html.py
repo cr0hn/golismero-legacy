@@ -37,6 +37,57 @@ from ...net.web_utils import HTMLParser
 class HTML(Information):
     """
     HTML document.
+
+    This type contains all of relevant tags of a HTML document:
+
+    - CSS links
+    - CSS embeded
+    - Javascript links
+    - Metas
+    - Links
+    - Forms
+    - Images
+    - Title
+    - Object
+
+    Also contains a generic property for access to other tags:
+
+    - Elements
+
+    You can also access to raw HTML code.
+
+    - raw_data
+
+    .. note::
+       The HTML parser used is dinamically selected internally, depends of your installed libraries.
+
+    Use if is very simple:
+
+    >>> from golismero.api.data.information.html import HTML
+    >>> html_info=\"\"\"<html>
+    <head>
+      <title>My sample page</title>
+    </head>
+    <body>
+      <a href="http://www.mywebsitelink.com">Link 1</a>
+      <p>
+        <img src="/images/my_image.png" />
+      </p>
+    </body>
+    </html>\"\"\"
+    >>> html_parsed=HTML(html_info)
+    >>> html_parsed.links
+    [<golismero.api.net.web_utils.HTMLElement object at 0x109ca8b50>]
+    >>> html_parsed.links[0].tag_name
+    'a'
+    >>> html_parsed.links[0].tag_content
+    'Link 1'
+    >>> html_parsed.links[0].attrs
+    {'href': 'http://www.mywebsitelink.com'}
+    >>> html_parsed.images[0].tag_name
+    'img'
+    >>> html_parsed.images[0].tag_content
+    ''
     """
 
     information_type = Information.INFORMATION_HTML
@@ -60,82 +111,118 @@ class HTML(Information):
     #----------------------------------------------------------------------
     @identity
     def raw_data(self):
-        """Get raw HTML code"""
+        """
+        :return: Get raw HTML code
+        :rtype: str
+        """
         return self.__raw_data
 
 
     #----------------------------------------------------------------------
     @property
     def elements(self):
-        """All HTML elements."""
+        """
+        :return: All HTML elements as a list of HTMLElement objects
+        :rtype: list(HTMLElement)
+        """
         return HTMLParser(self.raw_data).elements
 
 
     #----------------------------------------------------------------------
     @property
     def forms(self):
-        """HTML form tags."""
+        """
+        :return: HTML form tags as a list of HTMLElement objects
+        :rtype: list(HTMLElement)
+        """
         return HTMLParser(self.raw_data).forms
 
 
     #----------------------------------------------------------------------
     @property
     def images(self):
-        """Image tags."""
+        """
+        :return: Image tags as a list of HTMLElement objects
+        :rtype: list(HTMLElement)
+        """
         return HTMLParser(self.raw_data).images
 
 
     #----------------------------------------------------------------------
     @property
     def links(self):
-        """Links."""
+        """
+        :return: Links tags as a list of HTMLElement objects
+        :rtype: list(HTMLElement)
+        """
         return HTMLParser(self.raw_data).links
 
 
     #----------------------------------------------------------------------
     @property
     def css_links(self):
-        """CSS links."""
+        """
+        :return: CSS links as a list of HTMLElement objects
+        :rtype: list(HTMLElement)
+        """
         return HTMLParser(self.raw_data).css_links
 
 
     #----------------------------------------------------------------------
     @property
     def javascript_links(self):
-        """JavaScript links."""
+        """
+        :return: JavaScript links as a list of HTMLElement objects
+        :rtype: list(HTMLElement)
+        """
         return HTMLParser(self.raw_data).javascript_links
 
 
     #----------------------------------------------------------------------
     @property
     def css_embedded(self):
-        """Embedded CSS."""
+        """
+        :return: Embedded CSS as a list of HTMLElement objects
+        :rtype: list(HTMLElement)
+        """
         return HTMLParser(self.raw_data).css_embedded
 
 
     #----------------------------------------------------------------------
     @property
     def javascript_embedded(self):
-        """Embedded JavaScript."""
+        """
+        :return: Embedded JavaScript as a list of HTMLElement objects
+        :rtype: list(HTMLElement)
+        """
         return HTMLParser(self.raw_data).javascript_embedded
 
 
     #----------------------------------------------------------------------
     @property
     def metas(self):
-        """Meta tags."""
+        """
+        :return: Meta tags as a list of HTMLElement objects
+        :rtype: list(HTMLElement)
+        """
         return HTMLParser(self.raw_data).metas
 
 
     #----------------------------------------------------------------------
     @property
     def title(self):
-        """Document title."""
+        """
+        :return: Document title as a HTMLElement object
+        :rtype: HTMLElement
+        """
         return HTMLParser(self.raw_data).title
 
 
     #----------------------------------------------------------------------
     @property
     def objects(self):
-        """Object tags."""
+        """
+        :return: Object tags as a list of HTMLElement objects
+        :rtype: list(HTMLElement)
+        """
         return HTMLParser(self.raw_data).objects

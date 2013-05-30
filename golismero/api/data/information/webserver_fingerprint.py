@@ -81,28 +81,39 @@ class WebServerFingerprint(Information):
     #----------------------------------------------------------------------
     @identity
     def name(self):
-        """Web server name."""
+        """
+        :return: Web server name.
+        :rtype: str
+        """
         return self.__name
 
 
     #----------------------------------------------------------------------
     @identity
     def version(self):
-        """Web server version."""
+        """
+        :return: Web server version.
+        :rtype: str """
         return self.__version
 
 
     #----------------------------------------------------------------------
     @identity
     def banner(self):
-        """Web server banner."""
+        """
+        :return: Web server banner.
+        :rtype: str"""
         return self.__banner
 
 
     #----------------------------------------------------------------------
     @identity
     def others(self):
-        """Other possibilities for this web server."""
+        """
+
+        :return: Dict with other possibilities for this web server. The format for this parameter is: { SERVER_NAME : PROBABILITY }
+        :rtype: dict
+        """
         return self.__others
 
 

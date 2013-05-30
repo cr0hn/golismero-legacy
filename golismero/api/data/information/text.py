@@ -59,5 +59,8 @@ class Text(Information):
     #----------------------------------------------------------------------
     @identity
     def raw_data(self):
-        """Plain text data."""
+        """
+        :return: Plain text data.
+        :rtype: str
+        """
         return self.__raw_data

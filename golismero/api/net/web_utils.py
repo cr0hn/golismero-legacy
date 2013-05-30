@@ -42,7 +42,7 @@ __all__ = [
 from ..config import Config
 from ..text.text_utils import generate_random_string, split_first
 
-from BeautifulSoup import BeautifulSoup
+#from BeautifulSoup import BeautifulSoup
 from copy import deepcopy
 from posixpath import join, splitext, split
 from repoze.lru import lru_cache
@@ -914,7 +914,43 @@ class HTMLElement (object):
 #------------------------------------------------------------------------------
 class HTMLParser(object):
     """
-    HTML parser.
+    HTML parser. It selects automatically the parser. By default, the parser used is BeautifulSoup.
+
+    HTMLParser is a transparent wrapper for the other libraries. This parser aims to simplify the logic
+    of HTML parser process.
+
+    .. warning::
+       You must use this library instead of call other libraries, like BeautifulSoup or libxml, directly for maintain the compatibility and the multiplatform.
+
+
+    Example:
+
+    >>> from golismero.api.net.web_utils import HTMLParser
+    >>> html_info=\"\"\"<html>
+    <head>
+      <title>My sample page</title>
+    </head>
+    <body>
+      <a href="http://www.mywebsitelink.com">Link 1</a>
+      <p>
+        <img src="/images/my_image.png" />
+      </p>
+    </body>
+    </html>\"\"\"
+    >>> html_parsed=HTMLParser(html_info)
+    >>> html_parsed.links
+    [<golismero.api.net.web_utils.HTMLElement object at 0x109ca8b50>]
+    >>> html_parsed.links[0].tag_name
+    'a'
+    >>> html_parsed.links[0].tag_content
+    'Link 1'
+    >>> html_parsed.links[0].attrs
+    {'href': 'http://www.mywebsitelink.com'}
+    >>> html_parsed.images[0].tag_name
+    'img'
+    >>> html_parsed.images[0].tag_content
+    ''
+
     """
 
 
@@ -989,14 +1025,20 @@ class HTMLParser(object):
     #----------------------------------------------------------------------
     @property
     def raw_data(self):
-        """Get raw HTML code"""
+        """
+        :return: Get raw HTML code
+        :rtype: str
+        """
         return self.__raw_data
 
 
     #----------------------------------------------------------------------
     @property
     def elements(self):
-        """Get all HTML elements"""
+        """
+        :return: Get all HTML elements as a list of HTMLElement objects
+        :rtype: list(HTMLElement)
+        """
         if self.__all_elements is None:
             m_result = self.__html_parser.findAll()
             self.__all_elements = self.__convert_to_HTMLElements(m_result)
@@ -1006,7 +1048,10 @@ class HTMLParser(object):
     #----------------------------------------------------------------------
     @property
     def forms(self):
-        """Get forms from HTML"""
+        """
+        :return: Get forms from HTML as a list of HTMLElement objects
+        :rtype: HTMLElement
+        """
         if self.__html_forms is None:
             m_elem = self.__html_parser.findAll("form")
             self.__html_forms = self.__convert_to_HTMLElements(m_elem)
@@ -1016,7 +1061,10 @@ class HTMLParser(object):
     #----------------------------------------------------------------------
     @property
     def images(self):
-        """Get images from HTML"""
+        """
+        :return: Get images from HTML as a list of HTMLElement objects
+        :rtype: HTMLElement
+        """
         if self.__html_images is None:
             m_elem = self.__html_parser.findAll("img")
             self.__html_images = self.__convert_to_HTMLElements(m_elem)
@@ -1026,7 +1074,10 @@ class HTMLParser(object):
     #----------------------------------------------------------------------
     @property
     def links(self):
-        """Get links from HTML"""
+        """
+        :return: Get links from HTML as a list of HTMLElement objects
+        :rtype: HTMLElement
+        """
         if self.__html_links is None:
             m_elem = self.__html_parser.findAll("a")
             self.__html_links = self.__convert_to_HTMLElements(m_elem)
@@ -1036,7 +1087,10 @@ class HTMLParser(object):
     #----------------------------------------------------------------------
     @property
     def css_links(self):
-        """Get CSS links from HTML"""
+        """
+        :return: Get CSS links from HTML as a list of HTMLElement objects
+        :rtype: HTMLElement
+        """
         if self.__html_css is None:
             m_elem = self.__html_parser.findAll(name="link", attrs={"rel":"stylesheet"})
             self.__html_css = self.__convert_to_HTMLElements(m_elem)
@@ -1046,7 +1100,10 @@ class HTMLParser(object):
     #----------------------------------------------------------------------
     @property
     def javascript_links(self):
-        """Get JavaScript links from HTML"""
+        """
+        :return: Get JavaScript links from HTML as a list of HTMLElement objects
+        :rtype: HTMLElement
+        """
         if self.__html_javascript is None:
             m_elem = self.__html_parser.findAll(name="script", attrs={"src": True})
             self.__html_javascript = self.__convert_to_HTMLElements(m_elem)
@@ -1056,7 +1113,10 @@ class HTMLParser(object):
     #----------------------------------------------------------------------
     @property
     def css_embedded(self):
-        """Get embedded CSS from HTML"""
+        """
+        :return: Get embedded CSS from HTML as a list of HTMLElement objects
+        :rtype: HTMLElement
+        """
         if self.__html_css_embedded is None:
             m_elem = self.__html_parser.findAll("style")
             self.__html_css_embedded = self.__convert_to_HTMLElements(m_elem)
@@ -1066,7 +1126,10 @@ class HTMLParser(object):
     #----------------------------------------------------------------------
     @property
     def javascript_embedded(self):
-        """Get embedded JavaScript from HTML"""
+        """
+        :return: Get embedded JavaScript from HTML as a list of HTMLElement objects
+        :rtype: HTMLElement
+        """
         if self.__html_javascript_embedded is None:
             m_elem = self.__html_parser.findAll(name="script", attrs={"src": False})
             self.__html_javascript_embedded = self.__convert_to_HTMLElements(m_elem)
@@ -1076,7 +1139,10 @@ class HTMLParser(object):
     #----------------------------------------------------------------------
     @property
     def metas(self):
-        """Get meta tags from HTML"""
+        """
+        :return: Get meta tags from HTML as a list of HTMLElement objects
+        :rtype: HTMLElement
+        """
         if self.__html_metas is None:
             m_elem = self.__html_parser.findAll(name="meta")
             self.__html_metas = self.__convert_to_HTMLElements(m_elem)
@@ -1086,7 +1152,10 @@ class HTMLParser(object):
     #----------------------------------------------------------------------
     @property
     def title(self):
-        """Get title from HTML"""
+        """
+        :return: Get title from HTML as a HTMLElement object
+        :rtype: HTMLElement
+        """
         if self.__html_title is None:
             m_elem = self.__html_parser.findAll(name="title", recursive=False, limit=1)
             self.__html_title = m_elem.name.encode("utf-8")
@@ -1096,7 +1165,9 @@ class HTMLParser(object):
     #----------------------------------------------------------------------
     @property
     def objects(self):
-        """Get object tags from HTML"""
+        """
+        :return: Get object tags from HTML as a list of HTMLElement objects
+        :rtype: HTMLElement"""
 
         if self.__html_objects is None:
             m_elem = self.__html_parser.findAll(name="object")

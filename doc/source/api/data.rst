@@ -14,31 +14,32 @@ Each type of data respresent a particular information.
 Common interfaces
 =================
 
-Cada tipo de información tiene una interfaz común, que hay a continuación:
+Each type of information has one of de follow common interface:
 
 
 Information types
 -----------------
 
-El formato general de los tipo de información es:
+The methods and params for general Information types are:
 
 .. automodule:: golismero.api.data.information
    :members:
    :show-inheritance:
-   :inherited-members:
 
 Resource types
 --------------
 
+The methods and params for general Resources types are:
+
 .. automodule:: golismero.api.data.resource
    :members:
    :show-inheritance:
-   :inherited-members:
 
 Vulnerability types
 -------------------
 
+The methods and params for general vulnerabilities types are:
+
 .. automodule:: golismero.api.data.vulnerability
    :members:
    :show-inheritance:
-   :inherited-members:
