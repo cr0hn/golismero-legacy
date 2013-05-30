@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__license__="""
+__license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
@@ -95,9 +95,8 @@ class HTML(Information):
 
     #----------------------------------------------------------------------
     def __init__(self, data):
-        """Constructor.
-
-        :param data: Raw HTML content
+        """
+        :param data: Raw HTML content.
         :type data: str
         """
 
@@ -112,7 +111,7 @@ class HTML(Information):
     @identity
     def raw_data(self):
         """
-        :return: Get raw HTML code
+        :return: Raw HTML content.
         :rtype: str
         """
         return self.__raw_data
@@ -122,7 +121,7 @@ class HTML(Information):
     @property
     def elements(self):
         """
-        :return: All HTML elements as a list of HTMLElement objects
+        :return: All HTML elements.
         :rtype: list(HTMLElement)
         """
         return HTMLParser(self.raw_data).elements
@@ -132,7 +131,7 @@ class HTML(Information):
     @property
     def forms(self):
         """
-        :return: HTML form tags as a list of HTMLElement objects
+        :return: HTML form tags.
         :rtype: list(HTMLElement)
         """
         return HTMLParser(self.raw_data).forms
@@ -142,7 +141,7 @@ class HTML(Information):
     @property
     def images(self):
         """
-        :return: Image tags as a list of HTMLElement objects
+        :return: Image tags.
         :rtype: list(HTMLElement)
         """
         return HTMLParser(self.raw_data).images
@@ -152,7 +151,7 @@ class HTML(Information):
     @property
     def links(self):
         """
-        :return: Links tags as a list of HTMLElement objects
+        :return: Links tags.
         :rtype: list(HTMLElement)
         """
         return HTMLParser(self.raw_data).links
@@ -162,7 +161,7 @@ class HTML(Information):
     @property
     def css_links(self):
         """
-        :return: CSS links as a list of HTMLElement objects
+        :return: CSS links.
         :rtype: list(HTMLElement)
         """
         return HTMLParser(self.raw_data).css_links
@@ -172,7 +171,7 @@ class HTML(Information):
     @property
     def javascript_links(self):
         """
-        :return: JavaScript links as a list of HTMLElement objects
+        :return: JavaScript links.
         :rtype: list(HTMLElement)
         """
         return HTMLParser(self.raw_data).javascript_links
@@ -182,7 +181,7 @@ class HTML(Information):
     @property
     def css_embedded(self):
         """
-        :return: Embedded CSS as a list of HTMLElement objects
+        :return: Embedded CSS.
         :rtype: list(HTMLElement)
         """
         return HTMLParser(self.raw_data).css_embedded
@@ -192,7 +191,7 @@ class HTML(Information):
     @property
     def javascript_embedded(self):
         """
-        :return: Embedded JavaScript as a list of HTMLElement objects
+        :return: Embedded JavaScript.
         :rtype: list(HTMLElement)
         """
         return HTMLParser(self.raw_data).javascript_embedded
@@ -202,7 +201,7 @@ class HTML(Information):
     @property
     def metas(self):
         """
-        :return: Meta tags as a list of HTMLElement objects
+        :return: Meta tags.
         :rtype: list(HTMLElement)
         """
         return HTMLParser(self.raw_data).metas
@@ -212,7 +211,7 @@ class HTML(Information):
     @property
     def title(self):
         """
-        :return: Document title as a HTMLElement object
+        :return: Document title.
         :rtype: HTMLElement
         """
         return HTMLParser(self.raw_data).title
@@ -222,7 +221,7 @@ class HTML(Information):
     @property
     def objects(self):
         """
-        :return: Object tags as a list of HTMLElement objects
+        :return: Object tags.
         :rtype: list(HTMLElement)
         """
         return HTMLParser(self.raw_data).objects

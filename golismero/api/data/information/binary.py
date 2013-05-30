@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__license__="""
+__license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
@@ -43,8 +43,7 @@ class Binary(Information):
 
     #----------------------------------------------------------------------
     def __init__(self, data):
-        """Constructor.
-
+        """
         :param data: Raw bytes.
         :type data: str
         """
@@ -59,5 +58,8 @@ class Binary(Information):
     #----------------------------------------------------------------------
     @identity
     def raw_data(self):
-        """Raw bytes."""
+        """
+        :returns: Raw bytes.
+        :rtype: str
+        """
         return self.__raw_data

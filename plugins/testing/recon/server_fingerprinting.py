@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__license__="""
+__license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
@@ -841,7 +841,7 @@ def ttl_platform_detection(main_url):
         else:
             return {}
     except EnvironmentError,e:
-        Logger.log_error("! You can't make the platform detection if you're not root.")
+        Logger.log_error("[!] You can't run the platform detection plugin if you're not root.")
         return {}
     except Exception, e:
         return {}

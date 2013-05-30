@@ -5,7 +5,7 @@
 # Web utilities API
 #-----------------------------------------------------------------------
 
-__license__="""
+__license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
@@ -70,13 +70,15 @@ except ImportError:
 @lru_cache(maxsize=50)
 def parse_url(url):
     """
-    .. warning:
-       This method is only a wrapper of the original urllib3 function with de particularity that the **result will be cached for improve the performance**.
-
     Given a url, return a parsed :class:`.Url` namedtuple. Best-effort is
     performed to parse incomplete urls. Fields not provided will be None.
 
     Partly backwards-compatible with :mod:`urlparse`.
+
+    .. warning:
+       Implementation detail: this function is currently only a wrapper of
+       the original urllib3.parse_url() function to store its results in a
+       cache. It may be removed in future versions of GoLismero.
 
     Example: ::
 
@@ -93,9 +95,10 @@ def parse_url(url):
 #----------------------------------------------------------------------
 def is_method_allowed(method, url, network_conn):
     """
-    Checks if method as parameter is allowed for this url.
+    Checks if the given HTTP verb is allowed for this url.
 
-    if method is supported return True. False otherwise.
+    .. warning:
+       This function may be removed in future versions of GoLismero.
 
     Example:
 
@@ -105,16 +108,16 @@ def is_method_allowed(method, url, network_conn):
     >>> is_method_allowed("OPTIONS", "www.site.com", connection_object)
     False
 
-    :param method: string with method to check
+    :param method: HTTP verb to check.
     :type method: str
 
-    :param url: URL to test methods.
+    :param url: URL to test.
     :type url: str.
 
-    :param network_conn: network connection.
+    :param network_conn: Network connection.
     :type network_conn: Protocol (Web).
 
-    :returns: bool -- True if method is allowed. False otherwise.
+    :returns: True if method is allowed, False otherwise.
     :rtype: bool
     """
     if not url or not network_conn or not method:
@@ -134,36 +137,29 @@ def is_method_allowed(method, url, network_conn):
 #----------------------------------------------------------------------
 def fix_url(url, base_url=None):
     """
-    Fix selected URL adding neccesary info to be complete URL, like:
+    Parse a URL input from a user and convert it to a canonical URL.
 
-    * www.site.com -> http://www.site.com/
+    Relative URLs are converted to absolute URLs if the base URL is given.
+
+    .. warning:
+       This function may be removed in future versions of GoLismero.
 
     Example:
 
     >>> from golismero.net.web_utils import fix_url
     >>> fix_url("www.site.com")
     http://www.site.com
-
-    If base_url is provided, then a canonized and fixed url will return:
-
-    * in  -> (url=/contact, base_url=www.site.com)
-    * out -> http://www.site.com/contact
-
-    Example:
-
-    >>> from golismero.net.web_utils import fix_url
     >>> fix_url(url="/contact", base_url="www.site.com")
     http://www.site.com/contact
 
     :param url: URL
     :type url: str
 
-    :param base_url: base url for canonize process.
+    :param base_url: (Optional) Base URL.
     :type base_url: str
 
-    :return: fixed and canonized url.
+    :return: Canonical URL.
     :rtype: str
-
     """
     parsed = DecomposedURL(url)
     if not parsed.scheme:
@@ -183,6 +179,9 @@ def check_auth(url, user, password):
     """
     Check the auth for and specified url.
 
+    .. warning:
+       This function may be removed in future versions of GoLismero.
+
     :param url: String with url.
     :type url: str
 
@@ -192,7 +191,8 @@ def check_auth(url, user, password):
     :param password: string with password text
     :type password: str
 
-    :return: True if authentication is successful. False otherwise.
+    :return: True if authentication is successful, False otherwise.
+    :rtype: bool
     """
     if not url:
         return False
@@ -226,6 +226,9 @@ def get_auth_obj(method, user, password):
     * "digest"
     * "ntlm"
 
+    .. warning:
+       This function may be removed in future versions of GoLismero.
+
     :param method: Auth method: basic, digest, ntlm.
     :type method: str
 
@@ -257,6 +260,9 @@ def detect_auth_method(url):
     """
     Detects authentication method/type for an URL.
 
+    .. warning:
+       This function may be removed in future versions of GoLismero.
+
     :param url: url to test authentication.
     :type url: str.
 
@@ -286,14 +292,15 @@ def detect_auth_method(url):
 # No matter what PyLint says, don't remove it!
 def get_audit_scope(audit_name):
     """
-    Gets the scope for the audit that are executing. In practice, get all of hosts included to scan.
+    Get the domain names within the scope of the current audit.
 
-    **For improve the performance, all the check are cached**
+    .. warning:
+       This function may be removed in future versions of GoLismero.
 
     :param audit_name: Name of the current audit.
     :type audit_name: str
 
-    :return: Domain names we're allowed to connect to.
+    :return: Domains we're allowed to connect to.
     :rtype: set(str)
     """
     return {parse_url(x).hostname.lower() for x in Config.audit_config.targets}
@@ -302,28 +309,32 @@ def get_audit_scope(audit_name):
 #----------------------------------------------------------------------
 def is_in_scope(url):
     """
-    Checks if an URL is ins scope of an audit
+    Checks if an URL is in scope for the current audit.
 
-    Example:
+    .. warning:
+       This function may be removed in future versions of GoLismero.
 
-    If you're auditing the site: www.mysite.com:
+    For example, if you're auditing the site www.mysite.com:
 
     >>> from golismero.api.web_utils import is_in_scope
-    >>> url_to_check="www.other_site.com"
-    >>> is_in_scope(url_to_check)
+    >>> is_in_scope("www.mysite.com")
+    True
+    >>> is_in_scope("www.another_site.com")
     False
 
-    :param url: string with url to check.
+    :param url: URL to check.
     :type url: str
 
-    :returns: bool -- True if is in scope. False otherwise.
+    :returns: True if the URL is in scope, False otherwise.
+    :rtype: bool
     """
 
     # Trivial case.
     if not url:
         return False
 
-    # Use parse_url instead of DecomposedURL because it's faster and good enough for this.
+    # Use parse_url instead of DecomposedURL because
+    # it's faster and good enough for this.
     try:
         p_url = parse_url(url)
     except Exception, e:
@@ -346,19 +357,19 @@ def is_in_scope(url):
 #----------------------------------------------------------------------
 def generate_error_page_url(url):
     """
-    Generates a random error page for selected URL:
+    Takes an URL to an existing document and generates a random URL
+    to a nonexisting document, to trigger a server error.
 
     Example:
 
     >>> from golismero.api.web_utils import generate_error_page_url
-    >>> original_url = "http://www.site.com/index.php"
-    >>> generate_error_page_url(original_url)
+    >>> generate_error_page_url("http://www.site.com/index.php")
     'http://www.site.com/index.php.19ds_8vjX'
 
-    :param url: original URL
+    :param url: Original URL. It must point to an existing document.
     :type  url: str
 
-    :return: error page generated.
+    :return: Generated URL.
     :rtype: str
     """
     m_parsed_url = DecomposedURL(url)
@@ -426,12 +437,12 @@ class DecomposedURL(object):
     >>> r.hostname
     'www.site.com'
 
+    .. warning::
+       The url, request_uri, query, netloc and auth properties are URL-encoded.
+       All other properties are URL-decoded.
 
     .. warning::
-       The url, request_uri, query, netloc and auth properties are URL-encoded. All other properties are URL-decoded.
-
-    .. warning::
-       Unicode is currently NOT supported.
+       Unicode is currently *NOT* supported.
     """
 
     #----------------------------------------------------------------------
@@ -590,32 +601,30 @@ class DecomposedURL(object):
     #----------------------------------------------------------------------
     def copy(self):
         """
-        :returns: DecomposedURL -- A copy of this object.
+        :returns: A copy of this object.
+        :rtype: DecomposedURL
         """
         return deepcopy(self)
 
 
     #----------------------------------------------------------------------
     def to_urlsplit(self):
-        """
-        Convert to a tuple that can be passed to urlparse.urlunstrip().
-        """
+        # Do not document the return type below!
+        "Convert to a tuple that can be passed to urlparse.urlunstrip()."
         return (self.__scheme, self.netloc, self.__path, self.query, self.__fragment)
 
 
     #----------------------------------------------------------------------
     def to_urlparse(self):
-        """
-        Convert to a tuple that can be passed to urlparse.urlunparse().
-        """
+        # Do not document the return type below!
+        "Convert to a tuple that can be passed to urlparse.urlunparse()."
         return (self.__scheme, self.netloc, self.__path, None, self.query, self.__fragment)
 
 
     #----------------------------------------------------------------------
     def to_urllib3(self):
-        """
-        Convert to a named tuple as returned by urllib3.parse_url().
-        """
+        # Do not document the return type below!
+        "Convert to a named tuple as returned by urllib3.parse_url()."
         return Urllib3_Url(self.__scheme, self.auth, self.__host, self.port,
                            self.__path, self.query, self.__fragment)
 
@@ -872,12 +881,13 @@ class HTMLElement (object):
     #----------------------------------------------------------------------
     def __init__(self, tag_name, attrs, content):
         """
-        Constructor.
+        :param tag_name: HTML tag name.
+        :type tag_name: str
 
-        :param attr: dict with parameters of HTML element.
-        :type attr: dict
+        :param attr: HTML tag attributes.
+        :type attr: dict(str -> str)
 
-        :param content: raw HTML with sub elements of this HTML element
+        :param content: Raw HTML.
         :type content: str
         """
         self.__tag_name = tag_name
@@ -887,26 +897,35 @@ class HTMLElement (object):
 
     #----------------------------------------------------------------------
     def __str__(self):
-        """"""
         return "%s:%s" % (self.__tag_name, str(self.__attrs))
 
-    #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
     @property
     def tag_name(self):
-        """Name of HTML tag."""
+        """
+        :returns: HTML tag name.
+        :rtype: str
+        """
         return self.__tag_name
 
+
+    #----------------------------------------------------------------------
     @property
     def attrs(self):
-        """Attributes of HTML tag."""
+        """
+        :returns: HTML tag attributes.
+        :rtype: dict(str -> str)
+        """
         return self.__attrs
 
+
+    #----------------------------------------------------------------------
     @property
     def content(self):
-        """Returns an HTML object nested into this HTML element.
-
-        :returns: an HTML object
+        """
+        :returns: Raw HTML.
+        :rtype: str
         """
         return self.__content
 
@@ -914,19 +933,19 @@ class HTMLElement (object):
 #------------------------------------------------------------------------------
 class HTMLParser(object):
     """
-    HTML parser. It selects automatically the parser. By default, the parser used is BeautifulSoup.
+    HTML parser.
 
-    HTMLParser is a transparent wrapper for the other libraries. This parser aims to simplify the logic
-    of HTML parser process.
+    HTMLParser is a transparent wrapper for the other libraries.
+    This parser aims to simplify the logic of HTML parsing.
 
     .. warning::
-       You must use this library instead of call other libraries, like BeautifulSoup or libxml, directly for maintain the compatibility and the multiplatform.
-
+       You should use this function instead of calling other libraries to ensure
+       your plugin remains compatible with future versions of GoLismero.
 
     Example:
 
     >>> from golismero.api.net.web_utils import HTMLParser
-    >>> html_info=\"\"\"<html>
+    >>> html_info = \"\"\"<html>
     <head>
       <title>My sample page</title>
     </head>
@@ -937,7 +956,7 @@ class HTMLParser(object):
       </p>
     </body>
     </html>\"\"\"
-    >>> html_parsed=HTMLParser(html_info)
+    >>> html_parsed = HTMLParser(html_info)
     >>> html_parsed.links
     [<golismero.api.net.web_utils.HTMLElement object at 0x109ca8b50>]
     >>> html_parsed.links[0].tag_name
@@ -950,15 +969,13 @@ class HTMLParser(object):
     'img'
     >>> html_parsed.images[0].tag_content
     ''
-
     """
 
 
     #----------------------------------------------------------------------
     def __init__(self, data):
-        """Constructor.
-
-        :param data: raw HTML content
+        """
+        :param data: Raw HTML content.
         :type data: str
         """
 

@@ -5,7 +5,7 @@
 # Base classes for plugins
 #-----------------------------------------------------------------------
 
-__license__="""
+__license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:

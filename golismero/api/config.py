@@ -5,7 +5,7 @@
 # Plugin configuration API
 #-----------------------------------------------------------------------
 
-__license__="""
+__license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
@@ -30,68 +30,114 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__doc__ = """
+Global variable to access the current plugin and audit configuration.
+
+Whenever a plugin accesses this object it will receive its own
+configuration, including the current audit's name and settings.
+
+Example:
+
+    >>> from golismero.api.config import Config
+    >>> Config.plugin_name
+    'my_plugin_name'
+"""
+
 __all__ = ["Config"]
 
 from ..common import Singleton
 
 class _Config (Singleton):
     """
-    .. warning::
-       DO NOT USE THIS CLASS DIRECTLY. USE **Config** VAR INSTEAD.
-
-
-    Current plugin configuration.
+    Current plugin and audit configuration.
 
     Whenever a plugin accesses this object it will receive its own
     configuration, including the current audit's name and settings.
     """
 
+    # The constructor tries to prevent the user
+    # from instancing this class directly.
+    def __init__(self):
+        try:
+            Config
+            raise NotImplementedError("Use Config instead!")
+        except NameError:
+            pass
+
     @property
     def audit_name(self):
-        """str -- Name of the audit."""
+        """
+        :returns: Name of the audit.
+        :rtype: str
+        """
         return self.__context.audit_name
 
     @property
     def audit_config(self):
-        """AuditConfig -- Parameters of the audit."""
+        """
+        :returns: Parameters of the audit.
+        :rtype: AuditConfig
+        """
         return self.__context.audit_config
 
     @property
     def plugin_info(self):
-        """PluginInfo -- Plugin information."""
+        """
+        :returns: Plugin information.
+        :rtype: PluginInfo
+        """
         return self.__context.plugin_info
 
     @property
     def plugin_name(self):
-        """str -- Plugin name."""
+        """
+        :returns: Plugin name.
+        :rtype: str
+        """
         return self.plugin_info.plugin_name
 
     @property
     def plugin_module(self):
-        """str -- Module where the plugin was loaded from."""
+        """
+        :returns: Module where the plugin was loaded from.
+        :rtype: str
+        """
         return self.plugin_info.plugin_module
 
     @property
     def plugin_class(self):
-        """str -- Class name of the plugin."""
+        """
+        :returns: Class name of the plugin.
+        :rtype: str
+        """
         return self.plugin_info.plugin_class
 
     @property
     def plugin_config(self):
-        """dict(str -> str) -- Plugin configuration."""
+        """
+        Plugin configuration.
+
+        Here you will find all settings under the [Configuration]
+        section in the plugin configuration file.
+
+        :returns:
+        :rtype: dict(str -> str)
+        """
         return self.plugin_info.plugin_config
 
     @property
     def plugin_extra_config(self):
         """
-        dict(dict(str -> str)) -- Plugin extra configuration.
+        Plugin extra configuration.
 
-        All information, in plugin configuration file, that are not the tags:
+        Here you will find all information in the plugin
+        configuration file outside the following sections:
 
         * [Core]
         * [Documentation]
 
-        Will be stored at this dict.
+        :returns: Map of configuration file sections to their settings and values.
+        :rtype: dict(str -> dict(str -> str))
         """
         return self.plugin_info.plugin_extra_config
 
@@ -109,20 +155,5 @@ class _Config (Singleton):
         #       from pre-approved places.
         self.__context = context
 
+# Instance the singleton.
 Config = _Config()
-"""
-Public var to access to configuration system.
-
-.. warning::
-   You must use this var to access to the configuration params of _Config Class
-
-
-To access to the Configuration system, you can do:
-
-Example:
-
-    >>> from golismero.api.config import Config
-    >>> Config.plugin_name
-    'my_plugin_name'
-
-"""

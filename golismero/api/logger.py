@@ -5,7 +5,7 @@
 # Remote logging API
 #-----------------------------------------------------------------------
 
-__license__="""
+__license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
@@ -38,15 +38,16 @@ from ..messaging.codes import MessageType, MessageCode, MessagePriority
 
 class Logger (object):
     """
-Simple logger mechanism implementation. This send log/debug info to internal system.
+    Logging API for plugins.
 
-You should use this class instead of a simple `print` or other mechanism because GoLismero works with a message system and otherwise, the information can't be sent.
+    Plugins should use this class instead of a simple `print`,
+    otherwise messages will not be logged by GoLismero.
 
-Example of use ::
+    Example::
 
-   >>> Logger.log("My log message with information")
-   >>> Logger.log_error("My log with error information")
-   >>> Logger.log_more_verbose("Log message to display when more debug flag is set")
+       >>> Logger.log("My log message with information")
+       >>> Logger.log_error("My log with error information")
+       >>> Logger.log_verbose("Log message to display only when verbose mode is enabled")
     """
 
 

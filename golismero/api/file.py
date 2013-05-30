@@ -5,7 +5,7 @@
 # Local file API
 #-----------------------------------------------------------------------
 
-__license__="""
+__license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
@@ -103,7 +103,8 @@ class FileManager (object):
         Open a new temporary file. Temporary files have random names and are
         automatically deleted after they're closed.
 
-        :returns: (file, str) -- A tuple containing the open file and its pathname
+        :returns: A tuple containing the open file and its pathname
+        :rtype: (file, str)
         """
         fd = tempfile.NamedTemporaryFile()
         return fd, fd.name
@@ -123,7 +124,8 @@ class FileManager (object):
         :param mode: Open mode. Same flags as in Python's built-in open().
         :type mode: str
 
-        :returns: file -- File object.
+        :returns: File object.
+        :rtype: file
         """
 
         # Sanitize the filename.
@@ -141,7 +143,8 @@ class FileManager (object):
         :param filename: Name of the file to test.
         :type filename: str
 
-        :returns: bool -- True if the file exists, False otherwise.
+        :returns: True if the file exists, False otherwise.
+        :rtype: bool
         """
 
         # Sanitize the filename.
@@ -159,7 +162,8 @@ class FileManager (object):
         :param filename: Name of the file to test.
         :type filename: str
 
-        :returns: bool -- True if the file exists, False if it doesn't or is not a file.
+        :returns: True if the file exists, False if it doesn't or is not a file.
+        :rtype: bool
         """
 
         # Sanitize the filename.
@@ -177,7 +181,8 @@ class FileManager (object):
         :param filename: Name of the folder to test.
         :type filename: str
 
-        :returns: bool -- True if the folder exists, False if it doesn't or is not a folder.
+        :returns: True if the folder exists, False if it doesn't or is not a folder.
+        :rtype: bool
         """
 
         # Sanitize the filename.
@@ -198,7 +203,8 @@ class FileManager (object):
         :param f2: Name of the second file to test.
         :type f2: str
 
-        :returns: bool -- True if the files are the same, False otherwise.
+        :returns: True if the files are the same, False otherwise.
+        :rtype: bool
         """
 
         # Sanitize the filenames.
@@ -217,7 +223,8 @@ class FileManager (object):
         :param folder: Optional subfolder name. Defauts to the plugin folder itself.
         :type folder: str
 
-        :returns: list(str) -- List of file and folder names.
+        :returns: List of file and folder names.
+        :rtype: list(str)
         """
 
         # Sanitize the folder.
@@ -237,7 +244,8 @@ class FileManager (object):
         :param folder: Optional subfolder name. Defauts to the plugin folder itself.
         :type folder: str
 
-        :returns: iter -- Iterator of tuples containing the base path, and the file and folder names.
+        :returns: Iterator of tuples containing the base path, and the file and folder names.
+        :rtype: iter
         """
 
         # Sanitize the folder.
