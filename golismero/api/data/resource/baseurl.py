@@ -38,6 +38,14 @@ from ...net.web_utils import DecomposedURL, is_in_scope
 class BaseUrl(Resource):
     """
     Base URL information type.
+
+    This type is more likelly than Url, but has the diffence that only referer to a
+    base Url o, in other words, without any file or GET parameters, like:
+
+    - http://www.my_site.com -> **Good BaseUrl**
+    - http://www.my_site.com/index.php -> **Bad BaseUrl**. It's a Url type.
+
+
     """
 
     resource_type = Resource.RESOURCE_BASE_URL

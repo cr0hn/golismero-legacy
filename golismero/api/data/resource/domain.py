@@ -37,6 +37,14 @@ from ...net.web_utils import is_in_scope
 class Domain(Resource):
     """
     Domain name resource.
+
+    This resource referer to any domain type, like.
+
+    - www.my_site.com
+    - ftp.my_domain.com
+
+    It only contains information about de domain name.
+
     """
 
     resource_type = Resource.RESOURCE_DOMAIN

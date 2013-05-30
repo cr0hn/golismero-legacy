@@ -39,6 +39,19 @@ from ...net.web_utils import DecomposedURL, is_in_scope
 class Url(Resource):
     """
     URL information type.
+
+    This resource referer to a complete URL, like:
+
+    - http://www.my_site.com/index.php?param1=value1
+    - site.com/users/
+
+    It has the properties of an Url:
+
+    - Domain name.
+    - Get parameters.
+    - Post parameters.
+    - ...
+
     """
 
     resource_type = Resource.RESOURCE_URL
@@ -51,6 +64,7 @@ class Url(Resource):
 
         :param url: URL to manage
         :type url: str
+
 
         :param method: HTTP method to get URL
         :type method: str
