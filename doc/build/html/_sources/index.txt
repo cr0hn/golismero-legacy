@@ -15,6 +15,7 @@ You can follow these links to read the documentation:
    tutorials
    api
    develop
+   plugins
 
 Project page
 ============

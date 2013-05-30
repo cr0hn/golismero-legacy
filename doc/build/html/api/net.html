@@ -1051,77 +1051,219 @@ the RFC states that these are equivalent).</p>
 <dl class="class">
 <dt id="golismero.api.net.web_utils.HTMLParser">
 <em class="property">class </em><tt class="descclassname">golismero.api.net.web_utils.</tt><tt class="descname">HTMLParser</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#golismero.api.net.web_utils.HTMLParser" title="Permalink to this definition">¶</a></dt>
-<dd><p>HTML parser.</p>
+<dd><p>HTML parser. It selects automatically the parser. By default, the parser used is BeautifulSoup.</p>
+<p>HTMLParser is a transparent wrapper for the other libraries. This parser aims to simplify the logic
+of HTML parser process.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">You must use this library instead of call other libraries, like BeautifulSoup or libxml, directly for maintain the compatibility and the multiplatform.</p>
+</div>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.net.web_utils</span> <span class="kn">import</span> <span class="n">HTMLParser</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_info</span><span class="o">=</span><span class="s">&quot;&quot;&quot;&lt;html&gt;</span>
+<span class="go">&lt;head&gt;</span>
+<span class="go">  &lt;title&gt;My sample page&lt;/title&gt;</span>
+<span class="go">&lt;/head&gt;</span>
+<span class="go">&lt;body&gt;</span>
+<span class="go">  &lt;a href=&quot;http://www.mywebsitelink.com&quot;&gt;Link 1&lt;/a&gt;</span>
+<span class="go">  &lt;p&gt;</span>
+<span class="go">    &lt;img src=&quot;/images/my_image.png&quot; /&gt;</span>
+<span class="go">  &lt;/p&gt;</span>
+<span class="go">&lt;/body&gt;</span>
+<span class="go">&lt;/html&gt;&quot;&quot;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_parsed</span><span class="o">=</span><span class="n">HTMLParser</span><span class="p">(</span><span class="n">html_info</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_parsed</span><span class="o">.</span><span class="n">links</span>
+<span class="go">[&lt;golismero.api.net.web_utils.HTMLElement object at 0x109ca8b50&gt;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_parsed</span><span class="o">.</span><span class="n">links</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tag_name</span>
+<span class="go">&#39;a&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_parsed</span><span class="o">.</span><span class="n">links</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tag_content</span>
+<span class="go">&#39;Link 1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_parsed</span><span class="o">.</span><span class="n">links</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span>
+<span class="go">{&#39;href&#39;: &#39;http://www.mywebsitelink.com&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_parsed</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tag_name</span>
+<span class="go">&#39;img&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_parsed</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tag_content</span>
+<span class="go">&#39;&#39;</span>
+</pre></div>
+</div>
 <dl class="attribute">
 <dt id="golismero.api.net.web_utils.HTMLParser.css_embedded">
 <tt class="descname">css_embedded</tt><a class="headerlink" href="#golismero.api.net.web_utils.HTMLParser.css_embedded" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get embedded CSS from HTML</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get embedded CSS from HTML as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">HTMLElement</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.web_utils.HTMLParser.css_links">
 <tt class="descname">css_links</tt><a class="headerlink" href="#golismero.api.net.web_utils.HTMLParser.css_links" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get CSS links from HTML</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get CSS links from HTML as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">HTMLElement</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.web_utils.HTMLParser.elements">
 <tt class="descname">elements</tt><a class="headerlink" href="#golismero.api.net.web_utils.HTMLParser.elements" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get all HTML elements</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get all HTML elements as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(HTMLElement)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.web_utils.HTMLParser.forms">
 <tt class="descname">forms</tt><a class="headerlink" href="#golismero.api.net.web_utils.HTMLParser.forms" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get forms from HTML</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get forms from HTML as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">HTMLElement</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.web_utils.HTMLParser.images">
 <tt class="descname">images</tt><a class="headerlink" href="#golismero.api.net.web_utils.HTMLParser.images" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get images from HTML</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get images from HTML as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">HTMLElement</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.web_utils.HTMLParser.javascript_embedded">
 <tt class="descname">javascript_embedded</tt><a class="headerlink" href="#golismero.api.net.web_utils.HTMLParser.javascript_embedded" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get embedded JavaScript from HTML</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get embedded JavaScript from HTML as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">HTMLElement</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.web_utils.HTMLParser.javascript_links">
 <tt class="descname">javascript_links</tt><a class="headerlink" href="#golismero.api.net.web_utils.HTMLParser.javascript_links" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get JavaScript links from HTML</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get JavaScript links from HTML as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">HTMLElement</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.web_utils.HTMLParser.links">
 <tt class="descname">links</tt><a class="headerlink" href="#golismero.api.net.web_utils.HTMLParser.links" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get links from HTML</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get links from HTML as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">HTMLElement</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.web_utils.HTMLParser.metas">
 <tt class="descname">metas</tt><a class="headerlink" href="#golismero.api.net.web_utils.HTMLParser.metas" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get meta tags from HTML</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get meta tags from HTML as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">HTMLElement</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.web_utils.HTMLParser.objects">
 <tt class="descname">objects</tt><a class="headerlink" href="#golismero.api.net.web_utils.HTMLParser.objects" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get object tags from HTML</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get object tags from HTML as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">HTMLElement</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.web_utils.HTMLParser.raw_data">
 <tt class="descname">raw_data</tt><a class="headerlink" href="#golismero.api.net.web_utils.HTMLParser.raw_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get raw HTML code</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get raw HTML code</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.web_utils.HTMLParser.title">
 <tt class="descname">title</tt><a class="headerlink" href="#golismero.api.net.web_utils.HTMLParser.title" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get title from HTML</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get title from HTML as a HTMLElement object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">HTMLElement</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>

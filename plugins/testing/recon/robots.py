@@ -37,6 +37,7 @@ from golismero.api.text.matching_analyzer import *
 import codecs
 from urlparse import urljoin
 
+__doc__ = """This plugin search and analyze robots.txt files."""
 
 class Robots(TestingPlugin):
     """
