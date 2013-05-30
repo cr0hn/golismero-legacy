@@ -227,18 +227,4 @@ class Url(Resource):
 
     @property
     def discovered_resources(self):
-        """
-        This property returns some resources associated with it self.
-
-        For example, from an Url it can generate a Domain resource:
-
-        1. Information of Url: http://www.my_site.com/index.php?param1=value1
-        2. Generated resources:
-
-         - <Domain name="www.my_site.com" >
-         - <BaseUrl url="http://www.my_site.com" >
-
-        :return: list with generated resources.
-        :rtype: list
-        """
         return [Domain(self.parsed_url.hostname), BaseUrl(self.url)]

@@ -595,6 +595,8 @@ class Data(object):
         """
         Returns a list with the new resources discovered.
 
+        This property is mostly used by GoLismero itself.
+
         :return: List with resources.
         :rtype: list(Resource)
         """
