@@ -47,20 +47,36 @@ class WebServerFingerprint(Information):
 
     #----------------------------------------------------------------------
     def __init__(self, name, version, banner, others = None):
-        """Constructor.
-
-        :param name: Web server name. F.E: "Apache"
+        """
+        :param name: Web server name. Example: "Apache"
         :type name: str
 
-        :param version: Web server sersion. F.E: "2.4"
+        :param version: Web server sersion. Example: "2.4"
         :type version: str
 
-        :param banner: Complete description for web server. F.E: "Apache 2.2.23 ((Unix) mod_ssl/2.2.23 OpenSSL/1.0.1e-fips)"
+        :param banner: Complete description for web server. Example: "Apache 2.2.23 ((Unix) mod_ssl/2.2.23 OpenSSL/1.0.1e-fips)"
         :type banner: str
 
-        :param others: List of tuples with other possible web servers and their probabilities of being correct.
-        :type others: list( tuple(str, float) )
+        :param others: Map of other possible web servers by name and their probabilities of being correct [0.0 ~ 1.0].
+        :type others: dict( str -> float )
         """
+
+        # Check the data types.
+        # XXX this should probably be removed later, or only used in debug mode
+        if not isinstance(name, str):
+            raise TypeError("Expected str, got %s instead" % type(name))
+        if not isinstance(version, str):
+            raise TypeError("Expected str, got %s instead" % type(version))
+        if not isinstance(banner, str):
+            raise TypeError("Expected str, got %s instead" % type(banner))
+        if others is not None:
+            if not isinstance(others, dict):
+                raise TypeError("Expected dict, got %s instead" % type(others))
+            for k, v in others.iteritems():
+                if not isinstance(k, str):
+                    raise TypeError("Expected str, got %s instead" % type(k))
+                if not isinstance(v, float):
+                    raise TypeError("Expected float, got %s instead" % type(v))
 
         # Web server name.
         self.__name    = name
@@ -110,7 +126,6 @@ class WebServerFingerprint(Information):
     @identity
     def others(self):
         """
-
         :return: Dict with other possibilities for this web server. The format for this parameter is: { SERVER_NAME : PROBABILITY }
         :rtype: dict
         """

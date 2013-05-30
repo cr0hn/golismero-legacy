@@ -790,7 +790,8 @@ def http_analyzers(main_url, conn, number_of_entries=4):
             if not m_server_complete and m_server_version in l_server_name:
                 m_server_complete = l_server_name
 
-            m_other_servers_prob[l_server_name] = '{:0.2f}'.format((float(l_server_prob)/float(m_base_percent)) * 100.0)
+            # Add the probabilities as a float between 0 and 1
+            m_other_servers_prob[l_server_name] = float(l_server_prob) / float(m_base_percent)
 
             # Get only 4 results
             if len(m_other_servers_prob) >= number_of_entries:
