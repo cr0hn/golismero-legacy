@@ -11,14 +11,19 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import sys, os, os.path
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-
-sys.path.append(os.path.abspath(".."))
-sys.path.append(os.path.abspath(os.path.join("..", "thirdparty_libs")))
+root = os.path.split(os.path.abspath(__file__))[0]
+if not root:  # if it fails use cwd instead
+    root = os.path.abspath(os.getcwd())
+root = os.path.join(root, '..', '..')
+root = os.path.abspath(root)
+sys.path.insert(0, root)
+sys.path.append(os.path.join(root, 'thirdparty_libs'))
+del root
 
 # -- General configuration -----------------------------------------------------
 
