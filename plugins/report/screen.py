@@ -219,21 +219,20 @@ def general_display_only_vulns(db):
 #----------------------------------------------------------------------
 def general_display_by_resource(db):
     """
-    This function display the results like this:
+This function display the results like this:
 
-    [ 1 ] www.website.com/Param1=Value1&Param2=Value2
-    +-----------------+
-    | Vulnerabilities |
-    +------------------+-----------------------------+
-    |   Vuln name:     |        Url suspicious       |
-    +------------------+-----------------------------+
-    |       URL:       | http://website.com/admin    |
-    | Suspicius text:  |            admin            |
-    +------------------+-----------------------------+
-
-    [ 2 ] www.website.com/contact/
-    [ 3 ] www.website.com/Param1
-
+>>>
+[ 1 ] www.website.com/Param1=Value1&Param2=Value2
+      +-----------------+
+      | Vulnerabilities |
+      +------------------+-----------------------------+
+      |   Vuln name:     |        Url suspicious       |
+      +------------------+-----------------------------+
+      |       URL:       | http://website.com/admin    |
+      | Suspicius text:  |            admin            |
+      +------------------+-----------------------------+
+[ 2 ] www.website.com/contact/
+[ 3 ] www.website.com/Param1
     """
 
 
