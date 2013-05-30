@@ -29,6 +29,7 @@ golismero_2/TODO.txt
 
 # Build directories
 */dist/
+*/build/
 */*/build/
 
 # Log files
