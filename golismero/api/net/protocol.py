@@ -44,11 +44,16 @@ from httpparser.httpparser import *
 from requests import *
 from requests.exceptions import RequestException
 from time import time
-from StringIO import StringIO # Use StringIO instead of cStringIO because cStringIO can't be pickled
 from mimetools import Message
 import socket
 import hashlib
 from select import select
+
+# Use StringIO instead of cStringIO because cStringIO can't be pickled,
+# and mimetools.Message tries to store a copy of the "file descriptor".
+# FIXME: this may be fixed by tweaking mimetools instead.
+from StringIO import StringIO
+
 
 #------------------------------------------------------------------------------
 class NetworkException(Exception):
@@ -56,6 +61,7 @@ class NetworkException(Exception):
     General exception for net connections
     """
     pass
+
 
 #------------------------------------------------------------------------------
 class NetworkOutOfScope(Exception):
@@ -460,7 +466,7 @@ class Web (Protocol):
 
 
     #----------------------------------------------------------------------
-    def get_raw(self, host, request_content, timeout = 2, port=80, proto="HTTP", cache = True):
+    def get_raw(self, host, request_content, timeout=2.0, port=80, proto="HTTP"):
         """
         This method allow you to make raw connections to a host.
 
@@ -469,6 +475,7 @@ class Web (Protocol):
 
         .. warning::
            This method only returns the HTTP response headers, **NOT THE CONTENT**.
+           Also this method doesn't use the cache.
 
         Example:
 
@@ -484,12 +491,23 @@ class Web (Protocol):
         >>> response.lines_count
         4
 
-        :param timeout: timeout in seconds.
-        :type timeout: int
+        :param host: Host name to connect to.
+        :type host: str
 
-        :return: HTTPResponse instance or None if any error or URL out of scope.
+        :param request_content: Raw request to send.
+        :type request_content: str
+
+        :param timeout: Timeout in seconds.
+        :type timeout: float
+
+        :param port: TCP port to connect to.
+        :type port: int
+
+        :param proto: Network protocol.
+        :type proto: str
+
+        :return: HTTP response. Only the headers are parsed, not the contents.
         :rtype: HTTPResponse
-
         """
 
         # Check if the URL is within scope of the audit.
@@ -497,126 +515,92 @@ class Web (Protocol):
             Logger.log_verbose("Url '%s' out of scope. Skipping it." % host)
             raise NetworkOutOfScope("'%s' is out of the scope." % host)
 
-        # Create data for key
-        m_string = "%s|%s" % (host, ''.join(( "%s:%s" % (v.split(":")[0], v.split(":")[1]) if ":" in v else '' for v in request_content.splitlines() ) if request_content else ''))
-
-        # Make the hash
-        m_request_id = hashlib.md5(m_string).hexdigest()
-
-        # If the URL is cached, return the cached contents.
-        if cache and self._cache.exists(m_request_id, protocol=proto):
-            return self._cache.get(m_request_id, protocol=proto)
-
+        # Get a connection slot.
         with ConnectionSlot(host):
 
-            # Start timing the request
-
-            #
-            # Get URL
-            #
+            # Start timing the request.
             t1 = time()
 
-            # Issue the request
+            # Connect to the server.
             try:
-                # Connect to the server
-                s = socket.socket()
+                s = socket.socket()        # XXX FIXME: this fails for IPv6!
                 try:
                     s.settimeout(timeout)
                     s.connect((host, port))
                     try:
 
-                        # Send an HTTP request
-                        s.send(request_content)
-                        m_temp_response   = StringIO()
+                        # Send the HTTP request.
+                        s.sendall(request_content)
 
-                        m_select_response = select([s], [], [], timeout)
-
-                        if not m_select_response[0]:
-                            s.close()
-                            raise NetworkException("Timeout")
-
-                        buffer          = s.recv(1)
-                        m_temp_response.write( buffer )
-
-                        m_counter       = 0
-                        if buffer == '\n' or buffer == '\r':
-                            m_counter += 1
-
-                        # When server close the remote connection send, in ASCII, the
-                        # character "<"
-                        if buffer == "<":
-                            raise NetworkException("Server has closed the connection")
-
-
-                        # Get HTTP headers
+                        # Get the HTTP response headers.
+                        raw_response = StringIO()
                         while True:
-                            buffer = s.recv(1)
-                            m_temp_response.write( buffer )
-                            m_counter = m_counter + 1 if buffer == '\n' or buffer == '\r' else 0
-                            if m_counter == 4: # End of HTTP headers
-                                break
+                            data = s.recv(1)
+                            if not data:
+                                raise NetworkException("Server has closed the connection")
+                            raw_response.write(data)
+                            if raw_response.getvalue().endswith("\r\n\r\n"):
+                                break   # full HTTP headers received
+                            if len(raw_response.getvalue()) > 65536:
+                                raise NetworkException("Response headers too long")
 
-                    # Clean up the socket
+                        # TODO: add support for reading the data as well,
+                        #       this could mean having to parse HTTP for real
+                        #       and automatically storing large files on disk
+
+                    # Close the connection and clean up the socket.
                     finally:
                         try:
                             s.shutdown(2)
-                        except:
+                        except Exception:
                             pass
                 finally:
                     try:
                         s.close()
-                    except:
+                    except Exception:
                         pass
 
-                # Parse the HTTP headers and get the Content-Length
-                #if "Content-Length" in m_parser.response_http_headers:
-                    #m_body_length = int(m_parser.response_http_headers.get("Content-Length"))
+                # Stop timing the request.
+                t2 = time()
 
+                # Build the response dictionary.
+                try:
+                    m_response = {}
 
-                m_response = {}
-                m_response["raw_content"]  = m_temp_response.getvalue() # TODO: Add complete response!!!!!!
+                    # Store the raw response data.
+                    raw_content = raw_response.getvalue()
+                    m_response["raw_content"] = raw_content
 
-                # Read headers
-                request_line, headers_alone = m_response["raw_content"].split('\n', 1)
+                    # Split the response line from the headers.
+                    request_line, raw_headers = raw_content.split("\r\n", 1)
 
-                # Parse first line
-                m_response["protocol"]      = request_line[0:4]
-                m_response["version"]       = request_line[5:8]
-                m_response["statuscode"]    = request_line[9:12]
-                m_response["statustext"]    = request_line[13:]
-                m_response["content"]       = "" # TODO: Add complete response!!!!!!
+                    # Parse the response line.
+                    # FIXME: use a proper HTTP parser here!
+                    protocol, statuscode, statustext = request_line.strip().split(" ", 2)
+                    protocol, version = protocol.split("/", 1)
 
-                # Build headers
-                m_response["headers"]     = Message(StringIO(headers_alone))
+                    # Store the parsed response line.
+                    m_response["protocol"]   = protocol.strip().upper()
+                    m_response["version"]    = version.strip()
+                    m_response["statuscode"] = statuscode.strip()
+                    m_response["statustext"] = statustext.strip()
 
+                    # Parse and store the response headers.
+                    m_response["headers"] = Message(StringIO(raw_headers))
 
-                #
-                #
-                # TODO!!!!!
-                #
-                # When response of HEAD, with "Content-Length" header, but without data
-                # is received, then the connection is locked.
-                #
-                #m_response.write(s.recv(m_body_length))
+                    # XXX HACK: store an empty content to keep HTTP_Response from crashing.
+                    m_response["content"] = ""
 
+                # On parse error, send an exception.
+                except Exception, e:
+                    raise NetworkException("Error parsing the response: %s" % str(e))
 
+            # On socket errors, send an exception.
             except socket.error, e:
                 raise NetworkException(e.message)
 
-            # Stop timing the request
-            t2 = time()
-
-        # Calculate the request time
+        # Calculate the request time.
         m_time = t2 - t1
 
-        # Parse the response
-        m_response     = HTTP_Response.from_raw_request(m_response, m_time)
-
-        # Cache the response if enabled
-        if cache:
-            self._cache.set(m_request_id, m_response,
-                            protocol  = proto,
-                            timestamp = t1)
-
-        # Return the response
-        return m_response
+        # Return an HTTP response object.
+        return HTTP_Response.from_raw_request(m_response, m_time)
