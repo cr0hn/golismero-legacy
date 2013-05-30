@@ -1,0 +1,487 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Details for information types &mdash; GoLismero 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../static/doctools.js"></script>
+    <link rel="top" title="GoLismero 2.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Data API" href="../data.html" />
+    <link rel="next" title="Details for resource types" href="resource.html" />
+    <link rel="prev" title="Data API" href="../data.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="resource.html" title="Details for resource types"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../data.html" title="Data API"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../api.html" >API</a> &raquo;</li>
+          <li><a href="../data.html" accesskey="U">Data API</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="details-for-information-types">
+<h1>Details for information types<a class="headerlink" href="#details-for-information-types" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-golismero.api.data.information.text">
+<span id="text-type"></span><h2>Text type<a class="headerlink" href="#module-golismero.api.data.information.text" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="golismero.api.data.information.text.Text">
+<em class="property">class </em><tt class="descclassname">golismero.api.data.information.text.</tt><tt class="descname">Text</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.text.Text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../data.html#golismero.api.data.information.Information" title="golismero.api.data.information.Information"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.information.Information</span></tt></a></p>
+<p>Plain text data.</p>
+<dl class="attribute">
+<dt id="golismero.api.data.information.text.Text.raw_data">
+<tt class="descname">raw_data</tt><a class="headerlink" href="#golismero.api.data.information.text.Text.raw_data" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Plain text data.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-golismero.api.data.information.binary">
+<span id="binary-type"></span><h2>Binary type<a class="headerlink" href="#module-golismero.api.data.information.binary" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="golismero.api.data.information.binary.Binary">
+<em class="property">class </em><tt class="descclassname">golismero.api.data.information.binary.</tt><tt class="descname">Binary</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.binary.Binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../data.html#golismero.api.data.information.Information" title="golismero.api.data.information.Information"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.information.Information</span></tt></a></p>
+<p>Binary data.</p>
+<dl class="attribute">
+<dt id="golismero.api.data.information.binary.Binary.raw_data">
+<tt class="descname">raw_data</tt><a class="headerlink" href="#golismero.api.data.information.binary.Binary.raw_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raw bytes.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-golismero.api.data.information.html">
+<span id="html-type"></span><h2>HTML type<a class="headerlink" href="#module-golismero.api.data.information.html" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="golismero.api.data.information.html.HTML">
+<em class="property">class </em><tt class="descclassname">golismero.api.data.information.html.</tt><tt class="descname">HTML</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.html.HTML" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../data.html#golismero.api.data.information.Information" title="golismero.api.data.information.Information"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.information.Information</span></tt></a></p>
+<p>HTML document.</p>
+<p>This type contains all of relevant tags of a HTML document:</p>
+<ul class="simple">
+<li>CSS links</li>
+<li>CSS embeded</li>
+<li>Javascript links</li>
+<li>Metas</li>
+<li>Links</li>
+<li>Forms</li>
+<li>Images</li>
+<li>Title</li>
+<li>Object</li>
+</ul>
+<p>Also contains a generic property for access to other tags:</p>
+<ul class="simple">
+<li>Elements</li>
+</ul>
+<p>You can also access to raw HTML code.</p>
+<ul class="simple">
+<li>raw_data</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The HTML parser used is dinamically selected internally, depends of your installed libraries.</p>
+</div>
+<p>Use if is very simple:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.data.information.html</span> <span class="kn">import</span> <span class="n">HTML</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_info</span><span class="o">=</span><span class="s">&quot;&quot;&quot;&lt;html&gt;</span>
+<span class="go">&lt;head&gt;</span>
+<span class="go">  &lt;title&gt;My sample page&lt;/title&gt;</span>
+<span class="go">&lt;/head&gt;</span>
+<span class="go">&lt;body&gt;</span>
+<span class="go">  &lt;a href=&quot;http://www.mywebsitelink.com&quot;&gt;Link 1&lt;/a&gt;</span>
+<span class="go">  &lt;p&gt;</span>
+<span class="go">    &lt;img src=&quot;/images/my_image.png&quot; /&gt;</span>
+<span class="go">  &lt;/p&gt;</span>
+<span class="go">&lt;/body&gt;</span>
+<span class="go">&lt;/html&gt;&quot;&quot;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_parsed</span><span class="o">=</span><span class="n">HTML</span><span class="p">(</span><span class="n">html_info</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_parsed</span><span class="o">.</span><span class="n">links</span>
+<span class="go">[&lt;golismero.api.net.web_utils.HTMLElement object at 0x109ca8b50&gt;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_parsed</span><span class="o">.</span><span class="n">links</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tag_name</span>
+<span class="go">&#39;a&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_parsed</span><span class="o">.</span><span class="n">links</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tag_content</span>
+<span class="go">&#39;Link 1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_parsed</span><span class="o">.</span><span class="n">links</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span>
+<span class="go">{&#39;href&#39;: &#39;http://www.mywebsitelink.com&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_parsed</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tag_name</span>
+<span class="go">&#39;img&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">html_parsed</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tag_content</span>
+<span class="go">&#39;&#39;</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="golismero.api.data.information.html.HTML.css_embedded">
+<tt class="descname">css_embedded</tt><a class="headerlink" href="#golismero.api.data.information.html.HTML.css_embedded" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Embedded CSS as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(HTMLElement)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.html.HTML.css_links">
+<tt class="descname">css_links</tt><a class="headerlink" href="#golismero.api.data.information.html.HTML.css_links" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">CSS links as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(HTMLElement)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.html.HTML.elements">
+<tt class="descname">elements</tt><a class="headerlink" href="#golismero.api.data.information.html.HTML.elements" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">All HTML elements as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(HTMLElement)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.html.HTML.forms">
+<tt class="descname">forms</tt><a class="headerlink" href="#golismero.api.data.information.html.HTML.forms" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">HTML form tags as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(HTMLElement)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.html.HTML.images">
+<tt class="descname">images</tt><a class="headerlink" href="#golismero.api.data.information.html.HTML.images" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Image tags as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(HTMLElement)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.html.HTML.javascript_embedded">
+<tt class="descname">javascript_embedded</tt><a class="headerlink" href="#golismero.api.data.information.html.HTML.javascript_embedded" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Embedded JavaScript as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(HTMLElement)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.html.HTML.javascript_links">
+<tt class="descname">javascript_links</tt><a class="headerlink" href="#golismero.api.data.information.html.HTML.javascript_links" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">JavaScript links as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(HTMLElement)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.html.HTML.links">
+<tt class="descname">links</tt><a class="headerlink" href="#golismero.api.data.information.html.HTML.links" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Links tags as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(HTMLElement)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.html.HTML.metas">
+<tt class="descname">metas</tt><a class="headerlink" href="#golismero.api.data.information.html.HTML.metas" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Meta tags as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(HTMLElement)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.html.HTML.objects">
+<tt class="descname">objects</tt><a class="headerlink" href="#golismero.api.data.information.html.HTML.objects" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Object tags as a list of HTMLElement objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(HTMLElement)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.html.HTML.raw_data">
+<tt class="descname">raw_data</tt><a class="headerlink" href="#golismero.api.data.information.html.HTML.raw_data" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get raw HTML code</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.html.HTML.title">
+<tt class="descname">title</tt><a class="headerlink" href="#golismero.api.data.information.html.HTML.title" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Document title as a HTMLElement object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">HTMLElement</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-golismero.api.data.information.webserver_fingerprint">
+<span id="fingerprint-type"></span><h2>Fingerprint type<a class="headerlink" href="#module-golismero.api.data.information.webserver_fingerprint" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="golismero.api.data.information.webserver_fingerprint.WebServerFingerprint">
+<em class="property">class </em><tt class="descclassname">golismero.api.data.information.webserver_fingerprint.</tt><tt class="descname">WebServerFingerprint</tt><big>(</big><em>name</em>, <em>version</em>, <em>banner</em>, <em>others=None</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.webserver_fingerprint.WebServerFingerprint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../data.html#golismero.api.data.information.Information" title="golismero.api.data.information.Information"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.information.Information</span></tt></a></p>
+<p>Fingerprint information for a concrete host and web server.</p>
+<dl class="attribute">
+<dt id="golismero.api.data.information.webserver_fingerprint.WebServerFingerprint.banner">
+<tt class="descname">banner</tt><a class="headerlink" href="#golismero.api.data.information.webserver_fingerprint.WebServerFingerprint.banner" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Web server banner.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.webserver_fingerprint.WebServerFingerprint.name">
+<tt class="descname">name</tt><a class="headerlink" href="#golismero.api.data.information.webserver_fingerprint.WebServerFingerprint.name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Web server name.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.webserver_fingerprint.WebServerFingerprint.others">
+<tt class="descname">others</tt><a class="headerlink" href="#golismero.api.data.information.webserver_fingerprint.WebServerFingerprint.others" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Dict with other possibilities for this web server. The format for this parameter is: { SERVER_NAME : PROBABILITY }</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.information.webserver_fingerprint.WebServerFingerprint.version">
+<tt class="descname">version</tt><a class="headerlink" href="#golismero.api.data.information.webserver_fingerprint.WebServerFingerprint.version" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Web server version.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Details for information types</a><ul>
+<li><a class="reference internal" href="#module-golismero.api.data.information.text">Text type</a></li>
+<li><a class="reference internal" href="#module-golismero.api.data.information.binary">Binary type</a></li>
+<li><a class="reference internal" href="#module-golismero.api.data.information.html">HTML type</a></li>
+<li><a class="reference internal" href="#module-golismero.api.data.information.webserver_fingerprint">Fingerprint type</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../data.html"
+                        title="previous chapter">Data API</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="resource.html"
+                        title="next chapter">Details for resource types</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../sources/api/data/information.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="resource.html" title="Details for resource types"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../data.html" title="Data API"
+             >previous</a> |</li>
+        <li><a href="../../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../api.html" >API</a> &raquo;</li>
+          <li><a href="../data.html" >Data API</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, GoLismero Project.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

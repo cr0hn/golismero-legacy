@@ -1,0 +1,501 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Recon plugins &mdash; GoLismero 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../static/doctools.js"></script>
+    <link rel="top" title="GoLismero 2.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Testing plugins" href="../testing.html" />
+    <link rel="next" title="Scan plugins" href="scan.html" />
+    <link rel="prev" title="Testing plugins" href="../testing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scan.html" title="Scan plugins"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../testing.html" title="Testing plugins"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../plugins.html" >Plugins list</a> &raquo;</li>
+          <li><a href="../testing.html" accesskey="U">Testing plugins</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="recon-plugins">
+<h1>Recon plugins<a class="headerlink" href="#recon-plugins" title="Permalink to this headline">¶</a></h1>
+<p>This plugins are in the <strong>recognition</strong> step.</p>
+<div class="section" id="module-plugins.testing.recon.default_error_page">
+<span id="default-error-page-plugin"></span><h2>Default error page plugin<a class="headerlink" href="#module-plugins.testing.recon.default_error_page" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="plugins.testing.recon.default_error_page.SuspiciousURLPlugin">
+<em class="property">class </em><tt class="descclassname">plugins.testing.recon.default_error_page.</tt><tt class="descname">SuspiciousURLPlugin</tt><a class="headerlink" href="#plugins.testing.recon.default_error_page.SuspiciousURLPlugin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find suspicious words in URLs.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.recon.default_error_page.comparer_with_errors">
+<tt class="descclassname">plugins.testing.recon.default_error_page.</tt><tt class="descname">comparer_with_errors</tt><big>(</big><em>page_text</em><big>)</big><a class="headerlink" href="#plugins.testing.recon.default_error_page.comparer_with_errors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare the text a web page with defaul error pages and return the name of
+sever page or None</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>page_text</strong> (<em>str</em>) &#8211; text of web page to compare.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">an string with the value of server or None</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.recon.default_error_page.main_default_error_pages">
+<tt class="descclassname">plugins.testing.recon.default_error_page.</tt><tt class="descname">main_default_error_pages</tt><big>(</big><em>info</em><big>)</big><a class="headerlink" href="#plugins.testing.recon.default_error_page.main_default_error_pages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main function to process the error pages</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-plugins.testing.recon.server_fingerprinting">
+<span id="fingerprinting-plugin"></span><h2>Fingerprinting plugin<a class="headerlink" href="#module-plugins.testing.recon.server_fingerprinting" title="Permalink to this headline">¶</a></h2>
+<p>Fingerprint techniques are based on the fantastic paper of httprecon project, and their databases:</p>
+<ul class="simple">
+<li>Doc: <a class="reference external" href="http://www.computec.ch/projekte/httprecon/?s=documentation">http://www.computec.ch/projekte/httprecon/?s=documentation</a></li>
+<li>Project page: <a class="reference external" href="http://www.computec.ch/projekte/httprecon">http://www.computec.ch/projekte/httprecon</a></li>
+</ul>
+<p>This plugin try to a fingerprinting over web servers.</p>
+<div class="section" id="step-1">
+<h3>Step 1<a class="headerlink" href="#step-1" title="Permalink to this headline">¶</a></h3>
+<p>Define the methods used:</p>
+<p>1 Check de Banner.
+2 Check de order headers in HTTP response.
+3 Check the rest of headers.</p>
+</div>
+<div class="section" id="step-2">
+<h3>Step 2<a class="headerlink" href="#step-2" title="Permalink to this headline">¶</a></h3>
+<p>Then assigns a weight to each method:</p>
+<ol class="arabic simple">
+<li>-&gt; 50%</li>
+<li>-&gt; 20%</li>
+<li>-&gt; 30% (divided by the number of test for each header)</li>
+</ol>
+</div>
+<div class="section" id="step-3">
+<h3>Step 3<a class="headerlink" href="#step-3" title="Permalink to this headline">¶</a></h3>
+<p>We have 9 request with:</p>
+<ol class="arabic simple">
+<li>GET / HTTP/1.1</li>
+<li>GET /index.php HTTP/1.1</li>
+<li>GET /404_file.html HTTP/1.1</li>
+<li>HEAD / HTTP/1.1</li>
+<li>OPTIONS / HTTP/1.1</li>
+<li>DELETE / HTTP/1.1</li>
+<li>TEST / HTTP/1.1</li>
+<li>GET / 9.8</li>
+<li>GET /&lt;SCRIPT&gt;alert&lt;/script&gt; HTTP/1.1 -&gt; Any web attack.</li>
+</ol>
+</div>
+<div class="section" id="step-4">
+<h3>Step 4<a class="headerlink" href="#step-4" title="Permalink to this headline">¶</a></h3>
+<p>For each type of response analyze the HTTP headers trying to find matches and
+multiply for their weight.</p>
+</div>
+<div class="section" id="step-5">
+<h3>Step 5<a class="headerlink" href="#step-5" title="Permalink to this headline">¶</a></h3>
+<p>Sum de values obtained in step 4, for each test in step 3.</p>
+</div>
+<div class="section" id="step-6">
+<h3>Step 6<a class="headerlink" href="#step-6" title="Permalink to this headline">¶</a></h3>
+<p>Get the 3 highter values os matching.</p>
+</div>
+<div class="section" id="for-example">
+<h3>For example<a class="headerlink" href="#for-example" title="Permalink to this headline">¶</a></h3>
+<p>For an Apache 1.3.26 we will have these results for a normal GET:</p>
+<ul class="simple">
+<li>Banner (any of these options):</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Apache/1.3.26 (Linux/SuSE) mod_ssl/2.8.10 OpenSSL/0.9.6g PHP/4.2.2</li>
+<li>Apache/1.3.26 (UnitedLinux) mod_python/2.7.8 Python/2.2.1 PHP/4.2.2 mod_perl/1.27</li>
+<li>Apache/1.3.26 (Unix)</li>
+<li>Apache/1.3.26 (Unix) Debian GNU/Linux mod_ssl/2.8.9 OpenSSL/0.9.6g PHP/4.1.2 mod_webapp/1.2.0-dev</li>
+<li>Apache/1.3.26 (Unix) Debian GNU/Linux PHP/4.1.2</li>
+<li>Apache/1.3.26 (Unix) mod_gzip/1.3.19.1a PHP/4.3.11 mod_ssl/2.8.9 OpenSSL/0.9.6</li>
+<li>MIT Web Server Apache/1.3.26 Mark/1.5 (Unix) mod_ssl/2.8.9 OpenSSL/0.9.7c</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>A specific order for the rest of HTTP headers (any of these options):</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Date,Server,Accept-Ranges,Content-Type,Content-Length,Via</li>
+<li>Date,Server,Connection,Content-Type</li>
+<li>Date,Server,Keep-Alive,Connection,Transfer-Encoding,Content-Type</li>
+<li>Date,Server,Last-Modified,ETag,Accept-Ranges,Content-Length,Connection,Content-Type</li>
+<li>Date,Server,Last-Modified,ETag,Accept-Ranges,Content-Length,Keep-Alive,Connection,Content-Type</li>
+<li>Date,Server,Set-Cookie,Content-Type,Set-Cookie,Keep-Alive,Connection,Transfer-Encoding</li>
+<li>Date,Server,X-Powered-By,Keep-Alive,Connection,Transfer-Encoding,Content-Type</li>
+<li>Date,Server,X-Powered-By,Set-Cookie,Expires,Cache-Control,Pragma,Set-Cookie,Set-Cookie,Keep-Alive,Connection,Transfer-Encoding,Content-Type</li>
+<li>Date,Server,X-Powered-By,Set-Cookie,Set-Cookie,Expires,Last-Modified,Cache-Control,Pragma,Keep-Alive,Connection,Transfer-Encoding,Content-Type</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>The value of the rest of headers must be:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Content-Type (any of these options):</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>text/html</li>
+<li>text/html; charset=iso-8859-1</li>
+<li>text/html;charset=ISO-8859-1</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Cache-Control (any of these options):</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>no-store, no-cache, must-revalidate, post-check=0, pre-check=0</li>
+<li>post-check=0, pre-check=0</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Connection (any of these options):</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>close</li>
+<li>Keep-Alive</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Quotes types must be double for ETag field:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>ETag: &#8220;0&#8221;, instead of ETag: &#8216;0&#8217;</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>E-Tag length (any of these options):</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>0</li>
+<li>20</li>
+<li>21</li>
+<li>23</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Pragma (any of these options):</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>no-cache</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Format of headers. After a bash, the letter is uncapitalized, for http headers. For example:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Content-type, instead of Content-**T**ype.</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Has spaces between names and values. For example:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>E-Tag:0; instead of: E-Tag:0</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Protocol name used in request is &#8216;HTTP&#8217;. For example:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>GET / HTTP/1.1</li>
+</ul>
+</div></blockquote>
+<ul>
+<li><p class="first">The status text for a response of HTTP.</p>
+<p>GET / HTTP/1.1
+Host: misite.com</p>
+<p>HTTP/1.1 200 **OK**
+....</p>
+</li>
+<li><p class="first">X-Powered-By (any of these options):</p>
+</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>PHP/4.1.2</li>
+<li>PHP/4.2.2</li>
+<li>PHP/4.3.11</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+<dl class="class">
+<dt id="plugins.testing.recon.server_fingerprinting.ServerFingerprinting">
+<em class="property">class </em><tt class="descclassname">plugins.testing.recon.server_fingerprinting.</tt><tt class="descname">ServerFingerprinting</tt><a class="headerlink" href="#plugins.testing.recon.server_fingerprinting.ServerFingerprinting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does fingerprinting tests</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.recon.server_fingerprinting.basic_platform_detection">
+<tt class="descclassname">plugins.testing.recon.server_fingerprinting.</tt><tt class="descname">basic_platform_detection</tt><big>(</big><em>main_url</em>, <em>conn</em><big>)</big><a class="headerlink" href="#plugins.testing.recon.server_fingerprinting.basic_platform_detection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detect if platform is Windows or *NIX. To do this, get the first link, in scope, and
+does two resquest. If are the same response, then, platform are Windows. Else are *NIX.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Name of platforms: Windows, *NIX or unknown.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.recon.server_fingerprinting.http_analyzers">
+<tt class="descclassname">plugins.testing.recon.server_fingerprinting.</tt><tt class="descname">http_analyzers</tt><big>(</big><em>main_url</em>, <em>conn</em>, <em>number_of_entries=4</em><big>)</big><a class="headerlink" href="#plugins.testing.recon.server_fingerprinting.http_analyzers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Analyze HTTP headers for detect the web server. Return a list with most possible web servers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>main_url</strong> (<em>str</em>) &#8211; Base url to test.</li>
+<li><strong>conn</strong> (<em>Web type connection</em>) &#8211; Instance of connection.</li>
+<li><strong>number_of_entries</strong> (<em>int</em>) &#8211; number of resutls tu return for most probable web servers detected.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Web server family, Web server version, Web server complete description, others web server with their probabilities like: dict(CONCRETE_WEB_SERVER, PROBABILITY)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.recon.server_fingerprinting.main_server_fingerprint">
+<tt class="descclassname">plugins.testing.recon.server_fingerprinting.</tt><tt class="descname">main_server_fingerprint</tt><big>(</big><em>base_url</em><big>)</big><a class="headerlink" href="#plugins.testing.recon.server_fingerprinting.main_server_fingerprint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main function for server fingerprint. Get an URL and return the fingerprint results.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>base_url</strong> (<em>Domain</em>) &#8211; Domain resource instance.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Fingerprint type</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.recon.server_fingerprinting.nindex">
+<tt class="descclassname">plugins.testing.recon.server_fingerprinting.</tt><tt class="descname">nindex</tt><big>(</big><em>*arg</em><big>)</big><a class="headerlink" href="#plugins.testing.recon.server_fingerprinting.nindex" title="Permalink to this definition">¶</a></dt>
+<dd><p>From and string get nth ocurrence of substr</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.recon.server_fingerprinting.transform_name">
+<tt class="descclassname">plugins.testing.recon.server_fingerprinting.</tt><tt class="descname">transform_name</tt><big>(</big><em>*arg</em><big>)</big><a class="headerlink" href="#plugins.testing.recon.server_fingerprinting.transform_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforme strings like:</p>
+<p>nginx/1.5.1    -&gt; (nginx, 1.5)</p>
+<p>nginx 1.5.1-r2 -&gt; (nginx, 1.5)</p>
+<p>nginx/1.5.1v5  -&gt; (nginx, 1.5)</p>
+<p>Microsoft IIS 6.0 -&gt; (Microsoft IIS, 6.0)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a tuple as forme: (SERVER_NAME, VERSION)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.recon.server_fingerprinting.ttl_platform_detection">
+<tt class="descclassname">plugins.testing.recon.server_fingerprinting.</tt><tt class="descname">ttl_platform_detection</tt><big>(</big><em>main_url</em><big>)</big><a class="headerlink" href="#plugins.testing.recon.server_fingerprinting.ttl_platform_detection" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function try to recognize the remote platform doing a ping and analyzing the
+TTL of IP header response.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>main_url</strong> (<em>str</em>) &#8211; Base url to test.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a list with posibles platforms</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict(OS, version)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-plugins.testing.recon.robots">
+<span id="robots-plugin"></span><h2>Robots plugin<a class="headerlink" href="#module-plugins.testing.recon.robots" title="Permalink to this headline">¶</a></h2>
+<p>This plugin search and analyze robots.txt files.</p>
+<dl class="class">
+<dt id="plugins.testing.recon.robots.Robots">
+<em class="property">class </em><tt class="descclassname">plugins.testing.recon.robots.</tt><tt class="descname">Robots</tt><a class="headerlink" href="#plugins.testing.recon.robots.Robots" title="Permalink to this definition">¶</a></dt>
+<dd><p>This plugin search and analyze robots.txt files.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-plugins.testing.recon.spider">
+<span id="spider-plugin"></span><h2>spider plugin<a class="headerlink" href="#module-plugins.testing.recon.spider" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="plugins.testing.recon.spider.Spider">
+<em class="property">class </em><tt class="descclassname">plugins.testing.recon.spider.</tt><tt class="descname">Spider</tt><a class="headerlink" href="#plugins.testing.recon.spider.Spider" title="Permalink to this definition">¶</a></dt>
+<dd><p>This plugin is a web spider.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-plugins.testing.recon.suspicious_url">
+<span id="suspicious-url-plugin"></span><h2>suspicious url plugin<a class="headerlink" href="#module-plugins.testing.recon.suspicious_url" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="plugins.testing.recon.suspicious_url.SuspiciousURLPlugin">
+<em class="property">class </em><tt class="descclassname">plugins.testing.recon.suspicious_url.</tt><tt class="descname">SuspiciousURLPlugin</tt><a class="headerlink" href="#plugins.testing.recon.suspicious_url.SuspiciousURLPlugin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find suspicious words in URLs.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Recon plugins</a><ul>
+<li><a class="reference internal" href="#module-plugins.testing.recon.default_error_page">Default error page plugin</a></li>
+<li><a class="reference internal" href="#module-plugins.testing.recon.server_fingerprinting">Fingerprinting plugin</a><ul>
+<li><a class="reference internal" href="#step-1">Step 1</a></li>
+<li><a class="reference internal" href="#step-2">Step 2</a></li>
+<li><a class="reference internal" href="#step-3">Step 3</a></li>
+<li><a class="reference internal" href="#step-4">Step 4</a></li>
+<li><a class="reference internal" href="#step-5">Step 5</a></li>
+<li><a class="reference internal" href="#step-6">Step 6</a></li>
+<li><a class="reference internal" href="#for-example">For example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-plugins.testing.recon.robots">Robots plugin</a></li>
+<li><a class="reference internal" href="#module-plugins.testing.recon.spider">spider plugin</a></li>
+<li><a class="reference internal" href="#module-plugins.testing.recon.suspicious_url">suspicious url plugin</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../testing.html"
+                        title="previous chapter">Testing plugins</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="scan.html"
+                        title="next chapter">Scan plugins</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../sources/plugins/testing/recon.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scan.html" title="Scan plugins"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../testing.html" title="Testing plugins"
+             >previous</a> |</li>
+        <li><a href="../../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../plugins.html" >Plugins list</a> &raquo;</li>
+          <li><a href="../testing.html" >Testing plugins</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, GoLismero Project.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
