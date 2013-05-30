@@ -28,7 +28,7 @@
     <link rel="top" title="GoLismero 2.0.1 documentation" href="../index.html" />
     <link rel="up" title="API" href="../api.html" />
     <link rel="next" title="Text processsing API" href="text.html" />
-    <link rel="prev" title="Details for vulnerability types" href="data/vulnerabilities.html" /> 
+    <link rel="prev" title="Information disclosure vulnerabilities" href="data/vulnerabilities/information_disclosure.html" /> 
   </head>
   <body>
     <div class="related">
@@ -44,7 +44,7 @@
           <a href="text.html" title="Text processsing API"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="data/vulnerabilities.html" title="Details for vulnerability types"
+          <a href="data/vulnerabilities/information_disclosure.html" title="Information disclosure vulnerabilities"
              accesskey="P">previous</a> |</li>
         <li><a href="../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
           <li><a href="../api.html" accesskey="U">API</a> &raquo;</li> 
@@ -61,6 +61,15 @@
 <p>Here the Networking API functions:</p>
 <div class="section" id="module-golismero.api.net.http">
 <span id="http"></span><h2>HTTP<a class="headerlink" href="#module-golismero.api.net.http" title="Permalink to this headline">¶</a></h2>
+<p>This package contains the classes that represent the abstract objects for HTTP Request and Response.</p>
+<p>They acts as Java POJO (<a class="reference external" href="http://es.wikipedia.org/wiki/Plain_Old_Java_Object">http://es.wikipedia.org/wiki/Plain_Old_Java_Object</a>) or, put it another way, acting
+like a simple structures to store information.</p>
+<p>This way all HTTP Request and Responses has a simple and commom way to exchange HTTP information.</p>
+<p>Two types are defined in this package:</p>
+<ul class="simple">
+<li>HTTP_Request</li>
+<li>HTTP_Response</li>
+</ul>
 <dl class="class">
 <dt id="golismero.api.net.http.HTTP_Request">
 <em class="property">class </em><tt class="descclassname">golismero.api.net.http.</tt><tt class="descname">HTTP_Request</tt><big>(</big><em>url</em>, <em>method='GET'</em>, <em>post_data=None</em>, <em>cache=True</em>, <em>follow_redirects=None</em>, <em>cookie=''</em>, <em>random_user_agent=False</em>, <em>request_type=0</em><big>)</big><a class="headerlink" href="#golismero.api.net.http.HTTP_Request" title="Permalink to this definition">¶</a></dt>
@@ -68,13 +77,31 @@
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.accept">
 <tt class="descname">accept</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.accept" title="Permalink to this definition">¶</a></dt>
-<dd><p>&#8216;Accept&#8217; HTTP header</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">&#8216;Accept&#8217; HTTP header.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.accept_language">
 <tt class="descname">accept_language</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.accept_language" title="Permalink to this definition">¶</a></dt>
-<dd><p>&#8216;Accept-Language&#8217; HTTP header</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">&#8216;Accept-Language&#8217; HTTP header.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -117,23 +144,43 @@
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.content_type">
 <tt class="descname">content_type</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.content_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>&#8216;Content-Type&#8217; HTTP header</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">&#8216;Content-Type&#8217; HTTP header.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.cookie">
 <tt class="descname">cookie</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.cookie" title="Permalink to this definition">¶</a></dt>
-<dd><p>&#8216;Cookie&#8217; HTTP header</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">&#8216;Cookie&#8217; HTTP header.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.files_attached">
 <tt class="descname">files_attached</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.files_attached" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a dictionary with filenames attached, in the following format:
-{
-&#8216;file_name_1&#8217; : raw_object_1,
-&#8216;file_name_2&#8217; : raw_object_2,
-}</p>
+<dd><p>Get a dictionary with filenames attached, in the following format:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+   <span class="s">&#39;file_name_1&#39;</span> <span class="p">:</span> <span class="n">raw_object_1</span><span class="p">,</span>
+   <span class="s">&#39;file_name_2&#39;</span> <span class="p">:</span> <span class="n">raw_object_2</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -147,12 +194,13 @@
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.follow_redirects">
 <tt class="descname">follow_redirects</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.follow_redirects" title="Permalink to this definition">¶</a></dt>
-<dd><p>Redirect options for the request (True to follow redirects, False otherwise).</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None | bool. None if not set. Bool otherwise.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Redirect options for the request (True to follow redirects, False no follow. None if not set).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">None | bool</td>
 </tr>
 </tbody>
 </table>
@@ -161,24 +209,43 @@
 <dl class="method">
 <dt id="golismero.api.net.http.HTTP_Request.generate_user_agent">
 <tt class="descname">generate_user_agent</tt><big>(</big><big>)</big><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.generate_user_agent" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a random user agent string</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Return a random user agent string.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.hostname">
 <tt class="descname">hostname</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.hostname" title="Permalink to this definition">¶</a></dt>
-<dd><p>&#8216;Host&#8217; HTTP header</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">&#8216;Host&#8217; HTTP header.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.is_cacheable">
 <tt class="descname">is_cacheable</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.is_cacheable" title="Permalink to this definition">¶</a></dt>
-<dd><p>If request is marked as cacheable return True, else False.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">bool</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">If request is marked as cacheable return True, else False.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
 </tbody>
 </table>
@@ -187,12 +254,13 @@
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.method">
 <tt class="descname">method</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.method" title="Permalink to this definition">¶</a></dt>
-<dd><p>HTTP method used for this request.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">str</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">HTTP method used for this request.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -201,12 +269,13 @@
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.parsed_url">
 <tt class="descname">parsed_url</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.parsed_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the URL split to its components.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">DecomposedURL</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns the URL split to its components..</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">DecomposedURL.</td>
 </tr>
 </tbody>
 </table>
@@ -215,30 +284,58 @@
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.post_data">
 <tt class="descname">post_data</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.post_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>HTTP POST data</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">HTTP POST data.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.raw_headers">
 <tt class="descname">raw_headers</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.raw_headers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Raw HTTP headers</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Raw HTTP headers as a dict format.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.referer">
 <tt class="descname">referer</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.referer" title="Permalink to this definition">¶</a></dt>
-<dd><p>&#8216;Referer&#8217; HTTP header</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">&#8216;Referer&#8217; HTTP header.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.request_id">
 <tt class="descname">request_id</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.request_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a unique ID for this request.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">str</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get a unique ID for this request.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
 </tr>
 </tbody>
 </table>
@@ -265,12 +362,13 @@
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.url">
 <tt class="descname">url</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.url" title="Permalink to this definition">¶</a></dt>
-<dd><p>String with URL of the request.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">str</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">String with URL of the request.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
 </tr>
 </tbody>
 </table>
@@ -279,7 +377,16 @@
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.user_agent">
 <tt class="descname">user_agent</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.user_agent" title="Permalink to this definition">¶</a></dt>
-<dd><p>&#8216;User-Agent&#8217; HTTP header</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">&#8216;User-Agent&#8217; HTTP header.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -644,13 +751,14 @@ interact with the &#8216;Web&#8217; protocol easily.</p>
 
 <dl class="method">
 <dt id="golismero.api.net.protocol.Web.get_raw">
-<tt class="descname">get_raw</tt><big>(</big><em>host</em>, <em>request_content</em>, <em>timeout=2</em>, <em>port=80</em>, <em>proto='HTTP'</em>, <em>cache=True</em><big>)</big><a class="headerlink" href="#golismero.api.net.protocol.Web.get_raw" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_raw</tt><big>(</big><em>host</em>, <em>request_content</em>, <em>timeout=2.0</em>, <em>port=80</em>, <em>proto='HTTP'</em><big>)</big><a class="headerlink" href="#golismero.api.net.protocol.Web.get_raw" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method allow you to make raw connections to a host.</p>
 <p>You must to provide the data that you want to send to the server. You&#8217;re the responsible to manage the
 data that will be send to the server.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">This method only returns the HTTP response headers, <strong>NOT THE CONTENT</strong>.</p>
+<p class="last">This method only returns the HTTP response headers, <strong>NOT THE CONTENT</strong>.
+Also this method doesn&#8217;t use the cache.</p>
 </div>
 <p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.net.protocol</span> <span class="kn">import</span> <span class="n">Web</span><span class="p">,</span> <span class="n">NetworkAPI</span>
@@ -670,11 +778,20 @@ data that will be send to the server.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>timeout</strong> (<em>int</em>) &#8211; timeout in seconds.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>host</strong> (<em>str</em>) &#8211; Host name to connect to.</li>
+<li><strong>request_content</strong> (<em>str</em>) &#8211; Raw request to send.</li>
+<li><strong>timeout</strong> (<em>float</em>) &#8211; Timeout in seconds.</li>
+<li><strong>port</strong> (<em>int</em>) &#8211; TCP port to connect to.</li>
+<li><strong>proto</strong> (<em>str</em>) &#8211; Network protocol.</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">HTTPResponse instance or None if any error or URL out of scope.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">HTTP response. Only the headers are parsed, not the contents.</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">HTTPResponse</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">HTTPResponse</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -1289,8 +1406,8 @@ of HTML parser process.</p>
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="data/vulnerabilities.html"
-                        title="previous chapter">Details for vulnerability types</a></p>
+  <p class="topless"><a href="data/vulnerabilities/information_disclosure.html"
+                        title="previous chapter">Information disclosure vulnerabilities</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="text.html"
                         title="next chapter">Text processsing API</a></p>
@@ -1329,7 +1446,7 @@ of HTML parser process.</p>
           <a href="text.html" title="Text processsing API"
              >next</a> |</li>
         <li class="right" >
-          <a href="data/vulnerabilities.html" title="Details for vulnerability types"
+          <a href="data/vulnerabilities/information_disclosure.html" title="Information disclosure vulnerabilities"
              >previous</a> |</li>
         <li><a href="../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
           <li><a href="../api.html" >API</a> &raquo;</li> 

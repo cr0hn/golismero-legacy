@@ -27,7 +27,7 @@
     <script type="text/javascript" src="../../static/doctools.js"></script>
     <link rel="top" title="GoLismero 2.0.1 documentation" href="../../index.html" />
     <link rel="up" title="Data API" href="../data.html" />
-    <link rel="next" title="Networking API" href="../net.html" />
+    <link rel="next" title="Information disclosure vulnerabilities" href="vulnerabilities/information_disclosure.html" />
     <link rel="prev" title="Details for resource types" href="resource.html" /> 
   </head>
   <body>
@@ -41,7 +41,7 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="../net.html" title="Networking API"
+          <a href="vulnerabilities/information_disclosure.html" title="Information disclosure vulnerabilities"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="resource.html" title="Details for resource types"
@@ -59,6 +59,155 @@
             
   <div class="section" id="details-for-vulnerability-types">
 <h1>Details for vulnerability types<a class="headerlink" href="#details-for-vulnerability-types" title="Permalink to this headline">¶</a></h1>
+<p>The vulnerability types are classified by type.</p>
+<div class="section" id="vulnerability-types">
+<h2>vulnerability types<a class="headerlink" href="#vulnerability-types" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="vulnerabilities/information_disclosure.html">Information disclosure</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vulnerabilities/information_disclosure.html#module-golismero.api.data.vulnerability.information_disclosure.default_error_page">Default error page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vulnerabilities/information_disclosure.html#module-golismero.api.data.vulnerability.information_disclosure.url_disclosure">Url disclosure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vulnerabilities/information_disclosure.html#module-golismero.api.data.vulnerability.information_disclosure.url_suspicious">Url suspicious</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="module-golismero.api.data.vulnerability">
+<span id="generic-vulnerability-interfaces"></span><h2>Generic vulnerability interfaces<a class="headerlink" href="#module-golismero.api.data.vulnerability" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="golismero.api.data.vulnerability.Vulnerability">
+<em class="property">class </em><tt class="descclassname">golismero.api.data.vulnerability.</tt><tt class="descname">Vulnerability</tt><big>(</big><em>impact=0</em>, <em>cve=''</em>, <em>cwe=''</em>, <em>severity=0</em>, <em>risk=0</em>, <em>references=()</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.Vulnerability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for all vulnerabilities reported by the testing plugins.</p>
+<dl class="method">
+<dt id="golismero.api.data.vulnerability.Vulnerability.add_information">
+<tt class="descname">add_information</tt><big>(</big><em>info</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.Vulnerability.add_information" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add information elements associated to a vulnerability.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>info</strong> (<em>Information</em>) &#8211; Information element.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.data.vulnerability.Vulnerability.add_resource">
+<tt class="descname">add_resource</tt><big>(</big><em>res</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.Vulnerability.add_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add resource elements associated to a vulnerability.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>res</strong> (<em>Resource</em>) &#8211; Resource element.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.Vulnerability.associated_informations">
+<tt class="descname">associated_informations</tt><a class="headerlink" href="#golismero.api.data.vulnerability.Vulnerability.associated_informations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list with informations associated to this vulnerability.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List with informations.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.Vulnerability.associated_resources">
+<tt class="descname">associated_resources</tt><a class="headerlink" href="#golismero.api.data.vulnerability.Vulnerability.associated_resources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list with resources associated to this vulnerability.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List with resources.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="golismero.api.data.vulnerability.UrlVulnerability">
+<em class="property">class </em><tt class="descclassname">golismero.api.data.vulnerability.</tt><tt class="descname">UrlVulnerability</tt><big>(</big><em>url</em>, <em>*argv</em>, <em>**argd</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for all vulnerabilities associated with a single URL.</p>
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.UrlVulnerability.content_type">
+<tt class="descname">content_type</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.content_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>str - MIME content type.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.UrlVulnerability.has_post_param">
+<tt class="descname">has_post_param</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.has_post_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>bool - True if there are POST params, False otherwise.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.UrlVulnerability.has_url_param">
+<tt class="descname">has_url_param</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.has_url_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>bool - True if there are URL params, False otherwise.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.UrlVulnerability.is_https">
+<tt class="descname">is_https</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.is_https" title="Permalink to this definition">¶</a></dt>
+<dd><p>bool &#8211; True if it&#8217;s HTTPS, False otherwise.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.UrlVulnerability.method">
+<tt class="descname">method</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.method" title="Permalink to this definition">¶</a></dt>
+<dd><p>str &#8211; HTTP method.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.UrlVulnerability.post_params">
+<tt class="descname">post_params</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.post_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>dict(str) &#8211; POST parameters.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.UrlVulnerability.referer">
+<tt class="descname">referer</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.referer" title="Permalink to this definition">¶</a></dt>
+<dd><p>str &#8211; Referer for this URL.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.UrlVulnerability.request_type">
+<tt class="descname">request_type</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.request_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>int - One of the HTML.TYPE_* constants.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.UrlVulnerability.url">
+<tt class="descname">url</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.url" title="Permalink to this definition">¶</a></dt>
+<dd><p>str &#8211; Raw URL.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.UrlVulnerability.url_params">
+<tt class="descname">url_params</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.url_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>dict(str) &#8211; URL parameters.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 
 
@@ -67,12 +216,23 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Details for vulnerability types</a><ul>
+<li><a class="reference internal" href="#vulnerability-types">vulnerability types</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-golismero.api.data.vulnerability">Generic vulnerability interfaces</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Previous topic</h4>
   <p class="topless"><a href="resource.html"
                         title="previous chapter">Details for resource types</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="../net.html"
-                        title="next chapter">Networking API</a></p>
+  <p class="topless"><a href="vulnerabilities/information_disclosure.html"
+                        title="next chapter">Information disclosure vulnerabilities</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../../sources/api/data/vulnerabilities.txt"
@@ -105,7 +265,7 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="../net.html" title="Networking API"
+          <a href="vulnerabilities/information_disclosure.html" title="Information disclosure vulnerabilities"
              >next</a> |</li>
         <li class="right" >
           <a href="resource.html" title="Details for resource types"

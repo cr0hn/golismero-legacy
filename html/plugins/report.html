@@ -1,0 +1,294 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Report plugins &mdash; GoLismero 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../static/jquery.js"></script>
+    <script type="text/javascript" src="../static/underscore.js"></script>
+    <script type="text/javascript" src="../static/doctools.js"></script>
+    <link rel="top" title="GoLismero 2.0.1 documentation" href="../index.html" />
+    <link rel="up" title="Plugins list" href="../plugins.html" />
+    <link rel="prev" title="Scan plugins" href="testing/scan.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="testing/scan.html" title="Scan plugins"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../plugins.html" accesskey="U">Plugins list</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="report-plugins">
+<h1>Report plugins<a class="headerlink" href="#report-plugins" title="Permalink to this headline">¶</a></h1>
+<p>There are the list of plugins that are responsible of generate the reports:</p>
+<div class="section" id="module-plugins.report.screen">
+<span id="screen-report"></span><h2>Screen report<a class="headerlink" href="#module-plugins.report.screen" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="plugins.report.screen.ScreenReport">
+<em class="property">class </em><tt class="descclassname">plugins.report.screen.</tt><tt class="descname">ScreenReport</tt><a class="headerlink" href="#plugins.report.screen.ScreenReport" title="Permalink to this definition">¶</a></dt>
+<dd><p>This plugin to display reports on screen</p>
+<dl class="method">
+<dt id="plugins.report.screen.ScreenReport.generate_report">
+<tt class="descname">generate_report</tt><big>(</big><em>output_file</em><big>)</big><a class="headerlink" href="#plugins.report.screen.ScreenReport.generate_report" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run plugin and generate report.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output_file</strong> (<em>str | None</em>) &#8211; Output file to generate.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="plugins.report.screen.ScreenReport.is_supported">
+<tt class="descname">is_supported</tt><big>(</big><em>output_file</em><big>)</big><a class="headerlink" href="#plugins.report.screen.ScreenReport.is_supported" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine if this plugin supports the requested file format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output_file</strong> (<em>str | None</em>) &#8211; Output file to generate.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bool - True if this plugin supports the format, False otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.report.screen.common_display_general_summary">
+<tt class="descclassname">plugins.report.screen.</tt><tt class="descname">common_display_general_summary</tt><big>(</big><em>database</em><big>)</big><a class="headerlink" href="#plugins.report.screen.common_display_general_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the summary of scan</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.report.screen.common_get_resources">
+<tt class="descclassname">plugins.report.screen.</tt><tt class="descname">common_get_resources</tt><big>(</big><em>db</em>, <em>data_type=None</em>, <em>data_subtype=None</em><big>)</big><a class="headerlink" href="#plugins.report.screen.common_get_resources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of resources as optimous as possible.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a resouce list.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.report.screen.common_get_table_without">
+<tt class="descclassname">plugins.report.screen.</tt><tt class="descname">common_get_table_without</tt><big>(</big><em>main_cols=</em><span class="optional">[</span><span class="optional">]</span>, <em>with_header=True</em>, <em>with_hrules=True</em><big>)</big><a class="headerlink" href="#plugins.report.screen.common_get_table_without" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get PrettyTable with params:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>main_cols</strong> (<em>list</em>) &#8211; cols of header.</li>
+<li><strong>with_header</strong> (<em>bool</em>) &#8211; set the table header or not.</li>
+<li><strong>with_hrules</strong> (<em>bool</em>) &#8211; set rules at each row.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a PrettyTable object</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PrettyTable</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.report.screen.concrete_display_web_resources">
+<tt class="descclassname">plugins.report.screen.</tt><tt class="descname">concrete_display_web_resources</tt><big>(</big><em>database</em><big>)</big><a class="headerlink" href="#plugins.report.screen.concrete_display_web_resources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the results of web analysis</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.report.screen.general_display_by_resource">
+<tt class="descclassname">plugins.report.screen.</tt><tt class="descname">general_display_by_resource</tt><big>(</big><em>db</em><big>)</big><a class="headerlink" href="#plugins.report.screen.general_display_by_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function display the results like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="go">&gt;&gt;&gt;</span>
+<span class="go">[ 1 ] www.website.com/Param1=Value1&amp;Param2=Value2</span>
+<span class="go">      +-----------------+</span>
+<span class="go">      | Vulnerabilities |</span>
+<span class="go">      +------------------+-----------------------------+</span>
+<span class="go">      |   Vuln name:     |        Url suspicious       |</span>
+<span class="go">      +------------------+-----------------------------+</span>
+<span class="go">      |       URL:       | http://website.com/admin    |</span>
+<span class="go">      | Suspicius text:  |            admin            |</span>
+<span class="go">      +------------------+-----------------------------+</span>
+<span class="go">[ 2 ] www.website.com/contact/</span>
+<span class="go">[ 3 ] www.website.com/Param1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.report.screen.vuln_display_default_error_page">
+<tt class="descclassname">plugins.report.screen.</tt><tt class="descname">vuln_display_default_error_page</tt><big>(</big><em>vuln</em>, <em>table</em><big>)</big><a class="headerlink" href="#plugins.report.screen.vuln_display_default_error_page" title="Permalink to this definition">¶</a></dt>
+<dd><p>Diplay the vuln: URL Disclosure</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.report.screen.vuln_display_url_disclosure">
+<tt class="descclassname">plugins.report.screen.</tt><tt class="descname">vuln_display_url_disclosure</tt><big>(</big><em>vuln</em>, <em>table</em><big>)</big><a class="headerlink" href="#plugins.report.screen.vuln_display_url_disclosure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Diplay the vuln: URL Disclosure</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.report.screen.vuln_display_url_suspicious">
+<tt class="descclassname">plugins.report.screen.</tt><tt class="descname">vuln_display_url_suspicious</tt><big>(</big><em>vuln</em>, <em>table</em><big>)</big><a class="headerlink" href="#plugins.report.screen.vuln_display_url_suspicious" title="Permalink to this definition">¶</a></dt>
+<dd><p>Diplay the vuln: URL Suspicious</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.report.screen.vuln_genereral_displayer">
+<tt class="descclassname">plugins.report.screen.</tt><tt class="descname">vuln_genereral_displayer</tt><big>(</big><em>vulns</em><big>)</big><a class="headerlink" href="#plugins.report.screen.vuln_genereral_displayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>This functions is the responsible to display the vulns</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-plugins.report.text">
+<span id="text-file-report"></span><h2>Text file report<a class="headerlink" href="#module-plugins.report.text" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="plugins.report.text.TextReport">
+<em class="property">class </em><tt class="descclassname">plugins.report.text.</tt><tt class="descname">TextReport</tt><a class="headerlink" href="#plugins.report.text.TextReport" title="Permalink to this definition">¶</a></dt>
+<dd><p>This plugin generate text reports</p>
+<dl class="method">
+<dt id="plugins.report.text.TextReport.generate_report">
+<tt class="descname">generate_report</tt><big>(</big><em>output_file</em><big>)</big><a class="headerlink" href="#plugins.report.text.TextReport.generate_report" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run plugin and generate report.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output_file</strong> (<em>str | None</em>) &#8211; Output file to generate.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="plugins.report.text.TextReport.is_supported">
+<tt class="descname">is_supported</tt><big>(</big><em>output_file</em><big>)</big><a class="headerlink" href="#plugins.report.text.TextReport.is_supported" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine if this plugin supports the requested file format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output_file</strong> (<em>str | None</em>) &#8211; Output file to generate.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bool - True if this plugin supports the format, False otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Report plugins</a><ul>
+<li><a class="reference internal" href="#module-plugins.report.screen">Screen report</a></li>
+<li><a class="reference internal" href="#module-plugins.report.text">Text file report</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="testing/scan.html"
+                        title="previous chapter">Scan plugins</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../sources/plugins/report.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="testing/scan.html" title="Scan plugins"
+             >previous</a> |</li>
+        <li><a href="../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../plugins.html" >Plugins list</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, GoLismero Project.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

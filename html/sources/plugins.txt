@@ -7,3 +7,4 @@ The plugin list by type:
    :maxdepth: 2
 
    plugins/testing
+   plugins/report
