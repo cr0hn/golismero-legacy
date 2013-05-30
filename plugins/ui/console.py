@@ -100,7 +100,7 @@ class ConsoleUIPlugin(UIPlugin):
 
         UrlDisclosure.vulnerability_type: process_url_disclosure,
         SuspiciousURL.vulnerability_type: process_url_suspicious,
-        DefaulErrorPage.vulnerability_type: process_default_error_page,
+        DefaultErrorPage.vulnerability_type: process_default_error_page,
     }
 
 

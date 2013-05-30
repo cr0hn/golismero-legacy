@@ -99,7 +99,7 @@ def main_default_error_pages(info):
 
     m_return           = None
     if m_comparer_results:
-        m_return = DefaulErrorPage(info, m_comparer_results)
+        m_return = DefaultErrorPage(info, m_comparer_results)
         m_return.associated_resource = info
 
     return m_return
