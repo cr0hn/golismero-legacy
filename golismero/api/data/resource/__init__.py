@@ -63,6 +63,17 @@ class Resource(Data):
 
 
     #----------------------------------------------------------------------
+    def is_in_scope(self):
+        """
+        Determines if this resource is within the scope of the current audit.
+
+        :return: True if within scope, False otherwise.
+        :rtype: bool
+        """
+        return True
+
+
+    #----------------------------------------------------------------------
     @property
     def associated_vulnerabilities(self):
         """

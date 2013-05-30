@@ -28,9 +28,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["BaseUrl"]
 
-from .. import identity
 from . import Resource
-from ...net.web_utils import DecomposedURL
+from .domain import Domain
+from .. import identity
+from ...net.web_utils import DecomposedURL, is_in_scope
 
 
 #------------------------------------------------------------------------------
@@ -86,6 +87,11 @@ class BaseUrl(Resource):
 
 
     #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return is_in_scope(self.url)
+
+
+    #----------------------------------------------------------------------
     @identity
     def url(self):
         """
@@ -110,3 +116,9 @@ class BaseUrl(Resource):
         bool -- True if it's HTTPS, False otherwise.
         """
         return self.__parsed.scheme == "https"
+
+
+    #----------------------------------------------------------------------
+    @property
+    def discovered_resources(self):
+        return [Domain(self.parsed_url.hostname),]

@@ -146,6 +146,19 @@ def _bootstrap(context, func, argv, argd):
                         # Configure the plugin.
                         Config._context = context
 
+                        # If the plugin receives a Data object...
+                        if func == "recv_info":
+
+                            # Get the data sent to the plugin.
+                            try:
+                                input_data = argd["info"]
+                            except KeyError:
+                                input_data = argv[0]
+
+                            # Abort if the data is out of scope for the current audit.
+                            if not input_data.is_in_scope():
+                                return
+
                         # TODO: hook stdout and stderr to catch print statements
 
                         # Clear the local network cache for this process.
@@ -184,12 +197,6 @@ def _bootstrap(context, func, argv, argd):
 
                             # Return value is a list of data for recv_info().
                             if func == "recv_info":
-
-                                # Get the data sent to the plugin.
-                                try:
-                                    input_data = argd["info"]
-                                except KeyError:
-                                    input_data = argv[0]
 
                                 # Validate and sanitize the result data.
                                 result = TempDataStorage.on_finish(result)

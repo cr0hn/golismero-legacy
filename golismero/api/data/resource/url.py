@@ -28,11 +28,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Url"]
 
-from .. import identity
 from . import Resource
 from .baseurl import BaseUrl
 from .domain import Domain
-from ...net.web_utils import DecomposedURL
+from .. import identity
+from ...net.web_utils import DecomposedURL, is_in_scope
 
 
 #------------------------------------------------------------------------------
@@ -127,6 +127,11 @@ class Url(Resource):
 
 
     #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return is_in_scope(self.url)
+
+
+    #----------------------------------------------------------------------
 
     @identity
     def url(self):
@@ -215,12 +220,9 @@ class Url(Resource):
         """
         return self.__referer
 
+
+    #----------------------------------------------------------------------
+
     @property
     def discovered_resources(self):
-        """
-        list(Data) -- Discovered resources.
-        """
-        if not self.__discovered_resources:
-            self.__discovered_resources = [Domain(self.parsed_url.hostname), BaseUrl(self.url)]
-
-        return self.__discovered_resources
+        return [Domain(self.parsed_url.hostname), BaseUrl(self.url)]

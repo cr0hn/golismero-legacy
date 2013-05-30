@@ -28,8 +28,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Domain"]
 
-from .. import identity, merge
 from . import Resource
+from .. import identity, merge
+from ...net.web_utils import is_in_scope
 
 
 #------------------------------------------------------------------------------
@@ -81,12 +82,18 @@ class Domain(Resource):
 
 
     #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return is_in_scope("http://%s" % self.__name)
+
+
+    #----------------------------------------------------------------------
     @identity
     def name(self):
         """
         str -- Domain name
         """
         return self.__name
+
 
     #----------------------------------------------------------------------
     @merge
