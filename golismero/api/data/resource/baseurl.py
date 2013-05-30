@@ -38,6 +38,14 @@ from ...net.web_utils import DecomposedURL, is_in_scope
 class BaseUrl(Resource):
     """
     Base URL information type.
+
+    This type is more likelly than Url, but has the diffence that only referer to a
+    base Url o, in other words, without any file or GET parameters, like:
+
+    - http://www.my_site.com -> **Good BaseUrl**
+    - http://www.my_site.com/index.php -> **Bad BaseUrl**. It's a Url type.
+
+
     """
 
     resource_type = Resource.RESOURCE_BASE_URL
@@ -88,6 +96,10 @@ class BaseUrl(Resource):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
+        """
+        :returns: a boolean that indicates if this Url is in scope or not. True: the Url is in scope. False: not.
+        :rtype: bool.
+        """
         return is_in_scope(self.url)
 
 
@@ -95,7 +107,8 @@ class BaseUrl(Resource):
     @identity
     def url(self):
         """
-        str -- Raw URL.
+        :return: Raw URL.
+        :rtype: str
         """
         return self.__url
 
@@ -104,7 +117,8 @@ class BaseUrl(Resource):
     @property
     def parsed_url(self):
         """
-        DecomposedURL -- Parsed URL.
+        :return: Parsed URL.
+        :rtype: DecomposedURL.
         """
         return self.__parsed_url
 
@@ -113,7 +127,8 @@ class BaseUrl(Resource):
     @property
     def is_https(self):
         """
-        bool -- True if it's HTTPS, False otherwise.
+        :return: True if it's HTTPS, False otherwise.
+        :rtype: bool
         """
         return self.__parsed.scheme == "https"
 
@@ -121,4 +136,18 @@ class BaseUrl(Resource):
     #----------------------------------------------------------------------
     @property
     def discovered_resources(self):
+        """
+        This property returns some resources associated with it self.
+
+        For example, from an Url it can generate a Domain resource:
+
+        1. Information of Url: http://www.my_site.com/index.php?param1=value1
+        2. Generated resources:
+
+         - <Domain name="www.my_site.com" >
+         - <BaseUrl url="http://www.my_site.com" >
+
+        :return: list with generated resources.
+        :rtype: list
+        """
         return [Domain(self.parsed_url.hostname),]

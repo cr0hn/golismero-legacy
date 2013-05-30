@@ -37,6 +37,14 @@ from ...net.web_utils import is_in_scope
 class Domain(Resource):
     """
     Domain name resource.
+
+    This resource referer to any domain type, like.
+
+    - www.my_site.com
+    - ftp.my_domain.com
+
+    It only contains information about de domain name.
+
     """
 
     resource_type = Resource.RESOURCE_DOMAIN
@@ -90,7 +98,8 @@ class Domain(Resource):
     @identity
     def name(self):
         """
-        str -- Domain name
+        :return: Domain name
+        :rtype: str.
         """
         return self.__name
 
@@ -99,6 +108,7 @@ class Domain(Resource):
     @merge
     def addresses(self):
         """
-        tuple(str) -- IP addresses
+        :return: IP addresses
+        :rtype: tuple(str).
         """
         return self.__addresses
