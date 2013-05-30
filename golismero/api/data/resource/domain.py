@@ -98,7 +98,8 @@ class Domain(Resource):
     @identity
     def name(self):
         """
-        str -- Domain name
+        :return: Domain name
+        :rtype: str.
         """
         return self.__name
 
@@ -107,6 +108,7 @@ class Domain(Resource):
     @merge
     def addresses(self):
         """
-        tuple(str) -- IP addresses
+        :return: IP addresses
+        :rtype: tuple(str).
         """
         return self.__addresses

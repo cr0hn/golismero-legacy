@@ -37,6 +37,20 @@ from os.path import basename
 import hashlib
 from re import findall
 
+__doc__ = """
+This package contains the classes that represent the abstract objects for HTTP Request and Response.
+
+They acts as Java POJO (http://es.wikipedia.org/wiki/Plain_Old_Java_Object) or, put it another way, acting
+like a simple structures to store information.
+
+This way all HTTP Request and Responses has a simple and commom way to exchange HTTP information.
+
+Two types are defined in this package:
+
+- HTTP_Request
+- HTTP_Response
+
+"""
 
 #------------------------------------------------------------------------------
 class HTTP_Request (object):
@@ -134,13 +148,17 @@ class HTTP_Request (object):
     #----------------------------------------------------------------------
 
     def generate_user_agent(self):
-        """Return a random user agent string"""
+        """
+        :return: Return a random user agent string.
+        :rtype: str.
+        """
         return self.__user_agents[random.randint(0, len(self.__user_agents) - 1)]
 
 
     #----------------------------------------------------------------------
     def add_file_from_file(self, path_to_file, alt_filename=None):
-        """Add file from path
+        """
+        Add file from path
 
         :param path_to_file: path to file to load.
         :type path_to_file: str
@@ -153,7 +171,8 @@ class HTTP_Request (object):
 
     #----------------------------------------------------------------------
     def add_file_from_object(self, param_name, obj, alt_filename=None):
-        """Add file from a binary object.
+        """
+        Add file from a binary object.
 
         :param param_name: name of parameter in resquest
         :type param_name: str
@@ -218,7 +237,10 @@ class HTTP_Request (object):
 
     @property
     def hostname(self):
-        "'Host' HTTP header"
+        """
+        :return: 'Host' HTTP header.
+        :rtype: str
+        """
         return self.__headers.get('Host')
 
     @hostname.setter
@@ -229,7 +251,10 @@ class HTTP_Request (object):
 
     @property
     def user_agent(self):
-        "'User-Agent' HTTP header"
+        """
+        :return: 'User-Agent' HTTP header.
+        :rtype: str
+        """
         return self.__headers.get('User-Agent')
 
     @user_agent.setter
@@ -239,7 +264,10 @@ class HTTP_Request (object):
 
     @property
     def accept_language(self):
-        "'Accept-Language' HTTP header"
+        """
+        :return: 'Accept-Language' HTTP header.
+        :rtype: str.
+        """
         return self.__headers.get('Accept-Language')
 
     @accept_language.setter
@@ -249,7 +277,10 @@ class HTTP_Request (object):
 
     @property
     def accept(self):
-        "'Accept' HTTP header"
+        """
+        :return: 'Accept' HTTP header.
+        :rtype: str.
+        """
         return self.__headers.get('Accept')
 
     @accept.setter
@@ -259,7 +290,10 @@ class HTTP_Request (object):
 
     @property
     def referer(self):
-        "'Referer' HTTP header"
+        """
+        :return: 'Referer' HTTP header.
+        :rtype: str.
+        """
         return self.__headers.get('Referer')
 
     @referer.setter
@@ -269,7 +303,10 @@ class HTTP_Request (object):
 
     @property
     def cookie(self):
-        "'Cookie' HTTP header"
+        """
+        :return: 'Cookie' HTTP header.
+        :rtype: str.
+        """
         return self.__headers.get('Cookie')
 
     @cookie.setter
@@ -279,7 +316,10 @@ class HTTP_Request (object):
 
     @property
     def content_type(self):
-        "'Content-Type' HTTP header"
+        """
+        :return: 'Content-Type' HTTP header.
+        :rtype: str.
+        """
         return self.__headers.get('Content-Type')
 
     @content_type.setter
@@ -289,7 +329,10 @@ class HTTP_Request (object):
 
     @property
     def post_data(self):
-        "HTTP POST data"
+        """
+        :return: HTTP POST data.
+        :rtype: str.
+        """
         return self.__post_data
 
     @post_data.setter
@@ -302,7 +345,10 @@ class HTTP_Request (object):
 
     @property
     def raw_headers(self):
-        "Raw HTTP headers"
+        """
+        :return: Raw HTTP headers as a dict format.
+        :rtype: dict.
+        """
         return self.__headers
 
     @raw_headers.setter
@@ -313,9 +359,8 @@ class HTTP_Request (object):
     @property
     def follow_redirects(self):
         """
-        Redirect options for the request (True to follow redirects, False otherwise).
-
-        :returns: None | bool. None if not set. Bool otherwise.
+        :returns: Redirect options for the request (True to follow redirects, False no follow. None if not set).
+        :rtype: None | bool
         """
         return self.__follow_redirects
 
@@ -332,36 +377,32 @@ class HTTP_Request (object):
     @property
     def url(self):
         """
-        String with URL of the request.
-
-        :returns: str
+        :returns: String with URL of the request.
+        :rtype: str.
         """
         return self.__url
 
     @property
     def parsed_url(self):
         """
-        Returns the URL split to its components.
-
-        :returns: DecomposedURL
+        :returns: Returns the URL split to its components..
+        :rtype: DecomposedURL.
         """
         return self.__parsed_url
 
     @property
     def method(self):
         """
-        HTTP method used for this request.
-
-        :returns: str
+        :returns: HTTP method used for this request.
+        :rtype: str
         """
         return self.__method
 
     @property
     def is_cacheable(self):
         """
-        If request is marked as cacheable return True, else False.
-
-        :returns: bool
+        :returns: If request is marked as cacheable return True, else False.
+        :rtype: bool
         """
         return self.__cache
 
@@ -382,10 +423,13 @@ class HTTP_Request (object):
     def files_attached(self):
         """
         Get a dictionary with filenames attached, in the following format:
-        {
-        'file_name_1' : raw_object_1,
-        'file_name_2' : raw_object_2,
-        }
+
+        .. code-block:: python
+
+           {
+              'file_name_1' : raw_object_1,
+              'file_name_2' : raw_object_2
+           }
 
         :returns: dict
         """
@@ -394,9 +438,8 @@ class HTTP_Request (object):
     @property
     def request_id(self):
         """
-        Get a unique ID for this request.
-
-        :returns: str
+        :returns: Get a unique ID for this request.
+        :rtype: str.
         """
         if not self.__request_id:
             # Create data for key

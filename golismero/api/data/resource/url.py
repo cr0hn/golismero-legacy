@@ -58,13 +58,12 @@ class Url(Resource):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, url, method = "GET", url_params = None, post_params = None, content_type = None, depth = 0, request_type = 0, referer = ""):
+    def __init__(self, url, method = "GET", url_params = None, post_params = None, depth = 0, referer = ""):
         """
         Construct a URL information type.
 
         :param url: URL to manage
         :type url: str
-
 
         :param method: HTTP method to get URL
         :type method: str
@@ -103,12 +102,6 @@ class Url(Resource):
 
         # Encrypted?
         self.__is_https = url.lower().startswith("https://")
-
-        # Content type
-        self.__content_type = content_type
-
-        # Request type
-        self.__request_type = request_type
 
         # Depth
         assert type(depth) == int
@@ -150,21 +143,24 @@ class Url(Resource):
     @identity
     def url(self):
         """
-        str -- Raw URL.
+        :return: Raw URL.
+        :rtype: str.
         """
         return self.__url
 
     @identity
     def method(self):
         """
-        str -- HTTP method.
+        :return: HTTP method.
+        :rtype: str
         """
         return self.__method
 
     @identity
     def post_params(self):
         """
-        dict(str) -- POST parameters.
+        :return: POST parameters as a dict format.
+        :rtype: dict(str)
         """
         return self.__post_params
 
@@ -174,21 +170,24 @@ class Url(Resource):
     @property
     def parsed_url(self):
         """
-        DecomposedURL -- Parsed URL.
+        :return: Parsed URL.
+        :rtype: DecomposedURL.
         """
         return self.__parsed_url
 
     @property
     def url_params(self):
         """
-        dict(str) -- URL parameters.
+        :return: URL parameters.
+        :rtype: dict(str).
         """
         return self.__url_params
 
     @property
     def is_https(self):
         """
-        bool -- True if it's HTTPS, False otherwise.
+        :return: If it's HTTPS, False otherwise.
+        :rtype: bool.
         """
         return self.__is_https
 
@@ -202,35 +201,24 @@ class Url(Resource):
     @property
     def has_post_param(self):
         """
-        bool - True if there are POST params, False otherwise.
+        :return: True if there are POST params, False otherwise.
+        :rtype: bool
         """
         return bool(self.post_params)
 
     @property
-    def content_type(self):
-        """
-        str - MIME content type.
-        """
-        return self.__content_type
-
-    @property
-    def request_type(self):
-        """
-        int - One of the HTML.TYPE_* constants.
-        """
-        return self.__request_type
-
-    @property
     def depth(self):
         """
-        int - The recursion depth reached to find this URL.
+        :return: The recursion depth reached to find this URL.
+        :rtype: int
         """
         return self.__depth
 
     @property
     def referer(self):
         """
-        str -- Referer for this URL.
+        :return: Referer for this URL.
+        :rtype: str.
         """
         return self.__referer
 
@@ -239,4 +227,18 @@ class Url(Resource):
 
     @property
     def discovered_resources(self):
+        """
+        This property returns some resources associated with it self.
+
+        For example, from an Url it can generate a Domain resource:
+
+        1. Information of Url: http://www.my_site.com/index.php?param1=value1
+        2. Generated resources:
+
+         - <Domain name="www.my_site.com" >
+         - <BaseUrl url="http://www.my_site.com" >
+
+        :return: list with generated resources.
+        :rtype: list
+        """
         return [Domain(self.parsed_url.hostname), BaseUrl(self.url)]
