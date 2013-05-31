@@ -762,9 +762,29 @@ class Data(object):
         """
         if type(information_type) is not int:
             raise TypeError("Expected int, got %r instead" % type(information_type))
-        if not Information.INFORMATION_FIRST >= information_type >= Information.INFORMATION_LAST:
-            raise ValueError("Invalid information_type: %r" % information_type)
+##        if not Information.INFORMATION_FIRST >= information_type >= Information.INFORMATION_LAST:
+##            raise ValueError("Invalid information_type: %r" % information_type)
         return self.get_linked_data(self.TYPE_INFORMATION, information_type)
+
+
+    #----------------------------------------------------------------------
+    def associated_resources_by_category(self, resource_type = None):
+        """
+        Get associated informations by type.
+
+        :param resource_type: One of the Resource.RESOURCE_* constants.
+        :type resource_type: int
+
+        :return: Associated resources.
+        :rtype: set(Resource)
+
+        :raises ValueError: The specified resource type is invalid.
+        """
+        if type(resource_type) is not int:
+            raise TypeError("Expected int, got %r instead" % type(resource_type))
+##        if not Resource.RESOURCE_FIRST >= resource_type >= Resource.RESOURCE_LAST:
+##            raise ValueError("Invalid resource_type: %r" % resource_type)
+        return self.get_linked_data(self.TYPE_RESOURCE, resource_type)
 
 
     #----------------------------------------------------------------------

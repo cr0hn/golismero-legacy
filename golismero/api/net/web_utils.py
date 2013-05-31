@@ -42,7 +42,7 @@ __all__ = [
 from ..config import Config
 from ..text.text_utils import generate_random_string, split_first
 
-#from BeautifulSoup import BeautifulSoup
+from BeautifulSoup import BeautifulSoup
 from copy import deepcopy
 from posixpath import join, splitext, split
 from repoze.lru import lru_cache
