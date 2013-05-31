@@ -11,14 +11,22 @@ GoLismero has 3 types os data:
 
 Each type of data respresent a particular information.
 
-Common interfaces
-=================
+Generic base types
+==================
 
 Each type of information has one of de follow common interface:
 
+The base class: Data
+--------------------
 
-Information types
------------------
+This class defines the base of all subtypes of data
+
+.. automodule:: golismero.api.data
+   :members: Data
+
+
+Sub-type: Information
+---------------------
 
 The methods and params for general Information types are:
 
@@ -26,8 +34,8 @@ The methods and params for general Information types are:
    :members:
    :show-inheritance:
 
-Resource types
---------------
+Sub-type: Resource
+------------------
 
 The methods and params for general Resources types are:
 
@@ -35,8 +43,8 @@ The methods and params for general Resources types are:
    :members:
    :show-inheritance:
 
-Vulnerability types
--------------------
+Sub-type: Vulnerability
+-----------------------
 
 The methods and params for general vulnerabilities types are:
 

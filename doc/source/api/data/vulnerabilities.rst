@@ -15,6 +15,18 @@ vulnerability types
 Generic vulnerability interfaces
 --------------------------------
 
-.. automodule:: golismero.api.data.vulnerability
-   :members:
+Vulnerability interface
++++++++++++++++++++++++
 
+.. automodule:: golismero.api.data.vulnerability
+   :members: Vulnerability
+   :noindex:
+   :show-inheritance: Data
+
+Vulnerability sub-interface
++++++++++++++++++++++++++++
+
+.. automodule:: golismero.api.data.vulnerability
+   :members: UrlVulnerability
+   :noindex:
+   :show-inheritance:

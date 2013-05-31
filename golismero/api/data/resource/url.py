@@ -194,7 +194,8 @@ class Url(Resource):
     @property
     def has_url_param(self):
         """
-        bool - True if there are URL params, False otherwise.
+        :return: True if there are URL params, False otherwise.
+        :rtype: bool.
         """
         return bool(self.url_params)
 

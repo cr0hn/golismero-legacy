@@ -32,6 +32,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from .config import Config
 
+__doc__ = """
+This module contains all the interfaces for make plugins for GoLismero.
+
+.. warning::
+   The classes: :py:class:`.Plugin`, :py:class:`.InformationPlugin` and :py:class:`.AdvancedPlugin` provides a base for the end plugin never will be inherited by any plugin.
+
+There are 3 types of class you must inherit to develop a plugin:
+
+- :py:class:`.TestingPlugin`: To develop a testing/hacking? plugin.
+- :py:class:`.UIPlugin`: To develop a User Interface plugin
+- :py:class:`.ReportPlugin`: to develop a plugin to report the results.
+
+"""
+
 
 class Plugin (object):
     """
@@ -67,7 +81,10 @@ class Plugin (object):
 
     #----------------------------------------------------------------------
     def display_help(self):
-        """Get the help message for this plugin."""
+        """
+        :returns: Get the help message for this plugin.
+        :rtype: str
+        """
         text = Config.plugin_info.description
         if not text:
             raise NotImplementedError("Plugin must implement this method!")
@@ -77,7 +94,8 @@ class Plugin (object):
     #----------------------------------------------------------------------
     def _set_observer(self, observer):
         """
-        Called internally by GoLismero. Do not call or override!
+        .. warning::
+           Called internally by GoLismero. Do not call or override!
         """
         return
 
@@ -109,7 +127,9 @@ class InformationPlugin (Plugin):
 
         Messages types can be found at the Message class.
 
-        :returns: list -- list with constants
+
+        :returns: list with constants.
+        :rtype: list.
         """
         raise NotImplementedError("Plugin must implement this method!")
 
@@ -117,7 +137,7 @@ class InformationPlugin (Plugin):
 #------------------------------------------------------------------------------
 class AdvancedPlugin (InformationPlugin):
     """
-    Advanced plugins are tipically internal plugins, either of the UI type
+    Advanced plugins are tipically **internal plugins**, either of the UI type
     or the Global type. These are not usually coded by users, but only
     shipped with GoLismero itself.
     """
@@ -147,7 +167,8 @@ class AdvancedPlugin (InformationPlugin):
         """
         Plugins call this method to send messages back to GoLismero.
 
-        Do not override this method!
+        .. warning::
+           Do not override this method!
         """
         self.__observer_ref.send_msg(message)
 

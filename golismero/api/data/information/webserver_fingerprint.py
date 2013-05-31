@@ -32,6 +32,10 @@ from . import Information
 from .. import identity
 
 
+__doc__ = """
+This module contain the structure for store fingerprint information for a resource.
+"""
+
 #------------------------------------------------------------------------------
 class WebServerFingerprint(Information):
     """
