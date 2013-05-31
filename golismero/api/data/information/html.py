@@ -38,30 +38,31 @@ class HTML(Information):
     """
     HTML document.
 
-    This type contains all of relevant tags of a HTML document:
+    This object contains all of relevant tags of a HTML document:
 
-    - CSS links
-    - CSS embeded
-    - Javascript links
-    - Metas
-    - Links
-    - Forms
-    - Images
-    - Title
-    - Object
+    - title
+    - links
+    - forms
+    - images
+    - objects
+    - metas
+    - css_links
+    - css_embedded
+    - javascript_links
 
-    Also contains a generic property for access to other tags:
+    Also contains a property to access all tags:
 
-    - Elements
+    - elements
 
-    You can also access to raw HTML code.
+    You can also get the raw HTML code.
 
     - raw_data
 
     .. note::
-       The HTML parser used is dinamically selected internally, depends of your installed libraries.
+       The HTML parser used is internally selected on runtime,
+       depends of your installed libraries.
 
-    Use if is very simple:
+    Example:
 
     >>> from golismero.api.data.information.html import HTML
     >>> html_info=\"\"\"<html>
@@ -151,7 +152,7 @@ class HTML(Information):
     @property
     def links(self):
         """
-        :return: Links tags.
+        :return: Link tags.
         :rtype: list(HTMLElement)
         """
         return HTMLParser(self.raw_data).links

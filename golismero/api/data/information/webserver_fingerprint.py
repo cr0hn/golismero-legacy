@@ -35,7 +35,7 @@ from .. import identity
 #------------------------------------------------------------------------------
 class WebServerFingerprint(Information):
     """
-    Fingerprint information for a concrete host and web server.
+    Fingerprint information for a particular host and web server.
     """
 
     information_type = Information.INFORMATION_WEB_SERVER_FINGERPRINT
@@ -95,6 +95,15 @@ class WebServerFingerprint(Information):
 
 
     #----------------------------------------------------------------------
+    def __repr__(self):
+        return "<WebServerFingerprint server='%s-%s' banner='%s'>" % (
+            self.__name,
+            self.__version,
+            self.__banner,
+        )
+
+
+    #----------------------------------------------------------------------
     @identity
     def name(self):
         """
@@ -109,7 +118,8 @@ class WebServerFingerprint(Information):
     def version(self):
         """
         :return: Web server version.
-        :rtype: str """
+        :rtype: str
+        """
         return self.__version
 
 
@@ -118,7 +128,8 @@ class WebServerFingerprint(Information):
     def banner(self):
         """
         :return: Web server banner.
-        :rtype: str"""
+        :rtype: str
+        """
         return self.__banner
 
 
@@ -126,16 +137,7 @@ class WebServerFingerprint(Information):
     @identity
     def others(self):
         """
-        :return: Dict with other possibilities for this web server. The format for this parameter is: { SERVER_NAME : PROBABILITY }
-        :rtype: dict
+        :return: Map of other possible web servers by name and their probabilities of being correct [0.0 ~ 1.0].
+        :rtype: dict( str -> float )
         """
         return self.__others
-
-
-    #----------------------------------------------------------------------
-    def __repr__(self):
-        return "<WebServerFingerprint server='%s-%s' banner='%s'>" % (
-            self.__name,
-            self.__version,
-            self.__banner,
-        )

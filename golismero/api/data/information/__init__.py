@@ -80,10 +80,10 @@ class Information(Data):
     @property
     def associated_vulnerabilities(self):
         """
-        Get a list with vulnerabilities associated to this information.
+        Get the vulnerabilities associated to this information.
 
-        :return: List with vulnerabilities.
-        :rtype: list
+        :return: Vulnerabilities.
+        :rtype: list(Vulnerability)
         """
         return self.get_linked_data(Data.TYPE_VULNERABILITY)
 
@@ -92,10 +92,10 @@ class Information(Data):
     @property
     def associated_resources(self):
         """
-        Get a list with resources associated to this information.
+        Get the resources associated to this information.
 
-        :return: List with resources.
-        :rtype: list
+        :return: Resources.
+        :rtype: list(Resource)
         """
         return self.get_linked_data(Data.TYPE_RESOURCE)
 
@@ -103,7 +103,7 @@ class Information(Data):
     #----------------------------------------------------------------------
     def add_resource(self, res):
         """
-        Add resource elements associated to an information.
+        Associate a Resource to this Information.
 
         :param res: Resource element.
         :type res: Resource
@@ -116,7 +116,7 @@ class Information(Data):
     #----------------------------------------------------------------------
     def add_vulnerability(self, vuln):
         """
-        Add vulnerability elements associated to an information.
+        Associate a Vulnerability to this Information.
 
         :param info: Vulnerability element.
         :type info: Vulnerability

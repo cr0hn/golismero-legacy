@@ -43,8 +43,7 @@ class Text(Information):
 
     #----------------------------------------------------------------------
     def __init__(self, data):
-        """Constructor.
-
+        """
         :param data: Plain text data.
         :type data: str
         """
