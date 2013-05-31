@@ -170,7 +170,40 @@ def SimpleWordList(wordlist_path):
 
 
 #------------------------------------------------------------------------------
-class AdvancedWordlist(object):
+class AbstractWordlist(object):
+    """
+    Base class for advanced wordlists.
+    """
+
+
+    #----------------------------------------------------------------------
+    def binary_search(self, word):
+        raise NotImplemented()
+
+
+    #----------------------------------------------------------------------
+    def get_first(self, word, init=0):
+        """
+        Get first coincidence, starting at begining.
+        """
+        raise NotImplemented()
+
+
+    #----------------------------------------------------------------------
+    def get_rfirst(self, word, init=0):
+        """
+        Get first coincidence, starting at begining.
+        """
+        raise NotImplemented()
+
+
+    #----------------------------------------------------------------------
+    def search_mutations(self, word, rules):
+        raise NotImplemented()
+
+
+#------------------------------------------------------------------------------
+class AdvancedWordlist(AbstractWordlist):
     """
     Advanced wordlists allow to do some operations with wordlists:
     - Search matches of a word in the wordlist.
@@ -227,34 +260,8 @@ class AdvancedWordlist(object):
         return [x for x in self.__wordlist if word in x]
 
 
-    #----------------------------------------------------------------------
-    def binary_search(self, word):
-        raise NotImplemented()
-
-
-    #----------------------------------------------------------------------
-    def get_first(self, word, init=0):
-        """
-        Get first coincidence, starting at begining.
-        """
-        raise NotImplemented()
-
-
-    #----------------------------------------------------------------------
-    def get_rfirst(self, word, init=0):
-        """
-        Get first coincidence, starting at begining.
-        """
-        raise NotImplemented()
-
-
-    #----------------------------------------------------------------------
-    def search_mutations(self, word, rules):
-        raise NotImplemented()
-
-
 #------------------------------------------------------------------------------
-class AdvancedDicWordlist(object):
+class AdvancedDicWordlist(AbstractWordlist):
     """
     Advanced wordlist that loads a wordlist with a separator character as a dict, like:
 
@@ -269,9 +276,10 @@ class AdvancedDicWordlist(object):
     - Search matches of wordlist with mutations.
     """
 
+
     #----------------------------------------------------------------------
     def __init__(self, wordlist, separator = ";"):
-        """Constructor"""
+
         if not wordlist:
             raise ValueError("Empty wordlist got")
         if not separator:
@@ -301,8 +309,6 @@ class AdvancedDicWordlist(object):
                 self.__wordlist[v[0]].append(v[1])
 
 
-        del m_tmp_wordlist
-
     #----------------------------------------------------------------------
     def matches_by_keys(self, word):
         """
@@ -315,6 +321,7 @@ class AdvancedDicWordlist(object):
         :return: a list with matches.
         :rtype: dict(KEY, VALUE)
         """
+
         if not word:
             return {}
 
@@ -325,7 +332,6 @@ class AdvancedDicWordlist(object):
         # TODO: FIX WITH NEW FORMAT!!!!
         #
         #
-
 
         return { i:v for i, v in self.__wordlist.iteritems() if word == i}
 
@@ -342,6 +348,7 @@ class AdvancedDicWordlist(object):
         :return: a list with matches and correpondences.
         :rtype: list(list(KEY, VALUE, LEVEL))
         """
+
         if not word:
             return []
 
@@ -355,6 +362,7 @@ class AdvancedDicWordlist(object):
 
         return [x for x in self.__wordlist if word == x]
 
+
     #----------------------------------------------------------------------
     def matches_by_value(self, word, debug = False):
         """
@@ -367,6 +375,7 @@ class AdvancedDicWordlist(object):
         :return: a list with matches.
         :rtype: dict(KEY, VALUE)
         """
+
         if not word:
             return {}
 
@@ -396,6 +405,7 @@ class AdvancedDicWordlist(object):
         :return: a list with matches and correpondences.
         :rtype: list(list(KEY, VALUE, LEVEL))
         """
+
         if not word:
             return []
 
@@ -407,31 +417,4 @@ class AdvancedDicWordlist(object):
         #
         #
 
-
         return [x for x in self.__wordlist.itervalues() if word == x]
-
-
-    #----------------------------------------------------------------------
-    def binary_search(self, word):
-        """"""
-        raise NotImplemented()
-
-    #----------------------------------------------------------------------
-    def get_first(self, word, init=0):
-        """
-        Get first coincidence, starting at begining.
-        """
-        raise NotImplemented()
-
-    #----------------------------------------------------------------------
-    def get_rfirst(self, word, init=0):
-        """
-        Get first coincidence, starting at begining.
-        """
-        raise NotImplemented()
-
-
-    #----------------------------------------------------------------------
-    def search_mutations(self, word, rules):
-        """"""
-        raise NotImplemented()
