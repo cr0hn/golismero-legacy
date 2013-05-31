@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#-----------------------------------------------------------------------
-# Wordlist API
-#-----------------------------------------------------------------------
+"""
+Wordlist API.
+"""
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -40,6 +40,7 @@ from repoze.lru import lru_cache
 from ..logger import Logger
 from ...common import Singleton
 
+
 #------------------------------------------------------------------------------
 class WordListAPI(Singleton):
     """
@@ -63,6 +64,8 @@ class WordListAPI(Singleton):
     def __load_wordlists(self, currentDir):
         """
         Find and load wordlists from the specified directory.
+
+        .. warning: Private method, do not call!
 
         :param currentDir: Directory to look for wordlists.
         :type currentDir: str
@@ -96,9 +99,8 @@ class WordListAPI(Singleton):
     @property
     def all_wordlists(self):
         """
-        Get the names of all the wordlists.
-
-        :returns: list
+        :returns: Names of all the wordlists.
+        :rtype: list
         """
         return self.__store.keys()
 
@@ -106,35 +108,43 @@ class WordListAPI(Singleton):
     #----------------------------------------------------------------------
     def get_wordlist(self, wordlist_name):
         """
-        Get an iterator with the selected wordlist.
+        :param wordlist_name: Name of the requested wordlist.
+        :type wordlist_name: str
 
-        :returns: iterator with wordlist.
+        :returns: Iterator for the selected wordlist.
+        :rtype: iter(str)
         """
         try:
             return SimpleWordList(self.__store[wordlist_name])
         except KeyError:
             raise KeyError("Wordlist file not found: %s" % wordlist_name)
 
+
     #----------------------------------------------------------------------
     @lru_cache(maxsize=20)
     def get_advanced_wordlist(self, wordlist_name):
         """
-        Get an iterator with the selected wordlist.
+        :param wordlist_name: Name of the requested advanced wordlist.
+        :type wordlist_name: str
 
-        :returns: iterator with wordlist.
+        :returns: Iterator for the selected advanced wordlist.
+        :rtype: iter(str)
         """
         try:
             return AdvancedWordlist(self.__store[wordlist_name])
         except KeyError:
             raise KeyError("Wordlist file not found: %s" % wordlist_name)
 
+
     #----------------------------------------------------------------------
     @lru_cache(maxsize=20)
     def get_advanced_wordlist_as_dict(self, wordlist_name, separator=";"):
         """
-        Get an iterator with the selected wordlist.
+        :param wordlist_name: Name of the requested advanced wordlist.
+        :type wordlist_name: str
 
-        :returns: iterator with wordlist.
+        :returns: Advanced wordlist object.
+        :rtype: AdvancedDicWordlist
         """
         try:
             return AdvancedDicWordlist(self.__store[wordlist_name], separator)
@@ -159,25 +169,25 @@ def SimpleWordList(wordlist_path):
         Logger.log_error("Error opening wordlist %s: " % e.message)
 
 
-
-
 #------------------------------------------------------------------------------
 class AdvancedWordlist(object):
     """
-    Advanced wordlist that allow to do some operations with wordlists:
+    Advanced wordlists allow to do some operations with wordlists:
     - Search matches of a word in the wordlist.
     - Binary search in wordlist.
     - Get first coincidence, start at begining or end of list.
     - Search matches of wordlist with mutations.
     """
 
+
     #----------------------------------------------------------------------
     def __init__(self, wordlist):
-        """Constructor"""
+
         if not wordlist:
-            raise ValueError("Empty wordlist got")
+            raise ValueError("Empty wordlist!")
 
         self.__wordlist = wordlist
+
 
     #----------------------------------------------------------------------
     def matches(self, word):
@@ -185,16 +195,18 @@ class AdvancedWordlist(object):
         Search word passed as parameter in wordlist and return a list with
         matches found.
 
-        :param word: word to search.
+        :param word: Word to search.
         :type word: str.
 
-        :return: a list with matches.
+        :return: Matched words.
         :rtype: list
         """
+
         if not word:
             return []
 
         return [x for x in self.__wordlist if word in x]
+
 
     #----------------------------------------------------------------------
     def matches_level(self, word):
@@ -202,21 +214,23 @@ class AdvancedWordlist(object):
         Search word passed as parameter in wordlist and return a list with
         matches and level of correspondence.
 
-        :param word: word to search.
-        :type word: str.
+        :param word: Word to search.
+        :type word: str
 
-        :return: a list with matches and correpondences.
-        :rtype: list((URL, level))
+        :return: Matched words and correpondence levels.
+        :rtype: list( (str, int) )
         """
+
         if not word:
             return []
 
         return [x for x in self.__wordlist if word in x]
 
+
     #----------------------------------------------------------------------
     def binary_search(self, word):
-        """"""
         raise NotImplemented()
+
 
     #----------------------------------------------------------------------
     def get_first(self, word, init=0):
@@ -224,6 +238,7 @@ class AdvancedWordlist(object):
         Get first coincidence, starting at begining.
         """
         raise NotImplemented()
+
 
     #----------------------------------------------------------------------
     def get_rfirst(self, word, init=0):
@@ -235,14 +250,13 @@ class AdvancedWordlist(object):
 
     #----------------------------------------------------------------------
     def search_mutations(self, word, rules):
-        """"""
         raise NotImplemented()
 
 
 #------------------------------------------------------------------------------
 class AdvancedDicWordlist(object):
     """
-    Advanced wordlist that load a wordlist with a separated character as a dict, like:
+    Advanced wordlist that loads a wordlist with a separator character as a dict, like:
 
     word list 1; sencond value of wordlist
 

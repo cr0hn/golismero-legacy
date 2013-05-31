@@ -450,7 +450,7 @@ def get_http_method(url, net_manager):
 
 
     # Check if HEAD reponse is different that GET response, to ensure that results are valids
-    return "HEAD" if HTTP_response_headers_comparer(m_head_response.http_headers, m_get_response.http_headers) < 0.90 else "GET"
+    return "HEAD" if HTTP_response_headers_analyzer(m_head_response.http_headers, m_get_response.http_headers) < 0.90 else "GET"
 
 
 #----------------------------------------------------------------------

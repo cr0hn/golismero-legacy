@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#-----------------------------------------------------------------------
-# Text manipulation utilities
-#-----------------------------------------------------------------------
+"""
+Text manipulation utilities.
+"""
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -37,14 +37,14 @@ from string import ascii_letters, digits
 
 
 #----------------------------------------------------------------------
-def generate_random_string(string_length=30):
+def generate_random_string(length = 30):
     """
-    Generates a random string with length as parameter.
+    Generates a random string of the specified length.
 
     The key space used to generate random strings are:
 
-    * All ASCII letters (lowercase and uppercase letters).
-    * Digits from 0-9.
+    * ASCII letters (both lowercase and uppercase).
+    * Digits (0-9).
 
     >>> from golismero.text.text_utils import generate_random_string
     >>> generate_random_string(10)
@@ -52,13 +52,13 @@ def generate_random_string(string_length=30):
     >>> generate_random_string(30)
     8KNLs981jc0h1ls8b2ks01bc7slgu2
 
-    :param string_length: length of string generated
-    :type string_length: int
+    :param length: Desired string length.
+    :type length: int
     """
 
     m_available_chars = ascii_letters + digits
 
-    return ''.join(choice(m_available_chars) for _ in xrange(string_length))
+    return "".join(choice(m_available_chars) for _ in xrange(length))
 
 
 #----------------------------------------------------------------------
@@ -71,10 +71,8 @@ def generate_random_string(string_length=30):
 #
 def split_first(s, delims):
     """
-    **This function was borrowed from the urllib3 project.**
-
     Given a string and an iterable of delimiters, split on the first found
-    delimiter. Return two split parts and the matched delimiter.
+    delimiter. Return the two split parts and the matched delimiter.
 
     If not found, then the first part is the full input string.
 
@@ -85,7 +83,10 @@ def split_first(s, delims):
         >>> split_first('foo/bar?baz', '123')
         ('foo/bar?baz', '', None)
 
-    Scales linearly with number of delims. Not ideal for large number of delims.
+    Scales linearly with number of delimiters. Not ideal for a large number of delimiters.
+
+    .. warning: This function was borrowed from the urllib3 project.
+                It may be removed in future versions of GoLismero.
     """
     min_idx = None
     min_delim = None

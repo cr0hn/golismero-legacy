@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#-----------------------------------------------------------------------
-# 404 or not found pages analyzer
-#-----------------------------------------------------------------------
+"""
+404 or not found pages analyzer.
+"""
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -37,11 +37,10 @@ import hashlib
 from difflib import SequenceMatcher
 from diff_match_patch import diff_match_patch
 
+
 #----------------------------------------------------------------------
-#
-# Text comparer
-#
-#----------------------------------------------------------------------
+# Text analyzer.
+
 def get_matching_level(text1, text2):
     """
     Compare two text and return a value between 0-1 with the level of
@@ -53,10 +52,11 @@ def get_matching_level(text1, text2):
     :param text1: First text to compare.
     :type text1: str
 
-    :param text2: Text to comarpe text1.
+    :param text2: Second text to compare.
     :type text2: str
 
-    :returns: float - Value between 0-1
+    :returns: Floating point value between 0 and 1.
+    :rtype: float
     """
     if not text1 and not text2:
         return 1 # If two text are empty => are equals
@@ -98,29 +98,27 @@ class MatchingAnalyzerElement(object):
 
     #----------------------------------------------------------------------
     def __init__(self, attrs):
-        """Constructor"""
         self.__attrs = attrs
 
 
     #----------------------------------------------------------------------
     def __getattr__(self, name):
-        """"""
         return self.__attrs[name]
 
 
 #------------------------------------------------------------------------------
 class MatchingAnalyzer(object):
     """
-    Text analyzer and comparer texts.
+    Text analyzer.
 
-    Compare an undetermined number of text from a base text and generates
+    Compares any number of texts from a base text and generates
     an iterator with those that are sufficiently different.
     """
 
 
     #----------------------------------------------------------------------
     def __init__(self, base_text, matching_level = 0.52, deviation = 1.15):
-        """Constructor"""
+
         self.__base_text = base_text
         self.__unique_strings = []
         self.__new_data = False
@@ -138,24 +136,24 @@ class MatchingAnalyzer(object):
     #----------------------------------------------------------------------
     @property
     def base_text(self):
-        """Base text for compare rest of strings"""
+        """
+        :returns: Base text for comparison.
+        :rtype: str
+        """
         return self.__base_text
 
 
     #----------------------------------------------------------------------
     def append(self, text, **kargs):
         """
-        If the matching level is accepted store it and the others params in
-        \*\*kargs.
+        If the matching level is accepted,
+        store it along with all the keyword arguments.
 
-        :param text: text to compare.
+        :param text: Text to compare.
         :type text: str
 
-        :param \*\*kargs: undefined numbre of params.
-        :type \*\*kargs: special param.
-
-        :return: True if text is accepted. False otherwise.
-        :retype: bool
+        :returns: True if the text is accepted, False otherwise.
+        :rtype: bool
         """
         if text:
             l_matching_level = get_matching_level(self.__base_text, text)
@@ -179,7 +177,8 @@ class MatchingAnalyzer(object):
     @property
     def unique_texts(self):
         """
-        Return an iterable with unique text.
+        :returns: Iterable with unique texts.
+        :rtype: iter(str)
         """
         if self.__new_data:
             self.__calculate()
@@ -192,8 +191,7 @@ class MatchingAnalyzer(object):
     @property
     def level_average(self):
         """
-        Average of maching level.
-
+        :returns: Average matching level.
         :rtype: float
         """
         if self.__new_data:
@@ -208,11 +206,13 @@ class MatchingAnalyzer(object):
     #----------------------------------------------------------------------
     def __calculate(self):
         """
-        Calculate the elements that are really different:
+        Calculate the elements that are really different.
 
         Calculate the level of correpondence for all elements. We calculate the
         deviation of 5%. All elements in of these deviation are part of same page of
         error, and then skip it.
+
+        .. warning: Private method, do not call!
         """
         if self.level_average:
             m_average = self.level_average
@@ -230,11 +230,9 @@ class MatchingAnalyzer(object):
 
 
 #----------------------------------------------------------------------
-#
-# HTTP Response comparer
-#
-#----------------------------------------------------------------------
-def HTTP_response_headers_comparer(response_header_1, response_header_2):
+# HTTP response analyzer.
+
+def HTTP_response_headers_analyzer(response_header_1, response_header_2):
     """
     Does a HTTP comparison to determinate if two HTTP response matches with the
     same content without need the body content. To do that, remove some HTTP headers
@@ -251,14 +249,14 @@ def HTTP_response_headers_comparer(response_header_1, response_header_2):
     :param response_header_2: text with http response headers.
     :type response_header_2: str
     """
-    m_non_valid_headers = [
+
+    m_invalid_headers = [
         "Date",
         "Expires",
-        "Last-Modified"
+        "Last-Modified",
     ]
 
-
-    m_res1 = ''.join(["%s:%s" % (k,v) for k,v in response_header_1.iteritems() if k not in m_non_valid_headers  ])
-    m_res2 = ''.join(["%s:%s" % (k,v) for k,v in response_header_2.iteritems() if k not in m_non_valid_headers  ])
+    m_res1 = ''.join([ "%s:%s" % (k,v) for k,v in response_header_1.iteritems() if k not in m_invalid_headers ])
+    m_res2 = ''.join([ "%s:%s" % (k,v) for k,v in response_header_2.iteritems() if k not in m_invalid_headers ])
 
     return get_matching_level(m_res1, m_res2)
