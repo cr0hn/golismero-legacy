@@ -86,7 +86,6 @@ class Url(Resource):
 
         :raises ValueError: Currently, relative URLs are not allowed.
         """
-        assert isinstance(referer, basestring)
 
         # Parse, verify and canonicalize the URL.
         # TODO: if relative, make it absolute using the referer when available.
@@ -118,7 +117,8 @@ class Url(Resource):
         self.__depth = depth
 
         # Referer.
-        assert isinstance(referer, basestring)
+        if referer is not None:
+            assert isinstance(referer, basestring)
         self.__referer = referer
 
         # Discovered resources.
