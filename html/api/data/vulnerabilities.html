@@ -73,15 +73,18 @@
 </ul>
 </div>
 </div>
-<div class="section" id="module-golismero.api.data.vulnerability">
-<span id="generic-vulnerability-interfaces"></span><h2>Generic vulnerability interfaces<a class="headerlink" href="#module-golismero.api.data.vulnerability" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="generic-vulnerability-interfaces">
+<h2>Generic vulnerability interfaces<a class="headerlink" href="#generic-vulnerability-interfaces" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="vulnerability-interface">
+<h3>Vulnerability interface<a class="headerlink" href="#vulnerability-interface" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="golismero.api.data.vulnerability.Vulnerability">
-<em class="property">class </em><tt class="descclassname">golismero.api.data.vulnerability.</tt><tt class="descname">Vulnerability</tt><big>(</big><em>impact=0</em>, <em>cve=''</em>, <em>cwe=''</em>, <em>severity=0</em>, <em>risk=0</em>, <em>references=()</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.Vulnerability" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for all vulnerabilities reported by the testing plugins.</p>
+<dt>
+<em class="property">class </em><tt class="descclassname">golismero.api.data.vulnerability.</tt><tt class="descname">Vulnerability</tt><big>(</big><em>impact=0</em>, <em>cve=''</em>, <em>cwe=''</em>, <em>severity=0</em>, <em>risk=0</em>, <em>references=()</em><big>)</big></dt>
+<dd><p>Bases: <a class="reference internal" href="../data.html#golismero.api.data.Data" title="golismero.api.data.Data"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.Data</span></tt></a></p>
+<p>Base class for all vulnerabilities reported by the testing plugins.</p>
 <dl class="method">
-<dt id="golismero.api.data.vulnerability.Vulnerability.add_information">
-<tt class="descname">add_information</tt><big>(</big><em>info</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.Vulnerability.add_information" title="Permalink to this definition">¶</a></dt>
+<dt>
+<tt class="descclassname">Vulnerability.</tt><tt class="descname">add_information</tt><big>(</big><em>info</em><big>)</big></dt>
 <dd><p>Add information elements associated to a vulnerability.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -94,8 +97,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="golismero.api.data.vulnerability.Vulnerability.add_resource">
-<tt class="descname">add_resource</tt><big>(</big><em>res</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.Vulnerability.add_resource" title="Permalink to this definition">¶</a></dt>
+<dt>
+<tt class="descclassname">Vulnerability.</tt><tt class="descname">add_resource</tt><big>(</big><em>res</em><big>)</big></dt>
 <dd><p>Add resource elements associated to a vulnerability.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -108,8 +111,8 @@
 </dd></dl>
 
 <dl class="attribute">
-<dt id="golismero.api.data.vulnerability.Vulnerability.associated_informations">
-<tt class="descname">associated_informations</tt><a class="headerlink" href="#golismero.api.data.vulnerability.Vulnerability.associated_informations" title="Permalink to this definition">¶</a></dt>
+<dt>
+<tt class="descclassname">Vulnerability.</tt><tt class="descname">associated_informations</tt></dt>
 <dd><p>Get a list with informations associated to this vulnerability.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -124,8 +127,8 @@
 </dd></dl>
 
 <dl class="attribute">
-<dt id="golismero.api.data.vulnerability.Vulnerability.associated_resources">
-<tt class="descname">associated_resources</tt><a class="headerlink" href="#golismero.api.data.vulnerability.Vulnerability.associated_resources" title="Permalink to this definition">¶</a></dt>
+<dt>
+<tt class="descclassname">Vulnerability.</tt><tt class="descname">associated_resources</tt></dt>
 <dd><p>Get a list with resources associated to this vulnerability.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -141,72 +144,158 @@
 
 </dd></dl>
 
+</div>
+<div class="section" id="vulnerability-sub-interface">
+<h3>Vulnerability sub-interface<a class="headerlink" href="#vulnerability-sub-interface" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="golismero.api.data.vulnerability.UrlVulnerability">
-<em class="property">class </em><tt class="descclassname">golismero.api.data.vulnerability.</tt><tt class="descname">UrlVulnerability</tt><big>(</big><em>url</em>, <em>*argv</em>, <em>**argd</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for all vulnerabilities associated with a single URL.</p>
+<dt>
+<em class="property">class </em><tt class="descclassname">golismero.api.data.vulnerability.</tt><tt class="descname">UrlVulnerability</tt><big>(</big><em>url</em>, <em>*argv</em>, <em>**argd</em><big>)</big></dt>
+<dd><p>Bases: <a class="reference internal" href="../data.html#golismero.api.data.vulnerability.Vulnerability" title="golismero.api.data.vulnerability.Vulnerability"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.vulnerability.Vulnerability</span></tt></a></p>
+<p>Base class for all vulnerabilities associated with a single URL.</p>
 <dl class="attribute">
-<dt id="golismero.api.data.vulnerability.UrlVulnerability.content_type">
-<tt class="descname">content_type</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.content_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>str - MIME content type.</p>
+<dt>
+<tt class="descclassname">UrlVulnerability.</tt><tt class="descname">content_type</tt></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">MIME content type.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="golismero.api.data.vulnerability.UrlVulnerability.has_post_param">
-<tt class="descname">has_post_param</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.has_post_param" title="Permalink to this definition">¶</a></dt>
-<dd><p>bool - True if there are POST params, False otherwise.</p>
+<dt>
+<tt class="descclassname">UrlVulnerability.</tt><tt class="descname">has_post_param</tt></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if there are POST params, False otherwise.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="golismero.api.data.vulnerability.UrlVulnerability.has_url_param">
-<tt class="descname">has_url_param</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.has_url_param" title="Permalink to this definition">¶</a></dt>
+<dt>
+<tt class="descclassname">UrlVulnerability.</tt><tt class="descname">has_url_param</tt></dt>
 <dd><p>bool - True if there are URL params, False otherwise.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="golismero.api.data.vulnerability.UrlVulnerability.is_https">
-<tt class="descname">is_https</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.is_https" title="Permalink to this definition">¶</a></dt>
-<dd><p>bool &#8211; True if it&#8217;s HTTPS, False otherwise.</p>
+<dt>
+<tt class="descclassname">UrlVulnerability.</tt><tt class="descname">is_https</tt></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if it&#8217;s HTTPS, False otherwise.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="golismero.api.data.vulnerability.UrlVulnerability.method">
-<tt class="descname">method</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.method" title="Permalink to this definition">¶</a></dt>
-<dd><p>str &#8211; HTTP method.</p>
+<dt>
+<tt class="descclassname">UrlVulnerability.</tt><tt class="descname">method</tt></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">HTTP method.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="golismero.api.data.vulnerability.UrlVulnerability.post_params">
-<tt class="descname">post_params</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.post_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>dict(str) &#8211; POST parameters.</p>
+<dt>
+<tt class="descclassname">UrlVulnerability.</tt><tt class="descname">post_params</tt></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">POST parameters.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict(str)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="golismero.api.data.vulnerability.UrlVulnerability.referer">
-<tt class="descname">referer</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.referer" title="Permalink to this definition">¶</a></dt>
-<dd><p>str &#8211; Referer for this URL.</p>
+<dt>
+<tt class="descclassname">UrlVulnerability.</tt><tt class="descname">referer</tt></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Referer for this URL.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="golismero.api.data.vulnerability.UrlVulnerability.request_type">
-<tt class="descname">request_type</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.request_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>int - One of the HTML.TYPE_* constants.</p>
+<dt>
+<tt class="descclassname">UrlVulnerability.</tt><tt class="descname">request_type</tt></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">One of the HTML.TYPE_* constants.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="golismero.api.data.vulnerability.UrlVulnerability.url">
-<tt class="descname">url</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.url" title="Permalink to this definition">¶</a></dt>
-<dd><p>str &#8211; Raw URL.</p>
+<dt>
+<tt class="descclassname">UrlVulnerability.</tt><tt class="descname">url</tt></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Raw URL.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="golismero.api.data.vulnerability.UrlVulnerability.url_params">
-<tt class="descname">url_params</tt><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability.url_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>dict(str) &#8211; URL parameters.</p>
+<dt>
+<tt class="descclassname">UrlVulnerability.</tt><tt class="descname">url_params</tt></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">URL parameters.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict(str)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
 
+</div>
 </div>
 </div>
 
@@ -222,7 +311,11 @@
 <li><a class="reference internal" href="#vulnerability-types">vulnerability types</a><ul>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-golismero.api.data.vulnerability">Generic vulnerability interfaces</a></li>
+<li><a class="reference internal" href="#generic-vulnerability-interfaces">Generic vulnerability interfaces</a><ul>
+<li><a class="reference internal" href="#vulnerability-interface">Vulnerability interface</a></li>
+<li><a class="reference internal" href="#vulnerability-sub-interface">Vulnerability sub-interface</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
