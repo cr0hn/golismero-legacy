@@ -1,9 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#-----------------------------------------------------------------------
-# Base classes for plugins
-#-----------------------------------------------------------------------
+"""
+This module contains the base classes for GoLismero plugins.
+
+To write your own plugin, you must derive from one of the following base classes:
+
+- :py:class:`.TestingPlugin`: To write a testing/hacking plugin.
+- :py:class:`.UIPlugin`: To write a User Interface plugin.
+- :py:class:`.ReportPlugin`: to write a plugin to report the results.
+"""
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -30,21 +36,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["TestingPlugin", "UIPlugin", "ReportPlugin", "GlobalPlugin"]
+
 from .config import Config
-
-__doc__ = """
-This module contains all the interfaces for make plugins for GoLismero.
-
-.. warning::
-   The classes: :py:class:`.Plugin`, :py:class:`.InformationPlugin` and :py:class:`.AdvancedPlugin` provides a base for the end plugin never will be inherited by any plugin.
-
-There are 3 types of class you must inherit to develop a plugin:
-
-- :py:class:`.TestingPlugin`: To develop a testing/hacking? plugin.
-- :py:class:`.UIPlugin`: To develop a User Interface plugin
-- :py:class:`.ReportPlugin`: to develop a plugin to report the results.
-
-"""
 
 
 class Plugin (object):
@@ -55,7 +49,8 @@ class Plugin (object):
     PLUGIN_TYPE_ABSTRACT = 0    # Not a real plugin type!
     PLUGIN_TYPE_TESTING  = 1
     PLUGIN_TYPE_UI       = 2
-    PLUGIN_TYPE_GLOBAL   = 3
+    PLUGIN_TYPE_REPORT   = 3
+    PLUGIN_TYPE_GLOBAL   = 4
 
     PLUGIN_TYPE_FIRST = PLUGIN_TYPE_TESTING
     PLUGIN_TYPE_LAST  = PLUGIN_TYPE_GLOBAL
@@ -76,18 +71,18 @@ class Plugin (object):
         :param inputParams: input parameters to check
         :type inputParams: AuditConfig
         """
-        raise NotImplementedError("Plugin must implement this method!")
+        raise NotImplementedError("Plugins must implement this method!")
 
 
     #----------------------------------------------------------------------
     def display_help(self):
         """
-        :returns: Get the help message for this plugin.
+        :returns: The help message for this plugin.
         :rtype: str
         """
         text = Config.plugin_info.description
         if not text:
-            raise NotImplementedError("Plugin must implement this method!")
+            raise NotImplementedError("Plugins must implement this method!")
         return text
 
 
@@ -111,27 +106,27 @@ class InformationPlugin (Plugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
         """
-        Callback method to receive information to be processed.
+        Callback method to receive data to be processed.
 
-        :param info: input info to process
+        This is the most important method of a plugin.
+        Here's where most of the logic resides.
+
+        :param info: Data to be processed.
         :type info: Data
         """
-        raise NotImplementedError("Plugin must implement this method!")
+        raise NotImplementedError("Plugins must implement this method!")
 
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
         """
         Return a list of constants describing
-        which messages are accepted by this plugin.
+        which data types are accepted by the recv_info method.
 
-        Messages types can be found at the Message class.
-
-
-        :returns: list with constants.
-        :rtype: list.
+        :returns: Data type constants.
+        :rtype: list
         """
-        raise NotImplementedError("Plugin must implement this method!")
+        raise NotImplementedError("Plugins must implement this method!")
 
 
 #------------------------------------------------------------------------------
@@ -151,14 +146,11 @@ class AdvancedPlugin (InformationPlugin):
         :param message: incoming message to process
         :type message: Message
         """
-        raise NotImplementedError("Plugin must implement this method!")
+        raise NotImplementedError("Plugins must implement this method!")
 
 
     #----------------------------------------------------------------------
     def _set_observer(self, observer):
-        """
-        Called internally by GoLismero. Do not call or override!
-        """
         self.__observer_ref = observer
 
 
@@ -216,27 +208,34 @@ class ReportPlugin (Plugin):
     This is the base class for all Report plugins.
     """
 
+    PLUGIN_TYPE = PLUGIN_TYPE_REPORT
+
 
     #----------------------------------------------------------------------
     def is_supported(self, output_file):
         """
         Determine if this plugin supports the requested file format.
 
+        Tipically, here is where Report plugins examine the file extension.
+
         :param output_file: Output file to generate.
         :type output_file: str | None
 
         :returns: True if this plugin supports the format, False otherwise.
-        :rtype: bool.
+        :rtype: bool
         """
-        raise NotImplementedError("Plugin must implement this method!")
+        raise NotImplementedError("Plugins must implement this method!")
 
 
     #----------------------------------------------------------------------
     def generate_report(self, output_file):
         """
-        Run plugin and generate report.
+        Run plugin and generate the report.
+
+        This is the entry point for Report plugins,
+        where most of the logic resides.
 
         :param output_file: Output file to generate.
         :type output_file: str | None
         """
-        raise NotImplementedError("Plugin must implement this method!")
+        raise NotImplementedError("Plugins must implement this method!")

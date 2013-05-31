@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#-----------------------------------------------------------------------
-# Network cache API
-#-----------------------------------------------------------------------
+"""
+Network cache API.
+"""
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -52,10 +52,11 @@ class AbstractCache(Singleton):
         """
         Get data from the cache.
 
-        :param key: key to reference the data
+        :param key: Key to reference the data.
         :type key: str
 
-        :returns: object -- data from the cache | None
+        :returns: Data from the cache.
+        :rtype: object | None
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -65,10 +66,10 @@ class AbstractCache(Singleton):
         """
         Add data to the cache.
 
-        :param key: key to reference the data
+        :param key: Key to reference the data.
         :type key: str
 
-        :param data: data to store in the cache
+        :param data: Data to store in the cache.
         :type data: object
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
@@ -79,10 +80,11 @@ class AbstractCache(Singleton):
         """
         Verify if the given key exists in the cache.
 
-        :param key: key to reference the data
+        :param key: Key to reference the data.
         :type key: str
 
         :returns: True if the data is in the cache, False otherwise.
+        :rtype: bool
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -92,7 +94,7 @@ class AbstractCache(Singleton):
         """
         Remove data from the cache.
 
-        :param key: key to reference the network resource
+        :param key: Key to reference the network resource.
         :type key: str
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
@@ -131,6 +133,9 @@ class NetworkCache(AbstractCache):
 
     #----------------------------------------------------------------------
     def _clear_local_cache(self):
+        """
+        .. warning: Do not call!
+        """
 
         # This method is called from the plugin bootstrap.
 
@@ -148,13 +153,14 @@ class NetworkCache(AbstractCache):
         """
         Get a network resource from the cache.
 
-        :param key: key to reference the network resource
+        :param key: Key to reference the network resource.
         :type key: str
 
-        :param protocol: network protocol
+        :param protocol: Network protocol.
         :type protocol: str
 
-        :returns: object -- resource from the cache | None
+        :returns: Resource from the cache, None if not found.
+        :rtype: object | None
         """
 
         # First, try to get the resource from the local cache.
@@ -178,19 +184,19 @@ class NetworkCache(AbstractCache):
         """
         Store a network resource in the cache.
 
-        :param key: key to reference the network resource
+        :param key: Key to reference the network resource.
         :type key: str
 
-        :param data: data to store in the cache
+        :param data: Data to store in the cache.
         :type data: object
 
-        :param protocol: network protocol
+        :param protocol: Network protocol.
         :type protocol: str
 
-        :param timestamp: timestamp for this network resource
+        :param timestamp: Timestamp for this network resource.
         :type timestamp: int
 
-        :param lifespan: time to live in the cache
+        :param lifespan: Time to live in the cache.
         :type lifespan: int
         """
 
@@ -207,10 +213,10 @@ class NetworkCache(AbstractCache):
         """
         Remove a network resource from the cache.
 
-        :param key: key to reference the network resource
+        :param key: Key to reference the network resource.
         :type key: str
 
-        :param protocol: network protocol
+        :param protocol: Network protocol.
         :type protocol: str
         """
 
@@ -230,10 +236,11 @@ class NetworkCache(AbstractCache):
         """
         Verify if the given key exists in the cache.
 
-        :param key: key to reference the network resource
+        :param key: Key to reference the network resource.
         :type key: str
 
         :returns: True if the resource is in the cache, False otherwise.
+        :rtype: bool
         """
 
         # First, check if it's in the local cache.

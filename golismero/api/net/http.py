@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+This package contains the classes that represent HTTP requests and responses.
+"""
+
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -37,20 +41,6 @@ from os.path import basename
 import hashlib
 from re import findall
 
-__doc__ = """
-This package contains the classes that represent the abstract objects for HTTP Request and Response.
-
-They acts as Java POJO (http://es.wikipedia.org/wiki/Plain_Old_Java_Object) or, put it another way, acting
-like a simple structures to store information.
-
-This way all HTTP Request and Responses has a simple and commom way to exchange HTTP information.
-
-Two types are defined in this package:
-
-- HTTP_Request
-- HTTP_Response
-
-"""
 
 #------------------------------------------------------------------------------
 class HTTP_Request (object):
@@ -150,7 +140,7 @@ class HTTP_Request (object):
     def generate_user_agent(self):
         """
         :return: Return a random user agent string.
-        :rtype: str.
+        :rtype: str
         """
         return self.__user_agents[random.randint(0, len(self.__user_agents) - 1)]
 
@@ -160,10 +150,10 @@ class HTTP_Request (object):
         """
         Add file from path
 
-        :param path_to_file: path to file to load.
+        :param path_to_file: Path to file to load.
         :type path_to_file: str
 
-        :param alt_filename: if you set it, filename used for http post will be set to this.
+        :param alt_filename: If you set it, filename used for http post will be set to this.
         :type alt_filename: str
         """
         self.add_file_from_object(basename(path_to_file), open(path_to_file, "rb").read(), alt_filename)
@@ -174,13 +164,13 @@ class HTTP_Request (object):
         """
         Add file from a binary object.
 
-        :param param_name: name of parameter in resquest
+        :param param_name: Name of parameter in request.
         :type param_name: str
 
-        :param obj: binary object to send
+        :param obj: Binary object to send.
         :type obj: binary data
 
-        :param alt_filename: if you set it, filename used for http post will be set to this.
+        :param alt_filename: If you set it, filename used for http post will be set to this.
         :type alt_filename: str
         """
 
@@ -206,12 +196,14 @@ class HTTP_Request (object):
     #----------------------------------------------------------------------
 
     def __get_accept_type(self, accept_type=None):
-        """Get accepted types.
+        """
+        Get accepted types.
 
-        :param accept_type: One of the following: "html", "text", "all"
+        :param accept_type: One of the following: "html", "text", "all".
         :type accept_type: str
 
-        :returns: str -- Value to use on the Accept: HTTP header.
+        :returns: Value to use on the Accept: HTTP header.
+        :rtype: str
         """
 
         m_types = {
@@ -245,6 +237,10 @@ class HTTP_Request (object):
 
     @hostname.setter
     def hostname(self, value):
+        """
+        :param value: 'Host' HTTP header.
+        :type value: str
+        """
         assert isinstance(value, basestring)
         self.__headers['Host'] = value
         self.__parsed_url.hostname = self.__headers['Host']
@@ -259,6 +255,10 @@ class HTTP_Request (object):
 
     @user_agent.setter
     def user_agent(self, value):
+        """
+        :param value: 'User-Agent' HTTP header.
+        :type value: str
+        """
         assert isinstance(value, basestring)
         self.__headers['User-Agent'] = value
 
@@ -266,12 +266,16 @@ class HTTP_Request (object):
     def accept_language(self):
         """
         :return: 'Accept-Language' HTTP header.
-        :rtype: str.
+        :rtype: str
         """
         return self.__headers.get('Accept-Language')
 
     @accept_language.setter
     def accept_language(self, value):
+        """
+        :param value: 'Accept-Language' HTTP header.
+        :type value: str
+        """
         assert isinstance(value, basestring)
         self.__headers['Accept-Language'] = value
 
@@ -279,12 +283,16 @@ class HTTP_Request (object):
     def accept(self):
         """
         :return: 'Accept' HTTP header.
-        :rtype: str.
+        :rtype: str
         """
         return self.__headers.get('Accept')
 
     @accept.setter
     def accept(self, value):
+        """
+        :param value: 'Accept' HTTP header.
+        :type value: str
+        """
         assert isinstance(value, basestring)
         self.__headers['Accept'] = value
 
@@ -292,12 +300,16 @@ class HTTP_Request (object):
     def referer(self):
         """
         :return: 'Referer' HTTP header.
-        :rtype: str.
+        :rtype: str
         """
         return self.__headers.get('Referer')
 
     @referer.setter
     def referer(self, value):
+        """
+        :param value: 'Referer' HTTP header.
+        :type value: str
+        """
         assert isinstance(value, basestring)
         self.__headers['Referer'] = value
 
@@ -305,12 +317,16 @@ class HTTP_Request (object):
     def cookie(self):
         """
         :return: 'Cookie' HTTP header.
-        :rtype: str.
+        :rtype: str
         """
         return self.__headers.get('Cookie')
 
     @cookie.setter
     def cookie(self, value):
+        """
+        :param value: 'Cookie' HTTP header.
+        :type value: str
+        """
         assert isinstance(value, basestring)
         self.__headers['Cookie'] = value
 
@@ -318,12 +334,16 @@ class HTTP_Request (object):
     def content_type(self):
         """
         :return: 'Content-Type' HTTP header.
-        :rtype: str.
+        :rtype: str
         """
         return self.__headers.get('Content-Type')
 
     @content_type.setter
     def content_type(self, value):
+        """
+        :param value: 'Content-Type' HTTP header.
+        :type value: str
+        """
         assert isinstance(value, basestring)
         self.__headers['Content-Type'] = value
 
@@ -331,12 +351,16 @@ class HTTP_Request (object):
     def post_data(self):
         """
         :return: HTTP POST data.
-        :rtype: str.
+        :rtype: str
         """
         return self.__post_data
 
     @post_data.setter
     def post_data(self, value):
+        """
+        :param value: HTTP POST data.
+        :type value: str
+        """
         if self.__post_data:
             self.__post_data.update(value)
         else:
@@ -346,26 +370,34 @@ class HTTP_Request (object):
     @property
     def raw_headers(self):
         """
-        :return: Raw HTTP headers as a dict format.
-        :rtype: dict.
+        :return: Raw HTTP headers.
+        :rtype: dict(str -> str)
         """
         return self.__headers
 
     @raw_headers.setter
     def raw_headers(self, value):
+        """
+        :param value: Raw HTTP headers.
+        :type value: dict(str -> str)
+        """
         assert isinstance(value, dict)
         self.__headers.update(value)
 
     @property
     def follow_redirects(self):
         """
-        :returns: Redirect options for the request (True to follow redirects, False no follow. None if not set).
+        :returns: Redirect options for the request (True to follow redirects, False no follow, None if not set).
         :rtype: None | bool
         """
         return self.__follow_redirects
 
     @follow_redirects.setter
     def follow_redirects(self, value):
+        """
+        :param value: Redirect options for the request (True to follow redirects, False no follow, None if not set).
+        :type value: None | bool
+        """
         self.__follow_redirects = value
 
 
@@ -378,15 +410,15 @@ class HTTP_Request (object):
     def url(self):
         """
         :returns: String with URL of the request.
-        :rtype: str.
+        :rtype: str
         """
         return self.__url
 
     @property
     def parsed_url(self):
         """
-        :returns: Returns the URL split to its components..
-        :rtype: DecomposedURL.
+        :returns: URL split to its components.
+        :rtype: DecomposedURL
         """
         return self.__parsed_url
 
@@ -401,7 +433,7 @@ class HTTP_Request (object):
     @property
     def is_cacheable(self):
         """
-        :returns: If request is marked as cacheable return True, else False.
+        :returns: True if the request is marked as cacheable, otherwise False.
         :rtype: bool
         """
         return self.__cache
@@ -415,14 +447,15 @@ class HTTP_Request (object):
         2 - SOAP
         3 - VIEWSTATE
 
-        :returns: int
+        :returns: Type of HTTP request.
+        :rtype: int
         """
         return self.__type
 
     @property
     def files_attached(self):
         """
-        Get a dictionary with filenames attached, in the following format:
+        Attached filenames in the following format:
 
         .. code-block:: python
 
@@ -431,15 +464,16 @@ class HTTP_Request (object):
               'file_name_2' : raw_object_2
            }
 
-        :returns: dict
+        :returns: Attached filenames.
+        :rtype: dict
         """
         return self.__files_attached
 
     @property
     def request_id(self):
         """
-        :returns: Get a unique ID for this request.
-        :rtype: str.
+        :returns: Unique ID for this request.
+        :rtype: str
         """
         if not self.__request_id:
             # Create data for key
@@ -458,30 +492,25 @@ class HTTP_Response (object):
 
     def __init__(self):
 
-        # Content type
-        self.__content_type              = None
+        # Content type.
+        self.__content_type = None
 
-        # HTTP headers in raw format
-        self.__http_headers_raw          = None
+        # Raw HTTP headers.
+        self.__http_headers_raw = None
 
-        self.__raw_response              = None
+        # Raw HTTP response.
+        self.__raw_response = None
 
-        #
-        # Counters
-        #
+        # Total number of words in response body.
+        self.__word_count = None
 
-        # Total number of words of body response
-        self.__word_count                = None
+        # Total number of lines in response body.
+        self.__lines_count = None
 
-        # Total number of lines of body response
-        self.__lines_count               = None
+        # Total number of characters in response body.
+        self.__char_count = None
 
-        # Total number of characters of body response
-        self.__char_count                = None
-
-        #
-        # Parent constructor
-        #
+        # Parent constructor.
         super(HTTP_Response, self).__init__()
 
 
@@ -502,30 +531,33 @@ class HTTP_Response (object):
         :param request: The original request for this response.
         :para request: HTTP_Request
         """
+
         instance = cls()
-        # Request time
+
+        # Request time.
         instance.__request_time              = request_time
 
-        # Raw response of server
+        # Raw response from server.
         instance.__raw_response              = ""
 
-        # HTML code of response
+        # HTML data.
         instance.__raw_data                  = raw_response.content if raw_response.content else ""
 
-        # HTTP response code
+        # HTTP response code.
         instance.__http_response_code        = raw_response.status_code
 
-        # HTTP response reason
+        # HTTP response reason.
         instance.__http_response_code_reason = raw_response.reason
 
-        # HTTP headers
+        # HTTP headers.
         instance.__http_headers              = raw_response.headers
-        instance.__http_headers_raw          = ''.join(raw_response.headers)
+        instance.__http_headers_raw          = "".join(raw_response.headers)
 
-        # Wrapper for cookie
+        # Wrapper for cookie.
         instance.__cookie                    = raw_response.cookies.get_dict()
 
         return instance
+
 
     #----------------------------------------------------------------------
     @classmethod
@@ -541,58 +573,55 @@ class HTTP_Response (object):
         """
 
         instance = cls()
-        # Request time
+
+        # Request time.
         instance.__request_time              = request_time
 
-        # Content of response
-        instance.__raw_data                  = raw_response["content"]
-
-        # Raw response
+        # Raw response from server.
         instance.__raw_response              = raw_response["raw_content"]
 
-        # HTTP response code
+        # HTML data.
+        instance.__raw_data                  = raw_response["content"]
+
+        # HTTP response code.
         instance.__http_response_code        = raw_response["statuscode"]
 
-        # HTTP response reason
+        # HTTP response reason.
         instance.__http_response_code_reason = raw_response["statustext"]
 
-        # HTTP headers
+        # HTTP headers.
         instance.__http_headers              = raw_response["headers"]
-        instance.__http_headers_raw          = ''.join(raw_response["headers"].headers)
+        instance.__http_headers_raw          = "".join(raw_response["headers"].headers)
 
-        # Wrapper for cookie
+        # Wrapper for cookie.
         instance.__cookie                    = raw_response.get("cookie") if raw_response.get("cookie") else raw_response.get("set-cookie") # Thus, 2 cookie modes are covered.
 
         return instance
 
+
+    #----------------------------------------------------------------------
+
     @property
     def raw_content(self):
         """
-        Get raw information from the HTTP response.
-
-        :returns: str
+        :returns: HTML data.
+        :rtype: str
         """
         return self.__raw_data
 
-    #----------------------------------------------------------------------
     @property
     def raw_response(self):
         """
-        Get the complete raw response of server.
-
-        :return: str
+        :returns: Raw HTTP response.
+        :rtype: str
         """
         return self.__raw_response
-
 
     @property
     def content_length(self):
         """
-        Integer value of the 'Content-Length' header.
-
-        If the value can't be obtained, None is returned.
-
-        :returns: int | None
+        :returns: Value of the 'Content-Length' header, or None if not found.
+        :rtype: int | None
         """
         if self.__http_headers and 'Content-Length' in self.__http_headers:
             return int(self.__http_headers['Content-Length'])
@@ -601,45 +630,40 @@ class HTTP_Response (object):
     @property
     def cookie(self):
         """
-        Value of the 'Cookie' header.
-
-        :returns: str
+        :returns: Value of the 'Cookie' header.
+        :rtype: str
         """
         return self.__cookie
 
     @property
     def http_response_code(self):
         """
-        HTTP response code.
-
-        :returns: int
+        :returns: HTTP response code.
+        :rtype: int
         """
         return self.__http_response_code
 
     @property
     def http_response_reason(self):
         """
-        Descriptive text for the HTTP response code.
-
-        :returns: str
+        :returns: Descriptive text for the HTTP response code.
+        :rtype: str
         """
         return self.__http_response_code_reason
 
     @property
     def http_headers(self):
         """
-        HTTP response headers.
-
-        :returns: dict
+        :returns: HTTP response headers.
+        :rtype: dict(str -> str)
         """
         return self.__http_headers
 
     @property
     def http_headers_raw(self):
         """
-        Raw HTTP response headers.
-
-        :returns: str
+        :returns: Raw HTTP response headers.
+        :rtype: str
         """
         if not self.__http_headers_raw:
             self.__http_headers_raw = ''.join(("%s:%s\n" % (k,v) for k,v in self.__http_headers.iteritems()))
@@ -648,18 +672,16 @@ class HTTP_Response (object):
     @property
     def request_time(self):
         """
-        Get the response time, in seconds.
-
-        :retuns: float
+        :returns: Get the response time, in seconds.
+        :rtype: float
         """
         return self.__request_time
 
     @property
     def information(self):
         """
-        Information object extracted from this HTTP response.
-
-        :returns: Information
+        :returns: Information object extracted from this HTTP response.
+        :rtype: Information
         """
 
         m_return = None
@@ -685,6 +707,9 @@ class HTTP_Response (object):
         Available types are:
         - html
         - text
+
+        :returns: Simplified content type identifier.
+        :rtype: str
         """
         if not self.__content_type:
             self.__content_type = self.http_headers.get("Content-Type").split(";")[0]
@@ -694,23 +719,33 @@ class HTTP_Response (object):
 
 
     #----------------------------------------------------------------------
+
     @property
     def char_count(self):
-        """Number of chars in response body"""
+        """
+        :returns: Number of chars in response body.
+        :rtype: int
+        """
         if self.__char_count is None:
             self.__char_count = len(self.__raw_data)
         return self.__char_count
 
     @property
     def lines_count(self):
-        """Number of lines in response body"""
+        """
+        :returns: Number of lines in response body.
+        :rtype: int
+        """
         if self.__lines_count is None:
             self.__lines_count = len(findall("\S+", self.__raw_data))
         return self.__lines_count
 
     @property
     def words_count(self):
-        """Number of words in response body"""
+        """
+        :returns: Number of words in response body.
+        :rtype: int
+        """
         if not self.__word_count:
             self.__word_count = self.__raw_data.count('\n')
         return self.__word_count

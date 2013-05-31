@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#-----------------------------------------------------------------------
-# Plugin configuration API
-#-----------------------------------------------------------------------
+"""
+Plugin configuration API.
+"""
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -47,6 +47,7 @@ __all__ = ["Config"]
 
 from ..common import Singleton
 
+
 class _Config (Singleton):
     """
     Current plugin and audit configuration.
@@ -54,6 +55,7 @@ class _Config (Singleton):
     Whenever a plugin accesses this object it will receive its own
     configuration, including the current audit's name and settings.
     """
+
 
     # The constructor tries to prevent the user
     # from instancing this class directly.
@@ -64,6 +66,7 @@ class _Config (Singleton):
         except NameError:
             pass
 
+
     @property
     def audit_name(self):
         """
@@ -71,6 +74,7 @@ class _Config (Singleton):
         :rtype: str
         """
         return self.__context.audit_name
+
 
     @property
     def audit_config(self):
@@ -80,6 +84,7 @@ class _Config (Singleton):
         """
         return self.__context.audit_config
 
+
     @property
     def plugin_info(self):
         """
@@ -87,6 +92,7 @@ class _Config (Singleton):
         :rtype: PluginInfo
         """
         return self.__context.plugin_info
+
 
     @property
     def plugin_name(self):
@@ -96,6 +102,7 @@ class _Config (Singleton):
         """
         return self.plugin_info.plugin_name
 
+
     @property
     def plugin_module(self):
         """
@@ -104,6 +111,7 @@ class _Config (Singleton):
         """
         return self.plugin_info.plugin_module
 
+
     @property
     def plugin_class(self):
         """
@@ -111,6 +119,7 @@ class _Config (Singleton):
         :rtype: str
         """
         return self.plugin_info.plugin_class
+
 
     @property
     def plugin_config(self):
@@ -124,6 +133,7 @@ class _Config (Singleton):
         :rtype: dict(str -> str)
         """
         return self.plugin_info.plugin_config
+
 
     @property
     def plugin_extra_config(self):
@@ -163,19 +173,32 @@ class _Config (Singleton):
         """
         return self.plugin_info.plugin_extra_config
 
+
+    #--------------------------------------------------------------------------
     # The following properties may only be used internally.
 
     @property
     def _context(self):
-        """:returns: PluginContext"""
+        """
+        .. warning: Internally used by GoLismero. Do not use it in plugins!
+
+        :rtype: PluginContext
+        """
         return self.__context
 
     @_context.setter
     def _context(self, context):
-        """:type context: PluginContext"""
+        """
+        .. warning: Internally used by GoLismero. Do not use it in plugins!
+
+        :type context: PluginContext
+        """
         # TODO: check the call stack to make sure it's called only
         #       from pre-approved places.
         self.__context = context
+
+    #--------------------------------------------------------------------------
+
 
 # Instance the singleton.
 Config = _Config()

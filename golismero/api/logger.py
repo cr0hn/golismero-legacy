@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#-----------------------------------------------------------------------
-# Remote logging API
-#-----------------------------------------------------------------------
+"""
+Remote logging API.
+"""
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -36,6 +36,7 @@ from .config import Config
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 
 
+#----------------------------------------------------------------------
 class Logger (object):
     """
     Logging API for plugins.
@@ -52,10 +53,8 @@ class Logger (object):
 
 
     #----------------------------------------------------------------------
-    #
     # Verbose levels
-    #
-    #----------------------------------------------------------------------
+
     DISABLED     = 0
     STANDARD     = 1
     VERBOSE      = 2
@@ -65,7 +64,7 @@ class Logger (object):
     #----------------------------------------------------------------------
     def __new__(cls, *argv, **argd):
         """
-        This is a static class!
+        .. warning: This is a static class, do not try to instance it!
         """
         raise NotImplementedError("This is a static class!")
 
@@ -76,7 +75,7 @@ class Logger (object):
         """
         Send a log message with the specified level and error status.
 
-        :param message: message to write
+        :param message: Message to write.
         :type message: str
         """
         if message:
@@ -94,7 +93,7 @@ class Logger (object):
         """
         Send a log message of STANDARD level.
 
-        :param message: message to write
+        :param message: Message to write.
         :type message: str
         """
         cls._log(message, cls.STANDARD, is_error = False)
@@ -106,7 +105,7 @@ class Logger (object):
         """
         Send a log message of VERBOSE level.
 
-        :param message: message to write
+        :param message: Message to write.
         :type message: str
         """
         cls._log(message, cls.VERBOSE, is_error = False)
@@ -118,7 +117,7 @@ class Logger (object):
         """
         Send a log message of MORE_VERBOSE level.
 
-        :param message: message to write
+        :param message: Message to write.
         :type message: str
         """
         cls._log(message, cls.MORE_VERBOSE, is_error = False)
@@ -130,7 +129,7 @@ class Logger (object):
         """
         Send an error log message of STANDARD level.
 
-        :param message: message to write
+        :param message: Message to write.
         :type message: str
         """
         cls._log(message, cls.STANDARD, is_error = True)
@@ -142,7 +141,7 @@ class Logger (object):
         """
         Send an error log message of VERBOSE level.
 
-        :param message: message to write
+        :param message: Message to write.
         :type message: str
         """
         cls._log(message, cls.VERBOSE, is_error = True)
@@ -154,7 +153,7 @@ class Logger (object):
         """
         Send an error log message of MORE_VERBOSE level.
 
-        :param message: message to write
+        :param message: Message to write.
         :type message: str
         """
         cls._log(message, cls.MORE_VERBOSE, is_error = True)

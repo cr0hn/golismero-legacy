@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#-----------------------------------------------------------------------
-# Local file API
-#-----------------------------------------------------------------------
+"""
+Local file API.
+"""
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -79,8 +79,9 @@ class FileManager (object):
     def __sanitize(self, pathname):
         """
         Makes sure the given pathname lies within the plugin folder.
-
         Also makes it an absolute pathname.
+
+        .. warning: Internally used by GoLismero, do not call!
         """
 
         # Absolute pathnames are not allowed.
@@ -103,7 +104,7 @@ class FileManager (object):
         Open a new temporary file. Temporary files have random names and are
         automatically deleted after they're closed.
 
-        :returns: A tuple containing the open file and its pathname
+        :returns: A tuple containing the open file and its pathname.
         :rtype: (file, str)
         """
         fd = tempfile.NamedTemporaryFile()
@@ -220,7 +221,7 @@ class FileManager (object):
         """
         List all files and folders within the plugin folder.
 
-        :param folder: Optional subfolder name. Defauts to the plugin folder itself.
+        :param folder: Optional subfolder name. Defaults to the plugin folder itself.
         :type folder: str
 
         :returns: List of file and folder names.
@@ -241,7 +242,7 @@ class FileManager (object):
 
         Works exactly like the standard os.walk() function.
 
-        :param folder: Optional subfolder name. Defauts to the plugin folder itself.
+        :param folder: Optional subfolder name. Defaults to the plugin folder itself.
         :type folder: str
 
         :returns: Iterator of tuples containing the base path, and the file and folder names.

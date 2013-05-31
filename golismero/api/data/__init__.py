@@ -151,8 +151,8 @@ class _data_metaclass(type):
     """
     Metaclass to validate the definitions of Data subclasses.
 
-    ..warning: Do not use! If you want to define your own Data subclasses,
-               just derive from Information, Resource or Vulnerability.
+    .. warning: Do not use! If you want to define your own Data subclasses,
+                just derive from Information, Resource or Vulnerability.
     """
 
     def __init__(cls, name, bases, namespace):
@@ -201,9 +201,9 @@ class Data(object):
     """
     Base class for all data elements.
 
-    ..warning: Do not subclass directly!
-               If you want to define your own Data subclasses,
-               derive from Information, Resource or Vulnerability.
+    .. warning: Do not subclass directly!
+                If you want to define your own Data subclasses,
+                derive from Information, Resource or Vulnerability.
     """
 
     __metaclass__ = _data_metaclass
@@ -314,7 +314,7 @@ class Data(object):
         Returns a dictionary of identity properties
         and their values for this data object.
 
-        ..warning: This is an internally used method. Do not call!
+        .. warning: This is an internally used method. Do not call!
 
         :returns: Collected property names and values.
         :rtype: dict(str -> *)
@@ -367,7 +367,7 @@ class Data(object):
         """
         Merge objects in any order.
 
-        ..warning: This is an internally used method. Do not call!
+        .. warning: This is an internally used method. Do not call!
 
         :param old_data: Old data object.
         :type old_data: Data
@@ -399,7 +399,7 @@ class Data(object):
         """
         Merge a single property.
 
-        ..warning: This is an internally used method. Do not call!
+        .. warning: This is an internally used method. Do not call!
 
         :param old_data: Old data object.
         :type old_data: Data
@@ -482,7 +482,7 @@ class Data(object):
         """
         Merge links as the union of all links from both objects.
 
-        ..warning: This is an internally used method. Do not call!
+        .. warning: This is an internally used method. Do not call!
 
         :param old_data: Old data object.
         :type old_data: Data
@@ -576,7 +576,7 @@ class Data(object):
         This will include both new objects created by this plugins,
         and old objects already stored in the database.
 
-        ..warning: This is an internally used method. Do not call!
+        .. warning: This is an internally used method. Do not call!
 
         :param links: Set of identities to fetch.
         :type links: set(str)
@@ -616,7 +616,7 @@ class Data(object):
         Internal method to check if adding a new link
         of the requested type is allowed for this class.
 
-        ..warning: Do not call! Use add_link() instead.
+        .. warning: Do not call! Use add_link() instead.
 
         :param other: Another instance of Data.
         :type other: Data
@@ -644,7 +644,7 @@ class Data(object):
         """
         Internal method to link two Data instances together.
 
-        ..warning: Do not call! Use add_link() instead.
+        .. warning: Do not call! Use add_link() instead.
 
         :param other: Another instance of Data.
         :type other: Data
@@ -826,7 +826,7 @@ class _TempDataStorage(object):
     """
     Temporary storage for newly created objects.
 
-    ..warning: Used internally by GoLismero, do not use in plugins!
+    .. warning: Used internally by GoLismero, do not use in plugins!
     """
 
 

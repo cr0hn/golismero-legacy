@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#-----------------------------------------------------------------------
-# Network protocols API
-#-----------------------------------------------------------------------
+"""
+Network protocols API.
+"""
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -58,7 +58,7 @@ from StringIO import StringIO
 #------------------------------------------------------------------------------
 class NetworkException(Exception):
     """
-    General exception for net connections
+    Network connection errors.
     """
     pass
 
@@ -66,16 +66,16 @@ class NetworkException(Exception):
 #------------------------------------------------------------------------------
 class NetworkOutOfScope(Exception):
     """
-    Exception for net connections.
-
-    This exception means that an Url is out of audit scope.
+    Resource is out of audit scope.
     """
     pass
 
 
 #------------------------------------------------------------------------------
 class NetworkAPI (object):
-    """"""
+    """
+    Network protocols API.
+    """
 
     TYPE_WEB = 0
     TYPE_FTP = 1
@@ -93,10 +93,8 @@ class NetworkAPI (object):
         """
         Get a connection of for an specific protocol.
 
-        :param protocol: Connection to receive: HTTP, FTP...
+        :param protocol: Connection to receive. Must be one of the TYPE_* constants.
         :type protocol: int
-
-        :raises: ValueError
         """
         if NetworkAPI.__http_pool_manager is None:
 
@@ -173,12 +171,7 @@ class Protocol (object):
 
 
     #----------------------------------------------------------------------
-    def state(self):
-        pass
-
-
-    #----------------------------------------------------------------------
-    def close(self):
+    def clear(self):
         """
         Release all resources associated with this object.
         """
@@ -208,10 +201,6 @@ class Protocol (object):
 class Web (Protocol):
     """
     Web protocols handler (HTTP, HTTPS).
-
-    This class allow you to do HTTP/HTTPS requests with some different methods, providing a way to
-    interact with the 'Web' protocol easily.
-
     """
 
 
@@ -227,20 +216,103 @@ class Web (Protocol):
 
 
     #----------------------------------------------------------------------
-    def state(self):
-        pass
+    def clear(self):
+        self.__http_pool_manager.clear()
 
 
     #----------------------------------------------------------------------
-    def close(self):
+    def get(self, URL, method = "GET", timeout = 5, post_data = None, follow_redirect = None, cache = True):
         """
-        Close an active connection.
+        Get response for an input URL.
+        The URL parameter can be a string or an Url instance.
 
-        .. warning::
-            This method has not the same objective than in sockets libraries. **Do not call this method manually**.
+        .. note::
+           Most plugins will only use this method.
+           However, there are also more advanced
+           methods for customized HTTP requests.
 
+        Example with string:
+
+        >>> from golismero.api.net.protocol import Web, NetworkAPI
+        >>> con = NetworkAPI.get_connection()
+        >>> response = con.get("www.mysite.com", timeout=2, follow_redirect=True)
+        >>> response.http_headers_raw
+        HTTP/1.0 200 OK
+        Date: Wed, 29 May 2013 18:44:54 GMT
+        Server: Apache 2.2
+        Content-Type: text/html; charset=utf-8
+        >>> response.lines_count
+        4
+
+        Example with Url instance:
+
+        >>> from golismero.api.net.protocol import Web, NetworkAPI
+        >>> from golismero.api.data.resource.url import Url
+        >>> con = NetworkAPI.get_connection()
+        >>> u = Url("www.mysite.com")
+        >>> response = con.get(u)
+        >>> response.request_time
+        0.2
+        >>> response.content_type
+        "text/html"
+
+        :param URL: string with URL or Url instance
+        :type URL: str | Url
+
+        :param cache: True to enable the network cache.
+        :type cache: bool
+
+        :param redirect: True to follow HTTP redirects.
+        :type redirect: bool
+
+        :param timeout: Timeout in seconds.
+        :type timeout: int
+
+        :returns: HTTP response object.
+        :rtype: HTTP_Response
+
+        :raises NetworkException: A network error has occurred.
+        :raises NetworkOutOfScope: The requested URL is out of scope for this audit.
         """
-        self.__http_pool_manager.clear()
+
+        # Extract the raw URL when applicable
+        m_referer = None
+        try:
+            if isinstance(URL, Url):
+                URL       = URL.url
+                m_referer = URL.referer
+            elif isinstance(URL, basestring):
+                URL       = URL
+                # Parse, verify and canonicalize the URL
+                parsed = DecomposedURL(URL)
+                if not parsed.host or not parsed.scheme:
+                    raise ValueError("Only absolute URLs must be used!")
+
+        except AttributeError:
+            pass
+
+        # Check for host matching
+        if not is_in_scope(URL):
+            Logger.log_verbose("[!] Url '%s' is out of scope. Skipping it." % URL)
+            raise NetworkOutOfScope("'%s' is out of scope." % URL)
+
+        # Set redirect
+        m_follow_redirects = follow_redirect if follow_redirect else self.__follow_redirects
+
+        # Make HTTP_Request object
+        m_request = HTTP_Request(
+            url = URL,
+            method = method,
+            post_data = post_data,
+            follow_redirects = m_follow_redirects,
+            cache = cache
+        )
+
+        # Set referer
+        if m_referer:
+            m_request.referer = m_referer
+
+        return self.get_custom(m_request, timeout= timeout)
 
 
     #----------------------------------------------------------------------
@@ -253,16 +325,12 @@ class Web (Protocol):
         .. note::
            For more info about HTTP Request objects you can read :py:class:`HTTP_Request`
 
-        .. note::
-           You should use this method **only if you want advanced resquest**.
-
-
         Example:
 
         >>> from golismero.api.net.protocol import Web, NetworkAPI
         >>> from golismero.api.net.http import HTTP_Request
         >>> con = NetworkAPI.get_connection()
-        >>> resquest = HTTP_Request("www.mysite.com")
+        >>> request = HTTP_Request("www.mysite.com")
         >>> request.accept = "application/x-javascript"
         >>> request.post_data = dict('param1' : 'value1', 'param2' : 'value2')
         >>> requeat.add_file_from_file("PATH_TO_MY_FILE")
@@ -273,27 +341,25 @@ class Web (Protocol):
         Server: Apache 2.2
         Content-Type: text/html; charset=utf-8
 
+        :param request: HTTP request object.
+        :type request: HTTP_Request
 
-        :param request: An HTTP request object.
-        :type request: HTTP_request
-
-        :param timeout: timeout in seconds.
+        :param timeout: Timeout in seconds.
         :type timeout: int
 
-        :returns: HTTP_Response -- HTTP response object | None
+        :returns: HTTP response object.
+        :rtype: HTTP_Response
 
-        :returns: HTTPResponse instance or None if any error or URL out of scope.
-
-        :raises: TypeError, NetworkOutOfScope
-
+        :raises NetworkException: A network error has occurred.
+        :raises NetworkOutOfScope: The requested URL is out of scope for this audit.
         """
         if not isinstance(request, HTTP_Request):
             raise TypeError("Expected HTTP_Request, got %s instead" % type(URL))
 
         # Check if the URL is within scope of the audit.
         if not is_in_scope(request.url):
-            Logger.log_verbose("Url '%s' out of scope. Skipping it." % request.url)
-            raise NetworkOutOfScope("'%s' is out of the scope." % URL)
+            Logger.log_verbose("Url '%s' is out of scope. Skipping it." % request.url)
+            raise NetworkOutOfScope("'%s' is out of scope." % URL)
 
         # If the URL is cached, return the cached contents.
         if request.is_cacheable and self._cache.exists(request.request_id, protocol=request.parsed_url.scheme):
@@ -315,7 +381,6 @@ class Web (Protocol):
             # r = requests.post(url, files=files)
             #
             #  GET, OPTIONS, HEAD, POST, PUT, PATCH and DELETE.
-
 
 
             # Set options
@@ -373,105 +438,11 @@ class Web (Protocol):
 
 
     #----------------------------------------------------------------------
-    def get(self, URL, method = "GET", timeout = 5, post_data = None, follow_redirect = None, cache = True):
-        """
-        Get response for an input URL. The URL parameter can be a string or an URL instance.
-
-        .. note::
-           You should use this method for normal or habitual requests.
-
-
-        Example with string:
-
-        >>> from golismero.api.net.protocol import Web, NetworkAPI
-        >>> con = NetworkAPI.get_connection()
-        >>> response = con.get("www.mysite.com", timeout=2, follow_redirect=True)
-        >>> response.http_headers_raw
-        HTTP/1.0 200 OK
-        Date: Wed, 29 May 2013 18:44:54 GMT
-        Server: Apache 2.2
-        Content-Type: text/html; charset=utf-8
-        >>> response.lines_count
-        4
-
-        Example with Url instance:
-
-        >>> from golismero.api.net.protocol import Web, NetworkAPI
-        >>> from golismero.api.data.resource.url import Url
-        >>> con = NetworkAPI.get_connection()
-        >>> u = Url("www.mysite.com")
-        >>> response = con.get(u)
-        >>> response.request_time
-        0.2
-        >>> response.content_type
-        "text/html"
-
-
-        :param URL: string with URL or Url instance
-        :type URL: str or Url
-
-        :param cache: cache response?
-        :type cache: bool
-
-        :param redirect: If you want to follow HTTP redirect.
-        :type redirect: bool
-
-        :param timeout: timeout in seconds.
-        :type timeout: int
-
-        :returns: HTTPResponse instance or None if any error or URL out of scope.
-
-        :raises: AttributeError, ValueError, TypeError, NetworkOutOfScope
-        """
-
-
-        # Extract the raw URL when applicable
-        m_referer = None
-        try:
-            if isinstance(URL, Url):
-                URL       = URL.url
-                m_referer = URL.referer
-            elif isinstance(URL, basestring):
-                URL       = URL
-                # Parse, verify and canonicalize the URL
-                parsed = DecomposedURL(URL)
-                if not parsed.host or not parsed.scheme:
-                    raise ValueError("Only absolute URLs must be used!")
-
-        except AttributeError:
-            pass
-
-        # Check for host matching
-        if not is_in_scope(URL):
-            Logger.log_verbose("[!] Url '%s' out of scope. Skipping it." % URL)
-            raise NetworkOutOfScope("'%s' is out of the scope." % URL)
-
-        # Set redirect
-        m_follow_redirects = follow_redirect if follow_redirect else self.__follow_redirects
-
-        # Make HTTP_Request object
-        m_request = HTTP_Request(
-            url = URL,
-            method = method,
-            post_data = post_data,
-            follow_redirects = m_follow_redirects,
-            cache = cache
-        )
-
-        # Set referer
-        if m_referer:
-            m_request.referer = m_referer
-
-        return self.get_custom(m_request, timeout= timeout)
-
-
-    #----------------------------------------------------------------------
     def get_raw(self, host, request_content, timeout=2.0, port=80, proto="HTTP"):
         """
         This method allow you to make raw connections to a host.
 
-        You must to provide the data that you want to send to the server. You're the responsible to manage the
-        data that will be send to the server.
+        You must to provide the data that you want to send to the server.
 
         .. warning::
            This method only returns the HTTP response headers, **NOT THE CONTENT**.
@@ -508,12 +479,15 @@ class Web (Protocol):
 
         :return: HTTP response. Only the headers are parsed, not the contents.
         :rtype: HTTPResponse
+
+        :raises NetworkException: A network error has occurred.
+        :raises NetworkOutOfScope: The requested URL is out of scope for this audit.
         """
 
         # Check if the URL is within scope of the audit.
         if not is_in_scope(host):
             Logger.log_verbose("Url '%s' out of scope. Skipping it." % host)
-            raise NetworkOutOfScope("'%s' is out of the scope." % host)
+            raise NetworkOutOfScope("'%s' is out of scope." % host)
 
         # Get a connection slot.
         with ConnectionSlot(host):
