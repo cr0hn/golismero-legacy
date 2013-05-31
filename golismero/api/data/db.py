@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#-----------------------------------------------------------------------
-# Information, resources and vulnerabilities database API
-#-----------------------------------------------------------------------
+"""
+Information, resources and vulnerabilities database API.
+"""
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -52,7 +52,8 @@ class Database(Singleton):
         :param data: Data to add.
         :type data: Data
 
-        :returns: bool -- True if the data was added, False if it was updated
+        :returns: True if the data was added, False if it was updated.
+        :rtype: bool
         """
         return Config._context.remote_call(
             MessageCode.MSG_RPC_DATA_ADD, data)
@@ -84,7 +85,8 @@ class Database(Singleton):
         :param data_type: Optional data type. One of the Data.TYPE_* values.
         :type data_type: int
 
-        :returns: bool -- True if the object was removed, False if it didn't exist.
+        :returns: True if the object was removed, False if it didn't exist.
+        :rtype: bool
         """
         return Config._context.remote_call(
             MessageCode.MSG_RPC_DATA_REMOVE, identity, data_type)
@@ -104,7 +106,8 @@ class Database(Singleton):
         :param data_type: Optional data type. One of the Data.TYPE_* values.
         :type data_type: int
 
-        :returns: bool -- True if the object was removed, False if it didn't exist.
+        :returns: True if the object was removed, False if it didn't exist.
+        :rtype: bool
         """
         Config._context.async_remote_call(
             MessageCode.MSG_RPC_DATA_REMOVE, identity, data_type)
@@ -122,7 +125,8 @@ class Database(Singleton):
         :param identity: Identity hash.
         :type identity: str
 
-        :returns: bool - True if the object is present, False otherwise.
+        :returns: True if the object is present, False otherwise.
+        :rtype: bool
         """
         return Config._context.remote_call(
             MessageCode.MSG_RPC_DATA_CHECK, identity, data_type)
@@ -142,7 +146,8 @@ class Database(Singleton):
         :param data_type: Optional data type. One of the Data.TYPE_* values.
         :type data_type: int
 
-        :returns: Data | None
+        :returns: Data object if found, None otherwise.
+        :rtype: Data | None
         """
         return Config._context.remote_call(
             MessageCode.MSG_RPC_DATA_GET, identity, data_type)
@@ -159,7 +164,8 @@ class Database(Singleton):
         :param data_type: Optional data type. One of the Data.TYPE_* values.
         :type data_type: int
 
-        :returns: list(Data)
+        :returns: Data objects.
+        :rtype: list(Data)
         """
         return Config._context.remote_call(
             MessageCode.MSG_RPC_DATA_GET_MANY, identities, data_type)
@@ -168,7 +174,7 @@ class Database(Singleton):
     #----------------------------------------------------------------------
     def keys(self, data_type = None, data_subtype = None):
         """
-        Get a list of identity hashes for all objects of the requested
+        Get the identity hashes for all objects of the requested
         type, optionally filtering by subtype.
 
         :param data_type: Optional data type. One of the Data.TYPE_* values.
@@ -177,7 +183,8 @@ class Database(Singleton):
         :param data_subtype: Optional data subtype.
         :type data_subtype: int | str
 
-        :returns: set(str) -- Identity hashes.
+        :returns: Identity hashes.
+        :rtype: set(str)
         """
         if data_type is None:
             if data_subtype is not None:
@@ -199,7 +206,8 @@ class Database(Singleton):
         :param data_subtype: Optional data subtype.
         :type data_subtype: int | str
 
-        :returns: set(str) -- Identity hashes.
+        :returns: Count of requested objects.
+        :rtype: int
         """
         if data_type is None:
             if data_subtype is not None:
@@ -221,7 +229,8 @@ class Database(Singleton):
         :param data_subtype: Optional data subtype.
         :type data_subtype: int | str
 
-        :returns: generator -- Generator of Data objects.
+        :returns: Generator of Data objects.
+        :rtype: generator(Data)
         """
         for identity in self.keys(data_type, data_subtype):
             yield self.get(identity)
@@ -246,6 +255,7 @@ class Database(Singleton):
         """
         Iterate through all objects of the database.
 
-        :returns: generator -- Generator of Data objects.
+        :returns: Generator of Data objects.
+        :rtype: generator(Data)
         """
         return self.iterate()
