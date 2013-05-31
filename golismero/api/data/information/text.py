@@ -32,10 +32,6 @@ from . import Information
 from .. import identity
 
 
-__doc__ = """
-This module contain the structure for store plain text data.
-"""
-
 #------------------------------------------------------------------------------
 class Text(Information):
     """

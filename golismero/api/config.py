@@ -51,9 +51,6 @@ class _Config (Singleton):
     """
     Current plugin and audit configuration.
 
-    .. warning::
-       This var is private. It defines the properties to access to the plugin propteties but **you must to access to the config using** :py:data:`.Config` **public var**
-
     Whenever a plugin accesses this object it will receive its own
     configuration, including the current audit's name and settings.
     """
@@ -161,7 +158,6 @@ class _Config (Singleton):
         >>> Config.plugin_extra_config['Wordlist_extensions']['wordlist']
         'fuzzdb/Discovery/FilenameBruteforce/Extensions.Backup.fuzz.txt'
 
-
         :returns: Map of configuration file sections to their settings and values.
         :rtype: dict(str -> dict(str -> str))
         """
@@ -183,7 +179,3 @@ class _Config (Singleton):
 
 # Instance the singleton.
 Config = _Config()
-"""
-.. warning::
-   You must use this public var to access to the config
-"""

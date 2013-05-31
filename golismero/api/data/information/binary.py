@@ -31,9 +31,6 @@ __all__ = ["Binary"]
 from . import Information
 from .. import identity
 
-__doc__ = """
-This module contain the structure for store binary data.
-"""
 
 #------------------------------------------------------------------------------
 class Binary(Information):
