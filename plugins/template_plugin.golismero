@@ -1,7 +1,6 @@
 [Core]
-Name = Template for develop plugins
+Name = Template for plugin development
 Module = template_plugin.py
-Stage = Recon
 
 [Documentation]
 Description = [DESCRIPTION OF NEW PLUGIN]

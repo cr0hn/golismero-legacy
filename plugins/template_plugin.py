@@ -73,8 +73,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
 
-
-
+from golismero.api.plugin import TestingPlugin
 
 class TemplatePlugin(TestingPlugin):
     """
@@ -107,9 +106,9 @@ class TemplatePlugin(TestingPlugin):
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-        """"""
         #
         #
         # PUT YOUR CODE HERE
         #
         #
+        pass
