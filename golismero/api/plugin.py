@@ -225,7 +225,8 @@ class ReportPlugin (Plugin):
         :param output_file: Output file to generate.
         :type output_file: str | None
 
-        :returns: bool - True if this plugin supports the format, False otherwise.
+        :returns: True if this plugin supports the format, False otherwise.
+        :rtype: bool.
         """
         raise NotImplementedError("Plugin must implement this method!")
 
