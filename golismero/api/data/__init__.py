@@ -591,13 +591,122 @@ class Data(object):
 
     #----------------------------------------------------------------------
     @property
+    def associated_resources(self):
+        """
+        Get the associated resources.
+
+        :return: Resources.
+        :rtype: set(Resource)
+        """
+        return self.get_linked_data(Data.TYPE_RESOURCE)
+
+
+    #----------------------------------------------------------------------
+    @property
+    def associated_informations(self):
+        """
+        Get the associated informations.
+
+        :return: Informations.
+        :rtype: set(Information)
+        """
+        return self.get_linked_data(Data.TYPE_INFORMATION)
+
+
+    #----------------------------------------------------------------------
+    @property
+    def associated_vulnerabilities(self):
+        """
+        Get the associated vulnerabilities.
+
+        :return: Vulnerabilities.
+        :rtype: set(Vulnerability)
+        """
+        return self.get_linked_data(Data.TYPE_VULNERABILITY)
+
+
+    #----------------------------------------------------------------------
+    def associated_vulnerabilities_by_category(self, cat_name = None):
+        """
+        Get associated vulnerabilites by category.
+
+        :param cat_name: category name
+        :type cat_name: str
+
+        :return: Associated vulnerabilites. Returns an empty set if the category doesn't exist.
+        :rtype: set(Vulnerability)
+        """
+        return self.get_linked_data(self.TYPE_VULNERABILITY, cat_name)
+
+
+    #----------------------------------------------------------------------
+    def associated_informations_by_category(self, information_type = None):
+        """
+        Get associated informations by type.
+
+        :param information_type: One of the Information.INFORMATION_* constants.
+        :type information_type: int
+
+        :return: Associated informations.
+        :rtype: set(Information)
+
+        :raises ValueError: The specified information type is invalid.
+        """
+        if type(information_type) is not int:
+            raise TypeError("Expected int, got %r instead" % type(information_type))
+        if not Information.INFORMATION_FIRST >= information_type >= Information.INFORMATION_LAST:
+            raise ValueError("Invalid information_type: %r" % information_type)
+        return self.get_linked_data(self.TYPE_INFORMATION, information_type)
+
+
+    #----------------------------------------------------------------------
+    def add_resource(self, res):
+        """
+        Associate a resource.
+
+        :param res: Resource element.
+        :type res: Resource
+        """
+##        if not isinstance(info, Resource):
+##            raise TypeError("Expected Resource, got %s instead" % type(res))
+        self.add_link(res)
+
+
+    #----------------------------------------------------------------------
+    def add_information(self, info):
+        """
+        Associate an information.
+
+        :param info: Information element.
+        :type info: Information
+        """
+##        if not isinstance(info, Information):
+##            raise TypeError("Expected Information, got %s instead" % type(info))
+        self.add_link(info)
+
+
+    #----------------------------------------------------------------------
+    def add_vulnerability(self, vuln):
+        """
+        Associate a vulnerability.
+
+        :param info: Vulnerability element.
+        :type info: Vulnerability
+        """
+##        if isinstance(vuln, Vulnerability):
+##            raise TypeError("Expected Vulnerability, got %s instead" % type(vuln))
+        self.add_link(vuln)
+
+
+    #----------------------------------------------------------------------
+    @property
     def discovered_resources(self):
         """
         Returns a list with the new resources discovered.
 
         This property is mostly used by GoLismero itself.
 
-        :return: List with resources.
+        :return: New resources discovered.
         :rtype: list(Resource)
         """
         return []

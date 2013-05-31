@@ -38,83 +38,93 @@ from ...net.web_utils import DecomposedURL, is_in_scope
 #------------------------------------------------------------------------------
 class Url(Resource):
     """
-    URL information type.
+    Universal Resource Locator (URL).
 
-    This resource referer to a complete URL, like:
+    You can get the URL in canonical form:
 
-    - http://www.my_site.com/index.php?param1=value1
-    - site.com/users/
+    - url
 
-    It has the properties of an Url:
+    In deconstructed form:
 
-    - Domain name.
-    - Get parameters.
-    - Post parameters.
-    - ...
+    - parsed_url
 
+    The current crawling depth level:
+
+    - depth
+
+    And some extra information needed to build an HTTP request:
+
+    - method
+    - url_params
+    - post_params
+    - referer
     """
 
     resource_type = Resource.RESOURCE_URL
 
 
     #----------------------------------------------------------------------
-    def __init__(self, url, method = "GET", url_params = None, post_params = None, depth = 0, referer = ""):
+    def __init__(self, url, method = "GET", url_params = None, post_params = None, depth = 0, referer = None):
         """
-        Construct a URL information type.
-
-        :param url: URL to manage
+        :param url: Absolute URL.
         :type url: str
 
-        :param method: HTTP method to get URL
+        :param method: HTTP method.
         :type method: str
 
-        :param url_params: params inside URL
-        :type url_params: dict
+        :param url_params: GET parameters.
+        :type url_params: dict(str -> str)
 
-        :param post_params: params inside post
-        :type post_params: dict
+        :param post_params: POST parameters.
+        :type post_params: dict(str -> str)
 
-        :param deep: The deep of URL in relation with main site.
-        :type deep: int
+        :param depth: Crawling depth.
+        :type depth: int
+
+        :param referer: Referrer URL.
+        :type referer: str
+
+        :raises ValueError: Currently, relative URLs are not allowed.
         """
         assert isinstance(referer, basestring)
 
-        # Parse, verify and canonicalize the URL
+        # Parse, verify and canonicalize the URL.
+        # TODO: if relative, make it absolute using the referer when available.
         parsed = DecomposedURL(url)
         if not parsed.host or not parsed.scheme:
             raise ValueError("Only absolute URLs must be used!")
         url = parsed.url
 
-        # URL
+        # URL.
         self.__url = url
 
-        # Parsed URL
+        # Parsed URL.
         self.__parsed_url = parsed
 
-        # Method
+        # Method.
         self.__method = method.strip().upper() if method else "GET"
 
-        # GET params
+        # GET params.
         self.__url_params = url_params if url_params else {}
 
-        # POST params
+        # POST params.
         self.__post_params = post_params if post_params else {}
 
         # Encrypted?
         self.__is_https = url.lower().startswith("https://")
 
-        # Depth
+        # Depth.
         assert type(depth) == int
         self.__depth = depth
 
-        # Referer
+        # Referer.
         assert isinstance(referer, basestring)
         self.__referer = referer
 
-        # Discovered resources
+        # Discovered resources.
         self.__discovered_resources = None
 
-        # Parent constructor
+        # Parent constructor.
         super(Url, self).__init__()
 
 
@@ -128,8 +138,8 @@ class Url(Resource):
 
     #----------------------------------------------------------------------
     def __repr__(self):
-        s = "<Url url=%r, method=%r, params=%r, referer=%r>"
-        s %= (self.url, self.method, self.post_params, self.referer)
+        s = "<Url url=%r, method=%r, params=%r, referer=%r, depth=%r>"
+        s %= (self.url, self.method, self.post_params, self.referer, self.depth)
         return s
 
 
@@ -143,8 +153,8 @@ class Url(Resource):
     @identity
     def url(self):
         """
-        :return: Raw URL.
-        :rtype: str.
+        :return: URL in canonical form.
+        :rtype: str
         """
         return self.__url
 
@@ -159,7 +169,7 @@ class Url(Resource):
     @identity
     def post_params(self):
         """
-        :return: POST parameters as a dict format.
+        :return: POST parameters.
         :rtype: dict(str)
         """
         return self.__post_params
@@ -170,38 +180,39 @@ class Url(Resource):
     @property
     def parsed_url(self):
         """
-        :return: Parsed URL.
-        :rtype: DecomposedURL.
+        :return: URL in decomposed form.
+        :rtype: DecomposedURL
         """
         return self.__parsed_url
 
     @property
     def url_params(self):
         """
-        :return: URL parameters.
-        :rtype: dict(str).
+        :return: GET parameters.
+        :rtype: dict(str -> str)
         """
         return self.__url_params
 
     @property
     def is_https(self):
         """
-        :return: If it's HTTPS, False otherwise.
-        :rtype: bool.
+        :return: True if it's HTTPS, False otherwise.
+        :rtype: bool
         """
         return self.__is_https
 
     @property
     def has_url_param(self):
         """
-        bool - True if there are URL params, False otherwise.
+        :return: True if there are GET parameters, False otherwise.
+        :rtype: bool
         """
         return bool(self.url_params)
 
     @property
     def has_post_param(self):
         """
-        :return: True if there are POST params, False otherwise.
+        :return: True if there are POST parameters, False otherwise.
         :rtype: bool
         """
         return bool(self.post_params)
@@ -218,7 +229,7 @@ class Url(Resource):
     def referer(self):
         """
         :return: Referer for this URL.
-        :rtype: str.
+        :rtype: str
         """
         return self.__referer
 

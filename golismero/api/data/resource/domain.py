@@ -36,15 +36,9 @@ from ...net.web_utils import is_in_scope
 #------------------------------------------------------------------------------
 class Domain(Resource):
     """
-    Domain name resource.
+    Domain name.
 
-    This resource referer to any domain type, like.
-
-    - www.my_site.com
-    - ftp.my_domain.com
-
-    It only contains information about de domain name.
-
+    This data type maps the domain names to the IP addresses they resolve to.
     """
 
     resource_type = Resource.RESOURCE_DOMAIN
@@ -53,22 +47,20 @@ class Domain(Resource):
     #----------------------------------------------------------------------
     def __init__(self, name, *addresses):
         """
-        Construct a domain name resource.
-
-        :param name: Domain name
+        :param name: Domain name.
         :type name: str
 
-        :param addresses: List of IP addresses
-        :type addresses: list
+        :param addresses: IP address or addresses it resolves to.
+        :type addresses: tuple(str)
         """
 
-        # Domain name
+        # Domain name.
         self.__name = name
 
-        # List of IP addresses
-        self.__addresses = tuple(addresses)
+        # IP addresses.
+        self.__addresses = addresses
 
-        # Parent constructor
+        # Parent constructor.
         super(Domain, self).__init__()
 
 
@@ -98,8 +90,8 @@ class Domain(Resource):
     @identity
     def name(self):
         """
-        :return: Domain name
-        :rtype: str.
+        :return: Domain name.
+        :rtype: str
         """
         return self.__name
 
@@ -108,7 +100,7 @@ class Domain(Resource):
     @merge
     def addresses(self):
         """
-        :return: IP addresses
-        :rtype: tuple(str).
+        :return: IP address or addresses this domain name resolves to.
+        :rtype: tuple(str)
         """
         return self.__addresses

@@ -29,14 +29,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["Resource"]
 
 from .. import Data
-from ..information import Information
-##from ..vulnerability import Vulnerability
 
 
 #------------------------------------------------------------------------------
 class Resource(Data):
     """
-    Base class resources.
+    Base class for resources.
     """
 
     #--------------------------------------------------------------------------
@@ -71,84 +69,3 @@ class Resource(Data):
         :rtype: bool
         """
         return True
-
-
-    #----------------------------------------------------------------------
-    @property
-    def associated_vulnerabilities(self):
-        """
-        Get a list with vulnerabilities associated to this resource.
-
-        :return: List with vulnerabilities.
-        :rtype: list
-        """
-        return self.get_linked_data(Data.TYPE_VULNERABILITY)
-
-
-    #----------------------------------------------------------------------
-    @property
-    def associated_informations(self):
-        """
-        Get a list with informations associated to this resource.
-
-        :return: List with informations.
-        :rtype: list
-        """
-        return self.get_linked_data(Data.TYPE_INFORMATION)
-
-
-    #----------------------------------------------------------------------
-    def add_information(self, info):
-        """
-        Add information elements associated to a resource.
-
-        :param info: Information element.
-        :type info: Information
-        """
-        if not isinstance(info, Information):
-            raise TypeError("Expected Information, got %s instead" % type(info))
-        self.add_link(info)
-
-
-    #----------------------------------------------------------------------
-    def add_vulnerability(self, vuln):
-        """
-        Add vulnerability elements associated to a resource.
-
-        :param info: Vulnerability element.
-        :type info: Vulnerability
-        """
-##        if isinstance(vuln, Vulnerability):
-##            raise TypeError("Expected Vulnerability, got %s instead" % type(vuln))
-        self.add_link(vuln)
-
-
-    #----------------------------------------------------------------------
-    def associated_vulnerabilities_by_category(self, cat_name = None):
-        """
-        Get accociated vulnerabilites by category.
-
-        :param cat_name: category name
-        :type cat_name: str
-
-        :return: set(Data) -- Set of associated informations. Returns an empty set if the category doesn't exist.
-        """
-        return self.get_linked_data(self.TYPE_VULNERABILITY, cat_name)
-
-
-    #----------------------------------------------------------------------
-    def associated_informations_by_category(self, information_type = None):
-        """
-        Get accociated information by category.
-
-        :param information_type: One of the Information.INFORMATION_* constants.
-        :type information_type: int
-
-        :return: set(Data) -- Set of associated informations.
-        :raises ValueError: The specified information type is invalid.
-        """
-        if type(information_type) is not int:
-            raise TypeError("Expected int, got %r instead" % type(information_type))
-        if not Information.INFORMATION_FIRST >= information_type >= Information.INFORMATION_LAST:
-            raise ValueError("Invalid information_type: %r" % information_type)
-        return self.get_linked_data(self.TYPE_INFORMATION, information_type)

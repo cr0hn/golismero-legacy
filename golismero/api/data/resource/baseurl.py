@@ -37,15 +37,22 @@ from ...net.web_utils import DecomposedURL, is_in_scope
 #------------------------------------------------------------------------------
 class BaseUrl(Resource):
     """
-    Base URL information type.
+    Base URL.
 
-    This type is more likelly than Url, but has the diffence that only referer to a
-    base Url o, in other words, without any file or GET parameters, like:
+    Unlike the Url type, which refers to any URL, this type is strictly for
+    root level URLs in a web server. Plugins that only run once per web server
+    should probably receive this data type.
 
-    - http://www.my_site.com -> **Good BaseUrl**
-    - http://www.my_site.com/index.php -> **Bad BaseUrl**. It's a Url type.
+    For example, a plugin receiving both BaseUrl and Url may get this input:
 
+    - BaseUrl("http://www.my_site.com/")
+    - Url("http://www.my_site.com/")
+    - Url("http://www.my_site.com/index.php")
+    - Url("http://www.my_site.com/admin.php")
+    - Url("http://www.my_site.com/login.php")
 
+    Notice how the root level URL is sent twice,
+    once as BaseUrl and again the more generic Url.
     """
 
     resource_type = Resource.RESOURCE_BASE_URL
@@ -56,8 +63,10 @@ class BaseUrl(Resource):
         """
         Base URL information type.
 
-        :param url: Any URL. The base will be extracted from it.
+        :param url: Any **absolute** URL. The base will be extracted from it.
         :type url: str
+
+        :raises ValueError: Only absolute URLs must be used.
         """
         assert isinstance(url, basestring)
 
@@ -96,10 +105,6 @@ class BaseUrl(Resource):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        """
-        :returns: a boolean that indicates if this Url is in scope or not. True: the Url is in scope. False: not.
-        :rtype: bool.
-        """
         return is_in_scope(self.url)
 
 
@@ -136,18 +141,4 @@ class BaseUrl(Resource):
     #----------------------------------------------------------------------
     @property
     def discovered_resources(self):
-        """
-        This property returns some resources associated with it self.
-
-        For example, from an Url it can generate a Domain resource:
-
-        1. Information of Url: http://www.my_site.com/index.php?param1=value1
-        2. Generated resources:
-
-         - <Domain name="www.my_site.com" >
-         - <BaseUrl url="http://www.my_site.com" >
-
-        :return: list with generated resources.
-        :rtype: list
-        """
         return [Domain(self.parsed_url.hostname),]
