@@ -57,6 +57,15 @@ class identity(property):
 
     @staticmethod
     def is_identity_property(other):
+        """
+        Determine if a class property is marked with the @identity decorator.
+
+        :param other: Class property.
+        :type other: property
+
+        :returns: True if the property is marked, False otherwise.
+        :rtype: bool
+        """
 
         # TODO: benchmark!!!
         ##return isinstance(other, identity)
@@ -81,6 +90,15 @@ class merge(property):
 
     @staticmethod
     def is_mergeable_property(other):
+        """
+        Determine if a class property is marked with the @merge decorator.
+
+        :param other: Class property.
+        :type other: property
+
+        :returns: True if the property is marked, False otherwise.
+        :rtype: bool
+        """
 
         # TODO: benchmark!!!
         ##return isinstance(other, merge) and other.fset is not None
@@ -96,13 +114,22 @@ class merge(property):
 #------------------------------------------------------------------------------
 class overwrite(property):
     """
-    Decorator that marks properties that can be merged safely.
+    Decorator that marks properties that can be overwritten safely.
 
     It may not be combined with any other decorator, and may not be subclassed.
     """
 
     @staticmethod
     def is_overwriteable_property(other):
+        """
+        Determine if a class property is marked with the @overwrite decorator.
+
+        :param other: Class property.
+        :type other: property
+
+        :returns: True if the property is marked, False otherwise.
+        :rtype: bool
+        """
 
         # TODO: benchmark!!!
         ##return isinstance(other, overwrite) and other.fset is not None
@@ -117,7 +144,12 @@ class overwrite(property):
 
 #------------------------------------------------------------------------------
 class _data_metaclass(type):
-    "Metaclass to validate the definitions of Data subclasses."
+    """
+    Metaclass to validate the definitions of Data subclasses.
+
+    ..warning: Do not use! If you want to define your own Data subclasses,
+               just derive from Information, Resource or Vulnerability.
+    """
 
     def __init__(cls, name, bases, namespace):
         super(_data_metaclass, cls).__init__(name, bases, namespace)
@@ -163,7 +195,11 @@ class _data_metaclass(type):
 #------------------------------------------------------------------------------
 class Data(object):
     """
-    Base class for all data.
+    Base class for all data elements.
+
+    ..warning: Do not subclass directly!
+               If you want to define your own Data subclasses,
+               derive from Information, Resource or Vulnerability.
     """
 
     __metaclass__ = _data_metaclass
@@ -224,7 +260,8 @@ class Data(object):
     @property
     def identity(self):
         """
-        Get the identity hash of this object.
+        :returns: Identity hash of this object.
+        :rtype: str
         """
 
         # If the hash is already in the cache, return it.
@@ -273,7 +310,10 @@ class Data(object):
         Returns a dictionary of identity properties
         and their values for this data object.
 
-        :returns: dict -- Collected property names and values.
+        ..warning: This is an internally used method. Do not call!
+
+        :returns: Collected property names and values.
+        :rtype: dict(str -> *)
         """
         is_identity_property = identity.is_identity_property
         clazz = self.__class__
@@ -299,6 +339,9 @@ class Data(object):
         Merge another data object with this one.
 
         This is the old data, and the other object is the new data.
+
+        :param other: Data object to merge with this one.
+        :type other: Data
         """
         self._merge_objects(self, other, reverse = False)
 
@@ -308,13 +351,31 @@ class Data(object):
         Reverse merge another data object with this one.
 
         This is the new data, and the other object is the old data.
+
+        :param other: Data object to be merged with this one.
+        :type other: Data
         """
         self._merge_objects(other, self, reverse = True)
 
 
-    # Merge objects in any order.
     @classmethod
     def _merge_objects(cls, old_data, new_data, reverse = False):
+        """
+        Merge objects in any order.
+
+        ..warning: This is an internally used method. Do not call!
+
+        :param old_data: Old data object.
+        :type old_data: Data
+
+        :param new_data: New data object.
+        :type new_data: Data
+
+        :param reverse: Merge order flag.
+        :type reverse: bool
+        """
+
+        # Type checks.
         if type(old_data) is not type(new_data):
             raise TypeError("Can only merge data objects of the same type")
         if old_data.identity != new_data.identity:
@@ -329,9 +390,25 @@ class Data(object):
         cls._merge_links(old_data, new_data, reverse = reverse)
 
 
-    # Merge a single property.
     @classmethod
     def _merge_property(cls, old_data, new_data, key, reverse = False):
+        """
+        Merge a single property.
+
+        ..warning: This is an internally used method. Do not call!
+
+        :param old_data: Old data object.
+        :type old_data: Data
+
+        :param new_data: New data object.
+        :type new_data: Data
+
+        :param key: Property name.
+        :type key: str
+
+        :param reverse: Merge order flag.
+        :type reverse: bool
+        """
 
         # Determine if the property is mergeable or overwriteable, ignore otherwise.
         prop = getattr(new_data.__class__, key, None)
@@ -396,9 +473,22 @@ class Data(object):
                 warn(msg)
 
 
-    # Merge links as the union of all links from both objects.
     @classmethod
     def _merge_links(cls, old_data, new_data, reverse = False):
+        """
+        Merge links as the union of all links from both objects.
+
+        ..warning: This is an internally used method. Do not call!
+
+        :param old_data: Old data object.
+        :type old_data: Data
+
+        :param new_data: New data object.
+        :type new_data: Data
+
+        :param reverse: Merge order flag.
+        :type reverse: bool
+        """
         if reverse:
             for data_type, new_subdict in new_data.__linked.items():
                 target_subdict = old_data.__linked[data_type].copy()
@@ -415,14 +505,20 @@ class Data(object):
     #----------------------------------------------------------------------
     @property
     def links(self):
-        """set(str) -- Set of linked Data identities."""
+        """
+        :returns: Set of linked Data identities.
+        :rtype: set(str)
+        """
         return self.__linked[None][None]
 
 
     #----------------------------------------------------------------------
     @property
     def linked_data(self):
-        """set(str) -- Set of linked Data identities."""
+        """
+        :returns: Set of linked Data elements.
+        :rtype: set(Data)
+        """
         return self._convert_links_to_data( self.__linked[None][None] )
 
 
@@ -437,7 +533,9 @@ class Data(object):
         :param data_subtype: Optional data subtype.
         :type data_subtype: int | str
 
-        :returns: set(str) -- Set of identities.
+        :returns: Identities.
+        :rtype: set(str)
+
         :raises ValueError: Invalid data_type argument.
         """
         if data_type is None:
@@ -448,6 +546,25 @@ class Data(object):
 
 
     #----------------------------------------------------------------------
+    def get_linked_data(self, data_type = None, data_subtype = None):
+        """
+        Get the linked Data elements of the given data type.
+
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
+        :type data_type: int
+
+        :param data_subtype: Optional data subtype.
+        :type data_subtype: int | str
+
+        :returns: Data elements.
+        :rtype: set(Data)
+
+        :raises ValueError: Invalid data_type argument.
+        """
+        links = self.get_links(data_type, data_subtype)
+        return self._convert_links_to_data(links)
+
+
     @staticmethod
     def _convert_links_to_data(links):
         """
@@ -455,10 +572,13 @@ class Data(object):
         This will include both new objects created by this plugins,
         and old objects already stored in the database.
 
+        ..warning: This is an internally used method. Do not call!
+
         :param links: Set of identities to fetch.
         :type links: set(str)
 
-        :returns: set(Data) -- Set of Data objects.
+        :returns: Set of Data objects.
+        :rtype: set(Data)
         """
         remote = set()
         instances = set()
@@ -473,32 +593,12 @@ class Data(object):
 
 
     #----------------------------------------------------------------------
-    def get_linked_data(self, data_type = None, data_subtype = None):
-        """
-        Get the linked Data objects of the given data type.
-
-        :param data_type: Optional data type. One of the Data.TYPE_* values.
-        :type data_type: int
-
-        :param data_subtype: Optional data subtype.
-        :type data_subtype: int | str
-
-        :returns: set(Data) -- Set of Data objects.
-        :raises ValueError: Invalid data_type argument.
-        """
-        links = self.get_links(data_type, data_subtype)
-        return self._convert_links_to_data(links)
-
-
-    #----------------------------------------------------------------------
     def add_link(self, other):
         """
         Link two Data instances together.
 
         :param other: Another instance of Data.
         :type other: Data
-
-        :raises:
         """
         if not isinstance(other, Data):
             raise TypeError("Expected Data, got %s instead" % type(other))
@@ -506,17 +606,19 @@ class Data(object):
             other._add_link(self)
             self._add_link(other)
 
+
     def _can_link(self, other):
         """
         Internal method to check if adding a new link
         of the requested type is allowed for this class.
 
-        Do not call! Use add_link() instead.
+        ..warning: Do not call! Use add_link() instead.
 
         :param other: Another instance of Data.
         :type other: Data
 
-        :returns: bool - True if permitted, False otherwise.
+        :returns: True if permitted, False otherwise.
+        :rtype: bool
         """
         max_data = self.max_data
         data_type = other.data_type
@@ -533,11 +635,12 @@ class Data(object):
             (max_data_type is None or max_data_type < 0 or len(self.get_links(data_type)) <= max_data_type)
         )
 
+
     def _add_link(self, other):
         """
         Internal method to link two Data instances together.
 
-        Do not call! Use add_link() instead.
+        ..warning: Do not call! Use add_link() instead.
 
         :param other: Another instance of Data.
         :type other: Data
@@ -563,7 +666,8 @@ class Data(object):
 
         Note: The maximums are already checked when creating the links.
 
-        This method is called after plugins return the data.
+        This method is called automatically after plugins return the data.
+        Plugins do not need to call it.
 
         :raises ValueError: The minimum link constraints are not met.
         """
@@ -704,7 +808,8 @@ class Data(object):
         """
         Returns a list with the new resources discovered.
 
-        This property is mostly used by GoLismero itself.
+        This property is used by GoLismero itself.
+        Plugins do not need to call it.
 
         :return: New resources discovered.
         :rtype: list(Resource)
@@ -716,6 +821,8 @@ class Data(object):
 class _TempDataStorage(object):
     """
     Temporary storage for newly created objects.
+
+    ..warning: Used internally by GoLismero, do not use in plugins!
     """
 
 
@@ -765,7 +872,8 @@ class _TempDataStorage(object):
         :param identity: Identity to look for.
         :type identity: str
 
-        :returns: Data | None
+        :returns: Data object if found, None otherwise.
+        :rtype: Data | None
         """
         self.update()
         return self.__new_data.get(identity, None)
