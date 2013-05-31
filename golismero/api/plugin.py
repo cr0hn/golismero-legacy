@@ -208,7 +208,7 @@ class ReportPlugin (Plugin):
     This is the base class for all Report plugins.
     """
 
-    PLUGIN_TYPE = PLUGIN_TYPE_REPORT
+    PLUGIN_TYPE = Plugin.PLUGIN_TYPE_REPORT
 
 
     #----------------------------------------------------------------------
