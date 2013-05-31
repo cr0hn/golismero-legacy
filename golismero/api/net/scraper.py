@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#-----------------------------------------------------------------------
-# URL scraping API
-#-----------------------------------------------------------------------
+"""
+URL scraping API.
+
+This module contains utility functions to extract (scrape) URLs from data.
+Currently only HTML and plain text data are supported.
+"""
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -107,7 +110,7 @@ def extract_from_text(text, base_url, only_links = True):
     :type only_links: bool
 
     :returns: Extracted URLs.
-    :rtype: set(str).
+    :rtype: set(str)
     """
 
     # Set where the URLs will be collected.
@@ -159,7 +162,7 @@ def extract_from_html(raw_html, base_url, only_links = True):
     :type only_links: bool
 
     :returns: Extracted URLs.
-    :rtype: set(str).
+    :rtype: set(str)
     """
 
     # Set where the URLs will be collected.
