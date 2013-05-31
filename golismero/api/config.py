@@ -51,6 +51,9 @@ class _Config (Singleton):
     """
     Current plugin and audit configuration.
 
+    .. warning::
+       This var is private. It defines the properties to access to the plugin propteties but **you must to access to the config using** :py:data:`.Config` **public var**
+
     Whenever a plugin accesses this object it will receive its own
     configuration, including the current audit's name and settings.
     """
@@ -136,6 +139,29 @@ class _Config (Singleton):
         * [Core]
         * [Documentation]
 
+        >>> from golismero.api.config import Config
+        >>> print open("suspicious_url.golismero").read()
+        [Core]
+        Name = Suspicious URL
+        Module = suspicious_url.py
+        Stage = Recon
+        [Documentation]
+        Description = Find suspicious words in URLs
+        Author = Daniel Garcia Garcia (cr0hn)
+        Version = 0.1
+        Website = https://github.com/cr0hn/golismero/
+        Copyright = Copyright (C) 2011-2013 GoLismero Project
+        License = GNU Public License
+        [Wordlist_middle]
+        wordlist = golismero/warning_url.txt
+        [Wordlist_extensions]
+        wordlist = fuzzdb/Discovery/FilenameBruteforce/Extensions.Backup.fuzz.txt
+        >>> Config.plugin_extra_config['Wordlist_middle']['wordlist']
+        'golismero/warning_url.txt'
+        >>> Config.plugin_extra_config['Wordlist_extensions']['wordlist']
+        'fuzzdb/Discovery/FilenameBruteforce/Extensions.Backup.fuzz.txt'
+
+
         :returns: Map of configuration file sections to their settings and values.
         :rtype: dict(str -> dict(str -> str))
         """
@@ -157,3 +183,7 @@ class _Config (Singleton):
 
 # Instance the singleton.
 Config = _Config()
+"""
+.. warning::
+   You must use this public var to access to the config
+"""

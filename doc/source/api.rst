@@ -41,30 +41,14 @@ Configuration manager
 .. automodule:: golismero.api.config
    :members: Config, _Config
    :show-inheritance:
-   :inherited-members:
+   :private-members:
 
 Plugins interfaces
 ------------------
 
-All plugins inherits the method of one of these interfaces. Depends of the type of plugin, it must inherit of one of the other.
-
-Global plugin interface
-+++++++++++++++++++++++
-
 There is a general plugin interface. All sub classes implements and inherit their methods.
 
 .. automodule:: golismero.api.plugin
-   :members: Plugin, InformationPlugin, AdvancedPlugin
-
-Specific plugin interfaces
-++++++++++++++++++++++++++
-
-These are the availables interfaces for plugins:
-
-* **TestingPlugin**: Used to implement security audit related plugin.
-* **UIPLugin**: All user interface plugins implements this interface.
-* **ReportPlugin**: All resporting plugins implements this interface.
-
-.. automodule:: golismero.api.plugin
-   :members: TestingPlugin, UIPlugin, ReportPlugin
+   :members: Plugin, InformationPlugin, AdvancedPlugin, TestingPlugin, UIPlugin, ReportPlugin
    :show-inheritance:
+

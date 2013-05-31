@@ -8,3 +8,4 @@ The plugin list by type:
 
    plugins/testing
    plugins/report
+   plugins/ui

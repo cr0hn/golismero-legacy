@@ -70,7 +70,8 @@ def is_link(url, base_url):
     :param base_url: Base URL for the current document. Must not contain a fragment.
     :type base_url: str
 
-    :returns: bool -- True if the URL points to another page or resource, False otherwise.
+    :returns: True if the URL points to another page or resource, False otherwise.
+    :rtype: bool
     """
 
     # URLs that point to the same page in a different fragment are not links.
@@ -105,7 +106,8 @@ def extract_from_text(text, base_url, only_links = True):
     :param only_links: If True, only extract links to other resources. If False, extract all URLs.
     :type only_links: bool
 
-    :returns: set(str) -- Extracted URLs.
+    :returns: Extracted URLs.
+    :rtype: set(str).
     """
 
     # Set where the URLs will be collected.
@@ -156,7 +158,8 @@ def extract_from_html(raw_html, base_url, only_links = True):
     :param only_links: If True, only extract links to other resources. If False, extract all URLs.
     :type only_links: bool
 
-    :returns: set(str) -- Extracted URLs.
+    :returns: Extracted URLs.
+    :rtype: set(str).
     """
 
     # Set where the URLs will be collected.

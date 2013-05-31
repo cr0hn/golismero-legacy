@@ -33,6 +33,10 @@ from .. import identity
 from ...net.web_utils import HTMLParser
 
 
+__doc__ = """
+This module contain the structure for store HTML data.
+"""
+
 #------------------------------------------------------------------------------
 class HTML(Information):
     """
