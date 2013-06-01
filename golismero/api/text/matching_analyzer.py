@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-__all__ = ["get_matching_level", "MatchingAnalyzerElement", "MatchingAnalyzer", "HTTP_response_headers_comparer"]
+__all__ = ["get_matching_level", "MatchingAnalyzerElement", "MatchingAnalyzer", "HTTP_response_headers_analyzer"]
 
 import hashlib
 from difflib import SequenceMatcher
