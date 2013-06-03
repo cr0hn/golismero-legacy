@@ -1,10 +1,10 @@
 ---
 layout: master
-title: Tutorials
+title: Archive
 ---
 
-<ul>
+<ul id="archive">
 {% for post in site.posts %}
-	<li><a href="{{ post.url }}">{{ post.title }}</a><abbr>{{ post.date | date_to_string }}</abbr></li>
+<li><a href="{{ post.url }}">{{ post.title }}</a></li>
 {% endfor %}
 </ul>
