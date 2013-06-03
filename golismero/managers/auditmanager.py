@@ -424,8 +424,8 @@ class Audit (object):
             pluginManager = self.orchestrator.pluginManager
 
             # Look for the earliest stage with pending data.
-            self.__current_stage = pluginManager.max_stage + 1
             for stage in xrange(pluginManager.min_stage, pluginManager.max_stage + 1):
+                self.__current_stage = stage
                 pending = database.get_pending_data(stage)
                 if pending:
 
@@ -443,9 +443,6 @@ class Audit (object):
                         # Skip to the next stage.
                         continue
 
-                    # Set it as the current stage.
-                    self.__current_stage = stage
-
                     # Send the pending data.
                     self.send_msg(
                         message_type = MessageType.MSG_TYPE_DATA,
@@ -457,6 +454,7 @@ class Audit (object):
 
             # If we reached this point, we finished the last stage.
             # Launch the report generation.
+            self.__current_stage = pluginManager.max_stage + 1
             self.generate_reports()
 
 
