@@ -202,63 +202,6 @@ class AbstractWordlist(object):
         raise NotImplemented()
 
 
-#------------------------------------------------------------------------------
-class AdvancedWordlist(AbstractWordlist):
-    """
-    Advanced wordlists allow to do some operations with wordlists:
-    - Search matches of a word in the wordlist.
-    - Binary search in wordlist.
-    - Get first coincidence, start at begining or end of list.
-    - Search matches of wordlist with mutations.
-    """
-
-
-    #----------------------------------------------------------------------
-    def __init__(self, wordlist):
-
-        if not wordlist:
-            raise ValueError("Empty wordlist!")
-
-        self.__wordlist = wordlist
-
-
-    #----------------------------------------------------------------------
-    def matches(self, word):
-        """
-        Search word passed as parameter in wordlist and return a list with
-        matches found.
-
-        :param word: Word to search.
-        :type word: str.
-
-        :return: Matched words.
-        :rtype: list
-        """
-
-        if not word:
-            return []
-
-        return [x for x in self.__wordlist if word in x]
-
-
-    #----------------------------------------------------------------------
-    def matches_level(self, word):
-        """
-        Search word passed as parameter in wordlist and return a list with
-        matches and level of correspondence.
-
-        :param word: Word to search.
-        :type word: str
-
-        :return: Matched words and correpondence levels.
-        :rtype: list( (str, int) )
-        """
-
-        if not word:
-            return []
-
-        return [x for x in self.__wordlist if word in x]
-
 
 #------------------------------------------------------------------------------
 class AdvancedDicWordlist(AbstractWordlist):
