@@ -106,16 +106,18 @@ class BaseAuditDB (BaseDB):
     #----------------------------------------------------------------------
     def __init__(self, audit_name):
         """
-        Constructor.
-
         :param audit_name: Audit name.
         :type audit_name: str
         """
-        self.__audit_name   = audit_name
+        self.__audit_name = audit_name
 
 
     @property
     def audit_name(self):
+        """
+        :returns: Audit name.
+        :rtype: str
+        """
         return self.__audit_name
 
 

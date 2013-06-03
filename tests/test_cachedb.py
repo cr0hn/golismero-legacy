@@ -46,8 +46,8 @@ except NameError:
 
 
 # Imports.
-from golismero.database.cachedb import VolatileNetworkCache, PersistentNetworkCache
 from golismero.api.text.text_utils import generate_random_string
+from golismero.database.cachedb import VolatileNetworkCache, PersistentNetworkCache
 import time
 
 
@@ -83,7 +83,6 @@ def test_cachedb_consistency():
             disk.clean(audit)
         finally:
             disk.close()
-
 
 def helper_test_cachedb_consistency(db, key, data):
     db.set(audit, key, data, protocol="http")
