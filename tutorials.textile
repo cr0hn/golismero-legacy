@@ -1,0 +1,9 @@
+---
+layout: master
+title: Tutorials
+---
+<ul>
+{% for tuto in site.tutorials %}
+	<li><a href="{{ tuto.url }}">{{ post.title }}</a></li>
+{% endfor %}
+</ul>
