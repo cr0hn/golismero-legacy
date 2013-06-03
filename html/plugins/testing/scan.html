@@ -10,8 +10,8 @@
     
     <title>Scan plugins &mdash; GoLismero 2.0.1 documentation</title>
     
-    <link rel="stylesheet" href="../../static/default.css" type="text/css" />
-    <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -22,11 +22,12 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../../static/jquery.js"></script>
-    <script type="text/javascript" src="../../static/underscore.js"></script>
-    <script type="text/javascript" src="../../static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="top" title="GoLismero 2.0.1 documentation" href="../../index.html" />
     <link rel="up" title="Testing plugins" href="../testing.html" />
+    <link rel="next" title="Report plugins" href="../report.html" />
     <link rel="prev" title="Recon plugins" href="recon.html" /> 
   </head>
   <body>
@@ -39,6 +40,9 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../report.html" title="Report plugins"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="recon.html" title="Recon plugins"
              accesskey="P">previous</a> |</li>
@@ -56,8 +60,202 @@
   <div class="section" id="scan-plugins">
 <h1>Scan plugins<a class="headerlink" href="#scan-plugins" title="Permalink to this headline">¶</a></h1>
 <p>This plugins are in the <strong>scan</strong> step.</p>
-<div class="section" id="bruteforce-urls-plugin">
-<h2>Bruteforce Urls plugin<a class="headerlink" href="#bruteforce-urls-plugin" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-plugins.testing.scan.bruteforce_url_disclosure">
+<span id="bruteforce-urls-plugin"></span><h2>Bruteforce Urls plugin<a class="headerlink" href="#module-plugins.testing.scan.bruteforce_url_disclosure" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.ParallelBruter">
+<em class="property">class </em><tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">ParallelBruter</tt><big>(</big><em>wordlist</em>, <em>results</em>, <em>net</em>, <em>method</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.ParallelBruter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Worker threads for the bruteforcer plugin.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.analyze_urls">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">analyze_urls</tt><big>(</big><em>info</em>, <em>urls_to_test</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.analyze_urls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Analyze a list of URL, tryining it its exits.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>info</strong> (<em>Url or BaseUrl</em>) &#8211; Resource that will be associated discovered URLs</li>
+<li><strong>urls_to_test</strong> (<em>dict(WORDLIST_NAME, list(URLs))</em>) &#8211; dicts with URLs</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">discovered resources and vulns</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">UrlDisclosure</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.get_http_method">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">get_http_method</tt><big>(</big><em>url</em>, <em>net_manager</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.get_http_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function determinates if the method HEAD is available. To do that, compare between two responses:
+- One with GET method
+- One with HEAD method</p>
+<p>If both are seem more than 90%, the response are the same and HEAD method are not allowed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.is_folder_url">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">is_folder_url</tt><big>(</big><em>url_parts</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.is_folder_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine if the given URL points to a folder or a file:</p>
+<p>if URL looks like:
+- www.site.com/
+- www.site.com</p>
+<p>then ==&gt; Return True</p>
+<p>if URL looks like:
+- www.site.com/index.php
+- www.site.com/index.php?id=1&amp;name=bb
+- www.site.com/index.php/id=1&amp;name=bb</p>
+<p>then ==&gt; Return False</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>url_parts</strong> (<em>DecomposedURL</em>) &#8211; Parsed URL to test.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bool &#8211; True if it&#8217;s a folder, False otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.load_wordlists">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">load_wordlists</tt><big>(</big><em>wordlists</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.load_wordlists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the with names pased as parameter.</p>
+<p>This function receives a list of names of wordlist, defined in plugin
+configuration file, and return a dict with instances of wordlists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>wordlists</strong> (<em>list</em>) &#8211; list with wordlists names</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A dict with wordlists</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.main_url_bruteforcer">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">main_url_bruteforcer</tt><big>(</big><em>info</em>, <em>input_type</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.main_url_bruteforcer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Select the method to use depending on the input type.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.make_url_changing_extensions">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">make_url_changing_extensions</tt><big>(</big><em>wordlist</em>, <em>url_parts</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.make_url_changing_extensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an iterator of URLs with alternative file extensions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>wordlist</strong> (<em>WordList</em>) &#8211; Wordlist iterator.</li>
+<li><strong>url_parts</strong> (<em>DecomposedURL</em>) &#8211; Parsed URL to mutate.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.make_url_mutate_filename">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">make_url_mutate_filename</tt><big>(</big><em>url_parts</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.make_url_mutate_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an iterator of URLs with mutated filenames.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>url_parts</strong> (<em>DecomposedURL</em>) &#8211; Parsed URL to mutate.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.make_url_with_files_or_folder">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">make_url_with_files_or_folder</tt><big>(</big><em>wordlist</em>, <em>url_parts</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.make_url_with_files_or_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an iterator of URLs with guessed files and subfolders.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>wordlist</strong> (<em>WordList</em>) &#8211; Wordlist iterator.</li>
+<li><strong>url_parts</strong> (<em>DecomposedURL</em>) &#8211; Parsed URL to mutate.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.make_url_with_prefixes">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">make_url_with_prefixes</tt><big>(</big><em>wordlist</em>, <em>url_parts</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.make_url_with_prefixes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an iterator of URLs with prefixes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>wordlist</strong> (<em>WordList</em>) &#8211; Wordlist iterator.</li>
+<li><strong>url_parts</strong> (<em>DecomposedURL</em>) &#8211; Parsed URL to mutate.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">iterator with urls.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.make_url_with_suffixes">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">make_url_with_suffixes</tt><big>(</big><em>wordlist</em>, <em>url_parts</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.make_url_with_suffixes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an iterator of URLs with suffixes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>wordlist</strong> (<em>WordList</em>) &#8211; Wordlist iterator.</li>
+<li><strong>url_parts</strong> (<em>DecomposedURL</em>) &#8211; Parsed URL to mutate.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">iterator with urls.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.process_base_url">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">process_base_url</tt><big>(</big><em>info</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.process_base_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rereive and process a Base URL</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.process_relative_url">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">process_relative_url</tt><big>(</big><em>info</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.process_relative_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receive and process an Url</p>
+</dd></dl>
+
 </div>
 </div>
 
@@ -70,7 +268,7 @@
   <h3><a href="../../index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Scan plugins</a><ul>
-<li><a class="reference internal" href="#bruteforce-urls-plugin">Bruteforce Urls plugin</a></li>
+<li><a class="reference internal" href="#module-plugins.testing.scan.bruteforce_url_disclosure">Bruteforce Urls plugin</a></li>
 </ul>
 </li>
 </ul>
@@ -78,9 +276,12 @@
   <h4>Previous topic</h4>
   <p class="topless"><a href="recon.html"
                         title="previous chapter">Recon plugins</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../report.html"
+                        title="next chapter">Report plugins</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="../../sources/plugins/testing/scan.txt"
+    <li><a href="../../_sources/plugins/testing/scan.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -109,6 +310,9 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../report.html" title="Report plugins"
+             >next</a> |</li>
         <li class="right" >
           <a href="recon.html" title="Recon plugins"
              >previous</a> |</li>

@@ -10,8 +10,8 @@
     
     <title>Details for information types &mdash; GoLismero 2.0.1 documentation</title>
     
-    <link rel="stylesheet" href="../../static/default.css" type="text/css" />
-    <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -22,9 +22,9 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../../static/jquery.js"></script>
-    <script type="text/javascript" src="../../static/underscore.js"></script>
-    <script type="text/javascript" src="../../static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="top" title="GoLismero 2.0.1 documentation" href="../../index.html" />
     <link rel="up" title="Data API" href="../data.html" />
     <link rel="next" title="Details for resource types" href="resource.html" />
@@ -61,7 +61,7 @@
 <h1>Details for information types<a class="headerlink" href="#details-for-information-types" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-golismero.api.data.information.text">
 <span id="text-type"></span><h2>Text type<a class="headerlink" href="#module-golismero.api.data.information.text" title="Permalink to this headline">¶</a></h2>
-<p>This module contain the structure for store plain text data.</p>
+<p>Plain text data.</p>
 <dl class="class">
 <dt id="golismero.api.data.information.text.Text">
 <em class="property">class </em><tt class="descclassname">golismero.api.data.information.text.</tt><tt class="descname">Text</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.text.Text" title="Permalink to this definition">¶</a></dt>
@@ -87,7 +87,7 @@
 </div>
 <div class="section" id="module-golismero.api.data.information.binary">
 <span id="binary-type"></span><h2>Binary type<a class="headerlink" href="#module-golismero.api.data.information.binary" title="Permalink to this headline">¶</a></h2>
-<p>This module contain the structure for store binary data.</p>
+<p>Binary data.</p>
 <dl class="class">
 <dt id="golismero.api.data.information.binary.Binary">
 <em class="property">class </em><tt class="descclassname">golismero.api.data.information.binary.</tt><tt class="descname">Binary</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.binary.Binary" title="Permalink to this definition">¶</a></dt>
@@ -113,37 +113,38 @@
 </div>
 <div class="section" id="module-golismero.api.data.information.html">
 <span id="html-type"></span><h2>HTML type<a class="headerlink" href="#module-golismero.api.data.information.html" title="Permalink to this headline">¶</a></h2>
-<p>This module contain the structure for store HTML data.</p>
+<p>HTML document.</p>
 <dl class="class">
 <dt id="golismero.api.data.information.html.HTML">
 <em class="property">class </em><tt class="descclassname">golismero.api.data.information.html.</tt><tt class="descname">HTML</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.html.HTML" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../data.html#golismero.api.data.information.Information" title="golismero.api.data.information.Information"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.information.Information</span></tt></a></p>
 <p>HTML document.</p>
-<p>This type contains all of relevant tags of a HTML document:</p>
+<p>This object contains all of relevant tags of a HTML document:</p>
 <ul class="simple">
-<li>CSS links</li>
-<li>CSS embeded</li>
-<li>Javascript links</li>
-<li>Metas</li>
-<li>Links</li>
-<li>Forms</li>
-<li>Images</li>
-<li>Title</li>
-<li>Object</li>
+<li>title</li>
+<li>links</li>
+<li>forms</li>
+<li>images</li>
+<li>objects</li>
+<li>metas</li>
+<li>css_links</li>
+<li>css_embedded</li>
+<li>javascript_links</li>
 </ul>
-<p>Also contains a generic property for access to other tags:</p>
+<p>Also contains a property to access all tags:</p>
 <ul class="simple">
-<li>Elements</li>
+<li>elements</li>
 </ul>
-<p>You can also access to raw HTML code.</p>
+<p>You can also get the raw HTML code.</p>
 <ul class="simple">
 <li>raw_data</li>
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The HTML parser used is dinamically selected internally, depends of your installed libraries.</p>
+<p class="last">The HTML parser used is internally selected on runtime,
+depends of your installed libraries.</p>
 </div>
-<p>Use if is very simple:</p>
+<p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.data.information.html</span> <span class="kn">import</span> <span class="n">HTML</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">html_info</span><span class="o">=</span><span class="s">&quot;&quot;&quot;&lt;html&gt;</span>
 <span class="go">&lt;head&gt;</span>
@@ -283,7 +284,7 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Links tags.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Link tags.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(HTMLElement)</td>
 </tr>
@@ -356,12 +357,12 @@
 </div>
 <div class="section" id="module-golismero.api.data.information.webserver_fingerprint">
 <span id="fingerprint-type"></span><h2>Fingerprint type<a class="headerlink" href="#module-golismero.api.data.information.webserver_fingerprint" title="Permalink to this headline">¶</a></h2>
-<p>This module contain the structure for store fingerprint information for a resource.</p>
+<p>Fingerprint information for a particular host and web server.</p>
 <dl class="class">
 <dt id="golismero.api.data.information.webserver_fingerprint.WebServerFingerprint">
 <em class="property">class </em><tt class="descclassname">golismero.api.data.information.webserver_fingerprint.</tt><tt class="descname">WebServerFingerprint</tt><big>(</big><em>name</em>, <em>version</em>, <em>banner</em>, <em>others=None</em><big>)</big><a class="headerlink" href="#golismero.api.data.information.webserver_fingerprint.WebServerFingerprint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../data.html#golismero.api.data.information.Information" title="golismero.api.data.information.Information"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.information.Information</span></tt></a></p>
-<p>Fingerprint information for a concrete host and web server.</p>
+<p>Fingerprint information for a particular host and web server.</p>
 <dl class="attribute">
 <dt id="golismero.api.data.information.webserver_fingerprint.WebServerFingerprint.banner">
 <tt class="descname">banner</tt><a class="headerlink" href="#golismero.api.data.information.webserver_fingerprint.WebServerFingerprint.banner" title="Permalink to this definition">¶</a></dt>
@@ -399,9 +400,9 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Dict with other possibilities for this web server. The format for this parameter is: { SERVER_NAME : PROBABILITY }</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Map of other possible web servers by name and their probabilities of being correct [0.0 ~ 1.0].</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict( str -&gt; float )</td>
 </tr>
 </tbody>
 </table>
@@ -452,7 +453,7 @@
                         title="next chapter">Details for resource types</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="../../sources/api/data/information.txt"
+    <li><a href="../../_sources/api/data/information.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">

@@ -10,8 +10,8 @@
     
     <title>API &mdash; GoLismero 2.0.1 documentation</title>
     
-    <link rel="stylesheet" href="static/default.css" type="text/css" />
-    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -22,9 +22,9 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="static/jquery.js"></script>
-    <script type="text/javascript" src="static/underscore.js"></script>
-    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="GoLismero 2.0.1 documentation" href="index.html" />
     <link rel="next" title="Data API" href="api/data.html" />
     <link rel="prev" title="Tutorial: create a basic plugin" href="tutorials/english/howto_create_tutorial_basic.html" /> 
@@ -133,6 +133,7 @@
 </div>
 <div class="section" id="module-golismero.api.logger">
 <span id="logger"></span><h2>Logger<a class="headerlink" href="#module-golismero.api.logger" title="Permalink to this headline">¶</a></h2>
+<p>Remote logging API.</p>
 <dl class="class">
 <dt id="golismero.api.logger.Logger">
 <em class="property">class </em><tt class="descclassname">golismero.api.logger.</tt><tt class="descname">Logger</tt><a class="headerlink" href="#golismero.api.logger.Logger" title="Permalink to this definition">¶</a></dt>
@@ -154,7 +155,7 @@ otherwise messages will not be logged by GoLismero.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; message to write</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; Message to write.</td>
 </tr>
 </tbody>
 </table>
@@ -168,7 +169,7 @@ otherwise messages will not be logged by GoLismero.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; message to write</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; Message to write.</td>
 </tr>
 </tbody>
 </table>
@@ -182,7 +183,7 @@ otherwise messages will not be logged by GoLismero.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; message to write</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; Message to write.</td>
 </tr>
 </tbody>
 </table>
@@ -196,7 +197,7 @@ otherwise messages will not be logged by GoLismero.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; message to write</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; Message to write.</td>
 </tr>
 </tbody>
 </table>
@@ -210,7 +211,7 @@ otherwise messages will not be logged by GoLismero.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; message to write</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; Message to write.</td>
 </tr>
 </tbody>
 </table>
@@ -224,7 +225,7 @@ otherwise messages will not be logged by GoLismero.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; message to write</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; Message to write.</td>
 </tr>
 </tbody>
 </table>
@@ -244,24 +245,11 @@ configuration, including the current audit&#8217;s name and settings.</p>
 <span class="go">&#39;my_plugin_name&#39;</span>
 </pre></div>
 </div>
-<dl class="data">
-<dt id="golismero.api.config.Config">
-<tt class="descclassname">golismero.api.config.</tt><tt class="descname">Config</tt><em class="property"> = &lt;golismero.api.config._Config object at 0x109e9f590&gt;</em><a class="headerlink" href="#golismero.api.config.Config" title="Permalink to this definition">¶</a></dt>
-<dd><div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">You must use this public var to access to the config</p>
-</div>
-</dd></dl>
-
 <dl class="class">
 <dt id="golismero.api.config._Config">
 <em class="property">class </em><tt class="descclassname">golismero.api.config.</tt><tt class="descname">_Config</tt><a class="headerlink" href="#golismero.api.config._Config" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">golismero.common.Singleton</span></tt></p>
 <p>Current plugin and audit configuration.</p>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">This var is private. It defines the properties to access to the plugin propteties but <strong>you must to access to the config using</strong> <a class="reference internal" href="#golismero.api.config.Config" title="golismero.api.config.Config"><tt class="xref py py-data docutils literal"><span class="pre">Config</span></tt></a> <strong>public var</strong></p>
-</div>
 <p>Whenever a plugin accesses this object it will receive its own
 configuration, including the current audit&#8217;s name and settings.</p>
 <dl class="attribute">
@@ -271,7 +259,7 @@ configuration, including the current audit&#8217;s name and settings.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">PluginContext</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">PluginContext</td>
 </tr>
 </tbody>
 </table>
@@ -436,16 +424,12 @@ configuration file outside the following sections:</p>
 <div class="section" id="plugins-interfaces">
 <h2>Plugins interfaces<a class="headerlink" href="#plugins-interfaces" title="Permalink to this headline">¶</a></h2>
 <p>There is a general plugin interface. All sub classes implements and inherit their methods.</p>
-<span class="target" id="module-golismero.api.plugin"></span><p>This module contains all the interfaces for make plugins for GoLismero.</p>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">The classes: <a class="reference internal" href="#golismero.api.plugin.Plugin" title="golismero.api.plugin.Plugin"><tt class="xref py py-class docutils literal"><span class="pre">Plugin</span></tt></a>, <a class="reference internal" href="#golismero.api.plugin.InformationPlugin" title="golismero.api.plugin.InformationPlugin"><tt class="xref py py-class docutils literal"><span class="pre">InformationPlugin</span></tt></a> and <a class="reference internal" href="#golismero.api.plugin.AdvancedPlugin" title="golismero.api.plugin.AdvancedPlugin"><tt class="xref py py-class docutils literal"><span class="pre">AdvancedPlugin</span></tt></a> provides a base for the end plugin never will be inherited by any plugin.</p>
-</div>
-<p>There are 3 types of class you must inherit to develop a plugin:</p>
+<span class="target" id="module-golismero.api.plugin"></span><p>This module contains the base classes for GoLismero plugins.</p>
+<p>To write your own plugin, you must derive from one of the following base classes:</p>
 <ul class="simple">
-<li><a class="reference internal" href="#golismero.api.plugin.TestingPlugin" title="golismero.api.plugin.TestingPlugin"><tt class="xref py py-class docutils literal"><span class="pre">TestingPlugin</span></tt></a>: To develop a testing/hacking? plugin.</li>
-<li><a class="reference internal" href="#golismero.api.plugin.UIPlugin" title="golismero.api.plugin.UIPlugin"><tt class="xref py py-class docutils literal"><span class="pre">UIPlugin</span></tt></a>: To develop a User Interface plugin</li>
-<li><a class="reference internal" href="#golismero.api.plugin.ReportPlugin" title="golismero.api.plugin.ReportPlugin"><tt class="xref py py-class docutils literal"><span class="pre">ReportPlugin</span></tt></a>: to develop a plugin to report the results.</li>
+<li><a class="reference internal" href="#golismero.api.plugin.TestingPlugin" title="golismero.api.plugin.TestingPlugin"><tt class="xref py py-class docutils literal"><span class="pre">TestingPlugin</span></tt></a>: To write a testing/hacking plugin.</li>
+<li><a class="reference internal" href="#golismero.api.plugin.UIPlugin" title="golismero.api.plugin.UIPlugin"><tt class="xref py py-class docutils literal"><span class="pre">UIPlugin</span></tt></a>: To write a User Interface plugin.</li>
+<li><a class="reference internal" href="#golismero.api.plugin.ReportPlugin" title="golismero.api.plugin.ReportPlugin"><tt class="xref py py-class docutils literal"><span class="pre">ReportPlugin</span></tt></a>: to write a plugin to report the results.</li>
 </ul>
 <dl class="class">
 <dt id="golismero.api.plugin.Plugin">
@@ -476,7 +460,7 @@ exception must be raised.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get the help message for this plugin.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The help message for this plugin.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
@@ -496,15 +480,14 @@ send it back. Thus they can form feedback loops among each other.</p>
 <dt id="golismero.api.plugin.InformationPlugin.get_accepted_info">
 <tt class="descname">get_accepted_info</tt><big>(</big><big>)</big><a class="headerlink" href="#golismero.api.plugin.InformationPlugin.get_accepted_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a list of constants describing
-which messages are accepted by this plugin.</p>
-<p>Messages types can be found at the Message class.</p>
+which data types are accepted by the recv_info method.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list with constants.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Data type constants.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
 </tbody>
 </table>
@@ -513,12 +496,14 @@ which messages are accepted by this plugin.</p>
 <dl class="method">
 <dt id="golismero.api.plugin.InformationPlugin.recv_info">
 <tt class="descname">recv_info</tt><big>(</big><em>info</em><big>)</big><a class="headerlink" href="#golismero.api.plugin.InformationPlugin.recv_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Callback method to receive information to be processed.</p>
+<dd><p>Callback method to receive data to be processed.</p>
+<p>This is the most important method of a plugin.
+Here&#8217;s where most of the logic resides.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>info</strong> (<em>Data</em>) &#8211; input info to process</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>info</strong> (<em>Data</em>) &#8211; Data to be processed.</td>
 </tr>
 </tbody>
 </table>
@@ -584,7 +569,9 @@ shipped with GoLismero itself.</p>
 <dl class="method">
 <dt id="golismero.api.plugin.ReportPlugin.generate_report">
 <tt class="descname">generate_report</tt><big>(</big><em>output_file</em><big>)</big><a class="headerlink" href="#golismero.api.plugin.ReportPlugin.generate_report" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run plugin and generate report.</p>
+<dd><p>Run plugin and generate the report.</p>
+<p>This is the entry point for Report plugins,
+where most of the logic resides.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -599,6 +586,7 @@ shipped with GoLismero itself.</p>
 <dt id="golismero.api.plugin.ReportPlugin.is_supported">
 <tt class="descname">is_supported</tt><big>(</big><em>output_file</em><big>)</big><a class="headerlink" href="#golismero.api.plugin.ReportPlugin.is_supported" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine if this plugin supports the requested file format.</p>
+<p>Tipically, here is where Report plugins examine the file extension.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -607,7 +595,7 @@ shipped with GoLismero itself.</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if this plugin supports the format, False otherwise.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool.</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
 </tbody>
 </table>
@@ -651,7 +639,7 @@ shipped with GoLismero itself.</p>
                         title="next chapter">Data API</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="sources/api.txt"
+    <li><a href="_sources/api.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">

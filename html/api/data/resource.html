@@ -10,8 +10,8 @@
     
     <title>Details for resource types &mdash; GoLismero 2.0.1 documentation</title>
     
-    <link rel="stylesheet" href="../../static/default.css" type="text/css" />
-    <link rel="stylesheet" href="../../static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -22,9 +22,9 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../../static/jquery.js"></script>
-    <script type="text/javascript" src="../../static/underscore.js"></script>
-    <script type="text/javascript" src="../../static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="top" title="GoLismero 2.0.1 documentation" href="../../index.html" />
     <link rel="up" title="Data API" href="../data.html" />
     <link rel="next" title="Details for vulnerability types" href="vulnerabilities.html" />
@@ -61,22 +61,30 @@
 <h1>Details for resource types<a class="headerlink" href="#details-for-resource-types" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-golismero.api.data.resource.url">
 <span id="url-type"></span><h2>Url type<a class="headerlink" href="#module-golismero.api.data.resource.url" title="Permalink to this headline">¶</a></h2>
+<p>Universal Resource Locator (URL).</p>
 <dl class="class">
 <dt id="golismero.api.data.resource.url.Url">
-<em class="property">class </em><tt class="descclassname">golismero.api.data.resource.url.</tt><tt class="descname">Url</tt><big>(</big><em>url</em>, <em>method='GET'</em>, <em>url_params=None</em>, <em>post_params=None</em>, <em>depth=0</em>, <em>referer=''</em><big>)</big><a class="headerlink" href="#golismero.api.data.resource.url.Url" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">golismero.api.data.resource.url.</tt><tt class="descname">Url</tt><big>(</big><em>url</em>, <em>method='GET'</em>, <em>url_params=None</em>, <em>post_params=None</em>, <em>depth=0</em>, <em>referer=None</em><big>)</big><a class="headerlink" href="#golismero.api.data.resource.url.Url" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../data.html#golismero.api.data.resource.Resource" title="golismero.api.data.resource.Resource"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.resource.Resource</span></tt></a></p>
-<p>URL information type.</p>
-<p>This resource referer to a complete URL, like:</p>
+<p>Universal Resource Locator (URL).</p>
+<p>You can get the URL in canonical form:</p>
 <ul class="simple">
-<li><a class="reference external" href="http://www.my_site.com/index.php?param1=value1">http://www.my_site.com/index.php?param1=value1</a></li>
-<li>site.com/users/</li>
+<li>url</li>
 </ul>
-<p>It has the properties of an Url:</p>
+<p>In deconstructed form:</p>
 <ul class="simple">
-<li>Domain name.</li>
-<li>Get parameters.</li>
-<li>Post parameters.</li>
-<li>...</li>
+<li>parsed_url</li>
+</ul>
+<p>The current crawling depth level:</p>
+<ul class="simple">
+<li>depth</li>
+</ul>
+<p>And some extra information needed to build an HTTP request:</p>
+<ul class="simple">
+<li>method</li>
+<li>url_params</li>
+<li>post_params</li>
+<li>referer</li>
 </ul>
 <dl class="attribute">
 <dt id="golismero.api.data.resource.url.Url.depth">
@@ -100,7 +108,7 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if there are POST params, False otherwise.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if there are POST parameters, False otherwise.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
@@ -115,9 +123,9 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if there are URL params, False otherwise.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if there are GET parameters, False otherwise.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
 </tbody>
 </table>
@@ -130,9 +138,9 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">If it&#8217;s HTTPS, False otherwise.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if it&#8217;s HTTPS, False otherwise.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
 </tbody>
 </table>
@@ -160,9 +168,9 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Parsed URL.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">URL in decomposed form.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">DecomposedURL.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">DecomposedURL</td>
 </tr>
 </tbody>
 </table>
@@ -175,7 +183,7 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">POST parameters as a dict format.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">POST parameters.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict(str)</td>
 </tr>
@@ -192,7 +200,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Referer for this URL.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -205,9 +213,9 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Raw URL.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">URL in canonical form.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -220,9 +228,9 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">URL parameters.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">GET parameters.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict(str).</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict(str -&gt; str)</td>
 </tr>
 </tbody>
 </table>
@@ -233,44 +241,25 @@
 </div>
 <div class="section" id="module-golismero.api.data.resource.baseurl">
 <span id="base-url-type"></span><h2>Base Url type<a class="headerlink" href="#module-golismero.api.data.resource.baseurl" title="Permalink to this headline">¶</a></h2>
+<p>Base URL type.</p>
 <dl class="class">
 <dt id="golismero.api.data.resource.baseurl.BaseUrl">
 <em class="property">class </em><tt class="descclassname">golismero.api.data.resource.baseurl.</tt><tt class="descname">BaseUrl</tt><big>(</big><em>url</em><big>)</big><a class="headerlink" href="#golismero.api.data.resource.baseurl.BaseUrl" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../data.html#golismero.api.data.resource.Resource" title="golismero.api.data.resource.Resource"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.resource.Resource</span></tt></a></p>
-<p>Base URL information type.</p>
-<p>This type is more likelly than Url, but has the diffence that only referer to a
-base Url o, in other words, without any file or GET parameters, like:</p>
+<p>Base URL.</p>
+<p>Unlike the Url type, which refers to any URL, this type is strictly for
+root level URLs in a web server. Plugins that only run once per web server
+should probably receive this data type.</p>
+<p>For example, a plugin receiving both BaseUrl and Url may get this input:</p>
 <ul class="simple">
-<li><a class="reference external" href="http://www.my_site.com">http://www.my_site.com</a> -&gt; <strong>Good BaseUrl</strong></li>
-<li><a class="reference external" href="http://www.my_site.com/index.php">http://www.my_site.com/index.php</a> -&gt; <strong>Bad BaseUrl</strong>. It&#8217;s a Url type.</li>
+<li>BaseUrl(&#8220;<a class="reference external" href="http://www.my_site.com/">http://www.my_site.com/</a>&#8221;)</li>
+<li>Url(&#8220;<a class="reference external" href="http://www.my_site.com/">http://www.my_site.com/</a>&#8221;)</li>
+<li>Url(&#8220;<a class="reference external" href="http://www.my_site.com/index.php">http://www.my_site.com/index.php</a>&#8221;)</li>
+<li>Url(&#8220;<a class="reference external" href="http://www.my_site.com/admin.php">http://www.my_site.com/admin.php</a>&#8221;)</li>
+<li>Url(&#8220;<a class="reference external" href="http://www.my_site.com/login.php">http://www.my_site.com/login.php</a>&#8221;)</li>
 </ul>
-<dl class="attribute">
-<dt id="golismero.api.data.resource.baseurl.BaseUrl.discovered_resources">
-<tt class="descname">discovered_resources</tt><a class="headerlink" href="#golismero.api.data.resource.baseurl.BaseUrl.discovered_resources" title="Permalink to this definition">¶</a></dt>
-<dd><p>This property returns some resources associated with it self.</p>
-<p>For example, from an Url it can generate a Domain resource:</p>
-<ol class="arabic simple">
-<li>Information of Url: <a class="reference external" href="http://www.my_site.com/index.php?param1=value1">http://www.my_site.com/index.php?param1=value1</a></li>
-<li>Generated resources:</li>
-</ol>
-<blockquote>
-<div><ul class="simple">
-<li>&lt;Domain name=&#8221;www.my_site.com&#8221; &gt;</li>
-<li>&lt;BaseUrl url=&#8221;<a class="reference external" href="http://www.my_site.com">http://www.my_site.com</a>&#8221; &gt;</li>
-</ul>
-</div></blockquote>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list with generated resources.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
+<p>Notice how the root level URL is sent twice,
+once as BaseUrl and again the more generic Url.</p>
 <dl class="attribute">
 <dt id="golismero.api.data.resource.baseurl.BaseUrl.is_https">
 <tt class="descname">is_https</tt><a class="headerlink" href="#golismero.api.data.resource.baseurl.BaseUrl.is_https" title="Permalink to this definition">¶</a></dt>
@@ -281,21 +270,6 @@ base Url o, in other words, without any file or GET parameters, like:</p>
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if it&#8217;s HTTPS, False otherwise.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="golismero.api.data.resource.baseurl.BaseUrl.is_in_scope">
-<tt class="descname">is_in_scope</tt><big>(</big><big>)</big><a class="headerlink" href="#golismero.api.data.resource.baseurl.BaseUrl.is_in_scope" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a boolean that indicates if this Url is in scope or not. True: the Url is in scope. False: not.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool.</td>
 </tr>
 </tbody>
 </table>
@@ -336,17 +310,13 @@ base Url o, in other words, without any file or GET parameters, like:</p>
 </div>
 <div class="section" id="module-golismero.api.data.resource.domain">
 <span id="domain-type"></span><h2>Domain type<a class="headerlink" href="#module-golismero.api.data.resource.domain" title="Permalink to this headline">¶</a></h2>
+<p>Domain name.</p>
 <dl class="class">
 <dt id="golismero.api.data.resource.domain.Domain">
 <em class="property">class </em><tt class="descclassname">golismero.api.data.resource.domain.</tt><tt class="descname">Domain</tt><big>(</big><em>name</em>, <em>*addresses</em><big>)</big><a class="headerlink" href="#golismero.api.data.resource.domain.Domain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../data.html#golismero.api.data.resource.Resource" title="golismero.api.data.resource.Resource"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.resource.Resource</span></tt></a></p>
-<p>Domain name resource.</p>
-<p>This resource referer to any domain type, like.</p>
-<ul class="simple">
-<li>www.my_site.com</li>
-<li>ftp.my_domain.com</li>
-</ul>
-<p>It only contains information about de domain name.</p>
+<p>Domain name.</p>
+<p>This data type maps the domain names to the IP addresses they resolve to.</p>
 <dl class="attribute">
 <dt id="golismero.api.data.resource.domain.Domain.addresses">
 <tt class="descname">addresses</tt><a class="headerlink" href="#golismero.api.data.resource.domain.Domain.addresses" title="Permalink to this definition">¶</a></dt>
@@ -354,9 +324,9 @@ base Url o, in other words, without any file or GET parameters, like:</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">IP addresses</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">IP address or addresses this domain name resolves to.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tuple(str).</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tuple(str)</td>
 </tr>
 </tbody>
 </table>
@@ -369,9 +339,9 @@ base Url o, in other words, without any file or GET parameters, like:</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Domain name</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Domain name.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -406,7 +376,7 @@ base Url o, in other words, without any file or GET parameters, like:</p>
                         title="next chapter">Details for vulnerability types</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="../../sources/api/data/resource.txt"
+    <li><a href="../../_sources/api/data/resource.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">

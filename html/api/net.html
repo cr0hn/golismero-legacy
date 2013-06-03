@@ -10,8 +10,8 @@
     
     <title>Networking API &mdash; GoLismero 2.0.1 documentation</title>
     
-    <link rel="stylesheet" href="../static/default.css" type="text/css" />
-    <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -22,9 +22,9 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../static/jquery.js"></script>
-    <script type="text/javascript" src="../static/underscore.js"></script>
-    <script type="text/javascript" src="../static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="GoLismero 2.0.1 documentation" href="../index.html" />
     <link rel="up" title="API" href="../api.html" />
     <link rel="next" title="Text processsing API" href="text.html" />
@@ -68,19 +68,40 @@
 <li>Ftp (currently not available): Make FTP connections</li>
 <li>...</li>
 </ul>
-<span class="target" id="module-golismero.api.net.protocol"></span><dl class="exception">
+<span class="target" id="module-golismero.api.net.protocol"></span><p>Network protocols API.</p>
+<dl class="exception">
 <dt id="golismero.api.net.protocol.NetworkException">
 <em class="property">exception </em><tt class="descclassname">golismero.api.net.protocol.</tt><tt class="descname">NetworkException</tt><a class="headerlink" href="#golismero.api.net.protocol.NetworkException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
-<p>General exception for net connections</p>
+<p>Network connection errors.</p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="golismero.api.net.protocol.NetworkOutOfScope">
 <em class="property">exception </em><tt class="descclassname">golismero.api.net.protocol.</tt><tt class="descname">NetworkOutOfScope</tt><a class="headerlink" href="#golismero.api.net.protocol.NetworkOutOfScope" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
-<p>Exception for net connections.</p>
-<p>This exception means that an Url is out of audit scope.</p>
+<p>Resource is out of audit scope.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="golismero.api.net.protocol.NetworkAPI">
+<em class="property">class </em><tt class="descclassname">golismero.api.net.protocol.</tt><tt class="descname">NetworkAPI</tt><a class="headerlink" href="#golismero.api.net.protocol.NetworkAPI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Network protocols API.</p>
+<dl class="staticmethod">
+<dt id="golismero.api.net.protocol.NetworkAPI.get_connection">
+<em class="property">static </em><tt class="descname">get_connection</tt><big>(</big><em>protocol=0</em><big>)</big><a class="headerlink" href="#golismero.api.net.protocol.NetworkAPI.get_connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a connection of for an specific protocol.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>protocol</strong> (<em>int</em>) &#8211; Connection to receive. Must be one of the TYPE_* constants.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -88,25 +109,16 @@
 <em class="property">class </em><tt class="descclassname">golismero.api.net.protocol.</tt><tt class="descname">Web</tt><big>(</big><em>http_pool</em>, <em>config</em><big>)</big><a class="headerlink" href="#golismero.api.net.protocol.Web" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">golismero.api.net.protocol.Protocol</span></tt></p>
 <p>Web protocols handler (HTTP, HTTPS).</p>
-<p>This class allow you to do HTTP/HTTPS requests with some different methods, providing a way to
-interact with the &#8216;Web&#8217; protocol easily.</p>
-<dl class="method">
-<dt id="golismero.api.net.protocol.Web.close">
-<tt class="descname">close</tt><big>(</big><big>)</big><a class="headerlink" href="#golismero.api.net.protocol.Web.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Close an active connection.</p>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">This method has not the same objective than in sockets libraries. <strong>Do not call this method manually</strong>.</p>
-</div>
-</dd></dl>
-
 <dl class="method">
 <dt id="golismero.api.net.protocol.Web.get">
 <tt class="descname">get</tt><big>(</big><em>URL</em>, <em>method='GET'</em>, <em>timeout=5</em>, <em>post_data=None</em>, <em>follow_redirect=None</em>, <em>cache=True</em><big>)</big><a class="headerlink" href="#golismero.api.net.protocol.Web.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get response for an input URL. The URL parameter can be a string or an URL instance.</p>
+<dd><p>Get response for an input URL.
+The URL parameter can be a string or an Url instance.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">You should use this method for normal or habitual requests.</p>
+<p class="last">Most plugins will only use this method.
+However, there are also more advanced
+methods for customized HTTP requests.</p>
 </div>
 <p>Example with string:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.net.protocol</span> <span class="kn">import</span> <span class="n">Web</span><span class="p">,</span> <span class="n">NetworkAPI</span>
@@ -138,17 +150,23 @@ interact with the &#8216;Web&#8217; protocol easily.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>URL</strong> (<em>str or Url</em>) &#8211; string with URL or Url instance</li>
-<li><strong>cache</strong> (<em>bool</em>) &#8211; cache response?</li>
-<li><strong>redirect</strong> (<em>bool</em>) &#8211; If you want to follow HTTP redirect.</li>
-<li><strong>timeout</strong> (<em>int</em>) &#8211; timeout in seconds.</li>
+<li><strong>URL</strong> (<em>str | Url</em>) &#8211; string with URL or Url instance</li>
+<li><strong>cache</strong> (<em>bool</em>) &#8211; True to enable the network cache.</li>
+<li><strong>redirect</strong> (<em>bool</em>) &#8211; True to follow HTTP redirects.</li>
+<li><strong>timeout</strong> (<em>int</em>) &#8211; Timeout in seconds.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">HTTPResponse instance or None if any error or URL out of scope.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">HTTP response object.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last">AttributeError, ValueError, TypeError, NetworkOutOfScope</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">HTTP_Response</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>NetworkException</strong> &#8211; A network error has occurred.</li>
+<li><strong>NetworkOutOfScope</strong> &#8211; The requested URL is out of scope for this audit.</li>
+</ul>
 </td>
 </tr>
 </tbody>
@@ -164,15 +182,11 @@ interact with the &#8216;Web&#8217; protocol easily.</p>
 <p class="first admonition-title">Note</p>
 <p class="last">For more info about HTTP Request objects you can read <tt class="xref py py-class docutils literal"><span class="pre">HTTP_Request</span></tt></p>
 </div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">You should use this method <strong>only if you want advanced resquest</strong>.</p>
-</div>
 <p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.net.protocol</span> <span class="kn">import</span> <span class="n">Web</span><span class="p">,</span> <span class="n">NetworkAPI</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.net.http</span> <span class="kn">import</span> <span class="n">HTTP_Request</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">NetworkAPI</span><span class="o">.</span><span class="n">get_connection</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">resquest</span> <span class="o">=</span> <span class="n">HTTP_Request</span><span class="p">(</span><span class="s">&quot;www.mysite.com&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">request</span> <span class="o">=</span> <span class="n">HTTP_Request</span><span class="p">(</span><span class="s">&quot;www.mysite.com&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">request</span><span class="o">.</span><span class="n">accept</span> <span class="o">=</span> <span class="s">&quot;application/x-javascript&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">request</span><span class="o">.</span><span class="n">post_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="s">&#39;param1&#39;</span> <span class="p">:</span> <span class="s">&#39;value1&#39;</span><span class="p">,</span> <span class="s">&#39;param2&#39;</span> <span class="p">:</span> <span class="s">&#39;value2&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">requeat</span><span class="o">.</span><span class="n">add_file_from_file</span><span class="p">(</span><span class="s">&quot;PATH_TO_MY_FILE&quot;</span><span class="p">)</span>
@@ -189,18 +203,21 @@ interact with the &#8216;Web&#8217; protocol easily.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>request</strong> (<em>HTTP_request</em>) &#8211; An HTTP request object.</li>
-<li><strong>timeout</strong> (<em>int</em>) &#8211; timeout in seconds.</li>
+<li><strong>request</strong> (<em>HTTP_Request</em>) &#8211; HTTP request object.</li>
+<li><strong>timeout</strong> (<em>int</em>) &#8211; Timeout in seconds.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">HTTP_Response &#8211; HTTP response object | None</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">HTTP response object.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">HTTPResponse instance or None if any error or URL out of scope.</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">HTTP_Response</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last">TypeError, NetworkOutOfScope</p>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>NetworkException</strong> &#8211; A network error has occurred.</li>
+<li><strong>NetworkOutOfScope</strong> &#8211; The requested URL is out of scope for this audit.</li>
+</ul>
 </td>
 </tr>
 </tbody>
@@ -211,8 +228,7 @@ interact with the &#8216;Web&#8217; protocol easily.</p>
 <dt id="golismero.api.net.protocol.Web.get_raw">
 <tt class="descname">get_raw</tt><big>(</big><em>host</em>, <em>request_content</em>, <em>timeout=2.0</em>, <em>port=80</em>, <em>proto='HTTP'</em><big>)</big><a class="headerlink" href="#golismero.api.net.protocol.Web.get_raw" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method allow you to make raw connections to a host.</p>
-<p>You must to provide the data that you want to send to the server. You&#8217;re the responsible to manage the
-data that will be send to the server.</p>
+<p>You must to provide the data that you want to send to the server.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">This method only returns the HTTP response headers, <strong>NOT THE CONTENT</strong>.
@@ -248,7 +264,13 @@ Also this method doesn&#8217;t use the cache.</p>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">HTTP response. Only the headers are parsed, not the contents.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">HTTPResponse</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">HTTPResponse</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>NetworkException</strong> &#8211; A network error has occurred.</li>
+<li><strong>NetworkOutOfScope</strong> &#8211; The requested URL is out of scope for this audit.</li>
+</ul>
 </td>
 </tr>
 </tbody>
@@ -261,15 +283,7 @@ Also this method doesn&#8217;t use the cache.</p>
 <div class="section" id="structures-to-handle-http">
 <h2>Structures to handle HTTP<a class="headerlink" href="#structures-to-handle-http" title="Permalink to this headline">¶</a></h2>
 <p>Structured sended and received when you need to use HTTP connections.</p>
-<span class="target" id="module-golismero.api.net.http"></span><p>This package contains the classes that represent the abstract objects for HTTP Request and Response.</p>
-<p>They acts as Java POJO (<a class="reference external" href="http://es.wikipedia.org/wiki/Plain_Old_Java_Object">http://es.wikipedia.org/wiki/Plain_Old_Java_Object</a>) or, put it another way, acting
-like a simple structures to store information.</p>
-<p>This way all HTTP Request and Responses has a simple and commom way to exchange HTTP information.</p>
-<p>Two types are defined in this package:</p>
-<ul class="simple">
-<li>HTTP_Request</li>
-<li>HTTP_Response</li>
-</ul>
+<span class="target" id="module-golismero.api.net.http"></span><p>This package contains the classes that represent HTTP requests and responses.</p>
 <dl class="class">
 <dt id="golismero.api.net.http.HTTP_Request">
 <em class="property">class </em><tt class="descclassname">golismero.api.net.http.</tt><tt class="descname">HTTP_Request</tt><big>(</big><em>url</em>, <em>method='GET'</em>, <em>post_data=None</em>, <em>cache=True</em>, <em>follow_redirects=None</em>, <em>cookie=''</em>, <em>random_user_agent=False</em>, <em>request_type=0</em><big>)</big><a class="headerlink" href="#golismero.api.net.http.HTTP_Request" title="Permalink to this definition">¶</a></dt>
@@ -283,7 +297,7 @@ like a simple structures to store information.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">&#8216;Accept&#8217; HTTP header.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -298,7 +312,7 @@ like a simple structures to store information.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">&#8216;Accept-Language&#8217; HTTP header.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -313,8 +327,8 @@ like a simple structures to store information.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>path_to_file</strong> (<em>str</em>) &#8211; path to file to load.</li>
-<li><strong>alt_filename</strong> (<em>str</em>) &#8211; if you set it, filename used for http post will be set to this.</li>
+<li><strong>path_to_file</strong> (<em>str</em>) &#8211; Path to file to load.</li>
+<li><strong>alt_filename</strong> (<em>str</em>) &#8211; If you set it, filename used for http post will be set to this.</li>
 </ul>
 </td>
 </tr>
@@ -331,9 +345,9 @@ like a simple structures to store information.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>param_name</strong> (<em>str</em>) &#8211; name of parameter in resquest</li>
-<li><strong>obj</strong> (<em>binary data</em>) &#8211; binary object to send</li>
-<li><strong>alt_filename</strong> (<em>str</em>) &#8211; if you set it, filename used for http post will be set to this.</li>
+<li><strong>param_name</strong> (<em>str</em>) &#8211; Name of parameter in request.</li>
+<li><strong>obj</strong> (<em>binary data</em>) &#8211; Binary object to send.</li>
+<li><strong>alt_filename</strong> (<em>str</em>) &#8211; If you set it, filename used for http post will be set to this.</li>
 </ul>
 </td>
 </tr>
@@ -350,7 +364,7 @@ like a simple structures to store information.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">&#8216;Content-Type&#8217; HTTP header.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -365,7 +379,7 @@ like a simple structures to store information.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">&#8216;Cookie&#8217; HTTP header.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -374,7 +388,7 @@ like a simple structures to store information.</p>
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Request.files_attached">
 <tt class="descname">files_attached</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Request.files_attached" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a dictionary with filenames attached, in the following format:</p>
+<dd><p>Attached filenames in the following format:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
    <span class="s">&#39;file_name_1&#39;</span> <span class="p">:</span> <span class="n">raw_object_1</span><span class="p">,</span>
    <span class="s">&#39;file_name_2&#39;</span> <span class="p">:</span> <span class="n">raw_object_2</span>
@@ -385,7 +399,9 @@ like a simple structures to store information.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Attached filenames.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
 </tr>
 </tbody>
 </table>
@@ -398,7 +414,7 @@ like a simple structures to store information.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Redirect options for the request (True to follow redirects, False no follow. None if not set).</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Redirect options for the request (True to follow redirects, False no follow, None if not set).</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">None | bool</td>
 </tr>
@@ -415,7 +431,7 @@ like a simple structures to store information.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Return a random user agent string.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -443,7 +459,7 @@ like a simple structures to store information.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">If request is marked as cacheable return True, else False.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the request is marked as cacheable, otherwise False.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
@@ -473,9 +489,9 @@ like a simple structures to store information.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns the URL split to its components..</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">URL split to its components.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">DecomposedURL.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">DecomposedURL</td>
 </tr>
 </tbody>
 </table>
@@ -490,7 +506,7 @@ like a simple structures to store information.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">HTTP POST data.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -503,9 +519,9 @@ like a simple structures to store information.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Raw HTTP headers as a dict format.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Raw HTTP headers.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict(str -&gt; str)</td>
 </tr>
 </tbody>
 </table>
@@ -520,7 +536,7 @@ like a simple structures to store information.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">&#8216;Referer&#8217; HTTP header.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -533,9 +549,9 @@ like a simple structures to store information.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get a unique ID for this request.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Unique ID for this request.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -553,7 +569,9 @@ like a simple structures to store information.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">int</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Type of HTTP request.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
 </tr>
 </tbody>
 </table>
@@ -568,7 +586,7 @@ like a simple structures to store information.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">String with URL of the request.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -598,19 +616,28 @@ like a simple structures to store information.</p>
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Response.char_count">
 <tt class="descname">char_count</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Response.char_count" title="Permalink to this definition">¶</a></dt>
-<dd><p>Number of chars in response body</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Number of chars in response body.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Response.content_length">
 <tt class="descname">content_length</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Response.content_length" title="Permalink to this definition">¶</a></dt>
-<dd><p>Integer value of the &#8216;Content-Length&#8217; header.</p>
-<p>If the value can&#8217;t be obtained, None is returned.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">int | None</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Value of the &#8216;Content-Length&#8217; header, or None if not found.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int | None</td>
 </tr>
 </tbody>
 </table>
@@ -624,17 +651,28 @@ like a simple structures to store information.</p>
 <p>Available types are:
 - html
 - text</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Simplified content type identifier.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Response.cookie">
 <tt class="descname">cookie</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Response.cookie" title="Permalink to this definition">¶</a></dt>
-<dd><p>Value of the &#8216;Cookie&#8217; header.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">str</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Value of the &#8216;Cookie&#8217; header.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -684,12 +722,13 @@ like a simple structures to store information.</p>
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Response.http_headers">
 <tt class="descname">http_headers</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Response.http_headers" title="Permalink to this definition">¶</a></dt>
-<dd><p>HTTP response headers.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">HTTP response headers.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict(str -&gt; str)</td>
 </tr>
 </tbody>
 </table>
@@ -698,12 +737,13 @@ like a simple structures to store information.</p>
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Response.http_headers_raw">
 <tt class="descname">http_headers_raw</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Response.http_headers_raw" title="Permalink to this definition">¶</a></dt>
-<dd><p>Raw HTTP response headers.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">str</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Raw HTTP response headers.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -712,12 +752,13 @@ like a simple structures to store information.</p>
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Response.http_response_code">
 <tt class="descname">http_response_code</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Response.http_response_code" title="Permalink to this definition">¶</a></dt>
-<dd><p>HTTP response code.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">int</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">HTTP response code.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
 </tr>
 </tbody>
 </table>
@@ -726,12 +767,13 @@ like a simple structures to store information.</p>
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Response.http_response_reason">
 <tt class="descname">http_response_reason</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Response.http_response_reason" title="Permalink to this definition">¶</a></dt>
-<dd><p>Descriptive text for the HTTP response code.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">str</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Descriptive text for the HTTP response code.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -740,12 +782,13 @@ like a simple structures to store information.</p>
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Response.information">
 <tt class="descname">information</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Response.information" title="Permalink to this definition">¶</a></dt>
-<dd><p>Information object extracted from this HTTP response.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Information</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Information object extracted from this HTTP response.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">Information</td>
 </tr>
 </tbody>
 </table>
@@ -754,18 +797,28 @@ like a simple structures to store information.</p>
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Response.lines_count">
 <tt class="descname">lines_count</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Response.lines_count" title="Permalink to this definition">¶</a></dt>
-<dd><p>Number of lines in response body</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Number of lines in response body.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Response.raw_content">
 <tt class="descname">raw_content</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Response.raw_content" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get raw information from the HTTP response.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">str</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">HTML data.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -774,12 +827,13 @@ like a simple structures to store information.</p>
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Response.raw_response">
 <tt class="descname">raw_response</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Response.raw_response" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the complete raw response of server.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">str</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Raw HTTP response.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -788,12 +842,13 @@ like a simple structures to store information.</p>
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Response.request_time">
 <tt class="descname">request_time</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Response.request_time" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the response time, in seconds.</p>
-<table class="docutils field-list" frame="void" rules="none">
+<dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Retuns :</th><td class="field-body">float</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Get the response time, in seconds.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">float</td>
 </tr>
 </tbody>
 </table>
@@ -802,7 +857,16 @@ like a simple structures to store information.</p>
 <dl class="attribute">
 <dt id="golismero.api.net.http.HTTP_Response.words_count">
 <tt class="descname">words_count</tt><a class="headerlink" href="#golismero.api.net.http.HTTP_Response.words_count" title="Permalink to this definition">¶</a></dt>
-<dd><p>Number of words in response body</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Number of words in response body.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -811,7 +875,10 @@ like a simple structures to store information.</p>
 <div class="section" id="links-utilities">
 <h2>Links utilities<a class="headerlink" href="#links-utilities" title="Permalink to this headline">¶</a></h2>
 <p>Utilities for extract Urls from links into HTML page and a plain text.</p>
-<span class="target" id="module-golismero.api.net.scraper"></span><dl class="function">
+<span class="target" id="module-golismero.api.net.scraper"></span><p>URL scraping API.</p>
+<p>This module contains utility functions to extract (scrape) URLs from data.
+Currently only HTML and plain text data are supported.</p>
+<dl class="function">
 <dt id="golismero.api.net.scraper.is_link">
 <tt class="descclassname">golismero.api.net.scraper.</tt><tt class="descname">is_link</tt><big>(</big><em>url</em>, <em>base_url</em><big>)</big><a class="headerlink" href="#golismero.api.net.scraper.is_link" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determines if an URL is a link to another resource.</p>
@@ -853,7 +920,7 @@ like a simple structures to store information.</p>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Extracted URLs.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">set(str).</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">set(str)</p>
 </td>
 </tr>
 </tbody>
@@ -887,7 +954,7 @@ any major browser.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Extracted URLs.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">set(str).</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">set(str)</p>
 </td>
 </tr>
 </tbody>
@@ -1428,7 +1495,7 @@ your plugin remains compatible with future versions of GoLismero.</p>
                         title="next chapter">Text processsing API</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="../sources/api/net.txt"
+    <li><a href="../_sources/api/net.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
