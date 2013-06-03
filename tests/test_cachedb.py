@@ -66,34 +66,8 @@ def test_cachedb_consistency():
         for x in xrange(100):
             key = generate_random_string(10)
             data = generate_random_string(100)
-
-            mem.set(audit, key, data, protocol="http")
-            mem.set(audit, key, data, protocol="https")
-            assert mem.exists(audit, key, protocol="http")
-            assert mem.exists(audit, key, protocol="https")
-            assert not mem.exists(audit, key + "A", protocol="http")
-            assert not mem.exists(audit, key + "A", protocol="https")
-            assert not mem.exists(audit + "A", key + "A", protocol="http")
-            assert not mem.exists(audit + "A", key + "A", protocol="https")
-            assert mem.get(audit, key, protocol="http") == data
-            assert mem.get(audit, key, protocol="https") == data
-            assert mem.get(audit, key, protocol="HTTP") == data
-            assert mem.get(audit, key, protocol="https://www.example.com") == data
-            assert mem.get(audit, key + "A", protocol="http") is None
-            assert mem.get(audit, key + "A", protocol="https") is None
-            assert mem.get(audit + "A", key + "A", protocol="http") is None
-            assert mem.get(audit + "A", key + "A", protocol="https") is None
-
-            disk.set(audit, key, data, protocol="http")
-            disk.set(audit, key, data, protocol="https")
-            assert disk.get(audit, key, protocol="http") == data
-            assert disk.get(audit, key, protocol="https") == data
-            assert disk.get(audit, key, protocol="HTTP") == data
-            assert disk.get(audit, key, protocol="https://www.example.com") == data
-            assert disk.get(audit, key + "A", protocol="http") is None
-            assert disk.get(audit, key + "A", protocol="https") is None
-            assert disk.get(audit + "A", key + "A", protocol="http") is None
-            assert disk.get(audit + "A", key + "A", protocol="https") is None
+            helper_test_cachedb_consistency(mem, key, data)
+            helper_test_cachedb_consistency(disk, key, data)
 
         print "Testing disk cache compacting and dumping..."
         disk.compact()
@@ -109,6 +83,30 @@ def test_cachedb_consistency():
             disk.clean(audit)
         finally:
             disk.close()
+
+
+def helper_test_cachedb_consistency(db, key, data):
+    db.set(audit, key, data, protocol="http")
+    db.set(audit, key, data, protocol="https")
+    assert db.exists(audit, key, protocol="http")
+    assert db.exists(audit, key, protocol="https")
+    assert not db.exists(audit, key + "A", protocol="http")
+    assert not db.exists(audit, key + "A", protocol="https")
+    assert not db.exists(audit + "A", key + "A", protocol="http")
+    assert not db.exists(audit + "A", key + "A", protocol="https")
+    assert db.get(audit, key, protocol="http") == data
+    assert db.get(audit, key, protocol="https") == data
+    assert db.get(audit, key, protocol="HTTP") == data
+    assert db.get(audit, key, protocol="https://www.example.com") == data
+    assert db.get(audit, key + "A", protocol="http") is None
+    assert db.get(audit, key + "A", protocol="https") is None
+    assert db.get(audit + "A", key + "A", protocol="http") is None
+    assert db.get(audit + "A", key + "A", protocol="https") is None
+    db.remove(audit, key, protocol="http")
+    assert not db.exists(audit, key, protocol="http")
+    assert db.get(audit, key, protocol="http") is None
+    assert db.exists(audit, key, protocol="https")
+    assert db.get(audit, key, protocol="https") == data
 
 
 # Benchmark for the disk cache.
