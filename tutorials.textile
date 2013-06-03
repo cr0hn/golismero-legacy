@@ -8,3 +8,8 @@ title: Archive
 <li><a href="{{ post.url }}">{{ post.title }}</a></li>
 {% endfor %}
 </ul>
+
+
+<ul>
+	<li><a href="tutorials/basic_plugin_tutorial.html" >Tuto one</a></li>
+</ul>
