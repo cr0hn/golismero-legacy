@@ -69,6 +69,12 @@ def test_cachedb_consistency():
 
             mem.set(audit, key, data, protocol="http")
             mem.set(audit, key, data, protocol="https")
+            assert mem.exists(audit, key, protocol="http")
+            assert mem.exists(audit, key, protocol="https")
+            assert not mem.exists(audit, key + "A", protocol="http")
+            assert not mem.exists(audit, key + "A", protocol="https")
+            assert not mem.exists(audit + "A", key + "A", protocol="http")
+            assert not mem.exists(audit + "A", key + "A", protocol="https")
             assert mem.get(audit, key, protocol="http") == data
             assert mem.get(audit, key, protocol="https") == data
             assert mem.get(audit, key, protocol="HTTP") == data
@@ -115,6 +121,7 @@ def test_cachedb_stress():
         helper_cachedb_stress(disk, 10)
         helper_cachedb_stress(disk, 20)
         helper_cachedb_stress(disk, 30)
+        helper_cachedb_stress(disk, 100)
 
     finally:
         print "Cleaning up the disk cache..."
@@ -137,13 +144,19 @@ def helper_cachedb_stress(disk, n):
         disk.set(audit, key, data1, protocol="http")
         disk.set(audit, key, data2, protocol="https")
     t2 = time.time()
+    print "  -- Checking..."
+    for key in keys:
+        assert disk.exists(audit, key, protocol="http")
+        assert disk.exists(audit, key, protocol="https")
+    t3 = time.time()
     print "  <- Reading..."
     for key in keys:
         assert disk.get(audit, key, protocol="http") != disk.get(audit, key, protocol="https")
-    t3 = time.time()
+    t4 = time.time()
     print "  Write time: %d seconds (%f seconds per item)" % (t2 - t1, (t2 - t1) / (n * 2.0))
-    print "  Read time: %d seconds (%f seconds per item)" % (t3 - t2, (t3 - t2) / (n * 2.0))
-    print "  Total time: %d seconds (%f seconds per item)" % (t3 - t1, (t3 - t1) / (n * 2.0))
+    print "  Check time: %d seconds (%f seconds per item)" % (t3 - t2, (t3 - t2) / (n * 2.0))
+    print "  Read time: %d seconds (%f seconds per item)" % (t4 - t3, (t4 - t3) / (n * 2.0))
+    print "  Total time: %d seconds (%f seconds per item)" % (t4 - t1, (t4 - t1) / (n * 2.0))
 
 
 # Run all tests from the command line.
