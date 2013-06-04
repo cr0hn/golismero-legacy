@@ -843,7 +843,7 @@ def ttl_platform_detection(main_url):
         Logger.log_error("[!] You can't run the platform detection plugin if you're not root.")
         return {}
     except Exception, e:
-        Logger.log_error("[!] Platform detection failed, reason: %s", % e)
+        Logger.log_error("[!] Platform detection failed, reason: %s" % e)
         return {}
 
 
