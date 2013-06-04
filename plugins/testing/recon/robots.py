@@ -147,10 +147,6 @@ class Robots(TestingPlugin):
         # Analyze results
         m_analyzer            = MatchingAnalyzer(m_response_error_page.raw_content)
 
-        m_return              = []
-        m_return_append       = m_return.append
-        m_return_extend       = m_return.extend
-
         # Add results for analyze
         for l_url in set(m_discovered_urls):
             l_p = m_manager.get(fix_url(l_url, m_url))
@@ -158,15 +154,10 @@ class Robots(TestingPlugin):
             #
             # ¡¡¡¡ FIX !!!!
             #
-            # HTTP_Response also must me added!
+            # HTTP_Response also must be added!
 
-            # Append response to results
-            #m_return_append(l_p)
-
-            # Add for analyze
+            # Add for analysis
             m_analyzer.append(l_p.raw_content, url=l_url)
 
         # Generate results
-        m_return_extend([Url(i.url, referer=m_url) for i in m_analyzer.unique_texts])
-
-        return m_return
+        return [Url(i.url, referer=m_url) for i in m_analyzer.unique_texts]

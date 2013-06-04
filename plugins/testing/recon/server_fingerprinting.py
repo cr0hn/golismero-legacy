@@ -371,7 +371,6 @@ def http_analyzers(main_url, conn, number_of_entries=4):
 
 
     # Store results for others HTTP params
-    m_results_http_others = {}
     m_d                   = DecomposedURL(main_url)
     m_hostname            = m_d.hostname
     m_port                = m_d.port
@@ -840,10 +839,11 @@ def ttl_platform_detection(main_url):
             return m_ret
         else:
             return {}
-    except EnvironmentError,e:
+    except EnvironmentError:
         Logger.log_error("[!] You can't run the platform detection plugin if you're not root.")
         return {}
     except Exception, e:
+        Logger.log_error("[!] Platform detection failed, reason: %s", % e)
         return {}
 
 
@@ -1038,7 +1038,7 @@ class HTTPAnalyzer:
 
                 # Store determinators
                 try:
-                    a = self.__determinator_complete[l_full_server_name]
+                    self.__determinator_complete[l_full_server_name]
                 except KeyError:
                     self.__determinator_complete[l_full_server_name] = {}
 

@@ -9,5 +9,4 @@ del /s *.pyc > nul 2> nul
 del /s *.pyo > nul 2> nul
 for /F "tokens=*" %%A in (_tmp.txt) do C:\Python27\python.exe C:\Python27\Scripts\pyflakes-script.py "%%A" >> tests\pyflakes.log
 del _tmp.txt
-del /s *.c > nul 2> nul
 cd tests

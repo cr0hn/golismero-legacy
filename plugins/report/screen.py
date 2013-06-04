@@ -34,13 +34,10 @@ from golismero.api.config import Config
 from golismero.api.data import Data
 from golismero.api.data.resource import Resource
 from golismero.api.data.information import Information
-from golismero.api.data.resource.url import Url
 
 # XXX HACK
 from golismero.main.console import colorize, colorize_substring
 from prettytable import *
-
-from cStringIO import StringIO
 
 
 class ScreenReport(ReportPlugin):
@@ -356,7 +353,6 @@ def vuln_genereral_displayer(vulns):
     #
     # Display the info
     #
-    m_vulns      = {}
     for vuln in vulns:
         # Vuln name as raw format
         l_vuln_name      = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
@@ -368,7 +364,7 @@ def vuln_genereral_displayer(vulns):
             l_table      = PrettyTable(["Vuln name: ", l_vuln_name_text])
 
             # String value of handler
-            l_func_ret = VULN_DISPLAYER[l_vuln_name](vuln, l_table)
+            VULN_DISPLAYER[l_vuln_name](vuln, l_table)
 
             # Display the table
             #print l_table
