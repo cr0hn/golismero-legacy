@@ -70,6 +70,15 @@ class BaseNetworkCache(BaseDB):
 
 
     #----------------------------------------------------------------------
+    @staticmethod
+    def _sanitize_protocol(protocol):
+        protocol = protocol.lower()
+        if "://" in protocol:
+            protocol = protocol[:protocol.find("://")]
+        return protocol
+
+
+    #----------------------------------------------------------------------
     def get(self, audit, key, protocol="http"):
         """
         Get a network resource from the cache.
@@ -161,11 +170,13 @@ class VolatileNetworkCache(BaseNetworkCache):
 
     #----------------------------------------------------------------------
     def get(self, audit, key, protocol="http"):
+        protocol = self._sanitize_protocol(protocol)
         return self.__cache[audit][protocol].get(key, None)
 
 
     #----------------------------------------------------------------------
     def set(self, audit, key, data, protocol="http", timestamp=None, lifespan=None):
+        protocol = self._sanitize_protocol(protocol)
 
         # FIXME: timestamp and lifespan not yet supported in volatile mode!
         self.__cache[audit][protocol][key] = data
@@ -173,6 +184,7 @@ class VolatileNetworkCache(BaseNetworkCache):
 
     #----------------------------------------------------------------------
     def remove(self, audit, key, protocol="http"):
+        protocol = self._sanitize_protocol(protocol)
         try:
             del self.__cache[audit][protocol][key]
         except KeyError:
@@ -181,6 +193,7 @@ class VolatileNetworkCache(BaseNetworkCache):
 
     #----------------------------------------------------------------------
     def exists(self, audit, key, protocol="http"):
+        protocol = self._sanitize_protocol(protocol)
         return key in self.__cache[audit][protocol]
 
 
@@ -265,8 +278,9 @@ class PersistentNetworkCache(BaseNetworkCache):
                 protocol STRING NOT NULL,
                 key STRING NOT NULL,
                 timestamp INTEGER NOT NULL
-                          DEFAULT (DATETIME('now', 'unixepoch')),
-                lifespan INTEGER DEFAULT NULL,
+                          DEFAULT CURRENT_TIMESTAMP,
+                lifespan INTEGER NOT NULL
+                         DEFAULT 0,
                 data BLOB NOT NULL,
 
                 UNIQUE (audit, protocol, key) ON CONFLICT REPLACE
@@ -277,11 +291,12 @@ class PersistentNetworkCache(BaseNetworkCache):
     #----------------------------------------------------------------------
     @transactional
     def get(self, audit, key, protocol="http"):
+        protocol = self._sanitize_protocol(protocol)
         self.__cursor.execute("""
             SELECT data FROM cache
             WHERE audit = ? AND key = ? AND protocol = ?
-                AND (timestamp = NULL OR lifespan = NULL OR
-                     timestamp + lifespan > DATETIME('now', 'unixepoch')
+                AND (timestamp = 0 OR lifespan = 0 OR
+                     timestamp + lifespan > CURRENT_TIMESTAMP
                 )
             LIMIT 1;
         """, (audit, key, protocol) )
@@ -293,17 +308,27 @@ class PersistentNetworkCache(BaseNetworkCache):
     #----------------------------------------------------------------------
     @transactional
     def set(self, audit, key, data, protocol="http", timestamp=None, lifespan=None):
+        protocol = self._sanitize_protocol(protocol)
         data = self.encode(data)
         data = sqlite3.Binary(data)
-        self.__cursor.execute("""
-            INSERT INTO cache (audit, key, protocol, data, timestamp, lifespan)
-            VALUES            (  ?,    ?,     ?,       ?,      ?,        ?    );
-        """,                  (audit, key, protocol, data, timestamp, lifespan))
+        if lifespan is None:
+            lifespan = 0
+        if timestamp is None:
+            self.__cursor.execute("""
+                INSERT INTO cache (audit, key, protocol, data, lifespan)
+                VALUES            (  ?,    ?,     ?,       ?,     ?    );
+            """,                  (audit, key, protocol, data, lifespan))
+        else:
+            self.__cursor.execute("""
+                INSERT INTO cache (audit, key, protocol, data, timestamp, lifespan)
+                VALUES            (  ?,    ?,     ?,       ?,      ?,        ?    );
+            """,                  (audit, key, protocol, data, timestamp, lifespan))
 
 
     #----------------------------------------------------------------------
     @transactional
     def remove(self, audit, key, protocol="http"):
+        protocol = self._sanitize_protocol(protocol)
         self.__cursor.execute("""
             DELETE FROM cache
             WHERE audit = ? AND key = ? AND protocol = ?;
@@ -313,11 +338,12 @@ class PersistentNetworkCache(BaseNetworkCache):
     #----------------------------------------------------------------------
     @transactional
     def exists(self, audit, key, protocol="http"):
+        protocol = self._sanitize_protocol(protocol)
         self.__cursor.execute("""
             SELECT COUNT(id) FROM cache
             WHERE audit = ? AND key = ? AND protocol = ?
-                AND (timestamp = NULL OR lifespan = NULL OR
-                     timestamp + lifespan > DATETIME('now', 'unixepoch')
+                AND (timestamp = 0 OR lifespan = 0 OR
+                     timestamp + lifespan > CURRENT_TIMESTAMP
                 )
             LIMIT 1;
         """, (audit, key, protocol))
@@ -338,8 +364,8 @@ class PersistentNetworkCache(BaseNetworkCache):
     def compact(self):
         self.__cursor.executescript("""
             DELETE FROM cache
-                WHERE timestamp != NULL AND lifespan != NULL AND
-                      timestamp + lifespan <= DATETIME('now', 'unixepoch');
+                WHERE timestamp != 0 AND lifespan != 0 AND
+                      timestamp + lifespan <= CURRENT_TIMESTAMP;
             VACUUM;
         """)
 

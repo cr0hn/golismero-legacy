@@ -106,16 +106,18 @@ class BaseAuditDB (BaseDB):
     #----------------------------------------------------------------------
     def __init__(self, audit_name):
         """
-        Constructor.
-
         :param audit_name: Audit name.
         :type audit_name: str
         """
-        self.__audit_name   = audit_name
+        self.__audit_name = audit_name
 
 
     @property
     def audit_name(self):
+        """
+        :returns: Audit name.
+        :rtype: str
+        """
         return self.__audit_name
 
 
@@ -1148,7 +1150,7 @@ class AuditSQLiteDB (BaseAuditDB):
         self.__cursor.execute(
             "SELECT key FROM state WHERE plugin_id = ?;",
             (plugin_id,))
-        return set(self.__cursor.fetchall())
+        return {str(row[0]) for row in self.__cursor.fetchall()}
 
 
     #----------------------------------------------------------------------
