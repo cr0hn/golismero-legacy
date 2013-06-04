@@ -139,7 +139,7 @@ class BaseUrl(Resource):
         :return: True if it's HTTPS, False otherwise.
         :rtype: bool
         """
-        return self.__parsed.scheme == "https"
+        return self.__parsed_url.scheme == "https"
 
 
     #----------------------------------------------------------------------

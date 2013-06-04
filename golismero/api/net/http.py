@@ -87,6 +87,8 @@ class HTTP_Request (object):
     #----------------------------------------------------------------------
     def __init__(self, url, method = 'GET', post_data = None, cache = True, follow_redirects = None, cookie = "", random_user_agent = False, request_type = 0):
 
+        # XXX FIXME: Unused argument 'cookie'
+
         # Set method
         self.__method = method.upper() if method else "GET"
 
@@ -115,11 +117,6 @@ class HTTP_Request (object):
 
         # Post data
         self.__post_data = post_data
-
-        # Post data
-        if self.__post_data:
-            self.__headers.update(self.__get_content_type())
-
 
         # Get type of request
         self.__type = request_type
@@ -737,7 +734,7 @@ class HTTP_Response (object):
         :rtype: int
         """
         if self.__lines_count is None:
-            self.__lines_count = len(findall("\S+", self.__raw_data))
+            self.__lines_count = len(findall(r"\S+", self.__raw_data))
         return self.__lines_count
 
     @property

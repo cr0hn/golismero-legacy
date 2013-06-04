@@ -204,7 +204,7 @@ class PluginInfo (object):
 
         # Sanitize the plugin classname.
         if plugin_class is not None:
-            plugin_class = re.sub("\W|^(?=\d)", "_", plugin_class.strip())
+            plugin_class = re.sub(r"\W|^(?=\d)", "_", plugin_class.strip())
             if iskeyword(plugin_class):
                 msg = "Error parsing %r: plugin class (%s) is a Python reserved keyword"
                 raise ValueError(msg % (plugin_class, descriptor_file))
@@ -306,8 +306,9 @@ class PriscillaPluginManager (Singleton):
         # Dictionary to cache the plugin instances
         self.__cache = {}
 
-        # Batches of plugins
+        # Batches and stages of plugins
         self.__batches = []
+        self.__stages = {}
 
 
     #----------------------------------------------------------------------
@@ -342,7 +343,7 @@ class PriscillaPluginManager (Singleton):
         failure = list()
 
         # The first directory level is the category.
-        for category, base_class in self.CATEGORIES.iteritems():
+        for category, _ in self.CATEGORIES.iteritems():
             category_folder = path.join(plugins_folder, category)
 
             # Skip missing folders.
@@ -351,7 +352,7 @@ class PriscillaPluginManager (Singleton):
                 continue
 
             # The following levels belong to the plugins.
-            for (dirpath, dirnames, filenames) in walk(category_folder):
+            for (dirpath, _, filenames) in walk(category_folder):
 
                 # Look for plugin descriptor files.
                 for fname in filenames:
@@ -571,7 +572,7 @@ class PriscillaPluginManager (Singleton):
         source = info.plugin_module
 
         # Import the plugin module.
-        module_fake_name = "plugin_" + re.sub("\W|^(?=\d)", "_", name)
+        module_fake_name = "plugin_" + re.sub(r"\W|^(?=\d)", "_", name)
         module = imp.load_source(module_fake_name, source)
 
         # Get the plugin classname.

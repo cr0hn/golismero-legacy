@@ -218,12 +218,12 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
-    def iterate(self, data_type, data_subtype = None):
+    def iterate(self, data_type = None, data_subtype = None):
         """
         Iterate through all objects of the requested type,
         optionally filtering by subtype.
 
-        :param data_type: Data type. One of the Data.TYPE_* values.
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
         :type data_type: int
 
         :param data_subtype: Optional data subtype.

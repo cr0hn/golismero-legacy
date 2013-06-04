@@ -127,7 +127,7 @@ def is_method_allowed(method, url, network_conn):
 
     try:
         p = network_conn.get(url, method=method)
-    except:
+    except Exception:
         return False
 
     if p.http_response_code == 200: # and 'Content-Length' in p.http_headers:
@@ -200,7 +200,7 @@ def check_auth(url, user, password):
         return False
 
     # Get auth method
-    auth, realm = detect_auth_method(url)
+    auth, _ = detect_auth_method(url)
 
     if auth:
         # Get authentication object

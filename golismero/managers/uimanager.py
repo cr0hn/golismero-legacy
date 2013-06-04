@@ -100,6 +100,7 @@ class UIManager (object):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
         # Filter out ACKs but send all other messages.
-        if  message.message_type != MessageType.MSG_TYPE_CONTROL or \
-            message.message_code != MessageCode.MSG_CONTROL_ACK:
-                self.__notifier.notify(message)
+        if (message.message_type != MessageType.MSG_TYPE_CONTROL or
+            message.message_code != MessageCode.MSG_CONTROL_ACK
+        ):
+            self.__notifier.notify(message)

@@ -649,16 +649,16 @@ class Data(object):
         :param other: Another instance of Data.
         :type other: Data
         """
-        identity = other.identity
+        data_id = other.identity
         data_type = other.data_type
-        self.__linked[None][None].add(identity)
-        self.__linked[data_type][None].add(identity)
+        self.__linked[None][None].add(data_id)
+        self.__linked[data_type][None].add(data_id)
         if data_type == self.TYPE_INFORMATION:
-            self.__linked[data_type][other.information_type].add(identity)
+            self.__linked[data_type][other.information_type].add(data_id)
         elif data_type == self.TYPE_RESOURCE:
-            self.__linked[data_type][other.resource_type].add(identity)
+            self.__linked[data_type][other.resource_type].add(data_id)
         elif data_type == self.TYPE_VULNERABILITY:
-            self.__linked[data_type][other.vulnerability_type].add(identity)
+            self.__linked[data_type][other.vulnerability_type].add(data_id)
         else:
             raise ValueError("Internal error! Unknown data_type: %r" % data_type)
 
@@ -888,19 +888,19 @@ class _TempDataStorage(object):
 
 
     #----------------------------------------------------------------------
-    def get(self, identity):
+    def get(self, data_id):
         """
         Fetch an unsent instance given its identity.
         Returns None if the instance is not found.
 
-        :param identity: Identity to look for.
-        :type identity: str
+        :param data_id: Identity to look for.
+        :type data_id: str
 
         :returns: Data object if found, None otherwise.
         :rtype: Data | None
         """
         self.update()
-        return self.__new_data.get(identity, None)
+        return self.__new_data.get(data_id, None)
 
 
     #----------------------------------------------------------------------
@@ -932,14 +932,14 @@ class _TempDataStorage(object):
             merged = []
             for data in result:
                 data.validate_link_minimums() # raises ValueError on bad data
-                identity = data.identity
-                old_data = graph.get(identity, None)
+                data_id = data.identity
+                old_data = graph.get(data_id, None)
                 if old_data is not None:
                     if old_data is not data:
                         old_data.merge(data)
                         merged.append(data)
                 else:
-                    graph[identity] = data
+                    graph[data_id] = data
             if merged:
                 msg = "recv_info() returned duplicated results"
                 try:
@@ -953,14 +953,14 @@ class _TempDataStorage(object):
             missing = []
             queue = list(graph.iterkeys())
             while queue:
-                identity = queue.pop()
-                if identity not in visited:
-                    visited.add(identity)
-                    if identity not in graph:
-                        data = self.__new_data.get(identity, None)
+                data_id = queue.pop()
+                if data_id not in visited:
+                    visited.add(data_id)
+                    if data_id not in graph:
+                        data = self.__new_data.get(data_id, None)
                         if data is not None:
                             missing.append(data)
-                            graph[identity] = data
+                            graph[data_id] = data
                             queue.extend(data.links)
             if missing:
                 msg = ("Data created and referenced by plugin,"
@@ -980,7 +980,7 @@ class _TempDataStorage(object):
                        " nor returned by recv_info()")
                 try:
                     msg += ":\n\t" + "\n\t".join(
-                        repr(self.__new_data[identity]) for identity in orphan)
+                        repr(self.__new_data[data_id]) for data_id in orphan)
                 except Exception:
                     pass
                 warn(msg, Warning)

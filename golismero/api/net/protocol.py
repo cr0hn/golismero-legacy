@@ -106,7 +106,7 @@ class NetworkAPI (object):
                 m_auth_pass = Config.audit_config.proxy_pass
 
                 # Detect auth method
-                auth, realm = detect_auth_method(m_proxy_addr, m_auth_user, m_auth_pass)
+                auth, _ = detect_auth_method(m_proxy_addr)
 
                 # Set auth and proxy
                 NetworkAPI.__http_pool_manager.auth = get_auth_obj(auth, m_auth_user, m_auth_pass)
@@ -352,12 +352,12 @@ class Web (Protocol):
         :raises NetworkOutOfScope: The requested URL is out of scope for this audit.
         """
         if not isinstance(request, HTTP_Request):
-            raise TypeError("Expected HTTP_Request, got %s instead" % type(URL))
+            raise TypeError("Expected HTTP_Request, got %s instead" % type(request))
 
         # Check if the URL is within scope of the audit.
         if not is_in_scope(request.url):
             Logger.log_verbose("Url '%s' is out of scope. Skipping it." % request.url)
-            raise NetworkOutOfScope("'%s' is out of scope." % URL)
+            raise NetworkOutOfScope("'%s' is out of scope." % request.url)
 
         # If the URL is cached, return the cached contents.
         if request.is_cacheable and self._cache.exists(request.request_id, protocol=request.parsed_url.scheme):

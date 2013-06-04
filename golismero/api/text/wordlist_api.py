@@ -178,7 +178,7 @@ class AbstractWordlist(object):
 
     #----------------------------------------------------------------------
     def binary_search(self, word):
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
     #----------------------------------------------------------------------
@@ -186,7 +186,7 @@ class AbstractWordlist(object):
         """
         Get first coincidence, starting at begining.
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
     #----------------------------------------------------------------------
@@ -194,12 +194,12 @@ class AbstractWordlist(object):
         """
         Get first coincidence, starting at begining.
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
     #----------------------------------------------------------------------
     def search_mutations(self, word, rules):
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 

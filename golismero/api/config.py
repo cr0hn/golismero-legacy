@@ -30,19 +30,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__doc__ = """
-Global variable to access the current plugin and audit configuration.
-
-Whenever a plugin accesses this object it will receive its own
-configuration, including the current audit's name and settings.
-
-Example:
-
-    >>> from golismero.api.config import Config
-    >>> Config.plugin_name
-    'my_plugin_name'
-"""
-
 __all__ = ["Config"]
 
 from ..common import Singleton
@@ -54,6 +41,12 @@ class _Config (Singleton):
 
     Whenever a plugin accesses this object it will receive its own
     configuration, including the current audit's name and settings.
+
+    Example:
+
+        >>> from golismero.api.config import Config
+        >>> Config.plugin_name
+        'my_plugin_name'
     """
 
 
@@ -184,7 +177,10 @@ class _Config (Singleton):
 
         :rtype: PluginContext
         """
-        return self.__context
+        try:
+            return self.__context
+        except AttributeError:
+            raise SyntaxError("Plugin execution environment not initialized")
 
     @_context.setter
     def _context(self, context):
