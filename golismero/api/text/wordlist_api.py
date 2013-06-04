@@ -119,23 +119,6 @@ class WordListAPI(Singleton):
         except KeyError:
             raise KeyError("Wordlist file not found: %s" % wordlist_name)
 
-
-    #----------------------------------------------------------------------
-    @lru_cache(maxsize=20)
-    def get_advanced_wordlist(self, wordlist_name):
-        """
-        :param wordlist_name: Name of the requested advanced wordlist.
-        :type wordlist_name: str
-
-        :returns: Iterator for the selected advanced wordlist.
-        :rtype: iter(str)
-        """
-        try:
-            return AdvancedWordlist(self.__store[wordlist_name])
-        except KeyError:
-            raise KeyError("Wordlist file not found: %s" % wordlist_name)
-
-
     #----------------------------------------------------------------------
     @lru_cache(maxsize=20)
     def get_advanced_wordlist_as_dict(self, wordlist_name, separator=";"):
