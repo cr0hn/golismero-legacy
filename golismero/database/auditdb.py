@@ -1150,7 +1150,7 @@ class AuditSQLiteDB (BaseAuditDB):
         self.__cursor.execute(
             "SELECT key FROM state WHERE plugin_id = ?;",
             (plugin_id,))
-        return set(self.__cursor.fetchall())
+        return {str(row[0]) for row in self.__cursor.fetchall()}
 
 
     #----------------------------------------------------------------------

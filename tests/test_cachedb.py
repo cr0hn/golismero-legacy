@@ -62,7 +62,7 @@ def test_cachedb_consistency():
     disk.clean(audit)
     try:
 
-        print "Testing consistency between in-memory and disk caches..."
+        print "Testing consistency of in-memory and disk caches..."
         for x in xrange(100):
             key = generate_random_string(10)
             data = generate_random_string(100)
@@ -152,7 +152,7 @@ def helper_cachedb_stress(disk, n):
     t4 = time.time()
     print "  Write time: %d seconds (%f seconds per item)" % (t2 - t1, (t2 - t1) / (n * 2.0))
     print "  Check time: %d seconds (%f seconds per item)" % (t3 - t2, (t3 - t2) / (n * 2.0))
-    print "  Read time: %d seconds (%f seconds per item)" % (t4 - t3, (t4 - t3) / (n * 2.0))
+    print "  Read time:  %d seconds (%f seconds per item)" % (t4 - t3, (t4 - t3) / (n * 2.0))
     print "  Total time: %d seconds (%f seconds per item)" % (t4 - t1, (t4 - t1) / (n * 2.0))
 
 
