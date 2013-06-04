@@ -46,8 +46,6 @@ from requests.exceptions import RequestException
 from time import time
 from mimetools import Message
 import socket
-import hashlib
-from select import select
 
 # Use StringIO instead of cStringIO because cStringIO can't be pickled,
 # and mimetools.Message tries to store a copy of the "file descriptor".
@@ -233,7 +231,7 @@ class Web (Protocol):
 
         Example with string:
 
-        >>> from golismero.api.net.protocol import Web, NetworkAPI
+        >>> from golismero.api.net.protocol import NetworkAPI
         >>> con = NetworkAPI.get_connection()
         >>> response = con.get("www.mysite.com", timeout=2, follow_redirect=True)
         >>> response.http_headers_raw
@@ -246,7 +244,7 @@ class Web (Protocol):
 
         Example with Url instance:
 
-        >>> from golismero.api.net.protocol import Web, NetworkAPI
+        >>> from golismero.api.net.protocol import NetworkAPI
         >>> from golismero.api.data.resource.url import Url
         >>> con = NetworkAPI.get_connection()
         >>> u = Url("www.mysite.com")
@@ -327,14 +325,14 @@ class Web (Protocol):
 
         Example:
 
-        >>> from golismero.api.net.protocol import Web, NetworkAPI
+        >>> from golismero.api.net.protocol import NetworkAPI
         >>> from golismero.api.net.http import HTTP_Request
-        >>> con = NetworkAPI.get_connection()
+        >>> conn = NetworkAPI.get_connection()
         >>> request = HTTP_Request("www.mysite.com")
         >>> request.accept = "application/x-javascript"
-        >>> request.post_data = dict('param1' : 'value1', 'param2' : 'value2')
-        >>> requeat.add_file_from_file("PATH_TO_MY_FILE")
-        >>> response = con.get_custom(request)
+        >>> request.post_data = {'param1': 'value1', 'param2': 'value2'}
+        >>> request.add_file_from_file("PATH_TO_MY_FILE")
+        >>> response = conn.get_custom(request)
         >>> response.http_headers_raw
         HTTP/1.0 200 OK
         Date: Wed, 29 May 2013 18:44:54 GMT
@@ -450,7 +448,7 @@ class Web (Protocol):
 
         Example:
 
-        >>> from golismero.api.net.protocol import Web, NetworkAPI
+        >>> from golismero.api.net.protocol import NetworkAPI
         >>> request = "GET / HTTP/1.1\\r\\nHost: www.mysite.com\\r\\n\\r\\n\"
         >>> con = NetworkAPI.get_connection()
         >>> response = con.get_raw(request)

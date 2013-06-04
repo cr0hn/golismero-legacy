@@ -41,7 +41,7 @@ from golismero.api.data.resource.baseurl import BaseUrl
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.logger import Logger
 from golismero.api.net.protocol import *
-from golismero.api.net.web_utils import DecomposedURL, is_in_scope, is_method_allowed, generate_error_page_url
+from golismero.api.net.web_utils import DecomposedURL, is_in_scope
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.matching_analyzer import *
 from golismero.api.text.wordlist_api import WordListAPI
@@ -188,24 +188,22 @@ def process_base_url(info):
 
 
     # Parse original URL
-    m_url_parts = info.parsed_url
+    #m_url_parts = info.parsed_url
 
     # If file is a javascript, css or image, do not run
     if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg'):
         Logger.log_more_verbose("Bruteforcer - skipping URL '%s'." % str(info))
         return
 
-    m_return     = []
-
     #
     # Load wordlists
     #
     # -   Word lists to load
-    m_wordlists_names  = [
-        "predictables"
-    ]
+    #m_wordlists_names  = [
+    #    "predictables"
+    #]
     # -   Wordlist instances
-    m_wordlist         = load_wordlists(m_wordlists_names)
+    #m_wordlist         = load_wordlists(m_wordlists_names)
 
     #
     # Start with bruteforcing. Cases to try:
@@ -231,9 +229,6 @@ def process_base_url(info):
 def process_relative_url(info):
     """Receive and process an Url"""
 
-    # Local use of URL
-    m_url       = info.url
-
     # Parse original URL
     m_url_parts = info.parsed_url
 
@@ -241,8 +236,6 @@ def process_relative_url(info):
     if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg'):
         Logger.log_more_verbose("Bruteforcer - skipping URL '%s'." % str(info))
         return
-
-    m_return     = []
 
     #
     # Load wordlists

@@ -102,7 +102,9 @@ def is_method_allowed(method, url, network_conn):
 
     Example:
 
-    >>> from golismero.net.web_utils import is_method_allowed
+    >>> from golismero.api.net.protocol import NetworkAPI
+    >>> from golismero.api.net.web_utils import is_method_allowed
+    >>> connection_object = NetworkAPI.get_connection()
     >>> is_method_allowed("GET", "www.site.com", connection_object)
     True
     >>> is_method_allowed("OPTIONS", "www.site.com", connection_object)

@@ -69,7 +69,7 @@ class HTML(Information):
     Example:
 
     >>> from golismero.api.data.information.html import HTML
-    >>> html_info=\"\"\"<html>
+    >>> html_info = \"\"\"<html>
     <head>
       <title>My sample page</title>
     </head>
@@ -80,7 +80,7 @@ class HTML(Information):
       </p>
     </body>
     </html>\"\"\"
-    >>> html_parsed=HTML(html_info)
+    >>> html_parsed = HTML(html_info)
     >>> html_parsed.links
     [<golismero.api.net.web_utils.HTMLElement object at 0x109ca8b50>]
     >>> html_parsed.links[0].tag_name
