@@ -77,7 +77,7 @@ class WordListAPI(Singleton):
             currentDir += sep
 
         # Iterate the directory recursively.
-        for (dirpath, dirnames, filenames) in walk(currentDir):
+        for (dirpath, _, filenames) in walk(currentDir):
 
             # Make sure the directory name is absolute.
             dirpath = abspath(dirpath)
