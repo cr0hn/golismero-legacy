@@ -42,7 +42,7 @@ from prettytable import *
 
 class ScreenReport(ReportPlugin):
     """
-    This plugin to display reports on screen
+    Plugin to display reports on screen.
     """
 
     #----------------------------------------------------------------------

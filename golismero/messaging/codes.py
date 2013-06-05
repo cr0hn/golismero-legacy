@@ -31,13 +31,39 @@ __all__ = ["MessageType", "MessageCode", "MessagePriority",
            "MSG_CODES", "MSG_RPC_CODES", "MSG_CONTROL_CODES"]
 
 
+from ..common import Singleton
+
+
+#----------------------------------------------------------------------
+class MessageConstants(Singleton):
+    """
+    Base class for message constants enumerations.
+    """
+
+    @classmethod
+    def get_name(cls, value):
+        """
+        Finds a constant name based on its numeric value.
+
+        :param value: Value of the constant.
+        :type value: int
+
+        :returns: Name of the constant.
+        :rtype: str
+        """
+        for name in dir(cls):
+            if name.startswith("MSG_") and getattr(cls, name) == value:
+                return name
+        ##raise KeyError(value)
+
+
 #----------------------------------------------------------------------
 #
 # Message priorities
 #
 #----------------------------------------------------------------------
 
-class MessagePriority(object):
+class MessagePriority(MessageConstants):
     MSG_PRIORITY_HIGH   = 0
     MSG_PRIORITY_MEDIUM = 1
     MSG_PRIORITY_LOW    = 2
@@ -49,7 +75,7 @@ class MessagePriority(object):
 #
 #----------------------------------------------------------------------
 
-class MessageType(object):
+class MessageType(MessageConstants):
     MSG_TYPE_DATA    = 0
     MSG_TYPE_CONTROL = 1
     MSG_TYPE_RPC     = 2
@@ -61,7 +87,7 @@ class MessageType(object):
 #
 #----------------------------------------------------------------------
 
-class MessageCode(object):
+class MessageCode(MessageConstants):
 
 
     #----------------------------------------------------------------------

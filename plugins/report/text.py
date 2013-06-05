@@ -38,7 +38,7 @@ from collections import defaultdict
 
 class TextReport(ReportPlugin):
     """
-    This plugin generate text reports
+    Plugin to generate text reports.
     """
 
 

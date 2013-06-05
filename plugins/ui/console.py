@@ -79,6 +79,7 @@ def process_url_disclosure(vuln):
         "-" * len(vuln.url.url)
     )
 
+
 #----------------------------------------------------------------------
 def process_default_error_page(vuln):
     """Display default error page"""
@@ -88,6 +89,8 @@ def process_default_error_page(vuln):
         "-" * len(vuln.url.url)
     )
 
+
+#----------------------------------------------------------------------
 class ConsoleUIPlugin(UIPlugin):
     """
     Console UI plugin.
