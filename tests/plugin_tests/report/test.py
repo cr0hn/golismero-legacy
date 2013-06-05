@@ -53,5 +53,10 @@ class TestReport(ReportPlugin):
         db = Database()
 
         # Dump all objects in the database.
+        print "-" * 79
+        print "Report:"
         for data in db.iterate():
-            print "%s: %r" % (data.identity, data)
+            print
+            print data.identity
+            print repr(data)
+        print
