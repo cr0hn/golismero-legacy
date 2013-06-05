@@ -32,7 +32,7 @@ __all__ = [
     "pickle", "random",
 
     # Helper functions.
-    "get_user_settings_folder",
+    "get_user_settings_folder", "launcher",
 
     # Helper classes and decorators.
     "Singleton", "enum", "decorator",
@@ -615,3 +615,26 @@ class AuditConfig (Configuration):
                 re.compile(self.subdomain_regex)
             except re.error, e:
                 raise ValueError("Regular expression not valid: %s." % e.message)
+
+
+#----------------------------------------------------------------------
+def launcher(options, *audits):
+    """
+    Launches GoLismero in the current process.
+
+    Returns when (if) GoLismero finishes executing.
+
+    .. warning: This is an internally used function. Do not call!
+    """
+
+    # Validate the arguments.
+    if not isinstance(options, OrchestratorConfig):
+        raise TypeError("Expected OrchestratorConfig, got %s instead" % type(options))
+    for params in audits:
+        if not isinstance(params, AuditConfig):
+            raise TypeError("Expected AuditConfig, got %s instead" % type(options))
+
+    # Run the Orchestrator.
+    from .main.orchestrator import Orchestrator
+    with Orchestrator(options) as orchestrator:
+        orchestrator.run(*audits)

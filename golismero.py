@@ -117,8 +117,7 @@ from os import getenv
 #----------------------------------------------------------------------
 # GoLismero modules
 
-from golismero import launcher
-from golismero.common import OrchestratorConfig, AuditConfig
+from golismero.common import launcher, OrchestratorConfig, AuditConfig
 from golismero.main.console import Console
 from golismero.main.orchestrator import Orchestrator
 from golismero.managers.priscillapluginmanager import PriscillaPluginManager

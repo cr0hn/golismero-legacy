@@ -169,31 +169,43 @@ class _data_metaclass(type):
 
         # Check the data_type is not TYPE_UNKNOWN.
         if not cls.data_type:
-            raise TypeError("Subclasses of Data MUST define their data_type!")
+            raise TypeError(
+                "Error in %s.%s: Subclasses of Data MUST define their data_type!" % \
+                (cls.__module__, cls.__name__))
 
         # Check the information_type is not INFORMATION_UNKNOWN.
         if cls.data_type == Data.TYPE_INFORMATION:
             if not cls.information_type:
-                raise TypeError("Subclasses of Information MUST define their information_type!")
+                raise TypeError(
+                    "Error in %s.%s: Subclasses of Information MUST define their information_type!" % \
+                    (cls.__module__, cls.__name__))
 
         # Check the resource_type is not RESOURCE_UNKNOWN.
         elif cls.data_type == Data.TYPE_RESOURCE:
             if not cls.resource_type:
-                raise TypeError("Subclasses of Resource MUST define their resource_type!")
+                raise TypeError(
+                    "Error in %s.%s: Subclasses of Resource MUST define their resource_type!" % \
+                    (cls.__module__, cls.__name__))
 
         # Check the vulnerability_type is not "generic".
         elif cls.data_type == Data.TYPE_VULNERABILITY:
             if cls.vulnerability_type == "generic":
-                raise TypeError("Subclasses of Vulnerability MUST define their vulnerability_type!")
+                raise TypeError(
+                    "Error in %s.%s: Subclasses of Vulnerability MUST define their vulnerability_type!" % \
+                    (cls.__module__, cls.__name__))
 
         # Check all @merge and @overwrite properties have setters.
         for name, prop in cls.__dict__.iteritems():
             if merge.is_mergeable_property(prop):
                 if prop.fset is None:
-                    raise TypeError("Properties tagged with @merge MUST have a setter!")
+                    raise TypeError(
+                        "Error in %s.%s.%s: Properties tagged with @merge MUST have a setter!" % \
+                        (cls.__module__, cls.__name__, name))
             elif overwrite.is_overwriteable_property(prop):
                 if prop.fset is None:
-                    raise TypeError("Properties tagged with @overwrite MUST have a setter!")
+                    raise TypeError(
+                        "Error in %s.%s.%s: Properties tagged with @overwrite MUST have a setter!" % \
+                        (cls.__module__, cls.__name__, name))
 
 
 #------------------------------------------------------------------------------

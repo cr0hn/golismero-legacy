@@ -129,7 +129,7 @@ class InformationPlugin (Plugin):
 
 
 #------------------------------------------------------------------------------
-class UIPlugin (AdvancedPlugin):
+class UIPlugin (InformationPlugin):
     """
     User Interface plugins control the way in which the user interacts with GoLismero.
 

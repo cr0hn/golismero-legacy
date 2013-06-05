@@ -46,7 +46,7 @@ except NameError:
 
 
 # Imports.
-from golismero import launcher, OrchestratorConfig, AuditConfig
+from golismero.common import launcher, OrchestratorConfig, AuditConfig
 from golismero.api.data import Data
 from golismero.api.text.text_utils import generate_random_string
 from golismero.database.auditdb import AuditDB
