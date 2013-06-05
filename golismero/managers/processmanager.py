@@ -41,6 +41,7 @@ from multiprocessing.pool import Pool
 from os import getpid
 from warnings import catch_warnings, warn
 from traceback import format_exc, print_exc, format_exception_only, format_list
+from signal import signal, SIGINT
 from sys import exit, stdout, stderr   # the real std handles, not hooked
 
 
@@ -823,3 +824,18 @@ class ProcessManager (object):
 
             # Clean up.
             self.__launcher = None
+
+
+#----------------------------------------------------------------------
+def _suicide(signum, frame):
+    """
+    Child processes Control-C handler.
+
+    .. warning: Do not call!
+    """
+
+    # Kill the process. This should trigger a chain reaction.
+    exit(1)
+
+if __name__ == "__parents_main__":
+    signal(SIGINT, _suicide)
