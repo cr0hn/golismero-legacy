@@ -78,9 +78,9 @@ class TestUIPlugin(UIPlugin):
         print "  Timestamp: %s" % time.ctime(message.timestamp)
         print "  Audit:     %s" % message.audit_name
         print "  Plugin:    %s" % message.plugin_name
-        print "  Type:      %s" % MessageType.get_name(message.message_type)
-        print "  Code:      %s" % MessageCode.get_name(message.message_code)
-        print "  Priority:  %s" % MessagePriority.get_name(message.priority)
+        print "  Type:      %s" % MessageType.get_name_from_value(message.message_type)
+        print "  Code:      %s" % MessageCode.get_name_from_value(message.message_code)
+        print "  Priority:  %s" % MessagePriority.get_name_from_value(message.priority)
         print "  Payload:   %r" % (message.message_info,)
         print
 

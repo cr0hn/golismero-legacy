@@ -41,7 +41,27 @@ class MessageConstants(Singleton):
     """
 
     @classmethod
-    def get_name(cls, value):
+    def get_names(cls):
+        """
+        Get the names of all constants defined here.
+
+        :returns: Names of the constants.
+        :rtype: set(str)
+        """
+        return { name for name in dir(cls) if name.startswith("MSG_") }
+
+    @classmethod
+    def get_values(cls):
+        """
+        Get the values of all constants defined here.
+
+        :returns: Values of the constants.
+        :rtype: set(int)
+        """
+        return { getattr(cls, name) for name in dir(cls) if name.startswith("MSG_") }
+
+    @classmethod
+    def get_name_from_value(cls, value):
         """
         Finds a constant name based on its numeric value.
 
@@ -167,11 +187,9 @@ class MessageCode(MessageConstants):
 #
 #----------------------------------------------------------------------
 
-MSG_PRIORITIES = {getattr(MessagePriority, x) for x in dir(MessagePriority) if x.startswith("MSG_")}
+MSG_PRIORITIES = MessagePriority.get_values()
+MSG_TYPES = MessageType.get_values()
+MSG_CODES = MessageCode.get_values()
 
-MSG_TYPES = {getattr(MessageType, x) for x in dir(MessageType) if x.startswith("MSG_")}
-
-MSG_CODES = {getattr(MessageCode, x) for x in dir(MessageCode) if x.startswith("MSG_")}
-
-MSG_RPC_CODES     = {getattr(MessageCode, x) for x in dir(MessageCode) if x.startswith("MSG_RPC_")}
-MSG_CONTROL_CODES = {getattr(MessageCode, x) for x in dir(MessageCode) if x.startswith("MSG_CONTROL_")}
+MSG_RPC_CODES     = {getattr(MessageCode, x) for x in MessageCode.get_names() if x.startswith("MSG_RPC_")}
+MSG_CONTROL_CODES = {getattr(MessageCode, x) for x in MessageCode.get_names() if x.startswith("MSG_CONTROL_")}
