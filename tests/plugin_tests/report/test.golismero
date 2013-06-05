@@ -1,9 +1,8 @@
 [Core]
-Name = Global plugin test
-Module = test_global
+Name = Test Report
 
 [Documentation]
-Description = Plugin to test global plugin support
+Description = Plugin to test the reports.
 Author = Mario Vilas
 Version = 0.1
 Website = https://github.com/cr0hn/golismero/

@@ -1,6 +1,5 @@
 [Core]
 Name = Test UI
-Module = test_ui
 
 [Documentation]
 Description = Test UI that shows all events and data objects

@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.data import Data
+from golismero.api.data.db import Database
 from golismero.api.plugin import UIPlugin
 from golismero.messaging.codes import MessageType, MessageCode, MessagePriority
 from golismero.messaging.message import Message
@@ -57,7 +58,13 @@ class TestUIPlugin(UIPlugin):
         if not isinstance(info, Data):
             raise TypeError("Expected Data, got %s instead" % type(info))
         print "-" * 79
-        print "Info: %r" % info
+        print "ID:   %s" % info.identity
+        print "Data: %r" % info
+        history = Database().get_plugin_history(info.identity)
+        if history:
+            print "History:"
+            for plugin_name in history:
+                print "  " + plugin_name
         print
 
 
@@ -68,13 +75,13 @@ class TestUIPlugin(UIPlugin):
 
         print "-" * 79
         print "Message:"
-        print "  Timestamp: %s" % time.asctime(message.timestamp)
+        print "  Timestamp: %s" % time.ctime(message.timestamp)
         print "  Audit:     %s" % message.audit_name
         print "  Plugin:    %s" % message.plugin_name
         print "  Type:      %s" % MessageType.get_name(message.message_type)
         print "  Code:      %s" % MessageCode.get_name(message.message_code)
         print "  Priority:  %s" % MessagePriority.get_name(message.priority)
-        print "  Payload:   %r" % message.message_info
+        print "  Payload:   %r" % (message.message_info,)
         print
 
 

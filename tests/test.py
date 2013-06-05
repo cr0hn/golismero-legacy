@@ -61,12 +61,13 @@ def test():
     config = OrchestratorConfig()
     config.from_dictionary({
         "plugins_folder": os.path.abspath(os.path.join(here, "plugin_tests")),
+        "ui_mode": "test",
     })
 
     audit = AuditConfig()
     audit.from_dictionary({
         "targets": ["http://www.example.com/",],
-        "reports": [None, "test_audit.txt",],
+        "reports": [None,],
         "audit_name": "test_audit",
         "audit_db": "sqlite://test_audit.db",
     })
@@ -78,17 +79,21 @@ def test():
 
     try:
         print "Launching GoLismero..."
+        print
         launcher(config, audit)
 
         print "Validating the audit database..."
+        print
         validate(audit.audit_name)
 
     finally:
         print "Cleaning up..."
+        print
         try:
             os.unlink("%s.db" % audit.audit_name)
         except Exception:
             pass
+    print "Done!"
 
 
 # Validate the audit database.

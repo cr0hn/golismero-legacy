@@ -53,6 +53,5 @@ class TestReport(ReportPlugin):
         db = Database()
 
         # Dump all objects in the database.
-        for identity in db.iterate():
-            data = db.get(identity)
-            print "%s: %r" % (identity, data)
+        for data in db.iterate():
+            print "%s: %r" % (data.identity, data)
