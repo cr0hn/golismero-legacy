@@ -82,7 +82,8 @@ def get_matching_level(text1, text2):
         #l_google_value = float(l_differ.diff_levenshtein(l_differ.diff_main(text1, text2)))
         p = l_differ.diff_main(text1, text2)
         l_google_value = float(l_differ.diff_levenshtein(p))
-        l_google_value = 1 if l_google_value == 0 else l_google_value
+        if l_google_value == 0:
+            l_google_value = 1
 
         l_len_text2    = len(text2)
         l_len_text1    = len(text1)

@@ -199,12 +199,12 @@ class VolatileNetworkCache(BaseNetworkCache):
 
     #----------------------------------------------------------------------
     def clean(self, audit):
-        self.__cache = defaultdict( partial(defaultdict, dict) )
+        self.__cache[audit] = defaultdict(dict)
 
 
     #----------------------------------------------------------------------
     def close(self):
-        self.clean()
+        self.__cache = defaultdict( partial(defaultdict, dict) )
 
 
     #----------------------------------------------------------------------
