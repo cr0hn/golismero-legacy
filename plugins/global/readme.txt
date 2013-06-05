@@ -1,1 +1,0 @@
-Global plugins go here. This is an internally used kind of plugin, users normally don't need to add anything here.

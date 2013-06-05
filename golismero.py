@@ -311,13 +311,6 @@ def main(args):
             for name, info in report_plugins.iteritems():
                 Console.display("+ %s: %s" % (name, info.description))
 
-        # Global plugins...
-        global_plugins = manager.get_plugins("global")
-        if global_plugins:
-            Console.display("\n-= Global plugins =-")
-            for name, info in global_plugins.iteritems():
-                Console.display("+ %s: %s" % (name, info.description))
-
         Console.display(" ")
         exit(0)
 

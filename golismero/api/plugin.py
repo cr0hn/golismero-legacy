@@ -36,7 +36,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["TestingPlugin", "UIPlugin", "ReportPlugin", "GlobalPlugin"]
+__all__ = ["TestingPlugin", "UIPlugin", "ReportPlugin"]
 
 from .config import Config
 
@@ -50,10 +50,9 @@ class Plugin (object):
     PLUGIN_TYPE_TESTING  = 1
     PLUGIN_TYPE_UI       = 2
     PLUGIN_TYPE_REPORT   = 3
-    PLUGIN_TYPE_GLOBAL   = 4
 
     PLUGIN_TYPE_FIRST = PLUGIN_TYPE_TESTING
-    PLUGIN_TYPE_LAST  = PLUGIN_TYPE_GLOBAL
+    PLUGIN_TYPE_LAST  = PLUGIN_TYPE_REPORT
 
     PLUGIN_TYPE = PLUGIN_TYPE_ABSTRACT
 
@@ -130,12 +129,14 @@ class InformationPlugin (Plugin):
 
 
 #------------------------------------------------------------------------------
-class AdvancedPlugin (InformationPlugin):
+class UIPlugin (AdvancedPlugin):
     """
-    Advanced plugins are tipically **internal plugins**, either of the UI type
-    or the Global type. These are not usually coded by users, but only
-    shipped with GoLismero itself.
+    User Interface plugins control the way in which the user interacts with GoLismero.
+
+    This is the base class for all UI plugins.
     """
+
+    PLUGIN_TYPE = Plugin.PLUGIN_TYPE_UI
 
 
     #----------------------------------------------------------------------
@@ -174,30 +175,6 @@ class TestingPlugin (InformationPlugin):
     """
 
     PLUGIN_TYPE = Plugin.PLUGIN_TYPE_TESTING
-
-
-#------------------------------------------------------------------------------
-class UIPlugin (AdvancedPlugin):
-    """
-    User Interface plugins control the way in which the user interacts with GoLismero.
-
-    This is the base class for all UI plugins.
-    """
-
-    PLUGIN_TYPE = Plugin.PLUGIN_TYPE_UI
-
-
-#------------------------------------------------------------------------------
-class GlobalPlugin (AdvancedPlugin):
-    """
-    Global plugins can control all stages of an audit.
-
-    Tipically users don't code their own Global plugins.
-
-    This is the base class for all Global plugins.
-    """
-
-    PLUGIN_TYPE = Plugin.PLUGIN_TYPE_GLOBAL
 
 
 #------------------------------------------------------------------------------
