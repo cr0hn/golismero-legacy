@@ -289,7 +289,7 @@ class PriscillaPluginManager (Singleton):
     STAGES = {
         "recon"   : 1,    # Reconaissance stage.
         "scan"    : 2,    # Scanning (non-intrusive) stage.
-        "exploit" : 3,    # Exploitation (intrusive) stage.
+        "attack"  : 3,    # Exploitation (intrusive) stage.
         "post"    : 4,    # Post-exploitation stage.
         "cleanup" : 5,    # Cleanup stage.
     }
