@@ -1,0 +1,108 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+"""
+GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
+
+Authors:
+  Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
+  Mario Vilas | mvilas<@>gmail.com
+
+Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project mail: golismero.project<@>gmail.com
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+"""
+
+
+# Fix the module path for the tests.
+import sys
+import os
+from os import path
+try:
+    _FIXED_PATH_
+except NameError:
+    here = path.split(path.abspath(__file__))[0]
+    if not here:  # if it fails use cwd instead
+        here = path.abspath(os.getcwd())
+    golismero = path.join(here, "..")
+    thirdparty_libs = path.join(golismero, "thirdparty_libs")
+    if path.exists(thirdparty_libs):
+        sys.path.insert(0, thirdparty_libs)
+        sys.path.insert(0, golismero)
+    _FIXED_PATH_ = True
+
+
+# Imports.
+from golismero import launcher, OrchestratorConfig, AuditConfig
+from golismero.api.data import Data
+from golismero.api.text.text_utils import generate_random_string
+from golismero.database.auditdb import AuditDB
+import time
+import os, os.path
+import sys
+
+
+# Test GoLismero.
+def test():
+
+    config = OrchestratorConfig()
+    config.from_dictionary({
+        "plugins_folder": os.path.abspath(os.path.join(here, "plugin_tests")),
+    })
+
+    audit = AuditConfig()
+    audit.from_dictionary({
+        "targets": ["http://www.example.com/",],
+        "reports": [None, "test_audit.txt",],
+        "audit_name": "test_audit",
+        "audit_db": "sqlite://test_audit.db",
+    })
+
+    try:
+        os.unlink("%s.db" % audit.audit_name)
+    except Exception:
+        pass
+
+    try:
+        print "Launching GoLismero..."
+        launcher(config, audit)
+
+        print "Validating the audit database..."
+        validate(audit.audit_name)
+
+    finally:
+        print "Cleaning up..."
+        try:
+            os.unlink("%s.db" % audit.audit_name)
+        except Exception:
+            pass
+
+
+# Validate the audit database.
+def validate(audit = "test_audit"):
+    disk = AuditDB(audit, "sqlite://%s.db" % audit)
+    try:
+
+        # TO DO
+        pass
+
+    finally:
+        disk.close()
+
+
+# Run all tests from the command line.
+if __name__ == "__main__":
+    test()
