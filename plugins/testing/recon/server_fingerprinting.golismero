@@ -1,7 +1,5 @@
 [Core]
 Name = Server Fingerprinting plugin
-Module = server_fingerprinting.py
-Stage = Recon
 
 [Documentation]
 Description = Fingerprinter for server

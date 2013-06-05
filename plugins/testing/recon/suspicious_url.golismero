@@ -1,7 +1,5 @@
 [Core]
 Name = Suspicious URL
-Module = suspicious_url.py
-Stage = Recon
 
 [Documentation]
 Description = Find suspicious words in URLs

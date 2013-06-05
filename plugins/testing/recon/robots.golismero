@@ -1,7 +1,5 @@
 [Core]
 Name = Robots.txt Analyzer
-Module = robots.py
-Stage = Recon
 
 [Documentation]
 Description = Analyzes robots.txt files and extracts their links.

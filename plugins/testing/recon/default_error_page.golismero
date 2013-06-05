@@ -1,7 +1,5 @@
 [Core]
 Name = Default Error page finder
-Module = default_error_page.py
-Stage = Recon
 
 [Documentation]
 Description = Identify default error pages for most common web servers

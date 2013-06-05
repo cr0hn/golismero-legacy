@@ -1,7 +1,5 @@
 [Core]
 Name = Web Spider
-Module = spider.py
-Stage = Recon
 
 [Documentation]
 Description = Web spider plugin

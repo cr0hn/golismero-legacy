@@ -1,6 +1,5 @@
 [Core]
 Name = On Screen Report
-Module = screen.py
 
 [Documentation]
 Description = Plugin to display reports on screen.
