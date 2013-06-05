@@ -155,7 +155,10 @@ class PluginInfo (object):
 
         # Read the "[Core]" section.
         self.__display_name = parser.get("Core", "Name")
-        plugin_module       = parser.get("Core", "Module")
+        try:
+            plugin_module   = parser.get("Core", "Module")
+        except Exception:
+            plugin_module   = path.splitext(path.basename(descriptor_file))[0]
         try:
             plugin_class    = parser.get("Core", "Class")
         except Exception:
