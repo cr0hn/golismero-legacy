@@ -117,28 +117,11 @@ from os import getenv
 #----------------------------------------------------------------------
 # GoLismero modules
 
+from golismero import launcher
 from golismero.common import OrchestratorConfig, AuditConfig
 from golismero.main.console import Console
 from golismero.main.orchestrator import Orchestrator
 from golismero.managers.priscillapluginmanager import PriscillaPluginManager
-
-
-#----------------------------------------------------------------------
-# Exported function to launch GoLismero
-
-def launcher(options, *audits):
-
-    # We need to validate the arguments,
-    # since it may be called from outside.
-    if not isinstance(options, OrchestratorConfig):
-        raise TypeError("Expected OrchestratorConfig, got %s instead" % type(options))
-    for params in audits:
-        if not isinstance(params, AuditConfig):
-            raise TypeError("Expected AuditConfig, got %s instead" % type(options))
-
-    # Run the Orchestrator.
-    with Orchestrator(options) as orchestrator:
-        orchestrator.run(*audits)
 
 
 #----------------------------------------------------------------------

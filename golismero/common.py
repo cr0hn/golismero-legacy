@@ -373,14 +373,14 @@ class OrchestratorConfig (Configuration):
         "colorize": (bool, True),
 
         #
-        # Plugins options
+        # Plugin options
         #
 
         # Enabled plugins
-        "enabled_plugins": (list, ["global", "testing", "report", "ui/console"]),
+        "enabled_plugins": (list, ["all"]),
 
         # Disabled plugins
-        "disabled_plugins": (list, ["all"]),
+        "disabled_plugins": (list, []),
 
         # Plugins folder
         "plugins_folder": Configuration.string,
@@ -389,7 +389,7 @@ class OrchestratorConfig (Configuration):
         "max_process": (int, 10),
 
         #
-        # Networks options
+        # Network options
         #
 
         # Maximum number of connections per host
@@ -462,9 +462,11 @@ class AuditConfig (Configuration):
         #
         # Report options
         #
+
+        # Output files
         "reports": (list, []),
 
-        # Only display resources with vulns associated
+        # Only display resources with associated vulnerabilities
         "only_vulns": (bool, False),
 
         #
@@ -482,10 +484,10 @@ class AuditConfig (Configuration):
         #
 
         # Enabled plugins
-        "enabled_plugins": (list, ["testing", "report"]),
+        "enabled_plugins": (list, ["all"]),
 
         # Disabled plugins
-        "disabled_plugins": (list, ["all"]),
+        "disabled_plugins": (list, []),
 
         #
         # Networks options
