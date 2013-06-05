@@ -147,6 +147,7 @@ class MessageCode(MessageConstants):
     MSG_RPC_DATA_GET_MANY = 14
     MSG_RPC_DATA_KEYS     = 15
     MSG_RPC_DATA_COUNT    = 16
+    MSG_RPC_DATA_PLUGINS  = 17
 
     # Plugin state API
     MSG_RPC_STATE_ADD     = 20

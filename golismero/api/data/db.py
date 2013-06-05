@@ -237,6 +237,21 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
+    def get_plugin_history(self, identity):
+        """
+        Find out which plugins have already processed this data object.
+
+        :param identity: Identity hash.
+        :type identity: str
+
+        :returns: Names of the plugins that already processed this data object.
+        :rtype: set(str)
+        """
+        return Config._context.remote_call(
+            MessageCode.MSG_RPC_DATA_PLUGINS, identity)
+
+
+    #----------------------------------------------------------------------
     def __len__(self):
         return self.count()
 

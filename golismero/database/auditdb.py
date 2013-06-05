@@ -75,6 +75,10 @@ def rpc_data_db_keys(orchestrator, audit_name, *argv, **argd):
 def rpc_data_db_count(orchestrator, audit_name, *argv, **argd):
     return orchestrator.auditManager.get_audit(audit_name).database.get_data_count(*argv, **argd)
 
+@implementor(MessageCode.MSG_RPC_DATA_PLUGINS)
+def rpc_data_db_plugins(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_past_plugins(*argv, **argd)
+
 @implementor(MessageCode.MSG_RPC_STATE_ADD)
 def rpc_plugin_db_add(orchestrator, audit_name, *argv, **argd):
     return orchestrator.auditManager.get_audit(audit_name).database.add_state_variable(*argv, **argd)
@@ -930,6 +934,8 @@ class AuditSQLiteDB (BaseAuditDB):
         return [ data for data in result if data ]
 
     def __get_data(self, identity, data_type = None):
+        if type(identity) is not str:
+            raise TypeError("Expected string, got %s" % type(identity))
         if data_type is None:
             tables = ("information", "resource", "vulnerability")
         elif data_type == Data.TYPE_INFORMATION:
@@ -962,7 +968,7 @@ class AuditSQLiteDB (BaseAuditDB):
             for table in ("information", "resource", "vulnerability"):
                 query  = "SELECT identity FROM %s;" % table
                 self.__cursor.execute(query)
-                hashes.update( row[0] for row in self.__cursor.fetchall() )
+                hashes.update( str(row[0]) for row in self.__cursor.fetchall() )
             return hashes
 
         # Get keys filtered by type and subtype.
@@ -982,7 +988,7 @@ class AuditSQLiteDB (BaseAuditDB):
             query  = "SELECT identity FROM %s WHERE type = ?;" % table
             values = (data_subtype,)
         self.__cursor.execute(query, values)
-        return { row[0] for row in self.__cursor.fetchall() }
+        return { str(row[0]) for row in self.__cursor.fetchall() }
 
 
     #----------------------------------------------------------------------
@@ -999,17 +1005,19 @@ class AuditSQLiteDB (BaseAuditDB):
         return result
 
     def __get_data_type(self, identity):
-        for table, data_type in (
-            ("information",   Data.TYPE_INFORMATION),
-            ("resource",      Data.TYPE_RESOURCE),
-            ("vulnerability", Data.TYPE_VULNERABILITY),
+        if type(identity) is not str:
+            raise TypeError("Expected string, got %s" % type(identity))
+        for table, data_type, subtype_filter in (
+            ("information",   Data.TYPE_INFORMATION,   int),
+            ("resource",      Data.TYPE_RESOURCE,      int),
+            ("vulnerability", Data.TYPE_VULNERABILITY, str),
         ):
             query  = "SELECT type FROM %s WHERE identity = ? LIMIT 1;" % table
             values = (identity,)
             self.__cursor.execute(query, values)
             row = self.__cursor.fetchone()
             if row:
-                return data_type, row[0]
+                return data_type, subtype_filter(row[0])
 
 
     #----------------------------------------------------------------------
@@ -1050,6 +1058,10 @@ class AuditSQLiteDB (BaseAuditDB):
     #----------------------------------------------------------------------
     @transactional
     def add_state_variable(self, plugin_name, key, value):
+        if type(plugin_name) is not str:
+            raise TypeError("Expected string, got %s" % type(plugin_name))
+        if type(key) is not str:
+            raise TypeError("Expected string, got %s" % type(key))
 
         # Fetch the plugin rowid, add it if missing.
         self.__cursor.execute(
@@ -1079,6 +1091,10 @@ class AuditSQLiteDB (BaseAuditDB):
     #----------------------------------------------------------------------
     @transactional
     def remove_state_variable(self, plugin_name, key):
+        if type(plugin_name) is not str:
+            raise TypeError("Expected string, got %s" % type(plugin_name))
+        if type(key) is not str:
+            raise TypeError("Expected string, got %s" % type(key))
 
         # Fetch the plugin rowid, fail if missing.
         self.__cursor.execute(
@@ -1096,6 +1112,10 @@ class AuditSQLiteDB (BaseAuditDB):
     #----------------------------------------------------------------------
     @transactional
     def has_state_variable(self, plugin_name, key):
+        if type(plugin_name) is not str:
+            raise TypeError("Expected string, got %s" % type(plugin_name))
+        if type(key) is not str:
+            raise TypeError("Expected string, got %s" % type(key))
 
         # Fetch the plugin rowid, return False if missing.
         self.__cursor.execute(
@@ -1117,6 +1137,10 @@ class AuditSQLiteDB (BaseAuditDB):
     #----------------------------------------------------------------------
     @transactional
     def get_state_variable(self, plugin_name, key):
+        if type(plugin_name) is not str:
+            raise TypeError("Expected string, got %s" % type(plugin_name))
+        if type(key) is not str:
+            raise TypeError("Expected string, got %s" % type(key))
 
         # Fetch the plugin rowid, fail if missing.
         self.__cursor.execute(
@@ -1136,6 +1160,8 @@ class AuditSQLiteDB (BaseAuditDB):
     #----------------------------------------------------------------------
     @transactional
     def get_state_variable_names(self, plugin_name):
+        if type(plugin_name) is not str:
+            raise TypeError("Expected string, got %s" % type(plugin_name))
 
         # Fetch the plugin rowid, return an empty set if missing.
         self.__cursor.execute(
@@ -1156,6 +1182,10 @@ class AuditSQLiteDB (BaseAuditDB):
     #----------------------------------------------------------------------
     @transactional
     def mark_plugin_finished(self, identity, plugin_name):
+        if type(identity) is not str:
+            raise TypeError("Expected string, got %s" % type(identity))
+        if type(plugin_name) is not str:
+            raise TypeError("Expected string, got %s" % type(plugin_name))
 
         # Fetch the plugin rowid, add it if missing.
         self.__cursor.execute(
@@ -1185,6 +1215,10 @@ class AuditSQLiteDB (BaseAuditDB):
     #----------------------------------------------------------------------
     @transactional
     def mark_stage_finished(self, identity, stage):
+        if type(identity) is not str:
+            raise TypeError("Expected string, got %s" % type(identity))
+        if type(stage) is not int:
+            raise TypeError("Expected integer, got %s" % type(stage))
 
         # Get the previous value of the last completed stage for this data.
         self.__cursor.execute(
@@ -1193,7 +1227,7 @@ class AuditSQLiteDB (BaseAuditDB):
             )
         row = self.__cursor.fetchone()
         if row:
-            prev_stage = row[0]
+            prev_stage = int(row[0])
         else:
             prev_stage = 0
 
@@ -1209,6 +1243,8 @@ class AuditSQLiteDB (BaseAuditDB):
     #----------------------------------------------------------------------
     @transactional
     def get_past_plugins(self, identity):
+        if type(identity) is not str:
+            raise TypeError("Expected string, got %s" % type(identity))
         self.__cursor.execute((
             "SELECT plugin.name FROM plugin, history"
             " WHERE history.plugin_id = plugin.rowid AND"
@@ -1216,19 +1252,21 @@ class AuditSQLiteDB (BaseAuditDB):
             (identity,))
         rows = self.__cursor.fetchall()
         if rows:
-            return { x[0] for x in rows }
+            return { str(x[0]) for x in rows }
         return set()
 
 
     #----------------------------------------------------------------------
     @transactional
     def get_pending_data(self, stage):
+        if type(stage) is not int:
+            raise TypeError("Expected integer, got %s" % type(stage))
         self.__cursor.execute(
             "SELECT identity FROM stages WHERE stage < ?;",
             (stage,))
         rows = self.__cursor.fetchall()
         if rows:
-            return { x[0] for x in rows }
+            return { str(x[0]) for x in rows }
         return set()
 
 
