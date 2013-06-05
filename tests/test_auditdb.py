@@ -287,7 +287,34 @@ def helper_auditdb_stress(n):
             os.unlink("fake_audit.db")
 
 
+def test_auditdb_dump():
+    disk = AuditDB("fake_audit", "sqlite://fake_audit.db")
+    try:
+
+        print "Testing the audit database dump..."
+        print "  -> Writing..."
+        for x in xrange(30):
+            d1 = Url("http://www.example.com/" + generate_random_string())
+            d2 = Text(generate_random_string())
+            d3 = UrlDisclosure(d1)
+            d1.add_resource(d2)
+            disk.add_data(d1)
+            disk.add_data(d2)
+            disk.add_data(d3)
+        print "  -> Dumping..."
+        disk.dump("auditdb.sql")
+
+    finally:
+        print "Cleaning up..."
+        try:
+            disk.close()
+            del disk
+        finally:
+            os.unlink("fake_audit.db")
+
+
 # Run all tests from the command line.
 if __name__ == "__main__":
+    test_auditdb_dump()
     test_auditdb_consistency()
     test_auditdb_stress()

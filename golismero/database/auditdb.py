@@ -1272,6 +1272,14 @@ class AuditSQLiteDB (BaseAuditDB):
 
     #----------------------------------------------------------------------
     @atomic
+    def dump(self, filename):
+        with open(filename, 'w') as f:
+            for line in self.__db.iterdump():
+                f.write(line + "\n")
+
+
+    #----------------------------------------------------------------------
+    @atomic
     def close(self):
         try:
             try:
