@@ -44,25 +44,11 @@ class TextReport(ReportPlugin):
 
     #----------------------------------------------------------------------
     def is_supported(self, output_file):
-        """
-        Determine if this plugin supports the requested file format.
-
-        :param output_file: Output file to generate.
-        :type output_file: str | None
-
-        :returns: bool - True if this plugin supports the format, False otherwise.
-        """
         return output_file and output_file.endswith(".txt")
 
 
     #----------------------------------------------------------------------
     def generate_report(self, output_file):
-        """
-        Run plugin and generate report.
-
-        :param output_file: Output file to generate.
-        :type output_file: str | None
-        """
 
         # Get access to the database API.
         db = Database()

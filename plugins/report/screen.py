@@ -47,25 +47,11 @@ class ScreenReport(ReportPlugin):
 
     #----------------------------------------------------------------------
     def is_supported(self, output_file):
-        """
-        Determine if this plugin supports the requested file format.
-
-        :param output_file: Output file to generate.
-        :type output_file: str | None
-
-        :returns: bool - True if this plugin supports the format, False otherwise.
-        """
         return not output_file
 
 
     #----------------------------------------------------------------------
     def generate_report(self, output_file):
-        """
-        Run plugin and generate report.
-
-        :param output_file: Output file to generate.
-        :type output_file: str | None
-        """
 
         #
         # Plugin vars
@@ -99,9 +85,11 @@ class ScreenReport(ReportPlugin):
 #
 #----------------------------------------------------------------------
 def common_get_resources(db, data_type=None, data_subtype=None):
-    """Get a list of resources as optimous as possible.
+    """
+    Get a list of resources.
 
-    :return: a resouce list.
+    :return: List of resources.
+    :rtype: list(Resource)
     """
     # Get each resource
     m_resource = None
@@ -119,7 +107,9 @@ def common_get_resources(db, data_type=None, data_subtype=None):
 
 
 def common_display_general_summary(database):
-    """Display the summary of scan"""
+    """
+    Display the general summary.
+    """
 
     # ----------------------------------------
     # Discovered resources
@@ -157,12 +147,11 @@ def common_display_general_summary(database):
     m_table.align = "l"
     print m_table
 
-    """Display information for one vuln"""
 
 #----------------------------------------------------------------------
 def common_get_table_without(main_cols = [], with_header=True, with_hrules=True):
     """
-    Get PrettyTable with params:
+    Get PrettyTable with params.
 
     :param main_cols: cols of header.
     :type main_cols: list
@@ -190,10 +179,9 @@ def common_get_table_without(main_cols = [], with_header=True, with_hrules=True)
 #
 #----------------------------------------------------------------------
 def general_display_only_vulns(db):
-    """"""
 
     if not isinstance(db, Database):
-        raise ValueError("Espected 'Database' type, got %s." % type(db))
+        raise ValueError("Expected Database, got %s" % type(db))
 
     # ----------------------------------------
     # General summary
@@ -208,39 +196,35 @@ def general_display_only_vulns(db):
     print "+%s+" % ("-" * (len("Vulnerabilities") + 3))
     print
 
-
     common_get_resources(db, data_type=Data.TYPE_VULNERABILITY)
-
 
 
 #----------------------------------------------------------------------
 def general_display_by_resource(db):
     """
-This function display the results like this:
+    This function displays the results like this:
 
->>>
-[ 1 ] www.website.com/Param1=Value1&Param2=Value2
-      +-----------------+
-      | Vulnerabilities |
-      +------------------+-----------------------------+
-      |   Vuln name:     |        Url suspicious       |
-      +------------------+-----------------------------+
-      |       URL:       | http://website.com/admin    |
-      | Suspicius text:  |            admin            |
-      +------------------+-----------------------------+
-[ 2 ] www.website.com/contact/
-[ 3 ] www.website.com/Param1
+    >>>
+    [ 1 ] www.website.com/Param1=Value1&Param2=Value2
+          +-----------------+
+          | Vulnerabilities |
+          +------------------+-----------------------------+
+          |   Vuln name:     |        Url suspicious       |
+          +------------------+-----------------------------+
+          |       URL:       | http://website.com/admin    |
+          | Suspicius text:  |            admin            |
+          +------------------+-----------------------------+
+    [ 2 ] www.website.com/contact/
+    [ 3 ] www.website.com/Param1
     """
 
-
     if not isinstance(db, Database):
-        raise ValueError("Espected 'Database' type, got %s." % type(db))
+        raise ValueError("Expected Database, got %s" % type(db))
 
     # ----------------------------------------
     # General summary
     # ----------------------------------------
     common_display_general_summary(db)
-
 
     # ----------------------------------------
     # Get the resource list
@@ -255,15 +239,15 @@ This function display the results like this:
         x(db)
 
 
-
-
 #----------------------------------------------------------------------
 #
 # Concrete displayers each type of resource
 #
 #----------------------------------------------------------------------
 def concrete_display_web_resources(database):
-    """Display the results of web analysis"""
+    """
+    Display the results of web analysis.
+    """
 
     # Get resources URL resources
     resource = common_get_resources(database, Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
@@ -331,13 +315,13 @@ def concrete_display_web_resources(database):
     print m_table
 
 
-
-
 RESOURCE_DISPLAYER = {
     # Web related: URL + Base_URL
     Resource.RESOURCE_URL          : concrete_display_web_resources,
     Resource.RESOURCE_BASE_URL     : concrete_display_web_resources
 }
+
+
 #----------------------------------------------------------------------
 #
 # Concrete vulnerability displayers
@@ -346,7 +330,10 @@ RESOURCE_DISPLAYER = {
 #
 #----------------------------------------------------------------------
 def vuln_genereral_displayer(vulns):
-    """This functions is the responsible to display the vulns"""
+    """
+    Displays the vulnerabilities.
+    """
+
     if not vulns:
         return
 
@@ -374,17 +361,20 @@ def vuln_genereral_displayer(vulns):
             print "Function to display '%s' function are not available" % l_vuln_name
             continue
 
+
 #----------------------------------------------------------------------
 def vuln_display_url_suspicious(vuln, table):
     """Diplay the vuln: URL Suspicious"""
     table.add_row(["URL:", colorize_substring(vuln.url.url, vuln.substring, "red")])
     table.add_row(["Suspicius text: ", colorize(vuln.substring, "red")])
 
+
 #----------------------------------------------------------------------
 def vuln_display_url_disclosure(vuln, table):
     """Diplay the vuln: URL Disclosure"""
     table.add_row(["URL:", colorize_substring(vuln.url.url, vuln.discovered, "red")])
     table.add_row(["Path discovered: ", colorize(vuln.discovered, "red")])
+
 
 #----------------------------------------------------------------------
 def vuln_display_default_error_page(vuln, table):
@@ -394,9 +384,6 @@ def vuln_display_default_error_page(vuln, table):
     table.add_row(["Default error page for server: ", colorize(vuln.server_name, "red")])
 
 
-#
-# Vulneravility functions
-#
 VULN_DISPLAYER = {
     'url_suspicious'          : vuln_display_url_suspicious,
     'url_disclosure'          : vuln_display_url_disclosure,
