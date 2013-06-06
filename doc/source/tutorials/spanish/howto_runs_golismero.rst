@@ -1,2 +1,0 @@
-¿Cómo funciona GoLismero?
-=========================
