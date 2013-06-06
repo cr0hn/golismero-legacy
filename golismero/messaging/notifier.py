@@ -102,24 +102,51 @@ class Notifier (object):
 
         # Get the info types accepted by this plugin.
         m_message_types = plugin.get_accepted_info()
+        m_message_types = self.__filter_accepted_info(m_message_types)
 
         # Special value 'None' means all information types.
         if m_message_types is None:
             self._notification_info_all.append(name)
 
-        # Otherwise, it's a list of information types.
+        # Otherwise, it's a set of data subtype constants.
         else:
 
-            # Remove duplicates.
-            m_message_types = set(m_message_types)
-
-            # Register the plugin for each accepted info type.
+            # Register the plugin for each accepted type.
             for l_type in m_message_types:
                 self._notification_info_map[l_type].append(name)
 
         # UI and Global plugins can receive control messages.
         if plugin.PLUGIN_TYPE in (Plugin.PLUGIN_TYPE_UI, Plugin.PLUGIN_TYPE_UI):
             self._notification_msg_list.append(plugin)
+
+
+    #----------------------------------------------------------------------
+    def __filter_accepted_info(self, accepted_info):
+        """
+        Process the return value from Plugin.get_accepted_info().
+
+        :param accepted_info: Return value from Plugin.get_accepted_info().
+        :type accepted_info: list(class | int) | None
+
+        :returns: Set of data subtype constants.
+        :rtype: set(int)
+        """
+        if accepted_info is not None:
+            filtered_info = set()
+            for item in accepted_info:
+                if item is None:
+                    filtered_info = None
+                    break
+                if type(item) not in (int, long):
+                    if item.data_type == Data.TYPE_INFORMATION:
+                        item = item.information_type
+                    elif item.data_type == Data.TYPE_RESOURCE:
+                        item = item.resource_type
+                    elif item.data_type == Data.TYPE_VULNERABILITY:
+                        item = item.vulnerability_type
+                filtered_info.add(item)
+            return filtered_info
+        return None
 
 
     #----------------------------------------------------------------------

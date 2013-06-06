@@ -45,26 +45,12 @@ class SuspiciousURLPlugin(TestingPlugin):
 
 
     #----------------------------------------------------------------------
-    def check_input_params(self, inputParams):
-        pass
-
-
-    #----------------------------------------------------------------------
-    def display_help(self):
-        # TODO: this could default to the description found in the metadata.
-        return self.__doc__
-
-
-    #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url.RESOURCE_URL, BaseUrl.RESOURCE_BASE_URL]
+        return [Url, BaseUrl]
 
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-
-        if not isinstance(info, Url) and not isinstance(info, BaseUrl):
-            raise TypeError("Expected Url or BaseUrl, got %s instead" % type(info))
 
         m_url = info.url
 
@@ -72,11 +58,11 @@ class SuspiciousURLPlugin(TestingPlugin):
         if not is_in_scope(m_url):
             return
 
-        Logger.log_more_verbose("Default error page: Starting plugin")
+        #Logger.log_more_verbose("Default error page: Starting plugin")
 
         a = main_default_error_pages(info)
 
-        Logger.log_more_verbose("Default error page: Ending plugin")
+        #Logger.log_more_verbose("Default error page: Ending plugin")
 
         return a
 

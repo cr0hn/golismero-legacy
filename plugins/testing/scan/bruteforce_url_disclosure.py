@@ -36,6 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #   https://twitter.com/capi_x
 
 from golismero.api.config import Config
+from golismero.api.data.resource import Resource
 from golismero.api.data.resource.url import Url
 from golismero.api.data.resource.baseurl import BaseUrl
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
@@ -127,19 +128,8 @@ class UrlDisclosureBruteforcer(TestingPlugin):
 
 
     #----------------------------------------------------------------------
-    def check_input_params(self, inputParams):
-        pass
-
-
-    #----------------------------------------------------------------------
-    def display_help(self):
-        # TODO: this could default to the description found in the metadata.
-        return self.__doc__
-
-
-    #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url.RESOURCE_URL, BaseUrl.RESOURCE_BASE_URL]
+        return [Url, BaseUrl]
 
 
     #----------------------------------------------------------------------
@@ -148,34 +138,13 @@ class UrlDisclosureBruteforcer(TestingPlugin):
         # XXX DEBUG
         #return
 
-        m_input_type = None
-        if not isinstance(info, Url):
-            m_input_type = "url"
-        elif not isinstance(info, BaseUrl):
-            m_input_type = "base"
-        else:
-            raise TypeError("Expected Url, got %s instead" % type(info))
+        Logger.log_verbose("Bruteforcer - Start to process URL: '%s'" % str(info))
 
-
-        # Check if URL is in scope
-        if not is_in_scope(info.url):
-            return
-
-        return main_url_bruteforcer(info, m_input_type)
-
-
-#----------------------------------------------------------------------
-def main_url_bruteforcer(info, input_type):
-    """Select the method to use depending on the input type."""
-
-    Logger.log_verbose("Bruteforcer - Start to process URL: '%s'" % str(info))
-
-    # Run concrete method
-    if input_type == "url":
-        return process_relative_url(info)
-    elif input_type == "base":
-        return process_base_url(info)
-
+        if info.resource_type == Resource.RESOURCE_URL:
+            return process_url(info)
+        if info.resource_type == Resource.RESOURCE_BASE_URL:
+            return process_base_url(info)
+        raise TypeError()
 
 
 #----------------------------------------------------------------------
@@ -184,7 +153,9 @@ def main_url_bruteforcer(info, input_type):
 #
 #----------------------------------------------------------------------
 def process_base_url(info):
-    """Rereive and process a Base URL"""
+    """
+    Receive and process a Base URL.
+    """
 
 
     # Parse original URL
@@ -226,8 +197,10 @@ def process_base_url(info):
 
 
 #----------------------------------------------------------------------
-def process_relative_url(info):
-    """Receive and process an Url"""
+def process_url(info):
+    """
+    Receive and process an URL.
+    """
 
     # Parse original URL
     m_url_parts = info.parsed_url
@@ -269,7 +242,7 @@ def process_relative_url(info):
     # if URL looks like don't process suffixes:
     # - www.site.com/index.php
     #
-    if not is_folder_url(m_url_parts) and 1==2:
+    if not is_folder_url(m_url_parts):
         #
         #   1 - Suffixes
         m_urls_to_test["suffixes"]        = make_url_with_suffixes(m_wordlist, m_url_parts)

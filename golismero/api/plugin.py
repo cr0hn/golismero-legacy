@@ -60,7 +60,7 @@ class Plugin (object):
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
         """
-        Check input parameters passed by the user.
+        Optional method to check input parameters passed by the user.
 
         Parameters will be passed as an instance of 'AuditConfig'.
 
@@ -69,19 +69,32 @@ class Plugin (object):
 
         :param inputParams: input parameters to check
         :type inputParams: AuditConfig
+
+        :raises Exception: The plugin detected a configuration error.
         """
-        raise NotImplementedError("Plugins must implement this method!")
+        pass
 
 
     #----------------------------------------------------------------------
     def display_help(self):
         """
+        Optional method to display the help message for this plugin.
+
+        If not overridden, it defaults to returning the Description
+        setting in the plugin descriptor file, or the class docstring
+        if the Description setting is missing.
+
         :returns: The help message for this plugin.
         :rtype: str
         """
         text = Config.plugin_info.description
         if not text:
-            raise NotImplementedError("Plugins must implement this method!")
+            text = getattr(self, "__doc__", None)
+            if not text:
+                raise NotImplementedError(
+                    "Plugins that don't define a description in their"
+                    " config file nor their class documentation must"
+                    " implement the display_help() method")
         return text
 
 

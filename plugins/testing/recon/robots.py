@@ -46,25 +46,12 @@ class Robots(TestingPlugin):
 
 
     #----------------------------------------------------------------------
-    def check_input_params(self, inputParams):
-        pass
-
-
-    #----------------------------------------------------------------------
-    def display_help(self):
-        # TODO: this could default to the description found in the metadata.
-        return self.__doc__
-
-
-    #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [BaseUrl.RESOURCE_BASE_URL]
+        return [BaseUrl]
 
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-        if not isinstance(info, BaseUrl):
-            raise TypeError("Expected Url, got %s instead" % type(info))
 
         # Get the url of hosts
         m_url = info.url

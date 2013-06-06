@@ -93,8 +93,12 @@ def process_default_error_page(vuln):
 #----------------------------------------------------------------------
 class ConsoleUIPlugin(UIPlugin):
     """
-    Console UI plugin.
+    This is the console UI plugin. It provides a simple interface
+    to work with GoLismero from the command line.
+
+    This plugin has no options.
     """
+
 
     # Processors functions
     funcs = {
@@ -112,40 +116,12 @@ class ConsoleUIPlugin(UIPlugin):
 
 
     #----------------------------------------------------------------------
-    def display_help(self):
-        #
-        # Put here extended information, and usage details, to display when
-        # a user run progan with "--plugin-info" option.
-        #
-        # Example:
-        #
-        # info =
-        # """
-        #    This text is will displayed when user need to see additional
-        #    information about the plugin, and usage details.
-        #
-        #    Usage: This plugin need 'x' parameter to run... etc
-        # """
-        # return info
-        #
-        return """
-            This is the console UI plugin. It provides a simple interface
-            to work with GoLismero from the command line.
-
-            This plugin has no options.
-        """
-
-
-    #----------------------------------------------------------------------
-    def check_input_params(self, inputParams):
-        pass
+    def get_accepted_info(self):
+        return None
 
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-        #
-        # Display in console
-        #
 
         # Ignore already seen data
         if info.identity in self.already_seen_info:
@@ -175,10 +151,6 @@ class ConsoleUIPlugin(UIPlugin):
 
     #----------------------------------------------------------------------
     def recv_msg(self, message):
-        #
-        # Put here the code you want to execute when a control message is received.
-        #
-
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
@@ -226,27 +198,3 @@ class ConsoleUIPlugin(UIPlugin):
                             text = "[!] Warning: " + str(formatted)
                         text = colorize(text, 'low')
                         Console.display_error(text)
-
-
-    #----------------------------------------------------------------------
-    def get_accepted_info(self):
-        #
-        # Put here the list of the type of info you want to receive.
-        #
-        # To build the list, you will need to use the constants of
-        # the data package.
-        #
-        # Example:
-        #
-        # Receive XSS vulnerability and URLs, write this:
-        #
-        # 1 - Include libraries, at top of this file:
-        #
-        #     from golismero.api.data.resource import Resource
-        #     from golismero.api.data.resource.url import Url
-        #
-        # 2 - Make the list with the info we want receive:
-        #
-        #     return list(Resource.RESOURCE_URL)
-        #
-        return None

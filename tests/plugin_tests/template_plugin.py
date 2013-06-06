@@ -5,8 +5,7 @@ __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
-  Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
-  Mario Vilas | mvilas<@>gmail.com
+  [AUTHOR OF PLUGIN]
 
 Golismero project site: https://github.com/cr0hn/golismero/
 Golismero project mail: golismero.project<@>gmail.com
@@ -27,81 +26,85 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 #
-# Uncomment the includes you need
+# Uncomment the imports you need...
 #
-
-# CORE
+# PLUGIN API:
 #
 # - Access to the plugin configuration:
 # from golismero.api.config import Config
 #
-# - Access to te loggin system
+# - Log writer:
 # from golismero.api.logger import Logger
-
-# TYPES:
 #
-# - Access to the resources types:
+# DATA MODEL:
+#
+# - Information types:
+# from golismero.api.data.information.html import HTML
+# from golismero.api.data.information.text import Text
+# from golismero.api.data.information.binary import Binary
+#
+# - Resource types:
 # from golismero.api.data.resource.url import Url
 # from golismero.api.data.resource.baseurl import BaseUrl
+# from golismero.api.data.resource.domain import Domain
 #
-# - Access to the vulnerability types:
+# - Vulnerability types:
+# from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 # from golismero.api.data.vulnerability.information_disclosure.url_suspicious import SuspiciousURL
-
-
-# GOLISMERO API:
 #
-# - Access to the network framework:
+# OTHER API FUNCTIONS:
+#
+# - Network connections and protocols:
 # from golismero.api.net.protocol import NetworkAPI
 #
-# - Access to the web utils:
+# - Web helper functions.
 # from golismero.api.net.web_utils import is_method_allowed, fix_url, check_auth, get_auth_obj, detect_auth_method, is_in_scope, generate_error_page_url, DecomposedURL, HTMLElement, HTMLParser
 #
-# - Text utils:
+# - Text helper functions:
 # from golismero.api.text.text_utils import generate_random_string, split_first
 #
-# - Text analyzer utils:
+# - Differential analyzer:
 # from golismero.api.text.matching_analyzer import get_matching_level
 #
-# - Wordlists API:
+# - Wordlists (for bruteforcing):
 # from golismero.api.text.wordlist_api import WordListAPI
-
-
-# THIRDPARTY_LIBS
-#
-# - LRU cache for values returned in functions
-# from repoze.lru import lru_cache
 #
 
 
 from golismero.api.plugin import TestingPlugin
 
+
+#----------------------------------------------------------------------
 class TemplatePlugin(TestingPlugin):
-    """
-    DESCRIPTION FOR THE NEW PLUGIN
-    """
 
 
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
+        #
+        # Here you can optionally check the configuration, and raise an
+        # exception if you find an error that won't let this plugin work.
+        #
+        # Example:
+        #
+        # if not Config.plugin_config.has_key("My_Important_Setting"):
+        #     raise Exception("Missing configuration!")
+        # if not inputParams.cookie:
+        #     raise Exception("I want my cookie!")
+        #
         pass
-
-
-    #----------------------------------------------------------------------
-    def display_help(self):
-        # TODO: this could default to the description found in the metadata.
-        return self.__doc__
 
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
         #
-        # HERE YOU MUST ADD THE DATA TYPES YOU WANT TO RECEIVE
+        # Here you must specify which data types
+        # does your plugin want to receive.
         #
         # Example:
         #
-        # return [Url.RESOURCE_URL, BaseUrl.RESOURCE_BASE_URL]]
+        # return [Url, BaseUrl]
         #
-        return []
+        return None  # Returning None causes all data to be received.
 
 
     #----------------------------------------------------------------------

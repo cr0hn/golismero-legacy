@@ -41,26 +41,12 @@ class SuspiciousURLPlugin(TestingPlugin):
 
 
     #----------------------------------------------------------------------
-    def check_input_params(self, inputParams):
-        pass
-
-
-    #----------------------------------------------------------------------
-    def display_help(self):
-        # TODO: this could default to the description found in the metadata.
-        return self.__doc__
-
-
-    #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url.RESOURCE_URL]
+        return [Url]
 
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-
-        if not isinstance(info, Url):
-            raise TypeError("Expected Url, got %s instead" % type(info))
 
         m_url = info.url
 

@@ -45,6 +45,7 @@ class ScreenReport(ReportPlugin):
     Plugin to display reports on screen.
     """
 
+
     #----------------------------------------------------------------------
     def is_supported(self, output_file):
         return not output_file
