@@ -77,7 +77,6 @@ from golismero.api.plugin import TestingPlugin
 #----------------------------------------------------------------------
 class TemplatePlugin(TestingPlugin):
 
-
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
         #
@@ -115,3 +114,4 @@ class TemplatePlugin(TestingPlugin):
         #
         #
         pass
+

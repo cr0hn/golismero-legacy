@@ -3,7 +3,7 @@ Name = Bruteforce URL discovery
 
 [Documentation]
 Description = Tries to discover URLs not linked anywhere in the page using a brute force approach.
-Author = Daniel Garcia Garcia (cr0hn)
+Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/cr0hn/golismero/
 Copyright = Copyright (C) 2011-2013 GoLismero Project

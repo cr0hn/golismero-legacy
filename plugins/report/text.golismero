@@ -3,7 +3,7 @@ Name = Text Report
 
 [Documentation]
 Description = Plugin to generate text reports
-Author = Daniel Garcia Garcia (cr0hn)
+Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/cr0hn/golismero/
 Copyright = Copyright (C) 2011-2013 GoLismero Project

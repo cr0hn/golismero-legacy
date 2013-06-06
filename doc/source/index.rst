@@ -12,7 +12,6 @@ You can follow these links to read the documentation:
 .. toctree::
    :maxdepth: 2
 
-   tutorials
    api
    develop
    plugins
