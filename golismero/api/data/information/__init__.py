@@ -51,8 +51,8 @@ class Information(Data):
     INFORMATION_UNKNOWN = 0  # Not a real value!
 
     # Data
-    INFORMATION_HTTP_REQUEST  = 1000  # Raw HTTP request
-    INFORMATION_HTTP_RESPONSE = 1001  # Raw HTTP response
+    INFORMATION_HTTP_REQUEST  = 1000  # HTTP request
+    INFORMATION_HTTP_RESPONSE = 1001  # HTTP response
     INFORMATION_HTML          = 1002  # HTML source code
     INFORMATION_PLAIN_TEXT    = 1003  # Text file
     INFORMATION_BINARY        = 1004  # Binary file of unknown type
