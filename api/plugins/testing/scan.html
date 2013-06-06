@@ -1,0 +1,323 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Scan plugins &mdash; GoLismero 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="GoLismero 2.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Testing plugins" href="../testing.html" />
+    <link rel="next" title="Report plugins" href="../report.html" />
+    <link rel="prev" title="Recon plugins" href="recon.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../report.html" title="Report plugins"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="recon.html" title="Recon plugins"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../plugins.html" >Plugins list</a> &raquo;</li>
+          <li><a href="../testing.html" accesskey="U">Testing plugins</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="scan-plugins">
+<h1>Scan plugins<a class="headerlink" href="#scan-plugins" title="Permalink to this headline">¶</a></h1>
+<p>This plugins are in the <strong>scan</strong> step.</p>
+<div class="section" id="module-plugins.testing.scan.bruteforce_url_disclosure">
+<span id="bruteforce-urls-plugin"></span><h2>Bruteforce Urls plugin<a class="headerlink" href="#module-plugins.testing.scan.bruteforce_url_disclosure" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.ParallelBruter">
+<em class="property">class </em><tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">ParallelBruter</tt><big>(</big><em>wordlist</em>, <em>results</em>, <em>net</em>, <em>method</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.ParallelBruter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Worker threads for the bruteforcer plugin.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.analyze_urls">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">analyze_urls</tt><big>(</big><em>info</em>, <em>urls_to_test</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.analyze_urls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Analyze a list of URL, tryining it its exits.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>info</strong> (<em>Url or BaseUrl</em>) &#8211; Resource that will be associated discovered URLs</li>
+<li><strong>urls_to_test</strong> (<em>dict(WORDLIST_NAME, list(URLs))</em>) &#8211; dicts with URLs</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">discovered resources and vulns</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">UrlDisclosure</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.get_http_method">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">get_http_method</tt><big>(</big><em>url</em>, <em>net_manager</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.get_http_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function determinates if the method HEAD is available. To do that, compare between two responses:
+- One with GET method
+- One with HEAD method</p>
+<p>If both are seem more than 90%, the response are the same and HEAD method are not allowed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.is_folder_url">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">is_folder_url</tt><big>(</big><em>url_parts</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.is_folder_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine if the given URL points to a folder or a file:</p>
+<p>if URL looks like:
+- www.site.com/
+- www.site.com</p>
+<p>then ==&gt; Return True</p>
+<p>if URL looks like:
+- www.site.com/index.php
+- www.site.com/index.php?id=1&amp;name=bb
+- www.site.com/index.php/id=1&amp;name=bb</p>
+<p>then ==&gt; Return False</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>url_parts</strong> (<em>DecomposedURL</em>) &#8211; Parsed URL to test.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bool &#8211; True if it&#8217;s a folder, False otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.load_wordlists">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">load_wordlists</tt><big>(</big><em>wordlists</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.load_wordlists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the with names pased as parameter.</p>
+<p>This function receives a list of names of wordlist, defined in plugin
+configuration file, and return a dict with instances of wordlists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>wordlists</strong> (<em>list</em>) &#8211; list with wordlists names</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A dict with wordlists</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.make_url_changing_extensions">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">make_url_changing_extensions</tt><big>(</big><em>wordlist</em>, <em>url_parts</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.make_url_changing_extensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an iterator of URLs with alternative file extensions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>wordlist</strong> (<em>WordList</em>) &#8211; Wordlist iterator.</li>
+<li><strong>url_parts</strong> (<em>DecomposedURL</em>) &#8211; Parsed URL to mutate.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.make_url_mutate_filename">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">make_url_mutate_filename</tt><big>(</big><em>url_parts</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.make_url_mutate_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an iterator of URLs with mutated filenames.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>url_parts</strong> (<em>DecomposedURL</em>) &#8211; Parsed URL to mutate.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.make_url_with_files_or_folder">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">make_url_with_files_or_folder</tt><big>(</big><em>wordlist</em>, <em>url_parts</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.make_url_with_files_or_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an iterator of URLs with guessed files and subfolders.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>wordlist</strong> (<em>WordList</em>) &#8211; Wordlist iterator.</li>
+<li><strong>url_parts</strong> (<em>DecomposedURL</em>) &#8211; Parsed URL to mutate.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.make_url_with_prefixes">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">make_url_with_prefixes</tt><big>(</big><em>wordlist</em>, <em>url_parts</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.make_url_with_prefixes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an iterator of URLs with prefixes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>wordlist</strong> (<em>WordList</em>) &#8211; Wordlist iterator.</li>
+<li><strong>url_parts</strong> (<em>DecomposedURL</em>) &#8211; Parsed URL to mutate.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">iterator with urls.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.make_url_with_suffixes">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">make_url_with_suffixes</tt><big>(</big><em>wordlist</em>, <em>url_parts</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.make_url_with_suffixes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an iterator of URLs with suffixes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>wordlist</strong> (<em>WordList</em>) &#8211; Wordlist iterator.</li>
+<li><strong>url_parts</strong> (<em>DecomposedURL</em>) &#8211; Parsed URL to mutate.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">iterator with urls.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.process_base_url">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">process_base_url</tt><big>(</big><em>info</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.process_base_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receive and process a Base URL.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plugins.testing.scan.bruteforce_url_disclosure.process_url">
+<tt class="descclassname">plugins.testing.scan.bruteforce_url_disclosure.</tt><tt class="descname">process_url</tt><big>(</big><em>info</em><big>)</big><a class="headerlink" href="#plugins.testing.scan.bruteforce_url_disclosure.process_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receive and process an URL.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Scan plugins</a><ul>
+<li><a class="reference internal" href="#module-plugins.testing.scan.bruteforce_url_disclosure">Bruteforce Urls plugin</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="recon.html"
+                        title="previous chapter">Recon plugins</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../report.html"
+                        title="next chapter">Report plugins</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/plugins/testing/scan.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../report.html" title="Report plugins"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="recon.html" title="Recon plugins"
+             >previous</a> |</li>
+        <li><a href="../../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../plugins.html" >Plugins list</a> &raquo;</li>
+          <li><a href="../testing.html" >Testing plugins</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, GoLismero Project.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

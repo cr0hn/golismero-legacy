@@ -1,0 +1,681 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>API &mdash; GoLismero 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="GoLismero 2.0.1 documentation" href="index.html" />
+    <link rel="next" title="Data API" href="api/data.html" />
+    <link rel="prev" title="Documentation available" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api/data.html" title="Data API"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Documentation available"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">GoLismero 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="api">
+<h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<p>Content:</p>
+<div class="section" id="data-structures">
+<h2>Data structures<a class="headerlink" href="#data-structures" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/data.html">Data API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/data/information.html">Information structures details</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/data/information.html#module-golismero.api.data.information.text">Text type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/data/information.html#module-golismero.api.data.information.binary">Binary type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/data/information.html#module-golismero.api.data.information.html">HTML type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/data/information.html#module-golismero.api.data.information.webserver_fingerprint">Fingerprint type</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/data/resource.html">Resources structures details</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/data/resource.html#module-golismero.api.data.resource.url">Url type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/data/resource.html#module-golismero.api.data.resource.baseurl">Base Url type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/data/resource.html#module-golismero.api.data.resource.domain">Domain type</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/data/vulnerabilities.html">Vulnerabilities structures details</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/data/vulnerabilities.html#vulnerability-types">vulnerability types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/data/vulnerabilities/information_disclosure.html">Information disclosure</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="api/data/vulnerabilities/information_disclosure.html#module-golismero.api.data.vulnerability.information_disclosure.default_error_page">Default error page</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/data/vulnerabilities/information_disclosure.html#module-golismero.api.data.vulnerability.information_disclosure.url_disclosure">Url disclosure</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/data/vulnerabilities/information_disclosure.html#module-golismero.api.data.vulnerability.information_disclosure.url_suspicious">Url suspicious</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/data/vulnerabilities.html#generic-vulnerability-interfaces">Generic vulnerability interfaces</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/data/vulnerabilities.html#vulnerability-interface">Vulnerability interface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/data/vulnerabilities.html#vulnerability-sub-interface">Vulnerability sub-interface</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/data.html#generic-base-types">Generic base types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/data.html#the-base-class-data">The base class: Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/data.html#sub-type-information">Sub-type: Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/data.html#sub-type-resource">Sub-type: Resource</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/data.html#sub-type-vulnerability">Sub-type: Vulnerability</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="networking-api">
+<h2>Networking API<a class="headerlink" href="#networking-api" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/net.html">Networking API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/net.html#making-web-connections">Making web connections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/net.html#structures-to-handle-http">Structures to handle HTTP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/net.html#links-utilities">Links utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/net.html#module-golismero.api.net.web_utils">Utils for web</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="text-processing-api">
+<h2>Text processing API<a class="headerlink" href="#text-processing-api" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/text.html">Text processsing API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/text.html#module-golismero.api.text.matching_analyzer">matching_analyzer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/text.html#module-golismero.api.text.text_utils">Text utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/text.html#module-golismero.api.text.wordlist_api">Wordlist utils</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="module-golismero.api.logger">
+<span id="logger"></span><h2>Logger<a class="headerlink" href="#module-golismero.api.logger" title="Permalink to this headline">¶</a></h2>
+<p>Remote logging API.</p>
+<dl class="class">
+<dt id="golismero.api.logger.Logger">
+<em class="property">class </em><tt class="descclassname">golismero.api.logger.</tt><tt class="descname">Logger</tt><a class="headerlink" href="#golismero.api.logger.Logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Logging API for plugins.</p>
+<p>Plugins should use this class instead of a simple <cite>print</cite>,
+otherwise messages will not be logged by GoLismero.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s">&quot;My log message with information&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Logger</span><span class="o">.</span><span class="n">log_error</span><span class="p">(</span><span class="s">&quot;My log with error information&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Logger</span><span class="o">.</span><span class="n">log_verbose</span><span class="p">(</span><span class="s">&quot;Log message to display only when verbose mode is enabled&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="classmethod">
+<dt id="golismero.api.logger.Logger.log">
+<em class="property">classmethod </em><tt class="descname">log</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#golismero.api.logger.Logger.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a log message of STANDARD level.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; Message to write.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="golismero.api.logger.Logger.log_error">
+<em class="property">classmethod </em><tt class="descname">log_error</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#golismero.api.logger.Logger.log_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send an error log message of STANDARD level.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; Message to write.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="golismero.api.logger.Logger.log_error_more_verbose">
+<em class="property">classmethod </em><tt class="descname">log_error_more_verbose</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#golismero.api.logger.Logger.log_error_more_verbose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send an error log message of MORE_VERBOSE level.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; Message to write.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="golismero.api.logger.Logger.log_error_verbose">
+<em class="property">classmethod </em><tt class="descname">log_error_verbose</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#golismero.api.logger.Logger.log_error_verbose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send an error log message of VERBOSE level.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; Message to write.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="golismero.api.logger.Logger.log_more_verbose">
+<em class="property">classmethod </em><tt class="descname">log_more_verbose</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#golismero.api.logger.Logger.log_more_verbose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a log message of MORE_VERBOSE level.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; Message to write.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="golismero.api.logger.Logger.log_verbose">
+<em class="property">classmethod </em><tt class="descname">log_verbose</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#golismero.api.logger.Logger.log_verbose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a log message of VERBOSE level.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>str</em>) &#8211; Message to write.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-golismero.api.config">
+<span id="configuration-manager"></span><h2>Configuration manager<a class="headerlink" href="#module-golismero.api.config" title="Permalink to this headline">¶</a></h2>
+<p>Plugin configuration API.</p>
+<dl class="class">
+<dt id="golismero.api.config._Config">
+<em class="property">class </em><tt class="descclassname">golismero.api.config.</tt><tt class="descname">_Config</tt><a class="headerlink" href="#golismero.api.config._Config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">golismero.common.Singleton</span></tt></p>
+<p>Current plugin and audit configuration.</p>
+<p>Whenever a plugin accesses this object it will receive its own
+configuration, including the current audit&#8217;s name and settings.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.config</span> <span class="kn">import</span> <span class="n">Config</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Config</span><span class="o">.</span><span class="n">plugin_name</span>
+<span class="go">&#39;my_plugin_name&#39;</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="golismero.api.config._Config._context">
+<tt class="descname">_context</tt><a class="headerlink" href="#golismero.api.config._Config._context" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">PluginContext</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.config._Config.audit_config">
+<tt class="descname">audit_config</tt><a class="headerlink" href="#golismero.api.config._Config.audit_config" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Parameters of the audit.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">AuditConfig</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.config._Config.audit_name">
+<tt class="descname">audit_name</tt><a class="headerlink" href="#golismero.api.config._Config.audit_name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Name of the audit.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.config._Config.plugin_class">
+<tt class="descname">plugin_class</tt><a class="headerlink" href="#golismero.api.config._Config.plugin_class" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Class name of the plugin.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.config._Config.plugin_config">
+<tt class="descname">plugin_config</tt><a class="headerlink" href="#golismero.api.config._Config.plugin_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plugin configuration.</p>
+<p>Here you will find all settings under the [Configuration]
+section in the plugin configuration file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict(str -&gt; str)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.config._Config.plugin_extra_config">
+<tt class="descname">plugin_extra_config</tt><a class="headerlink" href="#golismero.api.config._Config.plugin_extra_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plugin extra configuration.</p>
+<p>Here you will find all information in the plugin
+configuration file outside the following sections:</p>
+<ul class="simple">
+<li>[Core]</li>
+<li>[Documentation]</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.config</span> <span class="kn">import</span> <span class="n">Config</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">open</span><span class="p">(</span><span class="s">&quot;suspicious_url.golismero&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="go">[Core]</span>
+<span class="go">Name = Suspicious URL</span>
+<span class="go">Module = suspicious_url.py</span>
+<span class="go">Stage = Recon</span>
+<span class="go">[Documentation]</span>
+<span class="go">Description = Find suspicious words in URLs</span>
+<span class="go">Author = Daniel Garcia Garcia (cr0hn)</span>
+<span class="go">Version = 0.1</span>
+<span class="go">Website = https://github.com/cr0hn/golismero/</span>
+<span class="go">Copyright = Copyright (C) 2011-2013 GoLismero Project</span>
+<span class="go">License = GNU Public License</span>
+<span class="go">[Wordlist_middle]</span>
+<span class="go">wordlist = golismero/warning_url.txt</span>
+<span class="go">[Wordlist_extensions]</span>
+<span class="go">wordlist = fuzzdb/Discovery/FilenameBruteforce/Extensions.Backup.fuzz.txt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Config</span><span class="o">.</span><span class="n">plugin_extra_config</span><span class="p">[</span><span class="s">&#39;Wordlist_middle&#39;</span><span class="p">][</span><span class="s">&#39;wordlist&#39;</span><span class="p">]</span>
+<span class="go">&#39;golismero/warning_url.txt&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Config</span><span class="o">.</span><span class="n">plugin_extra_config</span><span class="p">[</span><span class="s">&#39;Wordlist_extensions&#39;</span><span class="p">][</span><span class="s">&#39;wordlist&#39;</span><span class="p">]</span>
+<span class="go">&#39;fuzzdb/Discovery/FilenameBruteforce/Extensions.Backup.fuzz.txt&#39;</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Map of configuration file sections to their settings and values.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict(str -&gt; dict(str -&gt; str))</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.config._Config.plugin_info">
+<tt class="descname">plugin_info</tt><a class="headerlink" href="#golismero.api.config._Config.plugin_info" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Plugin information.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">PluginInfo</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.config._Config.plugin_module">
+<tt class="descname">plugin_module</tt><a class="headerlink" href="#golismero.api.config._Config.plugin_module" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Module where the plugin was loaded from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.config._Config.plugin_name">
+<tt class="descname">plugin_name</tt><a class="headerlink" href="#golismero.api.config._Config.plugin_name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Plugin name.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="plugins-interfaces">
+<h2>Plugins interfaces<a class="headerlink" href="#plugins-interfaces" title="Permalink to this headline">¶</a></h2>
+<p>There is a general plugin interface. All sub classes implements and inherit their methods.</p>
+<span class="target" id="module-golismero.api.plugin"></span><p>This module contains the base classes for GoLismero plugins.</p>
+<p>To write your own plugin, you must derive from one of the following base classes:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#golismero.api.plugin.TestingPlugin" title="golismero.api.plugin.TestingPlugin"><tt class="xref py py-class docutils literal"><span class="pre">TestingPlugin</span></tt></a>: To write a testing/hacking plugin.</li>
+<li><a class="reference internal" href="#golismero.api.plugin.UIPlugin" title="golismero.api.plugin.UIPlugin"><tt class="xref py py-class docutils literal"><span class="pre">UIPlugin</span></tt></a>: To write a User Interface plugin.</li>
+<li><a class="reference internal" href="#golismero.api.plugin.ReportPlugin" title="golismero.api.plugin.ReportPlugin"><tt class="xref py py-class docutils literal"><span class="pre">ReportPlugin</span></tt></a>: to write a plugin to report the results.</li>
+</ul>
+<dl class="class">
+<dt id="golismero.api.plugin.Plugin">
+<em class="property">class </em><tt class="descclassname">golismero.api.plugin.</tt><tt class="descname">Plugin</tt><a class="headerlink" href="#golismero.api.plugin.Plugin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Base class for all plugins.</p>
+<dl class="method">
+<dt id="golismero.api.plugin.Plugin.check_input_params">
+<tt class="descname">check_input_params</tt><big>(</big><em>inputParams</em><big>)</big><a class="headerlink" href="#golismero.api.plugin.Plugin.check_input_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optional method to check input parameters passed by the user.</p>
+<p>Parameters will be passed as an instance of &#8216;AuditConfig&#8217;.</p>
+<p>If any parameter is not correct o there is an error, an
+exception must be raised.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>inputParams</strong> (<em>AuditConfig</em>) &#8211; input parameters to check</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises Exception:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">The plugin detected a configuration error.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.plugin.Plugin.display_help">
+<tt class="descname">display_help</tt><big>(</big><big>)</big><a class="headerlink" href="#golismero.api.plugin.Plugin.display_help" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optional method to display the help message for this plugin.</p>
+<p>If not overridden, it defaults to returning the Description
+setting in the plugin descriptor file, or the class docstring
+if the Description setting is missing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The help message for this plugin.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="golismero.api.plugin.InformationPlugin">
+<em class="property">class </em><tt class="descclassname">golismero.api.plugin.</tt><tt class="descname">InformationPlugin</tt><a class="headerlink" href="#golismero.api.plugin.InformationPlugin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#golismero.api.plugin.Plugin" title="golismero.api.plugin.Plugin"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.plugin.Plugin</span></tt></a></p>
+<p>Information plugins are the ones that receive information, and may also
+send it back. Thus they can form feedback loops among each other.</p>
+<dl class="method">
+<dt id="golismero.api.plugin.InformationPlugin.get_accepted_info">
+<tt class="descname">get_accepted_info</tt><big>(</big><big>)</big><a class="headerlink" href="#golismero.api.plugin.InformationPlugin.get_accepted_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of constants describing
+which data types are accepted by the recv_info method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Data type constants.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.plugin.InformationPlugin.recv_info">
+<tt class="descname">recv_info</tt><big>(</big><em>info</em><big>)</big><a class="headerlink" href="#golismero.api.plugin.InformationPlugin.recv_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback method to receive data to be processed.</p>
+<p>This is the most important method of a plugin.
+Here&#8217;s where most of the logic resides.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>info</strong> (<em>Data</em>) &#8211; Data to be processed.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="golismero.api.plugin.TestingPlugin">
+<em class="property">class </em><tt class="descclassname">golismero.api.plugin.</tt><tt class="descname">TestingPlugin</tt><a class="headerlink" href="#golismero.api.plugin.TestingPlugin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#golismero.api.plugin.InformationPlugin" title="golismero.api.plugin.InformationPlugin"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.plugin.InformationPlugin</span></tt></a></p>
+<p>Testing plugins are the ones that perform the security tests.</p>
+<p>This is the base class for all Testing plugins.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="golismero.api.plugin.UIPlugin">
+<em class="property">class </em><tt class="descclassname">golismero.api.plugin.</tt><tt class="descname">UIPlugin</tt><a class="headerlink" href="#golismero.api.plugin.UIPlugin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#golismero.api.plugin.InformationPlugin" title="golismero.api.plugin.InformationPlugin"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.plugin.InformationPlugin</span></tt></a></p>
+<p>User Interface plugins control the way in which the user interacts with GoLismero.</p>
+<p>This is the base class for all UI plugins.</p>
+<dl class="method">
+<dt id="golismero.api.plugin.UIPlugin.recv_msg">
+<tt class="descname">recv_msg</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#golismero.api.plugin.UIPlugin.recv_msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback method to receive control messages to be processed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> (<em>Message</em>) &#8211; incoming message to process</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.plugin.UIPlugin.send_msg">
+<tt class="descname">send_msg</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#golismero.api.plugin.UIPlugin.send_msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plugins call this method to send messages back to GoLismero.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Do not override this method!</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="golismero.api.plugin.ReportPlugin">
+<em class="property">class </em><tt class="descclassname">golismero.api.plugin.</tt><tt class="descname">ReportPlugin</tt><a class="headerlink" href="#golismero.api.plugin.ReportPlugin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#golismero.api.plugin.Plugin" title="golismero.api.plugin.Plugin"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.plugin.Plugin</span></tt></a></p>
+<p>Report plugins control how results will be exported.</p>
+<p>This is the base class for all Report plugins.</p>
+<dl class="method">
+<dt id="golismero.api.plugin.ReportPlugin.generate_report">
+<tt class="descname">generate_report</tt><big>(</big><em>output_file</em><big>)</big><a class="headerlink" href="#golismero.api.plugin.ReportPlugin.generate_report" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run plugin and generate the report.</p>
+<p>This is the entry point for Report plugins,
+where most of the logic resides.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output_file</strong> (<em>str | None</em>) &#8211; Output file to generate.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.plugin.ReportPlugin.is_supported">
+<tt class="descname">is_supported</tt><big>(</big><em>output_file</em><big>)</big><a class="headerlink" href="#golismero.api.plugin.ReportPlugin.is_supported" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine if this plugin supports the requested file format.</p>
+<p>Tipically, here is where Report plugins examine the file extension.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output_file</strong> (<em>str | None</em>) &#8211; Output file to generate.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if this plugin supports the format, False otherwise.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">API</a><ul>
+<li><a class="reference internal" href="#data-structures">Data structures</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#networking-api">Networking API</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#text-processing-api">Text processing API</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-golismero.api.logger">Logger</a></li>
+<li><a class="reference internal" href="#module-golismero.api.config">Configuration manager</a></li>
+<li><a class="reference internal" href="#plugins-interfaces">Plugins interfaces</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Documentation available</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api/data.html"
+                        title="next chapter">Data API</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/api.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api/data.html" title="Data API"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Documentation available"
+             >previous</a> |</li>
+        <li><a href="index.html">GoLismero 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, GoLismero Project.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

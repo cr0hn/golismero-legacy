@@ -1,0 +1,266 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Information disclosure vulnerabilities &mdash; GoLismero 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="GoLismero 2.0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Details for vulnerability types" href="../vulnerabilities.html" />
+    <link rel="next" title="Networking API" href="../../net.html" />
+    <link rel="prev" title="Details for vulnerability types" href="../vulnerabilities.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../net.html" title="Networking API"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../vulnerabilities.html" title="Details for vulnerability types"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../../api.html" >API</a> &raquo;</li>
+          <li><a href="../../data.html" >Data API</a> &raquo;</li>
+          <li><a href="../vulnerabilities.html" accesskey="U">Details for vulnerability types</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="information-disclosure-vulnerabilities">
+<h1>Information disclosure vulnerabilities<a class="headerlink" href="#information-disclosure-vulnerabilities" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-golismero.api.data.vulnerability.information_disclosure.default_error_page">
+<span id="default-error-page"></span><h2>Default error page<a class="headerlink" href="#module-golismero.api.data.vulnerability.information_disclosure.default_error_page" title="Permalink to this headline">¶</a></h2>
+<p>Default error pages found in a web server.</p>
+<dl class="class">
+<dt id="golismero.api.data.vulnerability.information_disclosure.default_error_page.DefaultErrorPage">
+<em class="property">class </em><tt class="descclassname">golismero.api.data.vulnerability.information_disclosure.default_error_page.</tt><tt class="descname">DefaultErrorPage</tt><big>(</big><em>url</em>, <em>server_name</em>, <em>*argv</em>, <em>**argd</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.information_disclosure.default_error_page.DefaultErrorPage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../data.html#golismero.api.data.vulnerability.UrlVulnerability" title="golismero.api.data.vulnerability.UrlVulnerability"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.vulnerability.UrlVulnerability</span></tt></a></p>
+<p>Default error pages found in a web server.</p>
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.information_disclosure.default_error_page.DefaultErrorPage.discovered">
+<tt class="descname">discovered</tt><a class="headerlink" href="#golismero.api.data.vulnerability.information_disclosure.default_error_page.DefaultErrorPage.discovered" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Discovered part of the URL.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.information_disclosure.default_error_page.DefaultErrorPage.server_name">
+<tt class="descname">server_name</tt><a class="headerlink" href="#golismero.api.data.vulnerability.information_disclosure.default_error_page.DefaultErrorPage.server_name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Name of server that has this error page.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-golismero.api.data.vulnerability.information_disclosure.url_disclosure">
+<span id="url-disclosure"></span><h2>Url disclosure<a class="headerlink" href="#module-golismero.api.data.vulnerability.information_disclosure.url_disclosure" title="Permalink to this headline">¶</a></h2>
+<p>URL disclosure vulnerability.</p>
+<dl class="class">
+<dt id="golismero.api.data.vulnerability.information_disclosure.url_disclosure.UrlDisclosure">
+<em class="property">class </em><tt class="descclassname">golismero.api.data.vulnerability.information_disclosure.url_disclosure.</tt><tt class="descname">UrlDisclosure</tt><big>(</big><em>url</em>, <em>*argv</em>, <em>**argd</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.information_disclosure.url_disclosure.UrlDisclosure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../data.html#golismero.api.data.vulnerability.UrlVulnerability" title="golismero.api.data.vulnerability.UrlVulnerability"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.vulnerability.UrlVulnerability</span></tt></a></p>
+<p>URL disclosure vulnerability.</p>
+<p>These are URLs that are accessible but not linked from the web site itself.
+This may indicate a poor attempt at concealing information.</p>
+<p>For example:</p>
+<ul class="simple">
+<li>Backup files: <a class="reference external" href="http://www.my_site.com/">http://www.my_site.com/</a> <strong>index.php.old</strong></li>
+<li>Alternative file names: <a class="reference external" href="http://www.my_site.com/">http://www.my_site.com/</a> <strong>index4.php</strong></li>
+<li>Remnants of deployment: <a class="reference external" href="http://www.my_site.com/">http://www.my_site.com/</a> <strong>build.xml</strong></li>
+<li>Poorly configured servers: <a class="reference external" href="http://www.my_site.com/">http://www.my_site.com/</a> <strong>error_log</strong></li>
+<li>Forgotten server files: <a class="reference external" href="http://www.my_site.com/">http://www.my_site.com/</a> <strong>server-status</strong></li>
+</ul>
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.information_disclosure.url_disclosure.UrlDisclosure.discovered">
+<tt class="descname">discovered</tt><a class="headerlink" href="#golismero.api.data.vulnerability.information_disclosure.url_disclosure.UrlDisclosure.discovered" title="Permalink to this definition">¶</a></dt>
+<dd><p>Discovered part of the URL.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.data.resource.url</span> <span class="kn">import</span> <span class="n">Url</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.data.vulnerability.information_disclosure.url_disclosure</span> <span class="kn">import</span> <span class="n">UrlDisclosure</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">url</span> <span class="o">=</span> <span class="n">Url</span><span class="p">(</span><span class="s">&#39;http://www.my_site.com/path/to_the/file/index.php.old&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">url_disclosure</span> <span class="o">=</span> <span class="n">UrlDisclosure</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">url_disclosure</span>
+<span class="go">&lt;UrlDisclosure url=&#39;http://www.my_site.com/path/to_the/file/index.php.old&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">url_disclosure</span><span class="o">.</span><span class="n">discovered</span>
+<span class="go">&#39;index.php.old&#39;</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Discovered part of the URL.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-golismero.api.data.vulnerability.information_disclosure.url_suspicious">
+<span id="url-suspicious"></span><h2>Url suspicious<a class="headerlink" href="#module-golismero.api.data.vulnerability.information_disclosure.url_suspicious" title="Permalink to this headline">¶</a></h2>
+<p>Suspicious URLs that could require manual attention.</p>
+<dl class="class">
+<dt id="golismero.api.data.vulnerability.information_disclosure.url_suspicious.SuspiciousURL">
+<em class="property">class </em><tt class="descclassname">golismero.api.data.vulnerability.information_disclosure.url_suspicious.</tt><tt class="descname">SuspiciousURL</tt><big>(</big><em>url</em>, <em>substring</em>, <em>*argv</em>, <em>**argd</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.information_disclosure.url_suspicious.SuspiciousURL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../data.html#golismero.api.data.vulnerability.UrlVulnerability" title="golismero.api.data.vulnerability.UrlVulnerability"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.vulnerability.UrlVulnerability</span></tt></a></p>
+<p>Suspicious URLs that could require manual attention.</p>
+<p>For example:</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.my_site.com/">http://www.my_site.com/</a><strong>users</strong>/ -&gt; URL with suspicious path.</li>
+<li><a class="reference external" href="http://www.my_site.com/index.jsp">http://www.my_site.com/index.jsp</a>? <strong>jsessionid</strong> =.... -&gt; suspicious parameter</li>
+<li><a class="reference external" href="http://www.my_site.com/index.php?id=1">http://www.my_site.com/index.php?id=1</a> -&gt; no suspicious info</li>
+</ul>
+<dl class="attribute">
+<dt id="golismero.api.data.vulnerability.information_disclosure.url_suspicious.SuspiciousURL.substring">
+<tt class="descname">substring</tt><a class="headerlink" href="#golismero.api.data.vulnerability.information_disclosure.url_suspicious.SuspiciousURL.substring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matched substring within the URL that causes suspicion.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.data.resource.url</span> <span class="kn">import</span> <span class="n">Url</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.api.data.vulnerability.information_disclosure.url_suspicious</span> <span class="kn">import</span> <span class="n">SuspiciousUrl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">url</span> <span class="o">=</span> <span class="n">Url</span><span class="p">(</span><span class="s">&#39;http://www.my_site.com/path/index.jsp?para1=1&amp;jsessionid=901828392012&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">suspicious</span> <span class="o">=</span> <span class="n">SuspiciousUrl</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="s">&#39;jsessionid&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">suspicious</span>
+<span class="go">&lt;SuspiciousUrl url=&#39;http://www.my_site.com/path/index.jsp?para1=1&amp;jsessionid=901828392012&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">suspicious</span><span class="o">.</span><span class="n">substring</span>
+<span class="go">&#39;jsessionid&#39;</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Matched substring within the URL that causes suspicion.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Information disclosure vulnerabilities</a><ul>
+<li><a class="reference internal" href="#module-golismero.api.data.vulnerability.information_disclosure.default_error_page">Default error page</a></li>
+<li><a class="reference internal" href="#module-golismero.api.data.vulnerability.information_disclosure.url_disclosure">Url disclosure</a></li>
+<li><a class="reference internal" href="#module-golismero.api.data.vulnerability.information_disclosure.url_suspicious">Url suspicious</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../vulnerabilities.html"
+                        title="previous chapter">Details for vulnerability types</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../../net.html"
+                        title="next chapter">Networking API</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/api/data/vulnerabilities/information_disclosure.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../net.html" title="Networking API"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../vulnerabilities.html" title="Details for vulnerability types"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../../../api.html" >API</a> &raquo;</li>
+          <li><a href="../../data.html" >Data API</a> &raquo;</li>
+          <li><a href="../vulnerabilities.html" >Details for vulnerability types</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, GoLismero Project.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

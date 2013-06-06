@@ -1,0 +1,462 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Text processsing API &mdash; GoLismero 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="GoLismero 2.0.1 documentation" href="../index.html" />
+    <link rel="up" title="API" href="../api.html" />
+    <link rel="next" title="Core develop" href="../develop.html" />
+    <link rel="prev" title="Networking API" href="net.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../develop.html" title="Core develop"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="net.html" title="Networking API"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../api.html" accesskey="U">API</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="text-processsing-api">
+<h1>Text processsing API<a class="headerlink" href="#text-processsing-api" title="Permalink to this headline">¶</a></h1>
+<p>Here the text processsing API functions:</p>
+<div class="section" id="module-golismero.api.text.matching_analyzer">
+<span id="matching-analyzer"></span><h2>matching_analyzer<a class="headerlink" href="#module-golismero.api.text.matching_analyzer" title="Permalink to this headline">¶</a></h2>
+<p>404 or not found pages analyzer.</p>
+<dl class="function">
+<dt id="golismero.api.text.matching_analyzer.get_matching_level">
+<tt class="descclassname">golismero.api.text.matching_analyzer.</tt><tt class="descname">get_matching_level</tt><big>(</big><em>text1</em>, <em>text2</em><big>)</big><a class="headerlink" href="#golismero.api.text.matching_analyzer.get_matching_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare two text and return a value between 0-1 with the level of
+difference. 0 is lowest and 1 the highest.</p>
+<ul class="simple">
+<li>If text1 is more similar to text2, value will be near to 100.</li>
+<li>If text1 is more different to text2, value will be near to 0.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>text1</strong> (<em>str</em>) &#8211; First text to compare.</li>
+<li><strong>text2</strong> (<em>str</em>) &#8211; Second text to compare.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Floating point value between 0 and 1.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="golismero.api.text.matching_analyzer.MatchingAnalyzer">
+<em class="property">class </em><tt class="descclassname">golismero.api.text.matching_analyzer.</tt><tt class="descname">MatchingAnalyzer</tt><big>(</big><em>base_text</em>, <em>matching_level=0.52</em>, <em>deviation=1.15</em><big>)</big><a class="headerlink" href="#golismero.api.text.matching_analyzer.MatchingAnalyzer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Text analyzer.</p>
+<p>Compares any number of texts from a base text and generates
+an iterator with those that are sufficiently different.</p>
+<dl class="method">
+<dt id="golismero.api.text.matching_analyzer.MatchingAnalyzer.append">
+<tt class="descname">append</tt><big>(</big><em>text</em>, <em>**kargs</em><big>)</big><a class="headerlink" href="#golismero.api.text.matching_analyzer.MatchingAnalyzer.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the matching level is accepted,
+store it along with all the keyword arguments.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>text</strong> (<em>str</em>) &#8211; Text to compare.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if the text is accepted, False otherwise.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.text.matching_analyzer.MatchingAnalyzer.base_text">
+<tt class="descname">base_text</tt><a class="headerlink" href="#golismero.api.text.matching_analyzer.MatchingAnalyzer.base_text" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Base text for comparison.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.text.matching_analyzer.MatchingAnalyzer.level_average">
+<tt class="descname">level_average</tt><a class="headerlink" href="#golismero.api.text.matching_analyzer.MatchingAnalyzer.level_average" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Average matching level.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.text.matching_analyzer.MatchingAnalyzer.unique_texts">
+<tt class="descname">unique_texts</tt><a class="headerlink" href="#golismero.api.text.matching_analyzer.MatchingAnalyzer.unique_texts" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Iterable with unique texts.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">iter(str)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="golismero.api.text.matching_analyzer.HTTP_response_headers_analyzer">
+<tt class="descclassname">golismero.api.text.matching_analyzer.</tt><tt class="descname">HTTP_response_headers_analyzer</tt><big>(</big><em>response_header_1</em>, <em>response_header_2</em><big>)</big><a class="headerlink" href="#golismero.api.text.matching_analyzer.HTTP_response_headers_analyzer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does a HTTP comparison to determinate if two HTTP response matches with the
+same content without need the body content. To do that, remove some HTTP headers
+(like Date or Cache info).</p>
+<p>Return a value between 0-1 with the level of difference. 0 is lowest and 1 the highest.</p>
+<ul class="simple">
+<li>If response_header_1 is more similar to response_header_2, value will be near to 100.</li>
+<li>If response_header_1 is more different to response_header_2, value will be near to 0.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>response_header_1</strong> (<em>str</em>) &#8211; text with http response headers.</li>
+<li><strong>response_header_2</strong> (<em>str</em>) &#8211; text with http response headers.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-golismero.api.text.text_utils">
+<span id="text-utils"></span><h2>Text utils<a class="headerlink" href="#module-golismero.api.text.text_utils" title="Permalink to this headline">¶</a></h2>
+<p>Text manipulation utilities.</p>
+<dl class="function">
+<dt id="golismero.api.text.text_utils.generate_random_string">
+<tt class="descclassname">golismero.api.text.text_utils.</tt><tt class="descname">generate_random_string</tt><big>(</big><em>length=30</em><big>)</big><a class="headerlink" href="#golismero.api.text.text_utils.generate_random_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a random string of the specified length.</p>
+<p>The key space used to generate random strings are:</p>
+<ul class="simple">
+<li>ASCII letters (both lowercase and uppercase).</li>
+<li>Digits (0-9).</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">golismero.text.text_utils</span> <span class="kn">import</span> <span class="n">generate_random_string</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_random_string</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">Asi91Ujsn5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_random_string</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<span class="go">8KNLs981jc0h1ls8b2ks01bc7slgu2</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>length</strong> (<em>int</em>) &#8211; Desired string length.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="golismero.api.text.text_utils.split_first">
+<tt class="descclassname">golismero.api.text.text_utils.</tt><tt class="descname">split_first</tt><big>(</big><em>s</em>, <em>delims</em><big>)</big><a class="headerlink" href="#golismero.api.text.text_utils.split_first" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a string and an iterable of delimiters, split on the first found
+delimiter. Return the two split parts and the matched delimiter.</p>
+<p>If not found, then the first part is the full input string.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">split_first</span><span class="p">(</span><span class="s">&#39;foo/bar?baz&#39;</span><span class="p">,</span> <span class="s">&#39;?/=&#39;</span><span class="p">)</span>
+<span class="go">(&#39;foo&#39;, &#39;bar?baz&#39;, &#39;/&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">split_first</span><span class="p">(</span><span class="s">&#39;foo/bar?baz&#39;</span><span class="p">,</span> <span class="s">&#39;123&#39;</span><span class="p">)</span>
+<span class="go">(&#39;foo/bar?baz&#39;, &#39;&#39;, None)</span>
+</pre></div>
+</div>
+<p>Scales linearly with number of delimiters. Not ideal for a large number of delimiters.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-golismero.api.text.wordlist_api">
+<span id="wordlist-utils"></span><h2>Wordlist utils<a class="headerlink" href="#module-golismero.api.text.wordlist_api" title="Permalink to this headline">¶</a></h2>
+<p>Wordlist API.</p>
+<dl class="class">
+<dt id="golismero.api.text.wordlist_api.WordListAPI">
+<em class="property">class </em><tt class="descclassname">golismero.api.text.wordlist_api.</tt><tt class="descname">WordListAPI</tt><a class="headerlink" href="#golismero.api.text.wordlist_api.WordListAPI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wordlist API.</p>
+<dl class="attribute">
+<dt id="golismero.api.text.wordlist_api.WordListAPI.all_wordlists">
+<tt class="descname">all_wordlists</tt><a class="headerlink" href="#golismero.api.text.wordlist_api.WordListAPI.all_wordlists" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Names of all the wordlists.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.text.wordlist_api.WordListAPI.get_advanced_wordlist_as_dict">
+<tt class="descname">get_advanced_wordlist_as_dict</tt><big>(</big><em>*arg</em><big>)</big><a class="headerlink" href="#golismero.api.text.wordlist_api.WordListAPI.get_advanced_wordlist_as_dict" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>wordlist_name</strong> (<em>str</em>) &#8211; Name of the requested advanced wordlist.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Advanced wordlist object.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">AdvancedDicWordlist</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.text.wordlist_api.WordListAPI.get_wordlist">
+<tt class="descname">get_wordlist</tt><big>(</big><em>wordlist_name</em><big>)</big><a class="headerlink" href="#golismero.api.text.wordlist_api.WordListAPI.get_wordlist" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>wordlist_name</strong> (<em>str</em>) &#8211; Name of the requested wordlist.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Iterator for the selected wordlist.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">iter(str)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="golismero.api.text.wordlist_api.SimpleWordList">
+<tt class="descclassname">golismero.api.text.wordlist_api.</tt><tt class="descname">SimpleWordList</tt><big>(</big><em>wordlist_path</em><big>)</big><a class="headerlink" href="#golismero.api.text.wordlist_api.SimpleWordList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a wordlist from a file and iterate its words.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="golismero.api.text.wordlist_api.AdvancedDicWordlist">
+<em class="property">class </em><tt class="descclassname">golismero.api.text.wordlist_api.</tt><tt class="descname">AdvancedDicWordlist</tt><big>(</big><em>wordlist</em>, <em>separator=';'</em><big>)</big><a class="headerlink" href="#golismero.api.text.wordlist_api.AdvancedDicWordlist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Advanced wordlist that loads a wordlist with a separator character as a dict, like:</p>
+<p>word list 1; sencond value of wordlist</p>
+<p>These line load as =&gt; {&#8216;word list 1&#8217;:&#8217;sencond value of wordlist&#8217;}</p>
+<p>This wordlist allow to do some operations with wordlists:
+- Search matches of a word in the wordlist.
+- Binary search in wordlist.
+- Get first coincidence, start at begining or end of list.
+- Search matches of wordlist with mutations.</p>
+<dl class="method">
+<dt id="golismero.api.text.wordlist_api.AdvancedDicWordlist.matches_by_key_with_level">
+<tt class="descname">matches_by_key_with_level</tt><big>(</big><em>word</em><big>)</big><a class="headerlink" href="#golismero.api.text.wordlist_api.AdvancedDicWordlist.matches_by_key_with_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search a word passed as parameter in keys&#8217;s wordlist and return a list of dicts with
+matches and level of correspondence.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>word</strong> (<em>str.</em>) &#8211; word to search.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a list with matches and correpondences.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list(list(KEY, VALUE, LEVEL))</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.text.wordlist_api.AdvancedDicWordlist.matches_by_keys">
+<tt class="descname">matches_by_keys</tt><big>(</big><em>word</em><big>)</big><a class="headerlink" href="#golismero.api.text.wordlist_api.AdvancedDicWordlist.matches_by_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search a word passed as parameter in the keys&#8217;s wordlist and return a list of lists with
+matches found.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>word</strong> (<em>str.</em>) &#8211; word to search.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a list with matches.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict(KEY, VALUE)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.text.wordlist_api.AdvancedDicWordlist.matches_by_value">
+<tt class="descname">matches_by_value</tt><big>(</big><em>word</em>, <em>debug=False</em><big>)</big><a class="headerlink" href="#golismero.api.text.wordlist_api.AdvancedDicWordlist.matches_by_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search a word passed as parameter in the keys&#8217;s wordlist and return a list of lists with
+matches found.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>word</strong> (<em>str.</em>) &#8211; word to search.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a list with matches.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict(KEY, VALUE)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="golismero.api.text.wordlist_api.AdvancedDicWordlist.matches_by_value_with_level">
+<tt class="descname">matches_by_value_with_level</tt><big>(</big><em>word</em><big>)</big><a class="headerlink" href="#golismero.api.text.wordlist_api.AdvancedDicWordlist.matches_by_value_with_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search a word passed as parameter in keys&#8217;s wordlist and return a list of dicts with
+matches and level of correspondence.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>word</strong> (<em>str.</em>) &#8211; word to search.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a list with matches and correpondences.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list(list(KEY, VALUE, LEVEL))</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Text processsing API</a><ul>
+<li><a class="reference internal" href="#module-golismero.api.text.matching_analyzer">matching_analyzer</a></li>
+<li><a class="reference internal" href="#module-golismero.api.text.text_utils">Text utils</a></li>
+<li><a class="reference internal" href="#module-golismero.api.text.wordlist_api">Wordlist utils</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="net.html"
+                        title="previous chapter">Networking API</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../develop.html"
+                        title="next chapter">Core develop</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/text.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../develop.html" title="Core develop"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="net.html" title="Networking API"
+             >previous</a> |</li>
+        <li><a href="../index.html">GoLismero 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="../api.html" >API</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, GoLismero Project.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
