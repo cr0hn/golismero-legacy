@@ -63,11 +63,10 @@ class HTTP_Headers (object):
         """
 
         # Headers in original form.
-        # TODO: Validate the type, since most of the code relies heavily on it.
-        self.__headers = headers
+        self.__headers = tuple( [ (name, value) for name, value in headers ] )
 
         # Headers parsed as a dictionary of lowercase keys.
-        self.__cache = { key.lower() : value.strip() for key, value in headers }
+        self.__cache = { name.lower() : value.strip() for name, value in headers }
 
 
     #----------------------------------------------------------------------
@@ -225,7 +224,26 @@ class HTTP_Request (Information):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, url, method = "GET", headers = None, post_data = None, protocol = "HTTP", version = "1.1"):
+    def __init__(self, url, headers = None, post_data = None, method = "GET", protocol = "HTTP", version = "1.1"):
+        """
+        :param url: Absolute URL to connect to.
+        :type url: str
+
+        :param headers: HTTP headers. Defaults to DEFAULT_HEADERS.
+        :type headers: HTTP_Headers | dict(str -> str) | tuple( tuple(str, str) )
+
+        :param post_data: POST data.
+        :type post_data: str | None
+
+        :param method: HTTP method.
+        :type method: str
+
+        :param protocol: Protocol name.
+        :type protocol: str
+
+        :param version: Protocol version.
+        :type version: str
+        """
 
         # HTTP method.
         self.__method = method.upper()
@@ -241,7 +259,10 @@ class HTTP_Request (Information):
                 headers = ("Host", self.__parsed_url.host) + headers
             headers = HTTP_Headers(headers)
         elif not isinstance(headers, HTTP_Headers):
-            headers = HTTP_Headers(sorted(headers.items()))
+            if hasattr(headers, "items"):
+                headers = HTTP_Headers(sorted(headers.items()))
+            else:
+                headers = HTTP_Headers(sorted(headers))
         self.__headers = headers
 
         # POST data.
@@ -272,7 +293,7 @@ class HTTP_Request (Information):
     @identity
     def protocol(self):
         """
-        :returns: HTTP protocol name.
+        :returns: Protocol name.
         :rtype: str
         """
         return self.__protocol
@@ -280,7 +301,7 @@ class HTTP_Request (Information):
     @identity
     def version(self):
         """
-        :returns: HTTP protocol version.
+        :returns: Protocol version.
         :rtype: str
         """
         return self.__version
@@ -296,7 +317,7 @@ class HTTP_Request (Information):
     @identity
     def post_data(self):
         """
-        :return: HTTP POST data.
+        :return: POST data.
         :rtype: str | None
         """
         return self.__post_data
@@ -388,6 +409,36 @@ class HTTP_Response (Information):
 
     #----------------------------------------------------------------------
     def __init__(self, request, **kwargs):
+        """
+        All optional arguments must be passed as keywords.
+
+        :param request: HTTP request that originated this response.
+        :type request: HTTP_Request
+
+        :param raw_response: (Optional) Raw bytes received from the server.
+        :type raw_response: str
+
+        :param status: (Optional) HTTP status code. Defaults to "200".
+        :type status: str
+
+        :param reason: (Optional) HTTP reason message.
+        :type reason: str
+
+        :param protocol: (Optional) Protocol name. Defaults to "HTTP".
+        :type protocol: str
+
+        :param version: (Optional) Protocol version. Defaults to "1.1".
+        :type version: str
+
+        :param raw_headers: (Optional) Raw HTTP headers.
+        :type raw_headers: str
+
+        :param headers: (Optional) Parsed HTTP headers.
+        :type headers: HTTP_Headers | dict(str -> str) | tuple( tuple(str, str) )
+
+        :param data: (Optional) Raw data that followed the response headers.
+        :type data: str
+        """
 
         # Initialize everything.
         self.__raw_response = None
@@ -426,7 +477,10 @@ class HTTP_Response (Information):
         self.__headers = kwargs.get("headers", self.__headers)
         if self.__headers:
             if not isinstance(self.__headers, HTTP_Headers):
-                self.__headers = HTTP_Headers(sorted(self.__headers.items()))
+                if hasattr(headers, "items"):
+                    self.__headers = HTTP_Headers(sorted(self.__headers.items()))
+                else:
+                    self.__headers = HTTP_Headers(sorted(self.__headers))
             if not self.__raw_headers:
                 self.__reconstruct_raw_headers()
         elif self.__raw_headers and not self.__headers:
@@ -478,7 +532,7 @@ class HTTP_Response (Information):
     @property
     def protocol(self):
         """
-        :returns: HTTP protocol name.
+        :returns: Protocol name.
         :rtype: str | None
         """
         return self.__protocol
@@ -486,7 +540,7 @@ class HTTP_Response (Information):
     @property
     def version(self):
         """
-        :returns: HTTP protocol version.
+        :returns: Protocol version.
         :rtype: str | None
         """
         return self.__version
