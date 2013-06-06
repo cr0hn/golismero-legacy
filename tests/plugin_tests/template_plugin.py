@@ -71,11 +71,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
 
+# Testing plugins are the ones that perform the security tests.
+# This is the base class for all Testing plugins.
 from golismero.api.plugin import TestingPlugin
 
 
 #----------------------------------------------------------------------
 class TemplatePlugin(TestingPlugin):
+
+    # Don't forget to change your class name!
+    # You can name it however you like, as long
+    # as it derives from TestingPlugin.
+
 
     #----------------------------------------------------------------------
     def check_input_params(self, inputParams):
@@ -114,4 +121,3 @@ class TemplatePlugin(TestingPlugin):
         #
         #
         pass
-
