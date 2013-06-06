@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Orchestrator, the manager of everything, core of GoLismero.
+
+All messages go through here before being dispatched to their destinations.
+Most other tasks are delegated from here to other managers.
+"""
+
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 

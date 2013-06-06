@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+'Priscilla', the GoLismero plugin manager.
+"""
+
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -273,7 +277,9 @@ class PluginInfo (object):
 
 #----------------------------------------------------------------------
 class PriscillaPluginManager (Singleton):
-    """Priscilla Plugin Manager."""
+    """
+    Plugin Manager.
+    """
 
 
     # Plugin categories and their base classes.
@@ -282,7 +288,6 @@ class PriscillaPluginManager (Singleton):
         "report"  : ReportPlugin,
         "ui"      : UIPlugin,
     }
-
 
     # Testing plugin execution stages by name.
     STAGES = {
@@ -296,7 +301,7 @@ class PriscillaPluginManager (Singleton):
     # Minimum and maximum stage numbers.
     min_stage = min(*STAGES.values())
     max_stage = max(*STAGES.values())
-##    assert sorted(STAGES.itervalues()) == range(min_stage, max_stage + 1)
+    assert sorted(STAGES.itervalues()) == range(min_stage, max_stage + 1)
 
 
     #----------------------------------------------------------------------

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Abstract classes for message dispatchers.
+"""
+
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 

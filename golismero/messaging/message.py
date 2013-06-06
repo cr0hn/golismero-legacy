@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Messages send information, vulnerabilities, resources and internal control
+events between the different components of GoLismero.
+
+They may be shared locally (console run mode) or serialized and sent across
+the network (cloud run modes).
+"""
+
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 

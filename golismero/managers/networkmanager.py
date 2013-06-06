@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Manager for network connections.
+"""
+
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -50,7 +54,7 @@ def rpc_netdb_release_slot(orchestrator, audit_name, *argv, **argd):
 #--------------------------------------------------------------------------
 class NetworkManager (object):
     """
-    Manage and control network connections.
+    Manager for network connections.
     """
 
 
