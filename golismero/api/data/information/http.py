@@ -66,7 +66,16 @@ class HTTP_Headers (object):
         self.__headers = tuple( [ (name, value) for name, value in headers ] )
 
         # Headers parsed as a dictionary of lowercase keys.
-        self.__cache = { name.lower() : value.strip() for name, value in headers }
+        strip = self.__strip_value
+        self.__cache = { name.strip().lower() : strip(value) for name, value in headers }
+
+    @staticmethod
+    def __strip_value(value):
+        lines = value.split("\r\n")
+        lines[0] = strip()
+        for i in xrange(1, len(lines)):
+            lines[i] = " " + lines[i].strip()
+        return "\r\n".join(lines)
 
 
     #----------------------------------------------------------------------
