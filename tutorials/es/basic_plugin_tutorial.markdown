@@ -63,7 +63,7 @@ Las fases hacen referencia al momento de ejecución de plugins. Actualmente pode
 - **recon**: Fase de reconocimiento. Es la primera en ejecutarse.
 - **scan**: Etapa de escaneo y descubrimiento. Es la segunda en ejecutarse. A esta etapa pertenecen los escaneres de puertos y hosts, por ejemplo.
 - **attack**: Etapa de ataque. Tercera en ejecutarse. A esta fase pertenecen los analizadores de *XSS* y *SQL Injection*, por ejemplo.
-- **post**: Se ejecutan cuando ya no se necesita acceso a la red.
+- **intrude**: Se ejecuta después de la fase de ataque. Esta fase es intrusiva. A esta etapa pertenecen plugins que, tras encontrar una vulnerabilidad *SQL Injection* en la etapa de ataque, se encargen de volcar la base de datos.
 - **cleanup**: Fase de limpieza. Es la etapa final.
 
 En la carpeta `plugins/testing` se pueden varias carpetas, que corresponden con cada una de las fases existentes.
