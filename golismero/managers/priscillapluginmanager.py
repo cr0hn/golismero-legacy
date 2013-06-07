@@ -294,7 +294,7 @@ class PriscillaPluginManager (Singleton):
         "recon"   : 1,    # Reconaissance stage.
         "scan"    : 2,    # Scanning (non-intrusive) stage.
         "attack"  : 3,    # Exploitation (intrusive) stage.
-        "post"    : 4,    # Post-exploitation stage.
+        "intrude" : 4,    # Post-exploitation stage.
         "cleanup" : 5,    # Cleanup stage.
     }
 
