@@ -89,13 +89,13 @@ Para nuestro plugin de ejemplo, `Suspicious`, la fase sería la de **recon**.
 
 Copiamos el plugin plantilla, que consta de los ficheros `template.golismero` y `template.py`, al directorio correspondiente al tipo de plugin que queremos desarrollar. Estos ficheros se encuentran el: `test/plugin_test/`
 
-![Template plugin](/golismero/images/tutorials/basic_plugin_tutorial/template_plugin.png)
+![Template plugin](/images/tutorials/basic_plugin_tutorial/template_plugin.png)
 
 Para nuestro caso, del `Suspicious`, lo copiamos al directorio **recon**.
 
 Renombramos ambos ficheros por en nombre de nuestro plugin, en nuestro caso `suspicious_url.golismero` y `suspicious_url.py`:
 
-![Template plugin rename](/golismero/images/tutorials/basic_plugin_tutorial/template_plugin_rename.png)
+![Template plugin rename](/images/tutorials/basic_plugin_tutorial/template_plugin_rename.png)
 
 
 6. Añadir información al plugin
@@ -147,7 +147,7 @@ Como se aprecia, es muy sencillo, puesto que solo tiene 3 métodos, pero para nu
 
 Golismero trabaja con tipos de datos, ¿qué es esto? Un tipo de datp puede ser cualquier cosa que almacena cierta información: una URL, un dominio, una página HTML o una dirección de correo electrónico. 
 
-> Puede consultar los tipos de información disponibles en: [Tipos de datos](http://cr0hn.github.io/golismero/html/api/data.html)
+> Puede consultar los tipos de información disponibles en: [Tipos de datos](http://golismero-project.com/api/api.html#data-structures)
    
 El motor de golismero es capaz de tratar y distinguir todos los tipos de datos y enviar a los plugins solamente aquellos que el plugin desea recibir. De esta forma el plugin siempre sabrá el tipo de información que recibirá y, por tanto, como procesarla.
 
@@ -194,6 +194,6 @@ Para nuestro caso:
 
 Como véis, se devuelve un tipo de dato. Para enviar los resultado obtenidos en nuestro plugin, así es como tendremos que hacerlo.
 
-También podéis ver que el plugin usa la función del API para manejar diccionarios (`WordListAPI`). Para ampliar más información sobre cómo utilizar los diccionarios puede consultar: [WordList API](http://cr0hn.github.io/golismero/html/api/text.html#module-golismero.api.text.wordlist_api)
+También podéis ver que el plugin usa la función del API para manejar diccionarios (`WordListAPI`). Para ampliar más información sobre cómo utilizar los diccionarios puede consultar: [WordList API](http://golismero-project.com/api/api/text.html#module-golismero.api.text.wordlist_api)
 
 > Buenas prácticas: Separa el código introducido en el plugin en una función a parte. De esta forma tu código será más legible y portable.
