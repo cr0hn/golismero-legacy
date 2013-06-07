@@ -128,11 +128,11 @@ Modificamos los valores del fichero de configuración del plugin, del fichero `s
 
 Como dijimos al principio, un plugin no es más que una clase de python que ha de implementar unos determinados métodos heredados:
 
-	class SuspiciousURLPlugin(TestingPlugin):   
-
-    	def get_accepted_info(self):        
+	class SuspiciousURLPlugin(TestingPlugin):
+	
+		def get_accepted_info(self):
 	        pass
-  
+
 	    def recv_info(self, info):
 	    	pass
 
@@ -147,7 +147,7 @@ Como se aprecia, es muy sencillo, puesto que solo tiene 3 métodos, pero para nu
 
 Golismero trabaja con tipos de datos, ¿qué es esto? Un tipo de datp puede ser cualquier cosa que almacena cierta información: una URL, un dominio, una página HTML o una dirección de correo electrónico. 
 
-> Puede consultar los tipos de información disponibles en: [Tipos de datos](/api/api.html#data-structures)
+> Puede consultar los tipos de información disponibles en: [Tipos de datos](/api/api/data.html)
    
 El motor de golismero es capaz de tratar y distinguir todos los tipos de datos y enviar a los plugins solamente aquellos que el plugin desea recibir. De esta forma el plugin siempre sabrá el tipo de información que recibirá y, por tanto, como procesarla.
 
@@ -194,6 +194,6 @@ Para nuestro caso:
 
 Como véis, se devuelve un tipo de dato. Para enviar los resultado obtenidos en nuestro plugin, así es como tendremos que hacerlo.
 
-También podéis ver que el plugin usa la función del API para manejar diccionarios (`WordListAPI`). Para ampliar más información sobre cómo utilizar los diccionarios puede consultar: [WordList API](/api/text.html#module-golismero.api.text.wordlist_api)
+También podéis ver que el plugin usa la función del API para manejar diccionarios (`WordListAPI`). Para ampliar más información sobre cómo utilizar los diccionarios puede consultar: [WordList API](/api/api/text.html#module-golismero.api.text.wordlist_api)
 
 > Buenas prácticas: Separa el código introducido en el plugin en una función a parte. De esta forma tu código será más legible y portable.
