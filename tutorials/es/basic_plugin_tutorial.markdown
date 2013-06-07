@@ -22,16 +22,16 @@ Tutorial básico: Desarrollo de un plugin
 *****
 
 
-1. Qué es un plugin?
---------------------
+1 - Qué es un plugin?
+---------------------
 
 En golismero, un plugin es un pequeño programa que realiza un tarea muy específica y puede generar una serie de resultados.
 
 A nivel de código, es una clase de python que hereda de una clase en la que se definen las operaciones permitidas por los plugins.
 
 
-2.Introducción
---------------
+2 - Introducción
+----------------
 
 Crear un plugin de GoLismero es realmente fácil. Solamente tenéis que seguir unos sencillos pasos:
 
@@ -45,16 +45,16 @@ Para desarrollar un plugin necesitaremos crear los dos y establecer los valores 
 Como ejemplo para este tutorial, vamos a explicar paso a paso como desarrollar el plugin que busca URLs sospechosas (de ahora en adelante `Suspicious`).
 
 
-3. Tipos de plugins
--------------------
+3 - Tipos de plugins
+--------------------
 
 GoLismero consta de varios tipos de plugins, pero en este tutorial básico solamente nos centraremos en los plugins de **testing**. 
 
 Los plugins de testing son aquellos que realizan la auditorias o las pruebas sobre el sistema que está siendo auditado.
 
 
-4. Fases de ejecución
----------------------
+4 - Fases de ejecución
+----------------------
 
 Los plugins de testing se ejecutan en etapas o fases. Cada plugin tiene que pertenecer a una **única** de estas fases.
 
@@ -76,8 +76,8 @@ En la carpeta `plugins/testing` se pueden varias carpetas, que corresponden con 
 	      |- recon
 	      |- scan
 
-5. Elección del tipo plugin
----------------------------
+5 - Elección del tipo plugin
+----------------------------
 
 En función del tipo de plugin que queramos desarrollar deberemos de elegir una etapa de ejecución u otra.
 
@@ -88,8 +88,8 @@ Si creamos un plugin que realice ataques de fuerza bruta de contraseñas, deber�
 Para nuestro plugin de ejemplo, `Suspicious`, la fase sería la de **recon**.
 
 
-6. Copiar plantilla
--------------------
+6 - Copiar plantilla
+--------------------
 
 Copiamos el plugin plantilla, que consta de los ficheros `template.golismero` y `template.py`, al directorio correspondiente al tipo de plugin que queremos desarrollar. Estos ficheros se encuentran el: `test/plugin_test/`
 
@@ -102,7 +102,7 @@ Renombramos ambos ficheros por en nombre de nuestro plugin, en nuestro caso `sus
 ![Template plugin rename](/images/tutorials/basic_plugin_tutorial/template_plugin_rename.png)
 
 
-7. Añadir información al plugin
+7 - Añadir información al plugin
 --------------------------------
 
 Modificamos los valores del fichero de configuración del plugin, del fichero `suspicious_url.golismero`:
@@ -126,8 +126,8 @@ Modificamos los valores del fichero de configuración del plugin, del fichero `s
 
 
 
-8. Configuración del plugin
----------------------------
+8 - Configuración del plugin
+----------------------------
 
 **Lo primero que tendremos que hacer es cambiar el nombre de la clase por el nombre de nuestro plugin.**
 
@@ -148,8 +148,8 @@ Como se aprecia, es muy sencillo, puesto que solo tiene 3 métodos, pero para nu
 
 
 
-9. Tipos de datos
------------------
+9 - Tipos de datos
+------------------
 
 Golismero trabaja con tipos de datos, ¿qué es esto? Un tipo de datp puede ser cualquier cosa que almacena cierta información: una URL, un dominio, una página HTML o una dirección de correo electrónico. 
 
@@ -163,8 +163,8 @@ Para escecificar los tipos de datos que deseamos recibir en nuestro plugin, debe
 		return [BaseUrl]
 
 
-10. Escribiendo el código
-------------------------
+10 - Escribiendo el código
+--------------------------
 
 Por fin llegamos vamos a escribir el código de nuestro plugin. El código de nuestro plugin irá en el método `recv_info`.
 
