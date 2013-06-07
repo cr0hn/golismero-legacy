@@ -57,11 +57,11 @@ Los plugins de testing se ejecutan en etapas o fases. Cada plugin tiene que pert
 
 Las fases hacen referencia al momento de ejecución de plugins. Actualmente podemos distinguir varias estas de ejecución:
 
-- recon: Fase de reconocimiento. Es la primera en ejecutarse.
-- scan: scanner
-- attack: ataque
-- post: Se ejecutan cuando ya no se necesita acceso a la red.
-- cleanup: de limpieza. Es la etapa final.
+- **recon**: Fase de reconocimiento. Es la primera en ejecutarse.
+- **scan**: Etapa de escaneo y descubrimiento. Es la segunda en ejecutarse. A esta etapa pertenecen los escaneres de puertos y hosts, por ejemplo.
+- **attack**: Etapa de ataque. Tercera en ejecutarse. A esta fase pertenecen los analizadores de *XSS* y *SQL Injection*, por ejemplo.
+- **post**: Se ejecutan cuando ya no se necesita acceso a la red.
+- **cleanup**: Fase de limpieza. Es la etapa final.
 
 En la carpeta `plugins/testing` se pueden varias carpetas, que corresponden con cada una de las fases existentes.
 	
@@ -89,13 +89,13 @@ Para nuestro plugin de ejemplo, `Suspicious`, la fase sería la de **recon**.
 
 Copiamos el plugin plantilla, que consta de los ficheros `template.golismero` y `template.py`, al directorio correspondiente al tipo de plugin que queremos desarrollar. Estos ficheros se encuentran el: `test/plugin_test/`
 
-![Template plugin](/images/tutorials/basic_plugin_tutorial/template_plugin.png)
+![Template plugin](/golismero/images/tutorials/basic_plugin_tutorial/template_plugin.png)
 
 Para nuestro caso, del `Suspicious`, lo copiamos al directorio **recon**.
 
 Renombramos ambos ficheros por en nombre de nuestro plugin, en nuestro caso `suspicious_url.golismero` y `suspicious_url.py`:
 
-![Template plugin rename](/images/tutorials/basic_plugin_tutorial/template_plugin_rename.png)
+![Template plugin rename](/golismero/images/tutorials/basic_plugin_tutorial/template_plugin_rename.png)
 
 
 6. Añadir información al plugin
@@ -128,9 +128,7 @@ Modificamos los valores del fichero de configuración del plugin, del fichero `s
 
 Como dijimos al principio, un plugin no es más que una clase de python que ha de implementar unos determinados métodos heredados:
 
-	class SuspiciousURLPlugin(TestingPlugin):
-	    def check_input_params(self, inputParams):
-	        pass	        
+	class SuspiciousURLPlugin(TestingPlugin):   
 
     	def get_accepted_info(self):        
 	        pass
@@ -167,7 +165,6 @@ Para nuestro caso:
 
 	
     def recv_info(self, info):
-
         m_url = info.url
 
         # Check if URL is in scope
@@ -177,7 +174,6 @@ Para nuestro caso:
         # Load wordlists
         m_wordlist_middle     = WordListAPI().get_wordlist(Config.plugin_extra_config['Wordlist_middle']['wordlist'])
         m_wordlist_extensions = WordListAPI().get_wordlist(Config.plugin_extra_config['Wordlist_extensions']['wordlist'])
-
 
         # Results store
         m_results          = []
@@ -196,7 +192,7 @@ Para nuestro caso:
         return m_results
 
 
-Como véis, se devuelve un tipo de dato. **Todos los plugins tienen de devolver uno o varios tipos de datos.** No tendría sentido que fuera de otro modo, porque sino: ¿Cómo se devolverian los resultados generados?
+Como véis, se devuelve un tipo de dato. Para enviar los resultado obtenidos en nuestro plugin, así es como tendremos que hacerlo.
 
 También podéis ver que el plugin usa la función del API para manejar diccionarios (`WordListAPI`). Para ampliar más información sobre cómo utilizar los diccionarios puede consultar: [WordList API](http://cr0hn.github.io/golismero/html/api/text.html#module-golismero.api.text.wordlist_api)
 
