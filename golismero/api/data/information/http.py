@@ -129,11 +129,6 @@ class HTTP_Headers (object):
         :rtype: tuple( tuple(tuple(str, str)), dict(str -> str) )
         """
 
-        # Remove the trailing line breaks.
-        # There may be two, since an empty line marks the end of the headers.
-        while raw_headers.endswith("\r\n"):
-            raw_headers = raw_headers[:-2]
-
         # Split the headers into lines and parse each line.
         original = []
         parsed = {}
@@ -145,12 +140,11 @@ class HTTP_Headers (object):
                 break
 
             # If the line begins with whitespace, it's a continuation.
-            leading = line[0]
-            if leading in " \t":
+            if line[0] in " \t":
                 if last_name is None:
                     break                              # broken headers
                 line = line.strip()
-                parsed[last_name] += leading + line
+                parsed[last_name] += " " + line
                 item = original[-1]
                 item = (item[0], item[1] + " " + line)
                 original[-1] = item
@@ -165,6 +159,9 @@ class HTTP_Headers (object):
 
             # Convert the name to lowercase.
             name_lower = name.lower()
+
+            # Remember the last name we've seen.
+            last_name = name_lower
 
             # Add the headers to the parsed form.
             # If the name already exists, merge the headers.
@@ -327,25 +324,13 @@ class HTTP_Headers (object):
         return "".join("%s: %s\r\n" % item for item in self.__headers[start:end])
 
 
-    #----------------------------------------------------------------------
-    def __str__(self):
-        """
-        When converted into a string, all header lines are merged, and an
-        empty line is appended.
-
-        :returns: All header lines, followed by an empty line.
-        :rtype: str
-        """
-        return "".join("%s: %s\r\n" % item for item in self.__headers) + "\r\n"
-
-
 #------------------------------------------------------------------------------
 class HTTP_Request (Information):
     """
     HTTP request information.
     """
 
-    information_type = INFORMATION_HTTP_REQUEST
+    information_type = Information.INFORMATION_HTTP_REQUEST
 
 
     #
@@ -551,7 +536,7 @@ class HTTP_Response (Information):
     HTTP response information.
     """
 
-    information_type = INFORMATION_HTTP_RESPONSE
+    information_type = Information.INFORMATION_HTTP_RESPONSE
 
 
     #----------------------------------------------------------------------
@@ -828,7 +813,7 @@ class HTTP_Response (Information):
             self.__raw_response = self.__data
             return
 
-        # FIXME: now sure how Requests handles content encoding,
+        # FIXME: not sure how Requests handles content encoding,
         # it may be possible to generate broken raw responses if
         # the content is decoded automatically behind our backs
 
