@@ -37,6 +37,7 @@ from .html import HTML
 from .. import identity
 from ...net.web_utils import DecomposedURL
 
+import re
 import httplib
 import mimetools
 
@@ -50,32 +51,140 @@ class HTTP_Headers (object):
     the original order of the headers, doesn't remove duplicated headers,
     preserves the original case but still letting your access them in a
     case-insensitive manner, and is read-only.
+
+    Also see: :ref:`parse_headers`
     """
 
     # Also see: https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
 
 
     #----------------------------------------------------------------------
-    def __init__(self, headers):
+    def __init__(self, raw_headers):
         """
-        :param headers: Parsed headers to store.
-        :type headers: tuple( tuple(str, str) )
+        :param raw_headers: Raw headers to parse.
+        :type raw_headers: str
         """
+        self.__raw_headers = raw_headers
+        self.__headers, self.__cache = self.parse_headers(raw_headers)
 
-        # Headers in original form.
-        self.__headers = tuple( [ (name, value) for name, value in headers ] )
 
-        # Headers parsed as a dictionary of lowercase keys.
-        strip = self.__strip_value
-        self.__cache = { name.strip().lower() : strip(value) for name, value in headers }
-
+    #----------------------------------------------------------------------
     @staticmethod
-    def __strip_value(value):
-        lines = value.split("\r\n")
-        lines[0] = strip()
-        for i in xrange(1, len(lines)):
-            lines[i] = " " + lines[i].strip()
-        return "\r\n".join(lines)
+    def from_items(items):
+        """
+        Get HTTP headers in pre-parsed form.
+
+        This is useful for integrating with other libraries that have
+        already parsed the HTTP headers in their own way.
+
+        :param items: Iterable of key/value pairs.
+        :type items: iterable( tuple(str, str) )
+        """
+
+        # Reconstruct the raw headers the best we can.
+        reconstructed = [
+            "%s: %s" % (name,
+                        (value if value.endswith("\r\n") else value + "\r\n")
+                        )
+            for name, value in items
+        ]
+        reconstructed.append("\r\n")
+        raw_headers = "".join(reconstructed)
+
+        # Return an HTTP_Headers object using the reconstructed raw headers.
+        return HTTP_Headers(raw_headers)
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def parse_headers(raw_headers):
+        """
+        Parse HTTP headers.
+
+        Unlike other common Python solutions (mimetools, etc.) this one
+        properly supports multiline HTTP headers and duplicated header
+        merging as specified in the RFC.
+
+        The parsed headers are returned in two forms.
+
+        The first is an n-tuple of 2-tuples of strings containing each
+        header's name and value. The original case and order is preserved,
+        as well as any whitespace and line breaks in the values. Duplicate
+        headers are not merged or dealt with in any special way. This aims
+        at preserving the headers in original form as much as possible
+        without resorting to the raw headers themselves, for example for
+        fingerprint analysis of the web server.
+
+        The second is a dictionary mapping header names to their values.
+        Duplicate headers are merged as per RFC specs, and multiline headers
+        are converted to single line headers to avoid line breaks in the
+        values. Header names are converted to lowercase for easier case
+        insensitive lookups. This aims at making it easier to get the values
+        of the headers themselves rather than analyzing the web server.
+
+        :param raw_headers: Raw headers to parse.
+        :type raw_headers: str
+
+        :returns: Parsed headers in original and simplified forms.
+        :rtype: tuple( tuple(tuple(str, str)), dict(str -> str) )
+        """
+
+        # Remove the trailing line breaks.
+        # There may be two, since an empty line marks the end of the headers.
+        while raw_headers.endswith("\r\n"):
+            raw_headers = raw_headers[:-2]
+
+        # Split the headers into lines and parse each line.
+        original = []
+        parsed = {}
+        last_name = None
+        for line in raw_headers.split("\r\n"):
+
+            # If we find an empty line, stop processing.
+            if not line:
+                break
+
+            # If the line begins with whitespace, it's a continuation.
+            leading = line[0]
+            if leading in " \t":
+                if last_name is None:
+                    break                              # broken headers
+                line = line.strip()
+                parsed[last_name] += leading + line
+                item = original[-1]
+                item = (item[0], item[1] + " " + line)
+                original[-1] = item
+                continue                               # next line
+
+            # Split the name and value pairs.
+            name, value = line.split(":", 1)
+
+            # Strip the leading and trailing whitespace.
+            name  = name.strip()
+            value = value.strip()
+
+            # Convert the name to lowercase.
+            name_lower = name.lower()
+
+            # Add the headers to the parsed form.
+            # If the name already exists, merge the headers.
+            # If not, add a new one.
+            if name_lower in parsed:
+                parsed[name_lower] += ", " + value
+            else:
+                parsed[name_lower] = value
+
+            # Add the headers to the original form.
+            original.append( (name, value) )
+
+        # Convert the original headers list into a tuple to make it
+        # read-only, then return the tuple and the dictionary.
+        return tuple(original), parsed
+
+
+    #----------------------------------------------------------------------
+    def __str__(self):
+        return self.__raw_headers
 
 
     #----------------------------------------------------------------------
@@ -91,7 +200,23 @@ class HTTP_Headers (object):
         :returns: Headers.
         :rtype: tuple( tuple(str, str) )
         """
-        return self.__headers   # well, that one was easy ;)
+
+        # Immutable object, we can return it directly.
+        return self.__headers
+
+
+    #----------------------------------------------------------------------
+    def to_dict(self):
+        """
+        Convert the headers to a Python dictionary.
+
+        :returns: Headers.
+        :rtype: dict(str -> str)
+        """
+
+        # Mutable object, we need to make a copy.
+        # It can be a shallow copy because it only contains strings.
+        return self.__cache.copy()
 
 
     #----------------------------------------------------------------------
@@ -222,6 +347,15 @@ class HTTP_Request (Information):
 
     information_type = INFORMATION_HTTP_REQUEST
 
+
+    #
+    # TODO:
+    #   Parse and reconstruct requests as it's done with responses.
+    #   It may be useful one day, for example, for HTTP proxying.
+    #
+
+
+    # Default headers to use in HTTP requests.
     DEFAULT_HEADERS = (
         ("User-Agent", "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +https://github.com/cr0hn/golismero)"),
         ("Accept-Language", "en-US"),
@@ -238,8 +372,8 @@ class HTTP_Request (Information):
         :param url: Absolute URL to connect to.
         :type url: str
 
-        :param headers: HTTP headers. Defaults to DEFAULT_HEADERS.
-        :type headers: HTTP_Headers | dict(str -> str) | tuple( tuple(str, str) )
+        :param headers: HTTP headers, in raw or parsed form. Defaults to DEFAULT_HEADERS.
+        :type headers: HTTP_Headers | dict(str -> str) | tuple( tuple(str, str) ) | str
 
         :param post_data: POST data.
         :type post_data: str | None
@@ -266,12 +400,16 @@ class HTTP_Request (Information):
             headers = self.DEFAULT_HEADERS
             if version == "1.1":
                 headers = ("Host", self.__parsed_url.host) + headers
-            headers = HTTP_Headers(headers)
+            headers = HTTP_Headers.from_items(headers)
         elif not isinstance(headers, HTTP_Headers):
-            if hasattr(headers, "items"):
-                headers = HTTP_Headers(sorted(headers.items()))
-            else:
-                headers = HTTP_Headers(sorted(headers))
+            if type(headers) == unicode:
+                headers = str(headers)   # FIXME: better collation!
+            if type(headers) == str:             # raw headers
+                headers = HTTP_Headers(headers)
+            elif hasattr(headers, "items"):      # dictionary
+                headers = HTTP_Headers.from_items(sorted(headers.items()))
+            else:                                # dictionary items
+                headers = HTTP_Headers.from_items(sorted(headers))
         self.__headers = headers
 
         # POST data.
@@ -402,9 +540,9 @@ class HTTP_Request (Information):
     def content_length(self):
         """
         :return: 'Content-Length' HTTP header.
-        :rtype: str
+        :rtype: int
         """
-        return self.__headers.get('Content-Length')
+        return int(self.__headers.get('Content-Length'))
 
 
 #------------------------------------------------------------------------------
@@ -462,7 +600,7 @@ class HTTP_Response (Information):
         # Raw response bytes.
         self.__raw_response = kwargs.get("raw_response", None)
         if self.__raw_response:
-            self.__parse_raw_response()
+            self.__parse_raw_response(request)
 
         # Status line.
         self.__status   = kwargs.get("status",   self.__status)
@@ -582,10 +720,10 @@ class HTTP_Response (Information):
     def content_length(self):
         """
         :return: 'Content-Length' HTTP header.
-        :rtype: str | None
+        :rtype: int | None
         """
         if self.__headers:
-            return self.__headers.get('Content-Length')
+            return int(self.__headers.get('Content-Length'))
 
     @property
     def content_disposition(self):
@@ -627,47 +765,110 @@ class HTTP_Response (Information):
 
 
     #----------------------------------------------------------------------
-    def __parse_raw_response(self):
+    def __parse_raw_response(self, request):
 
-        # TODO
+        # Special case: if parsing HTTP/0.9, everything is data.
+        if request.version == "0.9":
+            self.__protocol = "HTTP"
+            self.__version  = "0.9"
+            self.__status   = "200"
+            self.__reason   = httplib.responses[200]
+            self.__data     = self.__raw_response
+            return
 
-        pass
+        # Split the response from the data.
+        response, data = self.__raw_response.split("\r\n\r\n", 1)
+        response = response + "\r\n\r\n"
+
+        # Split the response line from the headers.
+        raw_line, raw_headers = response.split("\r\n", 1)
+
+        # Split the response line into its components.
+        try:
+            proto_version, status, reason = re.split("[ \t]+", raw_line, 2)
+        except Exception:
+            proto_version, status = re.split("[ \t]+", raw_line, 1)
+            try:
+                reason = httplib.responses[int(status)]
+            except Exception:
+                reason = None
+        if "/" in proto_version:
+            protocol, version = proto_version.split("/")
+        else:
+            protocol = proto_version
+            version  = None
+
+        # Set missing components to None.
+        if not status:
+            status = None
+        if not reason:
+            reason = None
+        if not protocol:
+            protocol = None
+        if not data:
+            data = None
+
+        # Store the components.
+        self.__protocol    = protocol
+        self.__version     = version
+        self.__status      = status
+        self.__reason      = reason
+        self.__raw_headers = raw_headers
+        self.__data        = data
+
+        # Parse the raw headers.
+        self.__parse_raw_headers()
 
 
     #----------------------------------------------------------------------
     def __reconstruct_raw_response(self):
 
-        # TODO
+        # Special case: if parsing HTTP/0.9, everything is data.
+        if self.__version == "0.9":
+            self.__raw_response = self.__data
+            return
 
-        pass
+        # FIXME: now sure how Requests handles content encoding,
+        # it may be possible to generate broken raw responses if
+        # the content is decoded automatically behind our backs
 
-##        # FIXME: now sure how Requests handles content encoding,
-##        # it may be possible to generate broken raw responses if
-##        # the content is decoded automatically behind our backs
-##
-##        if self.__protocol and self.__version:
-##            proto_ver = "%s/%s " % (self.__protocol, self.__version)
-##        elif self.__protocol:
-##            proto_ver = self.__protocol + " "
-##        elif self.__version:
-##            proto_ver = self.__version + " "
-##        else:
-##            proto_ver = ""
-##        if self.__status and self.__reason:
-##            status_line = "%s%s %s\r\n" % (proto_ver, self.__status, self.__reason)
-##        elif self.__status:
-##            status_line = "%s%s\r\n" % (proto_ver, self.__status)
-##        elif self.__reason:
-##            status_line = "%s%s\r\n" % (proto_ver, self.__reason)
-##        return "%s%s%s" % (status_line, self.__raw_headers, self.__data)
+        # Reconstruct the response line.
+        if self.__protocol and self.__version:
+            proto_ver = "%s/%s " % (self.__protocol, self.__version)
+        elif self.__protocol:
+            proto_ver = self.__protocol + " "
+        elif self.__version:
+            proto_ver = self.__version + " "
+        else:
+            proto_ver = ""
+        if self.__status and self.__reason:
+            status_line = "%s%s %s\r\n" % (proto_ver, self.__status, self.__reason)
+        elif self.__status:
+            status_line = "%s%s\r\n" % (proto_ver, self.__status)
+        elif self.__reason:
+            status_line = "%s%s\r\n" % (proto_ver, self.__reason)
+
+        # Reconstruct the headers.
+        if not self.__raw_headers:
+            if self.__headers:
+                self.__reconstruct_raw_headers()
+                raw_headers = self.__raw_headers
+            else:
+                raw_headers = ""
+
+        # Get the data if available.
+        if self.__data:
+            data = self.__data
+        else:
+            data = ""
+
+        # Store the reconstructed raw response.
+        self.__raw_response = "%s%s%s" % (status_line, raw_headers, data)
 
 
     #----------------------------------------------------------------------
     def __parse_raw_headers(self):
-
-        # TODO
-
-        pass
+        self.__headers = HTTP_Headers(self.__raw_headers)
 
 
     #----------------------------------------------------------------------
