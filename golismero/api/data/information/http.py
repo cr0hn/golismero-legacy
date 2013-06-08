@@ -186,7 +186,7 @@ class HTTP_Headers (object):
 
     #----------------------------------------------------------------------
     def __repr__(self):
-        return "<HTTP_Headers headers=%r>" % self.__headers
+        return "<%s headers=%r>" % (self.__class__.__name__, self.__headers)
 
 
     #----------------------------------------------------------------------
@@ -284,7 +284,11 @@ class HTTP_Headers (object):
         """
         if type(key) in (int, long):
             return "%s: %s\r\n" % self.__headers[key]
-        return self.__cache[ key.lower() ]
+        try:
+            key = key.lower()
+        except AttributeError:
+            raise TypeError("Expected str, got %s" % type(key))
+        return self.__cache[key]
 
 
     #----------------------------------------------------------------------
@@ -302,7 +306,11 @@ class HTTP_Headers (object):
         :rtype: str
         """
         try:
-            return self.__cache[ name.lower() ]
+            name = name.lower()
+        except AttributeError:
+            raise TypeError("Expected str, got %s" % type(name))
+        try:
+            return self.__cache[name]
         except KeyError:
             return default
 

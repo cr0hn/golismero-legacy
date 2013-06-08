@@ -52,7 +52,10 @@ from golismero.api.data.information.http import HTTP_Headers, HTTP_Request, HTTP
 # Test cases for HTTP headers.
 cases_http_headers = (
 
+    # ---
+
     ("normal HTTP headers",
+
      ("Host: www.example.com\r\n"
       "Connection: keep-alive\r\n"
       "Content-Length: 0\r\n"
@@ -60,12 +63,14 @@ cases_http_headers = (
       "Transport-Encoding: plain\r\n"
       "Pragma: no-cache\r\n"
       "\r\n"),
+
      (("Host", "www.example.com"),
       ("Connection", "keep-alive"),
       ("Content-Length", "0"),
       ("Content-Encoding", "plain"),
       ("Transport-Encoding", "plain"),
       ("Pragma", "no-cache")),
+
      {"host": "www.example.com",
       "connection": "keep-alive",
       "content-length": "0",
@@ -74,48 +79,66 @@ cases_http_headers = (
       "pragma": "no-cache"}
     ),
 
+    # ---
+
     ("multiline HTTP headers",
+
      ("Host: www.example.com\r\n"
       "Set-Cookie: example=true,\r\n"
       "            multiline=true\r\n"
       "Location: http://www.example.com/index.php\r\n"
       "\r\n"),
+
      (("Host", "www.example.com"),
       ("Set-Cookie", "example=true, multiline=true"),
       ("Location", "http://www.example.com/index.php")),
+
      {"host": "www.example.com",
       "set-cookie": "example=true, multiline=true",
       "location": "http://www.example.com/index.php"}
     ),
 
+    # ---
+
     ("duplicated HTTP headers",
+
      ("Host: www.example.com\r\n"
       "Set-Cookie: example=true\r\n"
       "Set-Cookie: duplicated=true\r\n"
       "Location: http://www.example.com/index.php\r\n"
       "\r\n"),
+
      (("Host", "www.example.com"),
       ("Set-Cookie", "example=true"),
       ("Set-Cookie", "duplicated=true"),
       ("Location", "http://www.example.com/index.php")),
+
      {"host": "www.example.com",
       "set-cookie": "example=true, duplicated=true",
       "location": "http://www.example.com/index.php"}
     ),
 
+    # ---
+
     ("broken HTTP headers",
+
      ("Host: www.example.com\r\n"
       "Set-Cookie: example=true\r\n"
       "\r\n"
       "Location: http://www.example.com/index.php\r\n"
       "\r\n"),
+
      (("Host", "www.example.com"),
       ("Set-Cookie", "example=true")),
+
      {"host": "www.example.com",
       "set-cookie": "example=true"}
     ),
 
+    # ---
+
     ("HTTP headers with extra whitespace",
+
      ("Host  \t  :   \t   www.example.com   \t   \r\n"
       "X-Whatever::::: ::::: some data goes here \r\n"
       "\t   and here too   \r\n"
@@ -124,26 +147,135 @@ cases_http_headers = (
       "Set-Cookie:  \t   duplicated=true  \t \r\n"
       "Pragma: no-cache\r\n"
       "\r\n"),
+
      (("Host", "www.example.com"),
       ("X-Whatever", ":::: ::::: some data goes here and here too"),
       ("Set-Cookie", "example=true, multiline=true"),
       ("Set-Cookie", "duplicated=true"),
       ("Pragma", "no-cache")),
+
      {"host": "www.example.com",
       "x-whatever": ":::: ::::: some data goes here and here too",
       "set-cookie": "example=true, multiline=true, duplicated=true",
       "pragma": "no-cache"}
     ),
+
+    # ---
 )
 
 
 # This tests the HTTP headers parser.
 def test_http_headers():
+
+    # Test the methods.
+    print "Testing HTTP_Header() methods..."
+    raw_headers = (
+        "Host: www.example.com\r\n"
+        "Connection: keep-alive\r\n"
+        "Content-Length: 0\r\n"
+        "Content-Encoding: plain\r\n"
+        "Transport-Encoding: plain\r\n"
+        "Pragma: no-cache\r\n"
+        "\r\n"
+    )
+    headers = HTTP_Headers(raw_headers)
+    assert str(headers) == raw_headers
+    assert headers["cOnNeCtIoN"] == "keep-alive"
+    assert headers.get("FAKE", "fake") == "fake"
+    assert headers.get("NotHere") == None
+    try:
+        print headers["lalalala"]
+        assert False
+    except KeyError:
+        pass
+    try:
+        print headers.get(object())
+        assert False
+    except TypeError:
+        pass
+    try:
+        print headers.get(object(), "lalala")
+        assert False
+    except TypeError:
+        pass
+    try:
+        print headers[object()]
+        assert False
+    except TypeError:
+        pass
+    assert headers[0] == "Host: www.example.com\r\n"
+    assert headers[3] == "Content-Encoding: plain\r\n"
+    assert headers[-1] == "Pragma: no-cache\r\n"
+    try:
+        print headers[6]
+        assert False
+    except IndexError:
+        pass
+    try:
+        print headers[-7]
+        assert False
+    except IndexError:
+        pass
+    assert headers[1:3] == "Connection: keep-alive\r\nContent-Length: 0\r\n"
+    assert headers[-3:-1] == "Content-Encoding: plain\r\nTransport-Encoding: plain\r\n"
+    assert headers[3:] == "Content-Encoding: plain\r\nTransport-Encoding: plain\r\nPragma: no-cache\r\n"
+    assert headers[-2:] == "Transport-Encoding: plain\r\nPragma: no-cache\r\n"
+    assert headers[-100:] == raw_headers[:-2]
+    assert not headers[:-7]
+    assert not headers[6:]
+    assert headers[:100] == raw_headers[:-2]
+    assert list(headers) == [
+        "Host: www.example.com\r\n",
+        "Connection: keep-alive\r\n",
+        "Content-Length: 0\r\n",
+        "Content-Encoding: plain\r\n",
+        "Transport-Encoding: plain\r\n",
+        "Pragma: no-cache\r\n",
+    ]
+    assert list(headers.iterkeys()) == [
+        "Host",
+        "Connection",
+        "Content-Length",
+        "Content-Encoding",
+        "Transport-Encoding",
+        "Pragma",
+    ]
+    assert list(headers.itervalues()) == [
+        "www.example.com",
+        "keep-alive",
+        "0",
+        "plain",
+        "plain",
+        "no-cache",
+    ]
+    assert list(headers.iteritems()) == [
+        ("Host", "www.example.com"),
+        ("Connection", "keep-alive"),
+        ("Content-Length", "0"),
+        ("Content-Encoding", "plain"),
+        ("Transport-Encoding", "plain"),
+        ("Pragma", "no-cache"),
+    ]
+    original = sorted(headers.to_tuple())
+    orig_dict = dict(original)
+    headers = HTTP_Headers.from_items(original)
+    assert headers.to_tuple() == tuple(original)
+    parsed = headers.to_dict()
+    headers = HTTP_Headers.from_items(orig_dict.items())
+    assert sorted(headers.to_tuple()) == original
+    assert headers.to_dict() == parsed
+
+    # Run parser test cases.
     for title, raw_headers, original, parsed in cases_http_headers:
-        print "Testing " + title
+        print "Testing parser with %s..." % title
         headers = HTTP_Headers(raw_headers)
         assert str(headers) == raw_headers
         assert headers.to_tuple() == original
+        assert headers.to_dict() == parsed
+        headers = HTTP_Headers.from_items(original)
+        assert headers.to_tuple() == original
+        assert headers.to_dict() == parsed
+        headers = HTTP_Headers.from_items(parsed.items())
         assert headers.to_dict() == parsed
 
 
