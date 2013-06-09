@@ -264,6 +264,12 @@ def test_http_headers():
     headers = HTTP_Headers.from_items(orig_dict.items())
     assert sorted(headers.to_tuple()) == original
     assert headers.to_dict() == parsed
+    headers = HTTP_Headers.from_items(HTTP_Request.DEFAULT_HEADERS)
+    assert headers.to_tuple() == HTTP_Request.DEFAULT_HEADERS
+    parsed = headers.to_dict()
+    headers = HTTP_Headers.from_items(sorted(parsed.items()))
+    assert headers.to_dict() == parsed
+    assert headers.to_tuple() == tuple(sorted(parsed.items()))
 
     # Run parser test cases.
     for title, raw_headers, original, parsed in cases_http_headers:
@@ -279,6 +285,17 @@ def test_http_headers():
         assert headers.to_dict() == parsed
 
 
+# Test cases for HTTP requests.
+cases_http_request = (
+
+    # ---
+
+
+    # ---
+
+)
+
+
 # This tests the HTTP request parser.
 def test_http_request():
 
@@ -287,12 +304,174 @@ def test_http_request():
     pass
 
 
+# Test cases for HTTP responses.
+cases_http_response = (
+
+    # ---
+
+    ("full HTTP 1.1 response",
+     {
+      "status":   "200",
+      "reason":   "OK",
+      "protocol": "HTTP",
+      "version":  "1.1",
+      "data":     "hola manola",
+      "raw_response": (
+          "HTTP/1.1 200 OK\r\n"
+          "Server: lalalala\r\n"
+          "Content-Length: 11\r\n"
+          "Set-Cookie: pepe=momo\r\n"
+          "\r\n"
+          "hola manola"
+      ),
+      "raw_headers": (
+          "Server: lalalala\r\n"
+          "Content-Length: 11\r\n"
+          "Set-Cookie: pepe=momo\r\n"
+          "\r\n"
+      ),
+     }
+    ),
+
+    # ---
+
+    ("HTTP 1.1 response with no data",
+     {
+      "status":   "500",
+      "reason":   "Bad Request",
+      "protocol": "HTTP",
+      "version":  "1.1",
+      "data":     None,
+      "raw_response": (
+          "HTTP/1.1 500 Bad Request\r\n"
+          "Server: lalalala\r\n"
+          "Content-Length: 0\r\n"
+          "Set-Cookie: pepe=momo\r\n"
+          "\r\n"
+      ),
+      "raw_headers": (
+          "Server: lalalala\r\n"
+          "Content-Length: 0\r\n"
+          "Set-Cookie: pepe=momo\r\n"
+          "\r\n"
+      ),
+     }
+    ),
+
+    # ---
+
+    ("full HTTP 1.0 response",
+     {
+      "status":   "200",
+      "reason":   "OK",
+      "protocol": "HTTP",
+      "version":  "1.0",
+      "data":     "hola manola",
+      "raw_response": (
+          "HTTP/1.0 200 OK\r\n"
+          "Server: lalalala\r\n"
+          "Content-Length: 11\r\n"
+          "Set-Cookie: pepe=momo\r\n"
+          "\r\n"
+          "hola manola"
+      ),
+      "raw_headers": (
+          "Server: lalalala\r\n"
+          "Content-Length: 11\r\n"
+          "Set-Cookie: pepe=momo\r\n"
+          "\r\n"
+      ),
+     }
+    ),
+
+    # ---
+
+    ("HTTP 1.0 response with no data",
+     {
+      "status":   "500",
+      "reason":   "Bad Request",
+      "protocol": "HTTP",
+      "version":  "1.0",
+      "data":     None,
+      "raw_response": (
+          "HTTP/1.0 500 Bad Request\r\n"
+          "Server: lalalala\r\n"
+          "Content-Length: 0\r\n"
+          "Set-Cookie: pepe=momo\r\n"
+          "\r\n"
+      ),
+      "raw_headers": (
+          "Server: lalalala\r\n"
+          "Content-Length: 0\r\n"
+          "Set-Cookie: pepe=momo\r\n"
+          "\r\n"
+      ),
+     }
+    ),
+
+    # ---
+
+    ("HTTP 1.0 response with no headers nor data",
+     {
+      "status":   "404",
+      "reason":   "Not Found",
+      "protocol": "HTTP",
+      "version":  "1.0",
+      "data":     None,
+      "raw_response": (
+          "HTTP/1.0 404 Not Found\r\n"
+          "\r\n"
+      ),
+      "raw_headers": "\r\n",
+     }
+    ),
+
+    # ---
+
+    ("broken HTTP 1.0 response with only version and status code",
+     {
+      "status":   "404",
+      "reason":   "Not Found",
+      "protocol": "HTTP",
+      "version":  "1.0",
+      "data":     None,
+      "raw_response": (
+          "HTTP/1.0 404\r\n"
+          "\r\n"
+      ),
+      "raw_headers": "\r\n",
+     }
+    ),
+
+    # ---
+
+)
+
+
 # This tests the HTTP response parser.
 def test_http_response():
-
-    # TODO
-
-    pass
+    for title, kwargs in cases_http_response:
+        print "Testing %s..." % title
+        request = HTTP_Request("http://www.example.com/index.html")
+        kw_1 = kwargs.copy()
+        kw_2 = {"raw_response": kw_1.pop("raw_response")}
+        kw_3 = kw_1.copy()
+        kw_3["headers"] = HTTP_Headers(kw_3.pop("raw_headers"))
+        for kw in (kw_1, kw_2, kw_3):
+            response = HTTP_Response(request, **kw)
+            assert response.identity in request.links
+            assert request.identity in response.links
+            assert str(response.headers) == kwargs["raw_headers"]
+            for key, value in kwargs.iteritems():
+                if key == "raw_response" and title.startswith("broken"):
+                    continue
+                try:
+                    assert getattr(response, key) == value
+                except AssertionError:
+                    print "  key == %r" % key
+                    print "  value == %r" % value
+                    print "  getattr(response, key) == %r" % getattr(response, key)
+                    raise
 
 
 # Run all tests from the command line.

@@ -381,8 +381,13 @@ class HTTP_Request (Information):
         :type version: str
         """
 
-        # HTTP method.
-        self.__method = method.upper()
+        # HTTP method, protocol and version.
+        self.__method    = method.upper()      # Not sure about upper() here...
+        self.__protocol  = protocol.upper()    # Not sure about upper() here...
+        self.__version   = version
+
+        # POST data.
+        self.__post_data = post_data
 
         # URL.
         self.__parsed_url = DecomposedURL(url)
@@ -392,7 +397,7 @@ class HTTP_Request (Information):
         if headers is None:
             headers = self.DEFAULT_HEADERS
             if version == "1.1":
-                headers = ("Host", self.__parsed_url.host) + headers
+                headers = (("Host", self.__parsed_url.host),) + headers
             headers = HTTP_Headers.from_items(headers)
         elif not isinstance(headers, HTTP_Headers):
             if type(headers) == unicode:
@@ -404,9 +409,6 @@ class HTTP_Request (Information):
             else:                                # dictionary items
                 headers = HTTP_Headers.from_items(sorted(headers))
         self.__headers = headers
-
-        # POST data.
-        self.__post_data = post_data
 
         # Call the parent constructor.
         super(HTTP_Request, self).__init__()
@@ -850,7 +852,8 @@ class HTTP_Response (Information):
             status_line = "%s%s\r\n" % (proto_ver, self.__reason)
 
         # Reconstruct the headers.
-        if not self.__raw_headers:
+        raw_headers = self.__raw_headers
+        if not raw_headers:
             if self.__headers:
                 self.__reconstruct_raw_headers()
                 raw_headers = self.__raw_headers
