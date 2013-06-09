@@ -474,6 +474,14 @@ class HTTP_Request (Information):
         return self.__parsed_url
 
     @property
+    def request_uri(self):
+        """
+        :return: Request URI.
+        :rtype: str
+        """
+        return self.__parsed_url.request_uri
+
+    @property
     def hostname(self):
         """
         :return: 'Host' HTTP header.
