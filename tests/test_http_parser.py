@@ -450,6 +450,8 @@ cases_http_response = (
 
 # This tests the HTTP response parser.
 def test_http_response():
+
+    # Run test cases.
     for title, kwargs in cases_http_response:
         print "Testing %s..." % title
         request = HTTP_Request("http://www.example.com/index.html")
@@ -472,6 +474,18 @@ def test_http_response():
                     print "  value == %r" % value
                     print "  getattr(response, key) == %r" % getattr(response, key)
                     raise
+
+    # Test HTTP 0.9.
+    print "Testing HTTP 0.9 response..."
+    request  = HTTP_Request("http://www.example.com/index.html", version="0.9")
+    response = HTTP_Response(request, data="hola manola")
+    assert response.raw_response == "hola manola"
+    assert response.raw_headers  == None
+    assert response.headers      == None
+    assert response.status       == "200"
+    assert response.reason       == "OK"
+    assert response.protocol     == "HTTP"
+    assert response.version      == "0.9"
 
 
 # Run all tests from the command line.

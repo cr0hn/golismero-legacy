@@ -593,10 +593,10 @@ class HTTP_Response (Information):
         # Initialize everything.
         self.__raw_response = None
         self.__raw_headers  = None
-        self.__status       = "200"
+        self.__status       = None
         self.__reason       = None
-        self.__protocol     = "HTTP"
-        self.__version      = "1.1"
+        self.__protocol     = request.protocol
+        self.__version      = request.version
         self.__headers      = None
         self.__data         = None
 
@@ -621,6 +621,9 @@ class HTTP_Response (Information):
                 if text.lower() == lower_reason:
                     self.__status = str(code)
                     break
+        elif not self.__status:
+            self.__status = "200"
+            self.__reason = "OK"
 
         # HTTP headers.
         self.__raw_headers = kwargs.get("raw_headers", self.__raw_headers)
