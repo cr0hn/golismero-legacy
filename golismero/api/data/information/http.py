@@ -360,7 +360,7 @@ class HTTP_Request (Information):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, url, headers = None, post_data = None, method = "GET", protocol = "HTTP", version = "1.1"):
+    def __init__(self, url, headers = None, post_data = None, method = None, protocol = "HTTP", version = "1.1"):
         """
         :param url: Absolute URL to connect to.
         :type url: str
@@ -371,7 +371,7 @@ class HTTP_Request (Information):
         :param post_data: POST data.
         :type post_data: str | None
 
-        :param method: HTTP method.
+        :param method: HTTP method. Defaults to POST if post_data is used, or to GET if no post_data is used.
         :type method: str
 
         :param protocol: Protocol name.
@@ -380,6 +380,10 @@ class HTTP_Request (Information):
         :param version: Protocol version.
         :type version: str
         """
+
+        # Default method.
+        if not method:
+            method = "POST" if post_data else "GET"
 
         # HTTP method, protocol and version.
         self.__method    = method.upper()      # Not sure about upper() here...
@@ -398,6 +402,9 @@ class HTTP_Request (Information):
             headers = self.DEFAULT_HEADERS
             if version == "1.1":
                 headers = (("Host", self.__parsed_url.host),) + headers
+            if post_data:
+                headers = headers + (("Content-Type", "application/x-www-form-urlencoded"),
+                                     ("Content-Length", str(len(post_data))))
             headers = HTTP_Headers.from_items(headers)
         elif not isinstance(headers, HTTP_Headers):
             if type(headers) == unicode:
@@ -487,7 +494,7 @@ class HTTP_Request (Information):
     def hostname(self):
         """
         :return: 'Host' HTTP header.
-        :rtype: str
+        :rtype: str | None
         """
         return self.__headers.get('Host')
 
@@ -495,7 +502,7 @@ class HTTP_Request (Information):
     def user_agent(self):
         """
         :return: 'User-Agent' HTTP header.
-        :rtype: str
+        :rtype: str | None
         """
         return self.__headers.get('User-Agent')
 
@@ -503,7 +510,7 @@ class HTTP_Request (Information):
     def accept_language(self):
         """
         :return: 'Accept-Language' HTTP header.
-        :rtype: str
+        :rtype: str | None
         """
         return self.__headers.get('Accept-Language')
 
@@ -511,7 +518,7 @@ class HTTP_Request (Information):
     def accept(self):
         """
         :return: 'Accept' HTTP header.
-        :rtype: str
+        :rtype: str | None
         """
         return self.__headers.get('Accept')
 
@@ -527,7 +534,7 @@ class HTTP_Request (Information):
     def cookie(self):
         """
         :return: 'Cookie' HTTP header.
-        :rtype: str
+        :rtype: str | None
         """
         return self.__headers.get('Cookie')
 
@@ -535,7 +542,7 @@ class HTTP_Request (Information):
     def content_type(self):
         """
         :return: 'Content-Type' HTTP header.
-        :rtype: str
+        :rtype: str | None
         """
         return self.__headers.get('Content-Type')
 
@@ -543,9 +550,12 @@ class HTTP_Request (Information):
     def content_length(self):
         """
         :return: 'Content-Length' HTTP header.
-        :rtype: int
+        :rtype: int | None
         """
-        return int(self.__headers.get('Content-Length'))
+        try:
+            return int(self.__headers.get('Content-Length'))
+        except Exception:
+            pass
 
 
 #------------------------------------------------------------------------------
@@ -555,6 +565,7 @@ class HTTP_Response (Information):
     """
 
     information_type = Information.INFORMATION_HTTP_RESPONSE
+    min_informations = 1
 
 
     #----------------------------------------------------------------------

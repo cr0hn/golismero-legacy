@@ -47,6 +47,7 @@ except NameError:
 
 # Imports.
 from golismero.api.data.information.http import HTTP_Headers, HTTP_Request, HTTP_Response
+from golismero.api.net.web_utils import DecomposedURL
 
 
 # Test cases for HTTP headers.
@@ -285,23 +286,125 @@ def test_http_headers():
         assert headers.to_dict() == parsed
 
 
-# Test cases for HTTP requests.
-cases_http_request = (
-
-    # ---
-
-
-    # ---
-
-)
-
-
 # This tests the HTTP request parser.
 def test_http_request():
 
-    # TODO
+    print "Testing a simple GET request..."
+    request = HTTP_Request("http://www.example.com/index.html")
+    assert request.method == "GET"
+    assert request.url == "http://www.example.com/index.html"
+    assert isinstance(request.parsed_url, DecomposedURL)
+    assert request.protocol == "HTTP"
+    assert request.version == "1.1"
+    assert isinstance(request.headers, HTTP_Headers)
+    assert request.post_data == None
+    assert request.request_uri == "/index.html"
+    assert request.hostname == "www.example.com"
+    assert request.user_agent == "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +https://github.com/cr0hn/golismero)"
+    assert request.accept_language == "en-US"
+    assert request.accept == "*/*"
+    assert request.referer == None
+    assert request.cookie == None
+    assert request.content_type == None
+    assert request.content_length == None
 
-    pass
+    print "Testing a simple POST request..."
+    request = HTTP_Request("http://www.example.com/form.php", post_data="hola=manola")
+    assert request.method == "POST"
+    assert request.url == "http://www.example.com/form.php"
+    assert isinstance(request.parsed_url, DecomposedURL)
+    assert request.protocol == "HTTP"
+    assert request.version == "1.1"
+    assert isinstance(request.headers, HTTP_Headers)
+    assert request.post_data == "hola=manola"
+    assert request.request_uri == "/form.php"
+    assert request.hostname == "www.example.com"
+    assert request.user_agent == "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +https://github.com/cr0hn/golismero)"
+    assert request.accept_language == "en-US"
+    assert request.accept == "*/*"
+    assert request.referer == None
+    assert request.cookie == None
+    assert request.content_type == "application/x-www-form-urlencoded"
+    assert request.content_length == len("hola=manola")
+
+    print "Testing a custom GET request (1)..."
+    t_headers = (("Cookie", "lala=pepe"), ("Referer", "http://www.example.com/"))
+    request = HTTP_Request("http://www.example.com/index.html", headers=t_headers, version="1.0")
+    assert request.method == "GET"
+    assert request.url == "http://www.example.com/index.html"
+    assert isinstance(request.parsed_url, DecomposedURL)
+    assert request.protocol == "HTTP"
+    assert request.version == "1.0"
+    assert request.headers.to_tuple() == t_headers
+    assert request.post_data == None
+    assert request.request_uri == "/index.html"
+    assert request.hostname == None
+    assert request.user_agent == None
+    assert request.accept_language == None
+    assert request.accept == None
+    assert request.referer == "http://www.example.com/"
+    assert request.cookie == "lala=pepe"
+    assert request.content_type == None
+    assert request.content_length == None
+
+    print "Testing a custom GET request (2)..."
+    d_headers = {"Cookie": "lala=pepe", "Referer": "http://www.example.com/"}
+    request = HTTP_Request("http://www.example.com/index.html", headers=d_headers, version="1.0")
+    assert request.method == "GET"
+    assert request.url == "http://www.example.com/index.html"
+    assert isinstance(request.parsed_url, DecomposedURL)
+    assert request.protocol == "HTTP"
+    assert request.version == "1.0"
+    assert request.headers.to_tuple() == tuple(sorted(d_headers.items()))
+    assert request.post_data == None
+    assert request.request_uri == "/index.html"
+    assert request.hostname == None
+    assert request.user_agent == None
+    assert request.accept_language == None
+    assert request.accept == None
+    assert request.referer == "http://www.example.com/"
+    assert request.cookie == "lala=pepe"
+    assert request.content_type == None
+    assert request.content_length == None
+
+    print "Testing a custom GET request (3)..."
+    o_headers = HTTP_Headers.from_items(t_headers)
+    request = HTTP_Request("http://www.example.com/form.php?hola=manola", headers=o_headers, version="1.0")
+    assert request.method == "GET"
+    assert request.url == "http://www.example.com/form.php?hola=manola"
+    assert isinstance(request.parsed_url, DecomposedURL)
+    assert request.protocol == "HTTP"
+    assert request.version == "1.0"
+    assert request.headers is o_headers
+    assert request.post_data == None
+    assert request.request_uri == "/form.php?hola=manola"
+    assert request.hostname == None
+    assert request.user_agent == None
+    assert request.accept_language == None
+    assert request.accept == None
+    assert request.referer == "http://www.example.com/"
+    assert request.cookie == "lala=pepe"
+    assert request.content_type == None
+    assert request.content_length == None
+
+    print "Testing a custom POST request..."
+    request = HTTP_Request("http://www.example.com/form.php", post_data="hola=manola", headers=t_headers, version="1.0")
+    assert request.method == "POST"
+    assert request.url == "http://www.example.com/form.php"
+    assert isinstance(request.parsed_url, DecomposedURL)
+    assert request.protocol == "HTTP"
+    assert request.version == "1.0"
+    assert request.headers.to_tuple() == t_headers
+    assert request.post_data == "hola=manola"
+    assert request.request_uri == "/form.php"
+    assert request.hostname == None
+    assert request.user_agent == None
+    assert request.accept_language == None
+    assert request.accept == None
+    assert request.referer == "http://www.example.com/"
+    assert request.cookie == "lala=pepe"
+    assert request.content_type == None
+    assert request.content_length == None
 
 
 # Test cases for HTTP responses.
@@ -465,7 +568,7 @@ def test_http_response():
             assert request.identity in response.links
             assert str(response.headers) == kwargs["raw_headers"]
             for key, value in kwargs.iteritems():
-                if key == "raw_response" and title.startswith("broken"):
+                if key == "raw_response" and "broken" in title:
                     continue
                 try:
                     assert getattr(response, key) == value
