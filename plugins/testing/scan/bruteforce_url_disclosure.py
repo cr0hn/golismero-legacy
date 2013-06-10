@@ -136,7 +136,7 @@ class UrlDisclosureBruteforcer(TestingPlugin):
     def recv_info(self, info):
 
         # XXX DEBUG
-        #return
+        return
 
         Logger.log_verbose("Bruteforcer - Start to process URL: '%s'" % str(info))
 
