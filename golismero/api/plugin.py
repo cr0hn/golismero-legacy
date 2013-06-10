@@ -39,8 +39,100 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["TestingPlugin", "UIPlugin", "ReportPlugin"]
 
 from .config import Config
+from ..common import Singleton
+from ..messaging.codes import MessageCode
 
 
+#------------------------------------------------------------------------------
+class PluginState (Singleton):
+    """
+    Container of plugin state variables.
+
+    State variables are stored in the audit database.
+    That way plugins can maintain state regardless of which process
+    (or machine!) is running them at any given point in time.
+    """
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def get(name):
+        """
+        Get the value of a state variable.
+
+        :param name: Name of the variable.
+        :type name: str
+
+        :returns: Value of the variable.
+        :rtype: *
+
+        :raises KeyError: The variable was not defined.
+        """
+        return Config._context.remote_call(
+            MessageCode.MSG_RPC_STATE_GET, Config.plugin_name, name)
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def check(name):
+        """
+        Check if a state variable has been defined.
+
+        :param name: Name of the variable to test.
+        :type name: str
+
+        :returns: True if the variable was defined, False otherwise.
+        :rtype: bool
+        """
+        return Config._context.remote_call(
+            MessageCode.MSG_RPC_STATE_CHECK, Config.plugin_name, name)
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def set(name, value):
+        """
+        Set the value of a state variable.
+
+        :param name: Name of the variable.
+        :type name: str
+
+        :param value: Value of the variable.
+        :type value: *
+        """
+        Config._context.async_remote_call(
+            MessageCode.MSG_RPC_STATE_ADD, Config.plugin_name, name, value)
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def remove(name):
+        """
+        Remove a state variable.
+
+        :param name: Name of the variable.
+        :type name: str
+
+        :raises KeyError: The variable was not defined.
+        """
+        Config._context.async_remote_call(
+            MessageCode.MSG_RPC_STATE_REMOVE, Config.plugin_name, name)
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def get_names():
+        """
+        Get the names of the defined state variables.
+
+        :returns: Names of the defined state variables.
+        :rtype: set(str)
+        """
+        Config._context.async_remote_call(
+            MessageCode.MSG_RPC_STATE_KEYS, Config.plugin_name)
+
+
+#------------------------------------------------------------------------------
 class Plugin (object):
     """
     Base class for all plugins.
@@ -55,6 +147,8 @@ class Plugin (object):
     PLUGIN_TYPE_LAST  = PLUGIN_TYPE_REPORT
 
     PLUGIN_TYPE = PLUGIN_TYPE_ABSTRACT
+
+    state = PluginState
 
 
     #----------------------------------------------------------------------
@@ -107,6 +201,54 @@ class Plugin (object):
         return
 
 
+##    #----------------------------------------------------------------------
+##    def __getattr__(self, name):
+##        """
+##        When getting instance attributes from plugins, if they're not
+##        defined as static to the class they're fetched from the database.
+##
+##        That way plugins can maintain state regardless of which process
+##        (or machine!) is running them at any given point in time.
+##
+##        :param name: Name of the attribute.
+##        :type name: str
+##
+##        :returns: Value of the attribute.
+##        :rtype: *
+##
+##        :raises AttributeError: The attribute was not defined.
+##        """
+##        if not Config._has_context:
+##            return object.__getattribute__(name)
+##        try:
+##            return self.state.get(name)
+##        except KeyError:
+##            raise AttributeError(
+##                "'%s' instance has no attribute '%s'" % \
+##                (self.__class__.__name__, name))
+##
+##
+##    #----------------------------------------------------------------------
+##    def __setattr__(self, name, value):
+##        """
+##        When setting instance attributes in plugins, if they're not
+##        defined as static to the class they're stored into the database.
+##
+##        That way plugins can maintain state regardless of which process
+##        (or machine!) is running them at any given point in time.
+##
+##        :param name: Name of the attribute.
+##        :type name: str
+##
+##        :param value: Value of the attribute.
+##        :type value: *
+##        """
+##        if not Config._has_context or hasattr(self, name):
+##            object.__setattr__(self, name, value)
+##        else:
+##            self.state.set(name, value)
+
+
 #------------------------------------------------------------------------------
 class InformationPlugin (Plugin):
     """
@@ -152,6 +294,11 @@ class UIPlugin (InformationPlugin):
     PLUGIN_TYPE = Plugin.PLUGIN_TYPE_UI
 
 
+##    # Disable the magic plugin state feature for UI plugins.
+##    __getattr__ = object.__getattribute__
+##    __setattr__ = object.__setattr__
+
+
     #----------------------------------------------------------------------
     def recv_msg(self, message):
         """
@@ -164,11 +311,6 @@ class UIPlugin (InformationPlugin):
 
 
     #----------------------------------------------------------------------
-    def _set_observer(self, observer):
-        self.__observer_ref = observer
-
-
-    #----------------------------------------------------------------------
     def send_msg(self, message):
         """
         Plugins call this method to send messages back to GoLismero.
@@ -177,6 +319,11 @@ class UIPlugin (InformationPlugin):
            Do not override this method!
         """
         self.__observer_ref.send_msg(message)
+
+
+    #----------------------------------------------------------------------
+    def _set_observer(self, observer):
+        self.__observer_ref = observer
 
 
 #------------------------------------------------------------------------------

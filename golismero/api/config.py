@@ -66,7 +66,7 @@ class _Config (Singleton):
         :returns: Name of the audit.
         :rtype: str
         """
-        return self.__context.audit_name
+        return self._context.audit_name
 
 
     @property
@@ -75,7 +75,7 @@ class _Config (Singleton):
         :returns: Parameters of the audit.
         :rtype: AuditConfig
         """
-        return self.__context.audit_config
+        return self._context.audit_config
 
 
     @property
@@ -84,7 +84,7 @@ class _Config (Singleton):
         :returns: Plugin information.
         :rtype: PluginInfo
         """
-        return self.__context.plugin_info
+        return self._context.plugin_info
 
 
     @property
@@ -192,6 +192,20 @@ class _Config (Singleton):
         # TODO: check the call stack to make sure it's called only
         #       from pre-approved places.
         self.__context = context
+
+
+    @property
+    def _has_context(self):
+        """
+        :returns: True if the plugin execution environment is initialized, False otherwise.
+        :rtype: bool
+        """
+        try:
+            self.__context
+            return True
+        except AttributeError:
+            return False
+
 
     #--------------------------------------------------------------------------
 

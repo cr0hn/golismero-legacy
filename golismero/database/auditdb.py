@@ -86,23 +86,23 @@ def rpc_data_db_plugins(orchestrator, audit_name, *argv, **argd):
     return orchestrator.auditManager.get_audit(audit_name).database.get_past_plugins(*argv, **argd)
 
 @implementor(MessageCode.MSG_RPC_STATE_ADD)
-def rpc_plugin_db_add(orchestrator, audit_name, *argv, **argd):
+def rpc_plugin_state_add(orchestrator, audit_name, *argv, **argd):
     return orchestrator.auditManager.get_audit(audit_name).database.add_state_variable(*argv, **argd)
 
 @implementor(MessageCode.MSG_RPC_STATE_REMOVE)
-def rpc_plugin_db_remove(orchestrator, audit_name, *argv, **argd):
+def rpc_plugin_state_remove(orchestrator, audit_name, *argv, **argd):
     return orchestrator.auditManager.get_audit(audit_name).database.remove_state_variable(*argv, **argd)
 
 @implementor(MessageCode.MSG_RPC_STATE_CHECK)
-def rpc_plugin_db_check(orchestrator, audit_name, *argv, **argd):
+def rpc_plugin_state_check(orchestrator, audit_name, *argv, **argd):
     return orchestrator.auditManager.get_audit(audit_name).database.has_state_variable(*argv, **argd)
 
 @implementor(MessageCode.MSG_RPC_STATE_GET)
-def rpc_plugin_db_get(orchestrator, audit_name, *argv, **argd):
+def rpc_plugin_state_get(orchestrator, audit_name, *argv, **argd):
     return orchestrator.auditManager.get_audit(audit_name).database.get_state_variable(*argv, **argd)
 
 @implementor(MessageCode.MSG_RPC_STATE_KEYS)
-def rpc_plugin_db_keys(orchestrator, audit_name, *argv, **argd):
+def rpc_plugin_state_keys(orchestrator, audit_name, *argv, **argd):
     return orchestrator.auditManager.get_audit(audit_name).database.get_state_variable_names(*argv, **argd)
 
 
