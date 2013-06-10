@@ -68,16 +68,13 @@ class Url(Resource):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, url, method = "GET", url_params = None, post_params = None, depth = 0, referer = None):
+    def __init__(self, url, method = "GET", post_params = None, depth = 0, referer = None):
         """
         :param url: Absolute URL.
         :type url: str
 
         :param method: HTTP method.
         :type method: str
-
-        :param url_params: GET parameters.
-        :type url_params: dict(str -> str)
 
         :param post_params: POST parameters.
         :type post_params: dict(str -> str)
@@ -106,9 +103,6 @@ class Url(Resource):
 
         # Method.
         self.__method = method.strip().upper() if method else "GET"
-
-        # GET params.
-        self.__url_params = url_params if url_params else {}
 
         # POST params.
         self.__post_params = post_params if post_params else {}
@@ -190,12 +184,23 @@ class Url(Resource):
         return self.__parsed_url
 
     @property
+    def hostname(self):
+        """
+        :return: Hostname this URL points to.
+        :rtype: str
+        """
+        return self.__parsed_url.hostname
+
+    @property
     def url_params(self):
         """
         :return: GET parameters.
         :rtype: dict(str -> str)
         """
-        return self.__url_params
+        query = self.__parsed_url.query
+        if type(query) not in (str, unicode):
+            return query
+        return {}
 
     @property
     def is_https(self):
