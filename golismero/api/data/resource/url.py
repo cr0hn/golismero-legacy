@@ -244,4 +244,4 @@ class Url(Resource):
 
     @property
     def discovered_resources(self):
-        return [Domain(self.parsed_url.hostname), BaseUrl(self.url)]
+        return [Domain(self.hostname), BaseUrl(self.url)]

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Base URL type.
+Email address type.
 """
 
 __license__ = """
@@ -30,7 +30,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["BaseUrl"]
+__all__ = ["Email"]
 
 from . import Resource
 from .domain import Domain
@@ -39,108 +39,92 @@ from ...net.web_utils import DecomposedURL, is_in_scope
 
 
 #------------------------------------------------------------------------------
-class BaseUrl(Resource):
+class Email(Resource):
     """
-    Base URL.
-
-    Unlike the Url type, which refers to any URL, this type is strictly for
-    root level URLs in a web server. Plugins that only run once per web server
-    should probably receive this data type.
-
-    For example, a plugin receiving both BaseUrl and Url may get this input:
-
-    - BaseUrl("http://www.my_site.com/")
-    - Url("http://www.my_site.com/")
-    - Url("http://www.my_site.com/index.php")
-    - Url("http://www.my_site.com/admin.php")
-    - Url("http://www.my_site.com/login.php")
-
-    Notice how the root level URL is sent twice,
-    once as BaseUrl and again the more generic Url.
+    Email address.
     """
 
-    resource_type = Resource.RESOURCE_BASE_URL
+    resource_type = Resource.RESOURCE_EMAIL
 
 
     #----------------------------------------------------------------------
-    def __init__(self, url):
+    def __init__(self, address, name = None):
         """
-        :param url: Any **absolute** URL. The base will be extracted from it.
-        :type url: str
+        :param address: Email address.
+        :type address: str
 
-        :raises ValueError: Only absolute URLs must be used.
+        :param name: Optional real life name associated with this email.
+        :type name: str | None
         """
-        assert isinstance(url, basestring)
 
-        # Parse, verify and canonicalize the URL.
-        parsed = DecomposedURL(url)
-        if not parsed.host or not parsed.scheme:
-            raise ValueError("Only absolute URLs must be used!")
+        # Email address.
+        # TODO: sanitize the email addresses using a regular expression
+        self.__address = address
 
-        # Convert it into a base URL.
-        parsed.auth = None
-        parsed.path = "/"
-        parsed.fragment = None
-        parsed.query = None
-        parsed.query_char = None
-        url = parsed.url
-
-        # Raw base URL.
-        self.__url = url
-
-        # Parsed base URL.
-        self.__parsed_url = parsed
+        # Real name.
+        self.__name = name
 
         # Parent constructor.
-        super(BaseUrl, self).__init__()
+        super(Email, self).__init__()
 
 
     #----------------------------------------------------------------------
     def __str__(self):
-        return self.url
+        return self.address
 
 
     #----------------------------------------------------------------------
     def __repr__(self):
-        return "<BaseUrl url=%r>" % self.url
+        return "<Email address=%r name=%r>" % (self.address, self.name)
 
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.url)
+        return is_in_scope(self.domain)
 
 
     #----------------------------------------------------------------------
     @identity
-    def url(self):
+    def address(self):
         """
-        :return: Raw URL.
+        :return: Email address.
         :rtype: str
         """
-        return self.__url
+        return self.__address
 
 
     #----------------------------------------------------------------------
     @property
-    def parsed_url(self):
+    def name(self):
         """
-        :return: Parsed URL.
-        :rtype: DecomposedURL
+        :return: Real name.
+        :rtype: str | None
         """
-        return self.__parsed_url
+        return self.__name
 
 
     #----------------------------------------------------------------------
     @property
-    def is_https(self):
+    def url(self):
         """
-        :return: True if it's HTTPS, False otherwise.
-        :rtype: bool
+        :return: mailto:// URL for this email address.
+        :rtype: str
         """
-        return self.__parsed_url.scheme == "https"
+        return "mailto://" + self.__address
 
 
     #----------------------------------------------------------------------
+    @property
+    def hostname(self):
+        """
+        :return: Host name for this email address.
+        :rtype: str
+        """
+        return self.__address.split("@", 1)[1].strip().lower()
+
+
+    #----------------------------------------------------------------------
+
     @property
     def discovered_resources(self):
-        return [Domain(self.parsed_url.hostname),]
+        return [Domain(self.hostname)]

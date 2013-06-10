@@ -51,7 +51,7 @@ class Resource(Data):
     RESOURCE_BASE_URL      = 2    # Base URLs
     RESOURCE_DOMAIN        = 3    # Domain names
     #RESOURCE_IP            = 4    # IP addresses
-    #RESOURCE_MAIL          = 5    # Email addresses
+    RESOURCE_EMAIL         = 5    # Email addresses
 
 
     RESOURCE_FIRST = RESOURCE_URL
