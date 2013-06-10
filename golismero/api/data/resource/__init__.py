@@ -49,9 +49,10 @@ class Resource(Data):
     RESOURCE_UNKNOWN       = 0    # Not a real value!
     RESOURCE_URL           = 1    # URLs
     RESOURCE_BASE_URL      = 2    # Base URLs
-    RESOURCE_DOMAIN        = 3    # Domain names
-    #RESOURCE_IP            = 4    # IP addresses
-    RESOURCE_EMAIL         = 5    # Email addresses
+    RESOURCE_FOLDER_URL    = 3    # Folder URLs
+    RESOURCE_DOMAIN        = 4    # Domain names
+    #RESOURCE_IP            = 5    # IP addresses
+    RESOURCE_EMAIL         = 6    # Email addresses
 
 
     RESOURCE_FIRST = RESOURCE_URL

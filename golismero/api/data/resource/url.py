@@ -35,6 +35,7 @@ __all__ = ["Url"]
 from . import Resource
 from .baseurl import BaseUrl
 from .domain import Domain
+from .folderurl import FolderUrl
 from .. import identity
 from ...net.web_utils import DecomposedURL, is_in_scope
 
@@ -244,4 +245,4 @@ class Url(Resource):
 
     @property
     def discovered_resources(self):
-        return [Domain(self.hostname), BaseUrl(self.url)]
+        return [Domain(self.hostname), BaseUrl(self.url)] + FolderUrl.from_url(self.url)

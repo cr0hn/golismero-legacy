@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Base URL type.
+Folder URL type.
 """
 
 __license__ = """
@@ -39,34 +39,74 @@ from ...net.web_utils import DecomposedURL, is_in_scope
 
 
 #------------------------------------------------------------------------------
-class BaseUrl(Resource):
+class FolderUrl(Resource):
     """
-    Base URL.
+    Folder URL.
 
-    Unlike the Url type, which refers to any URL, this type is strictly for
-    root level URLs in a web server. Plugins that only run once per web server
-    should probably receive this data type.
+    Unlike the Url type, which refers to an URL that's linked or somehow found
+    to be valid, the FolderUrl type refers to inferred URLs to folders detected
+    within another URL.
 
-    For example, a plugin receiving both BaseUrl and Url may get this input:
+    This makes it semantically different, since there's no guarantee that the
+    URL actually points to a valid resource, nor that it belongs to the normal
+    web access flow.
 
-    - BaseUrl("http://www.my_site.com/")
-    - Url("http://www.my_site.com/")
-    - Url("http://www.my_site.com/index.php")
-    - Url("http://www.my_site.com/admin.php")
-    - Url("http://www.my_site.com/login.php")
+    For example, a plugin receiving both FolderUrl and Url may get this input:
 
-    Notice how the root level URL is sent twice,
-    once as BaseUrl and again the more generic Url.
+    - Url("http://www.my_site.com/wp-content/uploads/2013/06/attachment.pdf")
+    - FolderUrl("http://www.my_site.com/wp-content/uploads/2013/06/")
+    - FolderUrl("http://www.my_site.com/wp-content/uploads/2013/")
+    - FolderUrl("http://www.my_site.com/wp-content/uploads/")
+    - FolderUrl("http://www.my_site.com/wp-content/")
+
+    Note that the folder URLs may or may not be sent again as an Url object.
+    For example, for a site that has a link to the "incoming" directory in its
+    index page, we may get something like this:
+
+    - Url("http://www.my_site.com/index.html")
+    - Url("http://www.my_site.com/incoming/")
+    - FolderUrl("http://www.my_site.com/incoming/")
+
+    FolderUrl objects are never sent for the root folder of a web site.
+    For that, see the BaseUrl data type.
     """
 
-    resource_type = Resource.RESOURCE_BASE_URL
+    resource_type = Resource.RESOURCE_FOLDER_URL
 
 
     #----------------------------------------------------------------------
     def __init__(self, url):
         """
-        :param url: Any **absolute** URL. The base will be extracted from it.
+        :param url: Absolute URL to a folder.
         :type url: str
+
+        :raises ValueError: The URL wasn't absolute or didn't point to a folder.
+        """
+
+        # Parse, verify and canonicalize the URL.
+        parsed = DecomposedURL(url)
+        if not parsed.host or not parsed.scheme:
+            raise ValueError("Only absolute URLs must be used!")
+        if not parsed.path.endswith("/"):
+            raise ValueError("URL does not point to a folder!")
+
+        # Store the URL.
+        self.__url = url
+        self.__parsed_url = parsed
+
+        # Call the parent constructor.
+        super(FolderUrl, self).__init__()
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def from_url(url):
+        """
+        :param url: Any **absolute** URL. The folder will be extracted from it.
+        :type url: str
+
+        :returns: Inferred folder URLs.
+        :rtype: list(FolderUrl)
 
         :raises ValueError: Only absolute URLs must be used.
         """
@@ -77,22 +117,27 @@ class BaseUrl(Resource):
         if not parsed.host or not parsed.scheme:
             raise ValueError("Only absolute URLs must be used!")
 
-        # Convert it into a base URL.
+        # Extract the folders from the path.
+        path = parsed.path
+        folders = path.split("/")
+        if not path.endswith("/"):
+            folders.pop()
+
+        # Convert the URL to a base URL.
         parsed.auth = None
         parsed.path = "/"
         parsed.fragment = None
         parsed.query = None
         parsed.query_char = None
-        url = parsed.url
 
-        # Raw base URL.
-        self.__url = url
+        # Generate a new folder URL for each folder.
+        retval = []
+        for folder in folders:
+            parsed.path += folder + "/"
+            retval.append( FolderUrl(parsed.url) )
 
-        # Parsed base URL.
-        self.__parsed_url = parsed
-
-        # Parent constructor.
-        super(BaseUrl, self).__init__()
+        # Return the generated URLs.
+        return retval
 
 
     #----------------------------------------------------------------------
@@ -102,7 +147,7 @@ class BaseUrl(Resource):
 
     #----------------------------------------------------------------------
     def __repr__(self):
-        return "<BaseUrl url=%r>" % self.url
+        return "<FolderUrl url=%r>" % self.url
 
 
     #----------------------------------------------------------------------
@@ -138,6 +183,16 @@ class BaseUrl(Resource):
         :rtype: str
         """
         return self.__parsed_url.hostname
+
+
+    #----------------------------------------------------------------------
+    @property
+    def path(self):
+        """
+        :return: Path component of the URL.
+        :rtype: str
+        """
+        return self.__parsed_url.path
 
 
     #----------------------------------------------------------------------
