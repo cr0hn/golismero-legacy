@@ -64,7 +64,7 @@
 <p>Universal Resource Locator (URL).</p>
 <dl class="class">
 <dt id="golismero.api.data.resource.url.Url">
-<em class="property">class </em><tt class="descclassname">golismero.api.data.resource.url.</tt><tt class="descname">Url</tt><big>(</big><em>url</em>, <em>method='GET'</em>, <em>url_params=None</em>, <em>post_params=None</em>, <em>depth=0</em>, <em>referer=None</em><big>)</big><a class="headerlink" href="#golismero.api.data.resource.url.Url" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">golismero.api.data.resource.url.</tt><tt class="descname">Url</tt><big>(</big><em>url</em>, <em>method='GET'</em>, <em>post_params=None</em>, <em>depth=0</em>, <em>referer=None</em><big>)</big><a class="headerlink" href="#golismero.api.data.resource.url.Url" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../data.html#golismero.api.data.resource.Resource" title="golismero.api.data.resource.Resource"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.resource.Resource</span></tt></a></p>
 <p>Universal Resource Locator (URL).</p>
 <p>You can get the URL in canonical form:</p>
@@ -126,6 +126,21 @@
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if there are GET parameters, False otherwise.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="golismero.api.data.resource.url.Url.hostname">
+<tt class="descname">hostname</tt><a class="headerlink" href="#golismero.api.data.resource.url.Url.hostname" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Hostname this URL points to.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -261,6 +276,21 @@ should probably receive this data type.</p>
 <p>Notice how the root level URL is sent twice,
 once as BaseUrl and again the more generic Url.</p>
 <dl class="attribute">
+<dt id="golismero.api.data.resource.baseurl.BaseUrl.hostname">
+<tt class="descname">hostname</tt><a class="headerlink" href="#golismero.api.data.resource.baseurl.BaseUrl.hostname" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Hostname this URL points to.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="golismero.api.data.resource.baseurl.BaseUrl.is_https">
 <tt class="descname">is_https</tt><a class="headerlink" href="#golismero.api.data.resource.baseurl.BaseUrl.is_https" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -284,7 +314,7 @@ once as BaseUrl and again the more generic Url.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Parsed URL.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">DecomposedURL.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">DecomposedURL</td>
 </tr>
 </tbody>
 </table>

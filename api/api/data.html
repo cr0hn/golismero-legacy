@@ -486,7 +486,7 @@ Plugins do not need to call it.</p>
 <span class="target" id="module-golismero.api.data.vulnerability"></span><p>Vulnerability types.</p>
 <dl class="class">
 <dt id="golismero.api.data.vulnerability.Vulnerability">
-<em class="property">class </em><tt class="descclassname">golismero.api.data.vulnerability.</tt><tt class="descname">Vulnerability</tt><big>(</big><em>impact=0</em>, <em>cve=''</em>, <em>cwe=''</em>, <em>severity=0</em>, <em>risk=0</em>, <em>references=()</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.Vulnerability" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">golismero.api.data.vulnerability.</tt><tt class="descname">Vulnerability</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.Vulnerability" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#golismero.api.data.Data" title="golismero.api.data.Data"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.Data</span></tt></a></p>
 <p>Base class for all vulnerabilities.</p>
 <dl class="attribute">
@@ -583,7 +583,7 @@ Plugins do not need to call it.</p>
 
 <dl class="class">
 <dt id="golismero.api.data.vulnerability.UrlVulnerability">
-<em class="property">class </em><tt class="descclassname">golismero.api.data.vulnerability.</tt><tt class="descname">UrlVulnerability</tt><big>(</big><em>url</em>, <em>*argv</em>, <em>**argd</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">golismero.api.data.vulnerability.</tt><tt class="descname">UrlVulnerability</tt><big>(</big><em>url</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#golismero.api.data.vulnerability.UrlVulnerability" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#golismero.api.data.vulnerability.Vulnerability" title="golismero.api.data.vulnerability.Vulnerability"><tt class="xref py py-class docutils literal"><span class="pre">golismero.api.data.vulnerability.Vulnerability</span></tt></a></p>
 <p>Base class for all vulnerabilities associated with a single URL.</p>
 <dl class="attribute">
