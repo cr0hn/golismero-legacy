@@ -30,7 +30,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["PriscillaPluginManager", "PluginInfo"]
+__all__ = ["PluginManager", "PluginInfo"]
 
 from ..api.plugin import TestingPlugin, ReportPlugin, UIPlugin
 from ..common import Singleton
@@ -228,16 +228,16 @@ class PluginInfo (object):
         if not stage:
             try:
                 subcategory  = plugin_name.split("/")[1].lower()
-                self.__stage = PriscillaPluginManager.STAGES[subcategory]
+                self.__stage = PluginManager.STAGES[subcategory]
             except Exception:
                 self.__stage = 1
         else:
             try:
-                self.__stage = PriscillaPluginManager.STAGES[stage.lower()]
+                self.__stage = PluginManager.STAGES[stage.lower()]
             except KeyError:
                 try:
                     self.__stage = int(stage)
-                    if self.__stage not in PriscillaPluginManager.STAGES.values():
+                    if self.__stage not in PluginManager.STAGES.values():
                         raise ValueError()
                 except Exception:
                     msg = "Error parsing %r: invalid execution stage: %s"
@@ -329,7 +329,7 @@ class PluginInfo (object):
 
 
 #----------------------------------------------------------------------
-class PriscillaPluginManager (Singleton):
+class PluginManager (Singleton):
     """
     Plugin Manager.
     """

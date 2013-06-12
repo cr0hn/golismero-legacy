@@ -61,9 +61,7 @@ class NetworkManager (object):
     #----------------------------------------------------------------------
     def __init__(self, config):
         """
-        Constructor.
-
-        :param config: Global configuration object
+        :param config: Global configuration object.
         :type config: OrchestratorConfig
         """
 
@@ -80,6 +78,10 @@ class NetworkManager (object):
     #----------------------------------------------------------------------
     @property
     def max_connections(self):
+        """
+        :returns: Maximum allowed number of connection slots per host.
+        :rtype: int
+        """
         return self.__config.max_connections
 
 
@@ -97,7 +99,8 @@ class NetworkManager (object):
         :param number: Number of connection slots to request.
         :type number: int
 
-        :returns: str -- Request token | None
+        :returns: Request token on success, None on failure.
+        :rtype: str | None
         """
         if number != abs(number):
             raise ValueError("Number of slots can't be negative!")
@@ -113,6 +116,8 @@ class NetworkManager (object):
     def release_slot(self, audit_name, token):
         """
         Release a previously requested number of connection slots for a host.
+
+        This method doesn't raise any exceptions.
 
         :param audit_name: Audit name.
         :type audit_name: str

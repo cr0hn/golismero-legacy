@@ -1,6 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Process manager.
+
+Here's where the process pool is prepared and plugins are launched.
+The bootstrapping code for plugins is also here.
+
+Lots of black magic going on, beware of dragons! :)
+"""
+
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -37,7 +46,7 @@ from ..messaging.message import Message
 from imp import load_source
 from multiprocessing import Manager
 from multiprocessing import Process as _Original_Process
-from multiprocessing.pool import Pool
+from multiprocessing.pool import Pool as _Original_Pool
 from os import getpid
 from warnings import catch_warnings, warn
 from traceback import format_exc, print_exc, format_exception_only, format_list
@@ -49,6 +58,8 @@ from sys import exit, stdout, stderr   # the real std handles, not hooked
 class Process(_Original_Process):
     """
     A customized process that forces the 'daemon' property to False.
+
+    This means we have to take care of killing our own subprocesses.
     """
 
     @property
@@ -65,16 +76,18 @@ class Process(_Original_Process):
 
 
 #------------------------------------------------------------------------------
-class Pool(Pool):
+class Pool(_Original_Pool):
     """
     A customized process pool that forces the 'daemon' property to False.
+
+    This means we have to take care of killing our own subprocesses.
     """
     Process = Process
 
 
 #------------------------------------------------------------------------------
 
-# Plugin class per-process cache. Used by the bootstrap function.
+# Plugin class per-process cache. Used by the bootstrap() function.
 plugin_class_cache = dict()   # tuple(class, module) -> class object
 
 # Do-nothing function for "warming up" the process pool.
@@ -88,10 +101,6 @@ def do_nothing(*argv, **argd):
 def launcher(queue, max_process, refresh_after_tasks):
     return _launcher(queue, max_process, refresh_after_tasks)
 def _launcher(queue, max_process, refresh_after_tasks):
-    #print '-'*79       # XXX DEBUG
-    #import os
-    #print os.getpid()
-    #print '-'*79       # XXX DEBUG
 
     # Instance the pool manager.
     pool = PluginPoolManager(max_process, refresh_after_tasks)
@@ -301,45 +310,69 @@ class PluginContext (object):
 
     @property
     def msg_queue(self):
-        "str -- Message queue where to send the responses."
+        """"
+        :returns: Message queue where to send the responses.
+        :rtype: str
+        """
         return self.__msg_queue
 
     @property
     def audit_name(self):
-        "str -- Name of the audit. | None -- Not running an audit."
+        """"
+        :returns: Name of the audit, or None if not running an audit.
+        :rtype: str | None
+        """
         return self.__audit_name
 
     @property
     def audit_config(self):
-        "AuditConfig -- Parameters of the audit. | None -- Not running an audit."
+        """"
+        :returns: Parameters of the audit, or None if not running an audit.
+        :rtype: AuditConfig
+        """
         return self.__audit_config
 
     @property
     def plugin_info(self):
-        "PluginInfo -- Plugin information. | None -- Not running a plugin."
+        """"
+        :returns: Plugin information, or None if not running a plugin.
+        :rtype: str | None
+        """
         return self.__plugin_info
 
     @property
     def plugin_name(self):
-        "str -- Plugin name. | None -- Not running a plugin."
+        """"
+        :returns: Plugin name, or None if not running a plugin.
+        :rtype: str | None
+        """
         if self.__plugin_info:
             return self.__plugin_info.plugin_name
 
     @property
     def plugin_module(self):
-        "str -- Module where the plugin is to be loaded from. | None -- Not running a plugin."
+        """"
+        :returns: Module where the plugin is to be loaded from, or None if not running a plugin.
+        :rtype: str | None
+        """
         if self.__plugin_info:
             return self.__plugin_info.plugin_module
 
     @property
     def plugin_class(self):
-        "str -- Class name of the plugin. | None -- Not running a plugin."
+        """"
+        :returns: Class name of the plugin, or None if not running a plugin.
+        :rtype: str | None
+        """
         if self.__plugin_info:
             return self.__plugin_info.plugin_class
 
     @property
     def plugin_config(self):
-        "dict -- Plugin configuration. | None -- Not running a plugin."
+        """"
+        :returns: Plugin configuration, or None if not running a plugin.
+        :rtype: str | None
+        """
         if self.__plugin_info:
             return self.__plugin_info.plugin_config
 
@@ -366,14 +399,17 @@ class PluginContext (object):
         """
         Send messages from the plugins to the orchestrator.
 
-        :param message_type: specifies the type of message.
-        :type mesage_type: int -- specified in a constant of Message class.
+        :param message_type: Message type. Must be one of the constants from MessageType.
+        :type mesage_type: int
 
-        :param message_code: specifies the code of message.
-        :type message_code: int -- specified in a constant of Message class.
+        :param message_code: Message code. Must be one of the constants from MessageCode.
+        :type message_code: int
 
-        :param message_info: the payload of the message.
-        :type message_info: object -- type must be resolved at run time.
+        :param message_info: The payload of the message. Its type depends on the message type and code.
+        :type message_info: *
+
+        :param priority: Priority level. Must be one of the constants from MessagePriority.
+        :type priority: int
         """
 
         # Special case if we're in the same process
@@ -403,7 +439,7 @@ class PluginContext (object):
         """
         Send raw messages from the plugins to the orchestrator.
 
-        :param message: Message to send
+        :param message: Message to send.
         :type message: Message
         """
 
@@ -429,10 +465,11 @@ class PluginContext (object):
         """
         Make synchronous remote procedure calls on the orchestrator.
 
-        :param rpc_code: RPC code
+        :param rpc_code: RPC code.
         :type rpc_code: int
 
         :returns: Depends on the call.
+        :rtype: *
         """
 
         # Create the response queue.
@@ -468,7 +505,7 @@ class PluginContext (object):
 
         There's no return value, since we're not waiting for a response.
 
-        :param rpc_code: RPC code
+        :param rpc_code: RPC code.
         :type rpc_code: int
         """
         # Send the RPC message.
@@ -485,10 +522,11 @@ class PluginContext (object):
         The interface and behavior mimics that of the built-in map() function.
         For more details see: http://docs.python.org/2/library/functions.html#map
 
-        :param rpc_code: RPC code
+        :param rpc_code: RPC code.
         :type rpc_code: int
 
-        :returns: list -- List contents depend on the call.
+        :returns: List contents depend on the call.
+        :rtype: list
         """
 
         # Convert all the iterables to tuples to make sure they're serializable.
@@ -508,7 +546,7 @@ class PluginContext (object):
 
         There's no return value, since we're not waiting for a response.
 
-        :param rpc_code: RPC code
+        :param rpc_code: RPC code.
         :type rpc_code: int
         """
 
@@ -528,8 +566,7 @@ class PluginPoolManager (object):
 
     #----------------------------------------------------------------------
     def __init__(self, max_process, refresh_after_tasks):
-        """Constructor.
-
+        """
         :param max_process: Maximum number of processes to create.
         :type max_process: int
 
@@ -547,26 +584,26 @@ class PluginPoolManager (object):
         """
         Run a plugin in a pooled process.
 
-        :param context: context for the OOP plugin execution
+        :param context: Context for the OOP plugin execution.
         :type context: PluginContext
 
-        :param func: name of the method to execute
+        :param func: Name of the method to execute.
         :type func: str
 
-        :param argv: positional arguments to the function call
+        :param argv: Positional arguments to the function call.
         :type argv: tuple
 
-        :param argd: keyword arguments to the function call
+        :param argd: Keyword arguments to the function call.
         :type argd: dict
         """
 
-        # If we have a process pool, run the plugin asynchronously
+        # If we have a process pool, run the plugin asynchronously.
         if self.__pool is not None:
             self.__pool.apply_async(bootstrap,
                     (context, func, argv, argd))
             return
 
-        # Otherwise just call the plugin directly
+        # Otherwise just call the plugin directly.
         old_context = Config._context
         try:
             return bootstrap(context, func, argv, argd)
@@ -580,13 +617,13 @@ class PluginPoolManager (object):
         Start the process manager.
         """
 
-        # If we already have a process pool, do nothing
+        # If we already have a process pool, do nothing.
         if self.__pool is None:
 
             # Are we running the plugins in multiprocessing mode?
             if self.__max_processes is not None and self.__max_processes > 0:
 
-                # Create the process pool
+                # Create the process pool.
                 self.__pool = Pool(
                     processes = self.__max_processes,
                     maxtasksperchild = self.__refresh_after_tasks)
@@ -620,10 +657,10 @@ class PluginPoolManager (object):
                 self.__pool.terminate()
             self.__pool.join()
 
-            # Destroy the process pool
+            # Destroy the process pool.
             self.__pool = None
 
-        # Clear the plugin instance cache
+        # Clear the plugin instance cache.
         plugin_class_cache.clear()
 
 
@@ -636,8 +673,7 @@ class PluginLauncher (object):
 
     #----------------------------------------------------------------------
     def __init__(self, max_process, refresh_after_tasks):
-        """Constructor.
-
+        """
         :param max_process: Maximum number of processes to create.
         :type max_process: int
 
@@ -657,16 +693,16 @@ class PluginLauncher (object):
         """
         Run a plugin in a pooled process.
 
-        :param context: context for the OOP plugin execution
+        :param context: Context for the OOP plugin execution.
         :type context: PluginContext
 
-        :param func: name of the method to execute
+        :param func: Name of the method to execute.
         :type func: str
 
-        :param argv: positional arguments to the function call
+        :param argv: Positional arguments to the function call.
         :type argv: tuple
 
-        :param argd: keyword arguments to the function call
+        :param argd: Keyword arguments to the function call.
         :type argd: dict
         """
 
@@ -734,8 +770,7 @@ class ProcessManager (object):
 
     #----------------------------------------------------------------------
     def __init__(self, orchestrator, config):
-        """Constructor.
-
+        """
         :param orchestrator: Orchestrator to send messages to.
         :type orchestrator: Orchestrator
 
@@ -756,24 +791,24 @@ class ProcessManager (object):
         """
         Run a plugin in a pooled process.
 
-        :param context: context for the OOP plugin execution
+        :param context: Context for the OOP plugin execution.
         :type context: PluginContext
 
-        :param func: name of the method to execute
+        :param func: Name of the method to execute.
         :type func: str
 
-        :param argv: positional arguments to the function call
+        :param argv: Positional arguments to the function call.
         :type argv: tuple
 
-        :param argd: keyword arguments to the function call
+        :param argd: Keyword arguments to the function call.
         :type argd: dict
         """
 
-        # If we have a dispatcher, run the plugin asynchronously
+        # If we have a dispatcher, run the plugin asynchronously.
         if self.__launcher is not None:
             return self.__launcher.run_plugin(context, func, argv, argd)
 
-        # Otherwise just call the plugin directly
+        # Otherwise just call the plugin directly.
         old_context = Config._context
         try:
             return bootstrap(context, func, argv, argd)
@@ -787,13 +822,13 @@ class ProcessManager (object):
         Start the process manager.
         """
 
-        # If we already have a process pool, do nothing
+        # If we already have a process pool, do nothing.
         if self.__launcher is None:
 
             # Are we running the plugins in multiprocessing mode?
             if self.__max_processes is not None and self.__max_processes > 0:
 
-                # Create the process pool
+                # Create the process pool.
                 self.__launcher = PluginLauncher(self.__max_processes,
                                                  self.__refresh_after_tasks)
 

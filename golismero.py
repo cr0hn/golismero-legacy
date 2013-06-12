@@ -278,7 +278,7 @@ def main(args):
 
         # Load the plugins list
         try:
-            manager = PriscillaPluginManager()
+            manager = PluginManager()
             manager.find_plugins(plugins_folder)
         except Exception, e:
             Console.display("[!] Error loading plugins list: %s" % e.message)
@@ -321,7 +321,7 @@ def main(args):
 
         # Load the plugins list.
         try:
-            manager = PriscillaPluginManager()
+            manager = PluginManager()
             manager.find_plugins(plugins_folder)
         except Exception, e:
             Console.display("[!] Error loading plugins list: %s" % e.message)

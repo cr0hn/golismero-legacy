@@ -55,12 +55,10 @@ class AuditManager (object):
     #----------------------------------------------------------------------
     def __init__(self, orchestrator, config):
         """
-        Constructor.
-
-        :param orchestrator: Core to send messages to
+        :param orchestrator: Core to send messages to.
         :type orchestrator: Orchestrator
 
-        :param config: Global configuration object
+        :param config: Global configuration object.
         :type config: OrchestratorConfig
         """
 
@@ -71,8 +69,13 @@ class AuditManager (object):
         self.__orchestrator = orchestrator
 
 
+    #----------------------------------------------------------------------
     @property
     def orchestrator(self):
+        """
+        :returns: Orchestrator instance.
+        :rtype: Orchestrator
+        """
         return self.__orchestrator
 
 
@@ -81,12 +84,11 @@ class AuditManager (object):
         """
         Creates a new audit.
 
-        :param params: Params of audit
+        :param params: Parameters of the audit.
         :type params: AuditConfig
 
-        :returns: Audit
-
-        :raises: TypeError
+        :returns: Newly created audit.
+        :rtype: Audit
         """
         if not isinstance(params, AuditConfig):
             raise TypeError("Expected AuditConfig, got %r instead" % type(params))
@@ -110,6 +112,7 @@ class AuditManager (object):
         Determine if there are audits currently runnning.
 
         :returns: True if there are audits in progress, False otherwise.
+        :rtype: bool
         """
         return bool(self.__audits)
 
@@ -117,48 +120,51 @@ class AuditManager (object):
     #----------------------------------------------------------------------
     def get_all_audits(self):
         """
-        Get the list of audits currently running.
+        Get the currently running audits.
 
-        :returns: dicts(str, Audit) -- Mapping of audit names to instances
+        :returns: Mapping of audit names to instances.
+        :rtype: dict(str -> Audit)
         """
         return self.__audits
 
 
     #----------------------------------------------------------------------
-    def get_audit(self, auditName):
+    def get_audit(self, name):
         """
         Get an instance of an audit by its name.
 
-        :param auditName: audit name
-        :type auditName: str
+        :param name: Audit name.
+        :type name: str
 
-        :returns: Audit -- instance of audit
-        :raises: KeyError
+        :returns: Audit instance.
+        :rtype: Audit
+
+        :raises KeyError: No audit exists with that name.
         """
-        return self.__audits[auditName]
+        return self.__audits[name]
 
 
     #----------------------------------------------------------------------
-    def remove_audit(self, auditName):
+    def remove_audit(self, name):
         """
         Delete an instance of an audit by its name.
 
-        :param auditName: audit name
-        :type auditName: str
+        :param name: Audit name.
+        :type name: str
 
-        :raises: KeyError
+        :raises KeyError: No audit exists with that name.
         """
         try:
-            self.orchestrator.netManager.release_all_slots(auditName)
+            self.orchestrator.netManager.release_all_slots(name)
         finally:
             try:
-                audit = self.__audits[auditName]
+                audit = self.__audits[name]
                 try:
                     audit.close()
                 finally:
-                    del self.__audits[auditName]
+                    del self.__audits[name]
             finally:
-                self.orchestrator.cacheManager.clean(auditName)
+                self.orchestrator.cacheManager.clean(name)
 
 
     #----------------------------------------------------------------------
@@ -166,12 +172,11 @@ class AuditManager (object):
         """
         Process an incoming message from the orchestrator.
 
-        :param message: incoming message
+        :param message: Incoming message.
         :type message: Message
 
-        :returns: bool - True if the message was sent, False if it was dropped
-
-        :raises: TypeError, ValueError, KeyError
+        :returns: True if the message was sent, False if it was dropped.
+        :rtype: bool
         """
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
@@ -266,45 +271,87 @@ class Audit (object):
         self.__followed_links = 0
         self.__show_max_links_warning = True
 
-        # Number of unacknowledged messages
+        # Number of unacknowledged messages.
         self.__expecting_ack = 0
 
 
+    #----------------------------------------------------------------------
+
     @property
     def name(self):
+        """
+        :returns: Name of the audit.
+        :rtype: str
+        """
         return self.__name
 
     @property
     def orchestrator(self):
+        """
+        :returns: Orchestrator instance that will receive messages sent by this audit.
+        :rtype: Orchestrator
+        """
         return self.__orchestrator
 
     @property
     def params(self):
+        """
+        :returns: Audit configuration.
+        :rtype: AuditConfig
+        """
         return self.__params
 
     @property
     def database(self):
+        """
+        :returns: Audit database.
+        :rtype: AuditDB
+        """
         return self.__database
 
     @property
     def reportManager(self):
+        """
+        :returns: Report manager.
+        :rtype: ReportManager
+        """
         return self.__report_manager
+
+
+    #----------------------------------------------------------------------
+
+    @property
+    def expecting_ack(self):
+        """
+        :returns: Number of ACKs expected by this audit.
+        :rtype: int
+        """
+        return self.__expecting_ack
 
     @property
     def current_stage(self):
+        """
+        :returns: Current execution stage.
+        :rtype: str
+        """
         return self.__current_stage
 
     @property
     def is_report_started(self):
+        """
+        :returns: True if report generation has started, False otherwise.
+        :rtype: bool
+        """
         return self.__is_report_started
 
 
     #----------------------------------------------------------------------
     def __generateAuditName(self):
         """
-        Get a default name for an audit.
+        Get a default name for this audit.
 
-        :returns: str -- generated name for the audit.
+        :returns: Generated name for the audit.
+        :rtype: str
         """
         return "golismero-" + datetime.now().strftime("%Y-%m-%d-%H_%M_%S")
 
@@ -315,16 +362,16 @@ class Audit (object):
         Start execution of an audit.
         """
 
-        # Reset the number of unacknowledged messages
+        # Reset the number of unacknowledged messages.
         self.__expecting_ack = 0
 
-        # Load testing plugins
+        # Load testing plugins.
         m_audit_plugins = self.orchestrator.pluginManager.load_plugins("testing")
 
-        # Register plugins with the notifier
+        # Register plugins with the notifier.
         self.__notifier.add_multiple_plugins(m_audit_plugins)
 
-        # Send a message to the orchestrator with all target URLs
+        # Send a message to the orchestrator with all target URLs.
         self.send_msg(
             message_type = MessageType.MSG_TYPE_DATA,
             message_info = [ Url(url) for url in self.params.targets ]
@@ -340,7 +387,7 @@ class Audit (object):
         """
         Send data to the orchestrator.
 
-        :param data: Data to send
+        :param data: Data to send.
         :type data: Data
         """
         return self.send_msg(message_type = MessageType.MSG_TYPE_DATA,
@@ -355,14 +402,17 @@ class Audit (object):
         """
         Send messages to the orchestrator.
 
-        :param message_type: specifies the type of message.
-        :type mesage_type: int -- specified in a constant of Message class.
+        :param message_type: Message type. Must be one of the constants from MessageType.
+        :type mesage_type: int
 
-        :param message_code: specifies the code of message.
-        :type message_code: int -- specified in a constant of Message class.
+        :param message_code: Message code. Must be one of the constants from MessageCode.
+        :type message_code: int
 
-        :param message_info: the payload of the message.
-        :type message_info: object -- type must be resolved at run time.
+        :param message_info: The payload of the message. Its type depends on the message type and code.
+        :type message_info: *
+
+        :param priority: Priority level. Must be one of the constants from MessagePriority.
+        :type priority: int
         """
         m = Message(message_type = message_type,
                     message_code = message_code,
@@ -460,15 +510,6 @@ class Audit (object):
 
 
     #----------------------------------------------------------------------
-    @property
-    def expecting_ack(self):
-        """
-        Return the number of ACKs expected by this audit.
-        """
-        return self.__expecting_ack
-
-
-    #----------------------------------------------------------------------
     def dispatch_msg(self, message):
         """
         Send messages to the plugins of this audit.
@@ -476,7 +517,8 @@ class Audit (object):
         :param message: The message to send.
         :type message: Message
 
-        :returns: bool - True if the message was sent, False if it was dropped
+        :returns: True if the message was sent, False if it was dropped.
+        :rtype: bool
         """
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
@@ -559,7 +601,7 @@ class Audit (object):
     #----------------------------------------------------------------------
     def generate_reports(self):
         """
-        Start the generation of all the requested reports for the audit.
+        Start the generation of reports for the audit.
         """
 
         # Check if the report generation is already started.

@@ -60,23 +60,23 @@ class Message (object):
                         plugin_name = None,
                            priority = MessagePriority.MSG_PRIORITY_MEDIUM):
         """
-        :param message_type: specifies the type of message.
-        :type mesage_type: int -- specified in a constant of the MessageType class.
+        :param message_type: Message type. Must be one of the constants from MessageType.
+        :type mesage_type: int
 
-        :param message_code: specifies the code of the message.
-        :type message_code: int -- specified in a constant of the MessageCode class.
+        :param message_code: Message code. Must be one of the constants from MessageCode.
+        :type message_code: int
 
-        :param message_info: the payload of the message.
-        :type message_info: object -- type must be resolved at run time.
+        :param message_info: The payload of the message. Its type depends on the message type and code.
+        :type message_info: *
 
-        :param audit_name: the name of the audit this message belongs to.
+        :param audit_name: Name of the audit this message belongs to, if any.
         :type audit_name: str | None
 
-        :param plugin_name: the name of the plugin that sent this message.
+        :param plugin_name: Name of the plugin that sent this message, if any.
         :type plugin_name: str | None
 
-        :param priority: the priority level of the message.
-        :type priority: int -- specified in a constant of the Message class.
+        :param priority: Priority level. Must be one of the constants from MessagePriority.
+        :type priority: int
         """
 
         # Validate the arguments
@@ -110,43 +110,68 @@ class Message (object):
 
     @property
     def message_type(self):
-        "int -- type of message, specified in a constant of the MessageType class."
+        """
+        :returns: Message type. Must be one of the constants from MessageType.
+        :rtype: int
+        """
         return self.__message_type
 
     @property
     def message_code(self):
-        "int -- code of the message, specified in a constant of the MessageCode class."
+        """
+        :returns: Message code. Must be one of the constants from MessageCode.
+        :rtype: int
+        """
         return self.__message_code
 
     @property
     def message_info(self):
-        "object -- payload of the message, type must be resolved at run time."
+        """
+        :returns: The payload of the message. Its type depends on the message type and code.
+        :rtype: *
+        """
         return self.__message_info
 
     @property
     def audit_name(self):
-        "str -- the name of the audit this message belongs to. | None -- doesn't belong to an audit."
+        """
+        :returns: Name of the audit this message belongs to, if any.
+        :rtype: str | None
+        """
         return self.__audit_name
 
     @property
     def plugin_name(self):
-        "str -- the name of the plugin that sent this message. | None -- not sent from a plugin."
+        """
+        :returns: Name of the plugin that sent this message, if any.
+        :rtype: str | None
+        """
         return self.__plugin_name
 
     @property
     def priority(self):
-        "int -- the priority level of the message, specified in a constant of the Message class."
+        """
+        :returns: Priority level. Must be one of the constants from MessagePriority.
+        :rtype: int
+        """
         return self.__priority
 
     @property
     def timestamp(self):
-        "int -- POSIX timestamp for this message."
+        """
+        :returns: POSIX timestamp for this message.
+        :rtype: int
+        """
         return self.__timestamp
 
 
     #----------------------------------------------------------------------
     @property
     def is_ack(self):
+        """
+        :returns: True if this message is an ACK, False otherwise.
+        :rtype: bool
+        """
         return (self.message_type == MessageType.MSG_TYPE_CONTROL and
                 self.message_code == MessageCode.MSG_CONTROL_ACK)
 
@@ -162,7 +187,7 @@ class Message (object):
     #----------------------------------------------------------------------
     def _update_data(self, datalist):
         """
-        Called internally during message processing. Do not call anywhere else!
+        .. warning: Called internally during message processing. Do not use!
         """
         if not self.message_type == MessageType.MSG_TYPE_DATA:
             raise TypeError("Cannot update data of non-data message!")

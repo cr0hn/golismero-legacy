@@ -58,6 +58,13 @@ def _add_implementor(rpc_code, fn):
     """
     RPC implementation function.
     """
+    if rpc_code in rpcMap:
+        try:
+            msg = "Duplicated RPC implementors for code %d: %s and %s"
+            msg %= (rpc_code, rpcMap[rpc_code].__name__, fn.__name__)
+        except Exception:
+            msg = "Duplicated RPC implementors for code: %d" % rpc_code
+        raise SyntaxError(msg)
     rpcMap[rpc_code] = fn
     # TODO: use introspection to validate the function signature
     return fn  # no function wrapping is needed :)
@@ -94,9 +101,7 @@ class RPCManager (object):
     #----------------------------------------------------------------------
     def __init__(self, orchestrator):
         """
-        Constructor.
-
-        :param orchestrator: Orchestrator
+        :param orchestrator: Orchestrator instance.
         :type orchestrator: Orchestrator
         """
 
@@ -112,6 +117,16 @@ class RPCManager (object):
             msg  = "Missing RPC implementors for codes: %s"
             msg %= ", ".join(str(x) for x in sorted(missing))
             warnings.warn(msg, RuntimeWarning)
+
+
+    #----------------------------------------------------------------------
+    @property
+    def orchestrator(self):
+        """
+        :returns: Orchestrator instance.
+        :rtype: Orchestrator
+        """
+        return self.__orchestrator
 
 
     #----------------------------------------------------------------------
@@ -169,10 +184,11 @@ class RPCManager (object):
         :param exc_value: Exception value.
         :type exc_value:
 
-        :returns: tuple(class, object, str) -- Exception type, exception value
+        :returns: Exception type, exception value
             and formatted traceback. The exception value may be formatted too
             and the exception type replaced by Exception if it's not possible
-            to serialize them for sending.
+            to serialize it for sending.
+        :rtype: tuple(class, object, str)
         """
         exc_type, exc_value, exc_traceback = sys.exc_info()
         try:

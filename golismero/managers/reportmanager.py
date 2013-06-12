@@ -33,25 +33,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["ReportManager"]
 
 from ..api.logger import Logger
-from .priscillapluginmanager import PriscillaPluginManager
+from .pluginmanager import PluginManager
 
 from traceback import format_exc
 
 
 #------------------------------------------------------------------------------
 class ReportManager (object):
-    """This class manages the generation of reports."""
+    """
+    Manager of reports generation.
+    """
 
 
     #----------------------------------------------------------------------
     def __init__(self, config, orchestrator):
         """
-        Constructor.
-
         :param config: Audit configuration.
         :type config: AuditConfig.
 
-        :param orchestrator: Orchestrator.
+        :param orchestrator: Orchestrator instance.
         :type orchestrator: Orchestrator
         """
 
@@ -62,7 +62,7 @@ class ReportManager (object):
         self.__orchestrator = orchestrator
 
         # Load the report plugins.
-        self.__plugins = PriscillaPluginManager().load_plugins("report")
+        self.__plugins = PluginManager().load_plugins("report")
 
         # Map report plugins to output files.
         self.__reporters = {}
@@ -82,12 +82,22 @@ class ReportManager (object):
             self.__reporters[output_file] = found[0]
 
 
+    #----------------------------------------------------------------------
+
     @property
     def config(self):
+        """
+        :returns: Audit configuration.
+        :rtype: AuditConfig.
+        """
         return self.__config
 
     @property
     def orchestrator(self):
+        """
+        :returns: Orchestrator instance.
+        :rtype: Orchestrator
+        """
         return self.__orchestrator
 
 
@@ -99,7 +109,8 @@ class ReportManager (object):
         :param notifier: Plugin notifier.
         :type notifier: AuditNotifier
 
-        :returns: int -- Number of plugins executed.
+        :returns: Number of plugins executed.
+        :rtype: int
         """
 
         # Abort if reporting is disabled.

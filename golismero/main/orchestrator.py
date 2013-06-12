@@ -33,13 +33,15 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["Orchestrator"]
+
 from .console import Console
 from ..api.config import Config
 from ..api.logger import Logger
 from ..common import OrchestratorConfig
 from ..database.cachedb import PersistentNetworkCache, VolatileNetworkCache
 from ..managers.auditmanager import AuditManager
-from ..managers.priscillapluginmanager import PriscillaPluginManager
+from ..managers.pluginmanager import PluginManager
 from ..managers.uimanager import UIManager
 from ..managers.rpcmanager import RPCManager
 from ..managers.processmanager import ProcessManager, PluginContext
@@ -52,19 +54,15 @@ from traceback import format_exc, print_exc
 from signal import signal, SIGINT, SIG_DFL
 from multiprocessing import Manager
 
-__all__ = ["Orchestrator"]
 
-
+#----------------------------------------------------------------------
 class Orchestrator (object):
     """
-    Orchestrator is the core (or kernel) of GoLismero.
+    Orchestrator, the manager of everything, core of GoLismero.
+
+    All messages go through here before being dispatched to their destinations.
+    Most other tasks are delegated from here to other managers.
     """
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, tb):
-        self.close()
 
 
     #----------------------------------------------------------------------
@@ -76,14 +74,14 @@ class Orchestrator (object):
         :type config: OrchestratorConfig
         """
 
-        # Configuration
+        # Configuration.
         self.__config = config
 
-        # Set the console configuration
+        # Set the console configuration.
         Console.level = config.verbose
         Console.use_colors = config.colorize
 
-        # Check the run mode
+        # Check the run mode.
         if config.run_mode == config.RUN_MODE.master:
             raise NotImplementedError("Master mode not yet implemented!")
         if config.run_mode == config.RUN_MODE.slave:
@@ -91,30 +89,30 @@ class Orchestrator (object):
         if config.run_mode != config.RUN_MODE.standalone:
             raise ValueError("Invalid run mode: %r" % config.run_mode)
 
-        # Search for plugins
-        self.__pluginManager = PriscillaPluginManager()
+        # Search for plugins.
+        self.__pluginManager = PluginManager()
         success, failure = self.__pluginManager.find_plugins(self.__config.plugins_folder)
         if not success:
             raise RuntimeError("Failed to find any plugins!")
         self.__pluginManager.apply_black_and_white_lists(self.__config.enabled_plugins,
                                                          self.__config.disabled_plugins)
 
-        # Load the UI plugin
+        # Load the UI plugin.
         try:
             self.__pluginManager.get_plugin_by_name("ui/%s" % self.__config.ui_mode)
         except KeyError:
             raise ValueError("No plugin found for UI mode: %r" % self.__config.ui_mode)
         self.__pluginManager.load_plugin_by_name("ui/%s" % self.__config.ui_mode)
 
-        # Load the rest of the plugins
+        # Load the rest of the plugins.
         for category in self.__pluginManager.CATEGORIES:
             if category != "ui":
                 self.__pluginManager.load_plugins(category = category)
 
-        # Calculate the plugin dependencies
+        # Calculate the plugin dependencies.
         self.__pluginManager.calculate_dependencies()
 
-        # Incoming message queue
+        # Incoming message queue.
         if getattr(config, "max_process", 0) <= 0:
             from Queue import Queue
             self.__queue = Queue(maxsize = 0)
@@ -122,19 +120,19 @@ class Orchestrator (object):
             self.__queue_manager = Manager()
             self.__queue = self.__queue_manager.Queue()
 
-        # Set the Orchestrator context
+        # Set the Orchestrator context.
         self.__context = PluginContext( orchestrator_pid = getpid(),
                                          msg_queue = self.__queue,
                                       audit_config = self.__config )
         Config._context = self.__context
 
-        # Within the Orchestrator process, keep a static reference to it
+        # Within the Orchestrator process, keep a static reference to it.
         PluginContext._orchestrator = self
 
-        # Network connection manager
+        # Network connection manager.
         self.__netManager = NetworkManager(self.__config)
 
-        # Network cache
+        # Network cache.
         if (self.__config.use_cache_db or (
             self.__config.use_cache_db is None and
             self.__config.run_mode != OrchestratorConfig.RUN_MODE.standalone)
@@ -143,26 +141,26 @@ class Orchestrator (object):
         else:
             self.__cache = VolatileNetworkCache()
 
-        # RPC manager
+        # RPC manager.
         self.__rpcManager = RPCManager(self)
 
-        # Process manager
+        # Process manager.
         self.__processManager = ProcessManager(self, self.__config)
         self.__processManager.start()
 
-        # Audit manager
+        # Audit manager.
         self.__auditManager = AuditManager(self, self.__config)
 
-        # UI manager
+        # UI manager.
         if config.run_mode == OrchestratorConfig.RUN_MODE.standalone:
             self.__ui = UIManager(self, self.__config)
         else:
             self.__ui = None
 
-        # Signal handler to catch Ctrl-C
+        # Signal handler to catch Ctrl-C.
         self.__old_signal_action = signal(SIGINT, self.__control_c_handler)
 
-        # Log the plugins that failed to load
+        # Log the plugins that failed to load.
         Logger.log_more_verbose("Loaded %d plugins" % len(success))
         if failure:
             Logger.log_error("Failed to load %d plugins" % len(failure))
@@ -171,34 +169,71 @@ class Orchestrator (object):
 
 
     #----------------------------------------------------------------------
-    # Manager getters (mostly used by RPC implementors)
+    # Context support.
+
+    def __enter__(self):
+        return self
+    def __exit__(self, type, value, tb):
+        self.close()
+
+
+    #----------------------------------------------------------------------
+    # Manager getters (mostly used by RPC implementors).
 
     @property
     def pluginManager(self):
+        """
+        :returns: Plugin manager.
+        :rtype: PluginManager
+        """
         return self.__pluginManager
 
     @property
     def netManager(self):
+        """
+        :returns: Network manager.
+        :rtype: NetworkManager
+        """
         return self.__netManager
 
     @property
     def cacheManager(self):
+        """
+        :returns: Cache manager.
+        :rtype: AbstractNetworkCache
+        """
         return self.__cache
 
     @property
     def rpcManager(self):
+        """
+        :returns: RPC manager.
+        :rtype: RPCManager
+        """
         return self.__rpcManager
 
     @property
     def processManager(self):
+        """
+        :returns: Process manager.
+        :rtype: ProcessManager
+        """
         return self.__processManager
 
     @property
     def auditManager(self):
+        """
+        :returns: Audit manager.
+        :rtype: AuditManager
+        """
         return self.__auditManager
 
     @property
     def uiManager(self):
+        """
+        :returns: UI manager.
+        :rtype: UIManager
+        """
         return self.__ui
 
 
@@ -352,7 +387,8 @@ class Orchestrator (object):
         :param plugin: Plugin instance.
         :type plugin: Plugin
 
-        :returns: PluginContext -- OOP plugin execution context
+        :returns: OOP plugin execution context.
+        :rtype: PluginContext
         """
 
         # FIXME:
@@ -373,6 +409,8 @@ class Orchestrator (object):
     def run(self, *audits):
         """
         Message loop.
+
+        Optionally start new audits passed as positional arguments.
         """
         try:
 

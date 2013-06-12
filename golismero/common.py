@@ -96,6 +96,9 @@ def get_user_settings_folder():
 
     This folder will be used to store the various caches
     and the user-defined plugins.
+
+    :returns: GoLismero settings folder.
+    :rtype: str
     """
 
     # TODO: on Windows, use the roaming data folder instead.
@@ -274,7 +277,7 @@ class Configuration (object):
 
         This method only checks the validity of the arguments, it won't modify them.
 
-        :raises: ValueError
+        :raises ValueError: The parameters are incorrect.
         """
         return
 
@@ -285,7 +288,7 @@ class Configuration (object):
         Get the settings from a Python dictionary.
 
         :param args: Settings.
-        :type args: dict
+        :type args: dict(str -> *)
         """
         for name, value in args.iteritems():
             if name in self._settings_:
@@ -341,11 +344,6 @@ class Configuration (object):
 
 
 #----------------------------------------------------------------------
-#
-# Global options parser
-#
-#----------------------------------------------------------------------
-
 class OrchestratorConfig (Configuration):
     """
     Orchestator configuration object.
@@ -440,11 +438,6 @@ class OrchestratorConfig (Configuration):
 
 
 #----------------------------------------------------------------------
-#
-# Audit options parser
-#
-#----------------------------------------------------------------------
-
 class AuditConfig (Configuration):
     """
     Audit configuration object.

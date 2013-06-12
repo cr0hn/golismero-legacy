@@ -30,7 +30,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["Console"]
+__all__ = ["Console", "colorize", "colorize_substring"]
 
 from ..api.logger import Logger
 
@@ -73,23 +73,24 @@ m_colors = {
 #----------------------------------------------------------------------
 def colorize_substring(text, substring, level_or_color):
     """
-    Colorize a substring in a text depends of type of alert:
+    Colorize a substring in a text depending of the type of alert:
     - Information
     - Low
     - Middle
     - Hight
     - Critical
 
-    :param text: orginal text
+    :param text: Full text.
     :type text: str
 
-    :param text: subtext to colorize.
-    :type text: int with level (0-4) or string with values: info, low, middle, high, critical.
+    :param substring: Text to find and colorize.
+    :type substring: str
 
-    :param level_or_color: color name or integer with level selected.
-    :type level_or_color: str or integer (0-4).
+    :param level_or_color: May be an integer with level (0-4) or string with values: info, low, middle, high, critical.
+    :type level_or_color: int | str
 
-    :returns: str -- string with information to print.
+    :returns: Colorized text.
+    :rtype: str
     """
 
     #
@@ -107,16 +108,13 @@ def colorize_substring(text, substring, level_or_color):
     # Check for trivial cases.
     if text and substring and Console.use_colors:
 
-        # XXX HACK
-        # Instead of calling colorize() it's faster
-        # to call colored() directly. That means we'll
-        # have to convert level_or_color to the value
-        # that colored() expects.
-
-        # To avoid types problems
-        level_or_color = level_or_color if str(level_or_color).isdigit() else level_or_color.lower()
-
-        color          = m_colors[level_or_color]
+        # Parse the color name or level into
+        # a color value that colored() expects.
+        try:
+            level_or_color = level_or_color.lower()
+        except AttributeError:
+            pass
+        m_colors[level_or_color]
 
         # Loop for each occurrence of the substring.
         m_pos = 0
@@ -135,8 +133,7 @@ def colorize_substring(text, substring, level_or_color):
             m_suffix  = text[m_pos + len(substring):]
 
             # Patch the text to colorize the substring.
-            ##m_content = colorize(m_content, level_or_color) # XXX HACK
-            m_content = colored(m_content, color)             # See above
+            m_content = colored(m_content, color)
             text = "%s%s%s" % (m_prefix, m_content, m_suffix)
 
             # Update the current position and keep searching.

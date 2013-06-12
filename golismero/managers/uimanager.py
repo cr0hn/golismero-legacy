@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Manager for UI plugins.
+Dispatcher of messages for the UI plugins.
 """
 
 __license__ = """
@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["UIManager"]
 
-from .priscillapluginmanager import PriscillaPluginManager
+from .pluginmanager import PluginManager
 from ..messaging.codes import MessageType, MessageCode
 from ..messaging.message import Message
 from ..messaging.notifier import UINotifier
@@ -48,28 +48,36 @@ class UIManager (object):
     #----------------------------------------------------------------------
     def __init__(self, orchestrator, config):
         """
-        Constructor.
-
-        :param orchestrator: Orchestrator
+        :param orchestrator: Orchestrator instance.
         :type orchestrator: Orchestrator
 
-        :param config: Configuration for audit
+        :param config: Configuration of the audit.
         :type config: AuditConfig
         """
 
-        # Keep a reference to the orchestrator
+        # Keep a reference to the orchestrator.
         self.__orchestrator = orchestrator
 
-        # Init and start notifier
+        # Init and start notifier.
         self.__notifier = UINotifier(orchestrator)
 
-        # Load the selected UI plugin
+        # Load the selected UI plugin.
         name = "ui/%s" % config.ui_mode
-        p = PriscillaPluginManager().load_plugin_by_name(name)
+        p = PluginManager().load_plugin_by_name(name)
 
-        # Configure plugin to be its own the target of messages and add to notifier
+        # Configure plugin to be its own the target of messages and add to notifier.
         p._set_observer(self)
         self.__notifier.add_plugin(name, p)
+
+
+    #----------------------------------------------------------------------
+    @property
+    def orchestrator(self):
+        """
+        :returns: Orchestrator instance.
+        :rtype: Orchestrator
+        """
+        return self.__orchestrator
 
 
     #----------------------------------------------------------------------

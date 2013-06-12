@@ -44,6 +44,7 @@ from collections import defaultdict
 from warnings import warn
 
 
+#----------------------------------------------------------------------
 class Notifier (object):
     """
     Abstract class for message dispatchers.
@@ -52,7 +53,6 @@ class Notifier (object):
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """Constructor."""
 
         # Call the superclass constructor.
         super(Notifier, self).__init__()
@@ -158,7 +158,7 @@ class Notifier (object):
         """
         Dispatch messages to the plugins.
 
-        :param message: A message to send to plugins
+        :param message: A message to send to plugins.
         :type message: Message
         """
         if not isinstance(message, Message):
@@ -203,7 +203,7 @@ class Notifier (object):
         """
         Determine which plugins should receive this data object.
 
-        :param data: Data object
+        :param data: Data object.
         :type data: Data
 
         :returns: set(str) -- Set of plugin names.
@@ -239,14 +239,14 @@ class Notifier (object):
         """
         Send information to the plugins.
 
-        :param plugin: Target plugin
+        :param plugin: Target plugin.
         :type plugin: Plugin
 
         :param audit_name: Audit name.
         :type audit_name: str
 
-        :param message_info: Information to send to plugins
-        :type message_info: Information
+        :param message_info: Data to send to plugins.
+        :type message_info: Data
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -256,10 +256,10 @@ class Notifier (object):
         """
         Send messages to the plugins.
 
-        :param plugin: Target plugin
+        :param plugin: Target plugin.
         :type plugin: Plugin
 
-        :param message: Message to send to plugins
+        :param message: Message to send to plugins.
         :type message: Message
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
@@ -279,9 +279,7 @@ class AuditNotifier(Notifier):
     #----------------------------------------------------------------------
     def __init__(self, audit):
         """
-        Constructor.
-
-        :param audit: Audit
+        :param audit: Audit instance.
         :type audit: Audit
         """
         super(AuditNotifier, self).__init__()
@@ -293,22 +291,42 @@ class AuditNotifier(Notifier):
 
     @property
     def audit(self):
+        """
+        :returns: Audit instance.
+        :rtype: Audit
+        """
         return self.__audit
 
     @property
     def orchestrator(self):
+        """
+        :returns: Orchestrator instance.
+        :rtype: Orchestrator
+        """
         return self.__audit.orchestrator
 
     @property
     def pluginManager(self):
+        """
+        :returns: Plugin manager.
+        :rtype: PluginManager
+        """
         return self.__audit.orchestrator.pluginManager
 
     @property
     def current_stage(self):
+        """
+        :returns: Current execution stage.
+        :rtype: str
+        """
         return self.__audit.current_stage
 
     @property
     def database(self):
+        """
+        :returns: Audit database.
+        :rtype: AuditDB
+        """
         return self.__audit.database
 
 
@@ -374,7 +392,8 @@ class AuditNotifier(Notifier):
         :param data: Data object to find candidate plugins for.
         :type data: Data
 
-        :returns: set(str) -- Set of candidate plugin names.
+        :returns: Set of candidate plugin names.
+        :rtype: set(str)
         """
 
         # Get the whole set of plugins that can handle this data.
@@ -404,7 +423,8 @@ class AuditNotifier(Notifier):
         :param stage: Current stage.
         :type stage: int
 
-        :returns: bool
+        :returns: True if the stage has plugins that can handle the data, False otherwise.
+        :rtype: bool
         """
 
         # Early exit if the list of data objects is empty.
@@ -434,6 +454,15 @@ class AuditNotifier(Notifier):
 
     #----------------------------------------------------------------------
     def get_plugins_to_notify(self, data):
+        """
+        Get the plugins that are ready to handle the given data.
+
+        :param data: Data to be handled.
+        :type data: Data
+
+        :returns: Set of plugin names.
+        :rtype: set(str)
+        """
 
         # Get the candidate plugins.
         next_plugins = self.get_candidate_plugins(data)
@@ -455,13 +484,13 @@ class AuditNotifier(Notifier):
         """
         Send messages or information to the plugins.
 
-        :param plugin: Target plugin
+        :param plugin: Target plugin.
         :type plugin: Plugin
 
-        :param method: Callback method name
+        :param method: Callback method name.
         :type method: str
 
-        :param payload: Message or information to send to plugins
+        :param payload: Message or information to send to plugins.
         :type payload: Message or data
 
         :raises RuntimeError: The plugin doesn't support the method.
@@ -493,14 +522,14 @@ class AuditNotifier(Notifier):
         """
         Send information to the plugins.
 
-        :param plugin: Target plugin
+        :param plugin: Target plugin.
         :type plugin: Plugin
 
         :param audit_name: Audit name.
         :type audit_name: str
 
-        :param message_info: Information to send to plugins
-        :type message_info: Information
+        :param message_info: Data to send to plugins.
+        :type message_info: Data
         """
 
         # Validate the audit name.
@@ -516,10 +545,10 @@ class AuditNotifier(Notifier):
         """
         Send messages to the plugins.
 
-        :param plugin: Target plugin
+        :param plugin: Target plugin.
         :type plugin: Plugin
 
-        :param message: Message to send to plugins
+        :param message: Message to send to plugins.
         :type message: Message
         """
         self.__run_plugin(plugin, "recv_msg", message)
@@ -530,8 +559,11 @@ class AuditNotifier(Notifier):
         """
         Start an audit report.
 
-        :param plugin: Target plugin
+        :param plugin: Target plugin.
         :type plugin: Plugin
+
+        :param output_file: Output file where the report will be written.
+        :type output_file: str | None
         """
         self.__run_plugin(plugin, "generate_report", output_file)
 
@@ -550,9 +582,7 @@ class UINotifier(Notifier):
     #----------------------------------------------------------------------
     def __init__(self, orchestrator):
         """
-        Constructor.
-
-        :param orchestrator: Orchestrator
+        :param orchestrator: Orchestrator instance.
         :type orchestrator: Orchestrator
         """
         super(UINotifier, self).__init__()
@@ -564,14 +594,14 @@ class UINotifier(Notifier):
         """
         Send information to the plugins.
 
-        :param plugin: Target plugin
+        :param plugin: Target plugin.
         :type plugin: Plugin
 
         :param audit_name: Audit name.
         :type audit_name: str
 
-        :param message_info: Information to send to plugins
-        :type message_info: Information
+        :param message_info: Data to send to plugins.
+        :type message_info: Data
         """
         self.__run_plugin(plugin, audit_name, "recv_info", message_info)
 
@@ -581,10 +611,10 @@ class UINotifier(Notifier):
         """
         Send messages to the plugins.
 
-        :param plugin: Target plugin
+        :param plugin: Target plugin.
         :type plugin: Plugin
 
-        :param message: Message to send to plugins
+        :param message: Message to send to plugins.
         :type message: Message
         """
         self.__run_plugin(plugin, message.audit_name, "recv_msg", message)
@@ -595,14 +625,14 @@ class UINotifier(Notifier):
         """
         Send messages or information to the plugins.
 
-        :param plugin: Target plugin
+        :param plugin: Target plugi.
         :type plugin: Plugin
 
-        :param method: Callback method name
+        :param method: Callback method name.
         :type method: str
 
-        :param payload: Message or information to send to plugins
-        :type payload: Message or data
+        :param payload: Message or data to send to plugins.
+        :type payload: Message or Data
         """
 
         # If the plugin doesn't support the callback method, drop the message.
