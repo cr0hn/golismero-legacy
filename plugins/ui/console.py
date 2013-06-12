@@ -62,7 +62,7 @@ def process_url_suspicious(vuln):
     """Display suspicious URL"""
 
     return "%s: %s" % (
-        colorize("!! Suspicious URL", vuln.risk),
+        colorize("Suspicious URL", vuln.risk),
         colorize_substring(vuln.url.url, vuln.substring, 'red')
     )
 
@@ -72,7 +72,7 @@ def process_url_disclosure(vuln):
     """Display URL discover"""
 
     return "%s: %s\n| Method: %s\n%s|-%s" % (
-        colorize("!! Discovered", vuln.risk),
+        colorize("Discovered", vuln.risk),
         colorize_substring(vuln.url.url, vuln.discovered, vuln.risk),
         vuln.url.method,
         '| Referer <- %s\n' % str(vuln.url.referer) if vuln.url.referer else '',
@@ -83,10 +83,9 @@ def process_url_disclosure(vuln):
 #----------------------------------------------------------------------
 def process_default_error_page(vuln):
     """Display default error page"""
-    return "%s: %s\n|%s" % (
-        colorize("!! Default error page", vuln.risk),
-        colorize_substring(vuln.url.url, vuln.server_name, vuln.risk),
-        "-" * len(vuln.url.url)
+    return "%s: %s" % (
+        colorize("Default error page", vuln.risk),
+        colorize_substring(vuln.url.url, vuln.server_name, vuln.risk)
     )
 
 
@@ -136,7 +135,7 @@ class ConsoleUIPlugin(UIPlugin):
                     f = self.funcs[info.vulnerability_type]
                 except KeyError:
                     raise ValueError("No function available to process Vulnerability type: '%s'" % info.vulnerability_type)
-                Console.display(f(info))
+                Console.display("%s %s" % (colorize("<!>", "red"), f(info)))
 
         if Console.level >= Console.VERBOSE:
 
@@ -146,7 +145,7 @@ class ConsoleUIPlugin(UIPlugin):
                     f = self.funcs[info.resource_type]
                 except KeyError:
                     raise ValueError("No function available to process Resource type: '%s'" % info.vulnerability_type)
-                Console.display("+ %s" % f(info))
+                Console.display("[+] %s" % f(info))
 
 
     #----------------------------------------------------------------------
