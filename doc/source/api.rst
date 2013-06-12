@@ -49,6 +49,6 @@ Plugins interfaces
 There is a general plugin interface. All sub classes implements and inherit their methods.
 
 .. automodule:: golismero.api.plugin
-   :members: Plugin, InformationPlugin, AdvancedPlugin, TestingPlugin, UIPlugin, ReportPlugin
+   :members: Plugin, InformationPlugin, TestingPlugin, UIPlugin, ReportPlugin
    :show-inheritance:
 
