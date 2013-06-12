@@ -26,6 +26,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from cStringIO import StringIO
+
 from golismero.api.plugin import ReportPlugin
 from golismero.api.data.db import Database
 from golismero.api.config import Config
@@ -135,14 +137,14 @@ def common_display_general_summary(database):
         m_table.add_row(["Main web server:", colorize("Unknown", "yellow")])
 
     # Vhosts
-    m_table.add_row(["Vhosts", colorize("1", "yellow")])
-    m_table.add_row(["+  Vhosts2", colorize("1", "yellow")])
+    #m_table.add_row(["Vhosts", colorize("1", "yellow")])
+    #m_table.add_row(["+  Vhosts2", colorize("1", "yellow")])
 
     # Audited hosts
-    m_table.add_row(["Hosts audited", colorize("1", "yellow")])
+    m_table.add_row(["Hosts audited", colorize(len(common_get_resources(database, data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_DOMAIN)), "yellow")])
 
     # Total vulns
-    m_table.add_row(["Total vulns", "1"])
+    m_table.add_row(["Total vulns", str(len(common_get_resources(database, data_type=Data.TYPE_VULNERABILITY)))])
 
     # Set align
     m_table.align = "l"
@@ -298,6 +300,7 @@ def concrete_display_web_resources(database):
             # Title
             print "%s+%s+" % (" " * 8,"-" * (len("Vulnerabilities") + 3))
             print "%s| %s  |" % (" " * 8, colorize("Vulnerabilities", "Red"))
+            print "%s+%s+" % (" " * 8,"-" * (len("Vulnerabilities") + 3))
 
             vuln_genereral_displayer(u.associated_vulnerabilities)
 
@@ -341,6 +344,7 @@ def vuln_genereral_displayer(vulns):
     #
     # Display the info
     #
+    m_pre_spaces = 8
     for vuln in vulns:
         # Vuln name as raw format
         l_vuln_name      = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
@@ -349,14 +353,18 @@ def vuln_genereral_displayer(vulns):
 
         # Call to the function resposible to display the vuln info
         try:
-            l_table      = PrettyTable(["Vuln name: ", l_vuln_name_text])
+            #l_table      = PrettyTable(["Vuln name: ", l_vuln_name_text])
+            l_table      = StringIO()
+            l_table.write("Vuln name: %s\n" % colorize(l_vuln_name_text, "white"))
+            l_table.write("%s\n" % ("-" * len("Vuln name: %s" % l_vuln_name_text)))
+
 
             # String value of handler
-            VULN_DISPLAYER[l_vuln_name](vuln, l_table)
+            VULN_DISPLAYER[l_vuln_name](vuln, l_table.write)
 
             # Display the table
-            #print l_table
-            print '\n'.join([ "        " + x for x in l_table.get_string().splitlines()])
+            print '\n'.join([ "        | " + x for x in l_table.getvalue().splitlines()])
+            print "        *-"
 
         except KeyError:
             print "Function to display '%s' function are not available" % l_vuln_name
@@ -364,25 +372,25 @@ def vuln_genereral_displayer(vulns):
 
 
 #----------------------------------------------------------------------
-def vuln_display_url_suspicious(vuln, table):
+def vuln_display_url_suspicious(vuln, func):
     """Diplay the vuln: URL Suspicious"""
-    table.add_row(["URL:", colorize_substring(vuln.url.url, vuln.substring, "red")])
-    table.add_row(["Suspicius text: ", colorize(vuln.substring, "red")])
+    func("URL: %s\n" % colorize_substring(vuln.url.url, vuln.substring, "red"))
+    func("Suspicius text: %s\n" % colorize(vuln.substring, "red"))
 
 
 #----------------------------------------------------------------------
-def vuln_display_url_disclosure(vuln, table):
+def vuln_display_url_disclosure(vuln, func):
     """Diplay the vuln: URL Disclosure"""
-    table.add_row(["URL:", colorize_substring(vuln.url.url, vuln.discovered, "red")])
-    table.add_row(["Path discovered: ", colorize(vuln.discovered, "red")])
+    func("URL: %s\n" % colorize_substring(vuln.url.url, vuln.discovered, "red"))
+    func("Path discovered: %s\n" % colorize(vuln.discovered, "red"))
 
 
 #----------------------------------------------------------------------
-def vuln_display_default_error_page(vuln, table):
+def vuln_display_default_error_page(vuln, func):
     """Diplay the vuln: URL Disclosure"""
 
-    table.add_row(["URL:", colorize_substring(vuln.url.url, vuln.discovered, "red")])
-    table.add_row(["Default error page for server: ", colorize(vuln.server_name, "red")])
+    func("URL: %s\n" % colorize_substring(vuln.url.url, vuln.discovered, "red"))
+    func("Default error page for server: %s\n" % colorize(vuln.server_name, "red"))
 
 
 VULN_DISPLAYER = {
