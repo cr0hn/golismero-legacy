@@ -62,9 +62,7 @@ class ReportManager (object):
         self.__orchestrator = orchestrator
 
         # Load the report plugins.
-        self.__plugins = PriscillaPluginManager().load_plugins(
-            config.enabled_plugins, config.disabled_plugins,
-            category = "report")
+        self.__plugins = PriscillaPluginManager().load_plugins("report")
 
         # Map report plugins to output files.
         self.__reporters = {}
