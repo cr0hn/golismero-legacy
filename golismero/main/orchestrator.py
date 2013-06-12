@@ -91,25 +91,25 @@ class Orchestrator (object):
         if config.run_mode != config.RUN_MODE.standalone:
             raise ValueError("Invalid run mode: %r" % config.run_mode)
 
-        # Load the plugins
+        # Search for plugins
         self.__pluginManager = PriscillaPluginManager()
         success, failure = self.__pluginManager.find_plugins(self.__config.plugins_folder)
         if not success:
             raise RuntimeError("Failed to find any plugins!")
-        for category in self.__pluginManager.CATEGORIES:
-            if category != "ui":
-                self.__pluginManager.load_plugins(self.__config.enabled_plugins,
-                                                  self.__config.disabled_plugins,
-                                                  category = category)
-        self.__pluginManager.load_plugins(["ui/%s" % self.__config.ui_mode],
-                                          ["all"],
-                                          category = "ui")
+        self.__pluginManager.apply_black_and_white_lists(self.__config.enabled_plugins,
+                                                         self.__config.disabled_plugins)
 
-        # Validate the UI plugin
+        # Load the UI plugin
         try:
             self.__pluginManager.get_plugin_by_name("ui/%s" % self.__config.ui_mode)
         except KeyError:
             raise ValueError("No plugin found for UI mode: %r" % self.__config.ui_mode)
+        self.__pluginManager.load_plugin_by_name("ui/%s" % self.__config.ui_mode)
+
+        # Load the rest of the plugins
+        for category in self.__pluginManager.CATEGORIES:
+            if category != "ui":
+                self.__pluginManager.load_plugins(category = category)
 
         # Calculate the plugin dependencies
         self.__pluginManager.calculate_dependencies()
@@ -163,7 +163,7 @@ class Orchestrator (object):
         self.__old_signal_action = signal(SIGINT, self.__control_c_handler)
 
         # Log the plugins that failed to load
-        Logger.log_more_verbose("Found %d plugins" % len(success))
+        Logger.log_more_verbose("Loaded %d plugins" % len(success))
         if failure:
             Logger.log_error("Failed to load %d plugins" % len(failure))
             for plugin_name in failure:

@@ -53,82 +53,130 @@ class PluginInfo (object):
 
     @property
     def plugin_name(self):
-        "Plugin name."
+        """
+        :returns: Plugin name.
+        :rtype: str
+        """
         return self.__plugin_name
 
     @property
     def descriptor_file(self):
-        "Plugin descriptor file name."
+        """
+        :returns: Plugin descriptor file name.
+        :rtype: str
+        """
         return self.__descriptor_file
 
     @property
     def category(self):
-        "Plugin category."
+        """
+        :returns: Plugin category.
+        :rtype: str
+        """
         return self.__plugin_name.split("/")[0].lower()
 
     @property
     def stage(self):
-        "Plugin stage."
+        """
+        :returns: Plugin stage.
+        :rtype: str
+        """
         return self.__stage
 
     @property
     def dependencies(self):
-        "Plugin dependencies."
+        """
+        :returns: Plugin dependencies.
+        :rtype: str
+        """
         return self.__dependencies
 
     @property
     def plugin_module(self):
-        "Plugin module file name."
+        """
+        :returns: Plugin module file name.
+        :rtype: str
+        """
         return self.__plugin_module
 
     @property
     def plugin_class(self):
-        "Plugin class name."
+        """
+        :returns: Plugin class name.
+        :rtype: str
+        """
         return self.__plugin_class
 
     @property
     def plugin_config(self):
-        "Plugin configuration."
+        """
+        :returns: Plugin configuration.
+        :rtype: str
+        """
         return self.__plugin_config
 
     @property
     def plugin_extra_config(self):
-        "Plugin extra configuration."
+        """
+        :returns: Plugin extra configuration.
+        :rtype: str
+        """
         return self.__plugin_extra_config
 
     @property
     def display_name(self):
-        "Display name to be shown to the user."
+        """
+        :returns: Display name to be shown to the user.
+        :rtype: str
+        """
         return self.__display_name
 
     @property
     def description(self):
-        "Description of this plugin's functionality."
+        """
+        :returns: Description of this plugin's functionality.
+        :rtype: str
+        """
         return self.__description
 
     @property
     def version(self):
-        "Version of this plugin."
+        """
+        :returns: Version of this plugin.
+        :rtype: str
+        """
         return self.__version
 
     @property
     def author(self):
-        "Author of this plugin."
+        """
+        :returns: Author of this plugin.
+        :rtype: str
+        """
         return self.__author
 
     @property
     def copyright(self):
-        "Copyright of this plugin."
+        """
+        :returns: Copyright of this plugin.
+        :rtype: str
+        """
         return self.__copyright
 
     @property
     def license(self):
-        "License for this plugin."
+        """
+        :returns: License for this plugin.
+        :rtype: str
+        """
         return self.__license
 
     @property
     def website(self):
-        "Web site where you can download the latest version of this plugin."
+        """
+        :returns: Web site where you can download the latest version of this plugin.
+        :rtype: str
+        """
         return self.__website
 
 
@@ -269,9 +317,14 @@ class PluginInfo (object):
 
 
     #----------------------------------------------------------------------
-    # Protected method to update the class name if found during plugin load
-    # (Assumes it's always valid, so no sanitization is performed).
     def _fix_classname(self, plugin_class):
+        """
+        Protected method to update the class name if found during plugin load.
+        (Assumes it's always valid, so no sanitization is performed).
+
+        :param plugin_class: Plugin class name.
+        :type plugin_class: str
+        """
         self.__plugin_class = plugin_class
 
 
@@ -333,7 +386,8 @@ class PriscillaPluginManager (Singleton):
         :param plugins_folder: Folder where to look for plugins.
         :type plugins_folder: str
 
-        :returns: tuple(list, list) -- A list of plugins loaded, and a list of plugins that failed to load.
+        :returns: A list of plugins loaded, and a list of plugins that failed to load.
+        :rtype: tuple(list(str), list(str))
         """
 
         # Make sure the plugins folder is an absolute path.
@@ -407,8 +461,10 @@ class PriscillaPluginManager (Singleton):
         :param category: Category. Use "all" to get plugins from all categories.
         :type category: str
 
-        :returns: dict -- Mapping of plugin names to instances of PluginInfo.
-        :raises: KeyError -- The requested category doesn't exist.
+        :returns: Mapping of plugin names to instances of PluginInfo.
+        :rtype: dict(str -> PluginInfo)
+
+        :raises KeyError: The requested category doesn't exist.
         """
 
         # Make sure the category is lowercase.
@@ -416,7 +472,7 @@ class PriscillaPluginManager (Singleton):
 
         # If not filtering for category, just return the whole dictionary.
         if category == "all":
-            return self.__plugins
+            return self.__plugins.copy()
 
         # Make sure the category exists, otherwise raise an exception.
         if category not in self.CATEGORIES:
@@ -424,7 +480,9 @@ class PriscillaPluginManager (Singleton):
 
         # Get only the plugins that match the category.
         category = category + "/"
-        return { plugin: self.__plugins[plugin] for plugin in self.__plugins if plugin.startswith(category) }
+        return { plugin_name: plugin_info
+                 for plugin_name, plugin_info in self.__plugins.iteritems()
+                 if plugin_name.startswith(category) }
 
 
     #----------------------------------------------------------------------
@@ -435,8 +493,10 @@ class PriscillaPluginManager (Singleton):
         :param category: Category. Use "all" to get plugins from all categories.
         :type category: str
 
-        :returns: set -- Plugin names.
-        :raises: KeyError -- The requested category doesn't exist.
+        :returns: Plugin names.
+        :rtype: set(str)
+
+        :raises KeyError: The requested category doesn't exist.
         """
         return set(self.get_plugins(category).keys())
 
@@ -449,8 +509,10 @@ class PriscillaPluginManager (Singleton):
         :param plugin_name: Plugin name.
         :type plugin_name: str
 
-        :returns: PluginInfo
-        :raises: KeyError -- The requested plugin doesn't exist.
+        :returns: Plugin information.
+        :rtype: PluginInfo
+
+        :raises KeyError: The requested plugin doesn't exist.
         """
         try:
             return self.get_plugins()[plugin_name]
@@ -459,9 +521,27 @@ class PriscillaPluginManager (Singleton):
 
 
     #----------------------------------------------------------------------
-    def load_plugins(self, enabled_plugins = ("all",), disabled_plugins = (), category = "all"):
+    def search_plugins_by_name(self, search_string):
         """
-        Get info on the available plugins, optionally filtering by category.
+        Try to match the search string against plugin names.
+
+        :param search_string: Search string.
+        :type search_string: str
+
+        :returns: Mapping of plugin names to instances of PluginInfo.
+        :rtype: dict(str -> PluginInfo)
+        """
+        return { plugin_name: plugin_info
+                 for plugin_name, plugin_info in self.__plugins.iteritems()
+                 if search_string in plugin_name }
+
+
+    #----------------------------------------------------------------------
+    def apply_black_and_white_lists(self, enabled_plugins = ("all",), disabled_plugins = ()):
+        """
+        Apply the black and white lists.
+
+        This removes all plugins that weren't approved by those lists from the manager.
 
         :param enabled_plugins: List of enabled plugins, by name. Use "all" to enable all plugins (save those in disabled_plugins).
         :type enabled_plugins: list
@@ -469,12 +549,104 @@ class PriscillaPluginManager (Singleton):
         :param disabled_plugins: List of disabled plugins, by name. Use "all" to disable all plugins (save those in enabled_plugins).
         :type disabled_plugins: list
 
+        :raises ValueError: The lists were incorrect or conflicting.
+        """
+
+        # Remove duplicates in black and white lists.
+        blacklist_approach = False
+        if "all" in enabled_plugins:
+            enabled_plugins    = {"all"}
+        if "all" in disabled_plugins:
+            disabled_plugins   = {"all"}
+            blacklist_approach = True
+        enabled_plugins  = set(enabled_plugins)
+        disabled_plugins = set(disabled_plugins)
+
+        # Check for consistency in black and white lists.
+        conflicting_entries = enabled_plugins.intersection(disabled_plugins)
+        if conflicting_entries:
+            if len(conflicting_entries) > 1:
+                msg = "The same entries are present in both black and white lists: %s"
+                msg %= ", ".join(conflicting_entries)
+            else:
+                msg = "The same entry (%s) is present in both black and white lists"
+                msg %= conflicting_entries.pop()
+            raise ValueError(msg)
+
+        # Expand the black and white lists.
+        disabled_plugins = self.__expand_plugin_list(disabled_plugins, "blacklist")
+        enabled_plugins  = self.__expand_plugin_list(enabled_plugins,  "whitelist")
+
+        # Apply the black and white lists.
+        plugins = self.get_plugin_names()
+        if blacklist_approach:
+            plugins.intersection_update(enabled_plugins) # use only enabled plugins
+        else:
+            plugins.difference_update(disabled_plugins)  # use all but disabled plugins
+
+        # The UI plugins cannot be disabled.
+        plugins.update(self.get_plugin_names("ui"))
+
+        # Remove all plugins except those approved.
+        self.__plugins = { plugin_name: plugin_info
+                           for plugin_name, plugin_info in self.__plugins.iteritems()
+                           if plugin_name in plugins }
+
+
+    #----------------------------------------------------------------------
+    def __expand_plugin_list(self, plugin_list, list_name):
+
+        # Convert categories to plugin names.
+        if "all" in plugin_list:
+            plugin_list = self.get_plugin_names()
+        else:
+            for category in self.CATEGORIES:
+                if category in plugin_list:
+                    plugin_list.remove(category)
+                    plugin_list.update(self.get_plugin_names(category))
+
+        # Guess partial plugin names in the list.
+        # Also make sure all the plugins in the list exist.
+        missing_plugins = set()
+        all_plugins = self.get_plugin_names()
+        for name in sorted(plugin_list):
+            if name not in all_plugins:
+                matching_plugins = set(self.search_plugins_by_name(name).keys())
+                if not matching_plugins:
+                    missing_plugins.add(name)
+                if len(matching_plugins) > 1:
+                    msg = ("Ambiguous entry in %s (%r)"
+                           " may refer to any of the following plugins: %s")
+                    msg %= (list_name, name, ", ".join(sorted(matching_plugins)))
+                    raise ValueError(msg)
+                plugin_list.remove(name)
+                plugin_list.update(matching_plugins)
+        if missing_plugins:
+            if len(missing_plugins) > 1:
+                msg = "Unknown plugins in %s: %s"
+                msg %= (list_name, ", ".join(sorted(missing_plugins)))
+            else:
+                msg = "Unknown plugin in %s: %s"
+                msg %= (list_name, missing_plugins.pop())
+            raise KeyError(msg)
+
+        # Return the expanded list.
+        return plugin_list
+
+
+    #----------------------------------------------------------------------
+    def load_plugins(self, category = "all"):
+        """
+        Get info on the available plugins, optionally filtering by category.
+
         :param category: Category. Use "all" to load plugins from all categories.
         :type category: str
 
-        :returns: dict -- Mapping of plugin names to Plugin instances.
-        :raises: KeyError -- The requested plugin or category doesn't exist.
-        :raises: Exception -- Plugins may throw exceptions if they fail to load.
+        :returns: Mapping of plugin names to Plugin instances.
+        :rtype: dict(str -> Plugin)
+
+        :raises KeyError: The requested plugin or category doesn't exist.
+        :raises Exception: Plugins may throw exceptions if they fail to load.
         """
 
         # Sanitize the category.
@@ -486,64 +658,6 @@ class PriscillaPluginManager (Singleton):
 
         # Get the list of all plugins for the requested category.
         plugins = self.get_plugin_names(category)
-
-        # Remove duplicates in black and white lists.
-        if "all" in enabled_plugins:
-            enabled_plugins  = {"all"}
-        if "all" in disabled_plugins:
-            disabled_plugins = {"all"}
-        enabled_plugins  = set(enabled_plugins)
-        disabled_plugins = set(disabled_plugins)
-
-        # Convert categories to plugin names.
-        for cat in self.CATEGORIES:
-            if cat in disabled_plugins:
-                if cat in enabled_plugins:
-                    raise ValueError("Conflicting black and white lists!")
-                if cat == category:   # if the requested category is disabled,
-                    return {}         # just return an empty set now.
-                disabled_plugins.remove(cat)
-                if category == "all":
-                    disabled_plugins.update(self.get_plugin_names(cat))
-            elif cat in enabled_plugins:
-                if cat in disabled_plugins:
-                    raise ValueError("Conflicting black and white lists!")
-                enabled_plugins.remove(cat)
-                if category == "all" or cat == category:
-                    enabled_plugins.update(self.get_plugin_names(cat))
-
-        # Check for consistency in black and white lists.
-        if enabled_plugins.intersection(disabled_plugins):
-            raise ValueError("Conflicting black and white lists!")
-        if "all" not in enabled_plugins and "all" not in disabled_plugins:
-            disabled_plugins = set()
-
-        # Make sure all the plugins in the whitelist exist.
-        all_plugins = self.get_plugin_names()
-        missing_plugins = enabled_plugins.difference(all_plugins)
-        if "all" in missing_plugins:
-            missing_plugins.remove("all")
-        if missing_plugins:
-            if len(missing_plugins) > 1:
-                raise KeyError("Missing plugins: %s" % ", ".join(sorted(missing_plugins)))
-            raise KeyError("Missing plugin: %s" % missing_plugins.pop())
-
-        # Make sure all the plugins in the blacklist exist.
-        missing_plugins = disabled_plugins.difference(all_plugins)
-        if "all" in missing_plugins:
-            missing_plugins.remove("all")
-        if missing_plugins:
-            if len(missing_plugins) > 1:
-                raise KeyError("Unknown plugins: %s" % ", ".join(sorted(missing_plugins)))
-            raise KeyError("Unknown plugin: %s" % missing_plugins.pop())
-
-        # Blacklist approach.
-        if "all" in enabled_plugins:
-            plugins.difference_update(disabled_plugins)
-
-        # Whitelist approach.
-        else:
-            plugins.intersection_update(enabled_plugins)
 
         # Load each requested plugin.
         return { name : self.load_plugin_by_name(name) for name in plugins }
@@ -560,8 +674,10 @@ class PriscillaPluginManager (Singleton):
         :param name: Name of the plugin to load.
         :type name: str
 
-        :returns: Plugin instance
-        :raises: Exception -- Plugins may throw exceptions if they fail to load.
+        :returns: Plugin instance.
+        :rtype: Plugin
+
+        :raises Exception: Plugins may throw exceptions if they fail to load.
         """
 
         # If the plugin was already loaded, return the instance from the cache.
@@ -733,7 +849,8 @@ class PriscillaPluginManager (Singleton):
         :param candidate_plugins: Plugins we may want to execute.
         :type candidate_plugins: set(str)
 
-        :returns: set(str) -- Next plugins to execute.
+        :returns: Next plugins to execute.
+        :rtype: set(str)
         """
         if candidate_plugins:
             for batch in self.__batches:
@@ -746,8 +863,16 @@ class PriscillaPluginManager (Singleton):
     #----------------------------------------------------------------------
     @property
     def batches(self):
+        """
+        :returns: Plugin execution batches.
+        :rtype: list(set(str))
+        """
         return self.__batches
 
     @property
     def stages(self):
+        """
+        :returns: Mapping of stage names to plugin names for each stage.
+        :rtype: dict(str -> set(str))
+        """
         return self.__stages

@@ -319,10 +319,7 @@ class Audit (object):
         self.__expecting_ack = 0
 
         # Load testing plugins
-        m_audit_plugins = self.orchestrator.pluginManager.load_plugins(
-            self.params.enabled_plugins,
-            self.params.disabled_plugins,
-            category = "testing")
+        m_audit_plugins = self.orchestrator.pluginManager.load_plugins("testing")
 
         # Register plugins with the notifier
         self.__notifier.add_multiple_plugins(m_audit_plugins)
