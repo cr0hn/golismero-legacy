@@ -29,7 +29,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.config import Config
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.information_disclosure.url_suspicious import SuspiciousURL
-from golismero.api.net.web_utils import is_in_scope
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist_api import WordListAPI
 
@@ -49,10 +48,6 @@ class SuspiciousURLPlugin(TestingPlugin):
     def recv_info(self, info):
 
         m_url = info.url
-
-        # Check if URL is in scope
-        if not is_in_scope(m_url):
-            return
 
         # Load wordlists
         m_wordlist_middle     = WordListAPI().get_wordlist(Config.plugin_extra_config['Wordlist_middle']['wordlist'])

@@ -33,7 +33,6 @@ from golismero.api.data.vulnerability.information_disclosure.default_error_page 
 from golismero.api.logger import Logger
 from golismero.api.text.matching_analyzer import get_matching_level
 from golismero.api.net.protocol import NetworkAPI
-from golismero.api.net.web_utils import is_in_scope
 from golismero.api.plugin import TestingPlugin
 
 
