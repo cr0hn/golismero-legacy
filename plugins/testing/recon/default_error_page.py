@@ -33,7 +33,6 @@ from golismero.api.data.vulnerability.information_disclosure.default_error_page 
 from golismero.api.logger import Logger
 from golismero.api.text.matching_analyzer import get_matching_level
 from golismero.api.net.protocol import NetworkAPI
-from golismero.api.net.web_utils import is_in_scope
 from golismero.api.plugin import TestingPlugin
 
 
@@ -53,10 +52,6 @@ class SuspiciousURLPlugin(TestingPlugin):
     def recv_info(self, info):
 
         m_url = info.url
-
-        # Check if URL is in scope
-        if not is_in_scope(m_url):
-            return
 
         #Logger.log_more_verbose("Default error page: Starting plugin")
 
@@ -79,9 +74,15 @@ def main_default_error_pages(info):
     m_net_manager      = NetworkAPI.get_connection()
 
     # Get the request
-    m_error_response   = m_net_manager.get(m_url).raw_content
+    m_error_response   = m_net_manager.get(m_url)
 
-    m_comparer_results = comparer_with_errors(m_error_response)
+    # Check that URL contain text and valid status codes
+    if m_error_response.content_type.startswith("text") and \
+       not (m_error_response.http_response_code < 600 and m_error_response.http_response_code >= 500 or \
+        m_error_response.http_response_code == 200 or m_error_response.http_response_code == 403):
+        return
+
+    m_comparer_results = comparer_with_errors(m_error_response.raw_content)
 
     m_return           = None
     if m_comparer_results:
@@ -271,8 +272,8 @@ the <a href="mailto:admin@localhost">webmaster</a>.
 
 <h2>Error 403</h2>
 <address>
-  <a href="/">Apache 2.4.1 UnderFucking server</a><br />
-  <span>UnderFucking App engine 2.0</span>
+  <a href="/">Apache 2.4.1 </a><br />
+  <span>App engine 2.0</span>
 </address>
 </body>
 </html>"""
@@ -283,7 +284,12 @@ the <a href="mailto:admin@localhost">webmaster</a>.
     for l_server_name, l_server_page in m_signatures.iteritems():
         l_m = get_matching_level(page_text, l_server_page)
 
-        if l_m > 0.85:
+        if l_m > 0.95:
+            #print l_m
+            #print "@@@"
+            #print page_text
+            #print "#######"
+            #print l_server_page
             return l_server_name
 
 

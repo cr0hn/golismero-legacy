@@ -71,11 +71,20 @@ def get_matching_level(text1, text2):
     # Select the algorithm to make de diff.
     # - Google method: More efficient with texts more similar.
     # - difflib: More efficient with texts very different.
-    if m_difference > CUTOFF_VALUE:
+    if m_difference > CUTOFF_VALUE or 1==1:
         # difflib method
         m_return_value = SequenceMatcher(None, text1, text2).ratio()
 
     else:
+        #
+        #
+        # FIX IT!!!!!
+        #
+        # THIS CODE IS CURRENTLY UNUSABLE BECAUSE IT MUST TO RETURN A
+        # VALUE AND, AT THIS MOMENT, WE CAN ENSURE THAT.
+        #
+        #
+
         # Google method
         l_differ       = diff_match_patch()
         # Levenshtein comparation value

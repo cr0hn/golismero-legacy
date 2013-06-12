@@ -30,7 +30,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["WordListAPI", "SimpleWordList", "AdvancedDicWordlist"]
+__all__ = ["WordListAPI", "SimpleWordList", "AdvancedDicWordlist", "AdvancedListWordlist"]
 
 from os import getcwd, walk
 from os.path import join, sep, abspath
@@ -344,3 +344,80 @@ class AdvancedDicWordlist(AbstractWordlist):
         #
 
         return [x for x in self.__wordlist.itervalues() if word == x]
+
+
+#------------------------------------------------------------------------------
+class AdvancedListWordlist(AbstractWordlist):
+    """
+    Advanced wordlist that loads a wordlist as a list. This wordlist behaves
+    as a list.
+
+    Example:
+
+    >>> from golismero.api.text.wordlist_api import AdvancedListWordlist
+    >>> a = AdvancedListWordlist("./wordlist/golismero/no_spiderable_urls.txt")
+    >>> "exit" in a
+    True
+    >>> for p in a
+          print p
+    logout
+    logoff
+    exit
+    sigout
+    signout
+    delete
+    remove
+
+
+    This wordlist allow to do some operations with wordlists:
+    - Search matches of a word in the wordlist.
+    - Binary search in wordlist.
+    - Get first coincidence, start at begining or end of list.
+    - Search matches of wordlist with mutations.
+    """
+
+
+    #----------------------------------------------------------------------
+    def __init__(self, wordlist):
+
+        if not wordlist:
+            raise ValueError("Empty wordlist got")
+
+        m_tmp_wordlist = None
+        try:
+            m_tmp_wordlist = open(wordlist, mode='rU').readlines()
+        except IOError:
+            raise IOError("Error when trying to open wordlist: '%s'" % wordlist)
+
+        self.__wordlist   = [w.replace("\n","") for w in m_tmp_wordlist]
+        self.__i          = -1
+
+    #----------------------------------------------------------------------
+    def __getitem__(self, i):
+        """"""
+        return self.__wordlist[i]
+
+    #----------------------------------------------------------------------
+    def __setitem__(self, i, v):
+        """"""
+        self.__wordlist[i] = v
+
+
+    #----------------------------------------------------------------------
+    def __contains__(self, i):
+        """"""
+        return i in self.__wordlist
+
+
+    #----------------------------------------------------------------------
+    def __iter__(self):
+        """Make wordlist iterable"""
+        m_i  = self.__i
+        m_lw = len(self.__wordlist) -1
+
+        while m_i < m_lw:
+            m_i += 1
+            yield self.__wordlist[m_i]
+
+
+

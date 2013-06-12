@@ -34,6 +34,7 @@ from golismero.api.data.resource.url import Url
 from golismero.api.config import Config
 from golismero.api.net.web_utils import is_in_scope
 from golismero.api.net.scraper import extract_from_html
+from golismero.api.text.wordlist_api import WordListAPI
 
 
 #----------------------------------------------------------------------
@@ -109,13 +110,7 @@ class Spider(TestingPlugin):
 
         # Do not follow URLs that contain certain keywords
         # TODO: put this in the plugin's configuration!
-        m_forbidden = (
-            "logout",
-            "logoff",
-            "exit",
-            "sigout",
-            "signout",
-        )
+        m_forbidden = WordListAPI().get_wordlist(Config.plugin_extra_config["Wordlist_NoSpider"]["wordlist"])
 
         # Convert to Url data type and filter out out of scope and forbidden URLs
         m_return.extend(
