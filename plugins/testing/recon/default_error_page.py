@@ -54,10 +54,6 @@ class SuspiciousURLPlugin(TestingPlugin):
 
         m_url = info.url
 
-        # Check if URL is in scope
-        if not is_in_scope(m_url):
-            return
-
         #Logger.log_more_verbose("Default error page: Starting plugin")
 
         a = main_default_error_pages(info)
