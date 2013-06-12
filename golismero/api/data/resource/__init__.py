@@ -56,7 +56,7 @@ class Resource(Data):
 
 
     RESOURCE_FIRST = RESOURCE_URL
-    RESOURCE_LAST  = RESOURCE_DOMAIN
+    RESOURCE_LAST  = RESOURCE_EMAIL
 
 
     #----------------------------------------------------------------------

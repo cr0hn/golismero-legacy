@@ -114,7 +114,7 @@ def colorize_substring(text, substring, level_or_color):
             level_or_color = level_or_color.lower()
         except AttributeError:
             pass
-        m_colors[level_or_color]
+        color = m_colors[level_or_color]
 
         # Loop for each occurrence of the substring.
         m_pos = 0

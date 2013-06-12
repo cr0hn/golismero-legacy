@@ -663,7 +663,7 @@ class HTTP_Response (Information):
         self.__headers = kwargs.get("headers", self.__headers)
         if self.__headers:
             if not isinstance(self.__headers, HTTP_Headers):
-                if hasattr(headers, "items"):
+                if hasattr(self.__headers, "items"):
                     self.__headers = HTTP_Headers(sorted(self.__headers.items()))
                 else:
                     self.__headers = HTTP_Headers(sorted(self.__headers))
