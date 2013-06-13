@@ -251,7 +251,10 @@ def main_server_fingerprint(base_url):
 
     return [m_return]
 
-
+#----------------------------------------------------------------------
+#
+# Platform detection
+#
 #----------------------------------------------------------------------
 def basic_platform_detection(main_url, conn):
     """
@@ -309,6 +312,52 @@ def basic_platform_detection(main_url, conn):
     return m_return
 
 
+#----------------------------------------------------------------------
+def ttl_platform_detection(main_url):
+    """
+    This function try to recognize the remote platform doing a ping and analyzing the
+    TTL of IP header response.
+
+    :param main_url: Base url to test.
+    :type main_url: str
+
+    :return: a list with posibles platforms
+    :rtype: dict(OS, version)
+    """
+
+    # Do a ping
+    try:
+        m_ttl               = do_ping_and_receive_ttl(DecomposedURL(main_url).hostname, 2)
+
+        # Load words for the wordlist
+        l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config["Wordlist_ttl"]["ttl"])
+        # Looking for matches
+        l_matches           = l_wordlist_instance.matches_by_value(m_ttl)
+
+        if l_matches:
+            m_ret = {}
+            for v in l_matches:
+                sp = v.split("|")
+                k = sp[0].strip()
+                v = sp[1].strip()
+                m_ret[k] = v
+
+            return m_ret
+        else:
+            return {}
+    except EnvironmentError:
+        Logger.log_error("[!] You can't run the platform detection plugin if you're not root.")
+        return {}
+    except Exception, e:
+        Logger.log_error("[!] Platform detection failed, reason: %s" % e)
+        return {}
+
+
+
+#----------------------------------------------------------------------
+#
+# Web server detection
+#
 #----------------------------------------------------------------------
 def http_analyzers(main_url, conn, number_of_entries=4):
     """
@@ -792,136 +841,6 @@ def http_analyzers(main_url, conn, number_of_entries=4):
     return m_server_family, m_server_version, m_server_complete, m_other_servers_prob
 
 
-#----------------------------------------------------------------------
-def ttl_platform_detection(main_url):
-    """
-    This function try to recognize the remote platform doing a ping and analyzing the
-    TTL of IP header response.
-
-    :param main_url: Base url to test.
-    :type main_url: str
-
-    :return: a list with posibles platforms
-    :rtype: dict(OS, version)
-    """
-
-    # Do a ping
-    try:
-        m_ttl               = do_ping_and_receive_ttl(DecomposedURL(main_url).hostname, 2)
-
-        # Load words for the wordlist
-        l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config["Wordlist_ttl"]["ttl"])
-        # Looking for matches
-        l_matches           = l_wordlist_instance.matches_by_value(m_ttl)
-
-        if l_matches:
-            m_ret = {}
-            for v in l_matches:
-                sp = v.split("|")
-                k = sp[0].strip()
-                v = sp[1].strip()
-                m_ret[k] = v
-
-            return m_ret
-        else:
-            return {}
-    except EnvironmentError:
-        Logger.log_error("[!] You can't run the platform detection plugin if you're not root.")
-        return {}
-    except Exception, e:
-        Logger.log_error("[!] Platform detection failed, reason: %s" % e)
-        return {}
-
-
-@lru_cache(maxsize=100)
-def calculate_server_track(server_name):
-    # from nginx/1.5.1-r2 -> ("nginx", "1.5.1")
-    l_server_track = None
-    l_server       = None
-    try:
-        l_server = transform_name(server_name)
-    except ValueError:
-        return server_name
-
-
-    # Name -> nginx
-    l_server_name    = l_server[0]
-    l_server_version = None
-    try:
-
-        # if version has format: 6.0v1 or 2.0
-        if l_server[1].count(".") == 1:
-            l_server_version = l_server[1]
-        else:
-            # Major version: 1.5.1 -> 1.5
-            l_i = nindex(l_server[1], ".", 2)
-
-            if l_i != -1:
-                l_server_version = l_server[1][:l_i]
-            else:
-                l_server_version = l_server[1]
-
-    except ValueError:
-        l_server_version = "generic"
-
-    l_server_track = "%s-%s" % (l_server_name, l_server_version)
-
-    return l_server_track
-
-
-#----------------------------------------------------------------------
-@lru_cache(maxsize=100)
-def nindex(str_in, substr, nth):
-    """
-    From and string get nth ocurrence of substr
-    """
-
-    m_slice  = str_in
-    n        = 0
-    m_return = None
-    while nth:
-        try:
-            n += m_slice.index(substr) + len(substr)
-            m_slice = str_in[n:]
-            nth -= 1
-        except ValueError:
-            break
-    try:
-        m_return = n - 1
-    except ValueError:
-        m_return = 0
-
-    return m_return
-
-
-#----------------------------------------------------------------------
-@lru_cache(maxsize=100)
-def transform_name(name):
-    """
-    Transforme strings like:
-
-    nginx/1.5.1    -> (nginx, 1.5)
-
-    nginx 1.5.1-r2 -> (nginx, 1.5)
-
-    nginx/1.5.1v5  -> (nginx, 1.5)
-
-    Microsoft IIS 6.0 -> (Microsoft IIS, 6.0)
-
-    :return: a tuple as forme: (SERVER_NAME, VERSION)
-    :rtype: tuple
-    """
-    if not name:
-        raise ValueError("Empty value")
-
-    m_results = SERVER_PATTERN.search(name)
-
-    if not m_results:
-        raise ValueError("Incorrect format of name: '%s'" % name)
-
-    return (m_results.group(1), m_results.group(2))
-
-
 #------------------------------------------------------------------------------
 class HTTPAnalyzer:
     """"""
@@ -1075,3 +994,100 @@ class HTTPAnalyzer:
     def results_determinator_complete(self):
         """"""
         return self.__determinator_complete
+
+#----------------------------------------------------------------------
+#
+# Aux functions
+#
+#----------------------------------------------------------------------
+@lru_cache(maxsize=100)
+def calculate_server_track(server_name):
+    """
+    from nginx/1.5.1-r2 -> ("nginx", "1.5.1")
+    """
+    l_server_track = None
+    l_server       = None
+    try:
+        l_server = transform_name(server_name)
+    except ValueError:
+        return server_name
+
+
+    # Name -> nginx
+    l_server_name    = l_server[0]
+    l_server_version = None
+    try:
+
+        # if version has format: 6.0v1 or 2.0
+        if l_server[1].count(".") == 1:
+            l_server_version = l_server[1]
+        else:
+            # Major version: 1.5.1 -> 1.5
+            l_i = nindex(l_server[1], ".", 2)
+
+            if l_i != -1:
+                l_server_version = l_server[1][:l_i]
+            else:
+                l_server_version = l_server[1]
+
+    except ValueError:
+        l_server_version = "generic"
+
+    l_server_track = "%s-%s" % (l_server_name, l_server_version)
+
+    return l_server_track
+
+
+#----------------------------------------------------------------------
+@lru_cache(maxsize=100)
+def nindex(str_in, substr, nth):
+    """
+    From and string get nth ocurrence of substr
+    """
+
+    m_slice  = str_in
+    n        = 0
+    m_return = None
+    while nth:
+        try:
+            n += m_slice.index(substr) + len(substr)
+            m_slice = str_in[n:]
+            nth -= 1
+        except ValueError:
+            break
+    try:
+        m_return = n - 1
+    except ValueError:
+        m_return = 0
+
+    return m_return
+
+
+#----------------------------------------------------------------------
+@lru_cache(maxsize=100)
+def transform_name(name):
+    """
+    Transforme strings like:
+
+    nginx/1.5.1    -> (nginx, 1.5)
+
+    nginx 1.5.1-r2 -> (nginx, 1.5)
+
+    nginx/1.5.1v5  -> (nginx, 1.5)
+
+    Microsoft IIS 6.0 -> (Microsoft IIS, 6.0)
+
+    :return: a tuple as forme: (SERVER_NAME, VERSION)
+    :rtype: tuple
+    """
+    if not name:
+        raise ValueError("Empty value")
+
+    m_results = SERVER_PATTERN.search(name)
+
+    if not m_results:
+        raise ValueError("Incorrect format of name: '%s'" % name)
+
+    return (m_results.group(1), m_results.group(2))
+
+
