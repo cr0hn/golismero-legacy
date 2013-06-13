@@ -51,7 +51,7 @@ class Resource(Data):
     RESOURCE_BASE_URL      = 2    # Base URLs
     RESOURCE_FOLDER_URL    = 3    # Folder URLs
     RESOURCE_DOMAIN        = 4    # Domain names
-    #RESOURCE_IP            = 5    # IP addresses
+    RESOURCE_IP            = 5    # IP addresses
     RESOURCE_EMAIL         = 6    # Email addresses
 
 
