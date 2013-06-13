@@ -81,14 +81,6 @@ class Orchestrator (object):
         Console.level = config.verbose
         Console.use_colors = config.colorize
 
-        # Check the run mode.
-        if config.run_mode == config.RUN_MODE.master:
-            raise NotImplementedError("Master mode not yet implemented!")
-        if config.run_mode == config.RUN_MODE.slave:
-            raise NotImplementedError("Slave mode not yet implemented!")
-        if config.run_mode != config.RUN_MODE.standalone:
-            raise ValueError("Invalid run mode: %r" % config.run_mode)
-
         # Search for plugins.
         self.__pluginManager = PluginManager()
         success, failure = self.__pluginManager.find_plugins(self.__config.plugins_folder)
