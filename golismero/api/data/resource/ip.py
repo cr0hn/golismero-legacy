@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Email address type.
+IPv4 address type.
 """
 
 __license__ = """
@@ -30,7 +30,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["Email"]
+__all__ = ["IP"]
 
 from . import Resource
 from .domain import Domain
@@ -39,33 +39,33 @@ from ...net.web_utils import DecomposedURL, is_in_scope
 
 
 #------------------------------------------------------------------------------
-class Email(Resource):
+class IP(Resource):
     """
-    Email address.
+    IPv4 address.
     """
 
-    resource_type = Resource.RESOURCE_EMAIL
+    resource_type = Resource.RESOURCE_IP
 
 
     #----------------------------------------------------------------------
-    def __init__(self, address, name = None):
+    def __init__(self, address, domain):
         """
-        :param address: Email address.
+        :param address: IPv4 address.
         :type address: str
 
-        :param name: Optional real life name associated with this email.
-        :type name: str | None
+        :param domain: Domain associated to this IP address. Used to determine scope.
+        :type domain: str
         """
 
-        # Email address.
-        # TODO: sanitize the email addresses using a regular expression
+        # IPv4 address.
+        # TODO: sanitize the IP addresses
         self.__address = address
 
-        # Real name.
-        self.__name = name
+        # Domain name.
+        self.__domain = domain
 
         # Parent constructor.
-        super(Email, self).__init__()
+        super(IP, self).__init__()
 
 
     #----------------------------------------------------------------------
@@ -75,56 +75,29 @@ class Email(Resource):
 
     #----------------------------------------------------------------------
     def __repr__(self):
-        return "<Email address=%r name=%r>" % (self.address, self.name)
+        return "<IP address=%r>" % self.address
 
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.hostname)
+        return is_in_scope(self.domain)
 
 
     #----------------------------------------------------------------------
     @identity
     def address(self):
         """
-        :return: Email address.
+        :return: IPv4 address.
         :rtype: str
         """
         return self.__address
 
 
     #----------------------------------------------------------------------
-    @property
-    def name(self):
+    @identity
+    def domain(self):
         """
-        :return: Real name.
-        :rtype: str | None
-        """
-        return self.__name
-
-
-    #----------------------------------------------------------------------
-    @property
-    def url(self):
-        """
-        :return: mailto:// URL for this email address.
+        :return: Domain name associated to this IP address. Used to determine scope.
         :rtype: str
         """
-        return "mailto://" + self.__address
-
-
-    #----------------------------------------------------------------------
-    @property
-    def hostname(self):
-        """
-        :return: Host name for this email address.
-        :rtype: str
-        """
-        return self.__address.split("@", 1)[1].strip().lower()
-
-
-    #----------------------------------------------------------------------
-
-    @property
-    def discovered_resources(self):
-        return [Domain(self.hostname)]
+        return self.__domain
