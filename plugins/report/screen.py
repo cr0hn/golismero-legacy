@@ -39,7 +39,6 @@ from golismero.api.data.information import Information
 
 # XXX HACK
 from golismero.main.console import colorize, colorize_substring
-from prettytable import *
 
 
 class ScreenReport(ReportPlugin):
@@ -79,7 +78,7 @@ class ScreenReport(ReportPlugin):
         else:
             general_display_by_resource(m_db)
 
-        print
+        print "\n\n"
 
 
 #----------------------------------------------------------------------
@@ -117,12 +116,13 @@ def common_display_general_summary(database):
     # ----------------------------------------
     # Discovered resources
     # ----------------------------------------
-    print "\n-# %s #- \n"% colorize("Summary", "yellow")
+    print "\n-# %s #- "% colorize("Summary", "yellow")
 
 
     # Fingerprint
-    print "\n-- %s -- \n"% colorize("Fingerprinting results", "yellow")
-    m_table = common_get_table_without(with_header=False)
+    print "\n-- %s -- "% colorize("Target summary", "yellow")
+
+    m_table  = GolismeroTable(init_spaces=3)
 
     m_tmp_data = common_get_resources(database, data_type=Data.TYPE_INFORMATION, data_subtype=Information.INFORMATION_WEB_SERVER_FINGERPRINT)
 
@@ -132,48 +132,22 @@ def common_display_general_summary(database):
         for l_host in m_tmp_data:
             for l_res in l_host.associated_resources:
                 if hasattr(l_res, "url"):
-                    m_table.add_row(["Fingerprint: %s" % l_res.url, colorize("Apache", "yellow")])
+                    m_table.add_row("Fingerprint: %s - %s" % (l_res.url, colorize("Apache", "yellow")))
     else:
-        m_table.add_row(["Main web server:", colorize("Unknown", "yellow")])
+        m_table.add_row("Main web server: %s" % colorize("Unknown", "yellow"))
 
     # Vhosts
     #m_table.add_row(["Vhosts", colorize("1", "yellow")])
     #m_table.add_row(["+  Vhosts2", colorize("1", "yellow")])
 
     # Audited hosts
-    m_table.add_row(["Hosts audited", colorize(len(common_get_resources(database, data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_DOMAIN)), "yellow")])
+    m_table.add_row("Hosts audited: %s" % colorize(len(common_get_resources(database, data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_DOMAIN)), "yellow"))
 
     # Total vulns
-    m_table.add_row(["Total vulns", str(len(common_get_resources(database, data_type=Data.TYPE_VULNERABILITY)))])
+    m_table.add_row("Total vulns: %s" % str(len(common_get_resources(database, data_type=Data.TYPE_VULNERABILITY))))
 
     # Set align
-    m_table.align = "l"
-    print m_table
-
-
-#----------------------------------------------------------------------
-def common_get_table_without(main_cols = [], with_header=True, with_hrules=True):
-    """
-    Get PrettyTable with params.
-
-    :param main_cols: cols of header.
-    :type main_cols: list
-
-    :param with_header: set the table header or not.
-    :type with_header: bool
-
-    :param with_hrules: set rules at each row.
-    :type with_hrules: bool
-
-    :return: a PrettyTable object
-    :rtype: PrettyTable
-
-    """
-    m_table = PrettyTable(main_cols, hrules=(ALL if with_hrules else None))
-    m_table.header = with_header
-    m_table.padding_width = 3
-
-    return m_table
+    print m_table.get_content()
 
 
 #----------------------------------------------------------------------
@@ -191,15 +165,13 @@ def general_display_only_vulns(db):
     # ----------------------------------------
     common_display_general_summary(db)
 
-    print "\n- %s - \n"% colorize("Vulnerabilities", "yellow")
+    m_v = vuln_genereral_displayer(common_get_resources(db, data_type=Data.TYPE_VULNERABILITY))
 
-    # Title
-    print "+%s+" % ("-" * (len("Vulnerabilities") + 3))
-    print "| %s  |" % colorize("Vulnerabilities", "Red")
-    print "+%s+" % ("-" * (len("Vulnerabilities") + 3))
+    m_table = GolismeroTable(title="Vulnerabilities", init_spaces=0)
+    m_table.add_row(m_v)
+
     print
-
-    common_get_resources(db, data_type=Data.TYPE_VULNERABILITY)
+    print m_table.get_content()
 
 
 #----------------------------------------------------------------------
@@ -262,62 +234,50 @@ def concrete_display_web_resources(database):
 
     i = 0
 
-    #left_padding_width
-
-
     for u in resource:
-
+        l_b = StringIO()
         # Initial vars
         i             += 1
         # Url to print
-        l_url          = l_url = colorize(u.url, "white")
+        l_url          = colorize(u.url, "white")
 
         #
         # Display URL and method
         #
-        print "[%s] (%s) %s" % (colorize('{:^5}'.format(i), "Blue"), u.method, l_url)
+        l_b.write("  [%s] (%s) %s" % (colorize('{:^5}'.format(i), "Blue"), u.method, l_url))
+
+        # Displayer table
+        l_table = GolismeroTable(init_spaces=10)
 
         #
         # Display URL params
         #
         # GET
         if u.has_url_param:
-            l_table = PrettyTable(["Params type", "GET"])
+            l_vals        = []
+            l_vals_append = l_vals.append
             for p,v in u.url_params().iteritems():
-                l_table.add_row([p,v])
+                l_vals_append([p,v])
 
-            print l_table
+            l_table.add_row(l_vals, "Params type: GET")
 
         # POST
         if u.has_post_param:
-            l_table = PrettyTable(["Params type", "GET"])
+            l_vals        = []
+            l_vals_append = l_vals.append
             for p,v in u.post_params().iteritems():
-                l_table.add_row([p,v])
+                l_vals_append([p,v])
 
-            print l_table
+            l_table.add_row(l_vals, "Params type: POST")
 
         if u.associated_vulnerabilities:
-            # Title
-            print "%s+%s+" % (" " * 8,"-" * (len("Vulnerabilities") + 3))
-            print "%s| %s  |" % (" " * 8, colorize("Vulnerabilities", "Red"))
-            print "%s+%s+" % (" " * 8,"-" * (len("Vulnerabilities") + 3))
+            l_table.add_row(vuln_genereral_displayer(u.associated_vulnerabilities), "Vulnerabilities")
 
-            vuln_genereral_displayer(u.associated_vulnerabilities)
+        a = l_table.get_content()
+        if a:
+            l_b.write(a)
 
-
-
-    # ----------------------------------------
-    # Summary
-    # ----------------------------------------
-    print "\n\n- %s -\n" % colorize("Web summary", "yellow")
-
-    # Urls
-    m_table = PrettyTable(hrules=ALL)
-    m_table.header = False
-    m_table.add_row(["Total URLs:", colorize(str(i), "yellow")])
-
-    print m_table
-
+        print l_b.getvalue()
 
 RESOURCE_DISPLAYER = {
     # Web related: URL + Base_URL
@@ -344,7 +304,8 @@ def vuln_genereral_displayer(vulns):
     #
     # Display the info
     #
-    m_pre_spaces = 8
+    m_return        = []
+    m_return_append = m_return.append
     for vuln in vulns:
         # Vuln name as raw format
         l_vuln_name      = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
@@ -353,44 +314,43 @@ def vuln_genereral_displayer(vulns):
 
         # Call to the function resposible to display the vuln info
         try:
-            #l_table      = PrettyTable(["Vuln name: ", l_vuln_name_text])
-            l_table      = StringIO()
-            l_table.write("Vuln name: %s\n" % colorize(l_vuln_name_text, "white"))
-            l_table.write("%s\n" % ("-" * len("Vuln name: %s" % l_vuln_name_text)))
+            l_table      = []
+            l_table.append("Vuln name: %s" % colorize(l_vuln_name_text, "white"))
+            l_table.append("%s" % ("-" * len("Vuln name: %s" % l_vuln_name_text)))
 
 
             # String value of handler
-            VULN_DISPLAYER[l_vuln_name](vuln, l_table.write)
+            VULN_DISPLAYER[l_vuln_name](vuln, l_table.append)
 
-            # Display the table
-            print '\n'.join([ "        | " + x for x in l_table.getvalue().splitlines()])
-            print "        *-"
+            m_return_append(l_table)
 
         except KeyError:
             print "Function to display '%s' function are not available" % l_vuln_name
             continue
 
+    return m_return
+
 
 #----------------------------------------------------------------------
 def vuln_display_url_suspicious(vuln, func):
     """Diplay the vuln: URL Suspicious"""
-    func("URL: %s\n" % colorize_substring(vuln.url.url, vuln.substring, "red"))
-    func("Suspicius text: %s\n" % colorize(vuln.substring, "red"))
+    func("URL: %s" % colorize_substring(vuln.url.url, vuln.substring, "red"))
+    func("Suspicius text: %s" % colorize(vuln.substring, "red"))
 
 
 #----------------------------------------------------------------------
 def vuln_display_url_disclosure(vuln, func):
     """Diplay the vuln: URL Disclosure"""
-    func("URL: %s\n" % colorize_substring(vuln.url.url, vuln.discovered, "red"))
-    func("Path discovered: %s\n" % colorize(vuln.discovered, "red"))
+    func("URL: %s" % colorize_substring(vuln.url.url, vuln.discovered, "red"))
+    func("Path discovered: %s" % colorize(vuln.discovered, "red"))
 
 
 #----------------------------------------------------------------------
 def vuln_display_default_error_page(vuln, func):
     """Diplay the vuln: URL Disclosure"""
 
-    func("URL: %s\n" % colorize_substring(vuln.url.url, vuln.discovered, "red"))
-    func("Default error page for server: %s\n" % colorize(vuln.server_name, "red"))
+    func("URL: %s" % colorize_substring(vuln.url.url, vuln.discovered, "red"))
+    func("Default error page for server: %s" % colorize(vuln.server_name, "red"))
 
 
 VULN_DISPLAYER = {
@@ -398,3 +358,84 @@ VULN_DISPLAYER = {
     'url_disclosure'          : vuln_display_url_disclosure,
     'default_error_page'      : vuln_display_default_error_page
 }
+
+
+#------------------------------------------------------------------------------
+class GolismeroTable:
+    """
+    This class represent the information like a "table" as a custom format.
+    """
+
+    #----------------------------------------------------------------------
+    def __init__(self, title="", init_spaces_title=0, init_spaces=8, title_color = "red"):
+        """
+        :param init_spaces: inital spaces
+        :type init_spaces: int
+
+        :param title: title of table
+        :type title: str
+        """
+        self.__text              = StringIO()
+        self.__title             = StringIO()
+        self.__title_length      = len(title) + 5 # The 5 is for the initial and ends characters
+        self.__init_spaces       = init_spaces
+        self.__init_title_spaces = init_spaces_title
+
+        if title:
+            self.__title.write("+%s+\n" % ("-" * (len(title) + 3)))
+            self.__title.write("| %s  |\n" % (colorize(title, title_color)))
+            self.__title.write("+%s+\n" % ("-" * (len(title) + 3)))
+
+
+    #----------------------------------------------------------------------
+    def add_row(self, row_info, cell_title = ""):
+        """
+        Add a row to the table.
+
+        :param row_info: list with info of each line.
+        :type row_info: list
+
+        :param cell_title: title for the next rows
+        :type cell_title: str
+
+        """
+        if cell_title:
+            self.__text.write("%s\n" % ("-" * (len(cell_title) + 4)))
+            self.__text.write("| %s |\n" % cell_title)
+            self.__text.write("%s\n" % ("-" * (len(cell_title) + 4)))
+
+        if row_info:
+            if isinstance(row_info, list):
+                for r in row_info:
+                    for l in r:
+                        self.__text.write("| %s\n" % l)
+                    self.__text.write("+-\n")
+
+            else:
+                self.__text.writelines("| %s" % row_info)
+                self.__text.write("\n+-\n")
+
+
+
+    #----------------------------------------------------------------------
+    def get_content(self):
+        """
+        Get an string with the table
+        """
+
+        m_return = StringIO()
+
+        # Title
+        if self.__title_length > 5:
+            m_return.write('\n'.join(( "%s%s" % (" " * self.__init_title_spaces, x) for x in self.__title.getvalue().splitlines())))
+
+
+        if self.__text.getvalue():
+            m_return.write("\n")
+            # Rows
+            m_return.write('\n'.join(( "%s%s" % (" " * self.__init_spaces, x) for x in self.__text.getvalue().splitlines()[:-1])))
+
+            # End
+            m_return.write("\n%s|___" % (" " * self.__init_spaces))
+
+        return m_return.getvalue()
