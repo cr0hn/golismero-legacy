@@ -22,3 +22,9 @@ Wordlist utils
 
 .. automodule:: golismero.api.text.wordlist_api
    :members:
+
+Natural language
+----------------
+
+.. automodule:: golismero.api.text.natural_language
+   :members: detect_language
