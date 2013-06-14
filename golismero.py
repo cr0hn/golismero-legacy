@@ -372,7 +372,6 @@ def main(args):
             print "[!] Plugin name not found"
             exit(1)
         except Exception, e:
-            raise
             print "[!] Error recovering plugin info: %s" % e.message
             exit(1)
 

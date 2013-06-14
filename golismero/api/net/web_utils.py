@@ -464,6 +464,7 @@ class DecomposedURL(object):
         'https'     : 443,       # https://secure.example.com/
         'ftp'       : 21,        # ftp://ftp.example.com/file.txt
         'mailto'    : 25,        # mailto://user@example.com?subject=Hi!
+        ##'callto'    : None,      # callto:+34666131313
         ##'file'      : None,      # file://C:\Windows\System32\calc.exe
         ##'data'      : None,      # data:data:image/png;base64,iVBORw0KGgoA...
         ##'javascript': None,      # javascript:alert('XSS')
