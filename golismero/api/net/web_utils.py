@@ -213,10 +213,8 @@ def check_auth(url, user, password):
         s = Session()
         r = s.send(p)
 
-        if r.status_code == codes.ok:
-            return True
-        else:
-            return False
+        return r.status_code == codes.ok
+    return True
 
 
 #----------------------------------------------------------------------

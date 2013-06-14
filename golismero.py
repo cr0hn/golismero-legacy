@@ -396,22 +396,16 @@ def main(args):
     try:
         from golismero.api.net.web_utils import detect_auth_method, check_auth
 
-        # Detect auth in URLs.
-        if 1 == 2:
-            for t in auditParams.targets:
-                auth, realm = detect_auth_method(t)
-                if auth:
-                    Console.display_error("[!] '%s' authentication is needed for '%s'. Specify using syntax: http://user:pass@target.com." % (auth, t))
-                    exit(1)
-
         # Detect auth in proxy, if specified.
         if auditParams.proxy_addr:
             if auditParams.proxy_user:
-                check_auth(auditParams.proxy_addr, auditParams.proxy_user, auditParams.proxy_pass)
+                if not check_auth(auditParams.proxy_addr, auditParams.proxy_user, auditParams.proxy_pass):
+                    Console.display_error("[!] Authentication failed for proxy: '%s'." % auditParams.proxy_addr)
+                    exit(1)
             else:
-                auth, realm = detect_auth_method(auditParams.proxy_addr)
+                auth, _ = detect_auth_method(auditParams.proxy_addr)
                 if auth:
-                    Console.display_error("[!] Authentication is needed for '%s' proxy. Use '--proxy-user' and '--proxy-pass' to specify them." % cmdParams.proxy_addr)
+                    Console.display_error("[!] Authentication required for proxy: '%s'. Use '--proxy-user' and '--proxy-pass' to set the username and password." % cmdParams.proxy_addr)
                     exit(1)
 
         # Launch GoLismero.
