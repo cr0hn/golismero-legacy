@@ -121,6 +121,7 @@ def common_display_general_summary(database):
 
     # Fingerprint
     print "\n-- %s -- "% colorize("Target summary", "yellow")
+    print "   +",
 
     m_table  = GolismeroTable(init_spaces=3)
 
