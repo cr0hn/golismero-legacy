@@ -111,16 +111,17 @@ import datetime
 import textwrap
 import traceback
 
-from os import getenv
+from os import getenv, getpid
 
 
 #----------------------------------------------------------------------
 # GoLismero modules
 
+from golismero.api.config import Config
 from golismero.common import launcher, OrchestratorConfig, AuditConfig
-from golismero.main.console import Console
 from golismero.main.orchestrator import Orchestrator
-from golismero.managers.priscillapluginmanager import PriscillaPluginManager
+from golismero.managers.pluginmanager import PluginManager
+from golismero.managers.processmanager import PluginContext
 
 
 #----------------------------------------------------------------------
@@ -179,10 +180,9 @@ class ReadValueFromFileAction(argparse.Action):
 
 def cmdline_parser():
     parser = argparse.ArgumentParser(fromfile_prefix_chars="@")
-    parser.add_argument("targets", metavar="TARGET", nargs="+", help="one or more target web sites")
+    parser.add_argument("targets", metavar="TARGET", nargs="*", help="one or more target web sites")
 
     gr_main = parser.add_argument_group("main options")
-    gr_main.add_argument("-M", "--run-mode", metavar="MODE", help="run mode [default: standalone]", default="standalone", choices=OrchestratorConfig.RUN_MODE._values.keys())
     gr_main.add_argument("--ui-mode", metavar="MODE", help="UI mode [default: console]", default="console")
     gr_main.add_argument("-v", "--verbose", action="count", default=1, help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
@@ -281,36 +281,40 @@ def main(args):
             manager = PluginManager()
             manager.find_plugins(plugins_folder)
         except Exception, e:
-            Console.display("[!] Error loading plugins list: %s" % e.message)
+            print "[!] Error loading plugins list: %s" % e.message
             exit(1)
 
         # Show the list of plugins.
-        Console.display("-------------")
-        Console.display(" Plugin list")
-        Console.display("-------------\n")
+        print "-------------"
+        print " Plugin list"
+        print "-------------\n"
 
         # Testing plugins...
         testing_plugins = manager.get_plugins("testing")
         if testing_plugins:
-            Console.display("-= Testing plugins =-")
-            for name, info in testing_plugins.iteritems():
-                Console.display("+ %s: %s" % (name, info.description))
+            print "-= Testing plugins =-"
+            for name in sorted(testing_plugins.keys()):
+                info = testing_plugins[name]
+                print "+ %s: %s" % (name, info.description)
 
         # UI plugins...
         ui_plugins = manager.get_plugins("ui")
         if ui_plugins:
-            Console.display("\n-= UI plugins =-")
-            for name, info in ui_plugins.iteritems():
-                Console.display("+ %s: %s" % (name, info.description))
+            print "\n-= UI plugins =-"
+            for name in sorted(ui_plugins.keys()):
+                info = ui_plugins[name]
+                print "+ %s: %s" % (name, info.description)
 
         # Report plugins...
         report_plugins = manager.get_plugins("report")
         if ui_plugins:
-            Console.display("\n-= Report plugins =-")
-            for name, info in report_plugins.iteritems():
-                Console.display("+ %s: %s" % (name, info.description))
+            print "\n-= Report plugins =-"
+            for name in sorted(report_plugins.keys()):
+                info = report_plugins[name]
+                print "+ %s: %s" % (name, info.description)
 
-        Console.display(" ")
+        if os.sep != "\\":
+            print
         exit(0)
 
 
@@ -324,41 +328,51 @@ def main(args):
             manager = PluginManager()
             manager.find_plugins(plugins_folder)
         except Exception, e:
-            Console.display("[!] Error loading plugins list: %s" % e.message)
+            print "[!] Error loading plugins list: %s" % e.message
             exit(1)
 
         # Show the plugin information.
-        Console.level = Console.VERBOSE
         try:
-            m_plugin_info = manager.get_plugin_by_name(P.plugin_name)
-            m_plugin_obj  = manager.load_plugin_by_name(P.plugin_name)
-            if m_plugin_info and m_plugin_obj:
-                message = m_plugin_obj.display_help()
-                message = textwrap.dedent(message)
-                Console.display("Information for plugin: %s" % m_plugin_info.display_name)
-                Console.display("----------------------")
-                Console.display("Location: %s" % m_plugin_info.descriptor_file)
-                Console.display("Source code: %s" % m_plugin_info.plugin_module)
-                if m_plugin_info.plugin_class:
-                    Console.display("Class name: %s" % m_plugin_info.plugin_class)
-                if m_plugin_info.description != m_plugin_info.display_name:
-                    Console.display("")
-                    Console.display(m_plugin_info.description)
-                if message != m_plugin_info.description:
-                    Console.display("")
-                    Console.display(message)
-            else:
-                Console.display("[!] Plugin name not found")
-                exit(1)
+            try:
+                m_plugin_info = manager.get_plugin_by_name(P.plugin_name)
+            except KeyError:
+                try:
+                    m_found = manager.search_plugins_by_name(P.plugin_name)
+                    if len(m_found) > 1:
+                        print "[!] Error: which plugin did you mean?"
+                        for plugin_name in m_found.iterkeys():
+                            print "\t%s" % plugin_name
+                        exit(1)
+                    m_plugin_info = m_found.pop(m_found.keys()[0])
+                except Exception:
+                    raise KeyError(P.plugin_name)
+            Config._context = PluginContext( orchestrator_pid = getpid(),
+                                                  plugin_info = m_plugin_info,
+                                                    msg_queue = None )
+            m_plugin_obj = manager.load_plugin_by_name(m_plugin_info.plugin_name)
+            message = m_plugin_obj.display_help()
+            message = textwrap.dedent(message)
+            print "Information for plugin: %s" % m_plugin_info.display_name
+            print "----------------------"
+            print "Location: %s" % m_plugin_info.descriptor_file
+            print "Source code: %s" % m_plugin_info.plugin_module
+            if m_plugin_info.plugin_class:
+                print "Class name: %s" % m_plugin_info.plugin_class
+            if m_plugin_info.description != m_plugin_info.display_name:
+                print
+                print m_plugin_info.description
+            if message.strip().lower() != m_plugin_info.description.strip().lower():
+                print
+                print message
             exit(0)
         except KeyError:
-            Console.display("[!] Plugin name not found")
+            print "[!] Plugin name not found"
             exit(1)
         except ValueError:
-            Console.display("[!] Plugin name not found")
+            print "[!] Plugin name not found"
             exit(1)
         except Exception, e:
-            Console.display("[!] Error recovering plugin info: %s" % e.message)
+            print "[!] Error recovering plugin info: %s" % e.message
             exit(1)
 
 
@@ -375,27 +389,23 @@ def main(args):
     #------------------------------------------------------------
     # Launch GoLismero
 
+    from golismero.main.console import Console
+
     Console.level = cmdParams.verbose
     Console.display("GoLismero started at %s" % datetime.datetime.now())
     try:
         from golismero.api.net.web_utils import detect_auth_method, check_auth
 
-        # Detect auth in URLs.
-        if 1 == 2:
-            for t in auditParams.targets:
-                auth, realm = detect_auth_method(t)
-                if auth:
-                    Console.display_error("[!] '%s' authentication is needed for '%s'. Specify using syntax: http://user:pass@target.com." % (auth, t))
-                    exit(1)
-
         # Detect auth in proxy, if specified.
         if auditParams.proxy_addr:
             if auditParams.proxy_user:
-                check_auth(auditParams.proxy_addr, auditParams.proxy_user, auditParams.proxy_pass)
+                if not check_auth(auditParams.proxy_addr, auditParams.proxy_user, auditParams.proxy_pass):
+                    Console.display_error("[!] Authentication failed for proxy: '%s'." % auditParams.proxy_addr)
+                    exit(1)
             else:
-                auth, realm = detect_auth_method(auditParams.proxy_addr)
+                auth, _ = detect_auth_method(auditParams.proxy_addr)
                 if auth:
-                    Console.display_error("[!] Authentication is needed for '%s' proxy. Use '--proxy-user' and '--proxy-pass' to specify them." % cmdParams.proxy_addr)
+                    Console.display_error("[!] Authentication required for proxy: '%s'. Use '--proxy-user' and '--proxy-pass' to set the username and password." % cmdParams.proxy_addr)
                     exit(1)
 
         # Launch GoLismero.

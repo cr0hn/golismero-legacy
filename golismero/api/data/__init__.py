@@ -220,6 +220,9 @@ class Data(object):
 
     __metaclass__ = _data_metaclass
 
+    # TODO: Add user-defined tags to Data objects.
+    # TODO: Add user-defined properties to Data objects.
+
 
     #--------------------------------------------------------------------------
     # Data types

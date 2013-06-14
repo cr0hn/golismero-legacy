@@ -138,17 +138,6 @@ def get_user_settings_folder():
 
 
 #--------------------------------------------------------------------------
-def enum(*sequential, **named):
-    "Enumerated type"
-    values = dict(zip(sequential, range(len(sequential))), **named)
-    numbers = values.values()
-    values['_values'] = values
-    values['_first']  = min(numbers)
-    values['_last']   = max(numbers)
-    return type('Enum', (), values)
-
-
-#--------------------------------------------------------------------------
 class Singleton (object):
     """
     Implementation of the Singleton pattern.
@@ -349,9 +338,6 @@ class OrchestratorConfig (Configuration):
     Orchestator configuration object.
     """
 
-    # Run modes
-    RUN_MODE = enum('standalone', 'master', 'slave')
-
 
     #----------------------------------------------------------------------
     # The options definitions:
@@ -361,9 +347,6 @@ class OrchestratorConfig (Configuration):
         #
         # Main options
         #
-
-        # Run mode
-        "run_mode": (str, "standalone"),
 
         # UI mode
         "ui_mode": (str, "console"),
@@ -403,20 +386,6 @@ class OrchestratorConfig (Configuration):
         # None: default for current run mode
         "use_cache_db": Configuration.trinary,
     }
-
-
-    #----------------------------------------------------------------------
-
-    @property
-    def run_mode(self):
-        return self._run_mode
-
-    @run_mode.setter
-    def run_mode(self, run_mode):
-        run_mode = run_mode.strip().lower()
-        if not run_mode in self.RUN_MODE._values:
-            raise ValueError("Invalid run mode: %s" % run_mode)
-        self._run_mode = getattr(self.RUN_MODE, run_mode)
 
 
     #----------------------------------------------------------------------

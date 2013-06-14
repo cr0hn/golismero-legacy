@@ -81,14 +81,6 @@ class Orchestrator (object):
         Console.level = config.verbose
         Console.use_colors = config.colorize
 
-        # Check the run mode.
-        if config.run_mode == config.RUN_MODE.master:
-            raise NotImplementedError("Master mode not yet implemented!")
-        if config.run_mode == config.RUN_MODE.slave:
-            raise NotImplementedError("Slave mode not yet implemented!")
-        if config.run_mode != config.RUN_MODE.standalone:
-            raise ValueError("Invalid run mode: %r" % config.run_mode)
-
         # Search for plugins.
         self.__pluginManager = PluginManager()
         success, failure = self.__pluginManager.find_plugins(self.__config.plugins_folder)
@@ -133,9 +125,8 @@ class Orchestrator (object):
         self.__netManager = NetworkManager(self.__config)
 
         # Network cache.
-        if (self.__config.use_cache_db or (
-            self.__config.use_cache_db is None and
-            self.__config.run_mode != OrchestratorConfig.RUN_MODE.standalone)
+        if (self.__config.use_cache_db or
+            self.__config.use_cache_db is None
         ):
             self.__cache = PersistentNetworkCache()
         else:
@@ -152,10 +143,7 @@ class Orchestrator (object):
         self.__auditManager = AuditManager(self, self.__config)
 
         # UI manager.
-        if config.run_mode == OrchestratorConfig.RUN_MODE.standalone:
-            self.__ui = UIManager(self, self.__config)
-        else:
-            self.__ui = None
+        self.__ui = UIManager(self, self.__config)
 
         # Signal handler to catch Ctrl-C.
         self.__old_signal_action = signal(SIGINT, self.__control_c_handler)
@@ -427,9 +415,7 @@ class Orchestrator (object):
                 try:
 
                     # In standalone mode, if all audits have finished we have to stop.
-                    if (self.__config.run_mode == OrchestratorConfig.RUN_MODE.standalone and
-                        not self.__auditManager.has_audits()
-                    ):
+                    if not self.__auditManager.has_audits():
                         m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                                     message_code = MessageCode.MSG_CONTROL_STOP,
                                     message_info = True)  # True for finished, False for user cancel
