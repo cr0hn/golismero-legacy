@@ -47,11 +47,12 @@ from imp import load_source
 from multiprocessing import Manager
 from multiprocessing import Process as _Original_Process
 from multiprocessing.pool import Pool as _Original_Pool
-from os import getpid
+from os import devnull, getpid
 from warnings import catch_warnings, warn
 from traceback import format_exc, print_exc, format_exception_only, format_list
 from signal import signal, SIGINT
-from sys import exit, stdout, stderr   # the real std handles, not hooked
+
+import sys
 
 
 #------------------------------------------------------------------------------
@@ -73,6 +74,24 @@ class Process(_Original_Process):
     @daemon.deleter
     def daemon(self, value):
         pass
+
+##    def run(self):
+##        try:
+##            sys.stdin.close()
+##            sys.stdin = open(devnull, "rb")
+##        except (OSError, ValueError):
+##            pass
+##        try:
+##            sys.stdout.close()
+##            sys.stdout = open(devnull, "wb")
+##        except (OSError, ValueError):
+##            pass
+##        try:
+##            sys.stderr.close()
+##            sys.stderr = open(devnull, "wb")
+##        except (OSError, ValueError):
+##            pass
+##        super(Process, self).run()
 
 
 #------------------------------------------------------------------------------
@@ -684,7 +703,10 @@ class PluginLauncher (object):
         # Initialize the launcher process, but do not start it yet.
         self.__manager = Manager()
         self.__queue = self.__manager.Queue()
-        self.__process = Process(target=launcher, args=(self.__queue, max_process, refresh_after_tasks))
+        self.__process = Process(
+            target = launcher,
+            args   = (self.__queue, max_process, refresh_after_tasks),
+        )
         self.__alive = True
 
 
@@ -874,3 +896,9 @@ def _suicide(signum, frame):
 
 if __name__ == "__parents_main__":
     signal(SIGINT, _suicide)
+    ##import os, sys
+    ##sys.stdin.close()
+    ##sys.stdout.close()
+    ##sys.stderr.close()
+    ##sys.stdout = open(os.devnull, "wb")
+    ##sys.stderr = open(os.devnull, "wb")

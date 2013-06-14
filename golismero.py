@@ -109,7 +109,6 @@ except NameError:
 import argparse
 import datetime
 import textwrap
-import traceback
 
 from os import getenv, getpid
 
@@ -118,7 +117,8 @@ from os import getenv, getpid
 # GoLismero modules
 
 from golismero.api.config import Config
-from golismero.common import launcher, OrchestratorConfig, AuditConfig
+from golismero.common import OrchestratorConfig, AuditConfig
+from golismero.main import launcher
 from golismero.main.orchestrator import Orchestrator
 from golismero.managers.pluginmanager import PluginManager
 from golismero.managers.processmanager import PluginContext
@@ -188,6 +188,7 @@ def cmdline_parser():
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
     gr_main.add_argument("--color", action="store_true", dest="colorize", help="use colors in console output [default]", default=True)
     gr_main.add_argument("--no-color", action="store_false", dest="colorize", help="suppress colors in console output")
+    gr_main.add_argument("--forward-io", metavar="ADDRESS:PORT", help="forward all input and output to the given TCP address and port")
 
     gr_audit = parser.add_argument_group("audit options")
     gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
@@ -231,7 +232,7 @@ def cmdline_parser():
 #----------------------------------------------------------------------
 # Start of program
 
-def main(args):
+def main():
 
     # Show the program banner.
     show_banner()
@@ -241,6 +242,7 @@ def main(args):
 
     # Parse command line options.
     try:
+        args = sys.argv[1:]
         envcfg = getenv("GOLISMERO_SETTINGS")
         if envcfg:
             args = parser.convert_arg_line_to_args(envcfg) + args
@@ -389,40 +391,115 @@ def main(args):
     #------------------------------------------------------------
     # Launch GoLismero
 
-    from golismero.main.console import Console
 
-    Console.level = cmdParams.verbose
-    Console.display("GoLismero started at %s" % datetime.datetime.now())
-    try:
-        from golismero.api.net.web_utils import detect_auth_method, check_auth
+    # Background job mode disabled for now, until we
+    # find a way to make screen.py work without hacks.
+    launcher.run(cmdParams, auditParams)
+    exit(0)
 
-        # Detect auth in proxy, if specified.
-        if auditParams.proxy_addr:
-            if auditParams.proxy_user:
-                if not check_auth(auditParams.proxy_addr, auditParams.proxy_user, auditParams.proxy_pass):
-                    Console.display_error("[!] Authentication failed for proxy: '%s'." % auditParams.proxy_addr)
-                    exit(1)
-            else:
-                auth, _ = detect_auth_method(auditParams.proxy_addr)
-                if auth:
-                    Console.display_error("[!] Authentication required for proxy: '%s'. Use '--proxy-user' and '--proxy-pass' to set the username and password." % cmdParams.proxy_addr)
-                    exit(1)
 
-        # Launch GoLismero.
+
+
+    # (horrible spaghetti code follows)
+
+    # Background process. Forward all I/O through a TCP/IP socket.
+    if P.forward_io:
+        import socket
         try:
-            launcher(cmdParams, auditParams)
-        except Exception, e:
-            Console.display_error("[!] Fatal error: %s" % e.message)
-            Console.display_error_more_verbose(traceback.format_exc())
+            host, port = P.forward_io.split(":")
+            host, port = host.strip(), port.strip()
+            try:
+                port = int(port)
+            except Exception:
+                port = socket.getservbyname(port)
+            assert 0 < port < 65535
+            socket.gethostbyname(host)
+        except Exception:
+            print "[!] Error: invalid address: %s" % P.forward_io
             exit(1)
+        s = socket.socket()
+        try:
+            s.connect((host, port))
+            fd = s.makefile("r+", 0)
+            try:
+                stdin, stdout, stderr = sys.stdin, sys.stdout, sys.stderr
+                try:
+                    sys.stdin, sys.stdout, sys.stderr = fd, fd, fd
+                    try:
+                        launcher.run(cmdParams, auditParams)
+                    except Exception:
+                        import traceback
+                        traceback.print_exc()
+                        raise
+                finally:
+                    sys.stdin, sys.stdout, sys.stderr = stdin, stdout, stderr
+            finally:
+                fd.close()
+        finally:
+            try:
+                try:
+                    s.shutdown(2)
+                finally:
+                    s.close()
+            except Exception:
+                pass
 
-    except KeyboardInterrupt:
-        Console.display("GoLismero cancelled by the user at %s" % datetime.datetime.now())
-        exit(1)
-    except SystemExit:
-        Console.display("GoLismero stopped at %s" % datetime.datetime.now())
-        raise
+    # Foreground process. Receive all forwarded I/O from the background process.
+    else:
+        import subprocess, socket, select, colorizer
+        if P.colorize:
+            colorizer.init()
+        s = socket.socket()
+        try:
+            s.bind(("127.0.0.1",0))
+            s.listen(1)
+            port = s.getsockname()[1]
+            executable = sys.executable
+            if executable.lower().endswith("python.exe"):
+                executable = executable[:-10] + "pythonw.exe"
+            with open(os.devnull, "r+") as null_fd:
+                process = subprocess.Popen(
+                    [executable] + sys.argv + ["--forward-io", "127.0.0.1:%d" % port],
+                    stdin = null_fd, stdout = null_fd, stderr = null_fd)
+                try:
+                    try:
+                        a = s.accept()[0]
+                        try:
+                            while True:
+                                try:
+                                    r, w, e = select.select([a],[],[a])
+                                except KeyboardInterrupt:
+                                    if os.sep == "\\":
+                                        import ctypes
+                                        ctypes.windll.kernel32.GenerateConsoleCtrlEvent(0, process.pid) # CTRL_C_EVENT
+                                    else:
+                                        import signal
+                                        process.send_signal(signal.SIGINT)
+                                if e:
+                                    print "[!] Socket error!"
+                                    sys.stdout.flush()
+                                    raise Exception("Socket error")
+                                if r:
+                                    d = a.recv(65335)
+                                    if not d: break
+                                    sys.stdout.write(d)
+                                    sys.stdout.flush()
+                                if w:
+                                    a.sendall(sys.stdin.read(65335))
+                        finally:
+                            try:
+                                a.shutdown(2)
+                            finally:
+                                a.close()
+                    except Exception:
+                        process.terminate()
+                        raise
+                finally:
+                    process.wait()
+        finally:
+            s.close()
 
 
+#------------------------------------------------------------
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    main()

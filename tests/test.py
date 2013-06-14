@@ -27,10 +27,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-# Fix the module path for the tests.
-import sys
+# Standard imports.
 import os
 from os import path
+import sys
+import time
+
+
+# Fix the module path for the tests.
 try:
     _FIXED_PATH_
 except NameError:
@@ -45,14 +49,12 @@ except NameError:
     _FIXED_PATH_ = True
 
 
-# Imports.
-from golismero.common import launcher, OrchestratorConfig, AuditConfig
+# GoLismero imports.
 from golismero.api.data import Data
 from golismero.api.text.text_utils import generate_random_string
+from golismero.common import OrchestratorConfig, AuditConfig
 from golismero.database.auditdb import AuditDB
-import time
-import os, os.path
-import sys
+from golismero.main.launcher import run
 
 
 # Test GoLismero.
@@ -60,7 +62,7 @@ def test():
 
     config = OrchestratorConfig()
     config.from_dictionary({
-        "plugins_folder": os.path.abspath(os.path.join(here, "plugin_tests")),
+        "plugins_folder": path.abspath(path.join(here, "plugin_tests")),
         "ui_mode": "test",
     })
 
@@ -80,7 +82,7 @@ def test():
     try:
         print "Launching GoLismero..."
         print
-        launcher(config, audit)
+        run(config, audit)
 
         print "Validating the audit database..."
         print

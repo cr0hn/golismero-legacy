@@ -32,9 +32,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["run_external_tool"]
 
-from .config import Config
-from .logger import Logger
-
 import subprocess
 
 # TODO: Use pexpect to run tools interactively.

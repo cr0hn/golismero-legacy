@@ -196,24 +196,30 @@ def check_auth(url, user, password):
     :return: True if authentication is successful, False otherwise.
     :rtype: bool
     """
+
+    # Check trivial case
     if not url:
         return False
 
-    # Get auth method
+    # Get authentication method
     auth, _ = detect_auth_method(url)
 
+    # Is authentication required?
     if auth:
+
         # Get authentication object
-        m_auth_obj = get_auth_obj(auth, user,password)
+        m_auth_obj = get_auth_obj(auth, user, password)
 
         # Try the request
-        req = Request(url=url, auth=m_auth_obj)
+        req = Request(url = url, auth = m_auth_obj)
         p = req.prepare()
-
         s = Session()
         r = s.send(p)
 
+        # Check if authentication was successful
         return r.status_code == codes.ok
+
+    # No authentication is required
     return True
 
 

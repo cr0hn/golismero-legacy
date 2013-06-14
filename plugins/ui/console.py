@@ -173,7 +173,10 @@ class ConsoleUIPlugin(UIPlugin):
             # full traceback in more verbose level)
             elif message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 (description, traceback) = message.message_info
-                text = "[!] Plugin error: " + str(description)
+                if message.plugin_name:
+                    text = "[!] Error in plugin %s: %s" % (message.plugin_name, description)
+                else:
+                    text = "[!] Error: %s" % description
                 text = colorize(text, 'critical')
                 traceback = colorize(traceback, 'critical')
                 Console.display_error(text)
