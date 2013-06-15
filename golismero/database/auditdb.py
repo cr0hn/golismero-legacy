@@ -408,9 +408,9 @@ class AuditMemoryDB (BaseAuditDB):
     def __init__(self, audit_name):
         super(AuditMemoryDB, self).__init__(audit_name)
         self.__results = dict()
-        self.__state = collections.defaultdict(dict)
+        self.__state   = collections.defaultdict(dict)
         self.__history = collections.defaultdict(set)
-        self.__stages = collections.defaultdict(int)
+        self.__stages  = collections.defaultdict(int)
 
 
     #----------------------------------------------------------------------

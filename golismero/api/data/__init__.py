@@ -607,7 +607,8 @@ class Data(object):
                 remote.add(ref)
             else:
                 instances.add(data)
-        instances.update( Database().get_many(remote) )
+        if remote:
+            instances.update( Database.get_many(remote) )
         return instances
 
 
@@ -749,7 +750,7 @@ class Data(object):
 
 
     #----------------------------------------------------------------------
-    def associated_vulnerabilities_by_category(self, cat_name = None):
+    def get_associated_vulnerabilities_by_category(self, cat_name = None):
         """
         Get associated vulnerabilites by category.
 
@@ -763,7 +764,7 @@ class Data(object):
 
 
     #----------------------------------------------------------------------
-    def associated_informations_by_category(self, information_type = None):
+    def get_associated_informations_by_category(self, information_type = None):
         """
         Get associated informations by type.
 
@@ -783,7 +784,7 @@ class Data(object):
 
 
     #----------------------------------------------------------------------
-    def associated_resources_by_category(self, resource_type = None):
+    def get_associated_resources_by_category(self, resource_type = None):
         """
         Get associated informations by type.
 
@@ -845,15 +846,29 @@ class Data(object):
     @property
     def discovered_resources(self):
         """
-        Returns a list with the new resources discovered.
+        Returns a list with the new Data objects discovered.
 
-        This property is used by GoLismero itself.
-        Plugins do not need to call it.
+        .. warning: This property is used by GoLismero itself.
+                    Plugins do not need to access it.
 
         :return: New resources discovered.
         :rtype: list(Resource)
         """
         return []
+
+
+    #----------------------------------------------------------------------
+    def is_in_scope(self):
+        """
+        Determines if this Data object is within the scope of the current audit.
+
+        .. warning: This method is used by GoLismero itself.
+                    Plugins do not need to call it.
+
+        :return: True if within scope, False otherwise.
+        :rtype: bool
+        """
+        return True
 
 
 #----------------------------------------------------------------------

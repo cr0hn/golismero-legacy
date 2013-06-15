@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.data import Data
 from golismero.api.data.db import Database
 from golismero.api.plugin import UIPlugin
+from golismero.main.console import colorize
 from golismero.messaging.codes import MessageType, MessageCode, MessagePriority
 from golismero.messaging.message import Message
 
@@ -60,7 +61,7 @@ class TestUIPlugin(UIPlugin):
         print "-" * 79
         print "ID:   %s" % info.identity
         print "Data: %r" % info
-        history = Database().get_plugin_history(info.identity)
+        history = Database.get_plugin_history(info.identity)
         if history:
             print "History:"
             for plugin_name in history:
@@ -83,6 +84,23 @@ class TestUIPlugin(UIPlugin):
         print "  Priority:  %s" % MessagePriority.get_name_from_value(message.priority)
         print "  Payload:   %r" % (message.message_info,)
         print
+
+        if message.message_code == MessageCode.MSG_CONTROL_LOG:
+            (text, level, is_error) = message.message_info
+            if is_error:
+                print colorize(text, "magenta")
+            else:
+                print colorize(text, "cyan")
+
+        elif message.message_code == MessageCode.MSG_CONTROL_ERROR:
+            (description, traceback) = message.message_info
+            print colorize(description, "magenta")
+            print colorize(traceback, "magenta")
+
+        elif message.message_code == MessageCode.MSG_CONTROL_WARNING:
+            for w in message.message_info:
+                formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
+                print colorize(formatted, "yellow")
 
 
     #----------------------------------------------------------------------

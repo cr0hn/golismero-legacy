@@ -49,14 +49,15 @@ class TestReport(ReportPlugin):
     #----------------------------------------------------------------------
     def generate_report(self, output_file):
 
-        # Get access to the database API.
-        db = Database()
-
         # Dump all objects in the database.
         print "-" * 79
         print "Report:"
-        for data in db.iterate():
+        for data in Database.iterate():
             print
             print data.identity
             print repr(data)
+            print sorted(data.links)
+            for linked in data.linked_data:
+                print "--> " + linked.identity
+                print "--> " + repr(linked)
         print

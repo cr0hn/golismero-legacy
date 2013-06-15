@@ -59,9 +59,6 @@ class ScreenReport(ReportPlugin):
         # Plugin vars
         #
 
-        # Get access to the database API.
-        m_db = Database()
-
         # Display all URLs or only vulns?
         m_only_vulns = Config.audit_config.only_vulns
 
@@ -74,9 +71,9 @@ class ScreenReport(ReportPlugin):
         # Displayers
         #
         if m_only_vulns:
-            general_display_only_vulns(m_db)
+            general_display_only_vulns()
         else:
-            general_display_by_resource(m_db)
+            general_display_by_resource()
 
         print "\n\n"
 
@@ -86,7 +83,7 @@ class ScreenReport(ReportPlugin):
 # Common functions
 #
 #----------------------------------------------------------------------
-def common_get_resources(db, data_type=None, data_subtype=None):
+def common_get_resources(data_type=None, data_subtype=None):
     """
     Get a list of resources.
 
@@ -95,20 +92,20 @@ def common_get_resources(db, data_type=None, data_subtype=None):
     """
     # Get each resource
     m_resource = None
-    m_len_urls = db.count(data_type, data_type)
+    m_len_urls = Database.count(data_type, data_type)
     if m_len_urls < 200:   # increase as you see fit...
         # fast but memory consuming method
-        m_resource   = db.get_many( db.keys(data_type=data_type, data_subtype=data_subtype))
+        m_resource   = Database.get_many( Database.keys(data_type=data_type, data_subtype=data_subtype))
     else:
         # slow but lean method
-        m_resource   = db.iterate(data_type=data_type, data_subtype=data_subtype)
+        m_resource   = Database.iterate(data_type=data_type, data_subtype=data_subtype)
 
     return m_resource
 
 
 
 
-def common_display_general_summary(database):
+def common_display_general_summary():
     """
     Display the general summary.
     """
@@ -125,7 +122,7 @@ def common_display_general_summary(database):
 
     m_table  = GolismeroTable(init_spaces=3)
 
-    m_tmp_data = common_get_resources(database, data_type=Data.TYPE_INFORMATION, data_subtype=Information.INFORMATION_WEB_SERVER_FINGERPRINT)
+    m_tmp_data = common_get_resources(data_type=Data.TYPE_INFORMATION, data_subtype=Information.INFORMATION_WEB_SERVER_FINGERPRINT)
 
 
     if m_tmp_data: # There are data
@@ -142,10 +139,10 @@ def common_display_general_summary(database):
     #m_table.add_row(["+  Vhosts2", colorize("1", "yellow")])
 
     # Audited hosts
-    m_table.add_row("Hosts audited: %s" % colorize(len(common_get_resources(database, data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_DOMAIN)), "yellow"))
+    m_table.add_row("Hosts audited: %s" % colorize(len(common_get_resources(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_DOMAIN)), "yellow"))
 
     # Total vulns
-    m_table.add_row("Total vulns: %s" % str(len(common_get_resources(database, data_type=Data.TYPE_VULNERABILITY))))
+    m_table.add_row("Total vulns: %s" % str(len(common_get_resources(data_type=Data.TYPE_VULNERABILITY))))
 
     # Set align
     print m_table.get_content()
@@ -156,17 +153,14 @@ def common_display_general_summary(database):
 # Main display modes
 #
 #----------------------------------------------------------------------
-def general_display_only_vulns(db):
-
-    if not isinstance(db, Database):
-        raise ValueError("Expected Database, got %s" % type(db))
+def general_display_only_vulns():
 
     # ----------------------------------------
     # General summary
     # ----------------------------------------
-    common_display_general_summary(db)
+    common_display_general_summary()
 
-    m_v = vuln_genereral_displayer(common_get_resources(db, data_type=Data.TYPE_VULNERABILITY))
+    m_v = vuln_genereral_displayer(common_get_resources(data_type=Data.TYPE_VULNERABILITY))
 
     m_table = GolismeroTable(title="Vulnerabilities", init_spaces=0)
     m_table.add_row(m_v)
@@ -176,7 +170,7 @@ def general_display_only_vulns(db):
 
 
 #----------------------------------------------------------------------
-def general_display_by_resource(db):
+def general_display_by_resource():
     """
     This function displays the results like this:
 
@@ -194,25 +188,22 @@ def general_display_by_resource(db):
     [ 3 ] www.website.com/Param1
     """
 
-    if not isinstance(db, Database):
-        raise ValueError("Expected Database, got %s" % type(db))
-
     # ----------------------------------------
     # General summary
     # ----------------------------------------
-    common_display_general_summary(db)
+    common_display_general_summary()
 
     # ----------------------------------------
     # Get the resource list
     # ----------------------------------------
-    m_all_resources = set([x.resource_type for x in common_get_resources(db, data_type=Data.TYPE_RESOURCE)])
+    m_all_resources = set([x.resource_type for x in common_get_resources(data_type=Data.TYPE_RESOURCE)])
 
     # There are some types that calls the same function for process it. To avoid to call 2 o more times the same
     # function, filter it:
     m_functions_to_call = set([RESOURCE_DISPLAYER[f] for f in m_all_resources if f in RESOURCE_DISPLAYER])
 
     for x in m_functions_to_call:
-        x(db)
+        x()
 
 
 #----------------------------------------------------------------------
@@ -220,13 +211,13 @@ def general_display_by_resource(db):
 # Concrete displayers each type of resource
 #
 #----------------------------------------------------------------------
-def concrete_display_web_resources(database):
+def concrete_display_web_resources():
     """
     Display the results of web analysis.
     """
 
     # Get resources URL resources
-    resource = common_get_resources(database, Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
+    resource = common_get_resources(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
 
     # ----------------------------------------
     # Discovered resources
