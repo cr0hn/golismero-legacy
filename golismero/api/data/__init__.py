@@ -979,19 +979,30 @@ class _TempDataStorage(object):
                 warn(msg, RuntimeWarning)
 
             # Grab missing results.
+            #
+            # 1. Start with the data returned by the plugin (therefore being
+            #    referenced by the plugin).
+            # 2. For each data not already visited, see if the links point to
+            #    other local data that's not referenced.
+            # 3. If we found such data, add it to the results and enqueue the
+            #    data it references.
+            #
             visited = set()
             missing = []
-            queue = list(graph.iterkeys())
+            queue = graph.keys()
             while queue:
                 data_id = queue.pop()
                 if data_id not in visited:
                     visited.add(data_id)
-                    if data_id not in graph:
-                        data = self.__new_data.get(data_id, None)
-                        if data is not None:
-                            missing.append(data)
-                            graph[data_id] = data
-                            queue.extend(data.links)
+                    data = self.__new_data.get(data_id, None)
+                    if data is not None:
+                        for child_id in data.links:
+                            if child_id not in graph:
+                                child = self.__new_data.get(child_id, None)
+                                if child is not None:
+                                    missing.append(child)
+                                    graph[child_id] = child
+                                    queue.extend(child.links)
             if missing:
                 msg = ("Data created and referenced by plugin,"
                        " but not returned by recv_info()")
@@ -1002,7 +1013,9 @@ class _TempDataStorage(object):
                     pass
                 warn(msg, RuntimeWarning)
 
-            # Warn for data being instanced but not returned or referenced.
+            # Warn for data being instanced but not returned nor referenced.
+            # TODO: Add a way for plugins to tell when they discard data.
+            #       Discarded data shouldn't be referenced either (warn if so).
             orphan = set(self.__new_data.iterkeys())
             orphan.difference_update(graph.iterkeys())
             if orphan:

@@ -269,6 +269,36 @@ def test_data_links():
     assert {x.identity for x in d3.get_associated_resources_by_category(d1.resource_type)} == {d1.identity}
     assert {x.identity for x in d3.get_associated_informations_by_category(d2.information_type)} == set()
 
+    # Test TempDataStorage.on_finish().
+    print "Testing TempDataStorage.on_finish() on ideal conditions"
+    result_before = [d1, d2, d3]
+    result_after  = TempDataStorage.on_finish(result_before)
+    assert set(result_before) == set(result_after)
+    d1.validate_link_minimums()
+    d2.validate_link_minimums()
+    d3.validate_link_minimums()
+    assert d1.links == {d2.identity, d3.identity}
+    assert d2.links == {d1.identity}
+    assert d3.links == {d1.identity}
+    assert d1.get_links(d1.data_type) == set()
+    assert d1.get_links(d1.data_type, d1.resource_type) == set()
+    assert d1.get_links(d2.data_type) == {d2.identity}
+    assert d1.get_links(d2.data_type, d2.information_type) == {d2.identity}
+    assert d1.get_links(d3.data_type) == {d3.identity}
+    assert d1.get_links(d3.data_type, d3.vulnerability_type) == {d3.identity}
+    assert d2.get_links(d2.data_type) == set()
+    assert d2.get_links(d2.data_type, d2.information_type) == set()
+    assert d2.get_links(d1.data_type) == {d1.identity}
+    assert d2.get_links(d1.data_type, d1.resource_type) == {d1.identity}
+    assert d2.get_links(d3.data_type) == set()
+    assert d2.get_links(d3.data_type, d3.vulnerability_type) == set()
+    assert d3.get_links(d3.data_type) == set()
+    assert d3.get_links(d3.data_type, d3.vulnerability_type) == set()
+    assert d3.get_links(d1.data_type) == {d1.identity}
+    assert d3.get_links(d1.data_type, d1.resource_type) == {d1.identity}
+    assert d3.get_links(d2.data_type) == set()
+    assert d3.get_links(d2.data_type, d2.information_type) == set()
+
 
 # Run all tests from the command line.
 if __name__ == "__main__":
