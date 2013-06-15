@@ -556,7 +556,8 @@ class Audit (object):
                                     warn(w, RuntimeWarning)
                                 self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                                               message_code = MessageCode.MSG_CONTROL_WARNING,
-                                              message_info = wlist)
+                                              message_info = wlist,
+                                              priority = MessagePriority.MSG_PRIORITY_HIGH)
 
                             # Skip this data object.
                             continue
