@@ -30,7 +30,8 @@ def test_fd_limit():
                 except Exception:
                     pass
     except Exception:
-        pass
+        if limit == top:
+            raise
     if limit:
         print "--> Limit found at %d sockets" % (top - limit)
     else:
@@ -54,7 +55,8 @@ def test_select_limit():
                 except Exception:
                     pass
     except Exception:
-        pass
+        if limit == top:
+            raise
     if limit:
         print "--> Limit found at %d sockets" % (top - limit)
     else:
@@ -71,12 +73,13 @@ def test_accept_limit():
             ls.bind(("127.0.0.1", 0))
             ls.listen(top)
             p = ls.getsockname()[1]
-            start_new_thread(helper_acceptor, (ls,))
+            start_new_thread(helper_accept_limit, (ls,))
             fds = []
             try:
                 while limit > 0:
                     s = socket(AF_INET, SOCK_STREAM)
                     try:
+                        s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
                         s.settimeout(1.0)
                         s.connect(("127.0.0.1", p))
                         ##print ".",
@@ -98,7 +101,8 @@ def test_accept_limit():
         finally:
             ls.close()
     except Exception:
-        pass
+        if limit == top:
+            raise
     if limit:
         print "--> Limit found at %d sockets" % (top - limit)
     else:
