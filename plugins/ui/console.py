@@ -186,14 +186,12 @@ class ConsoleUIPlugin(UIPlugin):
             # (Only the description in verbose level,
             # full traceback in more verbose level)
             elif message.message_code == MessageCode.MSG_CONTROL_WARNING:
-                for w in message.message_info:
-                    if Console.level >= Console.MORE_VERBOSE:
-                        formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
-                    elif Console.level >= Console.VERBOSE:
-                        formatted = warnings.formatwarning(w.message, w.category)
-                    else:
-                        formatted = None
-                    if formatted:
+                if Console.level >= Console.VERBOSE:
+                    for w in message.message_info:
+                        if Console.level >= Console.MORE_VERBOSE:
+                            formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
+                        else:
+                            formatted = warnings.formatwarning(w.message, w.category)
                         if message.plugin_name:
                             text = "[!] Warning from plugin %s: %s" % (message.plugin_name, str(formatted))
                         else:

@@ -45,7 +45,8 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
-    def add(self, data):
+    @staticmethod
+    def add(data):
         """
         Add data to the database.
 
@@ -60,7 +61,8 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
-    def async_add(self, data):
+    @staticmethod
+    def async_add(data):
         """
         Asynchronously add data to the database.
 
@@ -72,7 +74,8 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
-    def remove(self, identity, data_type = None):
+    @staticmethod
+    def remove(identity, data_type = None):
         """
         Remove an object given its identity hash.
 
@@ -93,7 +96,8 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
-    def async_remove(self, identity, data_type = None):
+    @staticmethod
+    def async_remove(identity, data_type = None):
         """
         Asynchronously remove an object given its identity hash.
 
@@ -114,7 +118,8 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
-    def has_key(self, identity, data_type = None):
+    @staticmethod
+    def has_key(identity, data_type = None):
         """
         Check if an object with the given
         identity hash is present in the database.
@@ -133,7 +138,8 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
-    def get(self, identity, data_type = None):
+    @staticmethod
+    def get(identity, data_type = None):
         """
         Get an object given its identity hash.
 
@@ -154,7 +160,8 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
-    def get_many(self, identities, data_type = None):
+    @staticmethod
+    def get_many(identities, data_type = None):
         """
         Get an object given its identity hash.
 
@@ -172,7 +179,8 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
-    def keys(self, data_type = None, data_subtype = None):
+    @staticmethod
+    def keys(data_type = None, data_subtype = None):
         """
         Get the identity hashes for all objects of the requested
         type, optionally filtering by subtype.
@@ -195,7 +203,8 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
-    def count(self, data_type = None, data_subtype = None):
+    @staticmethod
+    def count(data_type = None, data_subtype = None):
         """
         Count all objects of the requested type,
         optionally filtering by subtype.
@@ -218,6 +227,7 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
+    @classmethod
     def iterate(self, data_type = None, data_subtype = None):
         """
         Iterate through all objects of the requested type,
@@ -237,7 +247,8 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
-    def get_plugin_history(self, identity):
+    @staticmethod
+    def get_plugin_history(identity):
         """
         Find out which plugins have already processed this data object.
 
@@ -252,11 +263,13 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
+    @classmethod
     def __len__(self):
         return self.count()
 
 
     #----------------------------------------------------------------------
+    @classmethod
     def __contains__(self, data):
         try:
             identity = data.identity
@@ -266,6 +279,7 @@ class Database(Singleton):
 
 
     #----------------------------------------------------------------------
+    @classmethod
     def __iter__(self):
         """
         Iterate through all objects of the database.

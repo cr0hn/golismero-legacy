@@ -62,13 +62,13 @@ def test_auditdb_consistency():
         os.unlink("fake_audit.db")
     except Exception:
         pass
-    mem = AuditDB("fake_audit", "memory://")
+    mem  = AuditDB("fake_audit", "memory://")
     disk = AuditDB("fake_audit", "sqlite://fake_audit.db")
     try:
 
         print "Testing consistency of in-memory and disk databases..."
         for x in xrange(100):
-            key = generate_random_string(10)
+            key  = generate_random_string(10)
             data = generate_random_string(100)
             helper_test_auditdb_consistency(mem, key, data)
             helper_test_auditdb_consistency(disk, key, data)
@@ -92,6 +92,9 @@ def helper_test_auditdb_consistency(db, key, data):
     d2 = Text(data)
     d3 = UrlDisclosure(d1)
     d1.add_resource(d2)
+    assert d1.links == {d2.identity, d3.identity}
+    assert d2.links == {d1.identity}
+    assert d3.links == {d1.identity}
     db.add_data(d1)
     db.add_data(d2)
     db.add_data(d3)

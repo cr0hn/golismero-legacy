@@ -108,6 +108,8 @@ class Message (object):
         self.__priority     = priority
         self.__timestamp    = time()
 
+
+    #----------------------------------------------------------------------
     @property
     def message_type(self):
         """

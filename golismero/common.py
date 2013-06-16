@@ -52,13 +52,6 @@ try:
 except ImportError:
     import pickle
 
-# Load NumPy's random (faster, written in C) if available,
-# otherwise use the built-in but slower random module.
-try:
-    import numpy.random as random
-except ImportError:
-    import random
-
 # Lazy import of the JSON decoder.
 json_decode = None
 
@@ -85,6 +78,7 @@ from keyword import iskeyword
 from os import path
 
 import os
+import random
 import urlparse
 
 

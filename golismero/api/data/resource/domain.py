@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["Domain"]
 
 from . import Resource
+from .ip import IP
 from .. import identity, merge
 from ...net.web_utils import is_in_scope
 
@@ -108,3 +109,11 @@ class Domain(Resource):
         :rtype: tuple(str)
         """
         return self.__addresses
+
+
+    #----------------------------------------------------------------------
+
+    @property
+    def discovered(self):
+        domain = self.name
+        return [ IP(address, domain) for address in self.addresses ]

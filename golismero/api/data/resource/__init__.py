@@ -63,14 +63,3 @@ class Resource(Data):
 
     data_type = Data.TYPE_RESOURCE
     resource_type = RESOURCE_UNKNOWN
-
-
-    #----------------------------------------------------------------------
-    def is_in_scope(self):
-        """
-        Determines if this resource is within the scope of the current audit.
-
-        :return: True if within scope, False otherwise.
-        :rtype: bool
-        """
-        return True

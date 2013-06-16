@@ -131,13 +131,14 @@ class FolderUrl(Resource):
         parsed.query_char = None
 
         # Generate a new folder URL for each folder.
-        retval = []
+        folder_urls = set()
         for folder in folders:
-            parsed.path += folder + "/"
-            retval.append( FolderUrl(parsed.url) )
+            if folder:
+                parsed.path += folder + "/"
+                folder_urls.add(parsed.url)
 
         # Return the generated URLs.
-        return retval
+        return [FolderUrl(x) for x in folder_urls]
 
 
     #----------------------------------------------------------------------
@@ -207,5 +208,5 @@ class FolderUrl(Resource):
 
     #----------------------------------------------------------------------
     @property
-    def discovered_resources(self):
+    def discovered(self):
         return [Domain(self.hostname)]

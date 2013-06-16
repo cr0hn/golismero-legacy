@@ -50,9 +50,6 @@ class TextReport(ReportPlugin):
     #----------------------------------------------------------------------
     def generate_report(self, output_file):
 
-        # Get access to the database API.
-        db = Database()
-
         # Dictionary where to keep all the counters.
         count = defaultdict(int)
 
@@ -61,13 +58,13 @@ class TextReport(ReportPlugin):
 
             # Show all discovered URLs.
             fd.write("\nSpidered URLs\n=============\n\n")
-            count["url"] = db.count(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
+            count["url"] = Database.count(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
             if count["url"] < 200:   # increase as you see fit...
                 # fast but memory consuming method
-                urls = db.get_many( db.keys(Data.TYPE_RESOURCE, Resource.RESOURCE_URL) )
+                urls = Database.get_many( Database.keys(Data.TYPE_RESOURCE, Resource.RESOURCE_URL) )
             else:
                 # slow but lean method
-                urls = db.iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
+                urls = Database.iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
             for u in urls:
                 fd.write("+ %s\n" % str(u))
 

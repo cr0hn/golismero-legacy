@@ -55,6 +55,7 @@ from golismero.api.text.text_utils import generate_random_string
 from golismero.common import OrchestratorConfig, AuditConfig
 from golismero.database.auditdb import AuditDB
 from golismero.main.launcher import run
+from golismero.managers.pluginmanager import PluginManager
 
 
 # Test GoLismero.
@@ -68,7 +69,7 @@ def test():
 
     audit = AuditConfig()
     audit.from_dictionary({
-        "targets": ["http://www.example.com/",],
+        "targets": ["http://www.example.com/folder/subfolder/index.html",],
         "reports": [None,],
         "audit_name": "test_audit",
         "audit_db": "sqlite://test_audit.db",
@@ -82,7 +83,13 @@ def test():
     try:
         print "Launching GoLismero..."
         print
-        run(config, audit)
+        t1 = time.time()
+        code = run(config, audit)
+        t2 = time.time()
+        print
+        print "GoLismero ran for %f seconds" % (t2 - t1)
+        print
+        assert code == 0
 
         print "Validating the audit database..."
         print
@@ -103,8 +110,11 @@ def validate(audit = "test_audit"):
     disk = AuditDB(audit, "sqlite://%s.db" % audit)
     try:
 
-        # TO DO
-        pass
+        # Make sure all objects completed all stages.
+        for stage in sorted(PluginManager.STAGES.values()):
+            assert disk.get_pending_data(stage) == set()
+
+
 
     finally:
         disk.close()

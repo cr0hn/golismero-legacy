@@ -33,7 +33,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["IP"]
 
 from . import Resource
-from .domain import Domain
 from .. import identity
 from ...net.web_utils import DecomposedURL, is_in_scope
 
@@ -80,7 +79,7 @@ class IP(Resource):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.domain)
+        return self.domain and is_in_scope(self.domain)
 
 
     #----------------------------------------------------------------------
