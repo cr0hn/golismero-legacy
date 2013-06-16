@@ -121,7 +121,7 @@ class Url(Resource):
         self.__referer = referer
 
         # Discovered resources.
-        self.__discovered_resources = None
+        self.__discovered = None
 
         # Parent constructor.
         super(Url, self).__init__()
@@ -244,5 +244,5 @@ class Url(Resource):
     #----------------------------------------------------------------------
 
     @property
-    def discovered_resources(self):
+    def discovered(self):
         return [Domain(self.hostname), BaseUrl(self.url)] + FolderUrl.from_url(self.url)

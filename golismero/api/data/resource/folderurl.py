@@ -208,5 +208,5 @@ class FolderUrl(Resource):
 
     #----------------------------------------------------------------------
     @property
-    def discovered_resources(self):
+    def discovered(self):
         return [Domain(self.hostname)]

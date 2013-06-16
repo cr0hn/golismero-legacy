@@ -371,11 +371,20 @@ class Audit (object):
         # Register plugins with the notifier.
         self.__notifier.add_multiple_plugins(m_audit_plugins)
 
-        # Send a message to the orchestrator with all target URLs.
-        self.send_msg(
-            message_type = MessageType.MSG_TYPE_DATA,
-            message_info = [ Url(url) for url in self.params.targets ]
-        )
+        # Send a message to the orchestrator with all target URLs,
+        # followed by an ACK.
+        self.__expecting_ack += 1
+        try:
+            self.send_msg(
+                message_type = MessageType.MSG_TYPE_DATA,
+                message_info = [ Url(url) for url in self.params.targets ]
+            )
+        finally:
+            self.send_msg(
+                message_type = MessageType.MSG_TYPE_CONTROL,
+                message_code = MessageCode.MSG_CONTROL_ACK,
+                    priority = MessagePriority.MSG_PRIORITY_LOW
+            )
 
         # TODO: instead of this, add the targets to the database if
         # missing, then call update_stage(). That way we get the "resume"
@@ -533,6 +542,8 @@ class Audit (object):
             if isinstance(message.message_info, Data):
                 message.message_info = [message.message_info]
             for data in message.message_info:
+
+                # Check the type.
                 if not isinstance(data, Data):
                     warn("TypeError: Expected Data, got %r instead" % type(data), RuntimeWarning)
                     continue
@@ -569,10 +580,20 @@ class Audit (object):
                 # The data will be sent to the plugins.
                 data_for_plugins.append(data)
 
-                # Process the embedded resources too, if any.
-                for resource in data.discovered_resources:
-                    self.database.add_data(resource)
-                    data_for_plugins.append(resource)
+            # Recursively process newly discovered data, if any.
+            # Discovered data already in the database is ignored.
+            visited = {data.identity for data in data_for_plugins}  # Skip original data.
+            for data in list(data_for_plugins):  # Can't iterate and modify!
+                queue = list(data.discovered)    # Make sure it's a copy.
+                while queue:
+                    data = queue.pop(0)
+                    if (data.identity not in visited and
+                        not self.database.has_data_key(data.identity)
+                    ):
+                        self.database.add_data(data)  # No merging because it's new.
+                        visited.add(data.identity)    # Prevents infinite loop.
+                        data_for_plugins.append(data) # Sends it to plugins.
+                        queue.extend(data.discovered) # Recursive.
 
             # If we have data to be sent...
             if data_for_plugins:
@@ -586,17 +607,8 @@ class Audit (object):
                 # Tell the Orchestrator we sent the message.
                 return True
 
-            # If we don't have data to be sent...
-            else:
-
-                # Drop the message. An ACK is still expected.
-                self.__expecting_ack += 1
-                self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                              message_code = MessageCode.MSG_CONTROL_ACK,
-                                  priority = MessagePriority.MSG_PRIORITY_LOW)
-
-                # Tell the Orchestrator we dropped the message.
-                return False
+        # Tell the Orchestrator we dropped the message.
+        return False
 
 
     #----------------------------------------------------------------------

@@ -844,7 +844,7 @@ class Data(object):
 
     #----------------------------------------------------------------------
     @property
-    def discovered_resources(self):
+    def discovered(self):
         """
         Returns a list with the new Data objects discovered.
 
