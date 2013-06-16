@@ -65,3 +65,12 @@ if __name__ == "__main__":
     print_current_platform()
     test_fd_limit()
     test_select_limit()
+
+# Some results...
+"""
+Using CPython 2.7.5 (32bit) on Windows 7 6.1.7601, AMD64
+Testing the maximum number of sockets that can be created...
+--> No limit found, stopped trying at 1048576
+Testing the maximum number of sockets that can be selected...
+--> Limit found at 512 sockets
+"""
