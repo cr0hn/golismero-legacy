@@ -831,11 +831,10 @@ def http_analyzers(main_url, conn, number_of_entries=4):
             if len(m_other_servers_prob) >= number_of_entries:
                 break
     else:
-
-        m_web_server      = "Unknown"
-        m_server_family   = "Unknown"
-        m_server_version  = "Unknown web server"
-        m_server_complete = []
+        m_server_family      = "Unknown"
+        m_server_version     = "Unknown"
+        m_server_complete    = "Unknown web server"
+        m_other_servers_prob = []
 
 
     return m_server_family, m_server_version, m_server_complete, m_other_servers_prob
