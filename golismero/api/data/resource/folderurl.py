@@ -131,7 +131,7 @@ class FolderUrl(Resource):
         parsed.query_char = None
 
         # Generate a new folder URL for each folder.
-        folder_urls = set()
+        folder_urls = {parsed.url}
         for folder in folders:
             if folder:
                 parsed.path += folder + "/"
