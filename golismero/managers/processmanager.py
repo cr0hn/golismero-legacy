@@ -52,6 +52,8 @@ from warnings import catch_warnings, warn
 from traceback import format_exc, print_exc, format_exception_only, format_list
 from signal import signal, SIGINT
 
+import sys
+
 
 #------------------------------------------------------------------------------
 class Process(_Original_Process):
@@ -495,8 +497,11 @@ class PluginContext (object):
         success, response = raw_response
         if not success:
             exc_type, exc_value, tb_list = response
-            stderr.writelines( format_exception_only(exc_type, exc_value) )
-            stderr.writelines( format_list(tb_list) )
+            try:
+                sys.stderr.writelines( format_exception_only(exc_type, exc_value) )
+                sys.stderr.writelines( format_list(tb_list) )
+            except Exception:
+                pass
             raise response[0], response[1]
         return response
 
