@@ -73,7 +73,7 @@ def process_url_disclosure(vuln):
 
     return "%s: %s\n| Method: %s\n%s|-%s" % (
         colorize("Discovered", vuln.risk),
-        colorize_substring(vuln.url.url, vuln.discovered, vuln.risk),
+        colorize_substring(vuln.url.url, vuln.discovered_path, vuln.risk),
         vuln.url.method,
         '| Referer <- %s\n' % str(vuln.url.referer) if vuln.url.referer else '',
         "-" * len(vuln.url.url)

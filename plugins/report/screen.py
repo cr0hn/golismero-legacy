@@ -333,15 +333,15 @@ def vuln_display_url_suspicious(vuln, func):
 #----------------------------------------------------------------------
 def vuln_display_url_disclosure(vuln, func):
     """Diplay the vuln: URL Disclosure"""
-    func("URL: %s" % colorize_substring(vuln.url.url, vuln.discovered, "red"))
-    func("Path discovered: %s" % colorize(vuln.discovered, "red"))
+    func("URL: %s" % colorize_substring(vuln.url.url, vuln.discovered_path, "red"))
+    func("Path discovered: %s" % colorize(vuln.discovered_path, "red"))
 
 
 #----------------------------------------------------------------------
 def vuln_display_default_error_page(vuln, func):
     """Diplay the vuln: URL Disclosure"""
 
-    func("URL: %s" % colorize_substring(vuln.url.url, vuln.discovered, "red"))
+    func("URL: %s" % colorize_substring(vuln.url.url, vuln.discovered_path, "red"))
     func("Default error page for server: %s" % colorize(vuln.server_name, "red"))
 
 
