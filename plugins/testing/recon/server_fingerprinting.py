@@ -411,6 +411,9 @@ def http_analyzers(main_url, conn, number_of_entries=4):
     m_port                = m_d.port
     m_debug               = False # Only for develop
 
+    # Counter of banners. Used when others methods fails.
+    m_banners_counter     = Counter()
+
     # Score counter
     m_counters = HTTPAnalyzer(debug=m_debug)
 
@@ -469,6 +472,10 @@ def http_analyzers(main_url, conn, number_of_entries=4):
 
         # Analyze for each wordlist
         #
+
+        # Store the server banner
+        if l_response.http_headers["Server"]:
+            m_banners_counter[l_response.http_headers["Server"]] += l_weight
 
         #
         # =====================
@@ -831,10 +838,18 @@ def http_analyzers(main_url, conn, number_of_entries=4):
             if len(m_other_servers_prob) >= number_of_entries:
                 break
     else:
-        m_server_family      = "Unknown"
-        m_server_version     = "Unknown"
-        m_server_complete    = "Unknown web server"
-        m_other_servers_prob = []
+        l_banner =  m_banners_counter.most_common(n=1)[0][0]
+        if l_banner:
+            l_banner_splited     = calculate_server_track(l_banner).split("-")
+            m_server_family      = l_banner_splited[0]
+            m_server_version     = l_banner_splited[1]
+            m_server_complete    = l_banner
+            m_other_servers_prob = []
+        else:
+            m_server_family      = "Unknown"
+            m_server_version     = "Unknown"
+            m_server_complete    = "Unknown web server"
+            m_other_servers_prob = []
 
 
     return m_server_family, m_server_version, m_server_complete, m_other_servers_prob
