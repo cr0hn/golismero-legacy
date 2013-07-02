@@ -29,17 +29,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.logger import Logger
 from golismero.api.net.protocol import *
 from golismero.api.plugin import TestingPlugin
-from golismero.api.data.resource.baseurl import BaseUrl
+from golismero.api.data.resource.folderurl import FolderUrl
 from golismero.api.text.wordlist_api import WordListAPI
 from golismero.api.config import Config
 from golismero.api.text.matching_analyzer import get_matching_level
 from golismero.api.net.web_utils import is_in_scope, DecomposedURL
 from golismero.api.net.scraper import extract_from_html
 from golismero.api.data.information.webserver_fingerprint import WebServerFingerprint
+from golismero.api.text.wordlist_api import WordListAPI
 from repoze.lru import lru_cache
 from ping import *
 
-from collections import Counter, OrderedDict
+from collections import Counter, OrderedDict, defaultdict
 from urlparse import urljoin
 from re import compile
 
@@ -203,7 +204,7 @@ class ServerFingerprinting(TestingPlugin):
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [BaseUrl]
+        return [FolderUrl]
 
 
     #----------------------------------------------------------------------
@@ -232,24 +233,28 @@ def main_server_fingerprint(base_url):
     #
     # Detect the platform: Windows or *NIX
     #
+    #
+    # FIXME: Improbe platform detection
+    #
+    #
     #basic_platform_detection(m_main_url, m_conn)
-    m_platform = ttl_platform_detection(DecomposedURL(m_main_url).hostname)
-    if m_platform:
-        Logger.log_more_verbose("Fingerprint - Plaform: %s" % ','.join(m_platform.keys()))
+    #m_platform = ttl_platform_detection(DecomposedURL(m_main_url).hostname)
+    #if m_platform:
+        #Logger.log_more_verbose("Fingerprint - Plaform: %s" % ','.join(m_platform.keys()))
 
     #
     # Analyze HTTP protocol
     #
-    m_server_name, m_server_version, m_webserver_complete_desc, m_others = http_analyzers(m_main_url, m_conn)
+    m_server_name, m_server_version, m_canonical_name, m_webserver_complete_desc, m_related_webservers, m_others = http_analyzers(m_main_url, m_conn)
 
     Logger.log_more_verbose("Fingerprint - Server: %s | Version: %s" % (m_server_name, m_server_version))
 
-    m_return = WebServerFingerprint(m_server_name, m_server_version, m_webserver_complete_desc, m_others)
+    m_return = WebServerFingerprint(m_server_name, m_server_version, m_webserver_complete_desc, m_canonical_name, m_related_webservers, m_others)
 
     # Associate resource
     m_return.add_resource(base_url)
 
-    return [m_return]
+    return m_return
 
 #----------------------------------------------------------------------
 #
@@ -372,7 +377,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
     :param number_of_entries: number of resutls tu return for most probable web servers detected.
     :type number_of_entries: int
 
-    :return: Web server family, Web server version, Web server complete description, others web server with their probabilities like: dict(CONCRETE_WEB_SERVER, PROBABILITY)
+    :return: Web server family, Web server version, Web server complete description, related web servers (as a dict('SERVER_RELATED' : set(RELATED_NAMES))), others web server with their probabilities as a dict(CONCRETE_WEB_SERVER, PROBABILITY)
     """
 
     if not isinstance(conn, Web):
@@ -464,7 +469,6 @@ def http_analyzers(main_url, conn, number_of_entries=4):
             Logger.log_error_more_verbose("No response for URL '%s'." % l_url)
             continue
         l_original_headers = {v.split(":")[0]:v.split(":")[1] for v in l_response.http_headers_raw.splitlines()}
-
 
         if m_debug:
             print "RESPONSE"
@@ -806,25 +810,31 @@ def http_analyzers(main_url, conn, number_of_entries=4):
 
     # Get web server family. F.E: Apache
 
-    m_web_server      = None
-    m_server_family   = None
-    m_server_version  = None
-    m_server_complete = None
+    m_web_server            = None
+    m_server_family         = None
+    m_server_version        = None
+    m_server_related        = None
+    m_server_complete       = None
+    m_server_canonical_name = None
 
     # If fingerprint found
     if m_counters.results_score.most_common():
 
-        m_web_server      = m_counters.results_score.most_common(1)[0][0]
-        m_server_family   = m_web_server.split("-")[0]
-        m_server_version  = m_web_server.split("-")[1]
+        l_tmp_server_info       = m_counters.results_score.most_common(1)[0][0]
+        l_tmp_info              = l_tmp_server_info.split("-")
+
+        m_server_family         = l_tmp_info[0]
+        m_server_version        = l_tmp_info[1]
+        m_server_related        = m_counters.related_webservers[l_tmp_server_info]
+        m_server_canonical_name = m_counters.canonical_webserver_name[l_tmp_server_info]
 
         # Get concrete versions and the probability
         m_base_percent = m_counters.results_score_complete.most_common(1)[0][1] # base value used for calculate percents
-        for v in m_counters.results_score_complete.most_common(40):
+        for v in m_counters.results_score_complete.most_common(25):
             l_server_name    = v[0]
             l_server_prob    = v[1]
 
-            if not l_server_name.startswith(m_server_family):
+            if m_server_family.lower() not in l_server_name.lower():
                 continue
 
             # Asociate complete web server info with most probable result
@@ -837,22 +847,30 @@ def http_analyzers(main_url, conn, number_of_entries=4):
             # Get only 4 results
             if len(m_other_servers_prob) >= number_of_entries:
                 break
+
+        # Save nulls
+        if not m_server_complete:
+            m_server_complete = "Unknown"
+
     else:
-        l_banner =  m_banners_counter.most_common(n=1)[0][0]
+        try:
+            l_banner = m_banners_counter.most_common(n=1)[0][0]
+        except IndexError:
+            l_banner = "Unknown"
         if l_banner:
-            l_banner_splited     = calculate_server_track(l_banner).split("-")
-            m_server_family      = l_banner_splited[0]
-            m_server_version     = l_banner_splited[1]
-            m_server_complete    = l_banner
-            m_other_servers_prob = []
+            m_server_family, m_server_version, m_server_canonical_name, m_server_related  = calculate_server_track(l_banner)
+            m_server_complete                  = l_banner
+            m_other_servers_prob               = []
         else:
-            m_server_family      = "Unknown"
-            m_server_version     = "Unknown"
-            m_server_complete    = "Unknown web server"
-            m_other_servers_prob = []
+            m_server_family         = "Unknown"
+            m_server_version        = "Unknown"
+            m_server_related        = set()
+            m_server_canonical_name = "Unknown"
+            m_server_complete       = "Unknown web server"
+            m_other_servers_prob    = []
 
 
-    return m_server_family, m_server_version, m_server_complete, m_other_servers_prob
+    return m_server_family, m_server_version, m_server_canonical_name, m_server_complete, m_server_related, m_other_servers_prob
 
 
 #------------------------------------------------------------------------------
@@ -915,16 +933,54 @@ class HTTPAnalyzer:
         self.__results_count          = Counter()
         # Count server + all revision: nginx-1.5.1-r2
         self.__results_count_complete = Counter()
+        # Canonical name for a server: {'Internet Information Server' : "iis"}
+        self.__results_canonical      = defaultdict(str)
+        # Stores the related servers to one web servers: {'IIS': 'hyperion' }
+        self.__results_related        = defaultdict(set)
 
         #
-        # Parameters determinator for each server
-        self.__determinator = {}
-        self.__determinator_complete = {}
+        # Determinator parameters for each server. Format:
+        # {'SERVER_NAME':
+        #    {
+        #       'HTTP_FIELD' : (HTTP_METHODS)
+        #    }
+        # }
+        #
+        # Examples:
+        #
+        # {'nginx':
+        #    {
+        #       'options-public' : ('GET', 'PUT')
+        #    }
+        # }
+        #
+        #
+        self.__determinator          = defaultdict(lambda: defaultdict(set))
+        self.__determinator_complete = defaultdict(lambda: defaultdict(set))
 
 
     #----------------------------------------------------------------------
     def inc(self, test_lists, method, method_weight, types,  message = ""):
-        """"""
+        """
+        Increment values associated with the fields as parameters.
+
+        :param test_list: List with server informations.
+        :type test_list: dict(KEY, list(VALUES))
+
+        :param method: HTTP method used to make the request.
+        :type method: str
+
+        :param method_weight: The weight associated to the HTTP method.
+        :type method_weight: int
+
+        :param types: HTTP field to process.
+        :type types: str
+
+        :param message: Message to debug the method call
+        :type message: str
+
+        :return: Don't return anything
+        """
         if test_lists:
             l_types = types.lower()
 
@@ -933,20 +989,22 @@ class HTTPAnalyzer:
                 print "%s: %s" % (message, l_types)
 
             # Get parsed web server list
-            l_server_splited = set([calculate_server_track(server) for server in test_lists])
+            l_server_splited = [ calculate_server_track(server) for server in test_lists]
 
             # Count only one time of each web server
             for u in l_server_splited:
-                self.__results_count[u] += 1 * method_weight
-                self.__results_score[u] += self.__HTTP_fields_weight[l_types] * method_weight
+                l_server                = "%s-%s" % (u[0], u[1]) # (Server name, Server version)
+                self.__results_count[l_server] += 1 * method_weight
+                self.__results_score[l_server] += self.__HTTP_fields_weight[l_types] * method_weight
+
+                # Stores the canonical name
+                self.__results_canonical[l_server] = u[2]
+
+                # Stores the related servers to this web server
+                self.__results_related[l_server].update(u[3])
 
                 # Store determinators
-                try:
-                    self.__determinator[u][l_types].add(method)
-                except KeyError:
-                    self.__determinator[u] = {}
-                    self.__determinator[u][l_types] = set()
-                    self.__determinator[u][l_types].add(method)
+                self.__determinator[l_server][l_types].add(method)
 
             # Count all info
             for l_full_server_name in test_lists:
@@ -956,16 +1014,7 @@ class HTTPAnalyzer:
                 self.__results_score_complete[l_full_server_name] += self.__HTTP_fields_weight[l_types] * method_weight
 
                 # Store determinators
-                try:
-                    self.__determinator_complete[l_full_server_name]
-                except KeyError:
-                    self.__determinator_complete[l_full_server_name] = {}
-
-                try:
-                    self.__determinator_complete[l_full_server_name][l_types].add(method)
-                except KeyError:
-                    self.__determinator_complete[l_full_server_name][l_types] = set()
-                    self.__determinator_complete[l_full_server_name][l_types].add(method)
+                self.__determinator_complete[l_full_server_name][l_types].add(method)
 
 
     #----------------------------------------------------------------------
@@ -1002,6 +1051,18 @@ class HTTPAnalyzer:
         """"""
         return self.__determinator
 
+    #----------------------------------------------------------------------
+    @property
+    def related_webservers(self):
+        """"""
+        return self.__results_related
+
+    #----------------------------------------------------------------------
+    @property
+    def canonical_webserver_name(self):
+        """"""
+        return self.__results_canonical
+
 
     #----------------------------------------------------------------------
     @property
@@ -1018,38 +1079,91 @@ class HTTPAnalyzer:
 def calculate_server_track(server_name):
     """
     from nginx/1.5.1-r2 -> ("nginx", "1.5.1")
-    """
-    l_server_track = None
-    l_server       = None
-    try:
-        l_server = transform_name(server_name)
-    except ValueError:
-        return server_name
 
+    :return: tuple with server family and their version
+    :rtype: tuple(SERVER_FAMILY, SERVER_VERSION, FAMILY_CANONICAL_NAME, RELATED_WEBSERVERS=set(str(RELATED_WEBSERVERS)))
+    """
 
     # Name -> nginx
-    l_server_name    = l_server[0]
-    l_server_version = None
-    try:
 
-        # if version has format: 6.0v1 or 2.0
-        if l_server[1].count(".") == 1:
-            l_server_version = l_server[1]
-        else:
-            # Major version: 1.5.1 -> 1.5
-            l_i = nindex(l_server[1], ".", 2)
+    #
+    # Get server version
+    # ------------------
+    #
+    # Transform strings like:
+    #
+    # nginx/1.5.1    -> "1.5"
+    # nginx 1.5.1-r2 -> "1.5"
+    # nginx/1.5.1v5  -> "1.5"
+    # Microsoft IIS 6.0 -> "6.0"
+    #
+    if not server_name:
+        raise ValueError("Empty value")
 
-            if l_i != -1:
-                l_server_version = l_server[1][:l_i]
+    m_server_version_tmp_search = SERVER_PATTERN.search(server_name)
+
+    if not m_server_version_tmp_search:
+        m_server_version     = "Unknown"
+    else:
+        m_server_version_tmp = m_server_version_tmp_search.group(2)
+
+        try:
+
+            # if version has format: 6.0v1 or 2.0
+            if m_server_version_tmp.count(".") == 1:
+                m_server_version = m_server_version_tmp
             else:
-                l_server_version = l_server[1]
+                # Major version: 1.5.1 -> 1.5
+                l_i = nindex(m_server_version_tmp, ".", 2)
 
-    except ValueError:
-        l_server_version = "generic"
+                if l_i != -1:
+                    m_server_version = m_server_version_tmp[:l_i]
+                else:
+                    m_server_version = m_server_version_tmp
 
-    l_server_track = "%s-%s" % (l_server_name, l_server_version)
+        except ValueError:
+            m_server_version = "Unknown"
 
-    return l_server_track
+    #
+    # Get server family
+    # ------------------
+    #
+    # Get the server name from a database from with a keyworks to most common
+    # web servers.
+    #
+    # Load keys an related servers
+    m_servers_keys, m_servers_related_tmp = get_fingerprinting_wordlist(Config.plugin_extra_config["keywords"]["w1"])
+
+    # Looking for web server in the keys
+    m_resultsc = Counter()
+    for l_family, l_keys in m_servers_keys.iteritems():
+        for k in l_keys:
+            if k in server_name:
+                m_resultsc[l_family] +=1
+
+
+    # There is keys for this web server?
+    if len(m_resultsc.most_common(10)) == 0:
+        m_server_canonical_name = "unknown"
+    else:
+        m_server_canonical_name = m_resultsc.most_common(1)[0][0]
+
+    #
+    # Checks For server name
+    #
+    if m_server_version_tmp_search and len(m_server_version_tmp_search.groups()) == 2:
+        m_server_name = m_server_version_tmp_search.group(1)
+    elif m_server_canonical_name != "unknown":
+        m_server_name = m_server_canonical_name
+    else:
+        m_server_name = "unknown"
+
+    try:
+        m_servers_related = m_servers_related_tmp[m_server_canonical_name]
+    except KeyError:
+        m_servers_related = set()
+
+    return (m_server_name, m_server_version, m_server_canonical_name, m_servers_related)
 
 
 #----------------------------------------------------------------------
@@ -1077,31 +1191,101 @@ def nindex(str_in, substr, nth):
     return m_return
 
 
+
+
 #----------------------------------------------------------------------
-@lru_cache(maxsize=100)
-def transform_name(name):
+@lru_cache(maxsize=2)
+def get_fingerprinting_wordlist(wordlist):
     """
-    Transforme strings like:
+    Load the wordlist of fingerprints and prepare the info in a dict.
 
-    nginx/1.5.1    -> (nginx, 1.5)
+    It using as a keys the name of the server family and, as value, an
+    iterable with the keywords related with this web server.
 
-    nginx 1.5.1-r2 -> (nginx, 1.5)
-
-    nginx/1.5.1v5  -> (nginx, 1.5)
-
-    Microsoft IIS 6.0 -> (Microsoft IIS, 6.0)
-
-    :return: a tuple as forme: (SERVER_NAME, VERSION)
-    :rtype: tuple
+    :return: The results of load of webservers keywords info and related webservers.
+    :rtype: tuple(WEBSERVER_KEYWORDS, RELATED_SERVES) <=>  (dict(SERVERNAME: set(str(KEYWORDS))), dict(SERVER_NAME, set(str(RELATED_SERVERS)))
     """
-    if not name:
-        raise ValueError("Empty value")
 
-    m_results = SERVER_PATTERN.search(name)
+    # Load the wordlist
+    m_w = WordListAPI().get_advanced_wordlist_as_dict(wordlist, separator=";", inteligence_load=True)
 
-    if not m_results:
-        raise ValueError("Incorrect format of name: '%s'" % name)
+    # Load references.
+    #
+    #   References in the wordlist are specified by # prefix.
+    #
+    already_parsed    = set()
+    related           = defaultdict(set)
+    m_webservers_keys = extend_items(m_w, already_parsed, related)
 
-    return (m_results.group(1), m_results.group(2))
+    return (m_webservers_keys, related)
 
 
+#----------------------------------------------------------------------
+def extend_items(all_items, already_parsed, related, ref = None):
+    """
+    Recursive function to walk the tree of fingerprinting keywords.
+
+    Returns an ordered list with the keywords associated.
+
+    In related dict, stores the relations. For example:
+
+    If you have this keywordlist:
+
+    >>> open("keywords.txt").readlines()
+    iis: IIS, ISA
+    hyperion: #iis
+
+    The `related` dict return:
+    >>> print related
+    defaultdict(<type 'set'>, {'iis': set(['hyperion'])})
+
+    :param all_items: raw wordlist with references.
+    :type all_items: dict
+
+    :param already_parsed: tuples with the keys already parsed.
+    :type already_parsed: Set
+
+    :param ref: key to explore. Optional param.
+    :type ref: str
+
+    :param related: dict to store the related webservers.
+    :type related: dict(SERVER_NAME, set(str(RELATED_WEBSERVER)))
+
+    :return: Ordered dict with the discovered info.
+    :rtype: OrderedDict
+    """
+    m_return        = defaultdict(set)
+    m_return_update = m_return.update
+
+    # Stop point
+    if ref:
+        try:
+            if ref not in already_parsed:
+                already_parsed.add(ref)
+                for l_v in all_items[ref]:
+                    if l_v.startswith("#"):
+                        # Follow the reference
+                        m_return_update(extend_items(all_items, already_parsed, related, ref=l_v[1:]))
+
+                        # Add to reference
+                        related[l_v[1:]].add(ref)
+                    else:
+                        m_return[ref].add(l_v)
+        except KeyError:
+            pass
+    else:
+        for k, v in all_items.iteritems():
+            if k not in already_parsed:
+                already_parsed.add(k)
+                for l_v in v:
+                    if l_v.startswith("#"):
+                        # Follow the reference
+                        m_return_update(extend_items(all_items, already_parsed, related, ref=l_v[1:]))
+
+                        # Add to reference
+                        related[l_v[1:]].add(k)
+                    else:
+                        m_return[k].add(l_v)
+
+
+    return m_return
