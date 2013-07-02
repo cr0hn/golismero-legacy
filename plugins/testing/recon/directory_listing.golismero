@@ -1,0 +1,10 @@
+[Core]
+Name = Directory listing
+
+[Documentation]
+Description = Search listing of directories in web servers
+Author = GoLismero Project team
+Version = 0.1
+Website = www.golismero-project.com
+Copyright = Copyright (C) [AUTHOR OF PLUGIN]
+License = GNU Public License
