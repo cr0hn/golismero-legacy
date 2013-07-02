@@ -30,12 +30,15 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["WordListAPI", "SimpleWordList", "AdvancedDicWordlist", "AdvancedListWordlist"]
+__all__ = ["WordListAPI"]
 
 from os import getcwd, walk
 from os.path import join, sep, abspath
-
+from golismero.api.text.matching_analyzer import get_matching_level
 from repoze.lru import lru_cache
+import bisect
+import re
+import copy
 
 from ..logger import Logger
 from ...common import Singleton
@@ -58,7 +61,6 @@ class WordListAPI(Singleton):
         # XXX FIXME this is broken!!! :(
         # It won't work unless you happen to be standing on the GoLismero folder!
         self.__load_wordlists(join(getcwd(), "wordlist"))
-
 
     #----------------------------------------------------------------------
     def __load_wordlists(self, currentDir):
@@ -120,17 +122,43 @@ class WordListAPI(Singleton):
             raise KeyError("Wordlist file not found: %s" % wordlist_name)
 
     #----------------------------------------------------------------------
-    @lru_cache(maxsize=20)
-    def get_advanced_wordlist_as_dict(self, wordlist_name, separator=";"):
+    @lru_cache(maxsize=30)
+    def get_advanced_wordlist_as_dict(self, wordlist, separator=";", inteligence_load=False):
         """
+        Get an AdvancedDicWordlist.
+
+
         :param wordlist_name: Name of the requested advanced wordlist.
         :type wordlist_name: str
+
+        :param separator: value used to split the lines
+        :type separator: str
+
+        :param inteligence_load: Indicates if the wordlist must detect if the line has values that can be converted in a list.
+        :type inteligence_load: bool
 
         :returns: Advanced wordlist object.
         :rtype: AdvancedDicWordlist
         """
         try:
-            return AdvancedDicWordlist(self.__store[wordlist_name], separator)
+            return AdvancedDicWordlist(self.__store[wordlist], inteligence_load, separator)
+        except KeyError:
+            raise KeyError("Wordlist file not found: %s" % wordlist_name)
+
+    #----------------------------------------------------------------------
+    @lru_cache(maxsize=30)
+    def get_advanced_wordlist_as_list(self, wordlist_name):
+        """
+        Get an AdvancedListWordlist.
+
+        :param wordlist_name: Name of the requested advanced wordlist.
+        :type wordlist_name: str
+
+        :returns: AdvancedListWordlist.
+        :rtype: AdvancedListWordlist
+        """
+        try:
+            return AdvancedListWordlist(self.__store[wordlist_name])
         except KeyError:
             raise KeyError("Wordlist file not found: %s" % wordlist_name)
 
@@ -160,14 +188,44 @@ class AbstractWordlist(object):
 
 
     #----------------------------------------------------------------------
-    def binary_search(self, word):
+    def binary_search(self, word, low_pos=0, high_pos=None):
+        """
+        Makes a binary search in the list and return the position of the word.
+
+        Raises a ValueError exception if no coincidence found.
+
+        low_pos and high_pos specifies the range between the function will search.
+
+        :param word: The word to find.
+        :type word: str
+
+        :param low_pos: initial postion to the function starts searching.
+        :type low_pos: Int
+
+        :param high_pos: End postion to the function starts searching.
+        :type high_pos: Int|None
+
+        :return: Get the position fo the first search value.
+        :rtype: Int
+
+        :raises: ValueError
+        """
         raise NotImplementedError()
 
 
     #----------------------------------------------------------------------
     def get_first(self, word, init=0):
         """
-        Get first coincidence, starting at begining.
+        Get first coincidence, starting at begining. Raises a ValueError exception
+        if no coincidence found.
+
+        :param init: initial postion to the function starts searching.
+        :type init: Int
+
+        :return: Value of the first element found.
+        :rtype: str
+
+        :raises: ValueError
         """
         raise NotImplementedError()
 
@@ -175,7 +233,16 @@ class AbstractWordlist(object):
     #----------------------------------------------------------------------
     def get_rfirst(self, word, init=0):
         """
-        Get first coincidence, starting at begining.
+        Get first coincidence, starting from the end. Raises a ValueError exception
+        if no coincidence found.
+
+        :param init: initial postion to the function starts searching.
+        :type init: Int
+
+        :return: Value of the first element found, stating at the end.
+        :rtype: str
+
+        :raises: ValueError
         """
         raise NotImplementedError()
 
@@ -184,167 +251,12 @@ class AbstractWordlist(object):
     def search_mutations(self, word, rules):
         raise NotImplementedError()
 
-
-
-#------------------------------------------------------------------------------
-class AdvancedDicWordlist(AbstractWordlist):
-    """
-    Advanced wordlist that loads a wordlist with a separator character as a dict, like:
-
-    word list 1; sencond value of wordlist
-
-    These line load as => {'word list 1':'sencond value of wordlist'}
-
-    This wordlist allow to do some operations with wordlists:
-    - Search matches of a word in the wordlist.
-    - Binary search in wordlist.
-    - Get first coincidence, start at begining or end of list.
-    - Search matches of wordlist with mutations.
-    """
-
-
     #----------------------------------------------------------------------
-    def __init__(self, wordlist, separator = ";"):
-
-        if not wordlist:
-            raise ValueError("Empty wordlist got")
-        if not separator:
-            raise ValueError("Empty separator got")
-
-        m_tmp_wordlist = None
-        try:
-            m_tmp_wordlist = open(wordlist, mode='rU').readlines()
-        except IOError:
-            raise IOError("Error when trying to open wordlist: '%s'" % wordlist)
-
-        #self.__wordlist = { k: dict([v.replace("\n","").replace("\r","").split(separator,1)])  for k, v in enumerate(m_tmp_wordlist)}
-        #self.__wordlist = [dict([v.replace("\n","").replace("\r","").split(separator,1)])  for k, v in enumerate(m_tmp_wordlist)]
-
-        self.__wordlist = {}
-        for k in m_tmp_wordlist:
-            v = k.replace("\n","").replace("\r","").split(separator,1)
-
-            if len(v) < 2:
-                #Logger.log_error_more_verbose("Wordlist error: value '%s' can't be splited with separator '%s'." % (v, separator))
-                continue
-
-            try:
-                self.__wordlist[v[0]].append(v[1])
-            except KeyError:
-                self.__wordlist[v[0]] = []
-                self.__wordlist[v[0]].append(v[1])
-
-
-    #----------------------------------------------------------------------
-    def matches_by_keys(self, word):
+    def clone(self):
         """
-        Search a word passed as parameter in the keys's wordlist and return a list of lists with
-        matches found.
-
-        :param word: word to search.
-        :type word: str.
-
-        :return: a list with matches.
-        :rtype: dict(KEY, VALUE)
+        This method get a clone of the object
         """
-
-        if not word:
-            return {}
-
-        word = str(word)
-
-        #
-        #
-        # TODO: FIX WITH NEW FORMAT!!!!
-        #
-        #
-
-        return { i:v for i, v in self.__wordlist.iteritems() if word == i}
-
-
-    #----------------------------------------------------------------------
-    def matches_by_key_with_level(self, word):
-        """
-        Search a word passed as parameter in keys's wordlist and return a list of dicts with
-        matches and level of correspondence.
-
-        :param word: word to search.
-        :type word: str.
-
-        :return: a list with matches and correpondences.
-        :rtype: list(list(KEY, VALUE, LEVEL))
-        """
-
-        if not word:
-            return []
-
-        word = str(word)
-
-        #
-        #
-        # TODO: FIX WITH NEW FORMAT!!!!
-        #
-        #
-
-        return [x for x in self.__wordlist if word == x]
-
-
-    #----------------------------------------------------------------------
-    def matches_by_value(self, word, debug = False):
-        """
-        Search a word passed as parameter in the keys's wordlist and return a list of lists with
-        matches found.
-
-        :param word: word to search.
-        :type word: str.
-
-        :return: a list with matches.
-        :rtype: dict(KEY, VALUE)
-        """
-
-        if not word:
-            return {}
-
-        word = str(word)
-
-        m_return = {}
-
-        for k, v in self.__wordlist.iteritems():
-            if debug:
-                print self.__wordlist
-            for l in v:
-                if word == l:
-                    m_return[k] = l
-
-        return m_return
-
-
-    #----------------------------------------------------------------------
-    def matches_by_value_with_level(self, word):
-        """
-        Search a word passed as parameter in keys's wordlist and return a list of dicts with
-        matches and level of correspondence.
-
-        :param word: word to search.
-        :type word: str.
-
-        :return: a list with matches and correpondences.
-        :rtype: list(list(KEY, VALUE, LEVEL))
-        """
-
-        if not word:
-            return []
-
-        word = str(word)
-
-        #
-        #
-        # TODO: FIX WITH NEW FORMAT!!!!
-        #
-        #
-
-        return [x for x in self.__wordlist.itervalues() if word == x]
-
+        raise NotImplementedError()
 
 #------------------------------------------------------------------------------
 class AdvancedListWordlist(AbstractWordlist):
@@ -390,7 +302,6 @@ class AdvancedListWordlist(AbstractWordlist):
             raise IOError("Error when trying to open wordlist: '%s'" % wordlist)
 
         self.__wordlist   = [w.replace("\n","") for w in m_tmp_wordlist]
-        self.__i          = -1
 
     #----------------------------------------------------------------------
     def __getitem__(self, i):
@@ -412,12 +323,320 @@ class AdvancedListWordlist(AbstractWordlist):
     #----------------------------------------------------------------------
     def __iter__(self):
         """Make wordlist iterable"""
-        m_i  = self.__i
-        m_lw = len(self.__wordlist) -1
+        return self.__wordlist.__iter__()
 
-        while m_i < m_lw:
-            m_i += 1
-            yield self.__wordlist[m_i]
+    #----------------------------------------------------------------------
+    def binary_search(self, word, low_pos=0, high_pos=None):
+        i = bisect.bisect_left(self.__wordlist, word, lo=low_pos, hi=high_pos if high_pos else len(high_pos))
+
+        if i != len(self.__wordlist) and self.__wordlist[i] == x:
+            return i
+
+        raise ValueError
+
+
+    #----------------------------------------------------------------------
+    def get_first(self, word, init=0):
+        """
+        Get first coincidence, starting at begining.
+        """
+        i = bisect.bisect_left(self.__wordlist, word, lo=init)
+
+        if i:
+            return i
+
+        raise ValueError
 
 
 
+    #----------------------------------------------------------------------
+    def get_rfirst(self, word, init=0):
+        """
+        Get first coincidence, starting at begining.
+        """
+        i = bisect.bisect_right(self.__wordlist, word, lo=init)
+
+        if i:
+            return i
+
+        raise ValueError
+    #----------------------------------------------------------------------
+    def clone(self):
+        """
+        This method get a clone of the object
+
+        :return: a copy of this object.
+        :rtype: AdvancedListWordlist
+        """
+        m_temp = self
+        m_temp.__wordlist = copy.copy(self.__wordlist)
+
+        return m_temp
+
+
+    #----------------------------------------------------------------------
+    def pop(self):
+        """"""
+        return self.__wordlist.pop()
+
+#------------------------------------------------------------------------------
+class AdvancedDicWordlist(object):
+    """
+    Advanced wordlist that loads a wordlist with a separator character as a dict, like:
+
+    word list 1; sencond value of wordlist
+
+    These line load as => {'word list 1':'sencond value of wordlist'}.
+    """
+
+
+    #----------------------------------------------------------------------
+    #def __init__(self, wordlist, *argv, **karg): #, inteligence_load=False, separator = ";"):
+    def __init__(self, wordlist, inteligence_load=False, separator = ";"):
+        """
+        Load a word list and conver it in a dict. The method used for the conversion
+        are:
+
+        Read line to line the file and split it using separatod specified as parameter. Then
+        use the left value as key, and the right will be used as value of dict.
+
+        .. note:
+           If the file has repeated values for keys names, the values will be joined in the same
+           key.
+
+        Example:
+
+        >>> f=open("wordlist.txt", "rU")
+        >>> f.readlines()
+        ['one; value1', 'two; value2', 'one; value3']
+        >>> w = AdvancedDicWordlist("wordlist.txt")
+        >>> w.matches_by_keys("one")
+        {'one': [' value1', ' value3']}
+
+
+        If you set to True the param 'inteligence_load', the AdvancedDicWordlist will try to detect if the values
+        at the right of 'separator', found by the split, can be pooled as a list an put the values in it.
+
+        Example:
+
+        >>> f=open("wordlist.txt", "rU")
+        >>> f.readlines()
+        ['one; value1 value2, value3, value4 "value 5"', 'two; value6', 'one; value7']
+        >>> w = AdvancedDicWordlist("wordlist.txt", inteligence_load=True)
+        >>> w.matches_by_keys("one")
+        {'one': ['value1', 'value2', 'value3', 'value4', 'value 5', 'value7']}
+
+
+        :param wordlist: wordlist path.
+        :type wordlist: str
+
+        :param separator: value used to split the lines
+        :type separator: str
+
+        :param inteligence_load: Indicates if the wordlist must detect if the line has values that can be converted in a list.
+        :type inteligence_load: bool
+
+        """
+
+
+
+        if not wordlist:
+            raise ValueError("Empty wordlist got")
+        if not separator:
+            raise ValueError("Empty separator got")
+
+        m_tmp_wordlist = None
+        try:
+            m_tmp_wordlist = open(wordlist, mode='rU').readlines()
+        except IOError, e:
+            raise IOError("Error when trying to open wordlist: '%s'" % wordlist + e.message)
+
+        self.__wordlist = {}
+        m_reg           = re.compile("([#A-Za-z\d]+|[\'\"][\w\d\s]+[\'\"])")
+        for k in m_tmp_wordlist:
+            v = k.replace("\n","").replace("\r","").split(separator,1)
+
+            if len(v) < 2:
+                continue
+
+            if inteligence_load:
+                m_values = [i.group(0).strip().replace("'","").replace("\"","") for i in m_reg.finditer(v[1])]
+
+                try:
+                    self.__wordlist[v[0]].extend(m_values)
+                except KeyError:
+                    self.__wordlist[v[0]] = []
+                    self.__wordlist[v[0]].extend(m_values)
+            else:
+                try:
+                    self.__wordlist[v[0]].append(v[1])
+                except KeyError:
+                    self.__wordlist[v[0]] = []
+                    self.__wordlist[v[0]].append(v[1])
+
+
+    #----------------------------------------------------------------------
+    def matches_by_keys(self, word):
+        """
+        Search a word passed as parameter in the keys's wordlist and return a list of lists with
+        matches found.
+
+        :param word: word to search.
+        :type word: str.
+
+        :return: a list with matches.
+        :rtype: dict(KEY, list(VALUES))
+        """
+
+        if not word:
+            return {}
+
+        word = str(word)
+
+        return { i:v for i, v in self.__wordlist.iteritems() if word == i}
+
+
+
+    #----------------------------------------------------------------------
+    def matches_by_key_with_level(self, word):
+        """
+        Search a word passed as parameter in keys's wordlist and return a list of dicts with
+        matches and level of correspondence.
+
+        The matching level is a value between 0-1.
+
+        :param word: word to search.
+        :type word: str.
+
+        :return: a list with matches and correpondences.
+        :rtype: list(list(KEY, VALUE, LEVEL))
+        """
+
+        if not word:
+            return [[]]
+
+        word = str(word)
+
+        m_return        = set()
+        m_return_append = m_return.add
+        for i, v in self.__wordlist.iteritems():
+            if word in i:
+                continue
+
+            m_return_append((i, v, get_matching_level(word, i)))
+
+        return m_return
+
+
+    #----------------------------------------------------------------------
+    def matches_by_value(self, word, debug = False):
+        """
+        Search a word passed as parameter in the values of wordlist and return a list of lists with
+        matches found.
+
+        :param word: word to search.
+        :type word: str.
+
+        :return: a list with matches.
+        :rtype: dict(KEY, list(VALUES))
+        """
+
+        if not word:
+            return {}
+
+        word = str(word)
+
+        m_return = {}
+
+        for k, v in self.__wordlist.iteritems():
+            if word not in v:
+                continue
+
+            for l in v:
+                if word == l:
+                    try:
+                        m_return[k].add(l)
+                    except KeyError:
+                        m_return[k] = set()
+                        m_return[k].add(l)
+
+        return m_return
+
+
+    #----------------------------------------------------------------------
+    def matches_by_value_with_level(self, word):
+        """
+        Search a word passed as parameter in values of wordlist and return a list of dicts with
+        matches and level of correspondence.
+
+        The matching level is a value between 0-1.
+
+        :param word: word to search.
+        :type word: str.
+
+        :return: a list with matches and correpondences.
+        :rtype: list(list(KEY, VALUE, LEVEL))
+        """
+
+        if not word:
+            return []
+
+        word = str(word)
+
+        #
+        #
+        # TODO: FIX WITH NEW FORMAT!!!!
+        #
+        #
+        m_return        = set()
+        m_return_append = m_return.add
+        for k, v in self.__wordlist.iteritems():
+            if word not in v:
+                continue
+
+            for l in v:
+                if word == l:
+                    m_return_append((i, v, get_matching_level(word, i)))
+
+        return m_return
+
+
+    #----------------------------------------------------------------------
+    def __getitem__(self, i):
+        """"""
+        return self.__wordlist[i]
+
+    #----------------------------------------------------------------------
+    def __setitem__(self, i, v):
+        """"""
+        if not isinstance(v, list):
+            raise ValueError("Excepted list type. Got '%s'" % type(v))
+
+        self.__wordlist[i] = v
+
+
+    #----------------------------------------------------------------------
+    def __contains__(self, i):
+        """"""
+        return i in self.__wordlist
+
+
+    #----------------------------------------------------------------------
+    def iteritems(self):
+        """"""
+        return self.__wordlist.iteritems()
+
+
+    #----------------------------------------------------------------------
+    def __iter__(self):
+        return self.__wordlist.__iter__
+
+    #----------------------------------------------------------------------
+    def itervalues(self):
+        """"""
+        return self.__wordlist.itervalues()
+
+    #----------------------------------------------------------------------
+    def iterkeys(self):
+        """"""
+        return self.__wordlist.iterkeys()
