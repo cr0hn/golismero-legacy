@@ -9,6 +9,11 @@ Website = https://github.com/cr0hn/golismero/
 Copyright = Copyright (C) 2011-2013 GoLismero Project
 License = GNU Public License
 
+
+[keywords]
+w1 = fingerprint/webservers_keywords.txt
+
+
 [Wordlist_get]
 accept-range            = fingerprint/httprecon/get_existing/accept-range.fdb
 banner                  = fingerprint/httprecon/get_existing/banner.fdb
