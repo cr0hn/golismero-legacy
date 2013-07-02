@@ -799,7 +799,14 @@ class DecomposedURL(object):
 
     @property
     def filebase(self):
-        return splitext(self.filename)[0]
+        # If the filename has more than one extension, get the
+        # the filename after the before extension
+        tmp     = splitext(self.filename)[0]
+        dot_pos = tmp.find(".")
+        if dot_pos == -1:
+            return tmp
+        else:
+            return tmp[:dot_pos]
 
     @filebase.setter
     def filebase(self, filebase):
@@ -807,11 +814,19 @@ class DecomposedURL(object):
 
     @property
     def extension(self):
-        return splitext(self.filename)[1]
+        # If the filename has more than one extension, get
+        # only the all.
+        tmp     = splitext(self.filename)[1]
+        dot_pos = tmp.find(".")
+        if dot_pos == -1:
+            return tmp
+        else:
+            return tmp[dot_pos:]
 
     @extension.setter
     def extension(self, extension):
-        self.path = join(self.directory, self.filebase + extension)
+        if self.extension:
+            self.path = join(self.directory, self.filebase + (".%s" % extension if not extension.startswith(".") else extension))
 
     @property
     def netloc(self):
