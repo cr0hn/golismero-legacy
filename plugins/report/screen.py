@@ -124,13 +124,12 @@ def common_display_general_summary():
 
     m_tmp_data = common_get_resources(data_type=Data.TYPE_INFORMATION, data_subtype=Information.INFORMATION_WEB_SERVER_FINGERPRINT)
 
-
+    # Fingerprint
     if m_tmp_data: # There are data
         # For each host
         for l_host in m_tmp_data:
-            for l_res in l_host.associated_resources:
-                if hasattr(l_res, "url"):
-                    m_table.add_row("Fingerprint: %s - %s" % (l_res.url, colorize("Apache", "yellow")))
+            t = '\n| -'.join(["%s - %s" % (l.url, colorize("Apache", "yellow")) for l in l_host.associated_resources if hasattr(l, "url")])
+            m_table.add_row("Fingerprint: \n| -%s" % t)
     else:
         m_table.add_row("Main web server: %s" % colorize("Unknown", "yellow"))
 
