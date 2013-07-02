@@ -10,7 +10,7 @@ Copyright = Copyright (C) 2011-2013 GoLismero Project
 License = GNU Public License
 
 
-[All]
+[all]
 w1 = fuzzdb/Discovery/PredictableRes/CGI_XPlatform.fuzz.txt
 
 #
@@ -40,10 +40,10 @@ w1 = fuzzdb/Discovery/PredictableRes/Weblogic.fuzz.txt
 [glassfish_predictables]
 w1 = fuzzdb/Discovery/PredictableRes/SunAppServerGlassfish.fuzz.txt
 
-[oracle9i_predictables]
+[oracle_sun_one_predictables]
 w1= fuzzdb/Discovery/PredictableRes/Oracle9i.fuzz.txt
 
-[oracleappserver_predictables]
+[oracle_app_server_predictables]
 w1= fuzzdb/Discovery/PredictableRes/OracleAppServer.fuzz.txt
 
 [jboss_predictables]
@@ -85,8 +85,16 @@ w1 = fuzzdb/Discovery/PredictableRes/ColdFusion.fuzz.txt
 #
 
 [common_prefixes]
-w1 = golismero/predictables/file-prefix.txt
+w1 = golismero/Discovery/FilenameBruteforce/file-prefix.txt
 w2 = fuzzdb/Discovery/FilenameBruteforce/copy_of.fuzz.txt
+
+
+#
+# Suffixes
+#
+
+[common_suffixes]
+w1 = golismero/Discovery/FilenameBruteforce/file-suffixes.txt
 
 
 #
@@ -94,14 +102,15 @@ w2 = fuzzdb/Discovery/FilenameBruteforce/copy_of.fuzz.txt
 #
 
 [common_extensions]
-w1 = golismero/predictables/file-compressed-suffixes.txt
+w1 = golismero/Discovery/FilenameBruteforce/file-compressed-extensions.txt
 w2 = fuzzdb/Discovery/FilenameBruteforce/Extensions.Backup.fuzz.txt
+w2 = golismero/Discovery/FilenameBruteforce/file-extensions.txt
 
 [microsoft_extensions]
-w1 = golismero/predictables/microsoft-file-extensions.txt
+w1 = golismero/Discovery/FilenameBruteforce/microsoft-file-extensions.txt
 
 [java_extensions]
-w1 = golismero/predictables/java-file-extensions.txt
+w1 = golismero/Discovery/FilenameBruteforce/java-file-extensions.txt
 
 [php_prefixes]
-w1 = golismero/predictables/file-prefix.txt
+w1 = golismero/Discovery/FilenameBruteforce/file-prefix.txt
