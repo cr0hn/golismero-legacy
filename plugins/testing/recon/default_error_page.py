@@ -87,7 +87,7 @@ def main_default_error_pages(info):
     m_return           = None
     if m_comparer_results:
         m_return = DefaultErrorPage(info, m_comparer_results)
-        m_return.associated_resource = info
+        m_return.add_resource(info)
 
     return m_return
 
@@ -285,11 +285,6 @@ the <a href="mailto:admin@localhost">webmaster</a>.
         l_m = get_matching_level(page_text, l_server_page)
 
         if l_m > 0.95:
-            #print l_m
-            #print "@@@"
-            #print page_text
-            #print "#######"
-            #print l_server_page
             return l_server_name
 
 
