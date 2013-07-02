@@ -8,7 +8,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: http://golismero-project.com
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -26,29 +26,39 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-# Acknowledgments:
-#
-#   We'd like to thank @capi_x for his idea on how
-#   to detect fake 200 responses from servers by
-#   issuing known good and bad queries and diffing
-#   them to calculate the deviation.
-#
-#   https://twitter.com/capi_x
+
 
 from golismero.api.config import Config
 from golismero.api.data.resource import Resource
+from golismero.api.data.information.webserver_fingerprint import WebServerFingerprint
 from golismero.api.data.resource.url import Url
-from golismero.api.data.resource.baseurl import BaseUrl
+from golismero.api.data.resource.folderurl import FolderUrl
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.logger import Logger
 from golismero.api.net.protocol import *
 from golismero.api.net.web_utils import DecomposedURL, is_in_scope
-from golismero.api.plugin import TestingPlugin
 from golismero.api.text.matching_analyzer import *
 from golismero.api.text.wordlist_api import WordListAPI
 from golismero.api.text.text_utils import generate_random_string
+from golismero.api.data.db import Database
+
+from golismero.api.plugin import TestingPlugin
+from collections import defaultdict
 
 import threading
+
+__doc__ = """
+
+.. note:
+   Acknowledgments:
+
+   We'd like to thank @capi_x for his idea on how
+   to detect fake 200 responses from servers by
+   issuing known good and bad queries and diffing
+   them to calculate the deviation.
+
+   https://twitter.com/capi_x
+"""
 
 
 # Impact vectors. Available values: 0 - 4.
@@ -57,7 +67,8 @@ severity_vectors = {
     "prefixes" : 3,
     "file_extensions": 3,
     "permutations" : 3,
-    "predictables": 4
+    "predictables": 4,
+    "directories": 2
 }
 
 
@@ -68,11 +79,11 @@ class ParallelBruter(threading.Thread):
     """
 
     #----------------------------------------------------------------------
-    def __init__(self, wordlist, results, net, method):
-        self.__wordlist = wordlist
-        self.__results = results
-        self.__net = net
-        self.__method = method
+    def __init__(self, urls, results, net, method):
+        self.__urls       = urls
+        self.__results    = results
+        self.__net        = net
+        self.__method     = method
         super(ParallelBruter,self).__init__()
 
 
@@ -85,7 +96,7 @@ class ParallelBruter(threading.Thread):
             m_iter = None
 
             try:
-                m_name, m_iter = self.__wordlist.popitem()
+                m_name, m_iter = self.__urls.popitem()
             except KeyError,e:
                 break
 
@@ -129,21 +140,19 @@ class UrlDisclosureBruteforcer(TestingPlugin):
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url, BaseUrl]
+        return [Url, FolderUrl]
 
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
         # XXX DEBUG
-        return
-
         Logger.log_verbose("Bruteforcer - Start to process URL: '%s'" % str(info))
 
         if info.resource_type == Resource.RESOURCE_URL:
             return process_url(info)
-        if info.resource_type == Resource.RESOURCE_BASE_URL:
-            return process_base_url(info)
+        if info.resource_type == Resource.RESOURCE_FOLDER_URL:
+            return process_folder_url(info)
         raise TypeError()
 
 
@@ -152,48 +161,70 @@ class UrlDisclosureBruteforcer(TestingPlugin):
 # Processors of input types
 #
 #----------------------------------------------------------------------
-def process_base_url(info):
+def process_folder_url(info):
     """
     Receive and process a Base URL.
     """
-
-
-    # Parse original URL
-    #m_url_parts = info.parsed_url
-
-    # If file is a javascript, css or image, do not run
-    if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg'):
-        Logger.log_more_verbose("Bruteforcer - skipping URL '%s'." % str(info))
-        return
-
     #
-    # Load wordlists
+    # Get the remote web server fingerprint
     #
-    # -   Word lists to load
-    #m_wordlists_names  = [
-    #    "predictables"
-    #]
-    # -   Wordlist instances
-    #m_wordlist         = load_wordlists(m_wordlists_names)
-
-    #
-    # Start with bruteforcing. Cases to try:
-    #
-    # 1 - Testing predictable files and dirs: hidden files, config, lost files...
-    #
-    m_urls_to_test = {}
-
-    #
-    # if URL looks like don't process suffixes:
-    # - www.site.com/ or
-    # - www.site.com
-    #
-    # 5 - Predictable files
-    #m_urls_to_test["predictables"] = make_url_with_files_or_folder(m_wordlist, m_url_parts)
-    m_urls_to_test["predictables"] = [info.url + "error_log"]
+    db = Database()
+    m_datafinger = db.get_many(db.keys(data_type=WebServerFingerprint.TYPE_INFORMATION, data_subtype=WebServerFingerprint.information_type))
+    m_webserver_finger = info.get_associated_informations_by_category(WebServerFingerprint.information_type).pop()
 
 
-    return analyze_urls(info, m_urls_to_test)
+    # There is fingerprinting information?
+    if m_webserver_finger:
+
+        m_server_canonical_name = m_webserver_finger.name_canonical
+        m_servers_related       = m_webserver_finger.related # Set with related web servers
+        #
+        # Load wordlists
+        #
+        m_wordlist         = set()
+        m_wordlist_update  = m_wordlist.update
+
+        # Wordlist of server name
+        try:
+            w = Config.plugin_extra_config["%s_predictables" % m_server_canonical_name]
+            m_wordlist_update([l_w for l_w in w.itervalues()])
+        except KeyError:
+            pass
+
+        # Wordlist of related with the server found
+        try:
+            for l_servers_related in m_servers_related:
+                w = Config.plugin_extra_config["%s_predictables" % m_server_canonical_name]
+                m_wordlist_update([l_w for l_w in w.itervalues()])
+        except KeyError:
+            pass
+
+        # Load content of wordlists
+        m_return         = set()
+        m_return_update  = m_return.update
+        m_url            = info.url if info.url.endswith("/") else "%s/" % info.url
+
+        for l_w in m_wordlist:
+            # Use a copy of wordlist to avoid modify the original source
+            l_loaded_wordlist = WordListAPI().get_advanced_wordlist_as_list(l_w)
+
+            #
+            # README!!!!!
+            #
+            # Here don't use urljoin because it doesn't works with complete URL. With urljoin:
+            #
+            # http://www.mysite.com/folder1/ + /folder/to/append/index.php
+            # ---> http://www.mysite.com/folder/to/append/index.php
+            # instead of
+            # ---> http://www.mysite.com/folder1/folder/to/append/index.php
+            #
+            m_return_update(( "%s%s" % (m_url, l_wo[1:] if l_wo.startswith("/") else l_wo) for l_wo in l_loaded_wordlist))
+
+
+        return analyze_urls(info, {'predictables' : m_return})
+
+    else:
+        return None
 
 
 #----------------------------------------------------------------------
@@ -206,7 +237,7 @@ def process_url(info):
     m_url_parts = info.parsed_url
 
     # If file is a javascript, css or image, do not run
-    if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg'):
+    if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
         Logger.log_more_verbose("Bruteforcer - skipping URL '%s'." % str(info))
         return
 
@@ -224,40 +255,46 @@ def process_url(info):
     m_wordlist         = load_wordlists(m_wordlists_names)
 
     #
+    # README!!!!!
+    #
+    # Here don't use urljoin because it doesn't works with complete URL. With urljoin:
+    #
+    # http://www.mysite.com/folder1/ + /folder/to/append/index.php
+    # ---> http://www.mysite.com/folder/to/append/index.php
+    # instead of
+    # ---> http://www.mysite.com/folder1/folder/to/append/index.php
+    #
+    m_urls_to_test = defaultdict(set)
+
+    #
     # Start with bruteforcing. Cases to try:
     #
-    # 1 - Testing suffixes
+    # 1 - Testing suffixes: index.php -> index_0.php
+    #
+    # COMMON
+    m_urls_to_test["suffixes"].update(make_url_with_suffixes(get_list_from_wordlist("common_suffixes"), m_url_parts))
+
     # 2 - Testing prefixes
+    #
+    # COMMON
+    m_urls_to_test["prefixes"].update(make_url_with_prefixes(get_list_from_wordlist("common_prefixes"), m_url_parts))
+
     # 3 - Testing changing extension of files
+    #
+    # COMMON
+    m_urls_to_test["file_extensions"].update(make_url_changing_extensions(get_list_from_wordlist("common_extensions"), m_url_parts))
+
     # 4 - Testing filename permutations
+    #
+    # COMMON
+    m_urls_to_test["permutations"].update(make_url_mutate_filename(m_url_parts))
+
     # 5 - Testing urls with more than 2 number at the end of URL, like: www.misite.com/app302/ -> test:
     #     + www.misite.com/app300/
     #     + www.misite.com/app301/
     #     ...
     #     + www.misite.com/appNNN/
-    m_urls_to_test = {}
-
-
-    #
-    # if URL looks like don't process suffixes:
-    # - www.site.com/index.php
-    #
-    if not is_folder_url(m_url_parts):
-        #
-        #   1 - Suffixes
-        m_urls_to_test["suffixes"]        = make_url_with_suffixes(m_wordlist, m_url_parts)
-
-        #
-        #   2 - Preffixes
-        m_urls_to_test["prefixes"]        = make_url_with_suffixes(m_wordlist, m_url_parts)
-
-        #
-        #   3 - Changing extension of files
-        m_urls_to_test["file_extensions"] = make_url_changing_extensions(m_wordlist, m_url_parts)
-
-        #
-        #   4 - Permutation of file
-        m_urls_to_test["permutations"]    = make_url_mutate_filename(m_url_parts)
+    m_urls_to_test["directories"].update(make_url_changing_folder_name(m_url_parts))
 
     return analyze_urls(info, m_urls_to_test)
 
@@ -275,8 +312,8 @@ def analyze_urls(info, urls_to_test):
     :param info: Resource that will be associated discovered URLs
     :type info: Url or BaseUrl
 
-    :param urls_to_test: dicts with URLs
-    :type urls_to_test: dict(WORDLIST_NAME, list(URLs))
+    :param urls_to_test: Dict with the type of URLs (predictables, backup...) and the values of URLs to test.
+    :type urls_to_test: dict(TYPE_OF_URL, set(URLs)) -> {'predictables': set("url1", "url2") }
 
     :return: discovered resources and vulns
     :rtype: UrlDisclosure
@@ -426,7 +463,7 @@ def get_http_method(url, net_manager):
 #----------------------------------------------------------------------
 def make_url_with_suffixes(wordlist, url_parts):
     """
-    Creates an iterator of URLs with suffixes.
+    Creates a set of URLs with suffixes.
 
     :param wordlist: Wordlist iterator.
     :type wordlist: WordList
@@ -434,7 +471,8 @@ def make_url_with_suffixes(wordlist, url_parts):
     :param url_parts: Parsed URL to mutate.
     :type url_parts: DecomposedURL
 
-    :returns: iterator with urls.
+    :returns: a set with urls.
+    :rtype: set
     """
 
     if not isinstance(url_parts, DecomposedURL):
@@ -443,62 +481,105 @@ def make_url_with_suffixes(wordlist, url_parts):
     if not wordlist:
         raise ValueError("Internal error!")
 
-    m_new = url_parts.copy()
-    for l_wordlist in wordlist['suffixes']:
-        # For errors
-        if not l_wordlist:
-            Logger.log_error("Can't load one of wordlist fo category: 'suffixes'.")
-            continue
+    m_new        = url_parts.copy() # Works with a copy
+    m_return     = set()
+    m_return_add = m_return.add
+    m_filename   = m_new.filename
+    for l_suffix in wordlist:
 
-        for l_suffix in l_wordlist:
-            m_new.extension = l_suffix
-            yield m_new.url
+        # Format: index1.php
+        m_new.filename = m_filename + str(n)
+        m_return_add(m_new.url)
 
+        # Format: index_1.php
+        m_new.filename = "%s_%s" % (m_filename, l_suffix)
+        m_return_add(m_new.url)
+
+    return m_return
 
 #----------------------------------------------------------------------
-def make_url_with_prefixes(wordlist, url_parts):
+def make_url_mutate_filename(url_parts):
     """
-    Creates an iterator of URLs with prefixes.
-
-    :param wordlist: Wordlist iterator.
-    :type wordlist: WordList
+    Creates a set of URLs with mutated filenames.
 
     :param url_parts: Parsed URL to mutate.
     :type url_parts: DecomposedURL
 
-    :returns: iterator with urls.
+    :return: a set with URLs
+    :rtype: set
     """
 
     if not isinstance(url_parts, DecomposedURL):
         raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
 
-    if not wordlist:
-        raise ValueError("Internal error!")
+    # Change extension to upper case
+    m_new           = url_parts.copy()
+    m_new.extension = m_new.extension.upper()
+    m_return        = set()
+    m_return_add    = m_return.add
+
+    m_return_add(m_new.url)
+
+    # Adding numeric ends of filename
+    m_new = url_parts.copy()
+    filename = m_new.filename
+    for n in xrange(5):
+
+        # Format: index1.php
+        m_new.filename = filename + str(n)
+        m_return_add(m_new.url)
+
+        # Format: index_1.php
+        m_new.filename = "%s_%s" % (filename, str(n))
+        m_return_add(m_new.url)
+
+    return m_return
+
+#----------------------------------------------------------------------
+def make_url_changing_folder_name(url_parts):
+    """
+    Creates a set of URLs with prefixes.
+
+    :param url_parts: Parsed URL to mutate.
+    :type url_parts: DecomposedURL
+
+    :returns: a set with urls.
+    :rtype: set
+    """
+
+    if not isinstance(url_parts, DecomposedURL):
+        raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
+
 
     # Making predictables
-    m_new = url_parts.copy()
-    m_filename = m_new.filename
-    for l_wordlist in wordlist_suffix['prefixes']:
-        # For errors
-        if not l_wordlist:
-            Logger.log_error("Can't load wordlist for category: 'prefixes'.")
-            continue
+    m_new        = url_parts.copy()
+    m_return     = set()
+    m_return_add = m_return.add
+    m_directory  = m_new.directory
 
-        for l_prefix in l_wordlist:
-            m_new.filename = l_prefix + m_filename
-            yield m_new.url
+    if len(m_directory.split("/")) > 1:
+        for n in xrange(20):
+            m_new.directory = "%s%s" % (m_directory, str(n))
+            m_return_add(m_new.url)
+
+        return m_return
+    else:
+        return set()
 
 
 #----------------------------------------------------------------------
 def make_url_with_files_or_folder(wordlist, url_parts):
     """
-    Creates an iterator of URLs with guessed files and subfolders.
+    Creates a set of URLs with guessed files and subfolders.
 
     :param wordlist: Wordlist iterator.
     :type wordlist: WordList
 
     :param url_parts: Parsed URL to mutate.
     :type url_parts: DecomposedURL
+
+    :return: a set with URLs
+    :rtype: set
     """
 
     if not isinstance(url_parts, DecomposedURL):
@@ -515,7 +596,9 @@ def make_url_with_files_or_folder(wordlist, url_parts):
         m_wordlist_suffix = set()
 
     # Making predictables
-    m_new = url_parts.copy()
+    m_new        = url_parts.copy()
+    m_return     = set()
+    m_return_add = m_return.add
     for l_wordlist in m_wordlist_predictable:
         # For errors
         if not l_wordlist:
@@ -532,7 +615,7 @@ def make_url_with_files_or_folder(wordlist, url_parts):
             l_fixed_path = l_path[1:] if l_path.startswith("/") else l_path
 
             m_new.filename = l_fixed_path
-            yield m_new.url
+            m_return_add(m_new.url)
 
     # For locations source code of application, like:
     # www.site.com/folder/app1/ -> www.site.com/folder/app1.war
@@ -548,19 +631,24 @@ def make_url_with_files_or_folder(wordlist, url_parts):
             continue
         for l_suffix in l_wordlist:
             m_new.path = m_path + l_suffix
-            yield m_new.url
+            m_return_add(m_new.url)
+
+    return m_return
 
 
 #----------------------------------------------------------------------
 def make_url_changing_extensions(wordlist, url_parts):
     """
-    Creates an iterator of URLs with alternative file extensions.
+    Creates a set of URLs with alternative file extensions.
 
     :param wordlist: Wordlist iterator.
     :type wordlist: WordList
 
     :param url_parts: Parsed URL to mutate.
     :type url_parts: DecomposedURL
+
+    :return: a set with the URLs
+    :rtype: set
     """
 
     if not isinstance(url_parts, DecomposedURL):
@@ -570,33 +658,38 @@ def make_url_changing_extensions(wordlist, url_parts):
         raise ValueError("Internal error!")
 
     # Making predictables
-    m_new = url_parts.copy()
-    for l_wordlist in wordlist['extensions']:
-        # For errors
-        if not l_wordlist:
-            Logger.log_error("Can't load wordlist for category: 'extensions'.")
-            continue
-        for l_suffix in l_wordlist:
-            m_new.extension = l_suffix
-            yield m_new.url
+    m_new        = url_parts.copy()
+    m_return     = set()
+    m_return_add = m_return.add
+    for l_suffix in wordlist:
+        m_new.extension = l_suffix
+        m_return_add(m_new.url)
+
+    return m_return
 
 
 #----------------------------------------------------------------------
 def make_url_mutate_filename(url_parts):
     """
-    Creates an iterator of URLs with mutated filenames.
+    Creates a set of URLs with mutated filenames.
 
     :param url_parts: Parsed URL to mutate.
     :type url_parts: DecomposedURL
+
+    :return: a set with URLs
+    :rtype: set
     """
 
     if not isinstance(url_parts, DecomposedURL):
         raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
 
     # Change extension to upper case
-    m_new = url_parts.copy()
+    m_new           = url_parts.copy()
     m_new.extension = m_new.extension.upper()
-    yield m_new.url
+    m_return        = set()
+    m_return_add    = m_return.add
+
+    m_return_add(m_new.url)
 
     # Adding numeric ends of filename
     m_new = url_parts.copy()
@@ -605,11 +698,13 @@ def make_url_mutate_filename(url_parts):
 
         # Format: index1.php
         m_new.filename = filename + str(n)
-        yield m_new.url
+        m_return_add(m_new.url)
 
         # Format: index_1.php
         m_new.filename = "%s_%s" % (filename, str(n))
-        yield m_new.url
+        m_return_add(m_new.url)
+
+    return m_return
 
 
 #----------------------------------------------------------------------
@@ -633,6 +728,31 @@ def is_folder_url(url_parts):
     :param url_parts: Parsed URL to test.
     :type url_parts: DecomposedURL
 
-    :return: bool -- True if it's a folder, False otherwise.
+    :return: True if it's a folder, False otherwise.
+    :rtype: bool
     """
     return url_parts.path.endswith('/') and not url_parts.query_char == '/'
+
+#----------------------------------------------------------------------
+def get_list_from_wordlist(wordlist):
+    """
+    Load the content of the wordlist and return a set with the content.
+
+    :param wordlist: wordlist name.
+    :type wordlist: str
+
+    :return: a set with the results.
+    :rtype result_output: set
+    """
+
+    try:
+        m_commom_wordlists = set()
+
+        for v in Config.plugin_extra_config[wordlist].itervalues():
+            m_commom_wordlists.update(WordListAPI().get_advanced_wordlist_as_list(v))
+
+        return m_commom_wordlists
+    except KeyError,e:
+        Logger.log_error_more_verbose(e.message)
+        return set()
+
