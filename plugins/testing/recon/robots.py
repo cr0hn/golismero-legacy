@@ -117,7 +117,6 @@ class Robots(TestingPlugin):
 
                 if m_key in ('disallow', 'allow', 'sitemap') and m_value:
                     tmp_discovered = urljoin(m_url, m_value)
-                    Logger.log_more_verbose("Robots - discovered new url: %s" % tmp_discovered)
                     m_discovered_urls_append( tmp_discovered )
             except Exception,e:
                 continue
@@ -147,4 +146,8 @@ class Robots(TestingPlugin):
             m_analyzer.append(l_p.raw_content, url=l_url)
 
         # Generate results
-        return [Url(i.url, referer=m_url) for i in m_analyzer.unique_texts]
+        m_return = [Url(i.url, referer=m_url) for i in m_analyzer.unique_texts]
+
+        Logger.log_more_verbose("Robots - discovered %s URLs" % len(m_return))
+
+        return m_return
