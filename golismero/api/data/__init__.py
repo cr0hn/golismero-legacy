@@ -871,6 +871,34 @@ class Data(object):
         return True
 
 
+    #----------------------------------------------------------------------
+    def __eq__(self, obj):
+        """
+        Determines if the object and the passed params are the equals property by
+        property. Only uses the identy properties.
+
+        :param obj: An object of same type of self.
+        :type obj: object
+
+        :return: boolean with True if the object are the same, property by property.
+        :rtype: bool
+        """
+        if not isinstance(obj, self):
+            return False
+
+
+        # Get local identities
+        m_local = set(self._collect_identity_properties())
+        m_rem   = set(obj._collect_identity_properties())
+
+        # Compare two lists element by element
+        if ( (m_local | m_rem) - (m_local & m_rem)): # Are the same
+            return True
+        else:
+            return False
+
+
+
 #----------------------------------------------------------------------
 class _TempDataStorage(object):
     """
