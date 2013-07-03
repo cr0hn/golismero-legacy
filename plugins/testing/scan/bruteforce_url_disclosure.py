@@ -488,7 +488,7 @@ def make_url_with_suffixes(wordlist, url_parts):
     for l_suffix in wordlist:
 
         # Format: index1.php
-        m_new.filename = m_filename + str(n)
+        m_new.filename = m_filename + str(l_suffix)
         m_return_add(m_new.url)
 
         # Format: index_1.php
