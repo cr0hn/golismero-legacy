@@ -637,10 +637,12 @@ class DecomposedURL(object):
 
 
     #----------------------------------------------------------------------
-    def match_extension(self, extension, directory_allowed = True, double_allowed = True):
+    def match_extension(self, extension,
+                        directory_allowed = True,
+                        double_allowed    = True,
+                        case_insensitive  = True):
         """
         Tries to match the given extension against the URL path.
-        String comparisons are case insensitive.
 
         By default every component of the path is tested:
 
@@ -684,6 +686,24 @@ class DecomposedURL(object):
         >>> d.match_extension(".pdf", double_allowed = False)
         False
 
+        String comparisons are case insensitive by default:
+
+        >>> from golismero.api.web_utils import DecomposedURL
+        >>> d = DecomposedURL("http://www.example.com/index.html")
+        >>> d.match_extension(".html")
+        True
+        >>> d.match_extension(".HTML")
+        True
+
+        This too can be configured, just set 'case_insensitive' to False:
+
+        >>> from golismero.api.web_utils import DecomposedURL
+        >>> d = DecomposedURL("http://www.example.com/index.html")
+        >>> d.match_extension(".HTML", case_insensitive = True)
+        True
+        >>> d.match_extension(".HTML", case_insensitive = False)
+        False
+
         :param extension: Extension to match.
         :type extension: str
 
@@ -693,25 +713,35 @@ class DecomposedURL(object):
         :param double_allowed: True to support double extensions, False to handle only standard extensions.
         :type double_allowed: bool
 
+        :param case_insensitive: True for case insensitive string comparisons, False for case sensitive comparisons.
+        :type case_insensitive: bool
+
         :returns: True if the extension was found, False otherwise.
         :rtype: bool
         """
+        # TODO: maybe use **kwargs so we can support 'case_sensitive' (common mistake),
+        # but do not document it so people don't get used to it :P
         if not extension.startswith("."):
             extension = "." + extension
-        extension = extension.lower()
+        if case_insensitive:
+            extension = extension.lower()
         if directory_allowed:
             components = self.path.split("/")
         else:
             components = [self.filename]
         for token in components:
             base, ext = splitext(token)
-            if ext.lower() == extension:
+            if case_insensitive:
+                ext = ext.lower()
+            if ext == extension:
                 return True
             if double_allowed:
                 while True:
                     base, ext = splitext(base)
                     if not ext: break
-                    if ext.lower() == extension:
+                    if case_insensitive:
+                        ext = ext.lower()
+                    if ext == extension:
                         return True
         return False
 
