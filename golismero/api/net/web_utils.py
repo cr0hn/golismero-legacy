@@ -637,6 +637,154 @@ class DecomposedURL(object):
 
 
     #----------------------------------------------------------------------
+    def match_extension(self, extension, directory_allowed = True, double_allowed = True):
+        """
+        Tries to match the given extension against the URL path.
+        String comparisons are case insensitive.
+
+        By default every component of the path is tested:
+
+        >>> from golismero.api.web_utils import DecomposedURL
+        >>> d = DecomposedURL("http://www.example.com/download.php/filename/file.pdf")
+        >>> d.match_extension(".php")
+        True
+        >>> d.match_extension(".pdf")
+        True
+        >>> d.match_extension(".exe")
+        False
+
+        However you can set the 'directory_allowed' to False to check only the last component:
+
+        >>> from golismero.api.web_utils import DecomposedURL
+        >>> d = DecomposedURL("http://www.example.com/download.php/filename/file.pdf")
+        >>> d.match_extension(".php", directory_allowed = True)
+        True
+        >>> d.match_extension(".php", directory_allowed = False)
+        False
+
+        Double extension is supported, as it can come in handy when analyzing malware URLs:
+
+        >>> from golismero.api.web_utils import DecomposedURL
+        >>> d = DecomposedURL("http://www.example.com/malicious.pdf.exe")
+        >>> d.filebase
+        'malicious.pdf'
+        >>> d.extension
+        '.exe'
+        >>> d.match_extension(".pdf")
+        True
+        >>> d.match_extension(".exe")
+        True
+
+        The double extension support can be disabled by setting the 'double_allowed' argument to False:
+
+        >>> from golismero.api.web_utils import DecomposedURL
+        >>> d = DecomposedURL("http://www.example.com/malicious.pdf.exe")
+        >>> d.match_extension(".pdf", double_allowed = True)
+        True
+        >>> d.match_extension(".pdf", double_allowed = False)
+        False
+
+        :param extension: Extension to match.
+        :type extension: str
+
+        :param directory_allowed: True to match extensions in all path components, False to match only the last one.
+        :type directory_allowed: bool
+
+        :param double_allowed: True to support double extensions, False to handle only standard extensions.
+        :type double_allowed: bool
+
+        :returns: True if the extension was found, False otherwise.
+        :rtype: bool
+        """
+        if not extension.startswith("."):
+            extension = "." + extension
+        extension = extension.lower()
+        if directory_allowed:
+            components = self.path.split("/")
+        else:
+            components = [self.filename]
+        for token in components:
+            base, ext = splitext(token)
+            if ext.lower() == extension:
+                return True
+            if double_allowed:
+                while True:
+                    base, ext = splitext(base)
+                    if not ext: break
+                    if ext.lower() == extension:
+                        return True
+        return False
+
+
+    #----------------------------------------------------------------------
+    def get_all_extensions(self, directory_allowed = True, double_allowed = True):
+        """
+        Tries to find any possible file extensions from the URL path.
+
+        By default every component of the path is parsed:
+
+        >>> from golismero.api.web_utils import DecomposedURL
+        >>> d = DecomposedURL("http://www.example.com/download.php/filename/file.pdf")
+        >>> d.get_all_extensions()
+        ['.php', '.pdf']
+
+        However you can set the 'directory_allowed' to False to parse only the last component:
+
+        >>> from golismero.api.web_utils import DecomposedURL
+        >>> d = DecomposedURL("http://www.example.com/download.php/filename/file.pdf")
+        >>> d.get_all_extensions(directory_allowed = False)
+        ['.pdf']
+        >>> d.get_all_extensions(directory_allowed = True)
+        ['.php', '.pdf']
+
+        Double extension is supported, as it can come in handy when analyzing malware URLs:
+
+        >>> from golismero.api.web_utils import DecomposedURL
+        >>> d = DecomposedURL("http://www.example.com/malicious.pdf.exe")
+        >>> d.filebase
+        'malicious.pdf'
+        >>> d.extension
+        '.exe'
+        >>> d.get_all_extensions()
+        ['.pdf', '.exe']
+
+        The double extension support can be disabled by setting the 'double_allowed' argument to False:
+
+        >>> from golismero.api.web_utils import DecomposedURL
+        >>> d = DecomposedURL("http://www.example.com/malicious.pdf.exe")
+        >>> d.get_all_extensions(double_allowed = False)
+        ['.exe']
+        >>> d.get_all_extensions(double_allowed = True)
+        ['.pdf', '.exe']
+
+        :param directory_allowed: True to match extensions in all path components, False to match only the last one.
+        :type directory_allowed: bool
+
+        :param double_allowed: True to support double extensions, False to handle only standard extensions.
+        :type double_allowed: bool
+
+        :returns: List of extensions in the order in which they were found.
+        :rtype: list(str)
+        """
+        found = []
+        if directory_allowed:
+            components = self.path.split("/")
+        else:
+            components = [self.filename]
+        for token in components:
+            base, ext = splitext(token)
+            pos = len(found)
+            if ext:
+                found.append(ext)
+            if double_allowed:
+                while True:
+                    base, ext = splitext(base)
+                    if not ext: break
+                    found.insert(pos, ext)
+        return found
+
+
+    #----------------------------------------------------------------------
     # Read-only properties.
 
     @property
