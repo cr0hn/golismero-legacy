@@ -318,31 +318,44 @@ def main():
         print "-------------"
         print " Plugin list"
         print "-------------"
-        print
-
-        # Testing plugins...
-        testing_plugins = manager.get_plugins("testing")
-        if testing_plugins:
-            print "-= Testing plugins =-"
-            for name in sorted(testing_plugins.keys()):
-                info = testing_plugins[name]
-                print "+ %s: %s" % (name, info.description)
 
         # UI plugins...
         ui_plugins = manager.get_plugins("ui")
         if ui_plugins:
-            print "\n-= UI plugins =-"
+            print
+            print "-= UI plugins =-"
             for name in sorted(ui_plugins.keys()):
                 info = ui_plugins[name]
-                print "+ %s: %s" % (name, info.description)
+                print "+ %s: %s" % (name[3:], info.description)
 
         # Report plugins...
         report_plugins = manager.get_plugins("report")
         if ui_plugins:
-            print "\n-= Report plugins =-"
+            print
+            print "-= Report plugins =-"
             for name in sorted(report_plugins.keys()):
                 info = report_plugins[name]
-                print "+ %s: %s" % (name, info.description)
+                print "+ %s: %s" % (name[7:], info.description)
+
+        # Testing plugins...
+        testing_plugins = manager.get_plugins("testing")
+        if testing_plugins:
+            print
+            print "-= Testing plugins =-"
+            names = sorted(testing_plugins.keys())
+            names = [x[8:] for x in names]
+            stages = [ (v,k) for (k,v) in manager.STAGES.iteritems() ]
+            stages.sort()
+            for _, stage in stages:
+                s = stage + "/"
+                p = len(s)
+                slice = [x[p:] for x in names if x.startswith(s)]
+                if slice:
+                    print
+                    print "%s stage:" % stage.title()
+                    for name in slice:
+                        info = testing_plugins["testing/%s/%s" % (stage, name)]
+                        print "+ %s: %s" % (name, info.description)
 
         if os.sep != "\\":
             print

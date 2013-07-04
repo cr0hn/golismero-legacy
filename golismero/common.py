@@ -290,10 +290,14 @@ class Configuration (object):
 
     @staticmethod
     def integer(x):
+        if type(x) in (int, long):
+            return x
         return int(x, 0) if x is not None else None
 
     @staticmethod
     def comma_separated_list(x):
+        if not x:
+            return []
         if isinstance(x, str):
             return [t.strip() for t in x.split(",")]
         if isinstance(x, unicode):
@@ -501,7 +505,7 @@ class OrchestratorConfig (Configuration):
         "ui_mode": (str, "console"),
 
         # Verbosity level
-        "verbose": (int, 1),
+        "verbose": (Configuration.integer, 1),
 
         # Colorize console?
         "colorize": (Configuration.boolean, True),
@@ -615,9 +619,9 @@ class AuditConfig (Configuration):
         "subdomain_regex": Configuration.string,
 
         # Depth level for spider
-        "depth": (int, 0),
+        "depth": (Configuration.integer, 0),
         # Limits
-        "max_links" : (int, 0), # 0 -> infinite
+        "max_links" : (Configuration.integer, 0), # 0 -> infinite
 
         # Follow redirects
         "follow_redirects": (Configuration.boolean, True),
