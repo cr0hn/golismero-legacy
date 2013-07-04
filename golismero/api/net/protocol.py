@@ -132,16 +132,36 @@ class ConnectionSlot (object):
     Connection slot context manager.
     """
 
+    def __init__(self, hostname, number = 1):
+        """
+        :param hostname: Hostname to connect to.
+        :type hostname: str
+
+        :param number: Number of slots to request per call.
+        :type number: int
+        """
+        self.__host   = hostname
+        self.__number = number
+
     @property
     def hostname(self):
+        """
+        :returns: Hostname to connect to.
+        :rtype: str
+        """
         return self.__host
 
-    def __init__(self, hostname):
-        self.__host = hostname
+    @property
+    def number(self):
+        """
+        :returns: Number of slots to request per call.
+        :rtype: int
+        """
+        return self.__number
 
     def __enter__(self):
         self.__token = Config._context.remote_call(
-            MessageCode.MSG_RPC_REQUEST_SLOT, self.hostname, 1
+            MessageCode.MSG_RPC_REQUEST_SLOT, self.hostname, self.number
         )
         if not self.__token:
             # XXX FIXME
@@ -152,6 +172,24 @@ class ConnectionSlot (object):
         Config._context.remote_call(
             MessageCode.MSG_RPC_RELEASE_SLOT, self.__token
         )
+
+
+#------------------------------------------------------------------------------
+def slot(fn, number = 1):
+    """
+    Decorator for methods and functions
+    that request a network slot when called.
+
+    :param fn: Method or function to decorate.
+    :type fn: callable
+
+    :param number: Number of slots to request per call.
+    :type number: int
+    """
+    def method(hostname, *args, **kwargs):
+        with ConnectionSlot(hostname, number):
+            return fn(hostname, *args, **kwargs)
+    return method
 
 
 #------------------------------------------------------------------------------
