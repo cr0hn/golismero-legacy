@@ -813,6 +813,33 @@ class DecomposedURL(object):
         self.path = join(self.directory, filebase + self.extension)
 
     @property
+    def all_extension(self):
+        """
+        when an URLs has more than one extensions, like:
+
+        http://www.mysite.com/folder/filename.tar.gz
+
+        extension property returns the value: "gz". But, if you
+        want to get the complete extension: "tar.gz" you must use
+        this property
+        """
+        # If the filename has more than one extension, get
+        # only the all.
+        tmp     = splitext(self.filename)[1]
+        dot_pos = tmp.find(".")
+        if dot_pos == -1:
+            return tmp
+        else:
+            return tmp[dot_pos:]
+
+    @extension.setter
+    def all_extension(self, extension):
+        if self.extension:
+            self.path = join(self.directory, self.filebase + (".%s" % extension if not extension.startswith(".") else extension))
+
+
+
+    @property
     def extension(self):
         # If the filename has more than one extension, get
         # only the all.
