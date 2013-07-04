@@ -9,5 +9,5 @@ Website = https://github.com/cr0hn/golismero/
 Copyright = Copyright (C) 2011-2013 GoLismero Project
 License = GNU Public License
 
-[Wordlist_NoSpider]
-wordlist = golismero/no_spiderable_urls.txt
+[Configuration]
+wordlist_no_spider = golismero/no_spiderable_urls.txt

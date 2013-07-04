@@ -109,8 +109,7 @@ class Spider(TestingPlugin):
         m_links = extract_from_html(p.information.raw_data, m_url)
 
         # Do not follow URLs that contain certain keywords
-        # TODO: put this in the plugin's configuration!
-        m_forbidden = WordListAPI().get_wordlist(Config.plugin_extra_config["Wordlist_NoSpider"]["wordlist"])
+        m_forbidden = WordListAPI().get_wordlist(Config.plugin_config["wordlist_no_spider"])
 
         # Convert to Url data type and filter out out of scope and forbidden URLs
         m_return.extend(
