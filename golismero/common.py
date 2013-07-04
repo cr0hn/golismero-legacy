@@ -158,8 +158,11 @@ def get_profiles_folder():
     global _profiles_folder
     if not _profiles_folder:
         pathname = path.split(path.abspath(__file__))[0]
-        if not pathname:
-            pathname = path.abspath(get_user_settings_folder())
+        if pathname:
+            pathname = path.join(pathname, "..")
+        else:
+            pathname = get_user_settings_folder()
+        pathname = path.abspath(pathname)
         _profiles_folder = path.join(pathname, "profiles")
     return _profiles_folder
 
@@ -485,7 +488,7 @@ class Configuration (object):
         """
         parser = RawConfigParser()
         parser.read(config_file)
-        options = { k:v for k,v in parser.items("DEFAULT") if v }
+        options = { k:v for k,v in parser.items("golismero") if v }
         self.from_dictionary(options)
 
 

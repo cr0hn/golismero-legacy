@@ -443,13 +443,13 @@ def main():
                 try:
                     p = RawConfigParser()
                     p.read(get_profile(name))
-                    desc = p.get("DEFAULT", "description")
+                    desc = p.get("golismero", "description")
                 except Exception:
                     desc = None
                 if desc:
-                    print "%s: %s" % (name, desc)
+                    print "+ %s: %s" % (name, desc)
                 else:
-                    print name
+                    print "+ %s" % name
         if os.sep != "\\":
             print
         exit(0)
