@@ -1003,7 +1003,7 @@ class DecomposedURL(object):
         else:
             return tmp[dot_pos:]
 
-    @extension.setter
+    @all_extensions.setter
     def all_extensions(self, extension):
         if self.extension:
             self.path = join(self.directory, self.filebase + (".%s" % extension if not extension.startswith(".") else extension))
