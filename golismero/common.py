@@ -587,7 +587,7 @@ class AuditConfig (Configuration):
         #
 
         # Output files
-        "reports": (Configuration.comma_separated_list, []),
+        "reports": (Configuration.comma_separated_list, ["-"]),
 
         # Only display resources with associated vulnerabilities
         "only_vulns": (Configuration.boolean, False),

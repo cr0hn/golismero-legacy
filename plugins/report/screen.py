@@ -49,7 +49,7 @@ class ScreenReport(ReportPlugin):
 
     #----------------------------------------------------------------------
     def is_supported(self, output_file):
-        return not output_file
+        return not output_file or output_file == "-"
 
 
     #----------------------------------------------------------------------
