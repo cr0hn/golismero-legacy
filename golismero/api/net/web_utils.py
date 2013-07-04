@@ -952,6 +952,47 @@ class DecomposedURL(object):
                 query_params = None
         self.__query, self.__query_params = query, query_params
 
+    @property
+    def all_extensions(self):
+        """
+        When the filename of an URL has a double extension, this property
+        will give you all of them instead of just the last one (as
+        'extension' does).
+
+        Example:
+
+        >>> from golismero.api.web_utils import DecomposedURL
+        >>> d = DecomposedURL("http://www.example.com/malicious.pdf.exe")
+        >>> d.filename
+        'malicious.pdf.exe'
+        >>> d.filebase
+        'malicious.pdf'
+        >>> d.extension
+        '.exe'
+        >>> d.all_extensions
+        '.pdf.exe'
+        >>> d.extension = '.test'
+        >>> d.filename
+        'malicious.pdf.test'
+        >>> d.all_extensions = '.malware'
+        >>> d.filename
+        'malicious.malware'
+        """
+        ext = self.filename
+        pos = ext.find(".")
+        if pos > 0:
+            return ext[ pos : ]
+        return ""
+
+    @all_extensions.setter
+    def all_extensions(self, extension):
+        filename  = self.filename
+        dot_pos   = filename.find(".")
+        filebase  = filename[ : dot_pos ] if dot_pos > 0 else filename
+        if extension and not extension.startswith("."):
+            extension = "." + extension
+        self.path = join(self.directory, filebase + extension)
+
 
     #----------------------------------------------------------------------
     # Aliases.
@@ -984,40 +1025,13 @@ class DecomposedURL(object):
         self.path = join(self.directory, filebase + self.extension)
 
     @property
-    def all_extensions(self):
-        """
-        when an URLs has more than one extensions, like:
-
-        http://www.mysite.com/folder/filename.tar.gz
-
-        extension property returns the value: "gz". But, if you
-        want to get the complete extension: "tar.gz" you must use
-        this property
-        """
-        # If the filename has more than one extension, get
-        # only the all.
-        tmp     = splitext(self.filename)[1]
-        dot_pos = tmp.find(".")
-        if dot_pos == -1:
-            return tmp
-        else:
-            return tmp[dot_pos:]
-
-    @all_extensions.setter
-    def all_extensions(self, extension):
-        if self.extension:
-            self.path = join(self.directory, self.filebase + (".%s" % extension if not extension.startswith(".") else extension))
-
-
-
-    @property
     def extension(self):
         return splitext(self.filename)[1]
 
     @extension.setter
     def extension(self, extension):
         if extension:
-            self.path = join(self.directory, self.filebase + (".%s" % extension if not extension.startswith(".") else extension))
+            self.path = join(self.directory, self.filebase + (extension if extension.startswith(".") else "." + extension))
         else:
             self.path = join(self.directory, self.filebase)
 
