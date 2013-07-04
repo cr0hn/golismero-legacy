@@ -989,7 +989,7 @@ class DecomposedURL(object):
         filename  = self.filename
         dot_pos   = filename.find(".")
         filebase  = filename[ : dot_pos ] if dot_pos > 0 else filename
-        if extension and not extension.startswith("."):
+        if extension and extension[0] != ".":
             extension = "." + extension
         self.path = join(self.directory, filebase + extension)
 
@@ -1031,7 +1031,9 @@ class DecomposedURL(object):
     @extension.setter
     def extension(self, extension):
         if extension:
-            self.path = join(self.directory, self.filebase + (extension if extension.startswith(".") else "." + extension))
+            if "." in extension[1:]:
+                raise ValueError("To set a double extension use the all_extensions property instead")
+            self.path = join(self.directory, self.filebase + (extension if extension[0] == "." else "." + extension))
         else:
             self.path = join(self.directory, self.filebase)
 
