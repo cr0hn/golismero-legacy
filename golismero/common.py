@@ -192,7 +192,7 @@ def get_profile(name):
     if not profiles.endswith("/"):
         profiles += "/"
     if not filename.startswith(profiles) or not path.isfile(filename):
-        raise ValueError("Profile not found: " + name)
+        raise ValueError("Profile not found: %r" % name)
 
     # Return the filename.
     return filename
@@ -289,10 +289,69 @@ class Configuration (object):
         return str(x) if x is not None else None
 
     @staticmethod
+    def integer(x):
+        return int(x, 0) if x is not None else None
+
+    @staticmethod
+    def comma_separated_list(x):
+        if isinstance(x, str):
+            return [t.strip() for t in x.split(",")]
+        if isinstance(x, unicode):
+            return [t.strip() for t in x.split(u",")]
+        return list(x)
+
+    @staticmethod
+    def boolean(x):
+        if not x:
+            return False
+        if x is True:
+            return x
+        if hasattr(x, "lower"):
+            return {
+                "enabled": True,        # True
+                "enable": True,
+                "true": True,
+                "yes": True,
+                "y": True,
+                "1": True,
+                "disabled": False,      # False
+                "disable": False,
+                "false": False,
+                "no": False,
+                "f": False,
+                "0": False,
+            }.get(x.lower(), bool(x))
+        return bool(x)
+
+    @staticmethod
     def trinary(x):
-        if x not in (None, True, False):
-            raise SyntaxError("Trinary values only accept True, False and None")
-        return x
+        if x in (None, True, False):
+            return x
+        if not hasattr(x, "lower"):
+            raise ValueError("Trinary values only accept True, False and None")
+        try:
+            return {
+                "enabled": True,        # True
+                "enable": True,
+                "true": True,
+                "yes": True,
+                "y": True,
+                "1": True,
+                "disabled": False,      # False
+                "disable": False,
+                "false": False,
+                "no": False,
+                "f": False,
+                "0": False,
+                "default": None,        # None
+                "def": None,
+                "none": None,
+                "maybe": None,
+                "?": None,
+                "-1": None,
+            }[x.lower()]
+        except KeyError:
+            raise ValueError("Unknown value: %r" % x)
 
 
     #----------------------------------------------------------------------
@@ -445,30 +504,30 @@ class OrchestratorConfig (Configuration):
         "verbose": (int, 1),
 
         # Colorize console?
-        "colorize": (bool, True),
+        "colorize": (Configuration.boolean, True),
 
         #
         # Plugin options
         #
 
         # Enabled plugins
-        "enabled_plugins": (list, ["all"]),
+        "enabled_plugins": (Configuration.comma_separated_list, ["all"]),
 
         # Disabled plugins
-        "disabled_plugins": (list, []),
+        "disabled_plugins": (Configuration.comma_separated_list, []),
 
         # Plugins folder
         "plugins_folder": Configuration.string,
 
         # Maximum number of processes to execute plugins
-        "max_process": (int, 10),
+        "max_process": (Configuration.integer, 10),
 
         #
         # Network options
         #
 
         # Maximum number of connections per host
-        "max_connections": (int, 50),
+        "max_connections": (Configuration.integer, 50),
 
         # Use persistent cache?
         # True: yes
@@ -513,17 +572,17 @@ class AuditConfig (Configuration):
         #
 
         # Targets
-        "targets": (list, []),
+        "targets": (Configuration.comma_separated_list, []),
 
         #
         # Report options
         #
 
         # Output files
-        "reports": (list, []),
+        "reports": (Configuration.comma_separated_list, []),
 
         # Only display resources with associated vulnerabilities
-        "only_vulns": (bool, False),
+        "only_vulns": (Configuration.boolean, False),
 
         #
         # Audit options
@@ -540,17 +599,17 @@ class AuditConfig (Configuration):
         #
 
         # Enabled plugins
-        "enabled_plugins": (list, ["all"]),
+        "enabled_plugins": (Configuration.comma_separated_list, ["all"]),
 
         # Disabled plugins
-        "disabled_plugins": (list, []),
+        "disabled_plugins": (Configuration.comma_separated_list, []),
 
         #
         # Networks options
         #
 
         # Include subdomains?
-        "include_subdomains": (bool, True),
+        "include_subdomains": (Configuration.boolean, True),
 
         # Subdomains as regular expression
         "subdomain_regex": Configuration.string,
@@ -561,10 +620,10 @@ class AuditConfig (Configuration):
         "max_links" : (int, 0), # 0 -> infinite
 
         # Follow redirects
-        "follow_redirects": (bool, True),
+        "follow_redirects": (Configuration.boolean, True),
 
         # Follow only first redirect
-        "follow_first_redirect": (bool, True),
+        "follow_first_redirect": (Configuration.boolean, True),
 
         # Proxy options
         "proxy_addr": Configuration.string,
@@ -589,7 +648,8 @@ class AuditConfig (Configuration):
         self._targets = getattr(self, "_targets", [])
         if targets:
             self._targets.extend(
-                (x if (x.startswith("http://") or x.startswith("https://")) else "http://" + x)
+                (x if (x.startswith("http://") or x.startswith("https://"))
+                   else "http://" + x)
                 for x in targets)
 
 
@@ -604,8 +664,7 @@ class AuditConfig (Configuration):
         # Always append, never overwrite.
         self._reports = getattr(self, "_reports", [])
         if reports:
-            self._reports.extend(
-                (str(x) if x is not None else None) for x in reports)
+            self._reports.extend( (str(x) if x else None) for x in reports )
 
 
     #----------------------------------------------------------------------
