@@ -122,6 +122,7 @@ from golismero.common import OrchestratorConfig, AuditConfig, \
                              get_default_config_file, get_profile, \
                              get_available_profiles
 from golismero.main import launcher
+from golismero.main.console import get_terminal_size
 from golismero.main.orchestrator import Orchestrator
 from golismero.managers.pluginmanager import PluginManager
 from golismero.managers.processmanager import PluginContext
@@ -181,6 +182,13 @@ class ReadValueFromFileAction(argparse.Action):
 # Command line parser using argparse
 
 def cmdline_parser():
+
+    # Fix the console width bug in argparse.
+    try:
+        os.environ["COLUMNS"] = str(get_terminal_size()[0])
+    except Exception:
+        pass
+
     parser = argparse.ArgumentParser(fromfile_prefix_chars="@")
     parser.add_argument("targets", metavar="TARGET", nargs="*", help="one or more target web sites")
 
@@ -200,7 +208,7 @@ def cmdline_parser():
     gr_audit.add_argument("--audit-db", metavar="DATABASE", dest="audit_db", help="specify a database connection string")
 
     gr_report = parser.add_argument_group("report options")
-    gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", help="write the results of the audit to this file [default: stdout]")
+    gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", help="write the results of the audit to this file (use - for stdout)")
     gr_report.add_argument("-no", "--no-output", dest="reports", action=ResetListAction, help="do not output the results")
     gr_report.add_argument("--only-vulns", action="store_true", dest="only_vulns", help="display only vulnerable resources")
 
