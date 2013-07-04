@@ -292,7 +292,7 @@ class Configuration (object):
     def integer(x):
         if type(x) in (int, long):
             return x
-        return int(x, 0) if x is not None else None
+        return int(x, 0) if x else 0
 
     @staticmethod
     def comma_separated_list(x):
@@ -436,6 +436,9 @@ class Configuration (object):
         # Builds a dictionary with the object's public attributes.
         args = { k : getattr(args, k) for k in dir(args) if not k.startswith("_") }
 
+        # Remove all attributes whose values are None.
+        args = { k:v for k,v in args.iteritems() if v is not None }
+
         # Extract the settings from the dictionary.
         self.from_dictionary(args)
 
@@ -482,7 +485,8 @@ class Configuration (object):
         """
         parser = RawConfigParser()
         parser.read(config_file)
-        self.from_dictionary(dict(parser.items("DEFAULT")))
+        options = { k:v for k,v in parser.items("DEFAULT") if v }
+        self.from_dictionary(options)
 
 
 #----------------------------------------------------------------------
