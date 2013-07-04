@@ -110,6 +110,7 @@ import argparse
 import datetime
 import textwrap
 
+from ConfigParser import RawConfigParser
 from os import getenv, getpid
 
 
@@ -117,7 +118,9 @@ from os import getenv, getpid
 # GoLismero modules
 
 from golismero.api.config import Config
-from golismero.common import OrchestratorConfig, AuditConfig
+from golismero.common import OrchestratorConfig, AuditConfig, \
+                             get_default_config_file, get_profile, \
+                             get_available_profiles
 from golismero.main import launcher
 from golismero.main.orchestrator import Orchestrator
 from golismero.managers.pluginmanager import PluginManager
@@ -174,7 +177,6 @@ class ReadValueFromFileAction(argparse.Action):
             parser.error("Can't read file %r. Error: %s" % (values, e.message))
         setattr(namespace, self.dest, data)
 
-
 #----------------------------------------------------------------------
 # Command line parser using argparse
 
@@ -183,12 +185,15 @@ def cmdline_parser():
     parser.add_argument("targets", metavar="TARGET", nargs="*", help="one or more target web sites")
 
     gr_main = parser.add_argument_group("main options")
+    gr_main.add_argument("--config", metavar="FILE", help="global configuration file", default=get_default_config_file())
+    gr_main.add_argument("--profile", metavar="NAME", help="profile to use")
+    gr_main.add_argument("--profile-list", action="store_true", help="list available profiles and quit")
     gr_main.add_argument("--ui-mode", metavar="MODE", help="UI mode [default: console]", default="console")
     gr_main.add_argument("-v", "--verbose", action="count", default=1, help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
     gr_main.add_argument("--color", action="store_true", dest="colorize", help="use colors in console output [default]", default=True)
     gr_main.add_argument("--no-color", action="store_false", dest="colorize", help="suppress colors in console output")
-    gr_main.add_argument("--forward-io", metavar="ADDRESS:PORT", help="forward all input and output to the given TCP address and port")
+##    gr_main.add_argument("--forward-io", metavar="ADDRESS:PORT", help="forward all input and output to the given TCP address and port")
 
     gr_audit = parser.add_argument_group("audit options")
     gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
@@ -240,17 +245,40 @@ def main():
     # Get the command line parser.
     parser = cmdline_parser()
 
-    # Parse command line options.
+    # Parse the command line options.
     try:
         args = sys.argv[1:]
         envcfg = getenv("GOLISMERO_SETTINGS")
         if envcfg:
             args = parser.convert_arg_line_to_args(envcfg) + args
         P = parser.parse_args(args)
+
+        # Load the Orchestrator options.
         cmdParams = OrchestratorConfig()
+        if P.profile:
+            cmdParams.profile = profile
+        else:
+            cmdParams.profile = None
+        if P.config:
+            cmdParams.config_file = path.abspath(P.config)
+            if not path.isfile(cmdParams.config_file):
+                raise ValueError("File not found: %s" % cmdParams.config_file)
+            cmdParams.from_config_file(cmdParams.config_file)
+        else:
+            cmdParams.config_file = None
+        if cmdParams.profile:
+            cmdParams.profile_file = get_profile(cmdParams.profile)
+            cmdParams.from_config_file(cmdParams.profile_file)
+        else:
+            cmdParams.profile_file = None
         cmdParams.from_object(P)
+
+        # Load the target audit options.
+        # TODO: this should be done by the UI plugin somehow.
         auditParams = AuditConfig()
         auditParams.from_object(P)
+
+    # Show exceptions as command line parsing errors.
     except Exception, e:
         ##raise    # XXX DEBUG
         parser.error(str(e))
@@ -274,7 +302,7 @@ def main():
 
 
     #------------------------------------------------------------
-    # List plugins and quit
+    # List plugins and quit.
 
     if P.plugin_list:
 
@@ -289,7 +317,8 @@ def main():
         # Show the list of plugins.
         print "-------------"
         print " Plugin list"
-        print "-------------\n"
+        print "-------------"
+        print
 
         # Testing plugins...
         testing_plugins = manager.get_plugins("testing")
@@ -321,7 +350,7 @@ def main():
 
 
     #------------------------------------------------------------
-    # Display plugin info and quit
+    # Display plugin info and quit.
 
     if P.plugin_name:
 
@@ -366,7 +395,6 @@ def main():
             if message.strip().lower() != m_plugin_info.description.strip().lower():
                 print
                 print message
-            exit(0)
         except KeyError:
             print "[!] Plugin name not found"
             exit(1)
@@ -376,10 +404,38 @@ def main():
         except Exception, e:
             print "[!] Error recovering plugin info: %s" % e.message
             exit(1)
+        exit(0)
 
 
     #------------------------------------------------------------
-    # Check if all options are correct
+    # List profiles and quit.
+    if P.profile_list:
+        profiles = sorted(get_available_profiles())
+        if not profiles:
+            print "No available profiles!"
+        else:
+            print "-------------------"
+            print " Available profiles"
+            print "-------------------"
+            print
+            for name in profiles:
+                try:
+                    p = RawConfigParser()
+                    p.read(get_profile(name))
+                    desc = p.get("DEFAULT", "description")
+                except Exception:
+                    desc = None
+                if desc:
+                    print "%s: %s" % (name, desc)
+                else:
+                    print name
+        if os.sep != "\\":
+            print
+        exit(0)
+
+
+    #------------------------------------------------------------
+    # Check if all options are correct.
 
     try:
         cmdParams.check_params()
@@ -389,7 +445,7 @@ def main():
 
 
     #------------------------------------------------------------
-    # Launch GoLismero
+    # Launch GoLismero.
 
 
     # Background job mode disabled for now, until we

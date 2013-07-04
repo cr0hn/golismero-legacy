@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["PluginManager", "PluginInfo"]
 
+from ..api.config import Config
 from ..api.plugin import TestingPlugin, ReportPlugin, UIPlugin
 from ..common import Singleton
 
@@ -307,6 +308,14 @@ class PluginInfo (object):
         except Exception:
             self.__plugin_config = dict()
 
+        # Override the plugin configuration from the global config file(s).
+        if (Config._has_context and
+            Config.audit_config and
+            not Config.plugin_info
+        ):
+            self.__read_config_file(Config.audit_config.config)
+            self.__read_config_file(Config.audit_config.profile_file)
+
         # Load the plugin extra configuration sections as a dict of dicts.
         # All sections not parsed above will be included here.
         self.__plugin_extra_config = dict()
@@ -314,6 +323,22 @@ class PluginInfo (object):
             if section not in ("Core", "Documentation", "Configuration"):
                 options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
                 self.__plugin_extra_config[section] = options
+
+
+    #----------------------------------------------------------------------
+    def __read_config_file(self, config_file):
+        """
+        Private method to override plugin settings from a config file.
+
+        :param config_file: Configuration file.
+        :type config_file: str
+        """
+        if config_file:
+            config_parser = RawConfigParser()
+            config_parser.read(config_file)
+            if config_parser.has_section(plugin_name):
+                self.__plugin_config.update(
+                    dict(config_parser.items(plugin_name)))
 
 
     #----------------------------------------------------------------------

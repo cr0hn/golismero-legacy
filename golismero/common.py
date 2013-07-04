@@ -36,10 +36,11 @@ __all__ = [
     "pickle", "random",
 
     # Helper functions.
-    "get_user_settings_folder",
+    "get_user_settings_folder", "get_default_config_file",
+    "get_profiles_folder", "get_profile", "get_available_profiles",
 
     # Helper classes and decorators.
-    "Singleton", "enum", "decorator",
+    "Singleton", "decorator",
 
     # Configuration objects.
     "OrchestratorConfig", "AuditConfig"
@@ -74,6 +75,7 @@ except ImportError:
         return d
 
 # Other imports.
+from ConfigParser import RawConfigParser
 from keyword import iskeyword
 from os import path
 
@@ -129,6 +131,87 @@ def get_user_settings_folder():
 
     # Return the folder.
     return folder
+
+
+#--------------------------------------------------------------------------
+def get_default_config_file():
+    """
+    :returns: Pathname of the default configuration file, or None if it doesn't exist.
+    :rtype: str | None
+    """
+    config_file = path.join(get_user_settings_folder(), "golismero.cfg")
+    if not path.isfile(config_file):
+        config_file = path.split(path.abspath(__file__))[0]
+        config_file = path.join(config_file, "golismero.cfg")
+        if not path.isfile(config_file):
+            config_file = None
+    return config_file
+
+
+#--------------------------------------------------------------------------
+_profiles_folder = None
+def get_profiles_folder():
+    """
+    :returns: Pathname of the profiles folder.
+    :rtype: str
+    """
+    global _profiles_folder
+    if not _profiles_folder:
+        pathname = path.split(path.abspath(__file__))[0]
+        if not pathname:
+            pathname = path.abspath(get_user_settings_folder())
+        _profiles_folder = path.join(pathname, "profiles")
+    return _profiles_folder
+
+
+#--------------------------------------------------------------------------
+def get_profile(name):
+    """
+    Get the profile configuration file for the requested profile name.
+
+    :param name: Name of the profile.
+    :type name: str
+
+    :returns: Pathname of the profile configuration file.
+    :rtype: str
+
+    :raises ValueError: The name was invalid, or the profile was not found.
+    """
+
+    # Trivial case.
+    if not name:
+        raise ValueError("No profile name given")
+
+    # Get the profiles folder.
+    profiles = get_profiles_folder()
+
+    # Get the filename for the requested profile.
+    filename = path.abspath(path.join(profiles, name + ".cfg"))
+
+    # Check if it's outside the profiles folder or it doesn't exist.
+    if not profiles.endswith("/"):
+        profiles += "/"
+    if not filename.startswith(profiles) or not path.isfile(filename):
+        raise ValueError("Profile not found: " + name)
+
+    # Return the filename.
+    return filename
+
+
+#--------------------------------------------------------------------------
+def get_available_profiles():
+    """
+    :returns: Available profiles.
+    :rtype: set(str)
+    """
+    profiles_folder = get_profiles_folder()
+    if not profiles_folder or not path.isdir(profiles_folder):
+        return set()
+    return {
+        name[:-4]
+        for name in os.listdir(profiles_folder)
+        if name.endswith(".cfg")
+    }
 
 
 #--------------------------------------------------------------------------
@@ -326,6 +409,19 @@ class Configuration (object):
         self.from_dictionary(args)
 
 
+    #----------------------------------------------------------------------
+    def from_config_file(self, config_file):
+        """
+        Get the settings from a configuration file.
+
+        :param config_file: Configuration file.
+        :type config_file: str
+        """
+        parser = RawConfigParser()
+        parser.read(config_file)
+        self.from_dictionary(dict(parser.items("DEFAULT")))
+
+
 #----------------------------------------------------------------------
 class OrchestratorConfig (Configuration):
     """
@@ -385,15 +481,15 @@ class OrchestratorConfig (Configuration):
     #----------------------------------------------------------------------
     def check_params(self):
 
-        # Validate the network connections limit
+        # Validate the network connections limit.
         if self.max_connections < 1:
             raise ValueError("Number of connections must be greater than 0, got %i." % self.max_connections)
 
-        # Validate the number of concurrent processes
+        # Validate the number of concurrent processes.
         if self.max_process < 0:
             raise ValueError("Number of processes cannot be a negative number, got %i." % self.max_process)
 
-        # Validate the list of plugins
+        # Validate the list of plugins.
         if not self.enabled_plugins:
             raise ValueError("No plugins selected for execution.")
         if set(self.enabled_plugins).intersection(self.disabled_plugins):
@@ -488,8 +584,8 @@ class AuditConfig (Configuration):
 
     @targets.setter
     def targets(self, targets):
-        # Always append, never overwrite
-        # Fix target URLs if the scheme part is missing
+        # Always append, never overwrite.
+        # Fix target URLs if the scheme part is missing.
         self._targets = getattr(self, "_targets", [])
         if targets:
             self._targets.extend(
@@ -505,7 +601,7 @@ class AuditConfig (Configuration):
 
     @reports.setter
     def reports(self, reports):
-        # Always append, never overwrite
+        # Always append, never overwrite.
         self._reports = getattr(self, "_reports", [])
         if reports:
             self._reports.extend(
@@ -537,15 +633,15 @@ class AuditConfig (Configuration):
     @cookie.setter
     def cookie(self, cookie):
         if cookie:
-            # Parse the cookies argument
+            # Parse the cookies argument.
             try:
-                # Prepare cookie
+                # Prepare cookie.
                 m_cookie = cookie.replace(" ", "").replace("=", ":")
-                # Remove 'Cookie:' start, if exits
+                # Remove 'Cookie:' start, if exits.
                 m_cookie = m_cookie[len("Cookie:"):] if m_cookie.startswith("Cookie:") else m_cookie
-                # Split
+                # Split.
                 m_cookie = m_cookie.split(";")
-                # Parse
+                # Parse.
                 self.cookie = { c.split(":")[0]:c.split(":")[1] for c in m_cookie}
             except ValueError:
                 raise ValueError("Invalid cookie format specified. Use this format: 'Key=value; key=value'.")
@@ -557,17 +653,17 @@ class AuditConfig (Configuration):
     #----------------------------------------------------------------------
     def check_params(self):
 
-        # Validate the list of targets
+        # Validate the list of targets.
         if not self.targets:
             raise ValueError("No targets selected for execution.")
 
-        # Validate the list of plugins
+        # Validate the list of plugins.
         if not self.enabled_plugins:
             raise ValueError("No plugins selected for execution.")
         if set(self.enabled_plugins).intersection(self.disabled_plugins):
             raise ValueError("Conflicting plugins selection, aborting execution.")
 
-        # Validate the regular expresion
+        # Validate the regular expresion.
         if self.subdomain_regex:
             import re
 
