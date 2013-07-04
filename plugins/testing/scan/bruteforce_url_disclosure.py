@@ -513,10 +513,10 @@ def make_url_mutate_filename(url_parts):
         raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
 
     # Change extension to upper case
-    m_new           = url_parts.copy()
-    m_new.extension = m_new.extension.upper()
-    m_return        = set()
-    m_return_add    = m_return.add
+    m_new                = url_parts.copy()
+    m_new.all_extensions = m_new.all_extensions.upper()
+    m_return             = set()
+    m_return_add         = m_return.add
 
     m_return_add(m_new.url)
 
@@ -662,7 +662,7 @@ def make_url_changing_extensions(wordlist, url_parts):
     m_return     = set()
     m_return_add = m_return.add
     for l_suffix in wordlist:
-        m_new.extension = l_suffix
+        m_new.all_extensions = l_suffix
         m_return_add(m_new.url)
 
     return m_return
@@ -684,10 +684,10 @@ def make_url_mutate_filename(url_parts):
         raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
 
     # Change extension to upper case
-    m_new           = url_parts.copy()
-    m_new.extension = m_new.extension.upper()
-    m_return        = set()
-    m_return_add    = m_return.add
+    m_new                = url_parts.copy()
+    m_new.all_extensions = m_new.all_extensions.upper()
+    m_return             = set()
+    m_return_add         = m_return.add
 
     m_return_add(m_new.url)
 
