@@ -969,6 +969,8 @@ class DecomposedURL(object):
         'malicious.pdf'
         >>> d.extension
         '.exe'
+        >>> d.minimal_filebase
+        'malicious'
         >>> d.all_extensions
         '.pdf.exe'
         >>> d.extension = '.test'
@@ -992,6 +994,15 @@ class DecomposedURL(object):
         if extension and extension[0] != ".":
             extension = "." + extension
         self.path = join(self.directory, filebase + extension)
+
+    @property
+    def minimal_filebase(self):
+        ":see: all_extensions"
+        return self.filename[ : -len(self.all_extensions) ]
+
+    @minimal_filebase.setter
+    def minimal_filebase(self, filebase):
+        self.filename = filebase + self.all_extensions
 
 
     #----------------------------------------------------------------------
