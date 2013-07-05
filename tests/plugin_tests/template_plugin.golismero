@@ -25,6 +25,15 @@ Website = [AUTHOR WEB SITE]
 Copyright = Copyright (C) [AUTHOR OF PLUGIN]
 License = GNU Public License
 
+# Optionally override the plugin execution stage.
+#Stage = Recon
+
+# Plugin data dependencies, as a comma-separated list of plugins.
+# It tells GoLismero to make sure all data received by this plugin
+# has been processed before by the plugins specified here.
+#Dependencies = testing/recon/spider, testing/recon/default_error_page
+
+
 # Simple way to specify the plugin's configuration.
 # These key/value pairs go to a dictionary at "Config.plugin_config".
 [Configuration]
@@ -33,5 +42,6 @@ write_your_own = You can write your own key/value pairs here.
 # If you need more complex settings, you can define your own
 # sections with their own key/value pairs too. They're loaded
 # as a dictionary of dictionaries at "Config.plugin_extra_config".
+# Note that these settings cannot be overriden by profiles.
 [Arbitrary_Section_Names_May_Go_Here_Too]
 key = value

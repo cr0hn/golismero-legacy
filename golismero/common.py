@@ -36,10 +36,11 @@ __all__ = [
     "pickle", "random",
 
     # Helper functions.
-    "get_user_settings_folder",
+    "get_user_settings_folder", "get_default_config_file",
+    "get_profiles_folder", "get_profile", "get_available_profiles",
 
     # Helper classes and decorators.
-    "Singleton", "enum", "decorator",
+    "Singleton", "decorator",
 
     # Configuration objects.
     "OrchestratorConfig", "AuditConfig"
@@ -74,6 +75,7 @@ except ImportError:
         return d
 
 # Other imports.
+from ConfigParser import RawConfigParser
 from keyword import iskeyword
 from os import path
 
@@ -129,6 +131,90 @@ def get_user_settings_folder():
 
     # Return the folder.
     return folder
+
+
+#--------------------------------------------------------------------------
+def get_default_config_file():
+    """
+    :returns: Pathname of the default configuration file, or None if it doesn't exist.
+    :rtype: str | None
+    """
+    config_file = path.join(get_user_settings_folder(), "golismero.cfg")
+    if not path.isfile(config_file):
+        config_file = path.split(path.abspath(__file__))[0]
+        config_file = path.join(config_file, "golismero.cfg")
+        if not path.isfile(config_file):
+            config_file = None
+    return config_file
+
+
+#--------------------------------------------------------------------------
+_profiles_folder = None
+def get_profiles_folder():
+    """
+    :returns: Pathname of the profiles folder.
+    :rtype: str
+    """
+    global _profiles_folder
+    if not _profiles_folder:
+        pathname = path.split(path.abspath(__file__))[0]
+        if pathname:
+            pathname = path.join(pathname, "..")
+        else:
+            pathname = get_user_settings_folder()
+        pathname = path.abspath(pathname)
+        _profiles_folder = path.join(pathname, "profiles")
+    return _profiles_folder
+
+
+#--------------------------------------------------------------------------
+def get_profile(name):
+    """
+    Get the profile configuration file for the requested profile name.
+
+    :param name: Name of the profile.
+    :type name: str
+
+    :returns: Pathname of the profile configuration file.
+    :rtype: str
+
+    :raises ValueError: The name was invalid, or the profile was not found.
+    """
+
+    # Trivial case.
+    if not name:
+        raise ValueError("No profile name given")
+
+    # Get the profiles folder.
+    profiles = get_profiles_folder()
+
+    # Get the filename for the requested profile.
+    filename = path.abspath(path.join(profiles, name + ".cfg"))
+
+    # Check if it's outside the profiles folder or it doesn't exist.
+    if not profiles.endswith(path.sep):
+        profiles += path.sep
+    if not filename.startswith(profiles) or not path.isfile(filename):
+        raise ValueError("Profile not found: %r" % name)
+
+    # Return the filename.
+    return filename
+
+
+#--------------------------------------------------------------------------
+def get_available_profiles():
+    """
+    :returns: Available profiles.
+    :rtype: set(str)
+    """
+    profiles_folder = get_profiles_folder()
+    if not profiles_folder or not path.isdir(profiles_folder):
+        return set()
+    return {
+        name[:-4]
+        for name in os.listdir(profiles_folder)
+        if name.endswith(".cfg")
+    }
 
 
 #--------------------------------------------------------------------------
@@ -206,10 +292,79 @@ class Configuration (object):
         return str(x) if x is not None else None
 
     @staticmethod
+    def integer(x):
+        if type(x) in (int, long):
+            return x
+        return int(x, 0) if x else 0
+
+    @staticmethod
+    def integer_or_none(x):
+        if x is None or (hasattr(x, "lower") and x in ("", "none", "inf", "infinite")):
+            return None
+        return Configuration.integer(x)
+
+    @staticmethod
+    def comma_separated_list(x):
+        if not x:
+            return []
+        if isinstance(x, str):
+            return [t.strip() for t in x.split(",")]
+        if isinstance(x, unicode):
+            return [t.strip() for t in x.split(u",")]
+        return list(x)
+
+    @staticmethod
+    def boolean(x):
+        if not x:
+            return False
+        if x is True:
+            return x
+        if hasattr(x, "lower"):
+            return {
+                "enabled": True,        # True
+                "enable": True,
+                "true": True,
+                "yes": True,
+                "y": True,
+                "1": True,
+                "disabled": False,      # False
+                "disable": False,
+                "false": False,
+                "no": False,
+                "f": False,
+                "0": False,
+            }.get(x.lower(), bool(x))
+        return bool(x)
+
+    @staticmethod
     def trinary(x):
-        if x not in (None, True, False):
-            raise SyntaxError("Trinary values only accept True, False and None")
-        return x
+        if x in (None, True, False):
+            return x
+        if not hasattr(x, "lower"):
+            raise ValueError("Trinary values only accept True, False and None")
+        try:
+            return {
+                "enabled": True,        # True
+                "enable": True,
+                "true": True,
+                "yes": True,
+                "y": True,
+                "1": True,
+                "disabled": False,      # False
+                "disable": False,
+                "false": False,
+                "no": False,
+                "f": False,
+                "0": False,
+                "default": None,        # None
+                "def": None,
+                "none": None,
+                "maybe": None,
+                "?": None,
+                "-1": None,
+            }[x.lower()]
+        except KeyError:
+            raise ValueError("Unknown value: %r" % x)
 
 
     #----------------------------------------------------------------------
@@ -290,6 +445,9 @@ class Configuration (object):
         # Builds a dictionary with the object's public attributes.
         args = { k : getattr(args, k) for k in dir(args) if not k.startswith("_") }
 
+        # Remove all attributes whose values are None.
+        args = { k:v for k,v in args.iteritems() if v is not None }
+
         # Extract the settings from the dictionary.
         self.from_dictionary(args)
 
@@ -326,6 +484,20 @@ class Configuration (object):
         self.from_dictionary(args)
 
 
+    #----------------------------------------------------------------------
+    def from_config_file(self, config_file):
+        """
+        Get the settings from a configuration file.
+
+        :param config_file: Configuration file.
+        :type config_file: str
+        """
+        parser = RawConfigParser()
+        parser.read(config_file)
+        options = { k:v for k,v in parser.items("golismero") if v }
+        self.from_dictionary(options)
+
+
 #----------------------------------------------------------------------
 class OrchestratorConfig (Configuration):
     """
@@ -346,33 +518,33 @@ class OrchestratorConfig (Configuration):
         "ui_mode": (str, "console"),
 
         # Verbosity level
-        "verbose": (int, 1),
+        "verbose": (Configuration.integer, 1),
 
         # Colorize console?
-        "colorize": (bool, True),
+        "colorize": (Configuration.boolean, True),
 
         #
         # Plugin options
         #
 
         # Enabled plugins
-        "enabled_plugins": (list, ["all"]),
+        "enabled_plugins": (Configuration.comma_separated_list, ["all"]),
 
         # Disabled plugins
-        "disabled_plugins": (list, []),
+        "disabled_plugins": (Configuration.comma_separated_list, []),
 
         # Plugins folder
         "plugins_folder": Configuration.string,
 
         # Maximum number of processes to execute plugins
-        "max_process": (int, 10),
+        "max_process": (Configuration.integer, 10),
 
         #
         # Network options
         #
 
         # Maximum number of connections per host
-        "max_connections": (int, 50),
+        "max_connections": (Configuration.integer, 50),
 
         # Use persistent cache?
         # True: yes
@@ -385,15 +557,15 @@ class OrchestratorConfig (Configuration):
     #----------------------------------------------------------------------
     def check_params(self):
 
-        # Validate the network connections limit
+        # Validate the network connections limit.
         if self.max_connections < 1:
             raise ValueError("Number of connections must be greater than 0, got %i." % self.max_connections)
 
-        # Validate the number of concurrent processes
+        # Validate the number of concurrent processes.
         if self.max_process < 0:
             raise ValueError("Number of processes cannot be a negative number, got %i." % self.max_process)
 
-        # Validate the list of plugins
+        # Validate the list of plugins.
         if not self.enabled_plugins:
             raise ValueError("No plugins selected for execution.")
         if set(self.enabled_plugins).intersection(self.disabled_plugins):
@@ -417,17 +589,17 @@ class AuditConfig (Configuration):
         #
 
         # Targets
-        "targets": (list, []),
+        "targets": (Configuration.comma_separated_list, []),
 
         #
         # Report options
         #
 
         # Output files
-        "reports": (list, []),
+        "reports": (Configuration.comma_separated_list, ["-"]),
 
         # Only display resources with associated vulnerabilities
-        "only_vulns": (bool, False),
+        "only_vulns": (Configuration.boolean, False),
 
         #
         # Audit options
@@ -444,31 +616,31 @@ class AuditConfig (Configuration):
         #
 
         # Enabled plugins
-        "enabled_plugins": (list, ["all"]),
+        "enabled_plugins": (Configuration.comma_separated_list, ["all"]),
 
         # Disabled plugins
-        "disabled_plugins": (list, []),
+        "disabled_plugins": (Configuration.comma_separated_list, []),
 
         #
         # Networks options
         #
 
         # Include subdomains?
-        "include_subdomains": (bool, True),
+        "include_subdomains": (Configuration.boolean, True),
 
         # Subdomains as regular expression
         "subdomain_regex": Configuration.string,
 
         # Depth level for spider
-        "depth": (int, 0),
+        "depth": (Configuration.integer_or_none, 0),
         # Limits
-        "max_links" : (int, 0), # 0 -> infinite
+        "max_links" : (Configuration.integer, 0), # 0 -> infinite
 
         # Follow redirects
-        "follow_redirects": (bool, True),
+        "follow_redirects": (Configuration.boolean, True),
 
-        # Follow only first redirect
-        "follow_first_redirect": (bool, True),
+        # Follow a redirection on the target URL itself, regardless of "follow_redirects"
+        "follow_first_redirect": (Configuration.boolean, True),
 
         # Proxy options
         "proxy_addr": Configuration.string,
@@ -488,12 +660,13 @@ class AuditConfig (Configuration):
 
     @targets.setter
     def targets(self, targets):
-        # Always append, never overwrite
-        # Fix target URLs if the scheme part is missing
+        # Always append, never overwrite.
+        # Fix target URLs if the scheme part is missing.
         self._targets = getattr(self, "_targets", [])
         if targets:
             self._targets.extend(
-                (x if (x.startswith("http://") or x.startswith("https://")) else "http://" + x)
+                (x if (x.startswith("http://") or x.startswith("https://"))
+                   else "http://" + x)
                 for x in targets)
 
 
@@ -505,11 +678,10 @@ class AuditConfig (Configuration):
 
     @reports.setter
     def reports(self, reports):
-        # Always append, never overwrite
+        # Always append, never overwrite.
         self._reports = getattr(self, "_reports", [])
         if reports:
-            self._reports.extend(
-                (str(x) if x is not None else None) for x in reports)
+            self._reports.extend( (str(x) if x else None) for x in reports )
 
 
     #----------------------------------------------------------------------
@@ -537,15 +709,15 @@ class AuditConfig (Configuration):
     @cookie.setter
     def cookie(self, cookie):
         if cookie:
-            # Parse the cookies argument
+            # Parse the cookies argument.
             try:
-                # Prepare cookie
+                # Prepare cookie.
                 m_cookie = cookie.replace(" ", "").replace("=", ":")
-                # Remove 'Cookie:' start, if exits
+                # Remove 'Cookie:' start, if exits.
                 m_cookie = m_cookie[len("Cookie:"):] if m_cookie.startswith("Cookie:") else m_cookie
-                # Split
+                # Split.
                 m_cookie = m_cookie.split(";")
-                # Parse
+                # Parse.
                 self.cookie = { c.split(":")[0]:c.split(":")[1] for c in m_cookie}
             except ValueError:
                 raise ValueError("Invalid cookie format specified. Use this format: 'Key=value; key=value'.")
@@ -557,17 +729,18 @@ class AuditConfig (Configuration):
     #----------------------------------------------------------------------
     def check_params(self):
 
-        # Validate the list of targets
+        # Validate the list of targets.
+        # TODO: maybe this should be done by the UI plugins instead?
         if not self.targets:
             raise ValueError("No targets selected for execution.")
 
-        # Validate the list of plugins
+        # Validate the list of plugins.
         if not self.enabled_plugins:
             raise ValueError("No plugins selected for execution.")
         if set(self.enabled_plugins).intersection(self.disabled_plugins):
             raise ValueError("Conflicting plugins selection, aborting execution.")
 
-        # Validate the regular expresion
+        # Validate the regular expresion.
         if self.subdomain_regex:
             import re
 
@@ -575,3 +748,7 @@ class AuditConfig (Configuration):
                 re.compile(self.subdomain_regex)
             except re.error, e:
                 raise ValueError("Regular expression not valid: %s." % e.message)
+
+        # Validate the recursion depth.
+        if self.depth is not None and self.depth < 0:
+            raise ValueError("Spidering depth can't be negative: %r" % self.depth)

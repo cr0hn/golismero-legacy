@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["PluginManager", "PluginInfo"]
 
+from ..api.config import Config
 from ..api.plugin import TestingPlugin, ReportPlugin, UIPlugin
 from ..common import Singleton
 
@@ -307,6 +308,14 @@ class PluginInfo (object):
         except Exception:
             self.__plugin_config = dict()
 
+        # Override the plugin configuration from the global config file(s).
+        if (Config._has_context and
+            Config.audit_config and
+            not Config.plugin_info
+        ):
+            self.__read_config_file(Config.audit_config.config)
+            self.__read_config_file(Config.audit_config.profile_file)
+
         # Load the plugin extra configuration sections as a dict of dicts.
         # All sections not parsed above will be included here.
         self.__plugin_extra_config = dict()
@@ -314,6 +323,22 @@ class PluginInfo (object):
             if section not in ("Core", "Documentation", "Configuration"):
                 options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
                 self.__plugin_extra_config[section] = options
+
+
+    #----------------------------------------------------------------------
+    def __read_config_file(self, config_file):
+        """
+        Private method to override plugin settings from a config file.
+
+        :param config_file: Configuration file.
+        :type config_file: str
+        """
+        if config_file:
+            config_parser = RawConfigParser()
+            config_parser.read(config_file)
+            if config_parser.has_section(plugin_name):
+                self.__plugin_config.update(
+                    dict(config_parser.items(plugin_name)))
 
 
     #----------------------------------------------------------------------
@@ -502,6 +527,26 @@ class PluginManager (Singleton):
 
 
     #----------------------------------------------------------------------
+    def get_plugin_names_for_stage(self, stage):
+        """
+        Get the names of the available plugins, filtering by stage.
+
+        :param stage: Stage.
+        :type stage: str
+
+        :returns: Plugin names.
+        :rtype: set(str)
+
+        :raises KeyError: The requested stage doesn't exist.
+        """
+        if stage not in self.STAGES:
+            raise KeyError(stage)
+        return { plugin_name
+                 for plugin_name, plugin_info in self.__plugins.iteritems()
+                 if plugin_info.stage == stage }
+
+
+    #----------------------------------------------------------------------
     def get_plugin_by_name(self, plugin_name):
         """
         Get info on the requested plugin.
@@ -596,14 +641,22 @@ class PluginManager (Singleton):
     #----------------------------------------------------------------------
     def __expand_plugin_list(self, plugin_list, list_name):
 
-        # Convert categories to plugin names.
+        # Convert "all" to the entire list of plugins.
         if "all" in plugin_list:
             plugin_list = self.get_plugin_names()
         else:
+
+            # Convert categories to plugin names.
             for category in self.CATEGORIES:
                 if category in plugin_list:
                     plugin_list.remove(category)
                     plugin_list.update(self.get_plugin_names(category))
+
+            # Convert stages to plugin names.
+            for stage in self.STAGES:
+                if stage in plugin_list:
+                    plugin_list.remove(stage)
+                    plugin_list.update(self.get_plugin_names_for_stage(stage))
 
         # Guess partial plugin names in the list.
         # Also make sure all the plugins in the list exist.

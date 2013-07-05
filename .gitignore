@@ -8,6 +8,8 @@ golismero_2/TODO.txt
 *.wpu
 *.wpr
 *.wpr2
+*.komodoproject
+/.komodotools/
 
 # Source control folders
 .svn

@@ -882,6 +882,7 @@ class Data(object):
         :return: True if the two Data objects have the same identity, False otherwise.
         :rtype: bool
         """
+        # TODO: maybe we should compare all properties, not just identity.
         return self.identity == obj.identity
 
 

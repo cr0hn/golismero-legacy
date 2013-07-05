@@ -110,6 +110,7 @@ import argparse
 import datetime
 import textwrap
 
+from ConfigParser import RawConfigParser
 from os import getenv, getpid
 
 
@@ -117,8 +118,11 @@ from os import getenv, getpid
 # GoLismero modules
 
 from golismero.api.config import Config
-from golismero.common import OrchestratorConfig, AuditConfig
+from golismero.common import OrchestratorConfig, AuditConfig, \
+                             get_default_config_file, get_profile, \
+                             get_available_profiles
 from golismero.main import launcher
+from golismero.main.console import get_terminal_size
 from golismero.main.orchestrator import Orchestrator
 from golismero.managers.pluginmanager import PluginManager
 from golismero.managers.processmanager import PluginContext
@@ -174,56 +178,65 @@ class ReadValueFromFileAction(argparse.Action):
             parser.error("Can't read file %r. Error: %s" % (values, e.message))
         setattr(namespace, self.dest, data)
 
-
 #----------------------------------------------------------------------
 # Command line parser using argparse
 
 def cmdline_parser():
+
+    # Fix the console width bug in argparse.
+    try:
+        os.environ["COLUMNS"] = str(get_terminal_size()[0])
+    except Exception:
+        pass
+
     parser = argparse.ArgumentParser(fromfile_prefix_chars="@")
     parser.add_argument("targets", metavar="TARGET", nargs="*", help="one or more target web sites")
 
     gr_main = parser.add_argument_group("main options")
-    gr_main.add_argument("--ui-mode", metavar="MODE", help="UI mode [default: console]", default="console")
-    gr_main.add_argument("-v", "--verbose", action="count", default=1, help="increase output verbosity")
+    gr_main.add_argument("--config", metavar="FILE", help="global configuration file", default=get_default_config_file())
+    gr_main.add_argument("-p", "--profile", metavar="NAME", help="profile to use")
+    gr_main.add_argument("--profile-list", action="store_true", default=False, help="list available profiles and quit")
+    gr_main.add_argument("--ui-mode", metavar="MODE", help="UI mode")
+    gr_main.add_argument("-v", "--verbose", action="count", help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
-    gr_main.add_argument("--color", action="store_true", dest="colorize", help="use colors in console output [default]", default=True)
-    gr_main.add_argument("--no-color", action="store_false", dest="colorize", help="suppress colors in console output")
-    gr_main.add_argument("--forward-io", metavar="ADDRESS:PORT", help="forward all input and output to the given TCP address and port")
+    gr_main.add_argument("--color", action="store_true", default=None, dest="colorize", help="use colors in console output")
+    gr_main.add_argument("--no-color", action="store_false", default=None, dest="colorize", help="suppress colors in console output")
+##    gr_main.add_argument("--forward-io", metavar="ADDRESS:PORT", help="forward all input and output to the given TCP address and port")
 
     gr_audit = parser.add_argument_group("audit options")
     gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
-    gr_audit.add_argument("--audit-db", metavar="DATABASE", dest="audit_db", default="memory://", help="specify a database connection string")
+    gr_audit.add_argument("--audit-db", metavar="DATABASE", dest="audit_db", help="specify a database connection string")
 
     gr_report = parser.add_argument_group("report options")
-    gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", default=[None], help="write the results of the audit to this file [default: stdout]")
+    gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", help="write the results of the audit to this file (use - for stdout)")
     gr_report.add_argument("-no", "--no-output", dest="reports", action=ResetListAction, help="do not output the results")
-    gr_report.add_argument("--only-vulns", action="store_true", dest="only_vulns", help="display only vulnerable resources", default=False)
+    gr_report.add_argument("--only-vulns", action="store_true", default=None, dest="only_vulns", help="display only the vulnerabilities, instead of all the resources found")
 
     gr_net = parser.add_argument_group("network options")
-    gr_net.add_argument("--max-connections", help="maximum number of concurrent connections per host [default: 50]", default=50)
-    gr_net.add_argument("--allow-subdomains", action="store_true", dest="include_subdomains", help="include subdomains in the target scope [default]", default=True)
-    gr_net.add_argument("--forbid-subdomains", action="store_false", dest="include_subdomains", help="do not include subdomains in the target scope")
-    gr_net.add_argument("--subdomain-regex", metavar="REGEX", help="filter subdomains using a regular expression", default="")
-    gr_net.add_argument("-r", "--depth", type=int, help="depth level of spider [default: 0]", default=0)
-    gr_net.add_argument("-l", "--max-links", type=int, help="maximum number of links to analyze [default: 0 => infinite]", default=0)
-    gr_net.add_argument("-f","--follow-redirects", action="store_true", dest="follow_redirects", help="follow redirects", default=False)
-    gr_net.add_argument("-nf","--no-follow-redirects", action="store_false", dest="follow_redirects", help="do not follow redirects [default]")
-    gr_net.add_argument("-ff","--follow-first", action="store_true", dest="follow_first_redirect", help="always follow a redirection on the target URL itself [default]", default=True)
-    gr_net.add_argument("-nff","--no-follow-first", action="store_false", dest="follow_first_redirect", help="don't treat a redirection on a target URL as a special case")
+    gr_net.add_argument("--max-connections", help="maximum number of concurrent connections per host")
+    gr_net.add_argument("--allow-subdomains", action="store_true", default=None, dest="include_subdomains", help="include subdomains in the target scope")
+    gr_net.add_argument("--forbid-subdomains", action="store_false", default=None, dest="include_subdomains", help="do not include subdomains in the target scope")
+    gr_net.add_argument("--subdomain-regex", metavar="REGEX", help="filter subdomains using a regular expression")
+    gr_net.add_argument("-r", "--depth", help="maximum spidering depth (use \"infinite\" for no limit)")
+    gr_net.add_argument("-l", "--max-links", type=int, default=None, help="maximum number of links to analyze (0 => infinite)")
+    gr_net.add_argument("-f","--follow-redirects", action="store_true", default=None, dest="follow_redirects", help="follow redirects")
+    gr_net.add_argument("-nf","--no-follow-redirects", action="store_false", default=None, dest="follow_redirects", help="do not follow redirects")
+    gr_net.add_argument("-ff","--follow-first", action="store_true", default=None, dest="follow_first_redirect", help="always follow a redirection on the target URL itself")
+    gr_net.add_argument("-nff","--no-follow-first", action="store_false", default=None, dest="follow_first_redirect", help="don't treat a redirection on a target URL as a special case")
     gr_net.add_argument("-pu","--proxy-user", metavar="USER", help="HTTP proxy username")
     gr_net.add_argument("-pp","--proxy-pass", metavar="PASS", help="HTTP proxy password")
     gr_net.add_argument("-pa","--proxy-addr", metavar="ADDRESS:PORT", help="HTTP proxy address in format: address:port")
     gr_net.add_argument("--cookie", metavar="COOKIE", help="set cookie for requests")
     gr_net.add_argument("--cookie-file", metavar="FILE", action=ReadValueFromFileAction, dest="cookie", help="load a cookie from file")
-    gr_net.add_argument("--persistent-cache", action="store_true", dest="use_cache_db", help="use a persistent network cache [default in distributed modes]")
-    gr_net.add_argument("--volatile-cache", action="store_false", dest="use_cache_db", help="use a volatile network cache [default in standalone mode]")
+    gr_net.add_argument("--persistent-cache", action="store_true", default=None, dest="use_cache_db", help="use a persistent network cache [default in distributed modes]")
+    gr_net.add_argument("--volatile-cache", action="store_false", default=None, dest="use_cache_db", help="use a volatile network cache [default in standalone mode]")
 
     gr_plugins = parser.add_argument_group("plugin options")
-    gr_plugins.add_argument("-P", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load", default=["all"])
-    gr_plugins.add_argument("-NP", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load", default=[])
-    gr_plugins.add_argument("--max-process", metavar="N", type=int, help="maximum number of plugins to run concurrently [default: 8]", default=8)
+    gr_plugins.add_argument("-e", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load")
+    gr_plugins.add_argument("-d", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load")
+    gr_plugins.add_argument("--max-process", metavar="N", type=int, default=None, help="maximum number of plugins to run concurrently")
     gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
-    gr_plugins.add_argument("--plugin-list", action="store_true", help="list available plugins and quit")
+    gr_plugins.add_argument("--plugin-list", action="store_true", default=False, help="list available plugins and quit")
     gr_plugins.add_argument("--plugin-info", metavar="NAME", dest="plugin_name", help="show plugin info and quit")
 
     return parser
@@ -240,17 +253,43 @@ def main():
     # Get the command line parser.
     parser = cmdline_parser()
 
-    # Parse command line options.
+    # Parse the command line options.
     try:
         args = sys.argv[1:]
         envcfg = getenv("GOLISMERO_SETTINGS")
         if envcfg:
             args = parser.convert_arg_line_to_args(envcfg) + args
         P = parser.parse_args(args)
+
+        # Load the Orchestrator options.
         cmdParams = OrchestratorConfig()
+        if P.config:
+            cmdParams.config_file = path.abspath(P.config)
+            if not path.isfile(cmdParams.config_file):
+                raise ValueError("File not found: %r" % cmdParams.config_file)
+            cmdParams.from_config_file(cmdParams.config_file)
+        else:
+            cmdParams.config_file = None
+        if not P.profile and cmdParams.profile:
+            P.profile = cmdParams.profile
+        if P.profile:
+            cmdParams.profile = P.profile
+            cmdParams.profile_file = get_profile(cmdParams.profile)
+            cmdParams.from_config_file(cmdParams.profile_file)
+        else:
+            cmdParams.profile = None
+            cmdParams.profile_file = None
         cmdParams.from_object(P)
+
+        # Load the target audit options.
         auditParams = AuditConfig()
+        auditParams.profile = cmdParams.profile
+        auditParams.profile_file = cmdParams.profile_file
+        if auditParams.profile_file:
+            auditParams.from_config_file(auditParams.profile_file)
         auditParams.from_object(P)
+
+    # Show exceptions as command line parsing errors.
     except Exception, e:
         ##raise    # XXX DEBUG
         parser.error(str(e))
@@ -274,7 +313,7 @@ def main():
 
 
     #------------------------------------------------------------
-    # List plugins and quit
+    # List plugins and quit.
 
     if P.plugin_list:
 
@@ -289,31 +328,45 @@ def main():
         # Show the list of plugins.
         print "-------------"
         print " Plugin list"
-        print "-------------\n"
-
-        # Testing plugins...
-        testing_plugins = manager.get_plugins("testing")
-        if testing_plugins:
-            print "-= Testing plugins =-"
-            for name in sorted(testing_plugins.keys()):
-                info = testing_plugins[name]
-                print "+ %s: %s" % (name, info.description)
+        print "-------------"
 
         # UI plugins...
         ui_plugins = manager.get_plugins("ui")
         if ui_plugins:
-            print "\n-= UI plugins =-"
+            print
+            print "-= UI plugins =-"
             for name in sorted(ui_plugins.keys()):
                 info = ui_plugins[name]
-                print "+ %s: %s" % (name, info.description)
+                print "+ %s: %s" % (name[3:], info.description)
 
         # Report plugins...
         report_plugins = manager.get_plugins("report")
         if ui_plugins:
-            print "\n-= Report plugins =-"
+            print
+            print "-= Report plugins =-"
             for name in sorted(report_plugins.keys()):
                 info = report_plugins[name]
-                print "+ %s: %s" % (name, info.description)
+                print "+ %s: %s" % (name[7:], info.description)
+
+        # Testing plugins...
+        testing_plugins = manager.get_plugins("testing")
+        if testing_plugins:
+            print
+            print "-= Testing plugins =-"
+            names = sorted(testing_plugins.keys())
+            names = [x[8:] for x in names]
+            stages = [ (v,k) for (k,v) in manager.STAGES.iteritems() ]
+            stages.sort()
+            for _, stage in stages:
+                s = stage + "/"
+                p = len(s)
+                slice = [x[p:] for x in names if x.startswith(s)]
+                if slice:
+                    print
+                    print "%s stage:" % stage.title()
+                    for name in slice:
+                        info = testing_plugins["testing/%s/%s" % (stage, name)]
+                        print "+ %s: %s" % (name, info.description)
 
         if os.sep != "\\":
             print
@@ -321,7 +374,7 @@ def main():
 
 
     #------------------------------------------------------------
-    # Display plugin info and quit
+    # Display plugin info and quit.
 
     if P.plugin_name:
 
@@ -366,7 +419,6 @@ def main():
             if message.strip().lower() != m_plugin_info.description.strip().lower():
                 print
                 print message
-            exit(0)
         except KeyError:
             print "[!] Plugin name not found"
             exit(1)
@@ -376,10 +428,38 @@ def main():
         except Exception, e:
             print "[!] Error recovering plugin info: %s" % e.message
             exit(1)
+        exit(0)
 
 
     #------------------------------------------------------------
-    # Check if all options are correct
+    # List profiles and quit.
+    if P.profile_list:
+        profiles = sorted(get_available_profiles())
+        if not profiles:
+            print "No available profiles!"
+        else:
+            print "-------------------"
+            print " Available profiles"
+            print "-------------------"
+            print
+            for name in profiles:
+                try:
+                    p = RawConfigParser()
+                    p.read(get_profile(name))
+                    desc = p.get("golismero", "description")
+                except Exception:
+                    desc = None
+                if desc:
+                    print "+ %s: %s" % (name, desc)
+                else:
+                    print "+ %s" % name
+        if os.sep != "\\":
+            print
+        exit(0)
+
+
+    #------------------------------------------------------------
+    # Check if all options are correct.
 
     try:
         cmdParams.check_params()
@@ -389,7 +469,7 @@ def main():
 
 
     #------------------------------------------------------------
-    # Launch GoLismero
+    # Launch GoLismero.
 
 
     # Background job mode disabled for now, until we

@@ -58,7 +58,7 @@ class Spider(TestingPlugin):
         m_depth = info.depth
 
         # Check depth
-        if m_depth > int(Config.audit_config.depth):
+        if Config.audit_config.depth is not None and m_depth > Config.audit_config.depth:
             return m_return
 
         Logger.log_verbose("Spidering URL: '%s'" % m_url)
@@ -80,10 +80,6 @@ class Spider(TestingPlugin):
         # If error p == None => return
         if not p:
             return m_return
-
-        # Alert for redirect, if recursive spidering is not enabled.
-        if m_depth == Config.audit_config.depth and p.http_response_code == 301:
-            Logger.log("==> Initial redirection detected, but NOT followed. Try increasing the depth with the '-r' option.")
 
         # Send back the HTTP reponse
         ##m_return.append(p)
@@ -109,8 +105,7 @@ class Spider(TestingPlugin):
         m_links = extract_from_html(p.information.raw_data, m_url)
 
         # Do not follow URLs that contain certain keywords
-        # TODO: put this in the plugin's configuration!
-        m_forbidden = WordListAPI().get_wordlist(Config.plugin_extra_config["Wordlist_NoSpider"]["wordlist"])
+        m_forbidden = WordListAPI().get_wordlist(Config.plugin_config["wordlist_no_spider"])
 
         # Convert to Url data type and filter out out of scope and forbidden URLs
         m_return.extend(
