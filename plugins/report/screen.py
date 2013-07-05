@@ -59,23 +59,22 @@ class ScreenReport(ReportPlugin):
         # Plugin vars
         #
 
-        # Display all URLs or only vulns?
-        m_only_vulns = Config.audit_config.only_vulns
-
         # ----------------------------------------
         # Header
         # ----------------------------------------
-        print "\n\n--= %s =--" % colorize("Report", "cyan")
+        print
+        print
+        print "--= %s =--" % colorize("Report", "cyan")
 
         #
         # Displayers
         #
-        if m_only_vulns:
+        if Config.audit_config.only_vulns:
             general_display_only_vulns()
         else:
             general_display_by_resource()
 
-        print "\n\n"
+        print
 
 
 #----------------------------------------------------------------------
@@ -162,10 +161,14 @@ def general_display_only_vulns():
     m_v = vuln_genereral_displayer(common_get_resources(data_type=Data.TYPE_VULNERABILITY))
 
     m_table = GolismeroTable(title="Vulnerabilities", init_spaces=0)
-    m_table.add_row(m_v)
+    if m_v:
+        m_table.add_row(m_v)
 
     print
     print m_table.get_content()
+    if not m_v:
+        print
+        print "No vulnerabilities found."
 
 
 #----------------------------------------------------------------------
