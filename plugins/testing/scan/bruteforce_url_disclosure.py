@@ -170,11 +170,13 @@ def process_folder_url(info):
     #
     db = Database()
     m_datafinger = db.get_many(db.keys(data_type=WebServerFingerprint.TYPE_INFORMATION, data_subtype=WebServerFingerprint.information_type))
-    m_webserver_finger = info.get_associated_informations_by_category(WebServerFingerprint.information_type).pop()
+    m_webserver_finger = info.get_associated_informations_by_category(WebServerFingerprint.information_type)
 
 
     # There is fingerprinting information?
     if m_webserver_finger:
+
+        m_webserver_finger = m_webserver_finger.pop()
 
         m_server_canonical_name = m_webserver_finger.name_canonical
         m_servers_related       = m_webserver_finger.related # Set with related web servers
@@ -461,6 +463,43 @@ def get_http_method(url, net_manager):
 # Mutation functions
 #
 #----------------------------------------------------------------------
+def make_url_with_prefixes(wordlist, url_parts):
+    """
+    Creates a set of URLs with prefixes.
+
+    :param wordlist: Wordlist iterator.
+    :type wordlist: WordList
+
+    :param url_parts: Parsed URL to mutate.
+    :type url_parts: DecomposedURL
+
+    :returns: a set with urls.
+    :rtype: set
+    """
+
+    if not isinstance(url_parts, DecomposedURL):
+        raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
+
+    if not wordlist:
+        raise ValueError("Internal error!")
+
+    m_new        = url_parts.copy() # Works with a copy
+    m_return     = set()
+    m_return_add = m_return.add
+    m_filename   = m_new.filename
+    for l_suffix in wordlist:
+
+        # Format: _.index.php
+        m_new.filename = "%s_%s" % (l_suffix, m_filename)
+        m_return_add(m_new.url)
+
+        # Format: .index_1.php
+        m_new.filename = "%s%s" % (l_suffix, m_filename)
+        m_return_add(m_new.url)
+
+    return m_return
+
+
 def make_url_with_suffixes(wordlist, url_parts):
     """
     Creates a set of URLs with suffixes.
@@ -663,45 +702,6 @@ def make_url_changing_extensions(wordlist, url_parts):
     m_return_add = m_return.add
     for l_suffix in wordlist:
         m_new.all_extensions = l_suffix
-        m_return_add(m_new.url)
-
-    return m_return
-
-
-#----------------------------------------------------------------------
-def make_url_mutate_filename(url_parts):
-    """
-    Creates a set of URLs with mutated filenames.
-
-    :param url_parts: Parsed URL to mutate.
-    :type url_parts: DecomposedURL
-
-    :return: a set with URLs
-    :rtype: set
-    """
-
-    if not isinstance(url_parts, DecomposedURL):
-        raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
-
-    # Change extension to upper case
-    m_new                = url_parts.copy()
-    m_new.all_extensions = m_new.all_extensions.upper()
-    m_return             = set()
-    m_return_add         = m_return.add
-
-    m_return_add(m_new.url)
-
-    # Adding numeric ends of filename
-    m_new = url_parts.copy()
-    filename = m_new.filename
-    for n in xrange(5):
-
-        # Format: index1.php
-        m_new.filename = filename + str(n)
-        m_return_add(m_new.url)
-
-        # Format: index_1.php
-        m_new.filename = "%s_%s" % (filename, str(n))
         m_return_add(m_new.url)
 
     return m_return
