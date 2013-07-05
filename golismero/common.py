@@ -299,7 +299,7 @@ class Configuration (object):
 
     @staticmethod
     def integer_or_none(x):
-        if x is None or (hasattr(x, "lower") and x in ("", "none", "infinite")):
+        if x is None or (hasattr(x, "lower") and x in ("", "none", "inf", "infinite")):
             return None
         return Configuration.integer(x)
 
