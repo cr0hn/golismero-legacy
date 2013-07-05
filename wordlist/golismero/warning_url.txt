@@ -9,3 +9,5 @@ backup
 .jar
 bin
 .exe
+log
+cmd
