@@ -195,12 +195,12 @@ def cmdline_parser():
     gr_main = parser.add_argument_group("main options")
     gr_main.add_argument("--config", metavar="FILE", help="global configuration file", default=get_default_config_file())
     gr_main.add_argument("-p", "--profile", metavar="NAME", help="profile to use")
-    gr_main.add_argument("--profile-list", action="store_true", help="list available profiles and quit")
+    gr_main.add_argument("--profile-list", action="store_true", default=False, help="list available profiles and quit")
     gr_main.add_argument("--ui-mode", metavar="MODE", help="UI mode")
     gr_main.add_argument("-v", "--verbose", action="count", help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
-    gr_main.add_argument("--color", action="store_true", dest="colorize", help="use colors in console output")
-    gr_main.add_argument("--no-color", action="store_false", dest="colorize", help="suppress colors in console output")
+    gr_main.add_argument("--color", action="store_true", default=None, dest="colorize", help="use colors in console output")
+    gr_main.add_argument("--no-color", action="store_false", default=None, dest="colorize", help="suppress colors in console output")
 ##    gr_main.add_argument("--forward-io", metavar="ADDRESS:PORT", help="forward all input and output to the given TCP address and port")
 
     gr_audit = parser.add_argument_group("audit options")
@@ -210,33 +210,33 @@ def cmdline_parser():
     gr_report = parser.add_argument_group("report options")
     gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", help="write the results of the audit to this file (use - for stdout)")
     gr_report.add_argument("-no", "--no-output", dest="reports", action=ResetListAction, help="do not output the results")
-    gr_report.add_argument("--only-vulns", action="store_true", dest="only_vulns", help="display only vulnerable resources")
+    gr_report.add_argument("--only-vulns", action="store_true", default=None, dest="only_vulns", help="display only the vulnerabilities, instead of all the resources found")
 
     gr_net = parser.add_argument_group("network options")
     gr_net.add_argument("--max-connections", help="maximum number of concurrent connections per host")
-    gr_net.add_argument("--allow-subdomains", action="store_true", dest="include_subdomains", help="include subdomains in the target scope")
-    gr_net.add_argument("--forbid-subdomains", action="store_false", dest="include_subdomains", help="do not include subdomains in the target scope")
+    gr_net.add_argument("--allow-subdomains", action="store_true", default=None, dest="include_subdomains", help="include subdomains in the target scope")
+    gr_net.add_argument("--forbid-subdomains", action="store_false", default=None, dest="include_subdomains", help="do not include subdomains in the target scope")
     gr_net.add_argument("--subdomain-regex", metavar="REGEX", help="filter subdomains using a regular expression")
     gr_net.add_argument("-r", "--depth", help="maximum spidering depth (use \"infinite\" for no limit)")
-    gr_net.add_argument("-l", "--max-links", type=int, help="maximum number of links to analyze (0 => infinite)")
-    gr_net.add_argument("-f","--follow-redirects", action="store_true", dest="follow_redirects", help="follow redirects")
-    gr_net.add_argument("-nf","--no-follow-redirects", action="store_false", dest="follow_redirects", help="do not follow redirects")
-    gr_net.add_argument("-ff","--follow-first", action="store_true", dest="follow_first_redirect", help="always follow a redirection on the target URL itself")
-    gr_net.add_argument("-nff","--no-follow-first", action="store_false", dest="follow_first_redirect", help="don't treat a redirection on a target URL as a special case")
+    gr_net.add_argument("-l", "--max-links", type=int, default=None, help="maximum number of links to analyze (0 => infinite)")
+    gr_net.add_argument("-f","--follow-redirects", action="store_true", default=None, dest="follow_redirects", help="follow redirects")
+    gr_net.add_argument("-nf","--no-follow-redirects", action="store_false", default=None, dest="follow_redirects", help="do not follow redirects")
+    gr_net.add_argument("-ff","--follow-first", action="store_true", default=None, dest="follow_first_redirect", help="always follow a redirection on the target URL itself")
+    gr_net.add_argument("-nff","--no-follow-first", action="store_false", default=None, dest="follow_first_redirect", help="don't treat a redirection on a target URL as a special case")
     gr_net.add_argument("-pu","--proxy-user", metavar="USER", help="HTTP proxy username")
     gr_net.add_argument("-pp","--proxy-pass", metavar="PASS", help="HTTP proxy password")
     gr_net.add_argument("-pa","--proxy-addr", metavar="ADDRESS:PORT", help="HTTP proxy address in format: address:port")
     gr_net.add_argument("--cookie", metavar="COOKIE", help="set cookie for requests")
     gr_net.add_argument("--cookie-file", metavar="FILE", action=ReadValueFromFileAction, dest="cookie", help="load a cookie from file")
-    gr_net.add_argument("--persistent-cache", action="store_true", dest="use_cache_db", help="use a persistent network cache [default in distributed modes]")
-    gr_net.add_argument("--volatile-cache", action="store_false", dest="use_cache_db", help="use a volatile network cache [default in standalone mode]")
+    gr_net.add_argument("--persistent-cache", action="store_true", default=None, dest="use_cache_db", help="use a persistent network cache [default in distributed modes]")
+    gr_net.add_argument("--volatile-cache", action="store_false", default=None, dest="use_cache_db", help="use a volatile network cache [default in standalone mode]")
 
     gr_plugins = parser.add_argument_group("plugin options")
     gr_plugins.add_argument("-e", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load")
     gr_plugins.add_argument("-d", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load")
-    gr_plugins.add_argument("--max-process", metavar="N", type=int, help="maximum number of plugins to run concurrently")
+    gr_plugins.add_argument("--max-process", metavar="N", type=int, default=None, help="maximum number of plugins to run concurrently")
     gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
-    gr_plugins.add_argument("--plugin-list", action="store_true", help="list available plugins and quit")
+    gr_plugins.add_argument("--plugin-list", action="store_true", default=False, help="list available plugins and quit")
     gr_plugins.add_argument("--plugin-info", metavar="NAME", dest="plugin_name", help="show plugin info and quit")
 
     return parser
@@ -263,10 +263,6 @@ def main():
 
         # Load the Orchestrator options.
         cmdParams = OrchestratorConfig()
-        if P.profile:
-            cmdParams.profile = P.profile
-        else:
-            cmdParams.profile = None
         if P.config:
             cmdParams.config_file = path.abspath(P.config)
             if not path.isfile(cmdParams.config_file):
@@ -274,16 +270,23 @@ def main():
             cmdParams.from_config_file(cmdParams.config_file)
         else:
             cmdParams.config_file = None
-        if cmdParams.profile:
+        if not P.profile and cmdParams.profile:
+            P.profile = cmdParams.profile
+        if P.profile:
+            cmdParams.profile = P.profile
             cmdParams.profile_file = get_profile(cmdParams.profile)
             cmdParams.from_config_file(cmdParams.profile_file)
         else:
+            cmdParams.profile = None
             cmdParams.profile_file = None
         cmdParams.from_object(P)
 
         # Load the target audit options.
-        # TODO: this should be done by the UI plugin somehow.
         auditParams = AuditConfig()
+        auditParams.profile = cmdParams.profile
+        auditParams.profile_file = cmdParams.profile_file
+        if auditParams.profile_file:
+            auditParams.from_config_file(auditParams.profile_file)
         auditParams.from_object(P)
 
     # Show exceptions as command line parsing errors.

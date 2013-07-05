@@ -730,6 +730,7 @@ class AuditConfig (Configuration):
     def check_params(self):
 
         # Validate the list of targets.
+        # TODO: maybe this should be done by the UI plugins instead?
         if not self.targets:
             raise ValueError("No targets selected for execution.")
 

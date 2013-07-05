@@ -407,6 +407,7 @@ class Orchestrator (object):
                 self.__ui.start()
 
             # If we have initial audits, start them.
+            # TODO: maybe this should be done by the UI plugins instead?
             for params in audits:
                 self.add_audit(params)
 
