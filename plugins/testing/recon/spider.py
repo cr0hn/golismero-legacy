@@ -95,7 +95,7 @@ class Spider(TestingPlugin):
                 m_return.append(Url(url=m_location, depth=m_depth + 1, referer=m_url))
 
         # Stop if there's no embedded information
-        if not p.information:
+        if not p.information or not p.information.startswith("text"):
             return m_return
 
         # If there's embedded information, it will be sent as a result
