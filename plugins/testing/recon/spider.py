@@ -58,7 +58,7 @@ class Spider(TestingPlugin):
         m_depth = info.depth
 
         # Check depth
-        if m_depth > int(Config.audit_config.depth):
+        if Config.audit_config.depth is not None and m_depth > Config.audit_config.depth:
             return m_return
 
         Logger.log_verbose("Spidering URL: '%s'" % m_url)
@@ -82,7 +82,7 @@ class Spider(TestingPlugin):
             return m_return
 
         # Alert for redirect, if recursive spidering is not enabled.
-        if m_depth == Config.audit_config.depth and p.http_response_code == 301:
+        if Config.audit_config.depth is not None and m_depth >= Config.audit_config.depth and p.http_response_code == 301:
             Logger.log("==> Initial redirection detected, but NOT followed. Try increasing the depth with the '-r' option.")
 
         # Send back the HTTP reponse

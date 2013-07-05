@@ -298,6 +298,12 @@ class Configuration (object):
         return int(x, 0) if x else 0
 
     @staticmethod
+    def integer_or_none(x):
+        if x is None or (hasattr(x, "lower") and x in ("", "none", "infinite")):
+            return None
+        return Configuration.integer(x)
+
+    @staticmethod
     def comma_separated_list(x):
         if not x:
             return []
@@ -626,7 +632,7 @@ class AuditConfig (Configuration):
         "subdomain_regex": Configuration.string,
 
         # Depth level for spider
-        "depth": (Configuration.integer, 0),
+        "depth": (Configuration.integer_or_none, 0),
         # Limits
         "max_links" : (Configuration.integer, 0), # 0 -> infinite
 
