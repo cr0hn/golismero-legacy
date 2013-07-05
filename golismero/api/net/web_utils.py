@@ -395,7 +395,7 @@ class DecomposedURL(object):
     Is broken down to the following properties:
 
     + url          = 'http://user:pass@www.site.com/folder/index.php?param1=val1&b#anchor'
-    + request_uri  = '/folder/index.php?param1=val1&b#anchor'
+    + request_uri  = '/folder/index.php?b=&param1=val1
     + scheme       = 'http'
     + host         = 'www.site.com'
     + port         = 80
@@ -404,11 +404,11 @@ class DecomposedURL(object):
     + auth         = 'user:pass'
     + netloc       = 'user:pass@www.site.com'
     + path         = '/folder/index.php'
-    + directory    = '/folder/'
+    + directory    = '/folder'
     + filename     = 'index.php'
     + filebase     = 'index'
     + extension    = '.php'
-    + query        = 'param1=val1&b'
+    + query        = 'b=&param1=val1'
     + query_params = { 'param1' : 'val1', 'b' : '' }
 
     The url property contains the normalized form of the URL, mostly
@@ -861,6 +861,26 @@ class DecomposedURL(object):
         self.__scheme = scheme
 
     @property
+    def username(self):
+        return self.__username
+
+    @username.setter
+    def username(self, username):
+        if not username:
+            username = ''
+        self.__username = username
+
+    @property
+    def password(self):
+        return self.__password
+
+    @password.setter
+    def password(self, password):
+        if not password:
+            password = ''
+        self.__password = password
+
+    @property
     def host(self):
         return self.__host
 
@@ -873,18 +893,6 @@ class DecomposedURL(object):
         else:
             host = host.strip().lower()
         self.__host = host
-
-    @property
-    def query_char(self):
-        return self.__query_char
-
-    @query_char.setter
-    def query_char(self, query_char):
-        if not query_char:
-            query_char = '?'
-        elif query_char not in ('?', '/'):
-            raise ValueError("Invalid query separator character: %r" % query_char)
-        self.__query_char = query_char
 
     @property
     def port(self):
@@ -909,6 +917,8 @@ class DecomposedURL(object):
     def path(self, path):
         if not path:
             path = '/'
+        if path == '/' and self.__scheme == 'mailto':
+            path = ''
         self.__path = path
 
     @property
@@ -920,6 +930,18 @@ class DecomposedURL(object):
         if not fragment:
             fragment = ''
         self.__fragment = fragment
+
+    @property
+    def query_char(self):
+        return self.__query_char
+
+    @query_char.setter
+    def query_char(self, query_char):
+        if not query_char:
+            query_char = '?'
+        elif query_char not in ('?', '/'):
+            raise ValueError("Invalid query separator character: %r" % query_char)
+        self.__query_char = query_char
 
     @property
     def query(self):
@@ -951,6 +973,30 @@ class DecomposedURL(object):
                 ##raise   # XXX DEBUG
                 query_params = None
         self.__query, self.__query_params = query, query_params
+
+    @property
+    def query_params(self):
+        query_params = self.__query_params
+        if query_params is None:
+            query_params = dict()
+        else:
+            query_params = dict(query_params)
+        return query_params
+
+    @query_params.setter
+    def query_params(self, query_params):
+        if query_params is None:
+            self.__query = None
+            self.__query_params = None
+        else:
+            query_params = dict(query_params)
+            self.__query = None
+            self.__query_params = query_params
+            self.__query = self.query
+
+
+    #----------------------------------------------------------------------
+    # Aliases.
 
     @property
     def all_extensions(self):
@@ -1003,10 +1049,6 @@ class DecomposedURL(object):
     @minimal_filebase.setter
     def minimal_filebase(self, filebase):
         self.filename = filebase + self.all_extensions
-
-
-    #----------------------------------------------------------------------
-    # Aliases.
 
     @property
     def directory(self):
