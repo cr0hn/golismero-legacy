@@ -270,8 +270,6 @@ def main():
             cmdParams.from_config_file(cmdParams.config_file)
         else:
             cmdParams.config_file = None
-        if not P.profile and cmdParams.profile:
-            P.profile = cmdParams.profile
         if P.profile:
             cmdParams.profile = P.profile
             cmdParams.profile_file = get_profile(cmdParams.profile)
