@@ -31,6 +31,7 @@ from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.information_disclosure.url_suspicious import SuspiciousURL
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist_api import WordListAPI
+from golismero.api.text.text_utils import calculate_shannon_entropy
 
 
 class SuspiciousURLPlugin(TestingPlugin):
@@ -48,24 +49,43 @@ class SuspiciousURLPlugin(TestingPlugin):
     def recv_info(self, info):
 
         m_url = info.url
+        m_results = []
+
+        #------------------------------------------------------------------
+        # Find suspicious URLs by matching against known substrings.
 
         # Load wordlists
         m_wordlist_middle     = WordListAPI().get_wordlist(Config.plugin_extra_config['Wordlist_middle']['wordlist'])
         m_wordlist_extensions = WordListAPI().get_wordlist(Config.plugin_extra_config['Wordlist_extensions']['wordlist'])
 
-
-        # Results store
-        m_results          = []
-        m_results_extend   = m_results.extend
-
-        # Add matching keywords at any positions of URL
-        m_results_extend([SuspiciousURL(info, x)
+        # Add matching keywords at any positions of URL.
+        m_results.extend([SuspiciousURL(info, x)
                           for x in m_wordlist_middle
                           if x in m_url])
 
-        # Add matching keywords at any positions of URL
-        m_results_extend([SuspiciousURL(info, x)
+        # Add matching keywords at any positions of URL.
+        m_results.extend([SuspiciousURL(info, x)
                           for x in m_wordlist_extensions
                           if m_url.endswith(x)])
+
+        #------------------------------------------------------------------
+        # Find suspicious URLs by calculating the Shannon entropy of the hostname.
+        # Idea from: https://github.com/stricaud/urlweirdos/blob/master/src/urlw/plugins/shannon/__init__.py
+        # TODO: test with unicode enabled hostnames!
+
+        # Check the Shannon entropy for the hostname.
+        hostname = info.parsed_url.hostname
+        entropy = calculate_shannon_entropy(hostname)
+        if entropy > 4.0:
+            results.append( SuspiciousURL(info, hostname) )
+
+        # Check the Shannon entropy for the subdomains.
+        for subdomain in info.parsed_url.hostname.split('.'):
+            if len(subdomain) > 3:
+                entropy = calculate_shannon_entropy(subdomain)
+                if entropy > 4.0:
+                    results.append( SuspiciousURL(info, subdomain) )
+
+        #------------------------------------------------------------------
 
         return m_results

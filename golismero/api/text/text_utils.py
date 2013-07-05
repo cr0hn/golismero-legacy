@@ -30,8 +30,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["generate_random_string", "split_first"]
+__all__ = ["generate_random_string", "calculate_shannon_entropy", "split_first"]
 
+from math import log
 from random import choice
 from string import ascii_letters, digits
 
@@ -59,6 +60,31 @@ def generate_random_string(length = 30):
     m_available_chars = ascii_letters + digits
 
     return "".join(choice(m_available_chars) for _ in xrange(length))
+
+
+#----------------------------------------------------------------------
+def calculate_shannon_entropy(string):
+    """
+    Calculates the Shannon entropy for the given string.
+
+    :param string: String to parse.
+    :type string: str
+
+    :returns: Shannon entropy (min bits per byte-character).
+    :rtype: float
+    """
+    if isinstance(string, unicode):
+        string = string.encode("ascii")
+    ent = 0.0
+    if len(string) < 2:
+        return ent
+    size = float(len(string))
+    for b in xrange(128):
+        freq = string.count(chr(b))
+        if freq > 0:
+            freq = float(freq) / size
+            ent = ent + freq * log(freq, 2)
+    return -ent
 
 
 #----------------------------------------------------------------------
