@@ -7,7 +7,7 @@ admin
 .~
 backup
 .jar
-bin
+/bin
 .exe
-log
-cmd
+/log
+cmd=
