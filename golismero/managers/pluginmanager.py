@@ -527,6 +527,26 @@ class PluginManager (Singleton):
 
 
     #----------------------------------------------------------------------
+    def get_plugin_names_for_stage(self, stage):
+        """
+        Get the names of the available plugins, filtering by stage.
+
+        :param stage: Stage.
+        :type stage: str
+
+        :returns: Plugin names.
+        :rtype: set(str)
+
+        :raises KeyError: The requested stage doesn't exist.
+        """
+        if stage not in self.STAGES:
+            raise KeyError(stage)
+        return { plugin_name
+                 for plugin_name, plugin_info in self.__plugins.iteritems()
+                 if plugin_info.stage == stage }
+
+
+    #----------------------------------------------------------------------
     def get_plugin_by_name(self, plugin_name):
         """
         Get info on the requested plugin.
@@ -621,14 +641,22 @@ class PluginManager (Singleton):
     #----------------------------------------------------------------------
     def __expand_plugin_list(self, plugin_list, list_name):
 
-        # Convert categories to plugin names.
+        # Convert "all" to the entire list of plugins.
         if "all" in plugin_list:
             plugin_list = self.get_plugin_names()
         else:
+
+            # Convert categories to plugin names.
             for category in self.CATEGORIES:
                 if category in plugin_list:
                     plugin_list.remove(category)
                     plugin_list.update(self.get_plugin_names(category))
+
+            # Convert stages to plugin names.
+            for stage in self.STAGES:
+                if stage in plugin_list:
+                    plugin_list.remove(stage)
+                    plugin_list.update(self.get_plugin_names_for_stage(stage))
 
         # Guess partial plugin names in the list.
         # Also make sure all the plugins in the list exist.
