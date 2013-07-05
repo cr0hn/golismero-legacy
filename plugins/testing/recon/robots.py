@@ -70,7 +70,7 @@ class Robots(TestingPlugin):
 
         # Check for errors
         if not p or not p.content_type == "text/plain" or not p.information:  # order is important!
-            Logger.log_verbose("Robots - no robots.txt found.")
+            Logger.log_more_verbose("Robots - no robots.txt found.")
             return
 
         # Text with info
