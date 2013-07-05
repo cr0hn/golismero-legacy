@@ -476,6 +476,9 @@ class DecomposedURL(object):
         ##'magnet'    : None,      # magnet:?xt=urn:sha1:YNCKHTQCWBTRNJIV4WN...
     }
 
+    # See also:
+    # https://code.google.com/p/fuzzdb/source/browse/trunk/attack-payloads/http-protocol/known-uri-types.fuzz
+
 
     #----------------------------------------------------------------------
     # The constructor has code borrowed from the urllib3 project, then
@@ -917,6 +920,8 @@ class DecomposedURL(object):
     def path(self, path):
         if not path:
             path = '/'
+        if not path.startswith('/'):
+            path = '/' + path
         if path == '/' and self.__scheme == 'mailto':
             path = ''
         self.__path = path
@@ -929,6 +934,8 @@ class DecomposedURL(object):
     def fragment(self, fragment):
         if not fragment:
             fragment = ''
+        elif fragment.startswith('#'):
+            warn("You don't need to use a leading '#' when setting the fragment, this may be an error!")
         self.__fragment = fragment
 
     @property
@@ -948,16 +955,18 @@ class DecomposedURL(object):
         # TODO: according to this: https://en.wikipedia.org/wiki/URL_normalization
         # sorting the query parameters may break semantics. To fix this we may want
         # to try to preserve the original order when possible. The problem then is
-        # we'll "see" URLs with the same parameters in different order as different.
-        if self.__query is not None:  # when it can't be parsed
-            return self.__query
+        # we'd "see" URLs with the same parameters in different order as different.
         if not self.__query_params:
+            if self.__query is not None:  # when it can't be parsed
+                return self.__query
             return ''
         return '&'.join( '%s=%s' % ( quote(k, safe=''), quote(v, safe='') )
                          for (k, v) in sorted(self.__query_params.iteritems()) )
 
     @query.setter
     def query(self, query):
+        if query and query.startswith('?'):
+            warn("You don't need to use a leading '?' when setting the query string, this may be an error!")
         if not query:
             query_params = {}
         else:
@@ -966,28 +975,23 @@ class DecomposedURL(object):
                 query_params = dict(( map(unquote_plus, (token + '=').split('=', 2)[:2])
                                       for token in query.split('&') ))
                 if len(query_params) == 1 and not query_params.values()[0]:
-                    query_params = None
+                    query_params = {}
                 else:
                     query = None
             except Exception:
                 ##raise   # XXX DEBUG
-                query_params = None
+                query_params = {}
         self.__query, self.__query_params = query, query_params
 
     @property
     def query_params(self):
-        query_params = self.__query_params
-        if query_params is None:
-            query_params = dict()
-        else:
-            query_params = dict(query_params)
-        return query_params
+        return self.__query_params
 
     @query_params.setter
     def query_params(self, query_params):
         if query_params is None:
             self.__query = None
-            self.__query_params = None
+            self.__query_params = {}
         else:
             query_params = dict(query_params)
             self.__query = None
@@ -1111,6 +1115,7 @@ class DecomposedURL(object):
             auth, host = netloc.split('@', 1)
         else:
             auth, host = None, netloc
+        port = ''
         if host and host[0] == '[':
             host, port = host[1:].split(']', 1)
             if ':' in port:
