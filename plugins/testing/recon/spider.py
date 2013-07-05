@@ -81,10 +81,6 @@ class Spider(TestingPlugin):
         if not p:
             return m_return
 
-        # Alert for redirect, if recursive spidering is not enabled.
-        if Config.audit_config.depth is not None and m_depth >= Config.audit_config.depth and p.http_response_code == 301:
-            Logger.log("==> Initial redirection detected, but NOT followed. Try increasing the depth with the '-r' option.")
-
         # Send back the HTTP reponse
         ##m_return.append(p)
 
