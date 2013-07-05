@@ -633,7 +633,7 @@ class AuditConfig (Configuration):
         # Follow redirects
         "follow_redirects": (Configuration.boolean, True),
 
-        # Follow only first redirect
+        # Follow a redirection on the target URL itself, regardless of "follow_redirects"
         "follow_first_redirect": (Configuration.boolean, True),
 
         # Proxy options
