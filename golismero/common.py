@@ -192,8 +192,8 @@ def get_profile(name):
     filename = path.abspath(path.join(profiles, name + ".cfg"))
 
     # Check if it's outside the profiles folder or it doesn't exist.
-    if not profiles.endswith("/"):
-        profiles += "/"
+    if not profiles.endswith(path.sep):
+        profiles += path.sep
     if not filename.startswith(profiles) or not path.isfile(filename):
         raise ValueError("Profile not found: %r" % name)
 
@@ -747,3 +747,7 @@ class AuditConfig (Configuration):
                 re.compile(self.subdomain_regex)
             except re.error, e:
                 raise ValueError("Regular expression not valid: %s." % e.message)
+
+        # Validate the recursion depth.
+        if self.depth is not None and self.depth < 0:
+            raise ValueError("Spidering depth can't be negative: %r" % self.depth)
