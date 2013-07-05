@@ -194,7 +194,7 @@ def cmdline_parser():
 
     gr_main = parser.add_argument_group("main options")
     gr_main.add_argument("--config", metavar="FILE", help="global configuration file", default=get_default_config_file())
-    gr_main.add_argument("--profile", metavar="NAME", help="profile to use")
+    gr_main.add_argument("-p", "--profile", metavar="NAME", help="profile to use")
     gr_main.add_argument("--profile-list", action="store_true", help="list available profiles and quit")
     gr_main.add_argument("--ui-mode", metavar="MODE", help="UI mode")
     gr_main.add_argument("-v", "--verbose", action="count", help="increase output verbosity")
@@ -232,8 +232,8 @@ def cmdline_parser():
     gr_net.add_argument("--volatile-cache", action="store_false", dest="use_cache_db", help="use a volatile network cache [default in standalone mode]")
 
     gr_plugins = parser.add_argument_group("plugin options")
-    gr_plugins.add_argument("-P", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load")
-    gr_plugins.add_argument("-NP", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load")
+    gr_plugins.add_argument("-e", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load")
+    gr_plugins.add_argument("-d", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load")
     gr_plugins.add_argument("--max-process", metavar="N", type=int, help="maximum number of plugins to run concurrently")
     gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
     gr_plugins.add_argument("--plugin-list", action="store_true", help="list available plugins and quit")
