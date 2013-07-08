@@ -481,7 +481,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         try:
             m_banners_counter[l_response.http_headers["Server"]] += l_weight
         except KeyError:
-            Logger.log_error_more_verbose("Webserver without 'Server' field.")
+            pass
 
 
         #
