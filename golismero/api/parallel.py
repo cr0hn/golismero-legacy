@@ -1,10 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-
-__doc__ = """
-This file contains functions and methods to make tasks
-parallel easily.
+"""
+API for parallel execution within GoLismero plugins.
 """
 
 __license__ = """
@@ -34,20 +32,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
+__all__ = ["parallel"]
+
 import threading
 from threading import Semaphore
 
-__al__ = ["parallel"]
 
 #----------------------------------------------------------------------
 def parallel(func, data, pool_size=4):
     """
-    Run a function parallely, using the data provided in data var.
+    Run a function in parallel.
 
-    :param func: an executable function
-    :type func: function.
+    :param func: A function or any other executable object.
+    :type func: callable
 
-    :param values: a list of values to process for the function
+    :param values: List of parameters
     :type values: list(object)
 
     :return: a list with re results.
@@ -70,6 +69,7 @@ class GolismeroThread(threading.Thread):
     """
     Worker for threads
     """
+
 
     #----------------------------------------------------------------------
     def __init__(self):
@@ -123,12 +123,14 @@ class GolismeroThread(threading.Thread):
         self.__continue = False
         self.__sem_available.release()
 
+
     #----------------------------------------------------------------------
     def terminate(self):
         """
         Force the thread to terminate.
         """
         raise NotImplemented()
+
 
     #----------------------------------------------------------------------
     def add(self, func, data, queue):
@@ -161,61 +163,59 @@ class GolismeroThread(threading.Thread):
 #------------------------------------------------------------------------------
 class GolismeroQueue(object):
     """
-    A queue implementation that don't need picked anything.
+    A thread-safe queue implementation. Unlike that in the standard
+    multiprocessing module, this one doesn't require any pickling.
     """
+
 
     #----------------------------------------------------------------------
     def __init__(self):
-        """Constructor"""
-        self.__data        = []
+
+        # We'll exploit the fact that in CPython the list operations are
+        # atomic. However in other VMs we'll need to use syncronization
+        # objects here instead.
+        self.__data = []
+
 
     #----------------------------------------------------------------------
     def put(self, val):
         """
-        Put value of passed param in the pool.
-        """
-        if val:
-            if isinstance(val, list):
-                self.__data.extend(val)
-            else:
-                self.__data.append(val)
-        else:
-            raise ValueError("Value can't be empty")
+        Put value at the end of the queue.
 
+        :param val: Value to pass.
+        :type val: *
+        """
+        self.__data.append(val)
 
 
     #----------------------------------------------------------------------
     def get(self):
         """
-        :return: the first value of the pool.
-        :rtype: object
+        :return: Extract the value at the beginning of the queue.
+        :rtype: *
         """
         if self.__data:
             return self.__data.pop(0)
         else:
             return None
 
+
     #----------------------------------------------------------------------
     def __len__(self):
-        """"""
         return len(self.__data)
-
-
-
 
 
 #-------------------------------------------------------------------------
 class GolismeroPool(threading.Thread):
     """
-    Pool for GolismeroThreads
+    Thread pool.
     """
+
 
     #----------------------------------------------------------------------
     def __init__(self, pool_size = 5):
         """
-        Constructor.
-
-        :param pool_size: The size of the pool.
+        :param pool_size: Maximum amount of concurrent threads allowed by this pool.
         :type pool_size: int
         """
         if not isinstance(pool_size, int):
@@ -223,28 +223,30 @@ class GolismeroPool(threading.Thread):
         if pool_size < 1:
             raise ValueError("pool_size must be great than 0.")
 
-        # Number of maximun concurrent threads
+        # Synchronization
         self.__sem_max_threads             = Semaphore(pool_size)
         self.__sem_available_data          = Semaphore(0)
         self.__sem_join                    = Semaphore(0)
 
-        # Number os task running
+        # Number of tasks
         self.__count_task                  = 0
 
-        # Stop var
+        # Stop execution?
         self.__continue                    = True
+
         # Join wanted?
         self.__join                        = False
 
-        # Thread pool. Format: (function, values, return_value)
+        # Thread pool. Format: (function, values, return_queue)
         self.__data_pool                   = set()
 
-        # Executors buse
+        # Executors busy
         self.__task_pool_busy              = set()
 
         # Executors available
         self.__task_pool_available         = set()
         self.__task_pool_available_add     = self.__task_pool_available.add
+
         # Setup the pool
         for l_p in xrange(pool_size):
             l_thread             = GolismeroThread()
@@ -253,55 +255,58 @@ class GolismeroPool(threading.Thread):
 
             self.__task_pool_available_add(l_thread)
 
+        # Superclass constructor
         super(GolismeroPool,self).__init__()
 
         # Start the pool
         self.start()
 
+
     #----------------------------------------------------------------------
     def run(self):
         """
-        Execute a function or list of functions as daemon mode. This is: this
-        method is not blocking.
+        Execute a function or list of functions in daemon mode (non-blocking).
 
-        You can add any function or functions a their values to be processed. The
-        process will be done in background, without lock the program execution.
-
+        You can add any function or functions and their values to be processed.
+        Execution will be done in background.
         """
-        #
-        # The first while controls when there is not
-        # processes added in the pool
-        #
         while True:
-            # Controls if there is any value to process
+
+            # Blocks until input data is available
             self.__sem_available_data.acquire()
 
+            # If stop is requested, break out of the loop
             if not self.__continue:
                 break
 
-            # Get function to process
+            # Get task to run
             func, tmp_vals, queue = self.__data_pool.pop()
+
+            # Convert iterators and the like into a real list
             m_vals = list(tmp_vals)
 
-            # Get the length of the iterator
+            # Get the length of the input data
             self.__count_task += len(m_vals)
 
+            # For each input value...
             for l_val in m_vals:
+
                 # Get a slot
                 self.__sem_max_threads.acquire()
 
                 # Get executor
                 f = self.__task_pool_available.pop()
-                # Put to the busy task
+
+                # Mask the executor as busy
                 self.__task_pool_busy.add(f)
 
+                # Add the task
                 f.add(func, l_val, queue)
+
 
     #----------------------------------------------------------------------
     def _release_sem(self):
-        """
-        Increases in 1 the value of the semaphore
-        """
+
         # Switch wait tasks <-> avail tasks
         self.__task_pool_available.add(self.__task_pool_busy.pop())
 
@@ -315,15 +320,18 @@ class GolismeroPool(threading.Thread):
             self.__sem_join.release()
             self.__join = False
 
+
     #----------------------------------------------------------------------
     def join(self):
-        """"""
+        """
+        Block until all tasks are completed.
+        """
         self.__join = True
         self.__sem_join.acquire()
 
 
     #----------------------------------------------------------------------
-    def add(self, func, value):
+    def add(self, func, values):
         """
         Add a function to the pool for execution.
 
@@ -340,8 +348,8 @@ class GolismeroPool(threading.Thread):
             m_return_value = GolismeroQueue()
 
             m_data = None
-            if value:
-                m_data         = iter(value)
+            if values:
+                m_data = iter(values)
 
             # Add task to the pool
             self.__data_pool.add((func, m_data, m_return_value))
@@ -358,26 +366,26 @@ class GolismeroPool(threading.Thread):
     #----------------------------------------------------------------------
     def stop(self):
         """
-        Stop al threads in the pool
+        Stop all threads in the pool.
         """
-        self.__continue = False
 
         # Signal to all threads to stop
+        self.__continue = False
         map(GolismeroThread.stop, self.__task_pool_available)
 
         # Unlock
         self.__sem_available_data.release()
 
+
     #----------------------------------------------------------------------
     def terminate(self):
         """
-        Force to exit killing al threads
+        Force to exit killing all threads.
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
-
-
+#----------------------------------------------------------------------
 if __name__ == "__main__":
     #
     # This code is used for testing
@@ -388,4 +396,3 @@ if __name__ == "__main__":
     r = parallel(f, l)
 
     print r
-
