@@ -37,6 +37,34 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import threading
 from threading import Semaphore
 
+__al__ = ["parallel"]
+
+#----------------------------------------------------------------------
+def parallel(func, data, pool_size=4):
+    """
+    Run a function parallely, using the data provided in data var.
+
+    :param func: an executable function
+    :type func: function.
+
+    :param values: a list of values to process for the function
+    :type values: list(object)
+
+    :return: a list with re results.
+    :rtype: list
+    """
+    # Create the pool
+    m_pool   = GolismeroPool(pool_size)
+    # Add the task an get the returned value
+    m_return = m_pool.add(func, data)
+
+    # Wait for ending and stop the pool
+    m_pool.join()
+    m_pool.stop()
+
+    return [m_return.get() for x in xrange(len(m_return)) ]
+
+
 #-------------------------------------------------------------------------
 class GolismeroThread(threading.Thread):
     """
@@ -62,7 +90,9 @@ class GolismeroThread(threading.Thread):
 
     #----------------------------------------------------------------------
     def run(self):
-        """"""
+        """
+        Thread run function
+        """
         while True:
             self.__sem_available.acquire()
 
@@ -109,7 +139,10 @@ class GolismeroThread(threading.Thread):
         :type func: executable function.
 
         :param data: an object pass as parameter to the function.
-        :type data: object
+        :type data: object.
+
+        :param queue: a queue where will be put the results of the execution of the functions.
+        :type queue: GolismeroQueue
         """
 
         if func is None:
@@ -136,12 +169,10 @@ class GolismeroQueue(object):
         """Constructor"""
         self.__data        = []
 
-
-
     #----------------------------------------------------------------------
     def put(self, val):
         """
-        Put value of passed param in the pool list.
+        Put value of passed param in the pool.
         """
         if val:
             if isinstance(val, list):
@@ -156,7 +187,8 @@ class GolismeroQueue(object):
     #----------------------------------------------------------------------
     def get(self):
         """
-        :return: the first value of the input list.
+        :return: the first value of the pool.
+        :rtype: object
         """
         if self.__data:
             return self.__data.pop(0)
@@ -170,6 +202,8 @@ class GolismeroQueue(object):
 
 
 
+
+
 #-------------------------------------------------------------------------
 class GolismeroPool(threading.Thread):
     """
@@ -178,6 +212,12 @@ class GolismeroPool(threading.Thread):
 
     #----------------------------------------------------------------------
     def __init__(self, pool_size = 5):
+        """
+        Constructor.
+
+        :param pool_size: The size of the pool.
+        :type pool_size: int
+        """
         if not isinstance(pool_size, int):
             raise TypeError("Expected int, got %s instead" % type(pool_size))
         if pool_size < 1:
@@ -339,13 +379,13 @@ class GolismeroPool(threading.Thread):
 
 
 if __name__ == "__main__":
-    p = GolismeroPool(5)
+    #
+    # This code is used for testing
+    #
+    #p = GolismeroPool(5)
     l = [1,2,4,5,9,10,29,1919]
-    r = p.add(lambda x: x+1, l)
-    p.join()
-    p.stop()
+    f = lambda x: x+1
+    r = parallel(f, l)
 
-    print "####"
-    for x in xrange(len(r)):
-        print r.get()
+    print r
 
