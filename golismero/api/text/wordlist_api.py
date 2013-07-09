@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["WordListAPI"]
 
 from os import getcwd, walk
-from os.path import join, sep, abspath
+from os.path import join, sep, abspath, exists, isfile
 from golismero.api.text.matching_analyzer import get_matching_level
 from repoze.lru import lru_cache
 import bisect
@@ -45,7 +45,7 @@ from ...common import Singleton
 
 
 #------------------------------------------------------------------------------
-class WordListAPI(Singleton):
+class _WordListAPI(Singleton):
     """
     Wordlist API.
     """
@@ -61,6 +61,33 @@ class WordListAPI(Singleton):
         # XXX FIXME this is broken!!! :(
         # It won't work unless you happen to be standing on the GoLismero folder!
         self.__load_wordlists(join(getcwd(), "wordlist"))
+
+    #----------------------------------------------------------------------
+    def __resolve_wordlist_name(self, wordlist):
+        """
+        Looking for the world list name in the internal database and, if it's fails,
+        looking as an absolute path
+        """
+        if not wordlist:
+            raise ValueError("Wordlist name can't be an empty value")
+        if not isinstance(wordlist, basestring):
+            raise TypeError("Expected 'str' got '%s'." % type(wordlist))
+
+        m_return = None
+
+        try:
+            m_return = self.__store[wordlist]
+        except KeyError: # Wordlist is not in the internal database
+            # Exits the file
+            if not exists(wordlist):
+                raise IOError("Wordlist file '%s' not exits." % wordlist)
+            if not isfile(wordlist):
+                raise TypeError("Wordlist '%s' is not a file." % wordlist)
+
+            m_return = wordlist
+
+        return m_return
+
 
     #----------------------------------------------------------------------
     def __load_wordlists(self, currentDir):
@@ -116,10 +143,8 @@ class WordListAPI(Singleton):
         :returns: Iterator for the selected wordlist.
         :rtype: iter(str)
         """
-        try:
-            return SimpleWordList(self.__store[wordlist_name])
-        except KeyError:
-            raise KeyError("Wordlist file not found: %s" % wordlist_name)
+
+        return SimpleWordList(self.__resolve_wordlist_name(wordlist_name))
 
     #----------------------------------------------------------------------
     @lru_cache(maxsize=30)
@@ -140,10 +165,8 @@ class WordListAPI(Singleton):
         :returns: Advanced wordlist object.
         :rtype: AdvancedDicWordlist
         """
-        try:
-            return AdvancedDicWordlist(self.__store[wordlist], inteligence_load, separator)
-        except KeyError:
-            raise KeyError("Wordlist file not found: %s" % wordlist_name)
+
+        return AdvancedDicWordlist(self.__resolve_wordlist_name(wordlist), inteligence_load, separator)
 
     #----------------------------------------------------------------------
     @lru_cache(maxsize=30)
@@ -157,10 +180,8 @@ class WordListAPI(Singleton):
         :returns: AdvancedListWordlist.
         :rtype: AdvancedListWordlist
         """
-        try:
-            return AdvancedListWordlist(self.__store[wordlist_name])
-        except KeyError:
-            raise KeyError("Wordlist file not found: %s" % wordlist_name)
+
+        return AdvancedListWordlist(self.__resolve_wordlist_name(wordlist_name))
 
 
 #------------------------------------------------------------------------------
@@ -640,3 +661,8 @@ class AdvancedDicWordlist(object):
     def iterkeys(self):
         """"""
         return self.__wordlist.iterkeys()
+
+
+
+# Hidden the singleton pattern
+WordListAPI = _WordListAPI()
