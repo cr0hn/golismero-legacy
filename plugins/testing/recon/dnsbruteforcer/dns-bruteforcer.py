@@ -65,6 +65,6 @@ def main_dns_bruter(base_domain):
     """
     r = WordListAPI.get_advanced_wordlist_as_list("/Users/Dani/Documents/Pruebas/subbrute/subs_small.txt")
 
-    print "XXXXX"
-    for x in r:
-        print x
+    #print "XXXXX"
+    #for x in r:
+        #print x
