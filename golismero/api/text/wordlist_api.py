@@ -35,6 +35,7 @@ __all__ = ["WordListAPI"]
 from os import getcwd, walk
 from os.path import join, sep, abspath, exists, isfile
 from golismero.api.text.matching_analyzer import get_matching_level
+from golismero.api.file import FileManager
 from repoze.lru import lru_cache
 import bisect
 import re
@@ -66,7 +67,13 @@ class _WordListAPI(Singleton):
     def __resolve_wordlist_name(self, wordlist):
         """
         Looking for the world list name in the internal database and, if it's fails,
-        looking as an absolute path
+        looking in the plugin directory.
+
+        :param wordlist: wordlist name
+        :type wordlist: str
+
+        :return: a file descriptor.
+        :rtype: open()
         """
         if not wordlist:
             raise ValueError("Wordlist name can't be an empty value")
@@ -76,15 +83,16 @@ class _WordListAPI(Singleton):
         m_return = None
 
         try:
-            m_return = self.__store[wordlist]
+            m_return = open(self.__store[wordlist], "rU")
         except KeyError: # Wordlist is not in the internal database
             # Exits the file
-            if not exists(wordlist):
+            m_file_manager = FileManager()
+            if not m_file_manager.exists(wordlist):
                 raise IOError("Wordlist file '%s' not exits." % wordlist)
-            if not isfile(wordlist):
+            if not m_file_manager.isfile(wordlist):
                 raise TypeError("Wordlist '%s' is not a file." % wordlist)
 
-            m_return = wordlist
+            m_return = m_file_manager.open(wordlist, "rU")
 
         return m_return
 
@@ -185,20 +193,22 @@ class _WordListAPI(Singleton):
 
 
 #------------------------------------------------------------------------------
-def SimpleWordList(wordlist_path):
+def SimpleWordList(wordlist):
     """
     Load a wordlist from a file and iterate its words.
+
+    :param wordlist: a file descriptor of the wordlist.
+    :type wordllist: open()
     """
 
     try:
-        with open(wordlist_path, "rU") as fd:
-            for line in fd:
-                line = line.strip()
-                if line and not line.startswith("#"):
-                    yield line
+        for line in wordlist:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                yield line
 
     except IOError, e:
-        Logger.log_error("Error opening wordlist %s: " % e.message)
+        Logger.log_error("Error opening wordlist. Error: %s " % e.message)
 
 
 #------------------------------------------------------------------------------
@@ -312,15 +322,19 @@ class AdvancedListWordlist(AbstractWordlist):
 
     #----------------------------------------------------------------------
     def __init__(self, wordlist):
+        """
+        :param wordlist: a file descriptor of the wordlist.
+        :type wordllist: open()
+        """
 
         if not wordlist:
             raise ValueError("Empty wordlist got")
 
         m_tmp_wordlist = None
         try:
-            m_tmp_wordlist = open(wordlist, mode='rU').readlines()
-        except IOError:
-            raise IOError("Error when trying to open wordlist: '%s'" % wordlist)
+            m_tmp_wordlist = wordlist.readlines()
+        except IOError, e:
+            raise IOError("Error when trying to open wordlist. Error: %s" + e.message)
 
         self.__wordlist   = [w.replace("\n","") for w in m_tmp_wordlist]
 
@@ -448,8 +462,8 @@ class AdvancedDicWordlist(object):
         {'one': ['value1', 'value2', 'value3', 'value4', 'value 5', 'value7']}
 
 
-        :param wordlist: wordlist path.
-        :type wordlist: str
+        :param wordlist: a file descriptor of the wordlist.
+        :type wordllist: open()
 
         :param separator: value used to split the lines
         :type separator: str
@@ -468,9 +482,9 @@ class AdvancedDicWordlist(object):
 
         m_tmp_wordlist = None
         try:
-            m_tmp_wordlist = open(wordlist, mode='rU').readlines()
+            m_tmp_wordlist = wordlist.readlines()
         except IOError, e:
-            raise IOError("Error when trying to open wordlist: '%s'" % wordlist + e.message)
+            raise IOError("Error when trying to open wordlist. Error: %s" % e.message)
 
         self.__wordlist = {}
         m_reg           = re.compile("([#A-Za-z\d]+|[\'\"][\w\d\s]+[\'\"])")
