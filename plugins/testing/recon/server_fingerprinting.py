@@ -335,7 +335,7 @@ def ttl_platform_detection(main_url):
         m_ttl               = do_ping_and_receive_ttl(DecomposedURL(main_url).hostname, 2)
 
         # Load words for the wordlist
-        l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config["Wordlist_ttl"]["ttl"])
+        l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config["Wordlist_ttl"]["ttl"])
         # Looking for matches
         l_matches           = l_wordlist_instance.matches_by_value(m_ttl)
 
@@ -502,7 +502,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
             l_wordlist_path     = Config.plugin_extra_config[l_wordlist][l_header_wordlist]
 
             # Load words for the wordlist
-            l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(l_wordlist_path)
+            l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(l_wordlist_path)
             # Looking for matches
             l_matches           = l_wordlist_instance.matches_by_value(l_curr_header_value)
 
@@ -519,7 +519,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         # Status code
         # ===========
         #
-        l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["statuscode"])
+        l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["statuscode"])
         # Looking for matches
         l_matches           = l_wordlist_instance.matches_by_value(l_response.http_response_code)
 
@@ -530,7 +530,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         # Status text
         # ===========
         #
-        l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["statustext"])
+        l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["statustext"])
         # Looking for matches
         l_matches           = l_wordlist_instance.matches_by_value(l_response.http_response_reason)
 
@@ -548,7 +548,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         # -> Server:Apache 1
         # The number of spaces are: 0
         #
-        l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["header-space"])
+        l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["header-space"])
         # Looking for matches
         try:
             l_http_value        = l_response.http_headers_raw.splitlines()[0].split(":")[1] # get the value of first HTTP field
@@ -571,7 +571,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         # Instead of:
         # -> Content-Type: ....
         #
-        l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["header-capitalafterdash"])
+        l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["header-capitalafterdash"])
         # Looking for matches
         l_original_headers = {v.split(":")[0]:v.split(":")[1] for v in l_response.http_headers_raw.splitlines()}
         l_valid_fields     = [x for x in l_original_headers if "-" in x]
@@ -597,7 +597,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         #
         l_header_order  = ','.join(v.split(":")[0] for v in l_response.http_headers_raw.splitlines())
 
-        l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["header-order"])
+        l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["header-order"])
         l_matches           = l_wordlist_instance.matches_by_value(l_header_order)
 
         m_counters.inc(l_matches, l_action, l_weight, "header-order", message="Header order: " + l_header_order)
@@ -616,7 +616,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         try:
             l_proto             = l_response.raw_response.splitlines()[0][:4] # Get de 'HTTP' text from response, if available
             if l_proto:
-                l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["protocol-name"])
+                l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["protocol-name"])
                 l_matches           = l_wordlist_instance.matches_by_value(l_proto)
 
                 m_counters.inc(l_matches, l_action, l_weight, "proto-name", message="Proto name: " + l_proto)
@@ -639,7 +639,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         try:
             l_version           = l_response.raw_response.splitlines()[0][5:8] # Get de '1.0' text from response, if available
             if l_version:
-                l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["protocol-version"])
+                l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["protocol-version"])
                 l_matches           = l_wordlist_instance.matches_by_value(l_version)
 
                 m_counters.inc(l_matches, l_action, l_weight, "proto-version", message="Proto version: " + l_version)
@@ -657,7 +657,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
             # ================
             #
             l_etag_len          = len(l_etag_header)
-            l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["etag-legth"])
+            l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["etag-legth"])
             l_matches           = l_wordlist_instance.matches_by_value(l_etag_len)
 
             m_counters.inc(l_matches, l_action, l_weight, "etag-length", message="ETag length: " + str(l_etag_len))
@@ -669,7 +669,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
             #
             l_etag_striped          = l_etag_header.strip()
             if l_etag_striped.startswith("\"") or l_etag_striped.startswith("'"):
-                l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["etag-quotes"])
+                l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["etag-quotes"])
                 l_matches           = l_wordlist_instance.matches_by_value(l_etag_striped[0])
 
                 m_counters.inc(l_matches, l_action, l_weight, "etag-qoutes", message="Etag quotes: " + l_etag_striped[0])
@@ -686,7 +686,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
             # -> Vary: Accept-Encoding, User-Agent
             #
             l_var_delimiter     = ", " if l_vary_header.find(", ") else ","
-            l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["vary-delimiter"])
+            l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["vary-delimiter"])
             l_matches           = l_wordlist_instance.matches_by_value(l_var_delimiter)
 
             m_counters.inc(l_matches, l_action, l_weight, "vary-delimiter", message="Vary delimiter: " + l_var_delimiter)
@@ -701,7 +701,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
             # -> Vary: accept-encoding,user-agent
             #
             l_vary_capitalizer  = str(0 if l_vary_header == l_vary_header.lower() else 1)
-            l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["vary-capitalize"])
+            l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["vary-capitalize"])
             l_matches           = l_wordlist_instance.matches_by_value(l_vary_capitalizer)
 
             m_counters.inc(l_matches, l_action, l_weight, "vary-capitalize", message="Vary capitalizer: " + l_vary_capitalizer)
@@ -716,7 +716,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
             # Or this:
             # -> Vary: User-Agent,Accept-Encoding
             #
-            l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["vary-order"])
+            l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["vary-order"])
             l_matches           = l_wordlist_instance.matches_by_value(l_vary_header)
 
             m_counters.inc(l_matches, l_action, l_weight, "vary-order", message="Vary order: " + l_vary_header)
@@ -735,7 +735,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
             #
             l_option            = l_response.http_headers.get("Allow")
             if l_option:
-                l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["options-public"])
+                l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["options-public"])
                 # Looking for matches
                 l_matches           = l_wordlist_instance.matches_by_value(l_option)
 
@@ -750,7 +750,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
                 #
                 l_option            = l_response.http_headers.get("Allow")
                 if l_option:
-                    l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["options-public"])
+                    l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["options-public"])
                     # Looking for matches
                     l_matches           = l_wordlist_instance.matches_by_value(l_option)
 
@@ -764,7 +764,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
                 l_option            = l_response.http_headers.get("Allow")
                 if l_option:
                     l_var_delimiter     = ", " if l_option.find(", ") else ","
-                    l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["options-delimited"])
+                    l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["options-delimited"])
                     # Looking for matches
                     l_matches           = l_wordlist_instance.matches_by_value(l_var_delimiter)
 
@@ -778,7 +778,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
                 #
                 l_option            = l_response.http_headers.get("Public")
                 if l_option:
-                    l_wordlist_instance = WordListAPI().get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["options-public"])
+                    l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["options-public"])
                     # Looking for matches
                     l_matches           = l_wordlist_instance.matches_by_value(l_option)
 
@@ -1210,7 +1210,7 @@ def get_fingerprinting_wordlist(wordlist):
     """
 
     # Load the wordlist
-    m_w = WordListAPI().get_advanced_wordlist_as_dict(wordlist, separator=";", inteligence_load=True)
+    m_w = WordListAPI.get_advanced_wordlist_as_dict(wordlist, separator=";", inteligence_load=True)
 
     # Load references.
     #

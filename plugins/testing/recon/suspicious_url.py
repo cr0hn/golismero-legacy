@@ -55,8 +55,8 @@ class SuspiciousURLPlugin(TestingPlugin):
         # Find suspicious URLs by matching against known substrings.
 
         # Load wordlists
-        m_wordlist_middle     = WordListAPI().get_wordlist(Config.plugin_extra_config['Wordlist_middle']['wordlist'])
-        m_wordlist_extensions = WordListAPI().get_wordlist(Config.plugin_extra_config['Wordlist_extensions']['wordlist'])
+        m_wordlist_middle     = WordListAPI.get_wordlist(Config.plugin_extra_config['Wordlist_middle']['wordlist'])
+        m_wordlist_extensions = WordListAPI.get_wordlist(Config.plugin_extra_config['Wordlist_extensions']['wordlist'])
 
         # Add matching keywords at any positions of URL.
         m_results.extend([SuspiciousURL(info, x)

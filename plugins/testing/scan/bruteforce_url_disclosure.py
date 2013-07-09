@@ -208,7 +208,7 @@ def process_folder_url(info):
 
         for l_w in m_wordlist:
             # Use a copy of wordlist to avoid modify the original source
-            l_loaded_wordlist = WordListAPI().get_advanced_wordlist_as_list(l_w)
+            l_loaded_wordlist = WordListAPI.get_advanced_wordlist_as_list(l_w)
 
             #
             # README!!!!!
@@ -417,7 +417,7 @@ def load_wordlists(wordlists):
     # Load the wordlist
     m_return = {}
     for k, w_paths in m_tmp_wordlist.iteritems():
-        m_return[k] = [WordListAPI().get_wordlist(w) for w in w_paths]
+        m_return[k] = [WordListAPI.get_wordlist(w) for w in w_paths]
 
     return m_return
 
@@ -434,7 +434,7 @@ def load_wordlists(wordlists):
             #l_tmp_wordlist = 'predictable_files'
 
         #if l_tmp_wordlist:
-            #m_wordlist[l_tmp_wordlist].append(WordListAPI().get_wordlist(wordlist_path))
+            #m_wordlist[l_tmp_wordlist].append(WordListAPI.get_wordlist(wordlist_path))
 
     #return m_wordlist
     return m_return
@@ -749,7 +749,7 @@ def get_list_from_wordlist(wordlist):
         m_commom_wordlists = set()
 
         for v in Config.plugin_extra_config[wordlist].itervalues():
-            m_commom_wordlists.update(WordListAPI().get_advanced_wordlist_as_list(v))
+            m_commom_wordlists.update(WordListAPI.get_advanced_wordlist_as_list(v))
 
         return m_commom_wordlists
     except KeyError,e:
