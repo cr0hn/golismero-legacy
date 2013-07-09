@@ -1,0 +1,11 @@
+[Core]
+Name = DNS Bruteforcer
+Module = dnsbruteforcer/dns-bruteforcer.py
+
+[Documentation]
+Description = Try to find hidden sub domains
+Author = GoLismero project team
+Version = 0.1
+Website = https://github.com/cr0hn/golismero/
+Copyright = Copyright (C) 2011-2013 GoLismero Project
+License = GNU Public License
