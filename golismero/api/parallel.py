@@ -32,93 +32,330 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-__all__ = ["parallel"]
+__all__ = ["pmap"]
 
-import threading
-from threading import Semaphore
+from thread import get_ident
+from threading import Semaphore, Thread
 
 
 #----------------------------------------------------------------------
-def parallel(func, data, pool_size=4):
+def pmap(func, *args, **kwargs):
     """
     Run a function in parallel.
+
+    This function behaves pretty much like the built-in
+    function map(), but it runs in parallel using threads:
+
+        >>> from golismero.api.parallel import pmap
+        >>> def triple(x):
+        ...   return x * 3
+        ...
+        >>> pmap(triple, [1, 2, 3, 4, 5])
+        [3, 6, 9, 12, 15]
+        >>> def addition(x, y):
+        ...   return x + y
+        ...
+        >>> pmap(addition, [1, 2, 3, 4, 5], [2, 4, 6, 8, 10])
+        [3, 6, 9, 12, 15]
+
+    .. warning: Unlike the built-in map() function, exceptions raised
+                by the callback function will be silently ignored.
 
     :param func: A function or any other executable object.
     :type func: callable
 
-    :param values: List of parameters
-    :type values: list(object)
+    :param args: One or more iterables containing the parameters for each call.
+    :type args: iterable, iterable...
 
-    :return: a list with re results.
+    :keyword pool_size: Maximum amount of concurrent threads. Defaults to 4.
+    :type pool_size: int
+
+    :return: List with returned results, in the same order as the input data.
     :rtype: list
     """
-    # Create the pool
-    m_pool   = GolismeroPool(pool_size)
-    # Add the task an get the returned value
-    m_return = m_pool.add(func, data)
 
-    # Wait for ending and stop the pool
-    m_pool.join()
-    m_pool.stop()
+    # Check for missing arguments.
+    if len(args) <= 0:
+        raise TypeError("Expected at least one positional argument")
 
-    return [m_return.get() for x in xrange(len(m_return)) ]
+    # Get the pool size.
+    pool_size = kwargs.pop("pool_size", 4)
+
+    # Check for extraneous keyword arguments.
+    if kwargs:
+        if len(kwargs) > 1:
+            msg = "Unknown keyword arguments: "
+        else:
+            msg = "Unknown keyword argument: "
+        raise TypeError(msg + ", ".join(kwargs))
+
+    # Interpolate the arguments.
+    if len(args) == 1:
+        data = [ (x,) for x in args[0] ]
+    else:
+        data = map(None, *args)
+
+    # Create the task group.
+    m_task_group = GolismeroTaskGroup(func, data)
+
+    # Create the pool.
+    m_pool = GolismeroPool(pool_size)
+    try:
+
+        # Add the task and get the returned values.
+        m_pool.add(m_task_group)
+
+        # Wait for the tasks to end.
+        m_pool.join()
+
+    # Stop the pool.
+    finally:
+        m_pool.stop()
+
+    # Return the list of results.
+    return m_task_group.pack_output()
 
 
 #-------------------------------------------------------------------------
-class GolismeroThread(threading.Thread):
+class GolismeroTask(object):
     """
-    Worker for threads
+    A task to be executed.
+    """
+
+    def __init__(self, func, args, index, output):
+        """
+        :param func: A function or any other executable object.
+        :type func: callable
+
+        :param args: Tuple containing positional arguments.
+        :type args: tuple
+
+        :param index: Key for the output dictionary. Used later to sort the results.
+        :type index: int
+
+        :param output: Output dictionary that will receive the return value.
+        :type output: dict(int -> *)
+        """
+
+        # Validate the parameters.
+        if type(index) is not int:
+            raise TypeError("Expected int, got %s instead" % type(index))
+        if not hasattr(output, "__setitem__"):
+            raise TypeError("Expected dict, got %s instead" % type(output))
+        if not callable(func):
+            raise TypeError("Expected callable (function, class, instance with __call__), got %s instead" % type(func))
+
+        # Set the new task data.
+        self.__func   = func       # Function to run.
+        self.__args   = args       # Parameters for the function.
+        self.__index  = index      # Index for the return value.
+        self.__output = output     # Dictionary for return values.
+
+
+    #----------------------------------------------------------------------
+    @property
+    def func(self):
+        """
+        :returns: A function or any other executable object.
+        :rtype: callable
+        """
+        return self.__func
+
+    @property
+    def args(self):
+        """
+        :returns: Tuple containing positional arguments.
+        :rtype: tuple
+        """
+        return self.__args
+
+    @property
+    def index(self):
+        """
+        :returns: Key for the output dictionary. Used later to sort the results.
+        :rtype: int
+        """
+        return self.__index
+
+    @property
+    def output(self):
+        """
+        :returns: Output dictionary that will receive the return value.
+        :rtype: dict(int -> *)
+        """
+        return self.__output
+
+
+    #----------------------------------------------------------------------
+    def run(self):
+        """
+        Run the task.
+        """
+
+        try:
+
+            # Run the task.
+            x = self.__func( *self.__args )
+
+            # Store the results.
+            self.__output[self.__index] = x
+
+        except:
+
+            # TODO: Return exceptions to the caller.
+            pass
+
+
+#-------------------------------------------------------------------------
+class GolismeroTaskGroup(object):
+    """
+    A group of tasks to be executed.
+    """
+
+    def __init__(self, func, data):
+        """
+        :param func: A function or any other executable object.
+        :type func: callable
+
+        :param data: List of tuples containing the parameters for each call.
+        :type data: list(tuple(*))
+        """
+
+        # Validate the parameters.
+        if not callable(func):
+            raise TypeError("Expected callable (function, class, instance with __call__), got %s instead" % type(func))
+
+        # Set the new task group data.
+        self.__func   = func       # Function to run.
+        self.__data   = data       # Data to process.
+        self.__output = {}         # Dictionary for return values.
+
+
+    #----------------------------------------------------------------------
+    @property
+    def func(self):
+        """
+        :returns: A function or any other executable object.
+        :rtype: callable
+        """
+        return self.__func
+
+    @property
+    def data(self):
+        """
+        :returns: List of tuples containing the parameters for each call.
+        :rtype: list(tuple(*))
+        """
+        return self.__data
+
+    @property
+    def output(self):
+        """
+        :returns: Output dictionary that will receive the return values.
+        :rtype: dict(int -> *)
+        """
+        return self.__output
+
+
+    #----------------------------------------------------------------------
+    def __len__(self):
+        """
+        :returns: Number of individual tasks for this task group.
+        :rtype: int
+        """
+        return len(self.data)
+
+
+    #----------------------------------------------------------------------
+    def __iter__(self):
+        """
+        :returns: Iterator of individual tasks for this task group.
+        :rtype: iter(GolismeroTask)
+        """
+        func = self.func
+        output = self.output
+        index = 0
+        for args in self.data:
+            yield GolismeroTask(func, args, index, output)
+            index += 1
+
+
+    #----------------------------------------------------------------------
+    def pack_output(self):
+        """
+        Converts the output dictionary into an ordered list, where each
+        element is the return value for each tuple of positional arguments.
+        Missing elements are replaced with None.
+
+        .. warning: Do not call until join() has been called!
+        """
+        output = self.output
+        if not output:
+            return [None] * len(self.data)
+        get = output.get
+        max_index = max(output.iterkeys())
+        max_index = max(max_index, len(self.data) - 1)
+        return [ get(i) for i in xrange(max_index + 1) ]
+
+
+#-------------------------------------------------------------------------
+class GolismeroThread(Thread):
+    """
+    Worker threads.
     """
 
 
     #----------------------------------------------------------------------
     def __init__(self):
 
-        self.__func            = None
-        self.__data            = None
-        self.__queue           = None
-        self._callback         = None
+        # Initialize our variables.
+        self.__task            = None          # Task to run.
+        self._callback         = None          # Callback set by the pool.
+        self.__continue        = True          # Stop flag.
+        self.__sem_available   = Semaphore(0)  # Semaphore for pending tasks.
 
-        # Set stop condition
-        self.__continue        = True
-
-        # Sem to run processes
-        self.__sem_available = Semaphore(0)
-
+        # Call the superclass constructor
+        # *after* initializing our variables.
         super(GolismeroThread,self).__init__()
 
 
     #----------------------------------------------------------------------
     def run(self):
         """
-        Thread run function
+        Thread run function.
+
+        .. warning: This method is called automatically,
+                    do not call it yourself.
         """
+
+        # Check the user isn't a complete moron who doesn't read the docs.
+        if self.ident != get_ident():
+            msg = "Don't call GolismeroThread.run() yourself!"
+            raise SyntaxError(msg % name)
+
+        # Loop until signaled to stop.
         while True:
+
+            # Block until we receive a task.
             self.__sem_available.acquire()
 
+            # If signaled to stop, break out of the loop.
             if not self.__continue:
                 break
 
-            # Run process
-            x = None
-            if self.__data:
-                x = self.__func(self.__data)
-            else:
-                x = self.__func()
+            # Run the task.
+            if self.__task is not None:
+                self.__task.run()
 
-            # Store the results
-            if x:
-                self.__queue.put(x)
-
-            # Run the callback
-            if self._callback:
-                self._callback()
+            # Run the callback.
+            if self._callback is not None:
+                self._callback(self)
 
 
     #----------------------------------------------------------------------
     def stop(self):
         """
-        Marks the threads to stop
+        Signal the thread to stop.
         """
         self.__continue = False
         self.__sem_available.release()
@@ -129,193 +366,149 @@ class GolismeroThread(threading.Thread):
         """
         Force the thread to terminate.
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
     #----------------------------------------------------------------------
-    def add(self, func, data, queue):
+    def add(self, task):
         """
-        Add a function and a data to process.
+        Add a task for this worker thread.
 
-        :param func: function to run.
-        :type func: executable function.
+        .. warning: This is not reentrant! If this method is called while
+                    another task is still running, weird things may happen!
 
-        :param data: an object pass as parameter to the function.
-        :type data: object.
-
-        :param queue: a queue where will be put the results of the execution of the functions.
-        :type queue: GolismeroQueue
+        :param task: Task to run.
+        :type task: GolismeroTask
         """
 
-        if func is None:
-            raise ValueError("func can't be empty")
-        if queue is None:
-            raise ValueError("queue can't be empty")
+        # Validate the parameters.
+        if not isinstance(task, GolismeroTask):
+            raise TypeError("Expected GolismeroTask, got %s instead" % type(task))
 
-        self.__func  = func
-        self.__data  = data
-        self.__queue = queue
+        # Set the task as current.
+        self.__task = task
 
-        # Signal to continue the execution
+        # Signal the thread to run the task.
         self.__sem_available.release()
 
 
-#------------------------------------------------------------------------------
-class GolismeroQueue(object):
-    """
-    A thread-safe queue implementation. Unlike that in the standard
-    multiprocessing module, this one doesn't require any pickling.
-    """
-
-
-    #----------------------------------------------------------------------
-    def __init__(self):
-
-        # We'll exploit the fact that in CPython the list operations are
-        # atomic. However in other VMs we'll need to use syncronization
-        # objects here instead.
-        self.__data = []
-
-
-    #----------------------------------------------------------------------
-    def put(self, val):
-        """
-        Put value at the end of the queue.
-
-        :param val: Value to pass.
-        :type val: *
-        """
-        self.__data.append(val)
-
-
-    #----------------------------------------------------------------------
-    def get(self):
-        """
-        :return: Extract the value at the beginning of the queue.
-        :rtype: *
-        """
-        if self.__data:
-            return self.__data.pop(0)
-        else:
-            return None
-
-
-    #----------------------------------------------------------------------
-    def __len__(self):
-        return len(self.__data)
-
-
 #-------------------------------------------------------------------------
-class GolismeroPool(threading.Thread):
+class GolismeroPool(Thread):
     """
     Thread pool.
     """
 
 
     #----------------------------------------------------------------------
-    def __init__(self, pool_size = 5):
+    def __init__(self, pool_size = 4):
         """
-        :param pool_size: Maximum amount of concurrent threads allowed by this pool.
+        :param pool_size: Maximum amount of concurrent threads allowed.
         :type pool_size: int
         """
         if not isinstance(pool_size, int):
             raise TypeError("Expected int, got %s instead" % type(pool_size))
         if pool_size < 1:
-            raise ValueError("pool_size must be great than 0.")
+            raise ValueError("pool_size must be greater than 0")
 
-        # Synchronization
-        self.__sem_max_threads             = Semaphore(pool_size)
-        self.__sem_available_data          = Semaphore(0)
-        self.__sem_join                    = Semaphore(0)
+        # Synchronization.
+        self.__sem_max_threads    = Semaphore(pool_size)
+        self.__sem_available_data = Semaphore(0)
+        self.__sem_join           = Semaphore(0)
 
-        # Number of tasks
-        self.__count_task                  = 0
+        # Number of tasks.
+        self.__count_task = 0
 
         # Stop execution?
-        self.__continue                    = True
+        self.__stop = False
 
         # Join wanted?
-        self.__join                        = False
+        self.__join = False
 
-        # Thread pool. Format: (function, values, return_queue)
-        self.__data_pool                   = set()
+        # Pending tasks.
+        self.__pending_tasks = set()
 
-        # Executors busy
-        self.__task_pool_busy              = set()
+        # Busy worker threads.
+        self.__busy_workers = set()
 
-        # Executors available
-        self.__task_pool_available         = set()
-        self.__task_pool_available_add     = self.__task_pool_available.add
+        # Available worker threads.
+        self.__available_workers = set()
 
-        # Setup the pool
+        # Setup the pool.
+        add = self.__available_workers.add
         for l_p in xrange(pool_size):
-            l_thread             = GolismeroThread()
-            l_thread._callback   = self._release_sem
+            l_thread = GolismeroThread()
+            l_thread._callback = self._worker_thread_finished
+            add(l_thread)
             l_thread.start()
 
-            self.__task_pool_available_add(l_thread)
+        # Superclass constructor.
+        super(GolismeroPool, self).__init__()
 
-        # Superclass constructor
-        super(GolismeroPool,self).__init__()
-
-        # Start the pool
+        # Start the dispatcher thread.
         self.start()
 
 
     #----------------------------------------------------------------------
     def run(self):
         """
-        Execute a function or list of functions in daemon mode (non-blocking).
+        Execute incoming background tasks until signaled to stop.
 
-        You can add any function or functions and their values to be processed.
-        Execution will be done in background.
+        .. warning: This method is called automatically,
+                    do not call it yourself.
         """
+
+        # Check the user isn't a complete moron who doesn't read the docs.
+        if self.ident != get_ident():
+            msg = "Don't call GolismeroPool.run() yourself!"
+            raise SyntaxError(msg % name)
+
         while True:
 
-            # Blocks until input data is available
+            # Blocks until a task group is received.
             self.__sem_available_data.acquire()
 
-            # If stop is requested, break out of the loop
-            if not self.__continue:
+            # If stop is requested, break out of the loop.
+            if self.__stop:
                 break
 
-            # Get task to run
-            func, tmp_vals, queue = self.__data_pool.pop()
+            # Get task group to run.
+            task_group = self.__pending_tasks.pop()
 
-            # Convert iterators and the like into a real list
-            m_vals = list(tmp_vals)
+            # The length of the input data tells us how many
+            # thread finish signals to expect.
+            self.__count_task += len(task_group)
 
-            # Get the length of the input data
-            self.__count_task += len(m_vals)
+            # For each individual task...
+            for task in task_group:
 
-            # For each input value...
-            for l_val in m_vals:
-
-                # Get a slot
+                # Block until a worker thread is available.
                 self.__sem_max_threads.acquire()
 
-                # Get executor
-                f = self.__task_pool_available.pop()
+                # Get a random available worker thread.
+                f = self.__available_workers.pop()
 
-                # Mask the executor as busy
-                self.__task_pool_busy.add(f)
+                # Mark the worker thread as busy.
+                self.__busy_workers.add(f)
 
-                # Add the task
-                f.add(func, l_val, queue)
+                # Send the task to the worker thread.
+                f.add(task)
 
 
     #----------------------------------------------------------------------
-    def _release_sem(self):
+    def _worker_thread_finished(self, thread):
 
-        # Switch wait tasks <-> avail tasks
-        self.__task_pool_available.add(self.__task_pool_busy.pop())
+        # Move the completed task from the busy set to the available set.
+        self.__busy_workers.remove(thread)
+        self.__available_workers.add(thread)
 
-        # Global threads pool
+        # Signal the pool that a worker thread is now available.
         self.__sem_max_threads.release()
 
-        # Unlock concrete pool
+        # Decrement the currently running tasks counter.
         self.__count_task -= 1
 
+        # If no tasks are currently running and a join was requested,
+        # unlock the caller of join().
         if self.__count_task <= 0 and self.__join:
             self.__sem_join.release()
             self.__join = False
@@ -331,68 +524,42 @@ class GolismeroPool(threading.Thread):
 
 
     #----------------------------------------------------------------------
-    def add(self, func, values):
+    def add(self, task_group):
         """
-        Add a function to the pool for execution.
+        Add a task group to the pool for execution.
 
-        :param func: a GolismeroThread object.
-        :type func: GolismeroThread.
-
-        :param values: list of values to process.
-        :type values: object or list(object)
-
-        :return: an GolismeroQueue where will be puted the results of the threads.
-        :rtype: GolismeroQueue
+        :param task_group: A task group.
+        :type task_group: GolismeroTaskGroup
         """
-        if func:
-            m_return_value = GolismeroQueue()
 
-            m_data = None
-            if values:
-                m_data = iter(values)
+        # Add task group to the pending tasks set.
+        self.__pending_tasks.add(task_group)
 
-            # Add task to the pool
-            self.__data_pool.add((func, m_data, m_return_value))
-
-            # Signal to inform the avalibility of new data
-            self.__sem_available_data.release()
-
-            # Return the pointer to the values
-            return m_return_value
-        else:
-            raise ValueError("func can't be empty")
+        # Signal the availability of new data.
+        self.__sem_available_data.release()
 
 
     #----------------------------------------------------------------------
     def stop(self):
         """
         Stop all threads in the pool.
+
+        The pool cannot be used again after calling this method.
         """
 
-        # Signal to all threads to stop
-        self.__continue = False
-        map(GolismeroThread.stop, self.__task_pool_available)
+        # Signal to all threads to stop.
+        self.__stop = True
+        map(GolismeroThread.stop, self.__available_workers)
 
-        # Unlock
+        # Unlock the main loop.
         self.__sem_available_data.release()
 
 
     #----------------------------------------------------------------------
     def terminate(self):
         """
-        Force to exit killing all threads.
+        Force exit killing all threads.
+
+        The pool cannot be used again after calling this method.
         """
         raise NotImplementedError()
-
-
-#----------------------------------------------------------------------
-if __name__ == "__main__":
-    #
-    # This code is used for testing
-    #
-    #p = GolismeroPool(5)
-    l = [1,2,4,5,9,10,29,1919]
-    f = lambda x: x+1
-    r = parallel(f, l)
-
-    print r
