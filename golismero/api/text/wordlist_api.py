@@ -372,7 +372,7 @@ class AdvancedListWordlist(AbstractWordlist):
         if i != len(self.__wordlist) and self.__wordlist[i] == x:
             return i
 
-        raise ValueError
+        raise ValueError()
 
 
     #----------------------------------------------------------------------
@@ -385,7 +385,7 @@ class AdvancedListWordlist(AbstractWordlist):
         if i:
             return i
 
-        raise ValueError
+        raise ValueError()
 
 
     #----------------------------------------------------------------------
@@ -398,7 +398,7 @@ class AdvancedListWordlist(AbstractWordlist):
         if i:
             return i
 
-        raise ValueError
+        raise ValueError()
 
 
     #----------------------------------------------------------------------
