@@ -68,31 +68,31 @@ class HTML(Information):
 
     Example:
 
-    >>> from golismero.api.data.information.html import HTML
-    >>> html_info = \"\"\"<html>
-    <head>
-      <title>My sample page</title>
-    </head>
-    <body>
-      <a href="http://www.mywebsitelink.com">Link 1</a>
-      <p>
-        <img src="/images/my_image.png" />
-      </p>
-    </body>
-    </html>\"\"\"
-    >>> html_parsed = HTML(html_info)
-    >>> html_parsed.links
-    [<golismero.api.net.web_utils.HTMLElement object at 0x109ca8b50>]
-    >>> html_parsed.links[0].tag_name
-    'a'
-    >>> html_parsed.links[0].tag_content
-    'Link 1'
-    >>> html_parsed.links[0].attrs
-    {'href': 'http://www.mywebsitelink.com'}
-    >>> html_parsed.images[0].tag_name
-    'img'
-    >>> html_parsed.images[0].tag_content
-    ''
+        >>> from golismero.api.data.information.html import HTML
+        >>> html_info = \"\"\"<html>
+        <head>
+          <title>My sample page</title>
+        </head>
+        <body>
+          <a href="http://www.mywebsitelink.com">Link 1</a>
+          <p>
+            <img src="/images/my_image.png" />
+          </p>
+        </body>
+        </html>\"\"\"
+        >>> html_parsed = HTML(html_info)
+        >>> html_parsed.links
+        [<golismero.api.net.web_utils.HTMLElement object at 0x109ca8b50>]
+        >>> html_parsed.links[0].tag_name
+        'a'
+        >>> html_parsed.links[0].tag_content
+        'Link 1'
+        >>> html_parsed.links[0].attrs
+        {'href': 'http://www.mywebsitelink.com'}
+        >>> html_parsed.images[0].tag_name
+        'img'
+        >>> html_parsed.images[0].tag_content
+        ''
     """
 
     information_type = Information.INFORMATION_HTML

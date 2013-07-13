@@ -302,19 +302,20 @@ class AdvancedListWordlist(AbstractWordlist):
 
     Example:
 
-    >>> from golismero.api.text.wordlist_api import AdvancedListWordlist
-    >>> a = AdvancedListWordlist("./wordlist/golismero/no_spiderable_urls.txt")
-    >>> "exit" in a
-    True
-    >>> for p in a
-          print p
-    logout
-    logoff
-    exit
-    sigout
-    signout
-    delete
-    remove
+        >>> from golismero.api.text.wordlist_api import AdvancedListWordlist
+        >>> a = AdvancedListWordlist("./wordlist/golismero/no_spiderable_urls.txt")
+        >>> "exit" in a
+        True
+        >>> for p in a
+        ...   print p
+        ...
+        logout
+        logoff
+        exit
+        sigout
+        signout
+        delete
+        remove
 
 
     This wordlist allow to do some operations with wordlists:
