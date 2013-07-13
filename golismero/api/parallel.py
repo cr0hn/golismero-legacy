@@ -330,8 +330,7 @@ class GolismeroThread(Thread):
 
         # Check the user isn't a complete moron who doesn't read the docs.
         if self.ident != get_ident():
-            msg = "Don't call GolismeroThread.run() yourself!"
-            raise SyntaxError(msg % name)
+            raise SyntaxError("Don't call GolismeroThread.run() yourself!")
 
         # Loop until signaled to stop.
         while True:
@@ -459,8 +458,7 @@ class GolismeroPool(Thread):
 
         # Check the user isn't a complete moron who doesn't read the docs.
         if self.ident != get_ident():
-            msg = "Don't call GolismeroPool.run() yourself!"
-            raise SyntaxError(msg % name)
+            raise SyntaxError("Don't call GolismeroPool.run() yourself!")
 
         while True:
 
