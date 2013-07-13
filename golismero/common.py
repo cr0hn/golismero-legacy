@@ -149,6 +149,25 @@ def get_default_config_file():
 
 
 #--------------------------------------------------------------------------
+_wordlists_folder = None
+def get_wordlists_folder():
+    """
+    :returns: Pathname of the wordlists folder.
+    :rtype: str
+    """
+    global _wordlists_folder
+    if not _wordlists_folder:
+        pathname = path.split(path.abspath(__file__))[0]
+        if pathname:
+            pathname = path.join(pathname, "..")
+        else:
+            pathname = get_user_settings_folder()
+        pathname = path.abspath(pathname)
+        _wordlists_folder = path.join(pathname, "wordlist")
+    return _wordlists_folder
+
+
+#--------------------------------------------------------------------------
 _profiles_folder = None
 def get_profiles_folder():
     """

@@ -48,9 +48,9 @@ __all__ = ["detect_language"]
 
 try:
     from nltk import wordpunct_tokenize
-    from nltk.corpus import stopword
+    from nltk.corpus import stopwords
 except ImportError:
-    print "Cant import nltk libraries"
+    print "Can't import nltk libraries"
 
 #----------------------------------------------------------------------
 def _calculate_languages_ratios(text):

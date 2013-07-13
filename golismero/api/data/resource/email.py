@@ -35,7 +35,7 @@ __all__ = ["Email"]
 from . import Resource
 from .domain import Domain
 from .. import identity
-from ...net.web_utils import DecomposedURL, is_in_scope
+from ...net.web_utils import is_in_scope
 
 
 #------------------------------------------------------------------------------

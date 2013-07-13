@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["WordListAPI"]
 
 from os import getcwd, walk
-from os.path import join, sep, abspath, exists, isfile
+from os.path import join, sep, abspath
 from golismero.api.text.matching_analyzer import get_matching_level
 from golismero.api.file import FileManager
 from repoze.lru import lru_cache
@@ -42,7 +42,7 @@ import re
 import copy
 
 from ..logger import Logger
-from ...common import Singleton
+from ...common import Singleton, get_wordlists_folder
 
 
 #------------------------------------------------------------------------------
@@ -59,9 +59,8 @@ class _WordListAPI(Singleton):
         self.__store = {} # Pair with: (name, path)
 
         # Initial load
-        # XXX FIXME this is broken!!! :(
-        # It won't work unless you happen to be standing on the GoLismero folder!
-        self.__load_wordlists(join(getcwd(), "wordlist"))
+        self.__load_wordlists( get_wordlists_folder() )
+
 
     #----------------------------------------------------------------------
     def __resolve_wordlist_name(self, wordlist):
@@ -154,6 +153,7 @@ class _WordListAPI(Singleton):
 
         return SimpleWordList(self.__resolve_wordlist_name(wordlist_name))
 
+
     #----------------------------------------------------------------------
     @lru_cache(maxsize=30)
     def get_advanced_wordlist_as_dict(self, wordlist, separator=";", inteligence_load=False):
@@ -175,6 +175,7 @@ class _WordListAPI(Singleton):
         """
 
         return AdvancedDicWordlist(self.__resolve_wordlist_name(wordlist), inteligence_load, separator)
+
 
     #----------------------------------------------------------------------
     @lru_cache(maxsize=30)
@@ -282,12 +283,16 @@ class AbstractWordlist(object):
     def search_mutations(self, word, rules):
         raise NotImplementedError()
 
+
     #----------------------------------------------------------------------
     def clone(self):
         """
-        This method get a clone of the object
+        This method makes a clone of the object.
+
+        :return: A copy of this object.
         """
         raise NotImplementedError()
+
 
 #------------------------------------------------------------------------------
 class AdvancedListWordlist(AbstractWordlist):
@@ -338,27 +343,26 @@ class AdvancedListWordlist(AbstractWordlist):
 
         self.__wordlist   = [w.replace("\n","") for w in m_tmp_wordlist]
 
+
     #----------------------------------------------------------------------
     def __getitem__(self, i):
-        """"""
         return self.__wordlist[i]
+
 
     #----------------------------------------------------------------------
     def __setitem__(self, i, v):
-        """"""
         self.__wordlist[i] = v
 
 
     #----------------------------------------------------------------------
     def __contains__(self, i):
-        """"""
         return i in self.__wordlist
 
 
     #----------------------------------------------------------------------
     def __iter__(self):
-        """Make wordlist iterable"""
         return self.__wordlist.__iter__()
+
 
     #----------------------------------------------------------------------
     def binary_search(self, word, low_pos=0, high_pos=None):
@@ -383,7 +387,6 @@ class AdvancedListWordlist(AbstractWordlist):
         raise ValueError
 
 
-
     #----------------------------------------------------------------------
     def get_rfirst(self, word, init=0):
         """
@@ -395,14 +398,10 @@ class AdvancedListWordlist(AbstractWordlist):
             return i
 
         raise ValueError
+
+
     #----------------------------------------------------------------------
     def clone(self):
-        """
-        This method get a clone of the object
-
-        :return: a copy of this object.
-        :rtype: AdvancedListWordlist
-        """
         m_temp = self
         m_temp.__wordlist = copy.copy(self.__wordlist)
 
@@ -411,8 +410,8 @@ class AdvancedListWordlist(AbstractWordlist):
 
     #----------------------------------------------------------------------
     def pop(self):
-        """"""
         return self.__wordlist.pop()
+
 
 #------------------------------------------------------------------------------
 class AdvancedDicWordlist(object):
@@ -470,10 +469,7 @@ class AdvancedDicWordlist(object):
 
         :param inteligence_load: Indicates if the wordlist must detect if the line has values that can be converted in a list.
         :type inteligence_load: bool
-
         """
-
-
 
         if not wordlist:
             raise ValueError("Empty wordlist got")
@@ -529,7 +525,6 @@ class AdvancedDicWordlist(object):
         word = str(word)
 
         return { i:v for i, v in self.__wordlist.iteritems() if word == i}
-
 
 
     #----------------------------------------------------------------------
@@ -638,12 +633,11 @@ class AdvancedDicWordlist(object):
 
     #----------------------------------------------------------------------
     def __getitem__(self, i):
-        """"""
         return self.__wordlist[i]
+
 
     #----------------------------------------------------------------------
     def __setitem__(self, i, v):
-        """"""
         if not isinstance(v, list):
             raise ValueError("Excepted list type. Got '%s'" % type(v))
 
@@ -652,13 +646,11 @@ class AdvancedDicWordlist(object):
 
     #----------------------------------------------------------------------
     def __contains__(self, i):
-        """"""
         return i in self.__wordlist
 
 
     #----------------------------------------------------------------------
     def iteritems(self):
-        """"""
         return self.__wordlist.iteritems()
 
 
@@ -666,17 +658,16 @@ class AdvancedDicWordlist(object):
     def __iter__(self):
         return self.__wordlist.__iter__
 
+
     #----------------------------------------------------------------------
     def itervalues(self):
-        """"""
         return self.__wordlist.itervalues()
+
 
     #----------------------------------------------------------------------
     def iterkeys(self):
-        """"""
         return self.__wordlist.iterkeys()
 
 
-
-# Hidden the singleton pattern
+# Singleton.
 WordListAPI = _WordListAPI()

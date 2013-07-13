@@ -87,7 +87,7 @@ class WebServerFingerprint(Information):
                 raise TypeError("Expected dict, got %s instead" % type(others))
             for v in related:
                 if not isinstance(v, str):
-                    raise TypeError("Expected str, got %s instead" % type(k))
+                    raise TypeError("Expected str, got %s instead" % type(v))
 
         if others is not None:
             if not isinstance(others, dict):

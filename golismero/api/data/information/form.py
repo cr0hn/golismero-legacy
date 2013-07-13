@@ -34,7 +34,6 @@ __all__ = ["Form"]
 
 from . import Information
 from .. import identity
-from ...net.web_utils import HTMLParser
 
 
 #------------------------------------------------------------------------------

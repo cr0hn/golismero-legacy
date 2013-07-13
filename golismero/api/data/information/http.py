@@ -33,13 +33,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["HTTP_Request", "HTTP_Response"]
 
 from . import Information
-from .html import HTML
 from .. import identity
 from ...net.web_utils import DecomposedURL
 
 import re
 import httplib
-import mimetools
 
 
 #------------------------------------------------------------------------------
