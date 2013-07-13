@@ -41,9 +41,10 @@ class TestReport(ReportPlugin):
     Plugin to test the reports.
     """
 
+
     #----------------------------------------------------------------------
     def is_supported(self, output_file):
-        return not output_file
+        return not output_file or output_file == "-"
 
 
     #----------------------------------------------------------------------

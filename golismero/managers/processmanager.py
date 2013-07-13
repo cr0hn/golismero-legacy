@@ -48,7 +48,7 @@ from multiprocessing import Manager
 from multiprocessing import Process as _Original_Process
 from multiprocessing.pool import Pool as _Original_Pool
 from os import getpid
-from warnings import catch_warnings, warn
+from warnings import catch_warnings
 from traceback import format_exc, print_exc, format_exception_only, format_list
 from signal import signal, SIGINT
 
@@ -250,16 +250,7 @@ def _bootstrap(context, func, argv, argd):
 
         # Send back an ACK.
         finally:
-            ack_identity = None
-            try:
-                if func == "recv_info":
-                    if argv:
-                        ack_identity = argv[0].identity
-                    else:
-                        ack_identity = argd["information"].identity
-            except Exception, e:
-                warn(e.message, RuntimeWarning)
-            context.send_ack(ack_identity)
+            context.send_ack()
 
     # On keyboard interrupt or fatal error, tell the Orchestrator we need to stop.
     except:
@@ -287,7 +278,7 @@ class PluginContext (object):
     Serializable execution context for the plugins.
     """
 
-    def __init__(self, orchestrator_pid, msg_queue,
+    def __init__(self, orchestrator_pid, msg_queue, ack_identity = None,
                  plugin_info = None, audit_name = None, audit_config = None):
         """
         Serializable execution context for the plugins.
@@ -297,6 +288,9 @@ class PluginContext (object):
 
         :param msg_queue: Message queue where to send the responses.
         :type msg_queue: Queue
+
+        :param ack_identity: Identity hash of the current input data.
+        :type ack_identity: str
 
         :param plugin_info: Plugin information.
         :type plugin_info: PluginInfo
@@ -308,6 +302,7 @@ class PluginContext (object):
         :type audit_config: str
         """
         self.__orchestrator_pid = orchestrator_pid
+        self.__ack_identity     = ack_identity
         self.__plugin_info      = plugin_info
         self.__audit_name       = audit_name
         self.__audit_config     = audit_config
@@ -336,6 +331,14 @@ class PluginContext (object):
         :rtype: AuditConfig
         """
         return self.__audit_config
+
+    @property
+    def ack_identity(self):
+        """"
+        :returns: Identity hash of the current input data, or None if not running a plugin.
+        :rtype: str | None
+        """
+        return self.__ack_identity
 
     @property
     def plugin_info(self):
@@ -383,26 +386,58 @@ class PluginContext (object):
 
 
     #----------------------------------------------------------------------
-    def send_ack(self, ack_identity = None):
+    def send_ack(self):
         """
-        Send ACK messages from the plugins to the orchestrator.
-
-        :param ack_identity: Optional, identity hash of the data being acknowledged.
-        :type ack_identity: str | None
+        Send ACK messages from the plugins to the Orchestrator.
         """
         self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                       message_code = MessageCode.MSG_CONTROL_ACK,
-                      message_info = ack_identity,
-                      priority = MessagePriority.MSG_PRIORITY_LOW)
+                      message_info = self.ack_identity,
+                          priority = MessagePriority.MSG_PRIORITY_LOW)
+
+
+    #----------------------------------------------------------------------
+    def send_status(self, progress = None, text = None):
+        """
+        Send status updates from the plugins to the Orchestrator.
+
+        :param progress: Progress percentage (0-100) as a float,
+                         or None to indicate progress can't be measured.
+        :type progress: float | None
+
+        :param text: Optional status text.
+        :type text: str | None
+        """
+
+        # Validate the progress.
+        if progress is not None:
+            if type(progress) in (int, long):
+                progress = float(progress)
+            elif type(progress) is not float:
+                raise TypeError("Expected float, got %s instead", type(progress))
+            if progress < 0.0:
+                progress = 0.0
+            elif progress > 100.0:
+                progress = 100.0
+
+        # Validate the text.
+        if text is not None and type(text) not in (str, unicode):
+            raise TypeError("Expected str or unicode, got %s instead", type(text))
+
+        # Send the status message to the Orchestrator.
+        self.send_msg(message_type = MessageType.MSG_TYPE_STATUS,
+                      message_code = MessageCode.MSG_STATUS_PLUGIN_STEP,
+                      message_info = (self.ack_identity, progress, text),
+                          priority = MessagePriority.MSG_PRIORITY_MEDIUM)
 
 
     #----------------------------------------------------------------------
     def send_msg(self, message_type = 0,
                        message_code = 0,
                        message_info = None,
-                       priority = MessagePriority.MSG_PRIORITY_MEDIUM):
+                           priority = MessagePriority.MSG_PRIORITY_MEDIUM):
         """
-        Send messages from the plugins to the orchestrator.
+        Send messages from the plugins to the Orchestrator.
 
         :param message_type: Message type. Must be one of the constants from MessageType.
         :type mesage_type: int
@@ -442,7 +477,7 @@ class PluginContext (object):
     #----------------------------------------------------------------------
     def send_raw_msg(self, message):
         """
-        Send raw messages from the plugins to the orchestrator.
+        Send raw messages from the plugins to the Orchestrator.
 
         :param message: Message to send.
         :type message: Message
@@ -468,7 +503,7 @@ class PluginContext (object):
     #----------------------------------------------------------------------
     def remote_call(self, rpc_code, *argv, **argd):
         """
-        Make synchronous remote procedure calls on the orchestrator.
+        Make synchronous remote procedure calls on the Orchestrator.
 
         :param rpc_code: RPC code.
         :type rpc_code: int
@@ -483,11 +518,12 @@ class PluginContext (object):
         # Send the RPC message.
         self.send_msg(message_type = MessageType.MSG_TYPE_RPC,
                       message_code = rpc_code,
-                      message_info = (response_queue, argv, argd))
+                      message_info = (response_queue, argv, argd),
+                          priority = MessagePriority.MSG_PRIORITY_HIGH)
 
         # Get the response.
         try:
-            raw_response = response_queue.get()
+            raw_response = response_queue.get()  # blocking call
 
         # If the above fails we can assume the parent process is dead.
         except:
@@ -509,7 +545,7 @@ class PluginContext (object):
     #----------------------------------------------------------------------
     def async_remote_call(self, rpc_code, *argv, **argd):
         """
-        Make asynchronous remote procedure calls on the orchestrator.
+        Make asynchronous remote procedure calls on the Orchestrator.
 
         There's no return value, since we're not waiting for a response.
 
@@ -519,13 +555,14 @@ class PluginContext (object):
         # Send the RPC message.
         self.send_msg(message_type = MessageType.MSG_TYPE_RPC,
                       message_code = rpc_code,
-                      message_info = (None, argv, argd))
+                      message_info = (None, argv, argd),
+                          priority = MessagePriority.MSG_PRIORITY_HIGH)
 
 
     #----------------------------------------------------------------------
     def bulk_remote_call(self, rpc_code, *arguments):
         """
-        Make synchronous bulk remote procedure calls on the orchestrator.
+        Make synchronous bulk remote procedure calls on the Orchestrator.
 
         The interface and behavior mimics that of the built-in map() function.
         For more details see: http://docs.python.org/2/library/functions.html#map
@@ -547,7 +584,7 @@ class PluginContext (object):
     #----------------------------------------------------------------------
     def async_bulk_remote_call(self, rpc_code, *arguments):
         """
-        Make asynchronous bulk remote procedure calls on the orchestrator.
+        Make asynchronous bulk remote procedure calls on the Orchestrator.
 
         The interface and behavior mimics that of the built-in map() function.
         For more details see: http://docs.python.org/2/library/functions.html#map

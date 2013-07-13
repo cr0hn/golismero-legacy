@@ -55,7 +55,7 @@ class UIManager (object):
         :type config: AuditConfig
         """
 
-        # Keep a reference to the orchestrator.
+        # Keep a reference to the Orchestrator.
         self.__orchestrator = orchestrator
 
         # Init and start notifier.

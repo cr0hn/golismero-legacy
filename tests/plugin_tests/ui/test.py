@@ -80,27 +80,29 @@ class TestUIPlugin(UIPlugin):
         print "  Audit:     %s" % message.audit_name
         print "  Plugin:    %s" % message.plugin_name
         print "  Type:      %s" % MessageType.get_name_from_value(message.message_type)
-        print "  Code:      %s" % MessageCode.get_name_from_value(message.message_code)
+        print "  Code:      %s" % MessageCode.get_name_from_value_and_type(message.message_code, message.message_type)
         print "  Priority:  %s" % MessagePriority.get_name_from_value(message.priority)
         print "  Payload:   %r" % (message.message_info,)
         print
 
-        if message.message_code == MessageCode.MSG_CONTROL_LOG:
-            (text, level, is_error) = message.message_info
-            if is_error:
-                print colorize(text, "magenta")
-            else:
-                print colorize(text, "cyan")
+        if message.message_type == MessageType.MSG_TYPE_CONTROL:
 
-        elif message.message_code == MessageCode.MSG_CONTROL_ERROR:
-            (description, traceback) = message.message_info
-            print colorize(description, "magenta")
-            print colorize(traceback, "magenta")
+            if message.message_code == MessageCode.MSG_CONTROL_LOG:
+                (text, level, is_error) = message.message_info
+                if is_error:
+                    print colorize(text, "magenta")
+                else:
+                    print colorize(text, "cyan")
 
-        elif message.message_code == MessageCode.MSG_CONTROL_WARNING:
-            for w in message.message_info:
-                formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
-                print colorize(formatted, "yellow")
+            elif message.message_code == MessageCode.MSG_CONTROL_ERROR:
+                (description, traceback) = message.message_info
+                print colorize(description, "magenta")
+                print colorize(traceback, "magenta")
+
+            elif message.message_code == MessageCode.MSG_CONTROL_WARNING:
+                for w in message.message_info:
+                    formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
+                    print colorize(formatted, "yellow")
 
 
     #----------------------------------------------------------------------

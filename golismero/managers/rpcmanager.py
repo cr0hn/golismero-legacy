@@ -105,7 +105,7 @@ class RPCManager (object):
         :type orchestrator: Orchestrator
         """
 
-        # Keep a reference to the orchestrator.
+        # Keep a reference to the Orchestrator.
         self.__orchestrator = orchestrator
 
         # Keep a reference to the global RPC map (it's faster this way).

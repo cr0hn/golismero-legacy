@@ -70,7 +70,7 @@ def test():
     audit = AuditConfig()
     audit.from_dictionary({
         "targets": ["http://www.example.com/folder/subfolder/index.html",],
-        "reports": [None,],
+        "reports": ["-",],
         "audit_name": "test_audit",
         "audit_db": "sqlite://test_audit.db",
     })

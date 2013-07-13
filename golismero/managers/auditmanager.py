@@ -170,7 +170,7 @@ class AuditManager (object):
     #----------------------------------------------------------------------
     def dispatch_msg(self, message):
         """
-        Process an incoming message from the orchestrator.
+        Process an incoming message from the Orchestrator.
 
         :param message: Incoming message.
         :type message: Message
@@ -371,7 +371,7 @@ class Audit (object):
         # Register plugins with the notifier.
         self.__notifier.add_multiple_plugins(m_audit_plugins)
 
-        # Send a message to the orchestrator with all target URLs,
+        # Send a message to the Orchestrator with all target URLs,
         # followed by an ACK.
         self.__expecting_ack += 1
         try:
@@ -394,7 +394,7 @@ class Audit (object):
     #----------------------------------------------------------------------
     def send_info(self, data):
         """
-        Send data to the orchestrator.
+        Send data to the Orchestrator.
 
         :param data: Data to send.
         :type data: Data
@@ -405,11 +405,11 @@ class Audit (object):
 
     #----------------------------------------------------------------------
     def send_msg(self, message_type = MessageType.MSG_TYPE_DATA,
-                       message_code = 0,
+                       message_code = MessageCode.MSG_DATA,
                        message_info = None,
                        priority = MessagePriority.MSG_PRIORITY_MEDIUM):
         """
-        Send messages to the orchestrator.
+        Send messages to the Orchestrator.
 
         :param message_type: Message type. Must be one of the constants from MessageType.
         :type mesage_type: int

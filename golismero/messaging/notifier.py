@@ -37,7 +37,7 @@ from ..api.data import Data
 ##from ..api.logger import Logger
 from ..api.plugin import Plugin
 from .message import Message
-from .codes import MessageType
+from .codes import MessageType, MessageCode
 
 from collections import defaultdict
 ##from traceback import format_exc
@@ -346,22 +346,33 @@ class AuditNotifier(Notifier):
         # Only ACKs for data messages carry the identity.
         if identity:
 
-            # Only ACKs for plugin messages carry the plugin name.
-            if plugin_name:
+            try:
 
-                # Add the plugin to the already processed set.
-                self.database.mark_plugin_finished(identity, plugin_name)
+                # Only ACKs for plugin messages carry the plugin name.
+                if plugin_name:
 
-                # Remove the plugin from the currently processing data map.
-                try:
-                    self.__processing[identity].remove(plugin_name)
-                except KeyError:
-                    msg = "Got an unexpected ACK for data ID %s from plugin %s"
-                    warn(msg % (identity, plugin_name))
+                    # Add the plugin to the already processed set.
+                    self.database.mark_plugin_finished(identity, plugin_name)
 
-            # If the stage was finished, mark it so.
-            if self.__has_finished_stage(identity):
-                self.database.mark_stage_finished(identity, self.current_stage)
+                    # Remove the plugin from the currently processing data map.
+                    try:
+                        self.__processing[identity].remove(plugin_name)
+                    except KeyError:
+                        msg = "Got an unexpected ACK for data ID %s from plugin %s"
+                        warn(msg % (identity, plugin_name))
+
+                    # Notify the Orchestrator that the plugin has finished running.
+                    self.orchestrator.notify_plugin_status(
+                        self.audit.name, plugin_name,
+                        MessageCode.MSG_STATUS_PLUGIN_END,
+                        identity,
+                    )
+
+            finally:
+
+                # If the stage was finished, mark it so.
+                if self.__has_finished_stage(identity):
+                    self.database.mark_stage_finished(identity, self.current_stage)
 
 
     #----------------------------------------------------------------------
@@ -496,23 +507,59 @@ class AuditNotifier(Notifier):
         :raises RuntimeError: The plugin doesn't support the method.
         """
 
-        # If the plugin doesn't support the callback method, drop the message
+        # If the plugin doesn't support the callback method, drop the message.
         if not hasattr(plugin, method):
             msg = "Tried to run plugin %r but it has no method %r"
             raise RuntimeError(msg % (plugin, method))
 
-        # Get the Audit and Orchestrator instances
+        # Get the Audit and Orchestrator instances.
         audit        = self.__audit
         orchestrator = audit.orchestrator
 
-        # Prepare the context for the OOP observer
-        context = orchestrator.build_plugin_context(audit.name, plugin)
-
-        # Add the plugin to the currently processing data map.
+        # If it's a data message...
         if method == "recv_info":
-            self.__processing[payload.identity].add(context.plugin_name)
 
-        # Run the callback in a pooled process
+            # Get the payload identity hash.
+            ack_identity = payload.identity
+
+            # Prepare the context for the OOP observer.
+            context = orchestrator.build_plugin_context(
+                audit.name, plugin, ack_identity
+            )
+
+            # Add the plugin to the currently processing data map.
+            self.__processing[ack_identity].add(context.plugin_name)
+
+            # Notify the Orchestrator of the plugin execution start.
+            orchestrator.notify_plugin_status(
+                audit.name,
+                context.plugin_name,
+                MessageCode.MSG_STATUS_PLUGIN_BEGIN,
+                ack_identity,
+            )
+
+        # If it's any other message type...
+        else:
+
+            # Prepare the context for the OOP observer.
+            context = orchestrator.build_plugin_context(
+                audit.name, plugin, None
+            )
+
+        #
+        # XXXXXXXXXXXXXXXXXXXXXXX NOTE XXXXXXXXXXXXXXXXXXXXXXX
+        #
+        # We currently don't check for errors below,
+        # because if we fail to execute plugins then we
+        # shut down the Orchestrator anyway.
+        #
+        # When we implement the NodeManager we'll probably
+        # want to review this, since a single node going down
+        # shouldn't cause the Orchestrator to go down as well.
+        # We'll probably have to fake an ACK on error here.
+        #
+
+        # Run the callback in a pooled process.
         orchestrator.processManager.run_plugin(
             context, method, (payload,), {})
 
@@ -647,7 +694,10 @@ class UINotifier(Notifier):
             except KeyError:
                 audit = None
             if audit:
-                context = self.__orchestrator.build_plugin_context(audit_name, plugin)
+                context = self.__orchestrator.build_plugin_context(
+                    audit_name, plugin,
+                    payload.identity if method == "recv_info" else None
+                )
             else:
                 context = Config._context
                 warn("Received a message from a finished audit! %s" % payload,

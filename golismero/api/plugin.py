@@ -148,6 +148,7 @@ class Plugin (object):
 
     PLUGIN_TYPE = PLUGIN_TYPE_ABSTRACT
 
+    # Useful alias for the plugin state container.
     state = PluginState
 
 
@@ -199,6 +200,25 @@ class Plugin (object):
            Called internally by GoLismero. Do not call or override!
         """
         return
+
+
+    #----------------------------------------------------------------------
+    def update_status(self, progress = None, text = None):
+        """
+        Plugins can call this method to tell the user of the current
+        progress of whatever the plugin is doing.
+
+        .. warning::
+           Do not override this method!
+
+        :param progress: Progress percentage (0-100) as a float,
+                         or None to indicate progress can't be measured.
+        :type progress: float | None
+
+        :param text: Optional status text.
+        :type text: str | None
+        """
+        Config._context.send_status(progress, text)
 
 
 ##    #----------------------------------------------------------------------

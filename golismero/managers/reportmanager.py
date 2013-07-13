@@ -58,7 +58,7 @@ class ReportManager (object):
         # Keep a reference to the audit configuration.
         self.__config = config
 
-        # Keep a reference to the orchestrator.
+        # Keep a reference to the Orchestrator.
         self.__orchestrator = orchestrator
 
         # Load the report plugins.

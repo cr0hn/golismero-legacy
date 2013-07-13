@@ -79,27 +79,37 @@ class Message (object):
         :type priority: int
         """
 
-        # Validate the arguments
+        # Validate the argument types.
         if type(message_type) != int:
             raise TypeError("Expected int, got %s instead" % type(message_type))
-        if message_type not in MSG_CODES:
-            raise ValueError("Invalid message type: %d" % message_type)
-        if message_type != MessageType.MSG_TYPE_DATA and type(message_code) != int:
+        if type(message_code) != int:
             raise TypeError("Expected int, got %s instead" % type(message_code))
-        if (message_type == MessageType.MSG_TYPE_CONTROL and
-            not message_code in MSG_CONTROL_CODES
-        ):
-            raise ValueError("Invalid control message code: %d" % message_code)
         if audit_name is not None and type(audit_name) not in (str, unicode):
             raise TypeError("Expected int, got %s instead" % type(audit_name))
         if plugin_name is not None and type(plugin_name) not in (str, unicode):
             raise TypeError("Expected int, got %s instead" % type(plugin_name))
         if type(priority) != int:
             raise TypeError("Expected int, got %s instead" % type(priority))
+
+        # Validate the codes.
+        if message_type not in MSG_TYPES:
+            raise ValueError("Invalid message type: %d" % message_type)
+        if message_type == MessageType.MSG_TYPE_CONTROL:
+            if not message_code in MSG_CONTROL_CODES:
+                raise ValueError("Invalid control message code: %d" % message_code)
+        elif message_type == MessageType.MSG_TYPE_RPC:
+            if not message_code in MSG_RPC_CODES:
+                raise ValueError("Invalid RPC message code: %d" % message_code)
+        elif message_type == MessageType.MSG_TYPE_STATUS:
+            if not message_code in MSG_STATUS_CODES:
+                raise ValueError("Invalid status message code: %d" % message_code)
+        elif message_type == MessageType.MSG_TYPE_DATA:
+            if not message_code in MSG_DATA_CODES:
+                raise ValueError("Invalid data message code: %d" % message_code)
         if priority not in MSG_PRIORITIES:
             raise ValueError("Invalid priority level: %d" % priority)
 
-        # Build the message object
+        # Build the message object.
         self.__message_type = message_type
         self.__message_code = message_code
         self.__message_info = message_info

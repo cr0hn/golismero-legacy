@@ -38,7 +38,6 @@ __all__ = ["Orchestrator"]
 from .console import Console
 from ..api.config import Config
 from ..api.logger import Logger
-from ..common import OrchestratorConfig
 from ..database.cachedb import PersistentNetworkCache, VolatileNetworkCache
 from ..managers.auditmanager import AuditManager
 from ..managers.pluginmanager import PluginManager
@@ -68,7 +67,7 @@ class Orchestrator (object):
     #----------------------------------------------------------------------
     def __init__(self, config):
         """
-        Start the orchestrator.
+        Start the Orchestrator.
 
         :param config: configuration of orchestrator.
         :type config: OrchestratorConfig
@@ -365,7 +364,7 @@ class Orchestrator (object):
 
 
     #----------------------------------------------------------------------
-    def build_plugin_context(self, audit_name, plugin):
+    def build_plugin_context(self, audit_name, plugin, ack_identity):
         """
         Prepare a PluginContext object to pass to the plugins.
 
@@ -375,22 +374,50 @@ class Orchestrator (object):
         :param plugin: Plugin instance.
         :type plugin: Plugin
 
+        :param ack_identity: Identity hash of the current input data.
+        :type ack_identity: str
+
         :returns: OOP plugin execution context.
         :rtype: PluginContext
         """
 
-        # FIXME:
-        # The only reason this method is here is because we need self.__queue.
-        # Otherwise, by design it should belong to the ProcessManager.
-
-        # Get the plugin information
+        # Get the plugin information.
         info = self.__pluginManager.get_plugin_info_from_instance(plugin)[1]
 
-        # Get the audit configuration
+        # Get the audit configuration.
         audit_config = self.__auditManager.get_audit(audit_name).params
 
-        # Return the context instance
-        return PluginContext(getpid(), self.__queue, info, audit_name, audit_config)
+        # Return the context instance.
+        return PluginContext(getpid(), self.__queue,
+                             ack_identity, info, audit_name, audit_config)
+
+
+    #----------------------------------------------------------------------
+    def notify_plugin_status(self, audit_name, plugin_name, status_code, status_data):
+        """
+        Notify the Orchestrator of a change in a plugin execution state.
+
+        :param audit_name: Name of the audit.
+        :type audit_name: str
+
+        :param plugin_name: Name of the plugin.
+        :type plugin_name: str
+
+        :param status_code: Status code. Must be one of the MessageCode.MSG_STATUS_* constants.
+        :type status_code: int
+
+        :param status_data: Status data.
+        :type status_data: *
+        """
+        msg = Message(
+            message_type = MessageType.MSG_TYPE_STATUS,
+            message_code = status_code,
+            message_info = status_data,
+             plugin_name = plugin_name,
+              audit_name = audit_name,
+                priority = MessagePriority.MSG_PRIORITY_MEDIUM,
+        )
+        self.dispatch_msg(msg)
 
 
     #----------------------------------------------------------------------
