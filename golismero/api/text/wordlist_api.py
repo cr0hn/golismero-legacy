@@ -484,7 +484,7 @@ class AdvancedDicWordlist(object):
             raise IOError("Error when trying to open wordlist. Error: %s" % e.message)
 
         self.__wordlist = {}
-        m_reg           = re.compile("([#A-Za-z\d]+|[\'\"][\w\d\s]+[\'\"])")
+        m_reg           = re.compile(r"([#A-Za-z\d]+|[\'\"][\w\d\s]+[\'\"])")
         for k in m_tmp_wordlist:
             v = k.replace("\n","").replace("\r","").split(separator,1)
 

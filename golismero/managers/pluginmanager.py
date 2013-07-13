@@ -336,9 +336,9 @@ class PluginInfo (object):
         if config_file:
             config_parser = RawConfigParser()
             config_parser.read(config_file)
-            if config_parser.has_section(plugin_name):
+            if config_parser.has_section(self.__plugin_name):
                 self.__plugin_config.update(
-                    dict(config_parser.items(plugin_name)))
+                    dict(config_parser.items(self.__plugin_name)))
 
 
     #----------------------------------------------------------------------

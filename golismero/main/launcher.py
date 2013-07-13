@@ -36,11 +36,8 @@ from .console import Console
 from .orchestrator import Orchestrator
 from ..api.net.web_utils import detect_auth_method, check_auth
 from ..common import OrchestratorConfig, AuditConfig
-from ..managers.processmanager import Process, Manager
 
 import datetime
-import subprocess
-import sys
 import traceback
 
 
@@ -92,7 +89,7 @@ def run(options, *audits):
                 else:
                     auth, _ = detect_auth_method(auditParams.proxy_addr)
                     if auth:
-                        Console.display_error("[!] Authentication required for proxy: '%s'. Use '--proxy-user' and '--proxy-pass' to set the username and password." % cmdParams.proxy_addr)
+                        Console.display_error("[!] Authentication required for proxy: '%s'. Use '--proxy-user' and '--proxy-pass' to set the username and password." % auditParams.proxy_addr)
                         return 1
 
         # Run the Orchestrator.
