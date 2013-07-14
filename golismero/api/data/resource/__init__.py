@@ -55,10 +55,6 @@ class Resource(Data):
     RESOURCE_EMAIL         = 6    # Email addresses
 
 
-    RESOURCE_FIRST = RESOURCE_URL
-    RESOURCE_LAST  = RESOURCE_EMAIL
-
-
     #----------------------------------------------------------------------
 
     data_type = Data.TYPE_RESOURCE

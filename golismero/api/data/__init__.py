@@ -255,9 +255,6 @@ class Data(object):
     TYPE_VULNERABILITY         = 2
     TYPE_RESOURCE              = 3
 
-    TYPE_FIRST   = TYPE_INFORMATION    # constant for the first valid type
-    TYPE_LAST    = TYPE_RESOURCE       # constant for the last valid type
-
     data_type = TYPE_UNKNOWN
 
 

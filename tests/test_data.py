@@ -52,28 +52,31 @@ from golismero.api.data.resource import Resource
 from golismero.api.data.vulnerability import Vulnerability
 
 
+# Get the information and resource type IDs.
+INFORMATION_TYPES = {
+    getattr(Information, name)
+    for name in dir(Information)
+    if name.startswith("INFORMATION_")
+}
+RESOURCE_TYPES = {
+    getattr(Resource, name)
+    for name in dir(Resource)
+    if name.startswith("RESOURCE_")
+}
+
+
 # Helper function to test for duplicate type ID numbers.
 def helper_test_dupes(clazz, prefix, numbers):
     print "Testing %s" % clazz.__name__
-    n_first = prefix + "FIRST"
-    n_last = prefix + "LAST"
     n_unknown = prefix + "UNKNOWN"
-    first = getattr(clazz, n_first)
-    last = getattr(clazz, n_last)
     unknown = getattr(clazz, n_unknown)
-    assert type(first) is int
-    assert type(last) is int
     assert unknown is 0
-    assert first > 0
-    assert last > 0
-    assert first < last
     for name in dir(clazz):
-        if not name.startswith(prefix) or name in (n_first, n_last, n_unknown):
+        if not name.startswith(prefix) or name == n_unknown:
             continue
         value = getattr(clazz, name)
         assert type(value) is int
         assert value not in numbers
-        assert first <= value <= last
         numbers.add(value)
 
 
@@ -148,13 +151,17 @@ def test_data_types_have_id():
             assert type(clazz.information_type) == int
             if clazz.__module__ != "golismero.api.data.information":
                 assert clazz.information_type != Information.INFORMATION_UNKNOWN
-                assert Information.INFORMATION_FIRST <= clazz.information_type <= Information.INFORMATION_LAST
+                assert clazz.information_type in INFORMATION_TYPES
+            else:
+                assert clazz.information_type == Information.INFORMATION_UNKNOWN
         elif issubclass(clazz, Resource):
             assert clazz.data_type == Data.TYPE_RESOURCE
             assert type(clazz.resource_type) == int
             if clazz.__module__ != "golismero.api.data.resource":
                 assert clazz.resource_type != Resource.RESOURCE_UNKNOWN
-                assert Resource.RESOURCE_FIRST <= clazz.resource_type <= Resource.RESOURCE_LAST
+                assert clazz.resource_type in RESOURCE_TYPES
+            else:
+                assert clazz.resource_type == Resource.RESOURCE_UNKNOWN
         elif issubclass(clazz, Vulnerability):
             assert clazz.data_type == Data.TYPE_VULNERABILITY
             assert type(clazz.vulnerability_type) == str
