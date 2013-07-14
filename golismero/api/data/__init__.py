@@ -298,6 +298,11 @@ class Data(object):
 
 
     #----------------------------------------------------------------------
+    def __repr__(self):
+        return "<%s identity=%s>" % (self.__class__.__name__, self.identity)
+
+
+    #----------------------------------------------------------------------
     @property
     def identity(self):
         """

@@ -34,6 +34,7 @@ __all__ = ["HTTP_Request", "HTTP_Response"]
 
 from . import Information
 from .. import identity
+from ...config import Config
 from ...net.web_utils import DecomposedURL
 
 import re
@@ -403,6 +404,12 @@ class HTTP_Request (Information):
             if post_data:
                 headers = headers + (("Content-Type", "application/x-www-form-urlencoded"),
                                      ("Content-Length", str(len(post_data))))
+            try:
+                cookie = Config.audit_config.cookie
+            except Exception:
+                cookie = None
+            if cookie:
+                headers = headers + (("Cookie", cookie),)
             headers = HTTP_Headers.from_items(headers)
         elif not isinstance(headers, HTTP_Headers):
             if type(headers) == unicode:
@@ -759,8 +766,18 @@ class HTTP_Response (Information):
         :return: 'Content-Length' HTTP header.
         :rtype: int | None
         """
-        if self.__headers:
+        try:
             return int(self.__headers.get('Content-Length'))
+        except Exception:
+            pass
+
+    @property
+    def content_type(self):
+        """
+        :return: 'Content-Type' HTTP header.
+        :rtype: str | None
+        """
+        return self.__headers.get('Content-Type')
 
     @property
     def content_disposition(self):

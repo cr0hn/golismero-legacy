@@ -58,7 +58,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # from golismero.api.net.protocol import NetworkAPI
 #
 # - Web helper functions.
-# from golismero.api.net.web_utils import is_method_allowed, fix_url, check_auth, get_auth_obj, detect_auth_method, is_in_scope, generate_error_page_url, DecomposedURL, HTMLElement, HTMLParser
+# from golismero.api.net.web_utils import fix_url, check_auth, get_auth_obj, detect_auth_method, is_in_scope, generate_error_page_url, DecomposedURL, HTMLElement, HTMLParser
 #
 # - Text helper functions:
 # from golismero.api.text.text_utils import generate_random_string, split_first
