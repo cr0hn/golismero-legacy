@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["HTTP_Request", "HTTP_Response"]
 
 from . import Information
-from .. import identity
+from .. import identity, overwrite
 from ...config import Config
 from ...net.web_utils import DecomposedURL
 
@@ -586,9 +586,37 @@ class HTTP_Request (Information):
 
 
 #------------------------------------------------------------------------------
+class HTTP_Raw_Request (Information):
+    """
+    Raw HTTP request information.
+    """
+
+    information_type = Information.INFORMATION_HTTP_RAW_REQUEST
+
+
+    #----------------------------------------------------------------------
+    def __init__(self, raw_request):
+        """
+        :param raw_request: Raw HTTP request.
+        :type raw_request: str
+        """
+        self.__raw_request = raw_request
+        super(HTTP_Raw_Request, self).__init__()
+
+
+    #----------------------------------------------------------------------
+    @identity
+    def raw_request(self):
+        return self.__raw_request
+
+
+#------------------------------------------------------------------------------
 class HTTP_Response (Information):
     """
     HTTP response information.
+
+    Typically plugins don't directly instance these objects,
+    but receive them from the HTTP API.
     """
 
     information_type = Information.INFORMATION_HTTP_RESPONSE
@@ -601,7 +629,7 @@ class HTTP_Response (Information):
         All optional arguments must be passed as keywords.
 
         :param request: HTTP request that originated this response.
-        :type request: HTTP_Request
+        :type request: HTTP_Request | HTTP_Raw_Request
 
         :param raw_response: (Optional) Raw bytes received from the server.
         :type raw_response: str
@@ -626,6 +654,10 @@ class HTTP_Response (Information):
 
         :param data: (Optional) Raw data that followed the response headers.
         :type data: str
+
+        :param time: (Optional) Time elapsed in milliseconds since the request
+                     was sent until the response was received.
+        :type time: int
         """
 
         # Initialize everything.
@@ -637,6 +669,7 @@ class HTTP_Response (Information):
         self.__version      = request.version
         self.__headers      = None
         self.__data         = None
+        self.__time         = None
 
         # Raw response bytes.
         self.__raw_response = kwargs.get("raw_response", None)
@@ -684,11 +717,27 @@ class HTTP_Response (Information):
         if not self.__raw_response:
             self.__reconstruct_raw_response()
 
+        # Response time.
+        self.__time = kwargs.get("time", None)
+
         # Call the parent constructor.
         super(HTTP_Response, self).__init__()
 
         # Link this response to the request that originated it.
         self.add_link(request)
+
+
+    #----------------------------------------------------------------------
+
+    # TODO: maybe the times should be collected instead of overwritten?
+
+    @overwrite
+    def time(self):
+        return self.__time
+
+    @time.setter
+    def time(self, time):
+        self.__time = time
 
 
     #----------------------------------------------------------------------
