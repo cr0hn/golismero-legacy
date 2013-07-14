@@ -30,7 +30,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["char_count", "line_count", "word_count", "generate_random_string", "calculate_shannon_entropy", "split_first"]
+__all__ = [
+    "char_count", "line_count", "word_count",
+    "generate_random_string", "calculate_shannon_entropy",
+    "split_first"]
 
 from math import log
 from random import choice
