@@ -30,11 +30,51 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["generate_random_string", "calculate_shannon_entropy", "split_first"]
+__all__ = ["char_count", "line_count", "word_count", "generate_random_string", "calculate_shannon_entropy", "split_first"]
 
 from math import log
 from random import choice
+from re import finditer
 from string import ascii_letters, digits
+
+
+#----------------------------------------------------------------------
+def char_count(text):
+    """
+    :param text: Text.
+    :type text: str
+
+    :returns: Number of printable characters in text.
+    :rtype: int
+    """
+    return sum(1 for _ in finditer(r"\w", text))
+
+
+#----------------------------------------------------------------------
+def line_count(text):
+    """
+    :param text: Text.
+    :type text: str
+
+    :returns: Number of lines in text.
+    :rtype: int
+    """
+    count = text.count("\n")
+    if not text.endswith("\n"):
+        text += 1
+    return text
+
+
+#----------------------------------------------------------------------
+def word_count(text):
+    """
+    :param text: Text.
+    :type text: str
+
+    :returns: Number of words in text.
+    :rtype: int
+    """
+    return sum(1 for _ in finditer(r"\w+", text))
 
 
 #----------------------------------------------------------------------
