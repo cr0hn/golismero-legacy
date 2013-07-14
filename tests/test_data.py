@@ -169,8 +169,8 @@ def test_data_types_have_id():
 def test_data_links():
 
     # Reset the temporary data storage.
-    from golismero.api.data import TempDataStorage
-    TempDataStorage.on_run()
+    from golismero.api.data import LocalDataCache
+    LocalDataCache.on_run()
 
     # Create some dummy data.
     from golismero.api.data.resource.url import Url
@@ -270,9 +270,9 @@ def test_data_links():
     assert {x.identity for x in d3.get_associated_informations_by_category(d2.information_type)} == set()
 
     # Test TempDataStorage.on_finish().
-    print "Testing TempDataStorage.on_finish() on ideal conditions"
+    print "Testing LocalDataCache.on_finish() on ideal conditions"
     result_before = [d1, d2, d3]
-    result_after  = TempDataStorage.on_finish(result_before)
+    result_after  = LocalDataCache.on_finish(result_before)
     assert set(result_before) == set(result_after)
     d1.validate_link_minimums()
     d2.validate_link_minimums()
@@ -298,6 +298,8 @@ def test_data_links():
     assert d3.get_links(d1.data_type, d1.resource_type) == {d1.identity}
     assert d3.get_links(d2.data_type) == set()
     assert d3.get_links(d2.data_type, d2.information_type) == set()
+
+    # XXX TODO: more tests!!!
 
 
 # Run all tests from the command line.

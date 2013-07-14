@@ -38,7 +38,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["ProcessManager", "PluginContext"]
 
 from ..api.config import Config
-from ..api.data import TempDataStorage
+from ..api.data import LocalDataCache
 from ..api.net.cache import NetworkCache
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
@@ -176,7 +176,7 @@ def _bootstrap(context, func, argv, argd):
                         NetworkCache()._clear_local_cache()
 
                         # Initialize the temporary data storage for this run.
-                        TempDataStorage.on_run()
+                        LocalDataCache.on_run()
 
                         # Try to get the plugin from the cache.
                         cache_key = (context.plugin_module, context.plugin_class)
@@ -210,7 +210,7 @@ def _bootstrap(context, func, argv, argd):
                             if func == "recv_info":
 
                                 # Validate and sanitize the result data.
-                                result = TempDataStorage.on_finish(result)
+                                result = LocalDataCache.on_finish(result)
 
                                 # Always send back the input data as a result.
                                 result.append(input_data)
