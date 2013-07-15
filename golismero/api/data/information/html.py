@@ -70,16 +70,17 @@ class HTML(Information):
 
         >>> from golismero.api.data.information.html import HTML
         >>> html_info = \"\"\"<html>
-        <head>
-          <title>My sample page</title>
-        </head>
-        <body>
-          <a href="http://www.mywebsitelink.com">Link 1</a>
-          <p>
-            <img src="/images/my_image.png" />
-          </p>
-        </body>
-        </html>\"\"\"
+        ... <head>
+        ...   <title>My sample page</title>
+        ... </head>
+        ... <body>
+        ...   <a href="http://www.mywebsitelink.com">Link 1</a>
+        ...   <p>
+        ...     <img src="/images/my_image.png" />
+        ...   </p>
+        ... </body>
+        ... </html>\"\"\"
+        ...
         >>> html_parsed = HTML(html_info)
         >>> html_parsed.links
         [<golismero.api.net.web_utils.HTMLElement object at 0x109ca8b50>]

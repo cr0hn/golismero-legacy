@@ -95,6 +95,10 @@ if __name__ == "__main__":
                     # Load the module. This triggers PyChecker.
                     module = __import__(name, globals(), locals(), ['*'])
 
+                    # Flush the text output.
+                    sys.stdout.flush()
+                    sys.stderr.flush()
+
         # Stop capturing the output and error logs.
         finally:
             sys.stdout, sys.stderr = old_out, old_err

@@ -1231,13 +1231,14 @@ def extend_items(all_items, already_parsed, related, ref = None):
 
     If you have this keywordlist:
 
-    >>> open("keywords.txt").readlines()
-    iis: IIS, ISA
-    hyperion: #iis
+        >>> open("keywords.txt").readlines()
+        iis: IIS, ISA
+        hyperion: #iis
 
-    The `related` dict return:
-    >>> print related
-    defaultdict(<type 'set'>, {'iis': set(['hyperion'])})
+    The `related` dict returns:
+
+        >>> print related
+        defaultdict(<type 'set'>, {'iis': set(['hyperion'])})
 
     :param all_items: raw wordlist with references.
     :type all_items: dict

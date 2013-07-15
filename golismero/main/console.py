@@ -232,7 +232,7 @@ def _get_terminal_size_tput():
 def _get_terminal_size_linux():
     def ioctl_GWINSZ(fd):
         try:
-            import fcntl, termios, struct, os
+            import fcntl, termios, struct
             cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ,'1234'))
         except:
             return None
