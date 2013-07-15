@@ -64,8 +64,8 @@ def line_count(text):
     """
     count = text.count("\n")
     if not text.endswith("\n"):
-        text += 1
-    return text
+        count += 1
+    return count
 
 
 #----------------------------------------------------------------------

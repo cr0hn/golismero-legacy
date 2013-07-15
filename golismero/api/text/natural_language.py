@@ -2,6 +2,19 @@
 # -*- coding: utf-8 -*-
 
 """
+Natural language API.
+
+.. info:
+   Acknowledgments:
+
+   Much of this code was borrowed form z0mbiehunt3r (with his permission):
+
+   http://blog.alejandronolla.com/2013/05/15/detecting-text-language-with-python-and-nltk/
+
+   https://twitter.com/z0mbiehunt3r
+"""
+
+"""
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
@@ -28,29 +41,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-
-"""
-
-This package has functions to manage natural language.
-
-.. info:
-   Acknowledgments:
-
-   Many part of this code was borrowed form the post of z0mbiehunt3r (with his permission):
-
-   http://blog.alejandronolla.com/2013/05/15/detecting-text-language-with-python-and-nltk/
-
-   https://twitter.com/z0mbiehunt3r
-"""
-
 __all__ = ["detect_language"]
-
 
 try:
     from nltk import wordpunct_tokenize
     from nltk.corpus import stopwords
 except ImportError:
     print "Can't import nltk libraries"
+
 
 #----------------------------------------------------------------------
 def _calculate_languages_ratios(text):
