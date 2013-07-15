@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["WordListAPI"]
 
-from os import getcwd, walk
+from os import walk
 from os.path import join, sep, abspath
 from golismero.api.text.matching_analyzer import get_matching_level
 from golismero.api.file import FileManager
@@ -403,7 +403,7 @@ class AdvancedListWordlist(AbstractWordlist):
 
     #----------------------------------------------------------------------
     def clone(self):
-        m_temp = self
+        m_temp = copy.copy(self)
         m_temp.__wordlist = copy.copy(self.__wordlist)
 
         return m_temp
@@ -621,7 +621,7 @@ class AdvancedDicWordlist(object):
         #
         m_return        = set()
         m_return_append = m_return.add
-        for k, v in self.__wordlist.iteritems():
+        for v in self.__wordlist.itervalues():
             if word not in v:
                 continue
 
@@ -668,6 +668,15 @@ class AdvancedDicWordlist(object):
     #----------------------------------------------------------------------
     def iterkeys(self):
         return self.__wordlist.iterkeys()
+
+    #----------------------------------------------------------------------
+    def clone(self):
+        m_temp = copy.copy(self)
+        m_temp.__wordlist = copy.copy(self.__wordlist)
+
+        return m_temp
+
+
 
 
 # Singleton.
