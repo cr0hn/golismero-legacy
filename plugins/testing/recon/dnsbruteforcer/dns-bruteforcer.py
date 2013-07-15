@@ -63,7 +63,7 @@ def main_dns_bruter(base_domain):
     """
     Looking for new domains
     """
-    r = WordListAPI.get_advanced_wordlist_as_list("/Users/Dani/Documents/Pruebas/subbrute/subs_small.txt")
+    m_subdomains = WordListAPI.get_advanced_wordlist_as_list("subs_small.txt")
 
     #print "XXXXX"
     #for x in r:
