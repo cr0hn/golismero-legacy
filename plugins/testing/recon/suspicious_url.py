@@ -77,14 +77,14 @@ class SuspiciousURLPlugin(TestingPlugin):
         hostname = info.parsed_url.hostname
         entropy = calculate_shannon_entropy(hostname)
         if entropy > 4.0:
-            results.append( SuspiciousURL(info, hostname) )
+            m_results.append( SuspiciousURL(info, hostname) )
 
         # Check the Shannon entropy for the subdomains.
         for subdomain in info.parsed_url.hostname.split('.'):
             if len(subdomain) > 3:
                 entropy = calculate_shannon_entropy(subdomain)
                 if entropy > 4.0:
-                    results.append( SuspiciousURL(info, subdomain) )
+                    m_results.append( SuspiciousURL(info, subdomain) )
 
         #------------------------------------------------------------------
 
