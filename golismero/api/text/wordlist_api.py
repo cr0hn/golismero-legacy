@@ -369,7 +369,7 @@ class AdvancedListWordlist(AbstractWordlist):
     def binary_search(self, word, low_pos=0, high_pos=None):
         i = bisect.bisect_left(self.__wordlist, word, lo=low_pos, hi=high_pos if high_pos else len(high_pos))
 
-        if i != len(self.__wordlist) and self.__wordlist[i] == x:
+        if i != len(self.__wordlist) and self.__wordlist[i] == word:
             return i
 
         raise ValueError()
@@ -627,7 +627,7 @@ class AdvancedDicWordlist(object):
 
             for l in v:
                 if word == l:
-                    m_return_append((i, v, get_matching_level(word, i)))
+                    m_return_append((l, v, get_matching_level(word, l)))
 
         return m_return
 
