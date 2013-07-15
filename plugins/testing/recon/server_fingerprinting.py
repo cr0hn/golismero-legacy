@@ -1207,7 +1207,7 @@ def get_fingerprinting_wordlist(wordlist):
     """
 
     # Load the wordlist
-    m_w = WordListAPI.get_advanced_wordlist_as_dict(wordlist, separator=";", inteligence_load=True)
+    m_w = WordListAPI.get_advanced_wordlist_as_dict(wordlist, separator=";", smart_load=True)
 
     # Load references.
     #

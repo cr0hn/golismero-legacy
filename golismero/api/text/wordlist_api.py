@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["WordListAPI"]
 
-from os import getcwd, walk
+from os import walk
 from os.path import join, sep, abspath
 from golismero.api.text.matching_analyzer import get_matching_level
 from golismero.api.file import FileManager
@@ -156,7 +156,7 @@ class _WordListAPI(Singleton):
 
     #----------------------------------------------------------------------
     @lru_cache(maxsize=30)
-    def get_advanced_wordlist_as_dict(self, wordlist, separator=";", inteligence_load=False):
+    def get_advanced_wordlist_as_dict(self, wordlist, separator=";", smart_load=False):
         """
         Get an AdvancedDicWordlist.
 
@@ -174,7 +174,7 @@ class _WordListAPI(Singleton):
         :rtype: AdvancedDicWordlist
         """
 
-        return AdvancedDicWordlist(self.__resolve_wordlist_name(wordlist), inteligence_load, separator)
+        return AdvancedDicWordlist(self.__resolve_wordlist_name(wordlist), smart_load, separator)
 
 
     #----------------------------------------------------------------------
