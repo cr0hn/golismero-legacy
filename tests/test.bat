@@ -1,4 +1,6 @@
 @echo off
+del *.log
+del *.sql
 call test_cython.bat
 call test_pyflakes.bat
 python test_pylint.py
