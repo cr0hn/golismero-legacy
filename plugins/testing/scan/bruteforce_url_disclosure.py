@@ -35,12 +35,11 @@ from golismero.api.data.resource.url import Url
 from golismero.api.data.resource.folderurl import FolderUrl
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.logger import Logger
-from golismero.api.net.protocol import *
-from golismero.api.net.web_utils import DecomposedURL, is_in_scope
-from golismero.api.text.matching_analyzer import *
+from golismero.api.net.protocol import NetworkAPI, NetworkException
+from golismero.api.net.web_utils import DecomposedURL
+from golismero.api.text.matching_analyzer import MatchingAnalyzer, HTTP_response_headers_analyzer
 from golismero.api.text.wordlist_api import WordListAPI
 from golismero.api.text.text_utils import generate_random_string
-from golismero.api.data.db import Database
 
 from golismero.api.plugin import TestingPlugin
 from collections import defaultdict
@@ -168,10 +167,7 @@ def process_folder_url(info):
     #
     # Get the remote web server fingerprint
     #
-    db = Database()
-    m_datafinger = db.get_many(db.keys(data_type=WebServerFingerprint.TYPE_INFORMATION, data_subtype=WebServerFingerprint.information_type))
     m_webserver_finger = info.get_associated_informations_by_category(WebServerFingerprint.information_type)
-
 
     # There is fingerprinting information?
     if m_webserver_finger:
@@ -246,15 +242,6 @@ def process_url(info):
     #
     # Load wordlists
     #
-    # -   Word lists to load
-    m_wordlists_names  = [
-        "suffixes",
-        "prefixes",
-        "commonextensions",
-        "fileextensions"
-    ]
-    # -   Wordlist instances
-    m_wordlist         = load_wordlists(m_wordlists_names)
 
     #
     # README!!!!!
@@ -419,24 +406,6 @@ def load_wordlists(wordlists):
     for k, w_paths in m_tmp_wordlist.iteritems():
         m_return[k] = [WordListAPI.get_wordlist(w) for w in w_paths]
 
-    return m_return
-
-    # Load wordlist form config file
-    #for wordlist_name, wordlist_path in Config.plugin_extra_config.iteritems():
-        #l_tmp_wordlist = None
-        #if wordlist_name.startswith('wordlist_suffixes'):
-            #l_tmp_wordlist = 'suffixes'
-        #elif wordlist_name.startswith('wordlist_prefixes'):
-            #l_tmp_wordlist = 'prefixes'
-        #elif wordlist_name.startswith('wordlist_extensions'):
-            #l_tmp_wordlist = 'extensions'
-        #elif wordlist_name.startswith('wordlist_predictable_files'):
-            #l_tmp_wordlist = 'predictable_files'
-
-        #if l_tmp_wordlist:
-            #m_wordlist[l_tmp_wordlist].append(WordListAPI.get_wordlist(wordlist_path))
-
-    #return m_wordlist
     return m_return
 
 

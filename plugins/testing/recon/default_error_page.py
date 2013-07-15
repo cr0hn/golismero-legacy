@@ -30,7 +30,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.data.resource.url import Url
 from golismero.api.data.resource.baseurl import BaseUrl
 from golismero.api.data.vulnerability.information_disclosure.default_error_page import DefaultErrorPage
-from golismero.api.logger import Logger
 from golismero.api.text.matching_analyzer import get_matching_level
 from golismero.api.net.protocol import NetworkAPI
 from golismero.api.plugin import TestingPlugin
@@ -50,8 +49,6 @@ class SuspiciousURLPlugin(TestingPlugin):
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-
-        m_url = info.url
 
         #Logger.log_more_verbose("Default error page: Starting plugin")
 

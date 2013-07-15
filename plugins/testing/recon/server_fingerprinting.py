@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.logger import Logger
-from golismero.api.net.protocol import *
+from golismero.api.net.protocol import NetworkAPI, NetworkException, Web
 from golismero.api.plugin import TestingPlugin
 from golismero.api.data.resource.folderurl import FolderUrl
 from golismero.api.text.wordlist_api import WordListAPI
@@ -36,9 +36,8 @@ from golismero.api.text.matching_analyzer import get_matching_level
 from golismero.api.net.web_utils import is_in_scope, DecomposedURL
 from golismero.api.net.scraper import extract_from_html
 from golismero.api.data.information.webserver_fingerprint import WebServerFingerprint
-from golismero.api.text.wordlist_api import WordListAPI
 from repoze.lru import lru_cache
-from ping import *
+from ping import do_ping_and_receive_ttl
 
 from collections import Counter, OrderedDict, defaultdict
 from urlparse import urljoin
@@ -812,8 +811,6 @@ def http_analyzers(main_url, conn, number_of_entries=4):
     m_other_servers_prob = OrderedDict() # { WEB_SERVER, PROBABILITY }
 
     # Get web server family. F.E: Apache
-
-    m_web_server            = None
     m_server_family         = None
     m_server_version        = None
     m_server_related        = None

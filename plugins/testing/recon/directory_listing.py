@@ -25,15 +25,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
-from golismero.api.logger import Logger
 from golismero.api.data.resource.folderurl import FolderUrl
 from golismero.api.data.resource.url import Url
 
 # - Vulnerability types:
 # from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 
-from golismero.api.net.protocol import NetworkAPI
+#from golismero.api.net.protocol import NetworkAPI
 from golismero.api.plugin import TestingPlugin
 
 
@@ -138,8 +136,8 @@ div.foot { font: 90% monospace; color: #787878; padding-top: 4px;}
     if isinstance(info, Url) and info.url.endswith("/"):
         return
 
-    m_url = info.url
+
 
     # Make a request to try to get a directory listing
-    apt.saurik.com
+
 
