@@ -306,7 +306,7 @@ class AdvancedListWordlist(AbstractWordlist):
         >>> a = AdvancedListWordlist("./wordlist/golismero/no_spiderable_urls.txt")
         >>> "exit" in a
         True
-        >>> for p in a
+        >>> for p in a:
         ...   print p
         ...
         logout
@@ -316,7 +316,6 @@ class AdvancedListWordlist(AbstractWordlist):
         signout
         delete
         remove
-
 
     This wordlist allow to do some operations with wordlists:
     - Search matches of a word in the wordlist.
