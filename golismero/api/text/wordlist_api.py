@@ -613,11 +613,6 @@ class AdvancedDicWordlist(object):
 
         word = str(word)
 
-        #
-        #
-        # TODO: FIX WITH NEW FORMAT!!!!
-        #
-        #
         m_return        = set()
         m_return_append = m_return.add
         for v in self.__wordlist.itervalues():
