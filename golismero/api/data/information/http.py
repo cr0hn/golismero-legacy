@@ -35,7 +35,7 @@ __all__ = ["HTTP_Request", "HTTP_Response"]
 from . import Information
 from .. import identity, overwrite
 from ...config import Config
-from ...net.web_utils import DecomposedURL
+from ...net.web_utils import DecomposedURL, is_in_scope
 
 import re
 import httplib
@@ -331,6 +331,64 @@ class HTTP_Headers (object):
         return "".join("%s: %s\r\n" % item for item in self.__headers[start:end])
 
 
+    #----------------------------------------------------------------------
+    def has_key(self, name):
+        """
+        Test the presence of a header.
+        Comparisons are case-insensitive.
+
+        :param name: Header name.
+        :type name: str
+
+        :returns: True if present, False otherwise.
+        :rtype: bool
+        """
+        try:
+            name = name.lower()
+        except AttributeError:
+            raise TypeError("Expected str, got %s" % type(name))
+        return name in self.__cache
+
+    # Alias.
+    __contains__ = has_key
+
+
+    #----------------------------------------------------------------------
+    def items(self):
+        """
+        The original case and order of the headers is preserved.
+        This means some headers may be repeated.
+
+        :returns: Header names and values.
+        :rtype: list( tuple(str, str) )
+        """
+        return list(self.iteritems())
+
+
+    #----------------------------------------------------------------------
+    def keys(self):
+        """
+        The original case and order of the headers is preserved.
+        This means some headers may be repeated.
+
+        :returns: Header names.
+        :rtype: list(str)
+        """
+        return list(self.iterkeys())
+
+
+    #----------------------------------------------------------------------
+    def values(self):
+        """
+        The original case and order of the headers is preserved.
+        This means some headers may be repeated.
+
+        :returns: Header values.
+        :rtype: list(str)
+        """
+        return list(self.itervalues())
+
+
 #------------------------------------------------------------------------------
 class HTTP_Request (Information):
     """
@@ -342,8 +400,9 @@ class HTTP_Request (Information):
 
     #
     # TODO:
-    #   Parse and reconstruct requests as it's done with responses.
-    #   It may be useful one day, for example, for HTTP proxying.
+    #   + Allow multipart file uploads.
+    #   + Parse and reconstruct requests as it's done with responses.
+    #     It may be useful one day, for example, for HTTP proxying.
     #
 
 
@@ -359,7 +418,7 @@ class HTTP_Request (Information):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, url, headers = None, post_data = None, method = None, protocol = "HTTP", version = "1.1"):
+    def __init__(self, url, headers = None, post_data = None, method = None, protocol = "HTTP", version = "1.1", referer = None):
         """
         :param url: Absolute URL to connect to.
         :type url: str
@@ -378,6 +437,9 @@ class HTTP_Request (Information):
 
         :param version: Protocol version.
         :type version: str
+
+        :param referer: Optional referer, overrides that of :ref:`headers`.
+        :type referer: str
         """
 
         # Default method.
@@ -410,6 +472,8 @@ class HTTP_Request (Information):
                 cookie = None
             if cookie:
                 headers = headers + (("Cookie", cookie),)
+            if referer:
+                headers = headers + (("Referer", referer),)
             headers = HTTP_Headers.from_items(headers)
         elif not isinstance(headers, HTTP_Headers):
             if type(headers) == unicode:
@@ -420,6 +484,8 @@ class HTTP_Request (Information):
                 headers = HTTP_Headers.from_items(sorted(headers.items()))
             else:                                # dictionary items
                 headers = HTTP_Headers.from_items(sorted(headers))
+            if referer:
+                headers["Referer"] = referer
         self.__headers = headers
 
         # Call the parent constructor.
@@ -446,6 +512,11 @@ class HTTP_Request (Information):
         return HTTP_Request(url       = form.url,
                             method    = form.method,
                             post_data = data)
+
+
+    #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return is_in_scope(self.url)
 
 
     #----------------------------------------------------------------------
@@ -655,9 +726,9 @@ class HTTP_Response (Information):
         :param data: (Optional) Raw data that followed the response headers.
         :type data: str
 
-        :param time: (Optional) Time elapsed in milliseconds since the request
-                     was sent until the response was received.
-        :type time: int
+        :param elapsed: (Optional) Time elapsed in milliseconds since the request
+                        was sent until the response was received.
+        :type elapsed: int
         """
 
         # Initialize everything.
@@ -665,11 +736,11 @@ class HTTP_Response (Information):
         self.__raw_headers  = None
         self.__status       = None
         self.__reason       = None
-        self.__protocol     = request.protocol
-        self.__version      = request.version
+        self.__protocol     = getattr(request, "protocol", "HTTP")
+        self.__version      = getattr(request, "version",  "1.1")
         self.__headers      = None
         self.__data         = None
-        self.__time         = None
+        self.__elapsed      = None
 
         # Raw response bytes.
         self.__raw_response = kwargs.get("raw_response", None)
@@ -702,9 +773,9 @@ class HTTP_Response (Information):
         if self.__headers:
             if not isinstance(self.__headers, HTTP_Headers):
                 if hasattr(self.__headers, "items"):
-                    self.__headers = HTTP_Headers(sorted(self.__headers.items()))
+                    self.__headers = HTTP_Headers.from_items(sorted(self.__headers.items()))
                 else:
-                    self.__headers = HTTP_Headers(sorted(self.__headers))
+                    self.__headers = HTTP_Headers.from_items(sorted(self.__headers))
             if not self.__raw_headers:
                 self.__reconstruct_raw_headers()
         elif self.__raw_headers and not self.__headers:
@@ -718,7 +789,7 @@ class HTTP_Response (Information):
             self.__reconstruct_raw_response()
 
         # Response time.
-        self.__time = kwargs.get("time", None)
+        self.elapsed = kwargs.get("elapsed", None)
 
         # Call the parent constructor.
         super(HTTP_Response, self).__init__()
@@ -728,16 +799,40 @@ class HTTP_Response (Information):
 
 
     #----------------------------------------------------------------------
+    def is_cacheable(self):
+        """
+        Determines if this response should be cached by default.
+
+        :returns: True if cacheable, False otherwise.
+        :rtype: bool
+        """
+
+        # TODO: use the headers, Luke!
+
+        return True
+
+
+    #----------------------------------------------------------------------
 
     # TODO: maybe the times should be collected instead of overwritten?
 
     @overwrite
-    def time(self):
-        return self.__time
+    def elapsed(self):
+        """
+        :returns: Time elapsed in seconds since the request was sent
+                  until the response was received. None if not available.
+        :rtype: float | None
+        """
+        return self.__elapsed
 
-    @time.setter
-    def time(self, time):
-        self.__time = time
+    @elapsed.setter
+    def elapsed(self, elapsed):
+        """
+        :param elapsed: Time elapsed in seconds since the request was
+            sent until the response was received. None if not available.
+        :type elapsed: float | None
+        """
+        self.__elapsed = float(elapsed) if elapsed is not None else None
 
 
     #----------------------------------------------------------------------
@@ -871,7 +966,7 @@ class HTTP_Response (Information):
     def __parse_raw_response(self, request):
 
         # Special case: if parsing HTTP/0.9, everything is data.
-        if request.version == "0.9":
+        if getattr(request, "version", None) == "0.9":
             self.__protocol = "HTTP"
             self.__version  = "0.9"
             self.__status   = "200"

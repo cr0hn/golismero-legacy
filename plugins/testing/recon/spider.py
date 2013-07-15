@@ -27,13 +27,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.logger import Logger
-from golismero.api.net.protocol import NetworkAPI, NetworkException
+from golismero.api.net import NetworkException
+from golismero.api.net.web_utils import download
 from golismero.api.plugin import TestingPlugin
 from golismero.api.data.information import Information
 from golismero.api.data.resource.url import Url
 from golismero.api.config import Config
 from golismero.api.net.web_utils import is_in_scope
-from golismero.api.net.scraper import extract_from_html
+from golismero.api.net.scraper import extract_from_html, extract_from_text
 from golismero.api.text.wordlist_api import WordListAPI
 
 
@@ -63,46 +64,31 @@ class Spider(TestingPlugin):
 
         Logger.log_verbose("Spidering URL: '%s'" % m_url)
 
-        # Get a connection pool
-        m_manager = NetworkAPI.get_connection()
-
         # Check if need follow first redirect
         p = None
         try:
-            if m_depth == 0 and Config.audit_config.follow_first_redirect:
-                p = m_manager.get(m_url, follow_redirect=True)
-            else:
-                p = m_manager.get(m_url)
+            allow_redirects = Config.audit_config.follow_redirects or \
+                             (m_depth == 0 and Config.audit_config.follow_first_redirect)
+            p = download(m_url, self.check_download, allow_redirects=allow_redirects)
 
         except NetworkException,e:
-            Logger.log_more_verbose("Spider - value error while processing: '%s'. Error: %s" % (m_url, e.message))
+            Logger.log_more_verbose("Spider - error while processing: '%s': %s" % (m_url, e.message))
 
         # If error p == None => return
         if not p:
             return m_return
 
-        # Send back the HTTP reponse
-        ##m_return.append(p)
+        # Send back the data
+        m_return.append(p)
 
-        # If it's a 301 response, get the Location header
-        if p.http_response_code == 301:
-            m_location = p.http_headers.get("Location", "")
-            if m_location:
-                m_return.append(Url(url=m_location, depth=m_depth + 1, referer=m_url))
+        # TODO: If it's a 301 response, get the Location header
 
-        # Stop if there's no embedded information
-        if not p.information:
-            return m_return
-
-        # If there's embedded information, it will be sent as a result
-        m_return.append( p.information )
-
-        # Stop if the embedded information is not HTML
-        if p.information.information_type != Information.INFORMATION_HTML:
-            return m_return
-
-        # Get links from raw HTML
-        m_links = extract_from_html(p.information.raw_data, m_url)
+        # Get links
+        Logger.log("Info type: %r" % p.information_type)
+        if p.information_type == Information.INFORMATION_HTML:
+            m_links = extract_from_html(p.raw_data, m_url)
+        else:
+            m_links = extract_from_text(p.raw_data, m_url)
 
         # Do not follow URLs that contain certain keywords
         m_forbidden = WordListAPI.get_wordlist(Config.plugin_config["wordlist_no_spider"])
@@ -115,3 +101,17 @@ class Spider(TestingPlugin):
 
         # Send the results
         return m_return
+
+
+    #----------------------------------------------------------------------
+    def check_download(self, url, name, content_length, content_type):
+
+        # Returns True to continue or False to cancel.
+        return (
+
+            # Check the file type is text.
+            content_type and content_type.strip().lower().startswith("text/") and
+
+            # Check the file is not too big.
+            content_length and content_length < 100000
+        )

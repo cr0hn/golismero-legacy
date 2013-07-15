@@ -27,21 +27,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.logger import Logger
-from golismero.api.net.protocol import NetworkAPI, NetworkException
+from golismero.api.net import NetworkException
+from golismero.api.net.http import HTTP
+from golismero.api.net.web_utils import download
 from golismero.api.plugin import TestingPlugin
 from golismero.api.data.resource.url import Url
 from golismero.api.data.resource.baseurl import BaseUrl
-from golismero.api.net.web_utils import generate_error_page_url, fix_url
+from golismero.api.net.web_utils import generate_error_page_url, fix_url, is_in_scope
 from golismero.api.text.matching_analyzer import MatchingAnalyzer
 
 import codecs
 from urlparse import urljoin
 
-__doc__ = """This plugin search and analyze robots.txt files."""
-
 class Robots(TestingPlugin):
     """
-    This plugin search and analyze robots.txt files.
+    This plugin analyzes robots.txt files looking for private pages.
     """
 
 
@@ -51,7 +51,39 @@ class Robots(TestingPlugin):
 
 
     #----------------------------------------------------------------------
+    def check_download(self, url, name, content_length, content_type):
+
+        # Returns True to continue or False to cancel.
+        return (
+
+            # Check the file type is plain text.
+            content_type and content_type.strip().lower().split(";")[0] == "text/plain" and
+
+            # Check the file is not too big.
+            content_length and content_length < 100000
+        )
+
+
+    #----------------------------------------------------------------------
+    def check_response(self, request, url, status_code, content_length, content_type):
+
+        # Returns True to continue or False to cancel.
+        return (
+
+            # No need to analyze if the response is not 200.
+            status_code == "200" and
+
+            # Check the data is some kind of text.
+            content_type and content_type.strip().lower().startswith("text/") and
+
+            # Check the page is not too big.
+            content_length and content_length < 100000
+        )
+
+
+    #----------------------------------------------------------------------
     def recv_info(self, info):
+        m_return = []
 
         # Get the url of hosts
         m_url = info.url
@@ -59,22 +91,24 @@ class Robots(TestingPlugin):
 
         Logger.log_verbose("Robots - looking for robots.txt in URL: '%s'" % m_url_robots_txt)
 
-        # Request this URL
-        m_manager = NetworkAPI.get_connection()
-
         p = None
         try:
-            p = m_manager.get(m_url_robots_txt)
-        except NetworkException,e:
+            p = download(m_url_robots_txt, self.check_download)
+        except NetworkException, e:
             Logger.log_more_verbose("Robots - value error while processing: '%s'. Error: %s" % (m_url_robots_txt, e.message))
 
         # Check for errors
-        if not p or not p.content_type == "text/plain" or not p.information:  # order is important!
+        if not p:
             Logger.log_more_verbose("Robots - no robots.txt found.")
             return
 
+        u = Url(m_url_robots_txt, referer=m_url)
+        p.add_resource(u)
+        m_return.append(u)
+        m_return.append(p)
+
         # Text with info
-        m_robots_text = p.information
+        m_robots_text = p.raw_data
 
         # Prepare for unicode
         try:
@@ -90,8 +124,7 @@ class Robots(TestingPlugin):
         m_discovered_urls        = []
         m_discovered_urls_append = m_discovered_urls.append
         tmp_discovered           = None
-        for rawline in m_robots_text.splitlines():
-            m_line = rawline
+        for m_line in m_robots_text.splitlines():
 
             # Remove comments
             m_octothorpe = m_line.find('#')
@@ -128,26 +161,40 @@ class Robots(TestingPlugin):
 
         # Generating error page
         m_error_page          = generate_error_page_url(m_url_robots_txt)
-        m_response_error_page = m_manager.get(m_error_page)
+        m_response_error_page = HTTP.get_url(m_error_page, callback=self.check_response)
+        if m_response_error_page:
 
-        # Analyze results
-        m_analyzer            = MatchingAnalyzer(m_response_error_page.raw_content)
+            # Analyze results
+            match = {}
+            m_analyzer = MatchingAnalyzer(m_response_error_page.data)
+            for l_url in set(m_discovered_urls):
+                l_url = fix_url(l_url, m_url)
+                if is_in_scope(l_url):
+                    l_p = HTTP.get_url(l_url, callback=self.check_response)
+                    if l_p:
+                        match[l_url] = l_p
+                        m_analyzer.append(l_p.data, url=l_url)
 
-        # Add results for analyze
-        for l_url in set(m_discovered_urls):
-            l_p = m_manager.get(fix_url(l_url, m_url))
+            # Generate results
+            for i in m_analyzer.unique_texts:
+                l_url = i.url
+                l_p = match[l_url]
+                m_result = Url(l_url, referer=m_url)
+                m_result.add_information(l_p)
+                m_return.append(m_result)
 
-            #
-            # ¡¡¡¡ FIX !!!!
-            #
-            # HTTP_Response also must be added!
+        # No tricky error page, assume the status codes work
+        else:
+            for l_url in set(m_discovered_urls):
+                l_url = fix_url(l_url, m_url)
+                if is_in_scope(l_url):
+                    l_p = HTTP.get_url(l_url, callback=self.check_response)
+                    if l_p:
+                        m_result = Url(l_url, referer=m_url)
+                        m_result.add_information(l_p)
+                        m_return.append(m_result)
 
-            # Add for analysis
-            m_analyzer.append(l_p.raw_content, url=l_url)
-
-        # Generate results
-        m_return = [Url(i.url, referer=m_url) for i in m_analyzer.unique_texts]
-
-        Logger.log_more_verbose("Robots - discovered %s URLs" % len(m_return))
+        if m_return:
+            Logger.log_more_verbose("Robots - discovered %s URLs" % len(m_return))
 
         return m_return

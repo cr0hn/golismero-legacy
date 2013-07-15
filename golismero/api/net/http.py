@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This package contains the classes that represent HTTP requests and responses.
+HTTP protocol API for GoLismero.
 """
 
 __license__ = """
@@ -30,719 +30,457 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["HTTP_Request", "HTTP_Response"]
+__all__ = ["HTTP"]
 
-from .web_utils import DecomposedURL
-from ..data.information.html import HTML
-from ...common import random
+from . import ConnectionSlot, NetworkException, NetworkOutOfScope
+from .cache import NetworkCache
+from .web_utils import is_in_scope, detect_auth_method, get_auth_obj
+from ..config import Config
+from ..data import LocalDataCache, discard_data
+from ..data.information.http import HTTP_Request, HTTP_Response, HTTP_Raw_Request
+from ..data.resource.url import Url
+from ...common import Singleton
 
-from os.path import basename
-
-import hashlib
-from re import findall
+from hashlib import md5
+from requests import Session
+from requests.exceptions import RequestException
+from socket import socket, error
+from ssl import wrap_socket
+from StringIO import StringIO
+from time import time
 
 
 #------------------------------------------------------------------------------
-class HTTP_Request (object):
+class _HTTP(Singleton):
     """
-    HTTP request.
-    """
-
-    TYPE_HTTP      = 0    # No additional parsing
-    TYPE_JSON      = 1    # Automatic JSON parsing
-    TYPE_SOAP      = 2    # Automatic SOAP parsing
-    TYPE_VIEWSTATE = 3    # Automatic Viewstate parsing
-
-    DEFAULT_USER_AGENT = "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +http://code.google.com/p/golismero)"
-
-    __user_agents = (
-        "Opera/9.80 (Windows NT 6.1; U; zh-tw) Presto/2.5.22 Version/10.50",
-        "Mozilla/6.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:2.0.0.0) Gecko/20061028 Firefox/3.0",
-        "Mozilla/6.0 (Windows NT 6.2; WOW64; rv:16.0.1) Gecko/20121011 Firefox/16.0.1",
-        "Mozilla/5.0 (Windows NT 5.1; rv:15.0) Gecko/20100101 Firefox/13.0.1",
-        "Mozilla/5.0 (X11; Linux i686; rv:6.0) Gecko/20100101 Firefox/6.0",
-        "Mozilla/5.0 (X11; Linux x86_64; rv:15.0) Gecko/20120724 Debian Iceweasel/15.0",
-        "Mozilla/5.0 (X11; Linux) KHTML/4.9.1 (like Gecko) Konqueror/4.9",
-        "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1",
-        "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.60 Safari/537.17",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.6 Safari/537.11",
-        "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/19.77.34.5 Safari/537.1",
-        "Mozilla/5.0 (Windows; U; MSIE 9.0; Windows NT 9.0; en-US)",
-        "Mozilla/5.0 (compatible; MSIE 10.6; Windows NT 6.1; Trident/5.0; InfoPath.2; SLCC1; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; .NET CLR 2.0.50727) 3gpp-gba UNTRUSTED/1.0",
-        "Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; GTB7.4; InfoPath.2; SV1; .NET CLR 3.3.69573; WOW64; en-US)",
-        "Mozilla/4.0(compatible; MSIE 7.0b; Windows NT 6.0)",
-        "Mozilla/5.0 (iPod; U; CPU iPhone OS 4_3_3 like Mac OS X; ja-jp) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8J2 Safari/6533.18.5",
-        "Mozilla/5.0 (Linux; U; Android 4.0.3; ko-kr; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30",
-        "Mozilla/5.0 (BlackBerry; U; BlackBerry 9900; en) AppleWebKit/534.11+ (KHTML, like Gecko) Version/7.1.0.346 Mobile Safari/534.11+",
-        "Mozilla/5.0 (PLAYSTATION 3; 3.55)",
-        "Mozilla/5.0 (compatible; Yahoo! Slurp; http://help.yahoo.com/help/us/ysearch/slurp)"
-        "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-        "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.13+ (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2",
-        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-us) AppleWebKit/534.16+ (KHTML, like Gecko) Version/5.0.3 Safari/533.19.4",
-        "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25"
-    )
-
-
-    #----------------------------------------------------------------------
-    def __init__(self, url, method = 'GET', post_data = None, cache = True, follow_redirects = None, cookie = "", random_user_agent = False, request_type = 0):
-
-        # XXX FIXME: Unused argument 'cookie'
-
-        # Set method
-        self.__method = method.upper() if method else "GET"
-
-        # Set url
-        self.__parsed_url = DecomposedURL(url)
-        self.__url = self.__parsed_url.url
-
-        # Follow redirects
-        self.__follow_redirects = follow_redirects
-
-        # Set headers
-        self.__headers = {
-            'User-Agent' : self.generate_user_agent() if random_user_agent else self.DEFAULT_USER_AGENT,
-            'Accept-Language' : "en-US",
-            'Accept' : self.__get_accept_type(),
-        }
-
-        # Cache?
-        self.__cache = cache
-        # Set cache headers
-        if not self.__cache:
-            self.__headers['Cache-Control'] = 'no-cache'
-            self.__headers['Cache-Control'] = 'no-store'
-            self.__headers['Pragma'] = 'no-cache'
-            self.__headers['Expires'] = '0'
-
-        # Post data
-        self.__post_data = post_data
-
-        # Get type of request
-        self.__type = request_type
-
-        # This vas specify if request has files attached
-        self.__files_attached = None
-
-        # Id of request
-        self.__request_id = None
-
-
-    #----------------------------------------------------------------------
-    #
-    # Public functions
-    #
-    #----------------------------------------------------------------------
-
-    def generate_user_agent(self):
-        """
-        :return: Return a random user agent string.
-        :rtype: str
-        """
-        return self.__user_agents[random.randint(0, len(self.__user_agents) - 1)]
-
-
-    #----------------------------------------------------------------------
-    def add_file_from_file(self, path_to_file, alt_filename=None):
-        """
-        Add file from path
-
-        :param path_to_file: Path to file to load.
-        :type path_to_file: str
-
-        :param alt_filename: If you set it, filename used for http post will be set to this.
-        :type alt_filename: str
-        """
-        self.add_file_from_object(basename(path_to_file), open(path_to_file, "rb").read(), alt_filename)
-
-
-    #----------------------------------------------------------------------
-    def add_file_from_object(self, param_name, obj, alt_filename=None):
-        """
-        Add file from a binary object.
-
-        :param param_name: Name of parameter in request.
-        :type param_name: str
-
-        :param obj: Binary object to send.
-        :type obj: binary data
-
-        :param alt_filename: If you set it, filename used for http post will be set to this.
-        :type alt_filename: str
-        """
-
-        # Create dict, if not exits
-        if not self.__files_attached:
-            self.__files_attached = {}
-
-        # Fix method, if it's GET
-        if self.__method == "GET":
-            self.__method = "POST"
-
-        # Add data with true filename or alt filename
-        if alt_filename:
-            self.__files_attached[alt_filename] = obj
-        else:
-            self.__files_attached[param_name] = obj
-
-
-    #----------------------------------------------------------------------
-    #
-    # Private functions
-    #
-    #----------------------------------------------------------------------
-
-    def __get_accept_type(self, accept_type=None):
-        """
-        Get accepted types.
-
-        :param accept_type: One of the following: "html", "text", "all".
-        :type accept_type: str
-
-        :returns: Value to use on the Accept: HTTP header.
-        :rtype: str
-        """
-
-        m_types = {
-            "html": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "text" : "text/plain",
-            "all": "*/*"
-        }
-
-        # If type is in list
-        if accept_type:
-            if accept_type in m_types:
-                return m_types[accept_type]
-
-        # Otherwise
-        return m_types["all"]
-
-
-    #----------------------------------------------------------------------
-    #
-    # Read/write properties
-    #
-    #----------------------------------------------------------------------
-
-    @property
-    def hostname(self):
-        """
-        :return: 'Host' HTTP header.
-        :rtype: str
-        """
-        return self.__headers.get('Host')
-
-    @hostname.setter
-    def hostname(self, value):
-        """
-        :param value: 'Host' HTTP header.
-        :type value: str
-        """
-        assert isinstance(value, basestring)
-        self.__headers['Host'] = value
-        self.__parsed_url.hostname = self.__headers['Host']
-
-    @property
-    def user_agent(self):
-        """
-        :return: 'User-Agent' HTTP header.
-        :rtype: str
-        """
-        return self.__headers.get('User-Agent')
-
-    @user_agent.setter
-    def user_agent(self, value):
-        """
-        :param value: 'User-Agent' HTTP header.
-        :type value: str
-        """
-        assert isinstance(value, basestring)
-        self.__headers['User-Agent'] = value
-
-    @property
-    def accept_language(self):
-        """
-        :return: 'Accept-Language' HTTP header.
-        :rtype: str
-        """
-        return self.__headers.get('Accept-Language')
-
-    @accept_language.setter
-    def accept_language(self, value):
-        """
-        :param value: 'Accept-Language' HTTP header.
-        :type value: str
-        """
-        assert isinstance(value, basestring)
-        self.__headers['Accept-Language'] = value
-
-    @property
-    def accept(self):
-        """
-        :return: 'Accept' HTTP header.
-        :rtype: str
-        """
-        return self.__headers.get('Accept')
-
-    @accept.setter
-    def accept(self, value):
-        """
-        :param value: 'Accept' HTTP header.
-        :type value: str
-        """
-        assert isinstance(value, basestring)
-        self.__headers['Accept'] = value
-
-    @property
-    def referer(self):
-        """
-        :return: 'Referer' HTTP header.
-        :rtype: str
-        """
-        return self.__headers.get('Referer')
-
-    @referer.setter
-    def referer(self, value):
-        """
-        :param value: 'Referer' HTTP header.
-        :type value: str
-        """
-        assert isinstance(value, basestring)
-        self.__headers['Referer'] = value
-
-    @property
-    def cookie(self):
-        """
-        :return: 'Cookie' HTTP header.
-        :rtype: str
-        """
-        return self.__headers.get('Cookie')
-
-    @cookie.setter
-    def cookie(self, value):
-        """
-        :param value: 'Cookie' HTTP header.
-        :type value: str
-        """
-        assert isinstance(value, basestring)
-        self.__headers['Cookie'] = value
-
-    @property
-    def content_type(self):
-        """
-        :return: 'Content-Type' HTTP header.
-        :rtype: str
-        """
-        return self.__headers.get('Content-Type')
-
-    @content_type.setter
-    def content_type(self, value):
-        """
-        :param value: 'Content-Type' HTTP header.
-        :type value: str
-        """
-        assert isinstance(value, basestring)
-        self.__headers['Content-Type'] = value
-
-    @property
-    def post_data(self):
-        """
-        :return: HTTP POST data.
-        :rtype: str
-        """
-        return self.__post_data
-
-    @post_data.setter
-    def post_data(self, value):
-        """
-        :param value: HTTP POST data.
-        :type value: str
-        """
-        if self.__post_data:
-            self.__post_data.update(value)
-        else:
-            self.__post_data = value
-        self.content_type = "application/x-www-form-urlencoded; charset=UTF-8"
-
-    @property
-    def raw_headers(self):
-        """
-        :return: Raw HTTP headers.
-        :rtype: dict(str -> str)
-        """
-        return self.__headers
-
-    @raw_headers.setter
-    def raw_headers(self, value):
-        """
-        :param value: Raw HTTP headers.
-        :type value: dict(str -> str)
-        """
-        assert isinstance(value, dict)
-        self.__headers.update(value)
-
-    @property
-    def follow_redirects(self):
-        """
-        :returns: Redirect options for the request (True to follow redirects, False no follow, None if not set).
-        :rtype: None | bool
-        """
-        return self.__follow_redirects
-
-    @follow_redirects.setter
-    def follow_redirects(self, value):
-        """
-        :param value: Redirect options for the request (True to follow redirects, False no follow, None if not set).
-        :type value: None | bool
-        """
-        self.__follow_redirects = value
-
-
-    #----------------------------------------------------------------------
-    #
-    # Read-only properties
-    #
-    #----------------------------------------------------------------------
-    @property
-    def url(self):
-        """
-        :returns: String with URL of the request.
-        :rtype: str
-        """
-        return self.__url
-
-    @property
-    def parsed_url(self):
-        """
-        :returns: URL split to its components.
-        :rtype: DecomposedURL
-        """
-        return self.__parsed_url
-
-    @property
-    def method(self):
-        """
-        :returns: HTTP method used for this request.
-        :rtype: str
-        """
-        return self.__method
-
-    @property
-    def is_cacheable(self):
-        """
-        :returns: True if the request is marked as cacheable, otherwise False.
-        :rtype: bool
-        """
-        return self.__cache
-
-    @property
-    def request_type(self):
-        """
-        Type of HTTP request. Possible values are:
-        0 - HTTP
-        1 - JSON
-        2 - SOAP
-        3 - VIEWSTATE
-
-        :returns: Type of HTTP request.
-        :rtype: int
-        """
-        return self.__type
-
-    @property
-    def files_attached(self):
-        """
-        Attached filenames in the following format:
-
-        .. code-block:: python
-
-           {
-              'file_name_1' : raw_object_1,
-              'file_name_2' : raw_object_2
-           }
-
-        :returns: Attached filenames.
-        :rtype: dict
-        """
-        return self.__files_attached
-
-    @property
-    def request_id(self):
-        """
-        :returns: Unique ID for this request.
-        :rtype: str
-        """
-        if not self.__request_id:
-            # Create data for key
-            m_string = "%s|%s" % (self.__url, ''.join(( "%s:%s" % (k, v) for k,v in self.post_data.iteritems()) if self.post_data else ''))
-
-            # Make the hash
-            self.__request_id = hashlib.md5(m_string).hexdigest()
-        return self.__request_id
-
-
-#------------------------------------------------------------------------------
-class HTTP_Response (object):
-    """
-    HTTP response.
+    HTTP protocol API for GoLismero.
     """
 
+
+    #--------------------------------------------------------------------------
     def __init__(self):
-
-        # Content type.
-        self.__content_type = None
-
-        # Raw HTTP headers.
-        self.__http_headers_raw = None
-
-        # Raw HTTP response.
-        self.__raw_response = None
-
-        # Total number of words in response body.
-        self.__word_count = None
-
-        # Total number of lines in response body.
-        self.__lines_count = None
-
-        # Total number of characters in response body.
-        self.__char_count = None
-
-        # Parent constructor.
-        super(HTTP_Response, self).__init__()
+        self.__session = None
 
 
-    #----------------------------------------------------------------------
-    @classmethod
-    def from_custom_request(cls, raw_response, request_time):
+    #--------------------------------------------------------------------------
+    def _initialize(self):
         """
-        This method make an HTTP Response object from a Request library.
-
-        Using this method, raw response are not available.
-
-        :param raw_response: HTTPResponse object, from Request library.
-        :type raw_response: HTTPResponse
-
-        :param request_time: time that the response was take.
-        :type request_time: float
-
-        :param request: The original request for this response.
-        :para request: HTTP_Request
+        .. warning: Called automatically by GoLismero. Do not call!
         """
 
-        instance = cls()
+        # Start a new session.
+        self.__session = Session()
 
-        # Request time.
-        instance.__request_time              = request_time
+        # Load the proxy settings.
+        proxy_addr = Config.audit_config.proxy_addr
+        if proxy_addr:
+            auth_user = Config.audit_config.proxy_user
+            auth_pass = Config.audit_config.proxy_pass
+            auth, _ = detect_auth_method(proxy_addr)
+            self.__session.auth = get_auth_obj(auth, auth_user, auth_pass)
+            self.__session.proxies = {
+                "http":  proxy_addr,
+                "https": proxy_addr,
+                "ftp":   proxy_addr,
+            }
 
-        # Raw response from server.
-        instance.__raw_response              = ""
-
-        # HTML data.
-        instance.__raw_data                  = raw_response.content if raw_response.content else ""
-
-        # HTTP response code.
-        instance.__http_response_code        = raw_response.status_code
-
-        # HTTP response reason.
-        instance.__http_response_code_reason = raw_response.reason
-
-        # HTTP headers.
-        instance.__http_headers              = raw_response.headers
-        instance.__http_headers_raw          = "".join(raw_response.headers)
-
-        # Wrapper for cookie.
-        instance.__cookie                    = raw_response.cookies.get_dict()
-
-        return instance
+        # Load the cookie.
+        cookie = Config.audit_config.cookie
+        if cookie:
+            self.__session.cookies.set_cookie(cookie)
 
 
-    #----------------------------------------------------------------------
-    @classmethod
-    def from_raw_request(cls, raw_response, request_time):
+    #--------------------------------------------------------------------------
+    def get_url(self, url, method = "GET", callback = None,
+                     timeout = None, use_cache = None, allow_redirects = True):
         """
-        This method make an HTTP Response object from a raw parse of HTTP response.
+        Send a simple HTTP request to the server and get the response back.
 
-        :param raw_response: HttpParser object with the info.
-        :type raw_response: HttpParse
+        :param url: URL to request.
+        :type url: str
 
-        :param request_time: time that the response was take.
-        :type request_time: float
+        :param method: HTTP method.
+        :type method: str
+
+        :param callback: Callback function.
+        :type callback: callable
+
+        :param timeout: Timeout in seconds, or None for no timeout.
+        :type timeout: int | float | None
+
+        :param use_cache: Control the use of the cache.
+                          Use True to force the use of the cache,
+                          False to force not to use it,
+                          or None for automatic.
+        :type use_cache: bool | None
+
+        :param allow_redirects: True to follow redirections, False otherwise.
+        :type allow_redirects: bool
+
+        :returns: HTTP response, or None if the request was cancelled.
+        :rtype: HTTP_Response | None
+
+        :raises NetworkOutOfScope: The resource is out of the audit scope.
+        :raises NetworkException: A network error occurred.
         """
-
-        instance = cls()
-
-        # Request time.
-        instance.__request_time              = request_time
-
-        # Raw response from server.
-        instance.__raw_response              = raw_response["raw_content"]
-
-        # HTML data.
-        instance.__raw_data                  = raw_response["content"]
-
-        # HTTP response code.
-        instance.__http_response_code        = raw_response["statuscode"]
-
-        # HTTP response reason.
-        instance.__http_response_code_reason = raw_response["statustext"]
-
-        # HTTP headers.
-        instance.__http_headers              = raw_response["headers"]
-        instance.__http_headers_raw          = "".join(raw_response["headers"].headers)
-
-        # Wrapper for cookie.
-        instance.__cookie                    = raw_response.get("cookie") if raw_response.get("cookie") else raw_response.get("set-cookie") # Thus, 2 cookie modes are covered.
-
-        return instance
+        request = HTTP_Request(url, method = method)
+        return self.send_request(request, callback = callback,
+                                 timeout = timeout, use_cache = use_cache,
+                                 allow_redirects = allow_redirects)
 
 
-    #----------------------------------------------------------------------
-
-    @property
-    def raw_content(self):
+    #--------------------------------------------------------------------------
+    def send_request(self, request, callback = None,
+                     timeout = None, use_cache = None,
+                     allow_redirects = True):
         """
-        :returns: HTML data.
-        :rtype: str
-        """
-        return self.__raw_data
+        Send an HTTP request to the server and get the response back.
 
-    @property
-    def raw_response(self):
-        """
-        :returns: Raw HTTP response.
-        :rtype: str
-        """
-        return self.__raw_response
+        :param request: HTTP request to send.
+        :type request: HTTP_Request
 
-    @property
-    def content_length(self):
-        """
-        :returns: Value of the 'Content-Length' header, or None if not found.
-        :rtype: int | None
-        """
-        if self.__http_headers and 'Content-Length' in self.__http_headers:
-            return int(self.__http_headers['Content-Length'])
-        return None
+        :param callback: Callback function.
+        :type callback: callable
 
-    @property
-    def cookie(self):
-        """
-        :returns: Value of the 'Cookie' header.
-        :rtype: str
-        """
-        return self.__cookie
+        :param timeout: Timeout in seconds, or None for no timeout.
+        :type timeout: int | float | None
 
-    @property
-    def http_response_code(self):
-        """
-        :returns: HTTP response code.
-        :rtype: int
-        """
-        return self.__http_response_code
+        :param use_cache: Control the use of the cache.
+                          Use True to force the use of the cache,
+                          False to force not to use it,
+                          or None for automatic.
+        :type use_cache: bool | None
 
-    @property
-    def http_response_reason(self):
-        """
-        :returns: Descriptive text for the HTTP response code.
-        :rtype: str
-        """
-        return self.__http_response_code_reason
+        :param allow_redirects: True to follow redirections, False otherwise.
+        :type allow_redirects: bool
 
-    @property
-    def http_headers(self):
-        """
-        :returns: HTTP response headers.
-        :rtype: dict(str -> str)
-        """
-        return self.__http_headers
+        :returns: HTTP response, or None if the request was cancelled.
+        :rtype: HTTP_Response | None
 
-    @property
-    def http_headers_raw(self):
-        """
-        :returns: Raw HTTP response headers.
-        :rtype: str
-        """
-        if not self.__http_headers_raw:
-            self.__http_headers_raw = ''.join(("%s:%s\n" % (k,v) for k,v in self.__http_headers.iteritems()))
-        return self.__http_headers_raw
-
-    @property
-    def request_time(self):
-        """
-        :returns: Get the response time, in seconds.
-        :rtype: float
-        """
-        return self.__request_time
-
-    @property
-    def information(self):
-        """
-        :returns: Information object extracted from this HTTP response.
-        :rtype: Information
+        :raises NetworkOutOfScope: The resource is out of the audit scope.
+        :raises NetworkException: A network error occurred.
         """
 
-        m_return = None
+        # Check initialization.
+        if self.__session is None:
+            self._initialize()
 
-        m_contents = {
-            "text/html": HTML,
-        }
-
-        if self.content_type == "text/plain" or self.content_type == "unknown":
-            m_return = self.raw_content
+        # Check the arguments.
+        if not isinstance(request, HTTP_Request):
+            raise TypeError("Expected HTTP_Request, got %s instead" % type(request))
+        if callback is not None and not callable(callback):
+            raise TypeError(
+                "Expected callable (function, class, instance with __call__),"
+                " got %s instead" % type(callback)
+            )
+        if timeout:
+            timeout = float(timeout)
         else:
-            m_return = m_contents[self.content_type](self.raw_content)
+            timeout = None
+        if use_cache not in (True, False, None):
+            raise TypeError("Expected bool or None, got %s instead" % type(use_cache))
 
-        return m_return
+        # Check the request scope.
+        if not request.is_in_scope():
+            raise NetworkOutOfScope("URL out of scope: %s" % request.url)
 
-    @property
-    def content_type(self):
+        # If the cache is enabled, try to fetch the cached response.
+        cache_key = None
+        if use_cache is not False:
+            cache_key = "%s|%s|%s" % (request.method, request.url, request.post_data)
+            cache_key = md5(cache_key).hexdigest()
+            cached_resp = NetworkCache.get(cache_key, request.parsed_url.scheme)
+
+            # Do we have a cache hit?
+            if cached_resp is not None:
+
+                # Build the HTTP response object.
+                raw_response, elapsed = cached_resp
+                response = HTTP_Response(
+                    request      = request,
+                    raw_response = raw_response,
+                    elapsed      = elapsed,
+                )
+
+                # Call the user-defined callback.
+                if callback is not None:
+                    cont = callback(request, url,
+                                    response.status,
+                                    response.content_length,
+                                    response.content_type)
+
+                    # If the callback wants to abort...
+                    if not cont:
+
+                        # Discard the response.
+                        discard_data(response)
+
+                        # Abort.
+                        return
+
+                # Return the response.
+                return response
+
+        # Use a connection slot.
+        with ConnectionSlot(request.hostname):
+
+            # Send the request.
+            try:
+                t1 = time()
+                resp = self.__session.request(
+                    method  = request.method,
+                    url     = request.url,
+                    headers = request.headers.to_dict(),
+                    data    = request.post_data,
+                    ##files   = request.files,   # not supported yet!
+                    verify  = False,
+                    stream  = True,
+                    timeout = timeout,
+                    allow_redirects = allow_redirects,
+                )
+                t2 = time()
+            except RequestException, e:
+                raise NetworkException(str(e))
+
+            try:
+
+                # Get the response properties.
+                url = resp.url
+                status_code  = str(resp.status_code)
+                content_type = resp.headers.get("Content-Type")
+                try:
+                    content_length = int(resp.headers["Content-Length"])
+                except Exception:
+                    content_length = None
+
+                # If the final URL is different from the request URL,
+                # abort if the new URL is out of scope.
+                if url != request.url and not is_in_scope(url):
+                    raise NetworkOutOfScope("URL out of scope: %s" % url)
+
+                # Call the user-defined callback, and cancel if requested.
+                if callback is not None:
+                    cont = callback(request, url, status_code, content_length, content_type)
+                    if not cont:
+                        return
+
+                # Autogenerate an Url object.
+                # XXX FIXME: the depth level is broken!!!
+                url_obj = None
+                if url != request.url:
+                    url_obj = Url(
+                        url         = url,
+                        method      = request.method,
+                        post_params = request.post_data,
+                        referer     = request.referer,
+                    )
+                    LocalDataCache.on_autogeneration(url_obj)
+
+                # Download the contents.
+                try:
+                    t3 = time()
+                    data = resp.content
+                    t4 = time()
+                except RequestException, e:
+                    raise NetworkException(str(e))
+
+                # Calculate the elapsed time.
+                elapsed = (t2 - t1) + (t4 - t3)
+
+                # Build an HTTP_Response object.
+                # Since the requests library won't let us access the raw
+                # response bytes, we have to "reconstruct" them.
+                response = HTTP_Response(
+                    request = request,
+                    status  = status_code,
+                    headers = resp.headers,
+                    data    = data,
+                    elapsed = elapsed,
+                )
+
+                # Link it to the originating URL.
+                if url_obj is not None:
+                    response.add_resource(url_obj)
+
+                # If the cache is enabled, store the response in the cache.
+                # When possible use the original key instead of recalculating it.
+                # XXX FIXME the cache timestamps are broken!!!
+                if use_cache is True or (use_cache is None and response.is_cacheable()):
+                    if cache_key is None:
+                        cache_key = "%s|%s|%s" % (request.method, url, request.post_data)
+                        cache_key = md5(cache_key).hexdigest()
+                    cached_resp = (response.raw_response, elapsed)
+                    NetworkCache.set(cache_key, cached_resp, request.parsed_url.scheme)
+
+                # Return the HTTP_Response object.
+                return response
+
+            finally:
+
+                # Close the connection.
+                resp.close()
+
+
+    #--------------------------------------------------------------------------
+    def send_raw(self, raw_request, host, port = 80, proto = "http",
+                 callback = None, timeout = None):
         """
-        Simplified content type identifier.
+        Send a raw HTTP request to the server and get the response back.
 
-        This is not the same as the MIME type.
+        .. note: This method does not support the use of the cache.
 
-        Available types are:
-        - html
-        - text
+        .. warning::
+           This method only returns the HTTP response headers, **NOT THE CONTENT**.
 
-        :returns: Simplified content type identifier.
-        :rtype: str
+        :param raw_request: Raw HTTP request to send.
+        :type raw_request: HTTP_Raw_Request
+
+        :param host: Hostname or IP address to connect to.
+        :type host: str
+
+        :param port: TCP port to connect to.
+        :type port: int
+
+        :param proto: Network protocol (that is, the URL scheme).
+        :type proto: str
+
+        :param callback: Callback function.
+        :type callback: callable
+
+        :param timeout: Timeout in seconds, or None for no timeout.
+        :type timeout: int | float | None
+
+        :param use_cache: Control the use of the cache.
+                          Use True to force the use of the cache,
+                          False to force not to use it,
+                          or None for automatic.
+        :type use_cache: bool | None
+
+        :returns: HTTP response, or None if the request was cancelled.
+        :rtype: HTTP_Response | None
+
+        :raises NetworkOutOfScope: The resource is out of the audit scope.
+        :raises NetworkException: A network error occurred.
         """
-        if not self.__content_type:
-            self.__content_type = self.http_headers.get("Content-Type").split(";")[0]
-            if not self.__content_type:
-                self.__content_type = "unknown"
-        return self.__content_type
+
+        # Check initialization.
+        if self.__session is None:
+            self._initialize()
+
+        # Check the arguments.
+        if not isinstance(raw_request, HTTP_Raw_Request):
+            raise TypeError("Expected HTTP_Raw_Request, got %s instead" % type(raw_request))
+        if type(host) == unicode:
+            raise NotImplementedError("Unicode hostnames not yet supported")
+        if type(host) != str:
+            raise TypeError("Expected str, got %s instead" % type(host))
+        if type(port) not in (int, long):
+            raise TypeError("Expected int, got %s instead" % type(port))
+        if port < 1 or port > 32767:
+            raise ValueError("Invalid port number: %d" % port)
+        if proto not in ("http", "https"):
+            raise ValueError("Protocol must be 'http' or 'https', not %r" % proto)
+        if callback is not None and not callable(callback):
+            raise TypeError(
+                "Expected callable (function, class, instance with __call__),"
+                " got %s instead" % type(callback)
+            )
+        if timeout:
+            timeout = float(timeout)
+        else:
+            timeout = None
+
+        # Check the request scope.
+        if not is_in_scope(host):
+            raise NetworkOutOfScope("Host out of scope: %s" % host)
+
+        # Get a connection slot.
+        with ConnectionSlot(host):
+
+            # Start the timer.
+            t1 = time()
+
+            # Connect to the server.
+            try:
+                s = socket()        # XXX FIXME: this fails for IPv6!
+                try:
+                    s.settimeout(timeout)
+                    s.connect((host, port))
+                    try:
+                        if proto == "https":
+                            s = wrap_socket(s)
+
+                        # Send the HTTP request.
+                        s.sendall(raw_request.raw_request)
+
+                        # Get the HTTP response headers.
+                        raw_response = StringIO()
+                        while True:
+                            data = s.recv(1)
+                            if not data:
+                                raise NetworkException("Server has closed the connection")
+                            raw_response.write(data)
+                            if raw_response.getvalue().endswith("\r\n\r\n"):
+                                break   # full HTTP headers received
+                            if len(raw_response.getvalue()) > 65536:
+                                raise NetworkException("Response headers too long")
+
+                        # Stop the timer.
+                        t2 = time()
+
+                        # Call the user-defined callback, and cancel if requested.
+                        if callback is not None:
+                            temp_request  = HTTP_Raw_Request(raw_request.raw_request)
+                            temp_response = HTTP_Response(temp_request,
+                                                          raw_response = raw_response.getvalue())
+                            LocalDataCache.discard(temp_request)
+                            LocalDataCache.discard(temp_response)
+                            cont = callback(temp_request, temp_response)
+                            if not cont:
+                                return
+                            del temp_request
+                            del temp_response
+
+                        # Start the timer.
+                        t3 = time()
+
+                        # Download the contents.
+                        #
+                        #
+                        #
+                        # XXX TODO
+                        #
+                        #
+                        #
+
+                        # Stop the timer.
+                        t4 = time()
+
+                        # Return the HTTP_Response object.
+                        return HTTP_Response(
+                            request      = raw_request,
+                            raw_response = raw_response.getvalue(),
+                            elapsed      = (t2 - t1) + (t4 - t3),
+                        )
+
+                    # Close the connection and clean up the socket.
+                    finally:
+                        try:
+                            s.shutdown(2)
+                        except Exception:
+                            pass
+                finally:
+                    try:
+                        s.close()
+                    except Exception:
+                        pass
+
+            # On socket errors, send an exception.
+            except error, e:
+                raise NetworkException(e.message)
 
 
-    #----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
-    @property
-    def char_count(self):
-        """
-        :returns: Number of chars in response body.
-        :rtype: int
-        """
-        if self.__char_count is None:
-            self.__char_count = len(self.__raw_data)
-        return self.__char_count
-
-    @property
-    def lines_count(self):
-        """
-        :returns: Number of lines in response body.
-        :rtype: int
-        """
-        if self.__lines_count is None:
-            self.__lines_count = len(findall(r"\S+", self.__raw_data))
-        return self.__lines_count
-
-    @property
-    def words_count(self):
-        """
-        :returns: Number of words in response body.
-        :rtype: int
-        """
-        if not self.__word_count:
-            self.__word_count = self.__raw_data.count('\n')
-        return self.__word_count
+# Singleton pattern.
+HTTP = _HTTP()

@@ -26,8 +26,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
-
 from golismero.api.config import Config
 from golismero.api.data.resource import Resource
 from golismero.api.data.information.webserver_fingerprint import WebServerFingerprint
@@ -35,7 +33,8 @@ from golismero.api.data.resource.url import Url
 from golismero.api.data.resource.folderurl import FolderUrl
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.logger import Logger
-from golismero.api.net.protocol import NetworkAPI, NetworkException
+from golismero.api.net import NetworkException
+from golismero.api.net.http import HTTP
 from golismero.api.net.web_utils import DecomposedURL
 from golismero.api.text.matching_analyzer import MatchingAnalyzer, HTTP_response_headers_analyzer
 from golismero.api.text.wordlist_api import WordListAPI
@@ -45,6 +44,7 @@ from golismero.api.plugin import TestingPlugin
 from collections import defaultdict
 
 import threading
+
 
 __doc__ = """
 
@@ -59,6 +59,8 @@ __doc__ = """
    https://twitter.com/capi_x
 """
 
+
+#-------------------------------------------------------------------------
 
 # Impact vectors. Available values: 0 - 4.
 severity_vectors = {
@@ -78,10 +80,9 @@ class ParallelBruter(threading.Thread):
     """
 
     #----------------------------------------------------------------------
-    def __init__(self, urls, results, net, method):
+    def __init__(self, urls, results, method):
         self.__urls       = urls
         self.__results    = results
-        self.__net        = net
         self.__method     = method
         super(ParallelBruter,self).__init__()
 
@@ -105,7 +106,7 @@ class ParallelBruter(threading.Thread):
                 # Ge URL
                 p = None
                 try:
-                    p = self.__net.get(l_url, cache=False, method=self.__method)
+                    p = HTTP.get_url(l_url, use_cache=False, method=self.__method)
                 except NetworkException,e:
                     Logger.log_more_verbose("Bruteforcer - value error while processing: '%s'. Error: %s" % (l_url, e.message))
 
@@ -116,11 +117,11 @@ class ParallelBruter(threading.Thread):
                 # and this url is greater than 52%, then it's
                 # the same URL and must be discarded.
                 #
-                if p and p.http_response_code == 200:
+                if p and p.status == "200":
 
                     # If the method used to get URL was HEAD, get complete URL
                     if self.__method != "GET":
-                        p = self.__net.get(l_url, cache=False, method="GET")
+                        p = HTTP.get_url(l_url, use_cache=False, method="GET")
 
                     # Append for analyzate and display info if is accepted
                     if self.__results.append(p.raw_content,url=l_url,risk = severity_vectors[m_name]):
@@ -288,7 +289,6 @@ def process_url(info):
     return analyze_urls(info, m_urls_to_test)
 
 
-
 #----------------------------------------------------------------------
 #
 # The analyzer
@@ -311,11 +311,8 @@ def analyze_urls(info, urls_to_test):
     # Local use of URL
     m_url         = info.url
 
-    # Network manager reference
-    m_net_manager = NetworkAPI.get_connection()
-
     # Determine the HTTP Method
-    m_http_method = get_http_method(m_url, m_net_manager)
+    m_http_method = get_http_method(m_url)
 
     #
     # Generate an error in server to get an error page, using a random string
@@ -324,7 +321,7 @@ def analyze_urls(info, urls_to_test):
     m_error_url      = m_url + generate_random_string()
 
     # Get the request
-    m_error_response = m_net_manager.get(m_error_url).raw_content
+    m_error_response = HTTP.get_url(m_error_url).data
 
     # Run multithread bruteforcer
     m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
@@ -332,7 +329,7 @@ def analyze_urls(info, urls_to_test):
     # Does the resquests with the URLs
     m_threads = list()
     for i in xrange(5):
-        l_t = ParallelBruter(urls_to_test, m_store_info, m_net_manager, m_http_method)
+        l_t = ParallelBruter(urls_to_test, m_store_info, m_http_method)
         m_threads.append(l_t)
         l_t.start()
 
@@ -364,7 +361,6 @@ def analyze_urls(info, urls_to_test):
         m_results_append(l_vuln)
 
     return m_results
-
 
 
 #----------------------------------------------------------------------
@@ -409,9 +405,8 @@ def load_wordlists(wordlists):
     return m_return
 
 
-
 #----------------------------------------------------------------------
-def get_http_method(url, net_manager):
+def get_http_method(url):
     """
     This function determinates if the method HEAD is available. To do that, compare between two responses:
     - One with GET method
@@ -419,12 +414,12 @@ def get_http_method(url, net_manager):
 
     If both are seem more than 90%, the response are the same and HEAD method are not allowed.
     """
-    m_head_response = net_manager.get(url, method="HEAD")
-    m_get_response  = net_manager.get(url)
+    m_head_response = HTTP.get_url(url, method="HEAD")
+    m_get_response  = HTTP.get_url(url)
 
 
     # Check if HEAD reponse is different that GET response, to ensure that results are valids
-    return "HEAD" if HTTP_response_headers_analyzer(m_head_response.http_headers, m_get_response.http_headers) < 0.90 else "GET"
+    return "HEAD" if HTTP_response_headers_analyzer(m_head_response.headers, m_get_response.headers) < 0.90 else "GET"
 
 
 #----------------------------------------------------------------------
@@ -469,6 +464,7 @@ def make_url_with_prefixes(wordlist, url_parts):
     return m_return
 
 
+#----------------------------------------------------------------------
 def make_url_with_suffixes(wordlist, url_parts):
     """
     Creates a set of URLs with suffixes.
@@ -504,6 +500,7 @@ def make_url_with_suffixes(wordlist, url_parts):
         m_return_add(m_new.url)
 
     return m_return
+
 
 #----------------------------------------------------------------------
 def make_url_mutate_filename(url_parts):
@@ -542,6 +539,7 @@ def make_url_mutate_filename(url_parts):
         m_return_add(m_new.url)
 
     return m_return
+
 
 #----------------------------------------------------------------------
 def make_url_changing_folder_name(url_parts):
@@ -702,6 +700,7 @@ def is_folder_url(url_parts):
     """
     return url_parts.path.endswith('/') and not url_parts.query_char == '/'
 
+
 #----------------------------------------------------------------------
 def get_list_from_wordlist(wordlist):
     """
@@ -724,4 +723,3 @@ def get_list_from_wordlist(wordlist):
     except KeyError,e:
         Logger.log_error_more_verbose(e.message)
         return set()
-

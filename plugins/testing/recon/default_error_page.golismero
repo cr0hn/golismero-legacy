@@ -1,5 +1,6 @@
 [Core]
 Name = Default Error page finder
+Dependencies = testing/recon/spider
 
 [Documentation]
 Description = Identify default error pages for most common web servers

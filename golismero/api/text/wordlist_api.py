@@ -87,7 +87,7 @@ class _WordListAPI(Singleton):
             # Exits the file
             m_file_manager = FileManager()
             if not m_file_manager.exists(wordlist):
-                raise IOError("Wordlist file '%s' not exits." % wordlist)
+                raise IOError("Wordlist file '%s' does not exist." % wordlist)
             if not m_file_manager.isfile(wordlist):
                 raise TypeError("Wordlist '%s' is not a file." % wordlist)
 
