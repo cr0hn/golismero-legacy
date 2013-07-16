@@ -970,7 +970,7 @@ class _LocalDataCache(object):
         Process the fresh instances.
         """
 
-        # Reset the fresh instances list, but keep the old one.
+        # Reset the fresh instances list, but keep the old one apart.
         self.__fresh, fresh = [], self.__fresh
 
         # This set will contain the data identities.
@@ -984,6 +984,8 @@ class _LocalDataCache(object):
 
             # Keep (and overwrite) the data. Order is important!
             # XXX FIXME review, some data may be lost... (merge instead?)
+            ##if data_id in self.__new_data:
+            ##    warn("Data already existed! %r" % self.__new_data[data_id])
             self.__new_data[data_id] = data
 
             # Remember the identity.
@@ -1018,11 +1020,13 @@ class _LocalDataCache(object):
         :param data_id: Identity.
         :type data_id: str
         """
+        if isinstance(data_id, Data):
+            data_id = data_id.identity
         self.update()
         self.__discarded.add(data_id)
         self.__new_data.pop(data_id, None)
-        if data_id in self.__autogen:
-            self.__autogen.remove(data_id)
+        #if data_id in self.__autogen:
+        #    self.__autogen.remove(data_id)
 
 
     #----------------------------------------------------------------------
