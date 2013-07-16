@@ -492,7 +492,7 @@ def http_analyzers(main_url, number_of_entries=4):
         try:
             m_raw_request = HTTP_Raw_Request(l_raw_request)
             discard_data(m_raw_request)
-            l_response = HTTP.send_raw(host        = m_hostname,
+            l_response = HTTP.make_raw_request(host        = m_hostname,
                                        port        = m_port,
                                        raw_request = m_raw_request,
                                        callback    = check_raw_response)

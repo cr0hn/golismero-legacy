@@ -124,13 +124,13 @@ class _HTTP(Singleton):
         :raises NetworkException: A network error occurred.
         """
         request = HTTP_Request(url, method = method)
-        return self.send_request(request, callback = callback,
+        return self.make_request(request, callback = callback,
                                  timeout = timeout, use_cache = use_cache,
                                  allow_redirects = allow_redirects)
 
 
     #--------------------------------------------------------------------------
-    def send_request(self, request, callback = None,
+    def make_request(self, request, callback = None,
                      timeout = None, use_cache = None,
                      allow_redirects = True):
         """
@@ -322,7 +322,7 @@ class _HTTP(Singleton):
 
 
     #--------------------------------------------------------------------------
-    def send_raw(self, raw_request, host, port = 80, proto = "http",
+    def make_raw_request(self, raw_request, host, port = 80, proto = "http",
                  callback = None, timeout = None):
         """
         Send a raw HTTP request to the server and get the response back.

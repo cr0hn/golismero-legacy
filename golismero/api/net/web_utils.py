@@ -263,7 +263,7 @@ def download(url, callback = None, timeout = None, allow_redirects = True):
 
     # Send the request and get the response.
     from .http import HTTP
-    resp = HTTP.send_request(req,
+    resp = HTTP.make_request(req,
                              callback = temp_callback,
                              timeout = timeout,
                              allow_redirects = allow_redirects)
