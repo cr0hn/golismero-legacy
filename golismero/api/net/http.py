@@ -369,7 +369,10 @@ class _HTTP(Singleton):
             self._initialize()
 
         # Check the arguments.
-        if not isinstance(raw_request, HTTP_Raw_Request):
+        if type(raw_request) is str:
+            raw_request = HTTP_Raw_Request(raw_request)
+            LocalDataCache.on_autogeneration(raw_request)
+        elif not isinstance(raw_request, HTTP_Raw_Request):
             raise TypeError("Expected HTTP_Raw_Request, got %s instead" % type(raw_request))
         if type(host) == unicode:
             raise NotImplementedError("Unicode hostnames not yet supported")
@@ -434,8 +437,8 @@ class _HTTP(Singleton):
                             temp_request  = HTTP_Raw_Request(raw_request.raw_request)
                             temp_response = HTTP_Response(temp_request,
                                                           raw_response = raw_response.getvalue())
-                            LocalDataCache.discard(temp_request)
-                            LocalDataCache.discard(temp_response)
+                            discard_data(temp_request)
+                            discard_data(temp_response)
                             cont = callback(temp_request, temp_response)
                             if not cont:
                                 return
