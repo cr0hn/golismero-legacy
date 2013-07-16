@@ -124,6 +124,7 @@ class _HTTP(Singleton):
         :raises NetworkException: A network error occurred.
         """
         request = HTTP_Request(url, method = method)
+        LocalDataCache.on_autogeneration(request)
         return self.make_request(request, callback = callback,
                                  timeout = timeout, use_cache = use_cache,
                                  allow_redirects = allow_redirects)
