@@ -304,6 +304,7 @@ def basic_platform_detection(main_url):
     m_r = download(main_url, check_download)
     if not m_r:
         return "unknown"
+    discard_data(m_r)
 
     # Get the first link
     if m_r.information_type == Information.INFORMATION_HTML:
@@ -329,8 +330,10 @@ def basic_platform_detection(main_url):
 
     # Original
     m_response_orig  = HTTP.get_url(m_first_link, callback=check_response)
+    discard_data(m_response_orig)
     # Uppercase
     m_response_upper = HTTP.get_url(m_first_link.upper(), callback=check_response)
+    discard_data(m_response_upper)
     # Compare them
     m_orig_data      = m_response_orig.raw_response  if m_response_orig  else ""
     m_upper_data     = m_response_upper.raw_response if m_response_upper else ""
@@ -490,12 +493,16 @@ def http_analyzers(main_url, number_of_entries=4):
         # Do the connection
         l_response = None
         try:
+            from golismero.api.data import LocalDataCache
             m_raw_request = HTTP_Raw_Request(l_raw_request)
             discard_data(m_raw_request)
-            l_response = HTTP.make_raw_request(host        = m_hostname,
-                                       port        = m_port,
-                                       raw_request = m_raw_request,
-                                       callback    = check_raw_response)
+            l_response = HTTP.make_raw_request(
+                host        = m_hostname,
+                port        = m_port,
+                raw_request = m_raw_request,
+                callback    = check_raw_response)
+            if l_response:
+                discard_data(l_response)
         except NetworkException,e:
             Logger.log_error_more_verbose("Server-Fingerprint plugin: No response for URL (%s) '%s'. Message: %s" % (l_method, l_url, e.message))
             continue
@@ -628,7 +635,7 @@ def http_analyzers(main_url, number_of_entries=4):
         # Header order
         # ============
         #
-        l_header_order  = ','.join(l_response.iterkeys())
+        l_header_order  = ','.join(l_response.headers.iterkeys())
 
         l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["header-order"])
         l_matches           = l_wordlist_instance.matches_by_value(l_header_order)

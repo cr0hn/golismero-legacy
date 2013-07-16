@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
+from golismero.api.data import discard_data
 from golismero.api.data.resource import Resource
 from golismero.api.data.information.webserver_fingerprint import WebServerFingerprint
 from golismero.api.data.resource.url import Url
@@ -107,6 +108,8 @@ class ParallelBruter(threading.Thread):
                 p = None
                 try:
                     p = HTTP.get_url(l_url, use_cache=False, method=self.__method)
+                    if p:
+                        discard_data(p)
                 except NetworkException,e:
                     Logger.log_more_verbose("Bruteforcer - value error while processing: '%s'. Error: %s" % (l_url, e.message))
 
@@ -122,16 +125,12 @@ class ParallelBruter(threading.Thread):
                     # If the method used to get URL was HEAD, get complete URL
                     if self.__method != "GET":
                         p = HTTP.get_url(l_url, use_cache=False, method="GET")
+                        if p:
+                            discard_data(p)
 
-                    # Append for analyzate and display info if is accepted
+                    # Append for analyze and display info if is accepted
                     if self.__results.append(p.raw_content,url=l_url,risk = severity_vectors[m_name]):
                         Logger.log_more_verbose("Bruteforcer - Discovered partial url: '%s'!!" % l_url)
-
-                        # Send_ response, HTML and URL to kernel.
-                        #m_return = [Url(l_url), p]
-                        #if p.information:
-                        #    m_return.append(p.information)
-                        #return m_return
 
 
 #----------------------------------------------------------------------
@@ -321,7 +320,9 @@ def analyze_urls(info, urls_to_test):
     m_error_url      = m_url + generate_random_string()
 
     # Get the request
-    m_error_response = HTTP.get_url(m_error_url).data
+    m_error_response = HTTP.get_url(m_error_url)
+    discard_data(m_error_response)
+    m_error_response = m_error_response.data
 
     # Run multithread bruteforcer
     m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
@@ -414,9 +415,12 @@ def get_http_method(url):
 
     If both are seem more than 90%, the response are the same and HEAD method are not allowed.
     """
-    m_head_response = HTTP.get_url(url, method="HEAD")
-    m_get_response  = HTTP.get_url(url)
 
+    m_head_response = HTTP.get_url(url, method="HEAD")
+    discard_data(m_head_response)
+
+    m_get_response  = HTTP.get_url(url)
+    discard_data(m_get_response)
 
     # Check if HEAD reponse is different that GET response, to ensure that results are valids
     return "HEAD" if HTTP_response_headers_analyzer(m_head_response.headers, m_get_response.headers) < 0.90 else "GET"

@@ -66,7 +66,7 @@ class DefaultErrorPagePlugin(TestingPlugin):
                         # Match found.
                         vulnerability = DefaultErrorPage(info, server_name)
                         vulnerability.add_information(response)
-                        return vulnerability
+                        return [vulnerability, response]
 
                 # Discard the response if no match was found.
                 discard_data(response)

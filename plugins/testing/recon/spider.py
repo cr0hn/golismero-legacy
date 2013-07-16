@@ -84,7 +84,6 @@ class Spider(TestingPlugin):
         # TODO: If it's a 301 response, get the Location header
 
         # Get links
-        Logger.log("Info type: %r" % p.information_type)
         if p.information_type == Information.INFORMATION_HTML:
             m_links = extract_from_html(p.raw_data, m_url)
         else:

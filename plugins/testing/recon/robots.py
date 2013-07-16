@@ -26,19 +26,21 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from golismero.api.data import discard_data
+from golismero.api.data.resource.baseurl import BaseUrl
+from golismero.api.data.resource.url import Url
 from golismero.api.logger import Logger
 from golismero.api.net import NetworkException
 from golismero.api.net.http import HTTP
-from golismero.api.net.web_utils import download
+from golismero.api.net.web_utils import download, generate_error_page_url, fix_url, is_in_scope
 from golismero.api.plugin import TestingPlugin
-from golismero.api.data.resource.url import Url
-from golismero.api.data.resource.baseurl import BaseUrl
-from golismero.api.net.web_utils import generate_error_page_url, fix_url, is_in_scope
 from golismero.api.text.matching_analyzer import MatchingAnalyzer
 
 import codecs
 from urlparse import urljoin
 
+
+#----------------------------------------------------------------------
 class Robots(TestingPlugin):
     """
     This plugin analyzes robots.txt files looking for private pages.
@@ -102,6 +104,7 @@ class Robots(TestingPlugin):
             Logger.log_more_verbose("Robots - no robots.txt found.")
             return
 
+
         u = Url(m_url_robots_txt, referer=m_url)
         p.add_resource(u)
         m_return.append(u)
@@ -163,6 +166,7 @@ class Robots(TestingPlugin):
         m_error_page          = generate_error_page_url(m_url_robots_txt)
         m_response_error_page = HTTP.get_url(m_error_page, callback=self.check_response)
         if m_response_error_page:
+            m_return.append(m_response_error_page)
 
             # Analyze results
             match = {}
@@ -182,6 +186,7 @@ class Robots(TestingPlugin):
                 m_result = Url(l_url, referer=m_url)
                 m_result.add_information(l_p)
                 m_return.append(m_result)
+                m_return.append(l_p)
 
         # No tricky error page, assume the status codes work
         else:
@@ -193,6 +198,7 @@ class Robots(TestingPlugin):
                         m_result = Url(l_url, referer=m_url)
                         m_result.add_information(l_p)
                         m_return.append(m_result)
+                        m_return.append(l_p)
 
         if m_return:
             Logger.log_more_verbose("Robots - discovered %s URLs" % len(m_return))
