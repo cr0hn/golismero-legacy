@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Manager of reports generation.
+Manager of external results import plugins.
 """
 
 __license__ = """
@@ -30,8 +30,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["ReportManager"]
+__all__ = ["ImportManager"]
 
+from ..api.config import Config
 from ..api.logger import Logger
 from .pluginmanager import PluginManager
 
@@ -39,9 +40,9 @@ from traceback import format_exc
 
 
 #------------------------------------------------------------------------------
-class ReportManager (object):
+class ImportManager (object):
     """
-    Manager of reports generation.
+    Manager of external results import plugins.
     """
 
 
@@ -61,25 +62,25 @@ class ReportManager (object):
         # Keep a reference to the Orchestrator.
         self.__orchestrator = orchestrator
 
-        # Load the report plugins.
-        self.__plugins = PluginManager().load_plugins("report")
+        # Load the import plugins.
+        self.__plugins = PluginManager().load_plugins("import")
 
-        # Map report plugins to output files.
-        self.__reporters = {}
-        for output_file in config.reports:
-            if output_file in self.__reporters:
+        # Map import plugins to input files.
+        self.__importers = {}
+        for input_file in config.imports:
+            if input_file in self.__importers:
                 continue
             found = [name for name, plugin in self.__plugins.iteritems()
-                          if plugin.is_supported(output_file)]
+                          if plugin.is_supported(input_file)]
             if not found:
                 raise ValueError(
-                    "Output file format not supported: %r" % output_file)
+                    "Input file format not supported: %r" % input_file)
             if len(found) > 1:
-                msg = "Output file format supported by multiple plugins!\nFile: %r\nPlugins:\n\t"
-                msg %= output_file
+                msg = "Input file format supported by multiple plugins!\nFile: %r\nPlugins:\n\t"
+                msg %= input_file
                 msg += "\n\t".join(found)
                 raise ValueError(msg)
-            self.__reporters[output_file] = found[0]
+            self.__importers[input_file] = found[0]
 
 
     #----------------------------------------------------------------------
@@ -103,35 +104,42 @@ class ReportManager (object):
     @property
     def plugin_count(self):
         """
-        :returns: Number of report plugins loaded.
+        :returns: Number of import plugins loaded.
         :rtype: int
         """
-        return len(self.__reporters)
+        return len(self.__importers)
 
 
     #----------------------------------------------------------------------
-    def generate_reports(self, notifier):
+    def import_results(self):
         """
-        Generate all the requested reports for the audit.
-
-        :param notifier: Plugin notifier.
-        :type notifier: AuditNotifier
+        Import all the requested results before running an audit.
 
         :returns: Number of plugins executed.
         :rtype: int
         """
 
-        # Abort if reporting is disabled.
-        if not self.__reporters:
+        # Abort if importing is disabled.
+        if not self.__importers:
             return 0
 
-        # For each output file, run its corresponding report plugin.
+        # For each input file, run its corresponding import plugin.
+        # Import plugins are run in the same process as the Orchestrator.
         count = 0
-        for output_file, plugin_name in self.__reporters.iteritems():
+        for input_file, plugin_name in self.__importers.iteritems():
             try:
-                notifier.start_report(self.__plugins[plugin_name], output_file)
+                plugin_instance = self.__plugins[plugin_name]
+                context = self.orchestrator.build_plugin_context(
+                    self.config.name, plugin_instance, None
+                )
+                old_context = Config._context
+                try:
+                    Config._context = context
+                    plugin_instance.import_results(input_file)
+                finally:
+                    Config._context = old_context
             except Exception, e:
-                Logger.log_error("Failed to start report for file %r: %s" % (output_file, e.message))
+                Logger.log_error("Failed to import results from file %r: %s" % (input_file, e.message))
                 Logger.log_error_more_verbose(format_exc())
             count += 1
         return count

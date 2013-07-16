@@ -610,7 +610,7 @@ class AuditNotifier(Notifier):
         :type plugin: Plugin
 
         :param output_file: Output file where the report will be written.
-        :type output_file: str | None
+        :type output_file: str
         """
         self.__run_plugin(plugin, "generate_report", output_file)
 
@@ -672,7 +672,7 @@ class UINotifier(Notifier):
         """
         Send messages or information to the plugins.
 
-        :param plugin: Target plugi.
+        :param plugin: Target plugin.
         :type plugin: Plugin
 
         :param method: Callback method name.

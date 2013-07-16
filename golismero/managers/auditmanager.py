@@ -37,6 +37,7 @@ from ..api.data.resource import Resource
 from ..api.data.resource.url import Url
 from ..common import AuditConfig
 from ..database.auditdb import AuditDB
+from ..managers.importmanager import ImportManager
 from ..managers.reportmanager import ReportManager
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
@@ -261,6 +262,9 @@ class Audit (object):
         # Create the notifier.
         self.__notifier = AuditNotifier(self)
 
+        # Create the import manager.
+        self.__import_manager = ImportManager(auditParams, orchestrator)
+
         # Create the report manager.
         self.__report_manager = ReportManager(auditParams, orchestrator)
 
@@ -308,6 +312,14 @@ class Audit (object):
         :rtype: AuditDB
         """
         return self.__database
+
+    @property
+    def importManager(self):
+        """
+        :returns: Import manager.
+        :rtype: ImportManager
+        """
+        return self.__import_manager
 
     @property
     def reportManager(self):
@@ -364,6 +376,9 @@ class Audit (object):
 
         # Reset the number of unacknowledged messages.
         self.__expecting_ack = 0
+
+        # Import external results.
+        self.importManager.import_results()
 
         # Load testing plugins.
         m_audit_plugins = self.orchestrator.pluginManager.load_plugins("testing")

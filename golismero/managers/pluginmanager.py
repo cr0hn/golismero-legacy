@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["PluginManager", "PluginInfo"]
 
 from ..api.config import Config
-from ..api.plugin import TestingPlugin, ReportPlugin, UIPlugin
+from ..api.plugin import UIPlugin, ImportPlugin, TestingPlugin, ReportPlugin
 from ..common import Singleton
 
 from os import path, walk
@@ -362,6 +362,7 @@ class PluginManager (Singleton):
 
     # Plugin categories and their base classes.
     CATEGORIES = {
+        "import"  : ImportPlugin,
         "testing" : TestingPlugin,
         "report"  : ReportPlugin,
         "ui"      : UIPlugin,
