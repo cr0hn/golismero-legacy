@@ -402,7 +402,7 @@ class AdvancedListWordlist(AbstractWordlist):
 
     #----------------------------------------------------------------------
     def clone(self):
-        m_temp = self
+        m_temp = copy.copy(self)
         m_temp.__wordlist = copy.copy(self.__wordlist)
 
         return m_temp
@@ -613,14 +613,9 @@ class AdvancedDicWordlist(object):
 
         word = str(word)
 
-        #
-        #
-        # TODO: FIX WITH NEW FORMAT!!!!
-        #
-        #
         m_return        = set()
         m_return_append = m_return.add
-        for k, v in self.__wordlist.iteritems():
+        for v in self.__wordlist.itervalues():
             if word not in v:
                 continue
 
@@ -667,6 +662,15 @@ class AdvancedDicWordlist(object):
     #----------------------------------------------------------------------
     def iterkeys(self):
         return self.__wordlist.iterkeys()
+
+    #----------------------------------------------------------------------
+    def clone(self):
+        m_temp = copy.copy(self)
+        m_temp.__wordlist = copy.copy(self.__wordlist)
+
+        return m_temp
+
+
 
 
 # Singleton.
