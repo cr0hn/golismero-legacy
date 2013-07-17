@@ -1,5 +1,6 @@
 [Core]
 Name = Web Spider
+Recursive = yes
 
 [Documentation]
 Description = Web spider plugin

@@ -1,5 +1,6 @@
 [Core]
 Name = Directory listing
+Recursive = yes
 
 [Documentation]
 Description = Search listing of directories in web servers

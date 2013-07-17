@@ -592,6 +592,13 @@ class Audit (object):
                 # This automatically merges the data if it already exists.
                 self.database.add_data(data)
 
+                # If the plugin is not recursive, mark the data as already processed by it.
+                plugin_name = message.plugin_name
+                if plugin_name:
+                    plugin_info = self.orchestrator.pluginManager.get_plugin_by_name(plugin_name)
+                    if plugin_info.recursive:
+                        self.database.mark_plugin_finished(data.identity, plugin_name)
+
                 # The data will be sent to the plugins.
                 data_for_plugins.append(data)
 
