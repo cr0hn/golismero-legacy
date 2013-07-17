@@ -59,8 +59,8 @@ class Information(Data):
     #INFORMATION_IMAGE            = 1005  # Image file
     #INFORMATION_PDF              = 1006  # PDF file
     #INFORMATION_DOCUMENT         = 1007  # Document file (various formats)
-    #INFORMATION_PERSON           = 1008  # Online avatar of a person
-    #INFORMATION_CREDENTIALS      = 1009  # Login credentials (user and/or pass)
+    INFORMATION_USERNAME         = 1008  # Username
+    INFORMATION_PASSWORD         = 1009  # Password
 
     # Protocol captures
     INFORMATION_HTTP_REQUEST     = 1500  # HTTP request

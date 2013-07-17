@@ -115,9 +115,19 @@ class Email(Resource):
 
     #----------------------------------------------------------------------
     @property
+    def username(self):
+        """
+        :return: Username for this email address.
+        :rtype: str
+        """
+        return self.__address.split("@", 1)[0].strip().lower()
+
+
+    #----------------------------------------------------------------------
+    @property
     def hostname(self):
         """
-        :return: Host name for this email address.
+        :return: Hostname for this email address.
         :rtype: str
         """
         return self.__address.split("@", 1)[1].strip().lower()
