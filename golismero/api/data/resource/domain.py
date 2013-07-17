@@ -119,8 +119,8 @@ class Domain(Resource):
         result = [ IP(address, domain) for address in self.addresses ]
         subdomain, domain, suffix = split_hostname(domain)
         if subdomain:
-            prefix = "%s.%s" % (domain, suffix)
+            prefix = ".".join( (domain, suffix) )
             for part in reversed(subdomain.split(".")):
                 result.append( Domain(prefix) )
-                prefix = "%s.%s" % (part, prefix)
+                prefix = ".".join( (part, prefix) )
         return result

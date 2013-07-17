@@ -487,10 +487,10 @@ def get_audit_scope(audit_name):
         for u in urls:
             subdomain, domain, suffix = u.split_hostname()
             if subdomain:
-                prefix = "%s.%s" % (domain, suffix)
+                prefix = ".".join( (domain, suffix) )
                 for part in reversed(subdomain.split(".")):
                     audit_scope.add(prefix)
-                    prefix = "%s.%s" % (part, prefix)
+                    prefix = ".".join( (part, prefix) )
 
     # Return the audit scope.
     return audit_scope
@@ -1394,6 +1394,33 @@ class DecomposedURL(object):
         else:
             self.__username = ''
             self.__password = ''
+
+    @property
+    def subdomain(self):
+        return self.split_hostname()[0]
+
+    @subdomain.setter
+    def subdomain(self, subdomain):
+        _, domain, tld = self.split_hostname()
+        self.hostname = ".".join((subdomain, domain, tld))
+
+    @property
+    def domain(self):
+        return self.split_hostname()[1]
+
+    @domain.setter
+    def domain(self, domain):
+        subdomain, _, tld = self.split_hostname()
+        self.hostname = ".".join((subdomain, domain, tld))
+
+    @property
+    def tld(self):
+        return self.split_hostname()[2]
+
+    @tld.setter
+    def tld(self, tld):
+        subdomain, domain, _ = self.split_hostname()
+        self.hostname = ".".join((subdomain, domain, tld))
 
 
 #------------------------------------------------------------------------------
