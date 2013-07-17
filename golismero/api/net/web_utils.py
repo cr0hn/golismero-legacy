@@ -60,39 +60,12 @@ import re
 
 
 #----------------------------------------------------------------------
-# Cached version of the parse_url() function from urllib3,
-# and Url class renamed as Urllib3_Url to avoid confusion.
+# Url class from urllib3 renamed as Urllib3_Url to avoid confusion.
 
 try:
-    from requests.packages.urllib3.util import parse_url as original_parse_url
     from requests.packages.urllib3.util import Url as Urllib3_Url
 except ImportError:
-    from urllib3.util import parse_url as original_parse_url
     from urllib3.util import Url as Urllib3_Url
-
-@lru_cache(maxsize=50)
-def parse_url(url):
-    """
-    Given a url, return a parsed :class:`.Url` namedtuple. Best-effort is
-    performed to parse incomplete urls. Fields not provided will be None.
-
-    Partly backwards-compatible with :mod:`urlparse`.
-
-    .. warning:
-       Implementation detail: this function is currently only a wrapper of
-       the original urllib3.parse_url() function to store its results in a
-       cache. It may be removed in future versions of GoLismero.
-
-    Example: ::
-
-        >>> parse_url('http://google.com/mail/')
-        Url(scheme='http', host='google.com', port=None, path='/', ...)
-        >>> parse_url('google.com:80')
-        Url(scheme=None, host='google.com', port=80, path=None, ...)
-        >>> parse_url('/foo?bar')
-        Url(scheme=None, host=None, port=None, path='/foo', query='bar', ...)
-    """
-    return original_parse_url(url)
 
 
 #----------------------------------------------------------------------
