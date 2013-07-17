@@ -671,7 +671,6 @@ class AdvancedDicWordlist(object):
         return m_temp
 
 
-
-
+#--------------------------------------------------------------------------
 # Singleton.
 WordListAPI = _WordListAPI()
