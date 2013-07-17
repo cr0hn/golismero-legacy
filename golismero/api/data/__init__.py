@@ -839,7 +839,7 @@ class Data(object):
         :param res: Resource element.
         :type res: Resource
         """
-        if not hasattr(info, "data_type") or info.data_type != self.TYPE_RESOURCE:
+        if not hasattr(res, "data_type") or res.data_type != self.TYPE_RESOURCE:
             raise TypeError("Expected Resource, got %s instead" % type(res))
         self.add_link(res)
 
@@ -865,7 +865,7 @@ class Data(object):
         :param info: Vulnerability element.
         :type info: Vulnerability
         """
-        if not hasattr(info, "data_type") or info.data_type != self.TYPE_VULNERABILITY:
+        if not hasattr(vuln, "data_type") or vuln.data_type != self.TYPE_VULNERABILITY:
             raise TypeError("Expected Vulnerability, got %s instead" % type(vuln))
         self.add_link(vuln)
 

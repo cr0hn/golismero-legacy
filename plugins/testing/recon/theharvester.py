@@ -32,7 +32,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 from golismero.api.data import discard_data
-from golismero.api.data.information.auth import Username
 from golismero.api.data.resource.email import Email
 from golismero.api.data.resource.domain import Domain
 from golismero.api.config import Config
@@ -44,6 +43,8 @@ import imp
 import functools
 import os, os.path
 import socket
+import StringIO
+import sys
 import traceback
 import warnings
 
@@ -59,6 +60,12 @@ class HarvesterPlugin(TestingPlugin):
     """
 
 
+    # Supported theHarvester modules.
+    SUPPORTED = (
+        "google", "bing", "pgp", "exalead", # "yandex",
+    )
+
+
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Domain]
@@ -71,15 +78,15 @@ class HarvesterPlugin(TestingPlugin):
         global lib
         global discovery
         if None in (lib, discovery):
-            cwd = os.path.abspath(os.path.split(__file__))
-            lib = imp.load_module(
-                name = "%s.lib" % __name__,
-                pathname = os.path.join(cwd, "lib")
-            )
-            discovery = imp.load_module(
-                name = "%s.discovery" % __name__,
-                pathname = os.path.join(cwd, "discovery")
-            )
+            cwd = os.path.abspath(os.path.split(__file__)[0])
+            cwd = os.path.join(cwd, "theharvester")
+            sys.path.insert(0, cwd)
+            try:
+                import lib
+                from discovery import *
+                import discovery
+            finally:
+                sys.path.remove(cwd)
 
         # Get the search parameters.
         word  = info.name
@@ -90,17 +97,16 @@ class HarvesterPlugin(TestingPlugin):
             pass
 
         # Search every supported engine.
-        all_emails, all_hosts, all_people = set(), set(), set()
-        for engine in discovery.__all__:
+        all_emails, all_hosts = set(), set()
+        for engine in self.SUPPORTED:
             try:
-                emails, hosts, people = self.search(engine, word, limit)
+                emails, hosts = self.search(engine, word, limit)
             except Exception, e:
                 t = traceback.format_exc()
                 m = "theHarvester raised an exception: %s\n%s"
                 warnings.warn(m % (e, t))
             all_emails.update(address.lower() for address in emails if address)
             all_hosts.update(name.lower() for name in hosts if name)
-            all_people.update(username for username in people if username)
 
         # Adapt the data into our model.
         results = []
@@ -116,7 +122,6 @@ class HarvesterPlugin(TestingPlugin):
                 data.add_resource(info)
                 results.append(data)
                 all_hosts.add(data.hostname)
-                all_people.add(data.username)
             else:
                 Logger.log_more_verbose("Email address out of scope: %s" % address)
                 discard_data(data)
@@ -143,12 +148,6 @@ class HarvesterPlugin(TestingPlugin):
                     data.add_resource(info)
                     results.append(data)
 
-        # Usernames.
-        for username in all_people:
-            data = Username(username)
-            data.add_resource(info)
-            results.append(data)
-
         # Return the data.
         return results
 
@@ -173,31 +172,31 @@ class HarvesterPlugin(TestingPlugin):
         :rtype: tuple(list(str), list(str), list(str))
         """
 
-        # This code tries to adapt to theHarvester's inconsistent API
-        # the best it can. Most of the functions and modules somewhat
-        # follow a pattern but some don't. Hopefully we won't have to
-        # update this code too often as new versions come out. :(
+        Logger.log_more_verbose("Searching on: %s" % engine)
 
-        # TODO: add support for Google profiles
-
-        # Get the search function.
-        if engine.endswith("search"):
-            engine = engine[:-6]
-        if engine == "yandex":
-            return [], []   # not working :P
-        if engine == "bing":
-            search_fn = functools.partial(discovery.bingsearch.search_bing, "no")
-        if engine == "people123":
-            search_fn = discovery.people123.search_123people
+        # Get the search class.
+        if engine == "pgp":
+            def search_fn(word, limit, start):
+                return discovery.pgpsearch.search_pgp(word)
         else:
             search_mod = getattr(discovery,  "%ssearch"  % engine)
             search_fn  = getattr(search_mod, "search_%s" % engine)
 
-        # Run the search.
-        search = search_fn(word, limit, 0)
+        # Run the search, hiding all the prints.
+        fd = StringIO.StringIO()
+        old_out, old_err = sys.stdout, sys.stderr
+        try:
+            sys.stdout, sys.stderr = fd, fd
+            search = search_fn(word, limit, 0)
+            if engine == "bing":
+                search.process("no")
+            else:
+                search.process()
+        finally:
+            sys.stdout, sys.stderr = old_out, old_err
 
         # Extract the results.
-        emails, hosts, people = [], [], []
+        emails, hosts = [], []
         if hasattr(search, "get_emails"):
             try:
                 emails = search.get_emails()
@@ -212,13 +211,8 @@ class HarvesterPlugin(TestingPlugin):
                 t = traceback.format_exc()
                 m = "theHarvester (%s, get_hostnames) raised an exception: %s\n%s"
                 warnings.warn(m % (engine, e, t))
-        if hasattr(search, "get_people"):
-            try:
-                people = search.get_people()
-            except Exception, e:
-                t = traceback.format_exc()
-                m = "theHarvester (%s, get_people) raised an exception: %s\n%s"
-                warnings.warn(m % (engine, e, t))
+
+        Logger.log_more_verbose("Found %d emails and %d hostnames on %s" % (len(emails), len(hosts), engine))
 
         # Return the results.
-        return emails, hosts, people
+        return emails, hosts

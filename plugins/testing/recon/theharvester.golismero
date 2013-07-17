@@ -1,6 +1,5 @@
 [Core]
 Name = theHarvester plugin
-Module = theharvester/plugin.py
 
 [Documentation]
 Description = Integration with theHarvester (https://code.google.com/p/theharvester/)
