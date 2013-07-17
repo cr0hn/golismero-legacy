@@ -50,24 +50,32 @@ from golismero.api.net.dns import *
 from golismero.api.data.information.dns import *
 
 
-def test_registers():
+def test_all_registers():
 
     d = DNS()
-    cname = d.resolve("www.terra.es", "CNAME")
+    HOSTS = ["twitter.com", "bing.com", "tuenti.es", "facebook.com", "google.com", "terra.es"]
 
-    for c in cname:
-        t = d.get_ips(c)
-        if c.type == "CNAME":
-            print c.target
+    print
 
-        for kk in t:
-            print kk.address
+    for l_host in HOSTS:
 
-    a = d.get_aaaa("www.google.es")
-    for t in a:
-        if t.type == "AAAA":
-            print t.address
+        print "Host: %s" % l_host
+        print "^" * (len(l_host) + 7)
 
+        for l_dns_type in DnsRegister.DNS_TYPES:
+            print "   Type: " + l_dns_type
+            print "   %s" % ("=" * (len(l_dns_type ) + 6))
+
+            r = d.resolve(l_host, l_dns_type)
+
+            for i, c in enumerate(r):
+                l_properties = [x for x in c.__dict__ if "__" in x]
+
+                for l_prop in l_properties:
+                    l_p = l_prop.find("__") + 2
+                    print "     - %s: %s" % (l_prop[l_p:], getattr(c, l_prop))
+
+            print "   %s" % ("-" * 30)
 
 if __name__ == "__main__":
-    test_registers()
+    test_all_registers()
