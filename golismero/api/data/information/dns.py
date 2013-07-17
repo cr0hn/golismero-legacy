@@ -763,7 +763,7 @@ class DnsRegisterDS(DNSRegisterAlgorithm):
         :type key_tag: int
         """
         if not isinstance(digest, str):
-            raise TypeError("Expected int, got '%s'" % type(digest))
+            raise TypeError("Expected str, got '%s'" % type(digest))
         if not isinstance(digest_type, int):
             raise TypeError("Expected int, got '%s'" % type(digest_type))
         if not isinstance(key_tag, int):
