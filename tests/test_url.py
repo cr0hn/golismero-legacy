@@ -297,7 +297,21 @@ def test_url_parser_custom():
     d.fragment = "frag"
     assert d.url == "http://www.site.com/index.html/test=me#frag"
 
+    # Methods.
+    d.hostname = "this.is.a.subdomain.of.example.co.uk"
+    assert ".".join(d.split_hostname()) == d.host
+    assert d.split_hostname() == ("this.is.a.subdomain.of", "example", "co.uk")
+    d.path = "/folder.with.extensions/file.pdf.exe"
+    assert d.get_all_extensions(directory_allowed = False, double_allowed = True)  == [".pdf", ".exe"]
+    assert d.get_all_extensions(directory_allowed = True,  double_allowed = True)  == [".with", ".extensions", ".pdf", ".exe"]
+    assert d.get_all_extensions(directory_allowed = False, double_allowed = False) == [".exe"]
+    assert d.get_all_extensions(directory_allowed = True,  double_allowed = False) == [".extensions", ".exe"]
+    assert d.get_all_extensions(directory_allowed = False                        ) == [".pdf", ".exe"]
+    assert d.get_all_extensions(                           double_allowed = False) == [".extensions", ".exe"]
+    assert d.get_all_extensions(                                                 ) == [".with", ".extensions", ".pdf", ".exe"]
+
     # Exceptions.
+    last_url = d.url
     try:
         d.query_char = "*"
         assert False
@@ -323,7 +337,7 @@ def test_url_parser_custom():
         assert False
     except ValueError:
         pass
-    assert d.url == "http://www.site.com/index.html/test=me#frag"
+    assert d.url == last_url
 
     # Warnings.
     with catch_warnings(record=True) as w:
