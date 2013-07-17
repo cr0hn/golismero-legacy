@@ -165,7 +165,11 @@ def discard_data(data):
     :param data: Data object to mark as discarded.
     :type data: Data
     """
-    LocalDataCache.discard(data.identity)
+    if hasattr(data, "identity"):
+        data = data.identity
+    if type(data) is not str:
+        raise TypeError("Expected Data, got %s instead" % type(data))
+    LocalDataCache.discard(data)
 
 
 #------------------------------------------------------------------------------
