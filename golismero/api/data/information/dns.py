@@ -1,6 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+# Required since "dns" is both an external module and the name of this file.
+from __future__ import absolute_import
+
 """
 This package contains the classes that represent
 the different types of DNS queries and responses.

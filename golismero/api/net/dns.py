@@ -1,6 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+# Required since "dns" is both an external module and the name of this file.
+from __future__ import absolute_import
+
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
