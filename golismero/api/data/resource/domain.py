@@ -35,7 +35,7 @@ __all__ = ["Domain"]
 from . import Resource
 from .ip import IP
 from .. import identity, merge
-from ...net.web_utils import is_in_scope, DecomposedURL
+from ...net.web_utils import is_in_scope, split_hostname
 
 
 #------------------------------------------------------------------------------
@@ -117,10 +117,10 @@ class Domain(Resource):
     def discovered(self):
         domain = self.name
         result = [ IP(address, domain) for address in self.addresses ]
-        subdomain, domain, suffix = DecomposedURL("http://" + domain).split_hostname()
+        subdomain, domain, suffix = split_hostname(domain)
         if subdomain:
-            prefix = domain + suffix
+            prefix = "%s.%s" % (domain, suffix)
             for part in reversed(subdomain.split(".")):
                 result.append( Domain(prefix) )
-                prefix = part + prefix
+                prefix = "%s.%s" % (part, prefix)
         return result

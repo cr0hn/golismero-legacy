@@ -33,7 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = [
     "download", "data_from_http_response", "generate_user_agent",
     "fix_url", "check_auth", "get_auth_obj", "detect_auth_method",
-    "is_in_scope", "generate_error_page_url", "DecomposedURL",
+    "split_hostname", "get_audit_scope", "is_in_scope",
+    "generate_error_page_url", "DecomposedURL",
 ]
 
 
@@ -487,6 +488,10 @@ def get_audit_scope(audit_name):
     """
     Get the domain names within the scope of the current audit.
 
+    Note that calling :ref:`is_in_scope`() is more accurate,
+    since previously unknown subdomains may be automatically
+    included in the scope.
+
     .. warning:
        This function may be removed in future versions of GoLismero.
 
@@ -496,7 +501,26 @@ def get_audit_scope(audit_name):
     :return: Domains we're allowed to connect to.
     :rtype: set(str)
     """
-    return {parse_url(x).hostname.lower() for x in Config.audit_config.targets}
+
+    # Parse all the target URLs.
+    # FIXME: this assumes all targets are URLs!
+    urls = map(DecomposedURL, Config.audit_config.targets)
+
+    # Include the domain names in the scope.
+    audit_scope = {x.hostname for x in urls}
+
+    # If subdomains are allowed, we must include the parent domains.
+    if Config.audit_config.include_subdomains:
+        for u in urls:
+            subdomain, domain, suffix = u.split_hostname()
+            if subdomain:
+                prefix = "%s.%s" % (domain, suffix)
+                for part in reversed(subdomain.split(".")):
+                    audit_scope.add(prefix)
+                    prefix = "%s.%s" % (part, prefix)
+
+    # Return the audit scope.
+    return audit_scope
 
 
 #----------------------------------------------------------------------
@@ -526,25 +550,51 @@ def is_in_scope(url):
     if not url:
         return False
 
-    # Use parse_url instead of DecomposedURL because
-    # it's faster and good enough for this.
+    # Parse the URL.
     try:
-        p_url = parse_url(url)
+        p_url = DecomposedURL(url)
     except Exception, e:
         warn("Error parsing URL (%s): %s" % (url, e.message))
         return False
 
     # Set of domain names we're allowed to connect to.
-    m_audit_scope = get_audit_scope(Config.audit_name)
+    audit_scope = get_audit_scope(Config.audit_name)
 
     # Check domains, and subdomains too when requested.
     # FIXME: IPv4 and IPv6 addresses are not handled!
-    m_include_subdomains = Config.audit_config.include_subdomains
     hostname = p_url.hostname.lower()
-    return hostname in m_audit_scope or (
-        m_include_subdomains and
-        any(hostname.endswith("." + domain) for domain in m_audit_scope)
+    return hostname in audit_scope or (
+        Config.audit_config.include_subdomains and
+        any(hostname.endswith("." + domain) for domain in audit_scope)
     )
+
+
+#----------------------------------------------------------------------
+def split_hostname(hostname):
+    """
+    Splits a hostname into its subdomain, domain and TLD parts.
+
+    For example:
+
+    >>> from golismero.api.web_utils import DecomposedURL
+    >>> d = DecomposedURL("http://www.example.com/")
+    >>> d.split_hostname()
+    ('www', 'example', 'com')
+    >>> d = DecomposedURL("http://some.subdomain.of.example.co.uk/")
+    >>> d.split_hostname()
+    ('some.subdomain.of', 'example', 'co.uk')
+    >>> '.'.join(d.split_hostname())
+    'some.subdomain.of.example.co.uk'
+
+    :param hostname: Hostname to split.
+    :type hostname: str
+
+    :returns: Subdomain, domain and TLD.
+    :rtype: tuple(str, str, str)
+    """
+    extract = TLDExtract(fetch = False)
+    result  = extract(hostname)
+    return result.subdomain, result.domain, result.suffix
 
 
 #----------------------------------------------------------------------
@@ -1024,9 +1074,7 @@ class DecomposedURL(object):
         :returns: Subdomain, domain and TLD.
         :rtype: tuple(str, str, str)
         """
-        extract = TLDExtract(fetch = False)
-        result  = extract(self.hostname)
-        return result.subdomain, result.domain, result.suffix
+        return split_hostname(self.hostname)
 
 
     #----------------------------------------------------------------------
