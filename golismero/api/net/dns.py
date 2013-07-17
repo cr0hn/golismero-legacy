@@ -32,6 +32,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["DNS"]
 
+from ..data.information.dns import *
+
 import re
 import dns.query
 import dns.resolver
@@ -39,6 +41,7 @@ import dns.reversename
 import socket
 from dns.zone import *
 from dns.dnssec import algorithm_to_text
+
 
 #------------------------------------------------------------------------------
 #
@@ -112,7 +115,7 @@ class DNS(object):
         :return: return a DnsRegister type.
         :rtype: DnsRegister
         """
-        return self._make_request(type, target, ns)
+        return self._make_request(type, target, nameservers)
 
 
     #----------------------------------------------------------------------
