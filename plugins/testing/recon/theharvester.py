@@ -48,9 +48,17 @@ import sys
 import traceback
 import warnings
 
-# Delayed imports.
-lib = None
-discovery = None
+# Import theHarvester as a library.
+cwd = os.path.abspath(os.path.split(__file__)[0])
+cwd = os.path.join(cwd, "theharvester")
+sys.path.insert(0, cwd)
+try:
+    import lib
+    import discovery
+    from discovery import *
+finally:
+    sys.path.remove(cwd)
+del cwd
 
 
 #------------------------------------------------------------------------------
@@ -74,20 +82,6 @@ class HarvesterPlugin(TestingPlugin):
     #--------------------------------------------------------------------------
     def recv_info(self, info):
 
-        # Import theHarvester as a library the first time this plugin is run.
-        global lib
-        global discovery
-        if None in (lib, discovery):
-            cwd = os.path.abspath(os.path.split(__file__)[0])
-            cwd = os.path.join(cwd, "theharvester")
-            sys.path.insert(0, cwd)
-            try:
-                import lib
-                from discovery import *
-                import discovery
-            finally:
-                sys.path.remove(cwd)
-
         # Get the search parameters.
         word  = info.name
         limit = 100
@@ -105,6 +99,7 @@ class HarvesterPlugin(TestingPlugin):
                 t = traceback.format_exc()
                 m = "theHarvester raised an exception: %s\n%s"
                 warnings.warn(m % (e, t))
+                continue
             all_emails.update(address.lower() for address in emails if address)
             all_hosts.update(name.lower() for name in hosts if name)
 
@@ -212,7 +207,10 @@ class HarvesterPlugin(TestingPlugin):
                 m = "theHarvester (%s, get_hostnames) raised an exception: %s\n%s"
                 warnings.warn(m % (engine, e, t))
 
-        Logger.log_more_verbose("Found %d emails and %d hostnames on %s" % (len(emails), len(hosts), engine))
+        Logger.log_more_verbose(
+            "Found %d emails and %d hostnames on %s for domain %s" %
+            (len(emails), len(hosts), engine, word)
+        )
 
         # Return the results.
         return emails, hosts
