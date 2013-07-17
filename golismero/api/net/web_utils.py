@@ -50,6 +50,7 @@ from repoze.lru import lru_cache
 from requests import Request, Session, codes
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests_ntlm import HttpNtlmAuth
+from tldextract import TLDExtract
 from urllib import quote, quote_plus, unquote, unquote_plus
 from urlparse import urldefrag, urljoin
 from warnings import warn
@@ -1001,6 +1002,31 @@ class DecomposedURL(object):
                     if not ext: break
                     found.insert(pos, ext)
         return found
+
+
+    #----------------------------------------------------------------------
+    def split_hostname(self):
+        """
+        Splits the hostname into the subdomain, domain and TLD parts.
+
+        For example:
+
+        >>> from golismero.api.web_utils import DecomposedURL
+        >>> d = DecomposedURL("http://www.example.com/")
+        >>> d.split_hostname()
+        ('www', 'example', 'com')
+        >>> d = DecomposedURL("http://some.subdomain.of.example.co.uk/")
+        >>> d.split_hostname()
+        ('some.subdomain.of', 'example', 'co.uk')
+        >>> '.'.join(d.split_hostname())
+        'some.subdomain.of.example.co.uk'
+
+        :returns: Subdomain, domain and TLD.
+        :rtype: tuple(str, str, str)
+        """
+        extract = TLDExtract(fetch = False)
+        result  = extract(self.hostname)
+        return result.subdomain, result.domain, result.suffix
 
 
     #----------------------------------------------------------------------
