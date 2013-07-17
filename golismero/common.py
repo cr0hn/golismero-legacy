@@ -630,6 +630,9 @@ class AuditConfig (Configuration):
         # Audit database
         "audit_db": (None, "memory://"),
 
+        # Input files
+        "imports": (Configuration.comma_separated_list, []),
+
         #
         # Plugins options
         #

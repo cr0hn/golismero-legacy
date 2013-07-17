@@ -123,6 +123,7 @@ def extract_from_text(text, base_url, only_links = True):
     # Look for URLs using regular expressions.
     for regex in (_re_url_rfc, _re_url_readable):
         for url in regex.findall(text):
+            url = url[0]
 
             # Canonicalize the URL.
             url = urljoin(base_url, url.strip())
@@ -215,6 +216,9 @@ def extract_from_html(raw_html, base_url, only_links = True):
 
         # If we found an URL in this tag...
         if url is not None:
+
+            # Unicode urls are not supported.
+            url = str(url)
 
             # Canonicalize the URL.
             url = urljoin(base_url, url.strip())

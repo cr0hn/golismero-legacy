@@ -27,82 +27,84 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
+from golismero.api.data import discard_data
 from golismero.api.data.resource.url import Url
-from golismero.api.data.resource.baseurl import BaseUrl
 from golismero.api.data.vulnerability.information_disclosure.default_error_page import DefaultErrorPage
 from golismero.api.text.matching_analyzer import get_matching_level
-from golismero.api.net.protocol import NetworkAPI
+from golismero.api.net.http import HTTP
 from golismero.api.plugin import TestingPlugin
 
 
-
-class SuspiciousURLPlugin(TestingPlugin):
+#------------------------------------------------------------------------------
+class DefaultErrorPagePlugin(TestingPlugin):
     """
-    Find suspicious words in URLs.
+    Find default error pages for the most common web servers.
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url, BaseUrl]
+        return [Url]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def recv_info(self, info):
 
-        #Logger.log_more_verbose("Default error page: Starting plugin")
+        # Get the response page.
+        response = HTTP.get_url(info.url, callback = self.check_response)
+        if response:
 
-        a = main_default_error_pages(info)
+            try:
 
-        #Logger.log_more_verbose("Default error page: Ending plugin")
+                # Look for a match.
+                page_text = response.data
+                for server_name, server_page in signatures.iteritems():
+                    level = get_matching_level(page_text, server_page)
 
-        return a
+                    if level > 0.95:  # magic number :)
+
+                        # Match found.
+                        vulnerability = DefaultErrorPage(info, server_name)
+                        vulnerability.add_information(response)
+                        return [vulnerability, response]
+
+                # Discard the response if no match was found.
+                discard_data(response)
+
+            except Exception:
+
+                # Discard the response on error.
+                discard_data(response)
+
+                raise
 
 
-#----------------------------------------------------------------------
-def main_default_error_pages(info):
-    """Main function to process the error pages"""
+    #--------------------------------------------------------------------------
+    def check_response(self, request, url, status_code, content_length, content_type):
+
+        # Returns True to continue, False to cancel.
+        return (
+
+            # Check the content length is not too large.
+            content_length is not None and content_length < 200000 and
+
+            # Check the content type is text.
+            content_type and content_type.strip().lower().startswith("text/") and
+
+            # Check the status code.
+            status_code and (status_code[0] == "5" or status_code in ("200", "403"))
+
+        )
 
 
-    # Local use of URL
-    m_url              = info.url
+#------------------------------------------------------------------------------
+signatures = {                       # TODO: move the signatures to a data file
 
-    # Network manager reference
-    m_net_manager      = NetworkAPI.get_connection()
 
-    # Get the request
-    m_error_response   = m_net_manager.get(m_url)
+#------------------------------------------------------------------------------
+"Internet Information Server (IIS)":
 
-    # Check that URL contain text and valid status codes
-    if m_error_response.content_type.startswith("text") and \
-       not (m_error_response.http_response_code < 600 and m_error_response.http_response_code >= 500 or \
-        m_error_response.http_response_code == 200 or m_error_response.http_response_code == 403):
-        return
-
-    m_comparer_results = comparer_with_errors(m_error_response.raw_content)
-
-    m_return           = None
-    if m_comparer_results:
-        m_return = DefaultErrorPage(info, m_comparer_results)
-        m_return.add_resource(info)
-
-    return m_return
-
-#----------------------------------------------------------------------
-def comparer_with_errors(page_text):
-    """
-    Compare the text a web page with defaul error pages and return the name of
-    sever page or None
-
-    :param page_text: text of web page to compare.
-    :type page_text: str
-
-    :return: an string with the value of server or None
-    :rtype: str
-    """
-
-    m_signatures = {
-        "Internet Information Server (IIS)" : """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
@@ -132,7 +134,11 @@ background-color:#555555;}
 </body>
 </html>
 """,
-   "Nginx" : """<!DOCTYPE html>
+
+#------------------------------------------------------------------------------
+"Nginx":
+
+"""<!DOCTYPE html>
 <html>
 <head>
 <title>Error</title>
@@ -152,8 +158,12 @@ Please try again later.</p>
 the <a href="http://nginx.org/r/error_log">error log</a> for details.</p>
 <p><em>Faithfully yours, nginx.</em></p>
 </body>
-</html>""" ,
-    "Apache Tomcat" : """<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+</html>""",
+
+#------------------------------------------------------------------------------
+"Apache Tomcat":
+
+"""<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
  <head>
   <title>403 Access Denied</title>
@@ -232,7 +242,11 @@ the <a href="http://nginx.org/r/error_log">error log</a> for details.</p>
 
 </html>""",
 
-    "Apache" : """<?xml version="1.0" encoding="UTF-8"?>
+
+#------------------------------------------------------------------------------
+"Apache":
+
+"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
@@ -274,16 +288,5 @@ the <a href="mailto:admin@localhost">webmaster</a>.
 </address>
 </body>
 </html>"""
-    }
 
-
-    # Looking for a match
-    for l_server_name, l_server_page in m_signatures.iteritems():
-        l_m = get_matching_level(page_text, l_server_page)
-
-        if l_m > 0.95:
-            return l_server_name
-
-
-    # Not match
-    return None
+}

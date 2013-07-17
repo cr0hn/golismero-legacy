@@ -36,7 +36,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["TestingPlugin", "UIPlugin", "ReportPlugin"]
+__all__ = ["UIPlugin", "ImportPlugin", "TestingPlugin", "ReportPlugin"]
 
 from .config import Config
 from ..common import Singleton
@@ -139,9 +139,10 @@ class Plugin (object):
     """
 
     PLUGIN_TYPE_ABSTRACT = 0    # Not a real plugin type!
-    PLUGIN_TYPE_TESTING  = 1
-    PLUGIN_TYPE_UI       = 2
-    PLUGIN_TYPE_REPORT   = 3
+    PLUGIN_TYPE_UI       = 1
+    PLUGIN_TYPE_IMPORT   = 2
+    PLUGIN_TYPE_TESTING  = 3
+    PLUGIN_TYPE_REPORT   = 4
 
     PLUGIN_TYPE_FIRST = PLUGIN_TYPE_TESTING
     PLUGIN_TYPE_LAST  = PLUGIN_TYPE_REPORT
@@ -221,54 +222,6 @@ class Plugin (object):
         Config._context.send_status(progress, text)
 
 
-##    #----------------------------------------------------------------------
-##    def __getattr__(self, name):
-##        """
-##        When getting instance attributes from plugins, if they're not
-##        defined as static to the class they're fetched from the database.
-##
-##        That way plugins can maintain state regardless of which process
-##        (or machine!) is running them at any given point in time.
-##
-##        :param name: Name of the attribute.
-##        :type name: str
-##
-##        :returns: Value of the attribute.
-##        :rtype: *
-##
-##        :raises AttributeError: The attribute was not defined.
-##        """
-##        if not Config._has_context:
-##            return object.__getattribute__(name)
-##        try:
-##            return self.state.get(name)
-##        except KeyError:
-##            raise AttributeError(
-##                "'%s' instance has no attribute '%s'" % \
-##                (self.__class__.__name__, name))
-##
-##
-##    #----------------------------------------------------------------------
-##    def __setattr__(self, name, value):
-##        """
-##        When setting instance attributes in plugins, if they're not
-##        defined as static to the class they're stored into the database.
-##
-##        That way plugins can maintain state regardless of which process
-##        (or machine!) is running them at any given point in time.
-##
-##        :param name: Name of the attribute.
-##        :type name: str
-##
-##        :param value: Value of the attribute.
-##        :type value: *
-##        """
-##        if not Config._has_context or hasattr(self, name):
-##            object.__setattr__(self, name, value)
-##        else:
-##            self.state.set(name, value)
-
-
 #------------------------------------------------------------------------------
 class InformationPlugin (Plugin):
     """
@@ -314,11 +267,6 @@ class UIPlugin (InformationPlugin):
     PLUGIN_TYPE = Plugin.PLUGIN_TYPE_UI
 
 
-##    # Disable the magic plugin state feature for UI plugins.
-##    __getattr__ = object.__getattribute__
-##    __setattr__ = object.__setattr__
-
-
     #----------------------------------------------------------------------
     def recv_msg(self, message):
         """
@@ -344,6 +292,48 @@ class UIPlugin (InformationPlugin):
     #----------------------------------------------------------------------
     def _set_observer(self, observer):
         self.__observer_ref = observer
+
+
+#------------------------------------------------------------------------------
+class ImportPlugin (Plugin):
+    """
+    Import plugins collect previously found resources from other tools
+    and store them in the audit database right before the audit starts.
+
+    This is the base class for all Import plugins.
+    """
+
+    PLUGIN_TYPE = Plugin.PLUGIN_TYPE_IMPORT
+
+
+    #----------------------------------------------------------------------
+    def is_supported(self, input_file):
+        """
+        Determine if this plugin supports the requested file format.
+
+        Tipically, here is where Import plugins examine the file extension.
+
+        :param input_file: Input file to parse.
+        :type input_file: str
+
+        :returns: True if this plugin supports the format, False otherwise.
+        :rtype: bool
+        """
+        raise NotImplementedError("Plugins must implement this method!")
+
+
+    #----------------------------------------------------------------------
+    def import_results(self, input_file):
+        """
+        Run plugin and import the results into the audit database.
+
+        This is the entry point for Import plugins,
+        where most of the logic resides.
+
+        :param input_file: Input file to parse.
+        :type input_file: str
+        """
+        raise NotImplementedError("Plugins must implement this method!")
 
 
 #------------------------------------------------------------------------------
@@ -376,7 +366,7 @@ class ReportPlugin (Plugin):
         Tipically, here is where Report plugins examine the file extension.
 
         :param output_file: Output file to generate.
-        :type output_file: str | None
+        :type output_file: str
 
         :returns: True if this plugin supports the format, False otherwise.
         :rtype: bool
@@ -393,6 +383,6 @@ class ReportPlugin (Plugin):
         where most of the logic resides.
 
         :param output_file: Output file to generate.
-        :type output_file: str | None
+        :type output_file: str
         """
         raise NotImplementedError("Plugins must implement this method!")

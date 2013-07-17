@@ -206,6 +206,8 @@ def cmdline_parser():
     gr_audit = parser.add_argument_group("audit options")
     gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
     gr_audit.add_argument("--audit-db", metavar="DATABASE", dest="audit_db", help="specify a database connection string")
+    gr_audit.add_argument("-i", "--input", dest="imports", metavar="FILENAME", action="append", help="read results from external tools right before the audit")
+    gr_audit.add_argument("-ni", "--no-input", dest="imports", action=ResetListAction, help="do not read results from external tools")
 
     gr_report = parser.add_argument_group("report options")
     gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", help="write the results of the audit to this file (use - for stdout)")

@@ -49,12 +49,15 @@ except NameError:
 from golismero.api.parallel import *
 
 from thread import get_ident
+from threading import enumerate
 from random import randint
 from time import sleep
 
 
 # Tests the parallel execution with random data.
 def test_pmap():
+    print "Testing parallel execution with random data"
+    t_list = enumerate()
     func = lambda x: x
     for i in xrange(20):
         input_data   = [randint(-10, 10) for x in xrange(randint(10, 200))]
@@ -62,10 +65,13 @@ def test_pmap():
         control_data = map(func, input_data)
         assert output_data == control_data
         assert input_data == output_data
+    assert t_list == enumerate()
 
 
 # Tests the parallel execution with random data and multiple parameters.
 def test_pmap_multi():
+    print "Testing parallel execution with random data and multiple parameters"
+    t_list = enumerate()
     def func(*args):
         return sum( x for x in args if x is not None )
     for i in xrange(10):
@@ -76,10 +82,13 @@ def test_pmap_multi():
         output_data  = pmap(func, *input_data, pool_size=10)
         control_data = map(func, *input_data)
         assert output_data == control_data
+    assert t_list == enumerate()
 
 
 # Tests the parallel execution with errors.
 def test_pmap_errors():
+    print "Testing parallel execution with errors"
+    t_list = enumerate()
     def func(x):
         if x & 1:
             raise ValueError("I don't like odd numbers!")
@@ -91,10 +100,13 @@ def test_pmap_errors():
     output_data  = pmap(func,   xrange(200))
     control_data = map(control, xrange(200))
     assert output_data == control_data
+    assert t_list == enumerate()
 
 
 # Tests the parallel execution with delays.
 def test_pmap_delays():
+    print "Testing parallel execution with delays"
+    t_list = enumerate()
     def func(x):
         ##print "(%d)" % get_ident()
         sleep(1)
@@ -104,6 +116,7 @@ def test_pmap_delays():
     test(1)
     test(4)
     test(8)
+    assert t_list == enumerate()
 
 
 # Run all tests from the command line.

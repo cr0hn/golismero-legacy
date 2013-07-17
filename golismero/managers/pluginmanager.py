@@ -33,8 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["PluginManager", "PluginInfo"]
 
 from ..api.config import Config
-from ..api.plugin import TestingPlugin, ReportPlugin, UIPlugin
-from ..common import Singleton
+from ..api.plugin import UIPlugin, ImportPlugin, TestingPlugin, ReportPlugin
+from ..common import Singleton, Configuration
 
 from os import path, walk
 from keyword import iskeyword
@@ -91,6 +91,14 @@ class PluginInfo (object):
         :rtype: str
         """
         return self.__dependencies
+
+    @property
+    def recursive(self):
+        """
+        :returns: True if the plugin is recursive, False otherwise.
+        :rtype: bool
+        """
+        return self.__recursive
 
     @property
     def plugin_module(self):
@@ -224,6 +232,10 @@ class PluginInfo (object):
             dependencies    = parser.get("Core", "Dependencies")
         except Exception:
             dependencies    = None
+        try:
+            recursive       = parser.get("Core", "Recursive")
+        except Exception:
+            recursive       = "no"
 
         # Parse the stage name to get the number.
         if not stage:
@@ -241,8 +253,15 @@ class PluginInfo (object):
                     if self.__stage not in PluginManager.STAGES.values():
                         raise ValueError()
                 except Exception:
-                    msg = "Error parsing %r: invalid execution stage: %s"
+                    msg = "Error parsing %r: invalid execution stage: %r"
                     raise ValueError(msg % (descriptor_file, stage))
+
+        # Parse the recursive flag.
+        try:
+            self.__recursive = Configuration.boolean(recursive)
+        except Exception:
+            msg = "Error parsing %r: invalid recursive flag: %r"
+            raise ValueError(msg % (descriptor_file, recursive))
 
         # Sanitize the plugin module pathname.
         if not plugin_module.endswith(".py"):
@@ -362,6 +381,7 @@ class PluginManager (Singleton):
 
     # Plugin categories and their base classes.
     CATEGORIES = {
+        "import"  : ImportPlugin,
         "testing" : TestingPlugin,
         "report"  : ReportPlugin,
         "ui"      : UIPlugin,

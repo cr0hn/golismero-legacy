@@ -100,6 +100,14 @@ class ReportManager (object):
         """
         return self.__orchestrator
 
+    @property
+    def plugin_count(self):
+        """
+        :returns: Number of report plugins loaded.
+        :rtype: int
+        """
+        return len(self.__reporters)
+
 
     #----------------------------------------------------------------------
     def generate_reports(self, notifier):

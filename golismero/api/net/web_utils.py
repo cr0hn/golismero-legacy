@@ -31,20 +31,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 __all__ = [
-    "is_method_allowed", "fix_url",
-    "check_auth", "get_auth_obj", "detect_auth_method",
-    "is_in_scope", "generate_error_page_url",
-    "DecomposedURL", "HTMLElement", "HTMLParser",
+    "download", "data_from_http_response", "generate_user_agent",
+    "fix_url", "check_auth", "get_auth_obj", "detect_auth_method",
+    "is_in_scope", "generate_error_page_url", "DecomposedURL",
 ]
 
 
-
+from . import NetworkOutOfScope
+from ..data import LocalDataCache
 from ..config import Config
 from ..text.text_utils import generate_random_string, split_first
 
 from BeautifulSoup import BeautifulSoup
 from copy import deepcopy
 from posixpath import join, splitext, split
+from random import randint
 from repoze.lru import lru_cache
 from requests import Request, Session, codes
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
@@ -93,47 +94,232 @@ def parse_url(url):
 
 
 #----------------------------------------------------------------------
-def is_method_allowed(method, url, network_conn):
+__user_agents = (
+    "Opera/9.80 (Windows NT 6.1; U; zh-tw) Presto/2.5.22 Version/10.50",
+    "Mozilla/6.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:2.0.0.0) Gecko/20061028 Firefox/3.0",
+    "Mozilla/6.0 (Windows NT 6.2; WOW64; rv:16.0.1) Gecko/20121011 Firefox/16.0.1",
+    "Mozilla/5.0 (Windows NT 5.1; rv:15.0) Gecko/20100101 Firefox/13.0.1",
+    "Mozilla/5.0 (X11; Linux i686; rv:6.0) Gecko/20100101 Firefox/6.0",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:15.0) Gecko/20120724 Debian Iceweasel/15.0",
+    "Mozilla/5.0 (X11; Linux) KHTML/4.9.1 (like Gecko) Konqueror/4.9",
+    "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.60 Safari/537.17",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.6 Safari/537.11",
+    "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/19.77.34.5 Safari/537.1",
+    "Mozilla/5.0 (Windows; U; MSIE 9.0; Windows NT 9.0; en-US)",
+    "Mozilla/5.0 (compatible; MSIE 10.6; Windows NT 6.1; Trident/5.0; InfoPath.2; SLCC1; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; .NET CLR 2.0.50727) 3gpp-gba UNTRUSTED/1.0",
+    "Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; GTB7.4; InfoPath.2; SV1; .NET CLR 3.3.69573; WOW64; en-US)",
+    "Mozilla/4.0(compatible; MSIE 7.0b; Windows NT 6.0)",
+    "Mozilla/5.0 (iPod; U; CPU iPhone OS 4_3_3 like Mac OS X; ja-jp) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8J2 Safari/6533.18.5",
+    "Mozilla/5.0 (Linux; U; Android 4.0.3; ko-kr; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30",
+    "Mozilla/5.0 (BlackBerry; U; BlackBerry 9900; en) AppleWebKit/534.11+ (KHTML, like Gecko) Version/7.1.0.346 Mobile Safari/534.11+",
+    "Mozilla/5.0 (PLAYSTATION 3; 3.55)",
+    "Mozilla/5.0 (compatible; Yahoo! Slurp; http://help.yahoo.com/help/us/ysearch/slurp)"
+    "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+    "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.13+ (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2",
+    "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-us) AppleWebKit/534.16+ (KHTML, like Gecko) Version/5.0.3 Safari/533.19.4",
+    "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25"
+)
+def generate_user_agent():
     """
-    Checks if the given HTTP verb is allowed for this url.
+    :returns: A valid user agent string, randomly chosen from a predefined list.
+    :rtype: str
+    """
+    return __user_agents[randint(0, len(__user_agents) - 1)]
 
-    .. warning:
-       This function may be removed in future versions of GoLismero.
+
+#----------------------------------------------------------------------
+def download(url, callback = None, timeout = None, allow_redirects = True):
+    """
+    Download the file pointed to by the given URL.
+
+    An optional callback function may be given. It will be called just
+    before downloading the file, and receives the file size. If it
+    returns True the download proceeds, if it returns False it's
+    cancelled.
 
     Example:
 
-    >>> from golismero.api.net.protocol import NetworkAPI
-    >>> from golismero.api.net.web_utils import is_method_allowed
-    >>> connection_object = NetworkAPI.get_connection()
-    >>> is_method_allowed("GET", "www.site.com", connection_object)
-    True
-    >>> is_method_allowed("OPTIONS", "www.site.com", connection_object)
-    False
+        >>> from golismero.api.data.resource.url import Url
+        >>> from golismero.api.net.web_utils import download
+        >>> def decide(url, name, size, type):
+        ...     # 'url' is the URL for the download
+        ...     if url is not None:
+        ...         print "URL: %s" % url
+        ...     # 'name' is the suggested filename (None if not available)
+        ...     if name is not None:
+        ...         print "Name: %s" % name
+        ...     # 'size' is the file size (None if not available)
+        ...     if size is not None:
+        ...         print "Size: %d" % size
+        ...     # 'type' is the MIME type (None if not available)
+        ...     if type is not None:
+        ...         print "Type: %s" % type
+        ...     # Cancel download if not a web page
+        ...     if type != "text/html":
+        ...         return False
+        ...     # Cancel download if it's too large
+        ...     if size > 1000000:
+        ...         return False
+        ...     # Continue downloading
+        ...     return True
+        ...
+        >>> download(Url("http://www.example.com/index.html"), callback=decide)
+        URL: http://www.example.com/index.html
+        Name: index.html
+        Size: 1234
+        Type: text/html
+        <HTML identity=606489619590839a1c0ad662bcdc0189>
+        >>> download(Url("http://www.example.com/"), callback=decide)
+        URL: http://www.example.com/
+        Size: 1234
+        Type: text/html
+        <HTML identity=606489619590839a1c0ad662bcdc0189>
+        >>> print download(Url("http://www.example.com/big_file.iso"), callback=decide)
+        URL: http://www.example.com/big_file.iso
+        Name: big_file.iso
+        Size: 1234567890
+        Type: application/octet-stream
+        None
 
-    :param method: HTTP verb to check.
-    :type method: str
+    :param url: URL to download.
+    :type url: Url
 
-    :param url: URL to test.
-    :type url: str.
+    :param callback: Callback function.
+    :type callback: callable
 
-    :param network_conn: Network connection.
-    :type network_conn: Protocol (Web).
+    :param timeout: Timeout in seconds, or None for no timeout.
+    :type timeout: int | float | None
 
-    :returns: True if method is allowed, False otherwise.
-    :rtype: bool
+    :param allow_redirects: True to follow redirections, False otherwise.
+    :type allow_redirects: bool
+
+    :returns: Downloaded data as an object of the GoLismero data model,
+              or None if cancelled.
+    :rtype: Data | None
+
+    :raises NetworkOutOfScope: The resource is out of the audit scope.
+    :raises NetworkException: A network error occurred during download.
+    :raises NotImplementedError: The network protocol is not supported.
     """
-    if not url or not network_conn or not method:
-        return False
 
-    try:
-        p = network_conn.get(url, method=method)
-    except Exception:
-        return False
+    # Validate the callback type.
+    if callback is not None and not callable(callback):
+        raise TypeError(
+            "Expected callable (function, class, instance with __call__),"
+            " got %s instead" % type(callback)
+        )
 
-    if p.http_response_code == 200: # and 'Content-Length' in p.http_headers:
-        return True
+    # Autogenerate an Url object if a string is given (common mistake).
+    from ..data.resource.url import Url
+    if not isinstance(url, Url):
+        url = Url(url)
+        LocalDataCache.on_autogeneration(url)
+        parsed = url.parsed_url
+        if not parsed.hostname or not parsed.scheme:
+            raise ValueError("Only absolute URLs must be used!")
+
+    # Validate the protocol.
+    # TODO: add support for FTP
+    scheme = url.parsed_url.scheme
+    if scheme not in ("http", "https"):
+        raise NotImplementedError("Protocol not supported: %s" % scheme)
+
+    # Validate the scope.
+    if not url.is_in_scope():
+        raise NetworkOutOfScope("URL out of scope: %s" % url.url)
+
+    # Autogenerate the HTTP request object.
+    from ..data.information.http import HTTP_Request
+    request = HTTP_Request(      url = url.url,
+                              method = url.method,
+                           post_data = url.post_params,
+                             referer = url.referer )
+    LocalDataCache.on_autogeneration(request)
+
+    # Prepare the callback.
+    if callback is None:
+        temp_callback = None
     else:
-        return False
+        def temp_callback(request, url, status_code, content_length, content_type):
+
+            # Abort if not successful.
+            if status_code != "200":
+                return False
+
+            # Get the name.
+            # TODO: parse the Content-Disposition header.
+            name = DecomposedURL(url).filename
+            if not name:
+                name = request.parsed_url.filename
+                if not name:
+                    name = None
+
+            # Call the user-defined callback.
+            return callback(url, name, content_length, content_type)
+
+    # Send the request and get the response.
+    from .http import HTTP
+    response = HTTP.make_request(request,
+                                 callback = temp_callback,
+                                 timeout = timeout,
+                                 allow_redirects = allow_redirects)
+
+    # If not aborted...
+    if response:
+
+        # The response object is autogenerated.
+        LocalDataCache.on_autogeneration(response)
+
+        # Associate the URL to the request and the response.
+        request.add_resource(url)
+        response.add_resource(url)
+
+        # Extract the data from the response.
+        data = data_from_http_response(response)
+
+        # Associate the data to the URL.
+        data.add_resource(url)
+
+        # Return the data.
+        return data
+
+
+#----------------------------------------------------------------------
+
+def data_from_http_response(response):
+
+    # Get the MIME content type.
+    content_type = response.content_type
+
+    # Strip the content type modifiers.
+    if ";" in content_type:
+        content_type = content_type[:content_type.find(";")]
+
+    # Sanitize the content type.
+    content_type = content_type.lower().strip()
+
+    # HTML pages.
+    if content_type == "text/html":
+        from ..data.information.html import HTML
+        data = HTML(response.data)
+
+    # Plain text data.
+    elif content_type.startswith("text/"):
+        from ..data.information.text import Text
+        data = Text(response.data)
+
+    # Anything we don't know how to parse we treat as binary.
+    else:
+        from ..data.information.binary import Binary
+        data = Binary(response.data)
+
+    # Associate the data to the response.
+    data.add_information(response)
+
+    # Return the data.
+    return data
 
 
 #----------------------------------------------------------------------
@@ -1165,6 +1351,9 @@ class DecomposedURL(object):
 
 #------------------------------------------------------------------------------
 class HTMLElement (object):
+    """
+    HTML element object.
+    """
 
 
     #----------------------------------------------------------------------
@@ -1235,16 +1424,17 @@ class HTMLParser(object):
 
     >>> from golismero.api.net.web_utils import HTMLParser
     >>> html_info = \"\"\"<html>
-    <head>
-      <title>My sample page</title>
-    </head>
-    <body>
-      <a href="http://www.mywebsitelink.com">Link 1</a>
-      <p>
-        <img src="/images/my_image.png" />
-      </p>
-    </body>
-    </html>\"\"\"
+    ... <head>
+    ...   <title>My sample page</title>
+    ... </head>
+    ... <body>
+    ...   <a href="http://www.mywebsitelink.com">Link 1</a>
+    ...   <p>
+    ...     <img src="/images/my_image.png" />
+    ...   </p>
+    ... </body>
+    ... </html>\"\"\"
+    ...
     >>> html_parsed = HTMLParser(html_info)
     >>> html_parsed.links
     [<golismero.api.net.web_utils.HTMLElement object at 0x109ca8b50>]

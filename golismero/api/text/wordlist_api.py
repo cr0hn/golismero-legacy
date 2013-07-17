@@ -87,7 +87,7 @@ class _WordListAPI(Singleton):
             # Exits the file
             m_file_manager = FileManager()
             if not m_file_manager.exists(wordlist):
-                raise IOError("Wordlist file '%s' not exits." % wordlist)
+                raise IOError("Wordlist file '%s' does not exist." % wordlist)
             if not m_file_manager.isfile(wordlist):
                 raise TypeError("Wordlist '%s' is not a file." % wordlist)
 
@@ -156,7 +156,7 @@ class _WordListAPI(Singleton):
 
     #----------------------------------------------------------------------
     @lru_cache(maxsize=30)
-    def get_advanced_wordlist_as_dict(self, wordlist, separator=";", inteligence_load=False):
+    def get_advanced_wordlist_as_dict(self, wordlist, separator=";", smart_load=False):
         """
         Get an AdvancedDicWordlist.
 
@@ -174,7 +174,7 @@ class _WordListAPI(Singleton):
         :rtype: AdvancedDicWordlist
         """
 
-        return AdvancedDicWordlist(self.__resolve_wordlist_name(wordlist), inteligence_load, separator)
+        return AdvancedDicWordlist(self.__resolve_wordlist_name(wordlist), smart_load, separator)
 
 
     #----------------------------------------------------------------------

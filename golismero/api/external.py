@@ -38,7 +38,7 @@ import subprocess
 
 
 #----------------------------------------------------------------------
-def run_external_tool(command, args = []):
+def run_external_tool(command, args = None):
     """
     Run an external tool and fetch the output.
 
@@ -67,6 +67,8 @@ def run_external_tool(command, args = []):
     # Still, especially on Windows, some external programs are really stupid
     # when it comes to parsing their own command line, so caveat emptor.
     #
+    if not args:
+        args   = []
     try:
         code   = 0
         output = subprocess.check_output(args, executable = command)

@@ -106,7 +106,7 @@ def pmap(func, *args, **kwargs):
         m_pool.add(m_task_group)
 
         # Wait for the tasks to end.
-        m_pool.join()
+        m_pool.join_tasks()
 
     # Stop the pool.
     finally:
@@ -513,7 +513,7 @@ class GolismeroPool(Thread):
 
 
     #----------------------------------------------------------------------
-    def join(self):
+    def join_tasks(self):
         """
         Block until all tasks are completed.
         """
@@ -545,12 +545,21 @@ class GolismeroPool(Thread):
         The pool cannot be used again after calling this method.
         """
 
-        # Signal to all threads to stop.
+        # Signal the dispatcher thread we want to stop.
         self.__stop = True
+
+        # Signal all available worker threads to stop.
         map(GolismeroThread.stop, self.__available_workers)
+
+        # Signal all busy worker threads to stop.
+        map(GolismeroThread.stop, self.__busy_workers)
 
         # Unlock the main loop.
         self.__sem_available_data.release()
+
+        # Block until the dispatcher thread finishes.
+        if self.ident != get_ident():
+            self.join()
 
 
     #----------------------------------------------------------------------

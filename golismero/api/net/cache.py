@@ -30,7 +30,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["AbstractCache", "AbstractDictCache", "NetworkCache"]
+__all__ = ["NetworkCache"]
 
 from ..config import Config
 from ...common import Singleton
@@ -41,86 +41,7 @@ from functools import partial
 
 
 #------------------------------------------------------------------------------
-class AbstractCache(Singleton):
-    """
-    Abstract class for caches.
-    """
-
-
-    #----------------------------------------------------------------------
-    def get(self, key):
-        """
-        Get data from the cache.
-
-        :param key: Key to reference the data.
-        :type key: str
-
-        :returns: Data from the cache.
-        :rtype: object | None
-        """
-        raise NotImplementedError("Subclasses MUST implement this method!")
-
-
-    #----------------------------------------------------------------------
-    def set(self, key, data):
-        """
-        Add data to the cache.
-
-        :param key: Key to reference the data.
-        :type key: str
-
-        :param data: Data to store in the cache.
-        :type data: object
-        """
-        raise NotImplementedError("Subclasses MUST implement this method!")
-
-
-    #----------------------------------------------------------------------
-    def exists(self, key):
-        """
-        Verify if the given key exists in the cache.
-
-        :param key: Key to reference the data.
-        :type key: str
-
-        :returns: True if the data is in the cache, False otherwise.
-        :rtype: bool
-        """
-        raise NotImplementedError("Subclasses MUST implement this method!")
-
-
-    #----------------------------------------------------------------------
-    def remove(self, key):
-        """
-        Remove data from the cache.
-
-        :param key: Key to reference the network resource.
-        :type key: str
-        """
-        raise NotImplementedError("Subclasses MUST implement this method!")
-
-
-#------------------------------------------------------------------------------
-class AbstractDictCache(AbstractCache):
-    """
-    Abstract class for caches that behave somewhat like dictionaries.
-    """
-
-    #----------------------------------------------------------------------
-    # Python operators mapped to the cache operations.
-
-    def __getitem__(self, key):
-        return self.get(key)
-    def __setitem__(self, key, data):
-        return self.set(key, data)
-    def __delitem__(self, key):
-        return self.remove(key)
-    def __contains__(self, key):
-        return self.exists(key)
-
-
-#------------------------------------------------------------------------------
-class NetworkCache(AbstractCache):
+class _NetworkCache(Singleton):
     """
     Cache for network resources, separated by protocol.
     """
@@ -254,3 +175,9 @@ class NetworkCache(AbstractCache):
 
         # Return the status.
         return found
+
+
+#------------------------------------------------------------------------------
+
+# Singleton pattern.
+NetworkCache = _NetworkCache()

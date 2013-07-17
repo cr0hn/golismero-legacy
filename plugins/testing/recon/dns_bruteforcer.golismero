@@ -3,7 +3,7 @@ Name = DNS Bruteforcer
 Module = dnsbruteforcer/dns_bruteforcer.py
 
 [Documentation]
-Description = Try to find hidden sub domains
+Description = Try to find hidden subdomains
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/cr0hn/golismero/

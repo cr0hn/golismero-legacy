@@ -26,24 +26,30 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from golismero.api.logger import Logger
-from golismero.api.net.protocol import NetworkAPI, NetworkException, Web
-from golismero.api.plugin import TestingPlugin
-from golismero.api.data.resource.folderurl import FolderUrl
-from golismero.api.text.wordlist_api import WordListAPI
-from golismero.api.config import Config
-from golismero.api.text.matching_analyzer import get_matching_level
-from golismero.api.net.web_utils import is_in_scope, DecomposedURL
-from golismero.api.net.scraper import extract_from_html
+from golismero.api.data import discard_data
+from golismero.api.data.information import Information
+from golismero.api.data.information.http import HTTP_Raw_Request
 from golismero.api.data.information.webserver_fingerprint import WebServerFingerprint
+from golismero.api.data.resource.folderurl import FolderUrl
+from golismero.api.config import Config
+from golismero.api.logger import Logger
+from golismero.api.net import NetworkException
+from golismero.api.net.http import HTTP
+from golismero.api.net.scraper import extract_from_html, extract_from_text
+from golismero.api.net.web_utils import is_in_scope, DecomposedURL, download
+from golismero.api.plugin import TestingPlugin
+from golismero.api.text.matching_analyzer import get_matching_level
+from golismero.api.text.wordlist_api import WordListAPI
+
 from repoze.lru import lru_cache
 from ping import do_ping_and_receive_ttl
-
 from collections import Counter, OrderedDict, defaultdict
 from urlparse import urljoin
 from re import compile
 
-SERVER_PATTERN = compile("([\w\W\s\d]+)[\s\/]+([\d\w\.]+)")
+
+SERVER_PATTERN = compile(r"([\w\W\s\d]+)[\s\/]+([\d\w\.]+)")
+
 
 __doc__ = """
 
@@ -60,8 +66,8 @@ Step 1
 
 Define the methods used:
 
-1 Check de Banner.
-2 Check de order headers in HTTP response.
+1 Check the Banner.
+2 Check the order headers in HTTP response.
 3 Check the rest of headers.
 
 
@@ -208,59 +214,77 @@ class ServerFingerprinting(TestingPlugin):
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-        return main_server_fingerprint(info)
+        """
+        Main function for server fingerprint. Get an URL and return the fingerprint results.
 
+        :param info: Folder URL.
+        :type info: FolderUrl
 
-#----------------------------------------------------------------------
-def main_server_fingerprint(base_url):
-    """
-    Main function for server fingerprint. Get an URL and return the fingerprint results.
+        :return: Fingerprint.
+        :rtype: WebServerFingerprint
+        """
 
-    :param base_url: Domain resource instance.
-    :type base_url: Domain
+        m_main_url = info.url
 
-    :return: Fingerprint type
-    """
-    #return
-    m_main_url = base_url.url
+        Logger.log_more_verbose("Starting fingerprinting plugin for site: %s" % m_main_url)
 
-    Logger.log_more_verbose("Starting fingerprinting plugin for site: %s" % m_main_url)
+        #
+        # Detect the platform: Windows or *NIX
+        #
+        #
+        # FIXME: Improve platform detection
+        #
+        #
+        #basic_platform_detection(m_main_url, m_conn)
+        #m_platform = ttl_platform_detection(DecomposedURL(m_main_url).hostname)
+        #if m_platform:
+            #Logger.log_more_verbose("Fingerprint - Plaform: %s" % ','.join(m_platform.keys()))
 
-    # Get a connection pool
-    m_conn = NetworkAPI.get_connection()
+        #
+        # Analyze HTTP protocol
+        #
+        m_server_name, m_server_version, m_canonical_name, m_webserver_complete_desc, m_related_webservers, m_others = http_analyzers(m_main_url)
 
-    #
-    # Detect the platform: Windows or *NIX
-    #
-    #
-    # FIXME: Improbe platform detection
-    #
-    #
-    #basic_platform_detection(m_main_url, m_conn)
-    #m_platform = ttl_platform_detection(DecomposedURL(m_main_url).hostname)
-    #if m_platform:
-        #Logger.log_more_verbose("Fingerprint - Plaform: %s" % ','.join(m_platform.keys()))
+        Logger.log_more_verbose("Fingerprint - Server: %s | Version: %s" % (m_server_name, m_server_version))
 
-    #
-    # Analyze HTTP protocol
-    #
-    m_server_name, m_server_version, m_canonical_name, m_webserver_complete_desc, m_related_webservers, m_others = http_analyzers(m_main_url, m_conn)
+        m_return = WebServerFingerprint(m_server_name, m_server_version, m_webserver_complete_desc, m_canonical_name, m_related_webservers, m_others)
 
-    Logger.log_more_verbose("Fingerprint - Server: %s | Version: %s" % (m_server_name, m_server_version))
+        # Associate resource
+        m_return.add_resource(info)
 
-    m_return = WebServerFingerprint(m_server_name, m_server_version, m_webserver_complete_desc, m_canonical_name, m_related_webservers, m_others)
+        # Return the fingerprint
+        return m_return
 
-    # Associate resource
-    m_return.add_resource(base_url)
-
-    return m_return
 
 #----------------------------------------------------------------------
 #
 # Platform detection
 #
 #----------------------------------------------------------------------
-def basic_platform_detection(main_url, conn):
+
+def check_download(url, name, content_length, content_type):
+
+    # Returns True to continue or False to cancel.
+    return (
+
+        # Check the file type is text.
+        content_type and content_type.strip().lower().startswith("text/") and
+
+        # Check the file is not too big.
+        content_length and content_length < 100000
+    )
+
+def check_response(request, url, status_code, content_length, content_type):
+
+    # Returns True to continue, False to cancel.
+    return (
+
+        # Check the content length is not too large.
+        content_length is not None and content_length < 200000
+
+    )
+
+def basic_platform_detection(main_url):
     """
     Detect if platform is Windows or \*NIX. To do this, get the first link, in scope, and
     does two resquest. If are the same response, then, platform are Windows. Else are \*NIX.
@@ -277,15 +301,21 @@ def basic_platform_detection(main_url, conn):
     )
 
     # Get the main web page
-    m_r     = conn.get(main_url, follow_redirect=True)
+    m_r = download(main_url, check_download)
+    if not m_r:
+        return "unknown"
+    discard_data(m_r)
 
     # Get the first link
-    m_links = extract_from_html(m_r.information.raw_data, main_url)
+    if m_r.information_type == Information.INFORMATION_HTML:
+        m_links = extract_from_html(m_r.raw_data, main_url)
+    else:
+        m_links = extract_from_text(m_r.raw_data, main_url)
 
     if not m_links:
         return "unknown"
 
-    # Get the first link of page
+    # Get the first link of the page that's in scope of the audit
     m_first_link = None
     for u in m_links:
         if is_in_scope(u) and not any(x in u for x in m_forbidden):
@@ -299,19 +329,22 @@ def basic_platform_detection(main_url, conn):
     # as upper URL.
 
     # Original
-    m_response_orig  = conn.get(m_first_link)
-    # Upper
-    m_response_upper = conn.get(m_first_link.upper())
-    # Comparte it
-    m_match_level    = get_matching_level(m_response_orig.raw_content, m_response_upper.raw_content)
+    m_response_orig  = HTTP.get_url(m_first_link, callback=check_response)
+    discard_data(m_response_orig)
+    # Uppercase
+    m_response_upper = HTTP.get_url(m_first_link.upper(), callback=check_response)
+    discard_data(m_response_upper)
+    # Compare them
+    m_orig_data      = m_response_orig.raw_response  if m_response_orig  else ""
+    m_upper_data     = m_response_upper.raw_response if m_response_upper else ""
+    m_match_level    = get_matching_level(m_orig_data, m_upper_data)
 
-    # If the responses are equals at 90%, two URL are the same => Windows; else => *NIX
+    # If the responses are equal by 90%, two URL are the same => Windows; else => *NIX
     m_return = None
     if m_match_level > 0.95:
         m_return = "Windows"
     else:
         m_return = "*NIX"
-
 
     return m_return
 
@@ -319,13 +352,13 @@ def basic_platform_detection(main_url, conn):
 #----------------------------------------------------------------------
 def ttl_platform_detection(main_url):
     """
-    This function try to recognize the remote platform doing a ping and analyzing the
+    This function tries to recognize the remote platform doing a ping and analyzing the
     TTL of IP header response.
 
     :param main_url: Base url to test.
     :type main_url: str
 
-    :return: a list with posibles platforms
+    :return: Possible platforms.
     :rtype: dict(OS, version)
     """
 
@@ -363,25 +396,29 @@ def ttl_platform_detection(main_url):
 # Web server detection
 #
 #----------------------------------------------------------------------
-def http_analyzers(main_url, conn, number_of_entries=4):
+
+def check_raw_response(request, response):
+
+    # Returns True to continue, False to cancel.
+    return (
+
+        # Check the content length is not too large.
+        response.content_length is not None and response.content_length < 200000
+
+    )
+
+def http_analyzers(main_url, number_of_entries=4):
     """
     Analyze HTTP headers for detect the web server. Return a list with most possible web servers.
 
     :param main_url: Base url to test.
     :type main_url: str
 
-    :param conn: Instance of connection.
-    :type conn: Web type connection
-
     :param number_of_entries: number of resutls tu return for most probable web servers detected.
     :type number_of_entries: int
 
     :return: Web server family, Web server version, Web server complete description, related web servers (as a dict('SERVER_RELATED' : set(RELATED_NAMES))), others web server with their probabilities as a dict(CONCRETE_WEB_SERVER, PROBABILITY)
     """
-
-    if not isinstance(conn, Web):
-        return
-
 
     # Load wordlist directly related with a HTTP fields.
     # { HTTP_HEADER_FIELD : [wordlists] }
@@ -456,10 +493,16 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         # Do the connection
         l_response = None
         try:
-            # PONER AQUI LA PETICION CON GET_RAW
-            l_response = conn.get_raw( host            = m_hostname,
-                                       port            = m_port,
-                                       request_content = l_raw_request)
+            from golismero.api.data import LocalDataCache
+            m_raw_request = HTTP_Raw_Request(l_raw_request)
+            discard_data(m_raw_request)
+            l_response = HTTP.make_raw_request(
+                host        = m_hostname,
+                port        = m_port,
+                raw_request = m_raw_request,
+                callback    = check_raw_response)
+            if l_response:
+                discard_data(l_response)
         except NetworkException,e:
             Logger.log_error_more_verbose("Server-Fingerprint plugin: No response for URL (%s) '%s'. Message: %s" % (l_method, l_url, e.message))
             continue
@@ -467,18 +510,17 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         if not l_response:
             Logger.log_error_more_verbose("No response for URL '%s'." % l_url)
             continue
-        l_original_headers = {v.split(":")[0]:v.split(":")[1] for v in l_response.http_headers_raw.splitlines()}
 
         if m_debug:
             print "RESPONSE"
-            print l_response.http_headers_raw
+            print l_response.raw_headers
 
         # Analyze for each wordlist
         #
 
         # Store the server banner
         try:
-            m_banners_counter[l_response.http_headers["Server"]] += l_weight
+            m_banners_counter[l_response.headers["Server"]] += l_weight
         except KeyError:
             pass
 
@@ -492,10 +534,10 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         for l_http_header_name, l_header_wordlist in m_wordlists_HTTP_fields.iteritems():
 
             # Check if HTTP header field is in response
-            if l_http_header_name not in l_response.http_headers:
+            if l_http_header_name not in l_response.headers:
                 continue
 
-            l_curr_header_value = l_response.http_headers.get(l_http_header_name)
+            l_curr_header_value = l_response.headers[l_http_header_name]
 
             # Generate concrete wordlist name
             l_wordlist_path     = Config.plugin_extra_config[l_wordlist][l_header_wordlist]
@@ -520,9 +562,9 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         #
         l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["statuscode"])
         # Looking for matches
-        l_matches           = l_wordlist_instance.matches_by_value(l_response.http_response_code)
+        l_matches           = l_wordlist_instance.matches_by_value(l_response.status)
 
-        m_counters.inc(l_matches, l_action, l_weight, "statuscode", message="Status code: " + str(l_response.http_response_code))
+        m_counters.inc(l_matches, l_action, l_weight, "statuscode", message="Status code: " + l_response.status)
 
 
         #
@@ -531,9 +573,9 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         #
         l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["statustext"])
         # Looking for matches
-        l_matches           = l_wordlist_instance.matches_by_value(l_response.http_response_reason)
+        l_matches           = l_wordlist_instance.matches_by_value(l_response.reason)
 
-        m_counters.inc(l_matches, l_action, l_weight, "statustext", message="Status text: " + l_response.http_response_reason)
+        m_counters.inc(l_matches, l_action, l_weight, "statustext", message="Status text: " + l_response.reason)
 
 
         #
@@ -550,7 +592,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["header-space"])
         # Looking for matches
         try:
-            l_http_value        = l_response.http_headers_raw.splitlines()[0].split(":")[1] # get the value of first HTTP field
+            l_http_value        = l_response.headers[0] # get the value of first HTTP field
             l_spaces_num        = str(abs(len(l_http_value) - len(l_http_value.lstrip())))
             l_matches           = l_wordlist_instance.matches_by_value(l_spaces_num)
 
@@ -572,8 +614,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         #
         l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["header-capitalafterdash"])
         # Looking for matches
-        l_original_headers = {v.split(":")[0]:v.split(":")[1] for v in l_response.http_headers_raw.splitlines()}
-        l_valid_fields     = [x for x in l_original_headers if "-" in x]
+        l_valid_fields     = [x for x in l_response.headers.iterkeys() if "-" in x]
 
         if l_valid_fields:
 
@@ -594,7 +635,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         # Header order
         # ============
         #
-        l_header_order  = ','.join(v.split(":")[0] for v in l_response.http_headers_raw.splitlines())
+        l_header_order  = ','.join(l_response.headers.iterkeys())
 
         l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["header-order"])
         l_matches           = l_wordlist_instance.matches_by_value(l_header_order)
@@ -613,7 +654,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         # Get the 'HTTP' value.
         #
         try:
-            l_proto             = l_response.raw_response.splitlines()[0][:4] # Get de 'HTTP' text from response, if available
+            l_proto             = l_response.protocol # Get the 'HTTP' text from response, if available
             if l_proto:
                 l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["protocol-name"])
                 l_matches           = l_wordlist_instance.matches_by_value(l_proto)
@@ -636,7 +677,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
         # Get the '1.0' value.
         #
         try:
-            l_version           = l_response.raw_response.splitlines()[0][5:8] # Get de '1.0' text from response, if available
+            l_version           = l_response.version # Get the '1.0' text from response, if available
             if l_version:
                 l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["protocol-version"])
                 l_matches           = l_wordlist_instance.matches_by_value(l_version)
@@ -649,8 +690,8 @@ def http_analyzers(main_url, conn, number_of_entries=4):
 
 
 
-        if "ETag" in l_response.http_headers:
-            l_etag_header       = l_response.http_headers.get("ETag")
+        if "ETag" in l_response.headers:
+            l_etag_header       = l_response.headers["ETag"]
             #
             # ETag length
             # ================
@@ -671,10 +712,10 @@ def http_analyzers(main_url, conn, number_of_entries=4):
                 l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["etag-quotes"])
                 l_matches           = l_wordlist_instance.matches_by_value(l_etag_striped[0])
 
-                m_counters.inc(l_matches, l_action, l_weight, "etag-qoutes", message="Etag quotes: " + l_etag_striped[0])
+                m_counters.inc(l_matches, l_action, l_weight, "etag-quotes", message="Etag quotes: " + l_etag_striped[0])
 
-        if "Vary" in l_response.http_headers:
-            l_vary_header       = l_response.http_headers.get("Vary")
+        if "Vary" in l_response.headers:
+            l_vary_header       = l_response.headers["Vary"]
             #
             # Vary delimiter
             # ================
@@ -732,7 +773,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
             # HEAD Options
             # ============
             #
-            l_option            = l_response.http_headers.get("Allow")
+            l_option            = l_response.headers.get("Allow")
             if l_option:
                 l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["options-public"])
                 # Looking for matches
@@ -742,12 +783,12 @@ def http_analyzers(main_url, conn, number_of_entries=4):
 
 
         if l_action == "OPTIONS" or l_action == "INVALID" or l_action == "DELETE":
-            if "Allow" in l_response.http_headers:
+            if "Allow" in l_response.headers:
                 #
                 # Options allow
                 # =============
                 #
-                l_option            = l_response.http_headers.get("Allow")
+                l_option            = l_response.headers.get("Allow")
                 if l_option:
                     l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["options-public"])
                     # Looking for matches
@@ -760,7 +801,7 @@ def http_analyzers(main_url, conn, number_of_entries=4):
                 # Allow delimiter
                 # ===============
                 #
-                l_option            = l_response.http_headers.get("Allow")
+                l_option            = l_response.headers.get("Allow")
                 if l_option:
                     l_var_delimiter     = ", " if l_option.find(", ") else ","
                     l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["options-delimited"])
@@ -770,12 +811,12 @@ def http_analyzers(main_url, conn, number_of_entries=4):
                     m_counters.inc(l_matches, l_action, l_weight, "options-delimiter", message="OPTION allow delimiter " + l_action + " # " + l_option)
 
 
-            if "Public" in l_response.http_headers:
+            if "Public" in l_response.headers:
                 #
                 # Public response
                 # ===============
                 #
-                l_option            = l_response.http_headers.get("Public")
+                l_option            = l_response.headers.get("Public")
                 if l_option:
                     l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config[l_wordlist]["options-public"])
                     # Looking for matches
@@ -874,13 +915,11 @@ def http_analyzers(main_url, conn, number_of_entries=4):
 
 
 #------------------------------------------------------------------------------
-class HTTPAnalyzer:
-    """"""
+class HTTPAnalyzer(object):
 
 
     #----------------------------------------------------------------------
     def __init__(self, debug = False):
-        """Constructor"""
 
         self.__HTTP_fields_weight = {
             "accept-ranges"                : 1,
@@ -889,7 +928,7 @@ class HTTPAnalyzer:
             "connection"                   : 2,
             "content-type"                 : 1,
             "etag-length"                  : 5,
-            "etag-qoutes"                  : 2,
+            "etag-quotes"                  : 2,
             "header-capitalizedafterdush"  : 2,
             "header-order"                 : 10,
             "header-space"                 : 2,
@@ -960,7 +999,7 @@ class HTTPAnalyzer:
 
 
     #----------------------------------------------------------------------
-    def inc(self, test_lists, method, method_weight, types,  message = ""):
+    def inc(self, test_lists, method, method_weight, types, message = ""):
         """
         Increment values associated with the fields as parameters.
 
@@ -1020,55 +1059,50 @@ class HTTPAnalyzer:
     #----------------------------------------------------------------------
     @property
     def results_score(self):
-        """"""
         return self.__results_score
 
 
     #----------------------------------------------------------------------
     @property
     def results_score_complete(self):
-        """"""
         return self.__results_score_complete
 
 
     #----------------------------------------------------------------------
     @property
     def results_count(self):
-        """"""
         return self.__results_count
 
 
     #----------------------------------------------------------------------
     @property
     def results_count_complete(self):
-        """"""
         return self.__results_count_complete
 
 
     #----------------------------------------------------------------------
     @property
     def results_determinator(self):
-        """"""
         return self.__determinator
+
 
     #----------------------------------------------------------------------
     @property
     def related_webservers(self):
-        """"""
         return self.__results_related
+
 
     #----------------------------------------------------------------------
     @property
     def canonical_webserver_name(self):
-        """"""
         return self.__results_canonical
 
 
     #----------------------------------------------------------------------
     @property
     def results_determinator_complete(self):
-        """"""
         return self.__determinator_complete
+
 
 #----------------------------------------------------------------------
 #
@@ -1191,8 +1225,6 @@ def nindex(str_in, substr, nth):
     return m_return
 
 
-
-
 #----------------------------------------------------------------------
 @lru_cache(maxsize=2)
 def get_fingerprinting_wordlist(wordlist):
@@ -1207,7 +1239,7 @@ def get_fingerprinting_wordlist(wordlist):
     """
 
     # Load the wordlist
-    m_w = WordListAPI.get_advanced_wordlist_as_dict(wordlist, separator=";", inteligence_load=True)
+    m_w = WordListAPI.get_advanced_wordlist_as_dict(wordlist, separator=";", smart_load=True)
 
     # Load references.
     #
@@ -1287,6 +1319,5 @@ def extend_items(all_items, already_parsed, related, ref = None):
                         related[l_v[1:]].add(k)
                     else:
                         m_return[k].add(l_v)
-
 
     return m_return

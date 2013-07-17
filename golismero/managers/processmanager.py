@@ -40,6 +40,7 @@ __all__ = ["ProcessManager", "PluginContext"]
 from ..api.config import Config
 from ..api.data import LocalDataCache
 from ..api.net.cache import NetworkCache
+from ..api.net.http import HTTP
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 
@@ -172,10 +173,13 @@ def _bootstrap(context, func, argv, argd):
 
                         # TODO: hook stdout and stderr to catch print statements
 
-                        # Clear the local network cache for this process.
-                        NetworkCache()._clear_local_cache()
+                        # Clear the HTTP connection pool.
+                        HTTP._initialize()
 
-                        # Initialize the temporary data storage for this run.
+                        # Clear the local network cache for this process.
+                        NetworkCache._clear_local_cache()
+
+                        # Initialize the local data cache for this run.
                         LocalDataCache.on_run()
 
                         # Try to get the plugin from the cache.
