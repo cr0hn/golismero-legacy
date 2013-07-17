@@ -762,7 +762,7 @@ class DnsRegisterDS(DNSRegisterAlgorithm):
         :param key_tag: the key tag.
         :type key_tag: int
         """
-        if not isinstance(digest, int):
+        if not isinstance(digest, str):
             raise TypeError("Expected int, got '%s'" % type(digest))
         if not isinstance(digest_type, int):
             raise TypeError("Expected int, got '%s'" % type(digest_type))
@@ -772,7 +772,6 @@ class DnsRegisterDS(DNSRegisterAlgorithm):
         self.__digest      = digest
         self.__digest_type = digest_type
         self.__key_tag     = key_tag
-        self.__protocol    = protocol
 
         # Set type of register and the other options
         super(DnsRegisterDS, self).__init__(algorithm, type="DS", **kwargs)
