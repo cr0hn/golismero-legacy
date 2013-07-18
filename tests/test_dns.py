@@ -49,11 +49,11 @@ except NameError:
 from golismero.api.net.dns import *
 from golismero.api.data.information.dns import *
 
+HOSTS = ["ns1.google.com", "twitter.com", "bing.com", "tuenti.es", "facebook.com", "google.com", "terra.es"]
 
 def test_all_registers():
 
     d = DNS()
-    HOSTS = ["twitter.com", "bing.com", "tuenti.es", "facebook.com", "google.com", "terra.es"]
 
     print
 
@@ -77,5 +77,13 @@ def test_all_registers():
 
             print "   %s" % ("-" * 30)
 
+#----------------------------------------------------------------------
+def test_zone_transfer():
+    d = DNS()
+    d.zone_transfer("173.194.34.224")
+    d.zone_transfer("zonetransfer.me", ["ns12.zoneedit.com"])
+
+
 if __name__ == "__main__":
     test_all_registers()
+    test_zone_transfer()
