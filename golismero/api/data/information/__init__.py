@@ -66,6 +66,7 @@ class Information(Data):
     INFORMATION_HTTP_REQUEST     = 1500  # HTTP request
     INFORMATION_HTTP_RAW_REQUEST = 1501  # Raw HTTP request
     INFORMATION_HTTP_RESPONSE    = 1502  # HTTP response
+    INFORMATION_DNS_REGISTER     = 1512  # DNS responses
 
     # Fingerprints
     INFORMATION_WEB_SERVER_FINGERPRINT = 2000  # HTTP server fingerprint
