@@ -901,14 +901,14 @@ def http_analyzers(main_url, number_of_entries=4):
         if l_banner:
             m_server_family, m_server_version, m_server_canonical_name, m_server_related  = calculate_server_track(l_banner)
             m_server_complete                  = l_banner
-            m_other_servers_prob               = []
+            m_other_servers_prob               = dict()
         else:
             m_server_family         = "Unknown"
             m_server_version        = "Unknown"
             m_server_related        = set()
             m_server_canonical_name = "Unknown"
             m_server_complete       = "Unknown web server"
-            m_other_servers_prob    = []
+            m_other_servers_prob    = dict()
 
 
     return m_server_family, m_server_version, m_server_canonical_name, m_server_complete, m_server_related, m_other_servers_prob
