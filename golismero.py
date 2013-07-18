@@ -234,8 +234,8 @@ def cmdline_parser():
     gr_net.add_argument("--volatile-cache", action="store_false", default=None, dest="use_cache_db", help="use a volatile network cache [default in standalone mode]")
 
     gr_plugins = parser.add_argument_group("plugin options")
-    gr_plugins.add_argument("-e", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", help="customize which plugins to load")
-    gr_plugins.add_argument("-d", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", help="customize which plugins not to load")
+    gr_plugins.add_argument("-e", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", default=list(OrchestratorConfig().enabled_plugins), help="customize which plugins to load")
+    gr_plugins.add_argument("-d", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", default=list(OrchestratorConfig().disabled_plugins), help="customize which plugins not to load")
     gr_plugins.add_argument("--max-process", metavar="N", type=int, default=None, help="maximum number of plugins to run concurrently")
     gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
     gr_plugins.add_argument("--plugin-list", action="store_true", default=False, help="list available plugins and quit")
