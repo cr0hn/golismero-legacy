@@ -83,7 +83,7 @@ class DNS(object):
 			raise ValueError("Port number must be greater than 0.")
 
 		s = socket.socket()
-		s.settimeout(DNS_QUERY_TIMEOUT)
+		s.settimeout(self.REQUEST_TIMEOUT)
 
 		try:
 			s.connect((address, dns_port))
@@ -298,318 +298,191 @@ class DNS(object):
 
 
 	#----------------------------------------------------------------------
-	def zone_transfer(self):
+	def zone_transfer(self, domain, nameservers = None):
 		"""
-		Function for testing for zone transfers for a given Domain, it will parse the
-		output by record type.
+		Function for testing for zone transfers for a given Domain.
 
-		The format of the returns is a dict that can contains:
+		:param domain: string with the hostname or nameserver.
+		:type domain: str
 
-		{ 'info' }
+		:param nameservers: list with an alternate nameservers.
+		:type nameservers: list(str)
 
-		:return: a dict with the info of the zone transfer.
-		:rtype: dict()
+		:return: a list with DnsRegisters
+		:rtype: list(DnsRegister)
 		"""
-		# if anyone reports a record not parsed I will add it, the list is a long one
-		# I tried to include those I thought where the most common.
-		raise NotImplemented()
+		if not isinstance(domain, basestring):
+			raise TypeError("Expected basestring, got '%s'" % type(domain))
+		if nameservers:
+			if isinstance(nameservers, list):
+				for n in nameservers:
+					if not isinstance(n, basestring):
+						raise TypeError("Expected basestring, got '%s'" % type(n))
+			else:
+				raise TypeError("Expected list, got '%s'" % type(nameservers))
 
+		# Results of zone transfer
+		zone_records        = []
+		zone_records_append = zone_records.append
 
-		zone_records = []
-		ns_records = []
+		# Availabe DNS servers
+		ns_records   = None
 
-		# Find SOA for Domain
-		try:
-			soa_srvs = self.get_soa()
-			for s in soa_srvs:
-				print_good("\t {0}".format(" ".join(s)))
-				ns_records.append(s[2])
-		except:
-			raise ValueError("Could not obtain the domains SOA Record.")
+		# If nameservers specified -> use it
+		if nameservers:
+			ns_records = set(nameservers)
 
-		# Find NS for Domain
-		ns_srvs = []
-		try:
-			ns_srvs = self.get_ns()
-			for ns in ns_srvs:
-				ns_ip = ''.join(ns[2])
-				ns_records.append(ns_ip)
-		except Exception as s:
-			pass
+		else: # Looking for nameservers for the domain
 
-		# Remove duplicates
-		ns_records = list(set(ns_records))
-		# Test each NS Server
+			#Find NS for domains
+			ns_tmp     = self.get_ns(domain)
+			#
+			# Check the input domain
+			#
+			# If name server of the domain is NOT empty -> the domain is NOT a nameserver
+			if ns_tmp:
+				# Store only the IP address of the DNS servers
+				l_dns        = []
+				l_dns_extend = l_dns.extend
+				for d in ns_tmp:
+					l_dns_extend([t.address for t in self.get_ips(d)])
+
+				# Find SOA for Domain
+				for d in self.get_soa(domain):
+					l_dns_extend([t.address for t in self.get_ips(d)])
+
+				# Remove duplicates
+				ns_records = set(l_dns)
+			else:
+				# The domain is an DNS server
+				ns_records = (domain)
+
+		#
+		# Make the transfer for each NS Server
+		#
 		for ns_srv in ns_records:
 			if self.check_tcp_dns(ns_srv):
 				try:
-					zone = self.from_wire(dns.query.xfr(ns_srv, self._domain))
-					# Zone Transfer was successful!!
-					zone_records.append({'type': 'info',
-										 'zone_transfer': 'success',
-										 'ns_server': ns_srv})
+					zone = self._from_wire(dns.query.xfr(ns_srv, domain))
+
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.SOA):
 						for rdata in rdataset:
-							for mn_ip in self.get_ip(rdata.mname.to_text()):
-								if re.search(r'^A', mn_ip[0]):
-									zone_records.append({'zone_server': ns_srv,
-														 'type': 'SOA',
-														 'mname': rdata.mname.to_text()[:-1],
-														 'address': mn_ip[2]})
+							zone_records_append(self._dnslib2register("SOA",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.NS):
 						for rdata in rdataset:
-							for n_ip in self.get_ip(rdata.target.to_text()):
-								if re.search(r'^A', n_ip[0]):
-									zone_records.append({'zone_server': ns_srv,
-														 'type': 'NS',
-														 'target': rdata.target.to_text()[:-1],
-														 'address': n_ip[2]})
+							zone_records_append(self._dnslib2register("NS",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.TXT):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'TXT',
-												 'strings': ''.join(rdata.strings)})
+							zone_records_append(self._dnslib2register("TXT",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.SPF):
-						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'SPF',
-												 'strings': ''.join(rdata.strings)})
+						zone_records_append(self._dnslib2register("SPF",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.PTR):
 						for rdata in rdataset:
-							for n_ip in self.get_ip(rdata.target.to_text() + "." + self._domain):
-								if re.search(r'^A', n_ip[0]):
-									zone_records.append({'zone_server': ns_srv,
-														 'type': 'PTR',
-														 'name': "%s.%s" % (rdata.target.to_text(), self._domain),
-														 'address': n_ip[2]})
+							zone_records_append(self._dnslib2register("PTR",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.MX):
 						for rdata in rdataset:
-							for e_ip in self.get_ip(rdata.exchange.to_text()):
-								zone_records.append({'zone_server': ns_srv,
-													 'type': 'MX',
-													 'name': "%s.%s" % (str(name), self._domain),
-													 'exchange': rdata.exchange.to_text()[:-1],
-													 'address': e_ip[2]})
+							zone_records_append(self._dnslib2register("MX",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.AAAA):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'AAAA',
-												 'name': "%s.%s" % (str(name), self._domain),
-												 'address': rdata.address})
+							zone_records_append(self._dnslib2register("AAAA",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.A):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'A',
-												 'name': "%s.%s" % (str(name), self._domain),
-												 'address': rdata.address})
+							zone_records_append(self._dnslib2register("A",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.CNAME):
 						for rdata in rdataset:
-							for t_ip in self.get_ip(rdata.target.to_text()):
-								if re.search(r'^A', t_ip[0]):
-									zone_records.append({'zone_server': ns_srv,
-														 'type': 'CNAME',
-														 'name': "%s.%s" % (str(name), self._domain),
-														 'target': str(rdata.target.to_text())[:-1],
-														 'address': t_ip[2]})
+							zone_records_append(self._dnslib2register("CNAME",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.SRV):
 						for rdata in rdataset:
-							ip_list = self.get_ip(rdata.target.to_text())
-							if ip_list:
-								for t_ip in self.get_ip(rdata.target.to_text()):
-									if re.search(r'^A', t_ip[0]):
-										zone_records.append({'zone_server': ns_srv,
-															 'type': 'SRV',
-															 'name': "%s.%s" % (str(name), self._domain),
-															 'target': rdata.target.to_text()[:-1],
-															 'address': t_ip[2],
-															 'port': str(rdata.port),
-															 'weight': str(rdata.weight)})
-							else:
-								zone_records.append({'zone_server': ns_srv,
-													 'type': 'SRV',
-													 'name': "%s.%s" % (str(name), self._domain),
-													 'target': rdata.target.to_text()[:-1],
-													 'address': "no_ip",
-													 'port': str(rdata.port),
-													 'weight': str(rdata.weight)})
+							zone_records_append(self._dnslib2register("SRV",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.HINFO):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'HINFO',
-												 'cpu': rdata.cpu,
-												 'os': rdata.os})
+							zone_records_append(self._dnslib2register("HINFO",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.WKS):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'WKS',
-												 'address': rdata.address,
-												 'bitmap': rdata.bitmap,
-												 'protocol': rdata.protocol})
+							zone_records_append(self._dnslib2register("WKS",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.RP):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'RP',
-												 'mbox': rdata.mbox.to_text(),
-												 'txt': rdata.txt.to_text()})
+							zone_records_append(self._dnslib2register("RP",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.AFSDB):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'AFSDB',
-												 'subtype': str(rdata.subtype),
-												 'hostname': rdata.hostname.to_text()})
+							zone_records_append(self._dnslib2register("AFSDB",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.LOC):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'LOC',
-												 'coordinates': rdata.to_text()})
+							zone_records_append(self._dnslib2register("LOC",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.X25):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'X25',
-												 'address': rdata.address})
+							zone_records_append(self._dnslib2register("X25",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.ISDN):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'ISDN',
-												 'address': rdata.address})
+							zone_records_append(self._dnslib2register("ISDN",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.RT):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'X25',
-												 'address': rdata.address})
+							zone_records_append(self._dnslib2register("X25",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.NSAP):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'NSAP',
-												 'address': rdata.address})
+							zone_records_append(self._dnslib2register("NSAP",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.NAPTR):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'NAPTR',
-												 'order': str(rdata.order),
-												 'preference': str(rdata.preference),
-												 'regex': rdata.regexp,
-												 'replacement': rdata.replacement.to_text(),
-												 'service': rdata.service})
+							zone_records_append(self._dnslib2register("NAPTR",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.CERT):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'CERT',
-												 'algorithm': rdata.algorithm,
-												 'certificate': rdata.certificate,
-												 'certificate_type': rdata.certificate_type,
-												 'key_tag': rdata.key_tag})
+							zone_records_append(self._dnslib2register("CERT",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.SIG):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'SIG',
-												 'algorithm': algorithm_to_text(rdata.algorithm),
-												 'expiration': rdata.expiration,
-												 'inception': rdata.inception,
-												 'key_tag': rdata.key_tag,
-												 'labels': rdata.labels,
-												 'original_ttl': rdata.original_ttl,
-												 'signature': rdata.signature,
-												 'signer': str(rdata.signer),
-												 'type_covered': rdata.type_covered})
+							zone_records_append(self._dnslib2register("SIG",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.RRSIG):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'RRSIG',
-												 'algorithm': algorithm_to_text(rdata.algorithm),
-												 'expiration': rdata.expiration,
-												 'inception': rdata.inception,
-												 'key_tag': rdata.key_tag,
-												 'labels': rdata.labels,
-												 'original_ttl': rdata.original_ttl,
-												 'signature': rdata.signature,
-												 'signer': str(rdata.signer),
-												 'type_covered': rdata.type_covered})
+							zone_records_append(self._dnslib2register("RRSIG",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.DNSKEY):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'DNSKEY',
-												 'algorithm': algorithm_to_text(rdata.algorithm),
-												 'flags': rdata.flags,
-												 'key': dns.rdata._hexify(rdata.key),
-												 'protocol': rdata.protocol})
+							zone_records_append(self._dnslib2register("DNSKEY",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.DS):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'DS',
-												 'algorithm': algorithm_to_text(rdata.algorithm),
-												 'digest': dns.rdata._hexify(rdata.digest),
-												 'digest_type': rdata.digest_type,
-												 'key_tag': rdata.key_tag})
+							zone_records_append(self._dnslib2register("DS",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.NSEC):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'NSEC',
-												 'next': rdata.next})
+							zone_records_append(self._dnslib2register("NSEC",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.NSEC3):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'NSEC3',
-												 'algorithm': algorithm_to_text(rdata.algorithm),
-												 'flags': rdata.flags,
-												 'iterations': rdata.iterations,
-												 'salt': dns.rdata._hexify(rdata.salt)})
+							zone_records_append(self._dnslib2register("NSEC3",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.NSEC3PARAM):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'NSEC3PARAM',
-												 'algorithm': algorithm_to_text(rdata.algorithm),
-												 'flags': rdata.flags,
-												 'iterations': rdata.iterations,
-												 'salt': rdata.salt})
+							zone_records_append(self._dnslib2register("NSEC3PARAM",rdata))
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.IPSECKEY):
 						for rdata in rdataset:
-							zone_records.append({'zone_server': ns_srv,
-												 'type': 'IPSECKEY',
-												 'algorithm': algorithm_to_text(rdata.algorithm),
-												 'gateway': rdata.gateway,
-												 'gateway_type': rdata.gateway_type,
-												 'key': dns.rdata._hexify(rdata.key),
-												 'precedence': rdata.precedence})
-				except Exception as e:
-					# Zone Transfer Failed!
-					zone_records.append({'type': 'info',
-										 'zone_transfer': 'failed',
-										 'ns_server': ns_srv})
-			else:
-				# Zone Transfer Failed
-				# Port 53 TCP is being filtered
-				zone_records.append({'type': 'info',
-								     'zone_transfer': 'failed',
-								     'ns_server': ns_srv})
+							zone_records_append(self._dnslib2register("IPSECKEY",rdata))
+
+				except:
+					pass
+
 		return zone_records
 
 
@@ -618,6 +491,40 @@ class DNS(object):
 	# Helpers
 	#
 	#----------------------------------------------------------------------
+	#
+	# This method has been taken directly (with some changes) from dns recon project
+	#
+	def _from_wire(self, xfr, zone_factory=Zone, relativize=True):
+		"""
+		Method for turning returned data from a DNS AXFR in to RRSET, this method will not perform a
+		check origin on the zone data as the method included with dnspython
+		"""
+		z = None
+
+
+		for r in xfr:
+			if z is None:
+				if relativize:
+					origin = r.origin
+				else:
+					origin = r.answer[0].name
+				rdclass = r.answer[0].rdclass
+				z = zone_factory(origin, rdclass, relativize=relativize)
+			for rrset in r.answer:
+				znode = z.nodes.get(rrset.name)
+				if not znode:
+					znode = z.node_factory()
+					z.nodes[rrset.name] = znode
+				zrds = znode.find_rdataset(rrset.rdclass, rrset.rdtype,
+			                               rrset.covers, True)
+				zrds.update_ttl(rrset.ttl)
+				for rd in rrset:
+					rd.choose_relativity(z.origin, relativize)
+					zrds.add(rd)
+
+
+		return z
+
 	def get_ips(self, register):
 		"""
 		Get the list of IPs associated the register as parameter.
@@ -681,8 +588,8 @@ class DNS(object):
 		:param type: the type of response to get: A, AAAA, CNAME...
 		:type type: str
 
-		:param answer: object with the answer of external dns lib
-		:type answer: dns.resolver.Answer
+		:param answer_in: object with the answer of external dns lib
+		:type answer_in: dns.resolver.Answer
 
 		:return: Golismero DnsRegister subtype for the specific type.
 		:rtype: `list(DnsRegister)`
@@ -692,115 +599,158 @@ class DNS(object):
 		m_return        = []
 		m_return_append = m_return.append
 
-		for ardata in answer_in.response.answer:
-			for rdata in ardata:
+		m_iter = None
+		if 1== 1: #isinstance(answer_in, dns.resolver.Answer):
 
-				register_type = DnsRegister.id2name(rdata.rdtype)
+			for ardata in answer_in.response.answer:
+				for rdata in ardata:
 
-				# If register it different that we are looking for, skip it.
-				if type != register_type and type != "ALL":
-					continue
+					register_type = DnsRegister.id2name(rdata.rdtype)
 
-				answer = rdata
+					# If register it different that we are looking for, skip it.
+					if type != register_type and type != "ALL":
+						continue
 
-				if register_type == "A":
-					m_return_append(DnsRegisterA(answer.address))
-				elif register_type == "AAAA":
-					m_return_append(DnsRegisterAAAA(answer.address))
-				elif register_type == "AFSDB":
-					m_return_append(DnsRegisterAFSDB(answer.subtype, answer.hostname))
-				elif register_type == "CERT":
-					m_return_append(DnsRegisterCERT(answer.algorithm,
-										            answer.certificate,
-										            answer.certificate_type,
-										            answer.key_tag))
-				elif register_type == "CNAME":
-					m_return_append(DnsRegisterCNAME(answer.target.to_text()[:-1]))
-				elif register_type == "DNSKEY":
-					m_return_append(DnsRegisterDNSKEY(answer.algorithm,
-										              answer.flags,
-										              dns.rdata._hexify(answer.key),
-										              answer.protocol))
-				elif register_type == "DS":
-					m_return_append(DnsRegisterDS(answer.algorithm,
-										          dns.rdata._hexify(answer.digest),
-										          answer.digest_type,
-										          answer.key_tag))
-				elif register_type == "HINFO":
-					m_return_append(DnsRegisterHINFO(answer.cpu,
-										             answer.os))
-				elif register_type == "IPSECKEY":
-					m_return_append(DnsRegisterIPSECKEY(answer.algorithm,
-										                answer.gateway,
-										                answer.gateway_type,
-										                answer.key,
-										                answer.precedence))
-				elif register_type == "ISDN":
-					m_return_append(DnsRegisterISDN(answer.address,
-										            answer.subaddress))
-				elif register_type == "LOC":
-					m_return = DnsRegisterLOC(answer.latitude, answer.longitude, answer.to_text())
-				elif register_type == "MX":
-					m_return_append(DnsRegisterMX(answer.exchange.to_text()[:-1],
-										          answer.preference))
-				elif register_type == "NAPTR":
-					m_return_append(DnsRegisterNAPTR(answer.order,
-										             answer.preference,
-										             answer.regexp,
-										             answer.replacement,
-										             answer.service))
-				elif register_type == "NS":
-					m_return_append(DnsRegisterNS(answer.target.to_text()[:-1]))
-				elif register_type == "NSAP":
-					m_return_append(DnsRegisterNSAP(answer.address))
-				elif register_type == "NSEC":
-					m_return_append(DnsRegisterNSEC(answer.next.to_text()[:-1]))
-				elif register_type == "NSEC3":
-					m_return_append(DnsRegisterNSEC3(answer.algorithm,
-										             answer.flags,
-										             answer.iterations,
-										             dns.rdata._hexify(answer.salt)))
-				elif register_type == "NSEC3PARAM":
-					m_return_append(DnsRegisterNSEC3PARAM(answer.algorithm,
-										                  answer.flags,
-										                  answer.iterations,
-										                  dns.rdata._hexify(answer.salt)))
-				elif register_type == "PTR":
-					m_return_append(DnsRegisterPTR(answer.target))
-				elif register_type == "RP":
-					m_return_append(DnsRegisterRP(answer.mbox,
-										          answer.txt))
-				elif register_type == "RPSIG":
-					m_return_append(DnsRegisterRRSIG(answer.algorithm,
-										             answer.expiration,
-										             answer.interception,
-										             answer.key_tag,
-										             answer.labels,
-										             answer.original_ttl,
-										             answer.signer,
-										             answer.type_coverded))
-				elif register_type == "SOA":
-					m_return_append(DnsRegisterSOA(answer.mname.to_text()[:-1],
-										           answer.rname.to_text()[:-1],
-										           answer.refresh,
-										           answer.expire))
-				elif register_type == "SPF":
-					m_return_append(DnsRegisterSPF(answer.strings))
-				elif register_type == "SRV":
-					m_return_append(DnsRegisterSRV(answer.target.to_text()[:-1],
-										           answer.priority,
-										           answer.weight,
-										           answer.port))
-				elif register_type == "TXT":
-					m_return_append(DnsRegisterTXT(answer.strings))
-				elif register_type == "WKS":
-					m_return_append(DnsRegisterWKS(answer.address,
-										           answer.protocol,
-										           answer.bitmap))
-				elif register_type == "X25":
-					m_return_append(DnsRegisterX25(answer.address))
-				else:
-					raise ValueError("DNS register type '%s' is incorrect." % register_type)
+					answer = rdata
+
+					m_return_append(self.__dnsregister2golismeroregister(register_type, answer))
+		else:
+			register_type = DnsRegister.id2name(answer_in.rdtype)
+			m_return_append(self.__dnsregister2golismeroregister(register_type, answer_in))
+
+		return m_return
+
+
+
+
+
+	#----------------------------------------------------------------------
+	def __dnsregister2golismeroregister(self, register_type, answer):
+		"""
+		Transform an dnslib register in golismero register.
+
+		:param register_type: string with the type of register
+		:type register_type: str
+
+		:param answer: dnslib object with a Dns register.
+		:type answer: object
+
+		:return: Golismero Dns register.
+		:rtype: DnsRegister
+		"""
+		m_return = None
+
+
+		if register_type == "A":
+			m_return = DnsRegisterA(answer.address)
+		elif register_type == "AAAA":
+			m_return = DnsRegisterAAAA(answer.address)
+		elif register_type == "AFSDB":
+			m_return = DnsRegisterAFSDB(answer.subtype, answer.hostname.to_text()[:-1])
+		elif register_type == "CERT":
+			m_return = DnsRegisterCERT(answer.algorithm,
+			                           answer.certificate,
+			                           answer.certificate_type,
+			                           answer.key_tag)
+		elif register_type == "CNAME":
+			m_return = DnsRegisterCNAME(answer.target.to_text()[:-1])
+		elif register_type == "DNSKEY":
+			m_return = DnsRegisterDNSKEY(answer.algorithm,
+			                             answer.flags,
+			                             dns.rdata._hexify(answer.key),
+			                             answer.protocol)
+		elif register_type == "DS":
+			m_return = DnsRegisterDS(answer.algorithm,
+			                         dns.rdata._hexify(answer.digest),
+			                         answer.digest_type,
+			                         answer.key_tag)
+		elif register_type == "HINFO":
+			m_return = DnsRegisterHINFO(answer.cpu,
+		                                     answer.os)
+		elif register_type == "IPSECKEY":
+			m_return = DnsRegisterIPSECKEY(answer.algorithm,
+			                               answer.gateway,
+			                               answer.gateway_type,
+			                               answer.key,
+			                               answer.precedence)
+		elif register_type == "ISDN":
+			m_return = DnsRegisterISDN(answer.address,
+			                           answer.subaddress)
+		elif register_type == "LOC":
+			m_return = DnsRegisterLOC(answer.latitude,
+			                          answer.longitude,
+			                          answer.altitude,
+			                          answer.to_text())
+		elif register_type == "MX":
+			m_return = DnsRegisterMX(answer.exchange.to_text()[:-1],
+			                         answer.preference)
+		elif register_type == "NAPTR":
+			m_return = DnsRegisterNAPTR(answer.order,
+			                            answer.preference,
+			                            answer.regexp,
+			                            answer.replacement.to_text()[:-1],
+			                            answer.service)
+		elif register_type == "NS":
+			m_return = DnsRegisterNS(answer.target.to_text()[:-1])
+		elif register_type == "NSAP":
+			m_return = DnsRegisterNSAP(answer.address)
+		elif register_type == "NSEC":
+			m_return_append(DnsRegisterNSEC(answer.next.to_text()[:-1]))
+		elif register_type == "NSEC3":
+			m_return = DnsRegisterNSEC3(answer.algorithm,
+			                            answer.flags,
+			                            answer.iterations,
+			                            dns.rdata._hexify(answer.salt))
+		elif register_type == "NSEC3PARAM":
+			m_return = DnsRegisterNSEC3PARAM(answer.algorithm,
+			                                 answer.flags,
+			                                 answer.iterations,
+			                                 dns.rdata._hexify(answer.salt))
+		elif register_type == "PTR":
+			m_return = DnsRegisterPTR(answer.target.to_text()[:-1])
+		elif register_type == "RP":
+			m_return = DnsRegisterRP(answer.mbox.to_text()[:-1],
+			                         answer.txt.to_text()[:-1])
+		elif register_type == "RPSIG":
+			m_return = DnsRegisterRRSIG(answer.algorithm,
+			                            answer.expiration,
+			                            answer.interception,
+			                            answer.key_tag,
+			                            answer.labels,
+			                            answer.original_ttl,
+			                            answer.signer,
+			                            answer.type_coverded)
+		elif register_type == "SIG":
+			m_return = DnsRegisterSIG(answer.algorithm,
+			                            answer.expiration,
+			                            answer.interception,
+			                            answer.key_tag,
+			                            answer.labels,
+			                            answer.original_ttl,
+			                            answer.signer,
+			                            answer.type_coverded)
+		elif register_type == "SOA":
+			m_return = DnsRegisterSOA(answer.mname.to_text()[:-1],
+			                          answer.rname.to_text()[:-1],
+			                          answer.refresh,
+			                          answer.expire)
+		elif register_type == "SPF":
+			m_return = DnsRegisterSPF(answer.strings)
+		elif register_type == "SRV":
+			m_return = DnsRegisterSRV(answer.target.to_text()[:-1],
+			                          answer.priority,
+			                          answer.weight,
+			                          answer.port)
+		elif register_type == "TXT":
+			m_return = DnsRegisterTXT(answer.strings)
+		elif register_type == "WKS":
+			m_return = DnsRegisterWKS(answer.address,
+			                          answer.protocol,
+			                          answer.bitmap)
+		elif register_type == "X25":
+			m_return = DnsRegisterX25(answer.address)
+		else:
+			raise ValueError("DNS register type '%s' is incorrect." % register_type)
 
 		return m_return
 
