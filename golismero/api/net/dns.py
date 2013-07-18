@@ -516,7 +516,7 @@ class DNS(object):
 					znode = z.node_factory()
 					z.nodes[rrset.name] = znode
 				zrds = znode.find_rdataset(rrset.rdclass, rrset.rdtype,
-			                               rrset.covers, True)
+				                           rrset.covers, True)
 				zrds.update_ttl(rrset.ttl)
 				for rd in rrset:
 					rd.choose_relativity(z.origin, relativize)
@@ -552,17 +552,17 @@ class DNS(object):
 			raise TypeError("Register type are not valid. Valid values are: A, AAAA, ISDN, NS, NSAP, PTR, SOA, SRV, WKS, X25")
 
 		PROP = {
-			"A":"target",
-			"AAA":"target",
-			"CNAME":"target",
-			"ISDN":"address",
-			"NS":"target",
-			"NSAP":"address",
-			"PTR":"target",
-			"SOA":"mname",
-			"SRV":"target",
-			"WKS":"address",
-			"X25":"address"
+		    "A":"target",
+		    "AAA":"target",
+		    "CNAME":"target",
+		    "ISDN":"address",
+		    "NS":"target",
+		    "NSAP":"address",
+		    "PTR":"target",
+		    "SOA":"mname",
+		    "SRV":"target",
+		    "WKS":"address",
+		    "X25":"address"
 		}
 
 		if register.type in ("A", "AAAA"):
@@ -600,7 +600,7 @@ class DNS(object):
 		m_return_append = m_return.append
 
 		m_iter = None
-		if 1== 1: #isinstance(answer_in, dns.resolver.Answer):
+		if isinstance(answer_in, dns.resolver.Answer):
 
 			for ardata in answer_in.response.answer:
 				for rdata in ardata:
@@ -666,7 +666,7 @@ class DNS(object):
 			                         answer.key_tag)
 		elif register_type == "HINFO":
 			m_return = DnsRegisterHINFO(answer.cpu,
-		                                     answer.os)
+			                            answer.os)
 		elif register_type == "IPSECKEY":
 			m_return = DnsRegisterIPSECKEY(answer.algorithm,
 			                               answer.gateway,
@@ -722,13 +722,13 @@ class DNS(object):
 			                            answer.type_coverded)
 		elif register_type == "SIG":
 			m_return = DnsRegisterSIG(answer.algorithm,
-			                            answer.expiration,
-			                            answer.interception,
-			                            answer.key_tag,
-			                            answer.labels,
-			                            answer.original_ttl,
-			                            answer.signer,
-			                            answer.type_coverded)
+			                          answer.expiration,
+			                          answer.interception,
+			                          answer.key_tag,
+			                          answer.labels,
+			                          answer.original_ttl,
+			                          answer.signer,
+			                          answer.type_coverded)
 		elif register_type == "SOA":
 			m_return = DnsRegisterSOA(answer.mname.to_text()[:-1],
 			                          answer.rname.to_text()[:-1],
