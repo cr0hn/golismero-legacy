@@ -80,8 +80,8 @@ def test_all_registers():
 #----------------------------------------------------------------------
 def test_zone_transfer():
     d = DNS()
-    d.zone_transfer("173.194.34.224")
-    d.zone_transfer("zonetransfer.me", ["ns12.zoneedit.com"])
+    print d.zone_transfer("173.194.34.224")
+    print d.zone_transfer("zonetransfer.me", ["ns12.zoneedit.com"])
 
 
 if __name__ == "__main__":
