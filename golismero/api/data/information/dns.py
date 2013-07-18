@@ -4,6 +4,9 @@
 # Required since "dns" is both an external module and the name of this file.
 from __future__ import absolute_import
 
+from .. import identity
+from . import Information
+
 """
 This package contains the classes that represent
 the different types of DNS queries and responses.
@@ -118,10 +121,15 @@ class DnsSEC(object):
 
 
 #------------------------------------------------------------------------------
-class DnsRegister(object):
+class DnsRegister(Information):
     """
     Base class for DNS Registers
     """
+
+
+    information_type = Information.INFORMATION_DNS_REGISTER
+
+
 
     # Types of registers
     DNS_TYPES = (
@@ -331,7 +339,7 @@ class DnsRegister(object):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def type(self):
         """
         :return: Type of DNS register
@@ -341,7 +349,7 @@ class DnsRegister(object):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def type_int(self):
         """
         :return:
@@ -377,7 +385,7 @@ class DNSRegisterAlgorithm(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def algorithm_name(self):
         """
         :return: name of the DNSSEC algorithm
@@ -387,7 +395,7 @@ class DNSRegisterAlgorithm(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def algorithm_value(self):
         """
         :return: integer with the DNSSEC algorithm value
@@ -419,7 +427,7 @@ class DnsRegisterA(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def address(self):
         """
         :return: the IPv4 address
@@ -451,7 +459,7 @@ class DnsRegisterAAAA(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def address(self):
         """
         :return: the IPv6 address
@@ -469,14 +477,14 @@ class DnsRegisterAFSDB(DnsRegister):
     #----------------------------------------------------------------------
     def __init__(self, subtype, hostname, **kwargs):
         """
-        :param name: alias for the 'preference' attribute.
-        :type name: str.
+        :param subtype: the subtype value
+        :type subtype: int.
 
-        :param address: alias for 'exchange' attribute.
-        :type address: str
+        :param hostname: the hostname name
+        :type hostname: str
         """
-        if not isinstance(subtype, basestring):
-            raise TypeError("Expected str, got %s" % type(subtype))
+        if not isinstance(subtype, int):
+            raise TypeError("Expected int, got %s" % type(subtype))
         if not isinstance(hostname, basestring):
             raise TypeError("Expected str, got %s" % type(hostname))
 
@@ -488,7 +496,7 @@ class DnsRegisterAFSDB(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def subtype(self):
         """
         :return: alias for the 'preference' attribute..
@@ -498,7 +506,7 @@ class DnsRegisterAFSDB(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def hostname(self):
         """
         :return: alias for 'exchange' attribute..
@@ -570,7 +578,7 @@ class DnsRegisterCERT(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def certificate(self):
         """
         :return: string with the certificate
@@ -580,7 +588,7 @@ class DnsRegisterCERT(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def certificate_type_name(self):
         """
         :return: string with the name of the type of certificate
@@ -590,7 +598,7 @@ class DnsRegisterCERT(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def certificate_type_value(self):
         """
         :return: integer value of the type of certificate
@@ -600,7 +608,7 @@ class DnsRegisterCERT(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def key_tag(self):
         """
         :return: The key tag
@@ -664,7 +672,7 @@ class DnsRegisterCNAME(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def target(self):
         """
         :return: name of the pointer host.
@@ -711,7 +719,7 @@ class DnsRegisterDNSKEY(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def flags(self):
         """
         :return: flags for the record
@@ -721,7 +729,7 @@ class DnsRegisterDNSKEY(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def key(self):
         """
         :return: String with the public key
@@ -731,7 +739,7 @@ class DnsRegisterDNSKEY(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def protocol(self):
         """
         :return: the protocol for which this key may be used.
@@ -778,7 +786,7 @@ class DnsRegisterDS(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def key_tag(self):
         """
         :return: The key tag
@@ -788,7 +796,7 @@ class DnsRegisterDS(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def digest(self):
         """
         :return: string with the digest
@@ -798,7 +806,7 @@ class DnsRegisterDS(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def digest_type(self):
         """
         :return: the digest type
@@ -836,7 +844,7 @@ class DnsRegisterHINFO(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def cpu(self):
         """
         :return: the CPU type
@@ -846,7 +854,7 @@ class DnsRegisterHINFO(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def os(self):
         """
         :return: the OS type
@@ -900,7 +908,7 @@ class DnsRegisterIPSECKEY(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def gateway(self):
         """
         :return: gateway address
@@ -910,7 +918,7 @@ class DnsRegisterIPSECKEY(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def gateway_type(self):
         """
         :return: the gateway type
@@ -920,7 +928,7 @@ class DnsRegisterIPSECKEY(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def key(self):
         """
         :return: the public key
@@ -930,7 +938,7 @@ class DnsRegisterIPSECKEY(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def precedence(self):
         """
         :return: the precedence of this key data
@@ -968,7 +976,7 @@ class DnsRegisterISDN(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def address(self):
         """
         :return: the ISDN address
@@ -978,7 +986,7 @@ class DnsRegisterISDN(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def subaddress(self):
         """
         :return: the ISDN subaddress (or '' if not present)
@@ -995,13 +1003,18 @@ class DnsRegisterLOC(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, latitude, longitude, coordinates, **kwargs):
+    def __init__(self, latitude, longitude, altitude, coordinates, **kwargs):
         """
         :param latitude: latitude
-        :type latitude: float
+        :type latitude: (int, int, int, int) tuple specifying the degrees, minutes,
+    seconds, and milliseconds of the coordinate.
 
         :param latitude: longitude
-        :type longitude: float
+        :type longitude: (int, int, int, int) tuple specifying the degrees,
+    minutes, seconds, and milliseconds of the coordinate.
+
+        :param altitude: altitude
+        :type altitude: float
 
         :param coordinates: string with the geolocation coordinates
         :type coordinates: str
@@ -1009,13 +1022,24 @@ class DnsRegisterLOC(DnsRegister):
 
         if not isinstance(coordinates, basestring):
             raise TypeError("Expected str, got %s" % type(coordinates))
-        if not isinstance(latitude, float):
+        if isinstance(latitude, tuple):
+            for t in latitude:
+                if not isinstance(t, int):
+                    raise TypeError("Expected int, got '%s'" % type(t))
+        else:
             raise TypeError("Expected float, got '%s'" % type(latitude))
-        if not isinstance(longitude, float):
+        if isinstance(longitude, tuple):
+            for t in longitude:
+                if not isinstance(t, int):
+                    raise TypeError("Expected int, got '%s'" % type(t))
+        else:
             raise TypeError("Expected float, got '%s'" % type(longitude))
+        if not isinstance(altitude, float):
+            raise TypeError("Expected float, got '%s'" % type(altitude))
 
         self.__latitude       = latitude
         self.__longitude      = longitude
+        self.__altitude       = altitude
         self.__coordinates    = coordinates
 
         # Set type of register and the other options
@@ -1023,7 +1047,7 @@ class DnsRegisterLOC(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def coordinates(self):
         """
         :return: string with the phisical coordinates
@@ -1033,23 +1057,34 @@ class DnsRegisterLOC(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def latitude(self):
         """
         :return: latitude
-        :rtype: float
+        :rtype: (int, int, int, int) tuple specifying the degrees,
+    minutes, seconds, and milliseconds of the coordinate.
         """
         return self.__latitude
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def longitude(self):
         """
         :return: longitude
-        :rtype: float
+        :rtype: (int, int, int, int) tuple specifying the degrees,
+    minutes, seconds, and milliseconds of the coordinate.
         """
         return self.__longitude
+
+    #----------------------------------------------------------------------
+    @identity
+    def altitude(self):
+        """
+        :return: altitude
+        :rtype: float
+        """
+        return self.__altitude
 
 
 #------------------------------------------------------------------------------
@@ -1082,7 +1117,7 @@ class DnsRegisterMX(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def exchange(self):
         """
         :return: string with the name of exchange server.
@@ -1092,7 +1127,7 @@ class DnsRegisterMX(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def preference(self):
         """
         :return: integer with the preference
@@ -1147,7 +1182,7 @@ class DnsRegisterNAPTR(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def order(self):
         """
         :return: the order
@@ -1156,7 +1191,7 @@ class DnsRegisterNAPTR(DnsRegister):
         return self.__order
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def preference(self):
         """
         :return: the preference
@@ -1165,7 +1200,7 @@ class DnsRegisterNAPTR(DnsRegister):
         return self.__preference
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def regex(self):
         """
         :return: regular expression
@@ -1174,7 +1209,7 @@ class DnsRegisterNAPTR(DnsRegister):
         return self.__regex
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def replacement(self):
         """
         :return: The replacemente name
@@ -1183,7 +1218,7 @@ class DnsRegisterNAPTR(DnsRegister):
         return self.__replacement
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def service(self):
         """
         :return: service name
@@ -1215,7 +1250,7 @@ class DnsRegisterNS(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def target(self):
         """
         :return: The target server
@@ -1248,7 +1283,7 @@ class DnsRegisterNSAP(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def address(self):
         """
         :return: a NASP address
@@ -1280,7 +1315,7 @@ class DnsRegisterNSEC(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def next(self):
         """
         :return: the next server name
@@ -1327,7 +1362,7 @@ class DnsRegisterNSEC3(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def salt(self):
         """
         :return: the salt
@@ -1337,7 +1372,7 @@ class DnsRegisterNSEC3(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def iterations(self):
         """
         :return: the number of iterations
@@ -1347,7 +1382,7 @@ class DnsRegisterNSEC3(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def flags(self):
         """
         :return: the flags
@@ -1394,7 +1429,7 @@ class DnsRegisterNSEC3PARAM(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def salt(self):
         """
         :return: the salt
@@ -1404,7 +1439,7 @@ class DnsRegisterNSEC3PARAM(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def iterations(self):
         """
         :return: the number of iterations
@@ -1414,7 +1449,7 @@ class DnsRegisterNSEC3PARAM(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def flags(self):
         """
         :return: the flags
@@ -1446,7 +1481,7 @@ class DnsRegisterPTR(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def target(self):
         """
         :return: The target server
@@ -1472,8 +1507,10 @@ class DnsRegisterRP(DnsRegister):
         :type txt: str
         """
 
-        if not isinstance(target, basestring):
-            raise TypeError("Expected basestring, got '%s'" % type(target))
+        if not isinstance(mbox, basestring):
+            raise TypeError("Expected basestring, got '%s'" % type(mbox))
+        if not isinstance(txt, basestring):
+            raise TypeError("Expected basestring, got '%s'" % type(txt))
 
         self.__mbox             = mbox
         self.__txt             = txt
@@ -1483,7 +1520,7 @@ class DnsRegisterRP(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def mbox(self):
         """
         :return: The responsible person's mailbox as string format
@@ -1493,7 +1530,7 @@ class DnsRegisterRP(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def txt(self):
         """
         :return: The owner name of a node with TXT records, or the root name if no TXT records are associated with this RP.
@@ -1558,7 +1595,7 @@ class DnsRegisterRRSIG(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def type_covered(self):
         """
         :return: the rdata type this signature covers
@@ -1568,7 +1605,7 @@ class DnsRegisterRRSIG(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def labels(self):
         """
         :return: number of labels
@@ -1578,7 +1615,7 @@ class DnsRegisterRRSIG(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def original_ttl(self):
         """
         :return: the original TTL
@@ -1588,7 +1625,7 @@ class DnsRegisterRRSIG(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def expiration(self):
         """
         :return: signature expiration time
@@ -1598,13 +1635,21 @@ class DnsRegisterRRSIG(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def key_tag(self):
         """
         :return: The key tag
         :rtype: int
         """
         return self.__key_tag
+
+
+#------------------------------------------------------------------------------
+class DnsRegisterSIG(DnsRegisterRRSIG):
+    """
+    Register type 'RRSIG'
+    """
+    pass
 
 
 #------------------------------------------------------------------------------
@@ -1648,7 +1693,7 @@ class DnsRegisterSOA(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def mname(self):
         """
         :return: the SOA MNAME (master name) field
@@ -1658,7 +1703,7 @@ class DnsRegisterSOA(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def rname(self):
         """
         :return: the SOA RNAME (responsible name) field
@@ -1668,7 +1713,7 @@ class DnsRegisterSOA(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def refresh(self):
         """
         :return: The zone's refresh value (in seconds)
@@ -1678,7 +1723,7 @@ class DnsRegisterSOA(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def expire(self):
         """
         :return: The zone's expiration value (in seconds)
@@ -1715,7 +1760,7 @@ class DnsRegisterTXT(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def strings(self):
         """
         :return: list of the text strings
@@ -1752,7 +1797,7 @@ class DnsRegisterSPF(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def strings(self):
         """
         :return: list of the text strings
@@ -1803,7 +1848,7 @@ class DnsRegisterSRV(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def target(self):
         """
         :return: the target host name
@@ -1813,7 +1858,7 @@ class DnsRegisterSRV(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def priority(self):
         """
         :return: the priority
@@ -1823,7 +1868,7 @@ class DnsRegisterSRV(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def weight(self):
         """
         :return: the weight
@@ -1833,7 +1878,7 @@ class DnsRegisterSRV(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def port(self):
         """
         :return: the port of the service
@@ -1878,7 +1923,7 @@ class DnsRegisterWKS(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def address(self):
         """
         :return: the address
@@ -1888,7 +1933,7 @@ class DnsRegisterWKS(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def protocol(self):
         """
         :return: the protocol
@@ -1898,7 +1943,7 @@ class DnsRegisterWKS(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def bitmap(self):
         """
         :return: the bitmap
@@ -1931,7 +1976,7 @@ class DnsRegisterX25(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    @property
+    @identity
     def address(self):
         """
         :return: the PSDN address
