@@ -36,7 +36,7 @@ __all__ = ["pmap"]
 
 from thread import get_ident
 from threading import Semaphore, Thread
-
+from collections import Iterable
 
 #----------------------------------------------------------------------
 def pmap(func, *args, **kwargs):
@@ -58,14 +58,22 @@ def pmap(func, *args, **kwargs):
         >>> pmap(addition, [1, 2, 3, 4, 5], [2, 4, 6, 8, 10])
         [3, 6, 9, 12, 15]
 
+        >>> def printer(x, my_list):
+               print "%s - %s" (x, str(my_list))
+
+        >>> pmap(printer, "fixed_text", [1,2])
+        fixed_text - 1
+        fixed_text - 2
+
+
     .. warning: Unlike the built-in map() function, exceptions raised
                 by the callback function will be silently ignored.
 
     :param func: A function or any other executable object.
     :type func: callable
 
-    :param args: One or more iterables containing the parameters for each call.
-    :type args: iterable, iterable...
+    :param args: One or more iterables or simple params containing the parameters for each call.
+    :type args: simple_param, simple_param, iterable, iterable...
 
     :keyword pool_size: Maximum amount of concurrent threads. Defaults to 4.
     :type pool_size: int
@@ -94,6 +102,19 @@ def pmap(func, *args, **kwargs):
         data = [ (x,) for x in args[0] ]
     else:
         data = map(None, *args)
+
+        if all(isinstance(x, Iterable) for x in args):
+            data = map(None, *args)
+        else:
+            le = max(map(len, filter(lambda x: isinstance(x, Iterable), args)))
+            m_tmp_data = []
+            for y in args:
+                if not isinstance(y, Iterable):
+                    print y
+                    m_tmp_data.append(tuple([y for x in xrange(le)]))
+                else:
+                    m_tmp_data.append(y)
+            data = map(None, *m_tmp_data)
 
     # Create the task group.
     m_task_group = GolismeroTaskGroup(func, data)
@@ -195,7 +216,7 @@ class GolismeroTask(object):
         try:
 
             # Run the task.
-            x = self.__func( *self.__args )
+            x = self.__func(*self.__args)
 
             # Store the results.
             self.__output[self.__index] = x
