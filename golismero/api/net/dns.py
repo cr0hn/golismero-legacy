@@ -119,7 +119,7 @@ class DNS(object):
 
 
 	#----------------------------------------------------------------------
-	def get_a(self, host, nameservers=None):
+	def get_a(self, host, nameservers=None, also_CNAME=False):
 		"""
 		Function for resolving the A Record for a given host.
 
@@ -131,14 +131,31 @@ class DNS(object):
 		:param nameservers: nameserver to use.
 		:type nameservers: list(str)
 
+		:param also_CNAME: set this var to True if you want to return also the CNAME Registers returned by the query.
+		:tyep algo_CNAME: bool
+
 		:return: list with A registers.
 		:rtype: list(DnsRegisterA)
 		"""
-		return self._make_request("A", host, nameservers)
+		r = self._make_request("A", host, nameservers, auto_resolve=not also_CNAME)
+
+		# Get all the register: CNAME and A
+		if also_CNAME:
+			m_return         = []
+			if not isinstance(r, list):
+				m_return.extend(self._dnslib2register("ALL", r))
+			else:
+				m_return_extend = m_return.extend
+				for lr in r:
+					m_return_extend(self._dnslib2register("ALL", lr))
+
+			return m_return
+		else:
+			return r
 
 
 	#----------------------------------------------------------------------
-	def get_aaaa(self, host, nameservers=None):
+	def get_aaaa(self, host, nameservers=None, also_CNAME=False):
 		"""
 		Function for resolving the A Record for a given host.
 
@@ -150,10 +167,28 @@ class DNS(object):
 		:param nameservers: nameserver to use.
 		:type nameservers: list(str)
 
+		:param also_CNAME: set this var to True if you want to return also the CNAME Registers returned by the query.
+		:tyep algo_CNAME: bool
+
 		:return: list with AAAA registers
 		:rtype: list(DnsRegisterAAAA)
 		"""
-		return self._make_request("AAAA", host, nameservers)
+		r = self._make_request("AAAA", host, nameservers, auto_resolve=not also_CNAME)
+
+		if also_CNAME:
+			# Get all the register: CNAME and A
+			m_return         = []
+			if not isinstance(r, list):
+				m_return.extend(self._dnslib2register("ALL", r))
+			else:
+				m_return_extend = m_return.extend
+				for lr in r:
+					m_return_extend(self._dnslib2register("ALL", lr))
+
+
+			return m_return
+		else:
+			return r
 
 
 	#----------------------------------------------------------------------
@@ -756,7 +791,7 @@ class DNS(object):
 
 
 	#----------------------------------------------------------------------
-	def _make_request(self, register_type, host, nameservers=None):
+	def _make_request(self, register_type, host, nameservers=None, auto_resolve=True):
 		"""
 		Make a request, using dnslib, and return an unified type of data
 		RegisterXXXX.
@@ -769,6 +804,9 @@ class DNS(object):
 
 		:param nameservers: list with a custom name servers
 		:type nameservers: list(str)
+
+		:param auto_resolve: configure this function to transform de dnslib register to the golismero register.
+		:type auto_resolve: bool
 
 		:return: a list with the DnsRegisters
 		:type: list(DnsRegister)
@@ -801,6 +839,8 @@ class DNS(object):
 			answer = m_query_obj.query(host, register_type)
 		except Exception, e:
 			return []
-			#raise NetworkException("Error while make the request: " + e)
 
-		return self._dnslib2register(register_type, answer)
+		if auto_resolve:
+			return self._dnslib2register(register_type, answer)
+		else:
+			return answer
