@@ -83,7 +83,26 @@ def test_zone_transfer():
     print d.zone_transfer("173.194.34.224")
     print d.zone_transfer("zonetransfer.me", ["ns12.zoneedit.com"])
 
+#----------------------------------------------------------------------
+def test_a_aaaa():
+    d = DNS()
+
+    HOSTS = ["aaaa.terra.es"]
+
+    for h in HOSTS:
+        r = d.get_a(h, also_CNAME=True)
+
+        for kk in r:
+
+            if kk.type == "CNAME":
+                print kk.target
+            if kk.type == "A":
+                print kk.address
+
+        print ""
+
 
 if __name__ == "__main__":
     test_all_registers()
     test_zone_transfer()
+    test_a_aaaa()
