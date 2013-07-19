@@ -524,7 +524,7 @@ class DnsRegisterAFSDB(DnsRegister):
 
 	@property
 	def discovered(self):
-		return Domain(self.hostname)
+		return [Domain(self.hostname)]
 
 #------------------------------------------------------------------------------
 class DnsRegisterCERT(DNSRegisterAlgorithm):
@@ -694,7 +694,7 @@ class DnsRegisterCNAME(DnsRegister):
 
 	@property
 	def discovered(self):
-		return Domain(self.target)
+		return [Domain(self.target)]
 
 #------------------------------------------------------------------------------
 class DnsRegisterDNSKEY(DNSRegisterAlgorithm):
@@ -1153,7 +1153,7 @@ class DnsRegisterMX(DnsRegister):
 
 	@property
 	def discovered(self):
-		return Domain(self.exchange)
+		return [Domain(self.exchange)]
 
 #------------------------------------------------------------------------------
 class DnsRegisterNAPTR(DnsRegister):
@@ -1247,7 +1247,7 @@ class DnsRegisterNAPTR(DnsRegister):
 
 	@property
 	def discovered(self):
-		return Domain(self.replacement)
+		return [Domain(self.replacement)]
 
 
 #------------------------------------------------------------------------------
@@ -1284,7 +1284,7 @@ class DnsRegisterNS(DnsRegister):
 
 	@property
 	def discovered(self):
-		return Domain(self.target)
+		return [Domain(self.target)]
 
 #------------------------------------------------------------------------------
 class DnsRegisterNSAP(DnsRegister):
@@ -1352,7 +1352,7 @@ class DnsRegisterNSEC(DnsRegister):
 
 	@property
 	def discovered(self):
-		return Domain(self.next)
+		return [Domain(self.next)]
 
 #------------------------------------------------------------------------------
 class DnsRegisterNSEC3(DNSRegisterAlgorithm):
@@ -1522,7 +1522,7 @@ class DnsRegisterPTR(DnsRegister):
 
 	@property
 	def discovered(self):
-		return Domain(self.target)
+		return [Domain(self.target)]
 
 #------------------------------------------------------------------------------
 class DnsRegisterRP(DnsRegister):
@@ -1939,7 +1939,7 @@ class DnsRegisterSRV(DnsRegister):
 
 	@property
 	def discovered(self):
-		return Domain(self.target)
+		return [Domain(self.target)]
 
 #------------------------------------------------------------------------------
 class DnsRegisterWKS(DnsRegister):
