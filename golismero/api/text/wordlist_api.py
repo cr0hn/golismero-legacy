@@ -365,6 +365,10 @@ class AdvancedListWordlist(AbstractWordlist):
 
 
     #----------------------------------------------------------------------
+    def __len__(self):
+        return len(self.__wordlist)
+
+    #----------------------------------------------------------------------
     def binary_search(self, word, low_pos=0, high_pos=None):
         i = bisect.bisect_left(self.__wordlist, word, lo=low_pos, hi=high_pos if high_pos else len(high_pos))
 
@@ -652,6 +656,11 @@ class AdvancedDicWordlist(object):
     #----------------------------------------------------------------------
     def __iter__(self):
         return self.__wordlist.__iter__
+
+
+    #----------------------------------------------------------------------
+    def __len__(self):
+        return len(self.__wordlist   )
 
 
     #----------------------------------------------------------------------
