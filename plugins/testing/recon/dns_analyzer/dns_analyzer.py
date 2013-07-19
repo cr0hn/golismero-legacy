@@ -30,14 +30,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-from golismero.api.data.resource.domain import Domain
+
 from golismero.api.logger import Logger
-from golismero.api.plugin import TestingPlugin
-from golismero.api.text.wordlist_api import WordListAPI
+from golismero.api.parallel import pmap
 from golismero.api.net.dns import DNS
+from golismero.api.data import discard_data
+from golismero.api.net.web_utils import is_in_scope
+from golismero.api.plugin import TestingPlugin
+from golismero.api.data.resource.domain import Domain
+from golismero.api.text.wordlist_api import WordListAPI
 
-
-
+#--------------------------------------------------------------------------
+#
+# DNS analyzer
+#
+#--------------------------------------------------------------------------
 class DNSAnalizer(TestingPlugin):
 	"""
 	Find subdomains
@@ -57,10 +64,9 @@ class DNSAnalizer(TestingPlugin):
 		# Checks if the hostname has been already processed
 		d = None
 		if not self.state.check(m_domain):
-			print "AAAA"
-
 			d = main_dns_analyzer(m_domain)
 
+			# Set the domain parsed
 			self.state.set(m_domain, True)
 
 		return d
@@ -70,73 +76,7 @@ def main_dns_analyzer(base_domain):
 	"""
 	Looking for new domains
 	"""
-
-	get_subdomains_bruteforcer(base_domain, [])
-
-#----------------------------------------------------------------------
-def get_subdomains_bruteforcer(base_domain, discovered_domains):
-	"""
-	Try to discover subdomains using bruteforce.
-
-	To try to make as less as possible connections, discovered_domains
-	contains a list with already discovered domains.
-
-	:param base_domain: string with de domain to make the test.
-	:type base_domain: str
-
-	:param discovered_domains: List with already found domains.
-	:type discovered_domains: list(str)
-	"""
-	m_subdomains = WordListAPI.get_advanced_wordlist_as_list("subs_small.txt")
-
-	# Select only subdomains that are not already processed.
-	m_non_repeated_domains = [d for d in m_subdomains if d not in discovered_domains]
-
-	m_non_repeated_domains = ["kkkk", "jjjj"]
-
-	# Manager for make DNS queries.
-	m_dom_manager = DNS()
-
-	# The results
-	m_domains                  = set()
-	m_domains_add              = m_domains.add
-	m_domains_allready         = []
-
-	m_ips                      = set()
-	m_ips_add                  = m_ips.add
-	m_ips_already              = []
-
-	for l_d in m_non_repeated_domains:
-		l_domain = "%s.%s" % (l_d, base_domain)
-
-		Logger.log_more_verbose("Looking for subdomain: %s" % l_domain)
-
-		l_oks = m_dom_manager.get_a(l_domain, also_CNAME=True)
-
-		if l_oks:
-			for dom in l_oks:
-				# Domains
-				if dom.type == "CNAME":
-					if not dom.target in m_domains_allready:
-						m_domains_allready.append(dom.target)
-						m_domains.add(dom)
-
-				# IPs
-				if dom.type == "A":
-					if dom.address not in m_ips_already:
-						m_ips_already.append(dom.address)
-						m_ips.add(dom)
-
-	#Logger.log_error_more_verbose("!! Subdomain '%s' discovereds: " % ','.join(m_domains))
-	#Logger.log_error_more_verbose("!! IPs '%s' discovereds: " % ','.join(m_ips))
-
-	print "###"
-	print m_domains
-	print "@@@@"
-	print m_ips
-	print "----"
-
-	print m_domains
+	return get_subdomains_bruteforcer(base_domain)
 
 
 #----------------------------------------------------------------------
@@ -153,5 +93,110 @@ def get_reverse_lookup():
 	""""""
 
 
+
+
+
+
+
+#--------------------------------------------------------------------------
+#
+# DNS Bruteforcer
+#
+#--------------------------------------------------------------------------
+class DNSBruteforcer(TestingPlugin):
+	"""
+	Find subdomains bruteforzing
+	"""
+
+
+	#----------------------------------------------------------------------
+	def get_accepted_info(self):
+		return [Domain]
+
+
+	#----------------------------------------------------------------------
+	def recv_info(self, info):
+
+		m_domain = info.hostname
+
+		# Checks if the hostname has been already processed
+		m_return = None
+		if not self.state.check(m_domain):
+			#
+			# Looking for
+			#
+			m_subdomains = WordListAPI.get_advanced_wordlist_as_list("subs_small.txt")
+			m_subdomains = [m_subdomains[x] for x in xrange(500)]
+			# Run parallely
+			r = pmap(_get_subdomains_bruteforcer, m_domain, m_subdomains, pool_size=10)
+
+			#
+			# Remove repeated
+			#
+
+			# The results
+			m_domains                  = set()
+			m_domains_add              = m_domains.add
+			m_domains_allready         = []
+
+			m_ips                      = set()
+			m_ips_add                  = m_ips.add
+			m_ips_already              = []
+
+			for doms in r:
+				for dom in doms:
+					# Domains
+					if dom.type == "CNAME":
+						if not dom.target in m_domains_allready:
+							m_domains_allready.append(dom.target)
+							if is_in_scope(dom.target):
+								m_domains.add(dom)
+							else:
+								discard_data(dom)
+
+					# IPs
+					if dom.type == "A":
+						if dom.address not in m_ips_already:
+							m_ips_already.append(dom.address)
+							m_ips.add(dom)
+
+			# Unify
+			m_domains.update(m_ips)
+
+			m_return = m_domains
+
+			print m_domains_allready
+
+			# Set the domain as processed
+			self.state.set(m_domain, True)
+
+		return m_return
+
+
+#----------------------------------------------------------------------
+def _get_subdomains_bruteforcer(base_domain, subdomain):
+	"""
+	Try to discover subdomains using bruteforce. This function is
+	prepared to run parallely.
+
+	To try to make as less as possible connections, discovered_domains
+	contains a list with already discovered domains.
+
+	:param base_domain: string with de domain to make the test.
+	:type base_domain: str
+
+	:param subdomain: string with the domain to process.
+	:type subdomain: str
+	"""
+	# Manager for make DNS queries.
+	m_dom_manager = DNS()
+
+	m_domain = "%s.%s" % (subdomain, base_domain)
+
+	Logger.log_more_verbose("Looking for subdomain: %s" % m_domain)
+
+	l_oks = m_dom_manager.get_a(m_domain, also_CNAME=True)
+
+	return l_oks
 
 
