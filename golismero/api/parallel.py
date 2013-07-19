@@ -101,19 +101,17 @@ def pmap(func, *args, **kwargs):
     if len(args) == 1:
         data = [ (x,) for x in args[0] ]
     else:
-        data = map(None, *args)
-
-        if all(isinstance(x, Iterable) for x in args):
+        if all(not isinstance(x, basestring) or getattr(x, '__iter__', False) for x in args):
             data = map(None, *args)
         else:
-            le = max(map(len, filter(lambda x: isinstance(x, Iterable), args)))
+            le = max(map(len, filter(lambda x: not isinstance(x, basestring) or getattr(x, '__iter__', False), args)))
             m_tmp_data = []
             for y in args:
-                if not isinstance(y, Iterable):
-                    print y
-                    m_tmp_data.append(tuple([y for x in xrange(le)]))
-                else:
+                if not isinstance(y, basestring) or getattr(y, '__iter__', False):
                     m_tmp_data.append(y)
+                else:
+                    m_tmp_data.append(tuple([y for x in xrange(le)]))
+
             data = map(None, *m_tmp_data)
 
     # Create the task group.
