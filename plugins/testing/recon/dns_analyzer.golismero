@@ -1,6 +1,7 @@
 [Core]
 Name = DNS Bruteforcer
 Module = dns_analyzer/dns_analyzer.py
+Class = DNSBruteforcer
 
 [Documentation]
 Description = Try to find as much as possible information of DNS and hidden subdomains
