@@ -55,7 +55,7 @@ from dns.dnssec import algorithm_to_text
 #
 class DNS(object):
 
-	REQUEST_TIMEOUT = 3.0 # In seconds
+	REQUEST_TIMEOUT = 2.0 # In seconds
 
 
 	#----------------------------------------------------------------------
