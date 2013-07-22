@@ -41,6 +41,8 @@ import dns.reversename
 import socket
 from dns.zone import *
 from dns.dnssec import algorithm_to_text
+from netaddr import IPAddress
+from netaddr.core import AddrFormatError
 
 
 #------------------------------------------------------------------------------
@@ -283,7 +285,8 @@ class DNS(object):
 	#----------------------------------------------------------------------
 	def get_ptr(self, ipaddress, nameservers=None):
 		"""
-		Function for resolving PTR Record given it's IPv4 or IPv6 Address.
+		Function for resolving PTR Record given it's IPv4 or IPv6 Address got
+		the associated domain.
 
 		:param ipaddress: IP address to make the request.
 		:type ipaddress: str
@@ -294,7 +297,30 @@ class DNS(object):
 		:return: list with PTR registers
 		:rtype: list(DnsRegisterPTR)
 		"""
-		return self._make_request("PTR", ipaddress, nameservers)
+		if not isinstance(ipaddress, basestring):
+			raise TypeError("Expected basestring, got '%s'" % type(ipaddress))
+
+		# Detect the IP address version
+		m_ipobj = None
+		try:
+			m_ipobj = IPAddress(ipaddress)
+		except AddrFormatError:
+			raise ValueError("Wrong IP address")
+
+		# Make the query
+		m_ip = str(dns.reversename.from_address(ipaddress))
+
+		# Get the IPs
+		m_return      = None
+		if m_ip:
+			if m_ipobj.version == "4":
+				m_name = m_ip.replace(".in-addr.arpa.", "")
+			else:
+				m_name = m_ip.replace("ip6.arpa.", "")
+
+			return self._make_request("PTR", m_name, nameservers)
+		else:
+			return []
 
 
 	#----------------------------------------------------------------------
