@@ -118,10 +118,23 @@ def test_pmap_delays():
     test(8)
     assert t_list == enumerate()
 
+# Tests the parallel with long data input
+def test_long_data_input():
+    print "Testing parallel with long data input"
+
+    def test(x):
+        print x
+
+    pmap(test, range(1005))
+
+    print "Ended"
+
+
 
 # Run all tests from the command line.
 if __name__ == "__main__":
-    test_pmap()
-    test_pmap_multi()
-    test_pmap_errors()
-    test_pmap_delays()
+    #test_pmap()
+    #test_pmap_multi()
+    #test_pmap_errors()
+    #test_pmap_delays()
+    test_long_data_input()
