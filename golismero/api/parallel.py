@@ -101,18 +101,8 @@ def pmap(func, *args, **kwargs):
     if len(args) == 1:
         data = [ (x,) for x in args[0] ]
     else:
-        if all(not isinstance(x, basestring) or getattr(x, '__iter__', False) for x in args):
-            data = map(None, *args)
-        else:
-            le = max(map(len, filter(lambda x: not isinstance(x, basestring) or getattr(x, '__iter__', False), args)))
-            m_tmp_data = []
-            for y in args:
-                if not isinstance(y, basestring) or getattr(y, '__iter__', False):
-                    m_tmp_data.append(y)
-                else:
-                    m_tmp_data.append(tuple([y for x in xrange(le)]))
+        data = map(None, *args)
 
-            data = map(None, *m_tmp_data)
 
     # Create the task group.
     m_task_group = GolismeroTaskGroup(func, data)
