@@ -101,8 +101,21 @@ def test_a_aaaa():
 
         print ""
 
+#----------------------------------------------------------------------
+def test_ptr():
+    """
+    Try to make a inverse resolution
+    """
+    ips = ["173.194.34.197"] # google.com
+    d   = DNS()
+
+    for ip in ips:
+        for t in d.get_ptr(ip):
+            print t.target
+
 
 if __name__ == "__main__":
     test_all_registers()
     test_zone_transfer()
     test_a_aaaa()
+    test_ptr()
