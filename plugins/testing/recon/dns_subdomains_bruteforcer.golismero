@@ -1,10 +1,10 @@
 [Core]
-Name = DNS analyzer
+Name = DNS subdomain bruteforcer
 Module = dns_analyzer/dns_analyzer.py
-Class = DNSAnalizer
+Class = DNSBruteforcer
 
 [Documentation]
-Description = Try to find as much as possible information of DNS and hidden subdomains
+Description = Using bruteforcer, try to find hidden subdomains
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/cr0hn/golismero/
