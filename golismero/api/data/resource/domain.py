@@ -126,7 +126,7 @@ class Domain(Resource):
     @property
     def discovered(self):
         domain = self.name
-        result = [ IP(address, domain) for address in self.addresses ]
+        result = [ IP(address) for address in self.addresses ]
         subdomain, domain, suffix = split_hostname(domain)
         if subdomain:
             prefix = ".".join( (domain, suffix) )
