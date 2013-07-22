@@ -944,6 +944,7 @@ class HTTPAnalyzer(object):
             "x-powered-by"                 : 3,
             "options-allow"                : 1,
             "options-public"               : 2,
+            "options-delimiter"            : 2
         }
 
         self.__debug = debug

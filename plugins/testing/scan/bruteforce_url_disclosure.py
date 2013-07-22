@@ -36,7 +36,7 @@ from golismero.api.data.vulnerability.information_disclosure.url_disclosure impo
 from golismero.api.logger import Logger
 from golismero.api.net import NetworkException
 from golismero.api.net.http import HTTP
-from golismero.api.net.web_utils import DecomposedURL
+from golismero.api.net.web_utils import DecomposedURL, is_in_scope
 from golismero.api.text.matching_analyzer import MatchingAnalyzer, HTTP_response_headers_analyzer
 from golismero.api.text.wordlist_api import WordListAPI
 from golismero.api.text.text_utils import generate_random_string
@@ -129,7 +129,7 @@ class ParallelBruter(threading.Thread):
                             discard_data(p)
 
                     # Append for analyze and display info if is accepted
-                    if self.__results.append(p.raw_content,url=l_url,risk = severity_vectors[m_name]):
+                    if self.__results.append(p.raw_response,url=l_url,risk = severity_vectors[m_name]):
                         Logger.log_more_verbose("Bruteforcer - Discovered partial url: '%s'!!" % l_url)
 
 
@@ -309,6 +309,9 @@ def analyze_urls(info, urls_to_test):
 
     # Local use of URL
     m_url         = info.url
+
+    if not is_in_scope(m_url):
+        return
 
     # Determine the HTTP Method
     m_http_method = get_http_method(m_url)

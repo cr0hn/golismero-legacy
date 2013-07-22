@@ -30,7 +30,7 @@ from golismero.api.data import discard_data
 from golismero.api.data.resource.baseurl import BaseUrl
 from golismero.api.data.resource.url import Url
 from golismero.api.logger import Logger
-from golismero.api.net import NetworkException
+from golismero.api.net import NetworkException, NetworkOutOfScope
 from golismero.api.net.http import HTTP
 from golismero.api.net.web_utils import download, generate_error_page_url, fix_url, is_in_scope
 from golismero.api.plugin import TestingPlugin
@@ -98,6 +98,10 @@ class Robots(TestingPlugin):
             p = download(m_url_robots_txt, self.check_download)
         except NetworkException, e:
             Logger.log_more_verbose("Robots - value error while processing: '%s'. Error: %s" % (m_url_robots_txt, e.message))
+            return
+        except NetworkOutOfScope:
+            Logger.log_more_verbose("Robots - Url '%s' is out of scope" % (m_url_robots_txt))
+            return
 
         # Check for errors
         if not p:
@@ -193,7 +197,10 @@ class Robots(TestingPlugin):
             for l_url in set(m_discovered_urls):
                 l_url = fix_url(l_url, m_url)
                 if is_in_scope(l_url):
-                    l_p = HTTP.get_url(l_url, callback=self.check_response)
+                    try:
+                        l_p = HTTP.get_url(l_url, callback=self.check_response)
+                    except NetworkException:
+                        continue
                     if l_p:
                         m_result = Url(l_url, referer=m_url)
                         m_result.add_information(l_p)
