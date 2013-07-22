@@ -34,11 +34,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.logger import Logger
 from golismero.api.parallel import pmap
 from golismero.api.net.dns import DNS
+from golismero.api.data.information.dns import DnsRegister
 from golismero.api.data import discard_data
 from golismero.api.net.web_utils import is_in_scope
 from golismero.api.plugin import TestingPlugin
 from golismero.api.data.resource.domain import Domain
 from golismero.api.text.wordlist_api import WordListAPI
+from golismero.api.data import discard_data
+from functools import partial
 
 #--------------------------------------------------------------------------
 #
@@ -46,55 +49,47 @@ from golismero.api.text.wordlist_api import WordListAPI
 #
 #--------------------------------------------------------------------------
 class DNSAnalizer(TestingPlugin):
-	"""
-	Find subdomains
-	"""
+    """
+    Find subdomains
+    """
 
 
-	#----------------------------------------------------------------------
-	def get_accepted_info(self):
-		return [Domain]
+    #----------------------------------------------------------------------
+    def get_accepted_info(self):
+        return [Domain]
 
 
-	#----------------------------------------------------------------------
-	def recv_info(self, info):
+    #----------------------------------------------------------------------
+    def recv_info(self, info):
 
-		m_domain = info.hostname
+        m_domain = info.hostname
 
-		# Checks if the hostname has been already processed
-		d = None
-		if not self.state.check(m_domain):
-			d = main_dns_analyzer(m_domain)
+        # Checks if the hostname has been already processed
+        m_return = None
+        if not self.state.check(m_domain):
+            Logger.log_more_verbose("starting DNS analyzer plugin")
+            d        = DNS()
+            m_return = []
 
-			# Set the domain parsed
-			self.state.set(m_domain, True)
+            # Send information status
+            self.update_status(progress=0.19, text="Making DNS zone transfer")
 
-		return d
+            # Make the zone transfer
+            m_return.extend(d.zone_transfer(m_domain))
 
-#----------------------------------------------------------------------
-def main_dns_analyzer(base_domain):
-	"""
-	Looking for new domains
-	"""
-	return get_subdomains_bruteforcer(base_domain)
+            for l_type in DnsRegister.DNS_TYPES:
+                self.update_status(progress=0.03, text="Making '%s' DNS query" % l_type)
+                m_return.extend(d.resolve(m_domain, l_type))
 
+            # Set the domain parsed
+            self.state.set(m_domain, True)
 
-#----------------------------------------------------------------------
-def get_all_registers():
-	""""""
+            # Add the information to the host
+            map(info.add_information, m_return)
 
+            Logger.log_more_verbose("Ending DNS analyzer plugin. Found %s registers" % str(len(m_return)))
 
-#----------------------------------------------------------------------
-def get_zone_transfer():
-	""""""
-
-#----------------------------------------------------------------------
-def get_reverse_lookup():
-	""""""
-
-
-
-
+        return m_return
 
 
 
@@ -104,99 +99,110 @@ def get_reverse_lookup():
 #
 #--------------------------------------------------------------------------
 class DNSBruteforcer(TestingPlugin):
-	"""
-	Find subdomains bruteforzing
-	"""
+    """
+    Find subdomains bruteforzing
+    """
 
 
-	#----------------------------------------------------------------------
-	def get_accepted_info(self):
-		return [Domain]
+    #----------------------------------------------------------------------
+    def get_accepted_info(self):
+        return [Domain]
 
 
-	#----------------------------------------------------------------------
-	def recv_info(self, info):
+    #----------------------------------------------------------------------
+    def recv_info(self, info):
 
-		m_domain = info.hostname
+        m_domain = info.hostname
 
-		# Checks if the hostname has been already processed
-		m_return = None
-		if not self.state.check(m_domain):
-			#
-			# Looking for
-			#
-			m_subdomains = WordListAPI.get_advanced_wordlist_as_list("subs_small.txt")
-			m_subdomains = [m_subdomains[x] for x in xrange(500)]
-			# Run parallely
-			r = pmap(_get_subdomains_bruteforcer, m_domain, m_subdomains, pool_size=10)
+        # Checks if the hostname has been already processed
+        m_return = None
+        if not self.state.check(m_domain):
+            Logger.log_more_verbose("starting DNS bruteforcer plugin")
+            #
+            # Looking for
+            #
+            m_subdomains = WordListAPI.get_advanced_wordlist_as_list("subs_small.txt")
+            m_subdomains = [m_subdomains[x] for x in xrange(500)]
 
-			#
-			# Remove repeated
-			#
+            # var used for update the plugin status
+            m_num_probes = len(m_subdomains)
 
-			# The results
-			m_domains                  = set()
-			m_domains_add              = m_domains.add
-			m_domains_allready         = []
+            # Run parallely
+            func_with_static_field = partial(_get_subdomains_bruteforcer, m_domain)
+            r = pmap(func_with_static_field, m_subdomains, pool_size=10)
 
-			m_ips                      = set()
-			m_ips_add                  = m_ips.add
-			m_ips_already              = []
+            #
+            # Remove repeated
+            #
 
-			for doms in r:
-				for dom in doms:
-					# Domains
-					if dom.type == "CNAME":
-						if not dom.target in m_domains_allready:
-							m_domains_allready.append(dom.target)
-							if is_in_scope(dom.target):
-								m_domains.add(dom)
-							else:
-								discard_data(dom)
+            # The results
+            m_domains                  = set()
+            m_domains_add              = m_domains.add
+            m_domains_allready         = []
 
-					# IPs
-					if dom.type == "A":
-						if dom.address not in m_ips_already:
-							m_ips_already.append(dom.address)
-							m_ips.add(dom)
+            m_ips                      = set()
+            m_ips_add                  = m_ips.add
+            m_ips_already              = []
 
-			# Unify
-			m_domains.update(m_ips)
+            if r:
+                for doms in r:
+                    for dom in doms:
+                        # Domains
+                        if dom.type == "CNAME":
+                            if not dom.target in m_domains_allready:
+                                m_domains_allready.append(dom.target)
+                                if is_in_scope(dom.target):
+                                    m_domains.add(dom)
+                                else:
+                                    discard_data(dom)
 
-			m_return = m_domains
+                        # IPs
+                        if dom.type == "A":
+                            if dom.address not in m_ips_already:
+                                m_ips_already.append(dom.address)
+                                m_ips.add(dom)
 
-			print m_domains_allready
+                # Unify
+                m_domains.update(m_ips)
 
-			# Set the domain as processed
-			self.state.set(m_domain, True)
+                m_return = m_domains
 
-		return m_return
+
+                # Add the information to the host
+                map(info.add_information, m_return)
+
+            # Set the domain as processed
+            self.state.set(m_domain, True)
+
+            Logger.log_more_verbose("Ending DNS analyzer plugin. Found %s subdomains" % str(len(m_return)))
+
+
+        return m_return
 
 
 #----------------------------------------------------------------------
 def _get_subdomains_bruteforcer(base_domain, subdomain):
-	"""
-	Try to discover subdomains using bruteforce. This function is
-	prepared to run parallely.
+    """
+    Try to discover subdomains using bruteforce. This function is
+    prepared to run parallely.
 
-	To try to make as less as possible connections, discovered_domains
-	contains a list with already discovered domains.
+    To try to make as less as possible connections, discovered_domains
+    contains a list with already discovered domains.
 
-	:param base_domain: string with de domain to make the test.
-	:type base_domain: str
+    :param base_domain: string with de domain to make the test.
+    :type base_domain: str
 
-	:param subdomain: string with the domain to process.
-	:type subdomain: str
-	"""
-	# Manager for make DNS queries.
-	m_dom_manager = DNS()
+    :param subdomain: string with the domain to process.
+    :type subdomain: str
+    """
+    # Manager for make DNS queries.
+    m_dom_manager = DNS()
 
-	m_domain = "%s.%s" % (subdomain, base_domain)
+    m_domain = "%s.%s" % (subdomain, base_domain)
 
-	Logger.log_more_verbose("Looking for subdomain: %s" % m_domain)
+    Logger.log_more_verbose("Looking for subdomain: %s" % m_domain)
 
-	l_oks = m_dom_manager.get_a(m_domain, also_CNAME=True)
+    l_oks = m_dom_manager.get_a(m_domain, also_CNAME=True)
 
-	return l_oks
-
+    return l_oks
 
