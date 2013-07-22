@@ -35,7 +35,8 @@ __all__ = ["IP"]
 from . import Resource
 from .. import identity
 from ...net.web_utils import is_in_scope
-
+from netaddr import IPAddress
+from netaddr.core import AddrFormatError
 
 #------------------------------------------------------------------------------
 class IP(Resource):
@@ -47,21 +48,30 @@ class IP(Resource):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, address, domain):
+    def __init__(self, address, version="auto"):
         """
         :param address: IPv4 address.
         :type address: str
 
-        :param domain: Domain associated to this IP address. Used to determine scope.
-        :type domain: str
+        :param version: version of IP protocolo: 4, 6 or auto to detect the version.
+        :param type: str(4|6|auto)
         """
+        if isinstance(version, basestring):
+            if version == "auto":
+                try:
+                    self.__version =  IPAddress(address).version
+                except AddrFormatError:
+                    raise ValueError("Wrong IP address")
+            elif version not in ("4", "6"):
+                raise ValueError("Valid versions for IP are: 4 or 6")
+            else:
+                self.__version = version
+        else:
+            raise TypeError("Expected basestring, got '%s'" % type(version))
 
-        # IPv4 address.
-        # TODO: sanitize the IP addresses
+
+        # IP address.
         self.__address = address
-
-        # Domain name.
-        self.__domain = domain
 
         # Parent constructor.
         super(IP, self).__init__()
@@ -76,11 +86,14 @@ class IP(Resource):
     def __repr__(self):
         return "<IP address=%r>" % self.address
 
-
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.domain and is_in_scope(self.domain)
-
+    @property
+    def version(self):
+        """
+        :return: version of IP protocolo: 4 or 6.
+        :rtype: str(4|6)
+        """
+        return self.__version
 
     #----------------------------------------------------------------------
     @identity
@@ -90,13 +103,3 @@ class IP(Resource):
         :rtype: str
         """
         return self.__address
-
-
-    #----------------------------------------------------------------------
-    @identity
-    def domain(self):
-        """
-        :return: Domain name associated to this IP address. Used to determine scope.
-        :rtype: str
-        """
-        return self.__domain
