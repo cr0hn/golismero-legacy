@@ -91,10 +91,11 @@ class Robots(TestingPlugin):
         m_url = info.url
         m_url_robots_txt = urljoin(m_url, 'robots.txt')
 
-        Logger.log_verbose("Robots - looking for robots.txt in URL: '%s'" % m_url_robots_txt)
-
         p = None
         try:
+            # Update status
+            self.update_status(0.40, "Robots - looking for robots.txt in URL: '%s'" % m_url_robots_txt)
+
             p = download(m_url_robots_txt, self.check_download)
         except NetworkException, e:
             Logger.log_more_verbose("Robots - value error while processing: '%s'. Error: %s" % (m_url_robots_txt, e.message))
@@ -131,7 +132,14 @@ class Robots(TestingPlugin):
         m_discovered_urls        = []
         m_discovered_urls_append = m_discovered_urls.append
         tmp_discovered           = None
-        for m_line in m_robots_text.splitlines():
+        m_lines                  = m_robots_text.splitlines()
+
+        # Var used to update the status
+        m_lines_number           = float(len(m_lines))
+
+        for i, m_line in enumerate(m_lines, start=1):
+            # Update status
+            self.update_status_step(i, m_lines_number, 0.6, "checking URL %s/%s" % (str(i), str(m_lines_number)))
 
             # Remove comments
             m_octothorpe = m_line.find('#')
