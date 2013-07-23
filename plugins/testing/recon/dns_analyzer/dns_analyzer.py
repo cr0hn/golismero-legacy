@@ -195,20 +195,20 @@ class DNSBruteforcer(TestingPlugin):
         # Checks if the hostname has been already processed
         m_return = None
         if not self.state.check(m_domain):
+
             Logger.log_more_verbose("starting DNS bruteforcer plugin")
             #
             # Looking for
             #
             m_subdomains = WordListAPI.get_advanced_wordlist_as_list("subs_small.txt")
-            m_subdomains = [m_subdomains[x] for x in xrange(500)]
 
             # var used for update the plugin status
             m_num_probes = len(m_subdomains)
 
             # Run parallely
-            func_with_static_field = partial(_get_subdomains_bruteforcer, m_domain)
+            func_with_static_field = partial(_get_subdomains_bruteforcer, m_domain, self.update_status)
             r = pmap(func_with_static_field, m_subdomains, pool_size=10)
-
+            print m_domain
             #
             # Remove repeated
             #
@@ -259,7 +259,7 @@ class DNSBruteforcer(TestingPlugin):
 
 
 #----------------------------------------------------------------------
-def _get_subdomains_bruteforcer(base_domain, subdomain):
+def _get_subdomains_bruteforcer(base_domain, updater_func, subdomain):
     """
     Try to discover subdomains using bruteforce. This function is
     prepared to run parallely.
@@ -270,6 +270,9 @@ def _get_subdomains_bruteforcer(base_domain, subdomain):
     :param base_domain: string with de domain to make the test.
     :type base_domain: str
 
+    :param updater_func: function to update the state of the process.
+    :type updater_func: update_status
+
     :param subdomain: string with the domain to process.
     :type subdomain: str
     """
@@ -277,6 +280,7 @@ def _get_subdomains_bruteforcer(base_domain, subdomain):
     m_domain = "%s.%s" % (subdomain, base_domain)
 
     Logger.log_more_verbose("Looking for subdomain: %s" % m_domain)
+    updater_func(text="Looking for subdomain: %s" % m_domain)
 
     l_oks = DNS.get_a(m_domain, also_CNAME=True)
 
