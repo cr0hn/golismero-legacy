@@ -548,6 +548,10 @@ class Audit (object):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
+        # Get the database and the plugin manager.
+        database = self.database
+        pluginManager = self.orchestrator.pluginManager
+
         # Is it data?
         if message.message_type == MessageType.MSG_TYPE_DATA:
 
@@ -565,7 +569,7 @@ class Audit (object):
                     continue
 
                 # Is the data new?
-                if not self.database.has_data_key(data.identity):
+                if not database.has_data_key(data.identity):
 
                     # Increase the number of links followed.
                     if data.data_type == Data.TYPE_RESOURCE and data.resource_type == Resource.RESOURCE_URL:
@@ -591,17 +595,26 @@ class Audit (object):
 
                 # Add the data to the database.
                 # This automatically merges the data if it already exists.
-                self.database.add_data(data)
+                database.add_data(data)
 
-                # If the plugin is not recursive, mark the data as already processed by it.
-                plugin_name = message.plugin_name
-                if plugin_name:
-                    plugin_info = self.orchestrator.pluginManager.get_plugin_by_name(plugin_name)
-                    if plugin_info.recursive:
-                        self.database.mark_plugin_finished(data.identity, plugin_name)
+                # If the data is in scope...
+                if data.is_in_scope():
 
-                # The data will be sent to the plugins.
-                data_for_plugins.append(data)
+                    # If the plugin is not recursive, mark the data as already processed by it.
+                    plugin_name = message.plugin_name
+                    if plugin_name:
+                        plugin_info = pluginManager.get_plugin_by_name(plugin_name)
+                        if plugin_info.recursive:
+                            database.mark_plugin_finished(data.identity, plugin_name)
+
+                    # The data will be sent to the plugins.
+                    data_for_plugins.append(data)
+
+                # If the data is NOT in scope...
+                else:
+
+                    # Mark the data as having completed all stages.
+                    database.mark_stage_finished(data.identity, pluginManager.max_stage)
 
             # Recursively process newly discovered data, if any.
             # Discovered data already in the database is ignored.
@@ -611,12 +624,15 @@ class Audit (object):
                 while queue:
                     data = queue.pop(0)
                     if (data.identity not in visited and
-                        not self.database.has_data_key(data.identity)
+                        not database.has_data_key(data.identity)
                     ):
-                        self.database.add_data(data)  # No merging because it's new.
+                        database.add_data(data)       # No merging because it's new.
                         visited.add(data.identity)    # Prevents infinite loop.
-                        data_for_plugins.append(data) # Sends it to plugins.
                         queue.extend(data.discovered) # Recursive.
+                        if data.is_in_scope():        # If in scope, send it to plugins.
+                            data_for_plugins.append(data)
+                        else:                         # If not, mark as completed.
+                            database.mark_stage_finished(data.identity, pluginManager.max_stage)
 
             # If we have data to be sent...
             if data_for_plugins:

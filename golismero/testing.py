@@ -123,6 +123,8 @@ def test_plugin(orchestrator, plugin_name, data_or_msg):
             return plugin.recv_msg(data_or_msg)
 
         # If it's data, run it through the plugin and return the results.
+        if not data_or_msg.is_in_scope():
+            return []
         result = plugin.recv_info(data_or_msg)
         result = LocalDataCache.on_finish(result)
         if data_or_msg not in result:
