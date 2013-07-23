@@ -72,13 +72,19 @@ class DNSAnalizer(TestingPlugin):
             m_return = []
 
             # Send information status
-            self.update_status(progress=0.19, text="Making DNS zone transfer")
+            #self.update_status(progress=0.20, text="Making DNS zone transfer")
 
             # Make the zone transfer
-            m_return.extend(d.zone_transfer(m_domain))
+            #m_return.extend(d.zone_transfer(m_domain))
 
-            for l_type in DnsRegister.DNS_TYPES:
-                self.update_status(progress=0.03, text="Making '%s' DNS query" % l_type)
+            m_reg_len = float(len(DnsRegister.DNS_TYPES))
+            for i, l_type in enumerate(DnsRegister.DNS_TYPES, start=1):
+                # Update status
+                #self.update_status(progress=((i)/m_reg_len) * 0.8, text="Making '%s' DNS query" % l_type)
+                self.update_status_step(i, m_reg_len, 0.8, "Making '%s' DNS query" % l_type)
+
+
+                # Add register
                 m_return.extend(d.resolve(m_domain, l_type))
 
             # Set the domain parsed
