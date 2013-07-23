@@ -47,48 +47,6 @@ import warnings
 # More verbose: Verbose + errors with tracebacks, unimportant actions of plugins
 #
 
-
-#----------------------------------------------------------------------
-def process_url(url):
-    """Display URL info"""
-    return "New URL: [%s] %s" % (
-        url.method,
-        colorize(url.url, 'info'),
-    )
-
-
-#----------------------------------------------------------------------
-def process_url_suspicious(vuln):
-    """Display suspicious URL"""
-
-    return "%s: %s" % (
-        colorize("Suspicious URL", vuln.risk),
-        colorize_substring(vuln.url.url, vuln.substring, 'red')
-    )
-
-
-#----------------------------------------------------------------------
-def process_url_disclosure(vuln):
-    """Display URL discover"""
-
-    return "%s: %s\n| Method: %s\n%s|-%s" % (
-        colorize("Discovered", vuln.risk),
-        colorize_substring(vuln.url.url, vuln.discovered_path, vuln.risk),
-        vuln.url.method,
-        '| Referer <- %s\n' % str(vuln.url.referer) if vuln.url.referer else '',
-        "-" * len(vuln.url.url)
-    )
-
-
-#----------------------------------------------------------------------
-def process_default_error_page(vuln):
-    """Display default error page"""
-    return "%s: %s" % (
-        colorize("Default error page", vuln.risk),
-        colorize_substring(vuln.url.url, vuln.server_name, vuln.risk)
-    )
-
-
 #----------------------------------------------------------------------
 class ConsoleUIPlugin(UIPlugin):
     """
@@ -97,16 +55,6 @@ class ConsoleUIPlugin(UIPlugin):
 
     This plugin has no options.
     """
-
-
-    # Processors functions
-    funcs = {
-        Resource.RESOURCE_URL : process_url,
-
-        UrlDisclosure.vulnerability_type: process_url_disclosure,
-        SuspiciousURL.vulnerability_type: process_url_suspicious,
-        DefaultErrorPage.vulnerability_type: process_default_error_page,
-    }
 
 
     #----------------------------------------------------------------------
@@ -123,78 +71,35 @@ class ConsoleUIPlugin(UIPlugin):
     def recv_info(self, info):
 
         # Ignore already seen data
-        if info.identity in self.already_seen_info:
-            return
-        self.already_seen_info.add(info.identity)
+        #if info.identity in self.already_seen_info:
+            #return
+        #self.already_seen_info.add(info.identity)
 
         if Console.level >= Console.STANDARD:
 
             # Messages with vulnerability types
             if  info.data_type == Data.TYPE_VULNERABILITY:
-                try:
-                    f = self.funcs[info.vulnerability_type]
-                except KeyError:
-                    raise ValueError("No function available to process Vulnerability type: '%s'" % info.vulnerability_type)
-                Console.display("%s %s" % (colorize("<!>", "red"), f(info)))
+                l_text = "%s Vulnerability '%s' dicovered. Risk level: %s." % (
+                    colorize("<!>", info.risk),
+                    colorize(info.vulnerability_type, info.risk),
+                    colorize(str(info.risk), info.risk)
+                )
 
-        if Console.level >= Console.VERBOSE:
-
-            # Messages with information types
-            if  info.data_type == Data.TYPE_RESOURCE and info.resource_type == Resource.RESOURCE_URL:
-                try:
-                    f = self.funcs[info.resource_type]
-                except KeyError:
-                    raise ValueError("No function available to process Resource type: '%s'" % info.vulnerability_type)
-                Console.display("[+] %s" % f(info))
-
+                Console.display(l_text)
 
     #----------------------------------------------------------------------
     def recv_msg(self, message):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
-        # Process control messages
-        if message.message_type == MessageType.MSG_TYPE_CONTROL:
+        if message.message_type == MessageType.MSG_TYPE_STATUS and \
+           message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
 
-            # Show log messages
-            # (The verbosity is sent by Logger)
-            if message.message_code == MessageCode.MSG_CONTROL_LOG:
-                (text, level, is_error) = message.message_info
-                if Console.level >= level:
-                    text = colorize(text, 'middle')
-                    text = "[*] %s" % text
-                    if is_error:
-                        Console.display_error(text)
-                    else:
-                        Console.display(text)
+            if Console.level >= Console.VERBOSE:
+                m_id, m_progress, m_text = message.message_info
 
-            # Show plugin errors
-            # (Only the description in standard level,
-            # full traceback in more verbose level)
-            elif message.message_code == MessageCode.MSG_CONTROL_ERROR:
-                (description, traceback) = message.message_info
-                if message.plugin_name:
-                    text = "[!] Error in plugin %s: %s" % (message.plugin_name, description)
-                else:
-                    text = "[!] Error: %s" % description
-                text = colorize(text, 'critical')
-                traceback = colorize(traceback, 'critical')
-                Console.display_error(text)
-                Console.display_error_more_verbose(traceback)
-
-            # Show plugin warnings
-            # (Only the description in verbose level,
-            # full traceback in more verbose level)
-            elif message.message_code == MessageCode.MSG_CONTROL_WARNING:
-                if Console.level >= Console.VERBOSE:
-                    for w in message.message_info:
-                        if Console.level >= Console.MORE_VERBOSE:
-                            formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
-                        else:
-                            formatted = warnings.formatwarning(w.message, w.category)
-                        if message.plugin_name:
-                            text = "[!] Warning from plugin %s: %s" % (message.plugin_name, str(formatted))
-                        else:
-                            text = "[!] Warning: " + str(formatted)
-                        text = colorize(text, 'low')
-                        Console.display_error(text)
+                #The counter
+                m_progress_txt = colorize("[%s/100]" % "{:2d}".format(int(m_progress * 100)), "white")
+                #m_text = "%s %s: Status: %s." % (m_progress_txt, m_id, m_text)
+                m_text = "%s Status: %s." % (m_progress_txt, m_text)
+                Console.display(m_text)
