@@ -66,23 +66,22 @@ class DNSAnalizer(TestingPlugin):
 
         # Checks if the hostname has been already processed
         m_return = None
+
         if not self.state.check(m_domain):
+
             Logger.log_more_verbose("starting DNS analyzer plugin")
             d        = DNS()
             m_return = []
 
-            # Send information status
-            #self.update_status(progress=0.20, text="Making DNS zone transfer")
-
+            # Update status
+            self.update_status(progress=0.20, text="making DNS zone transfer")
             # Make the zone transfer
-            #m_return.extend(d.zone_transfer(m_domain))
+            m_return.extend(d.zone_transfer(m_domain))
 
-            m_reg_len = float(len(DnsRegister.DNS_TYPES))
+            m_reg_len = len(DnsRegister.DNS_TYPES)
             for i, l_type in enumerate(DnsRegister.DNS_TYPES, start=1):
                 # Update status
-                #self.update_status(progress=((i)/m_reg_len) * 0.8, text="Making '%s' DNS query" % l_type)
-                self.update_status_step(i, m_reg_len, 0.8, "Making '%s' DNS query" % l_type)
-
+                self.update_status_step(step=i, total=m_reg_len, text="making '%s' DNS query" % l_type, partial=0.8)
 
                 # Add register
                 m_return.extend(d.resolve(m_domain, l_type))
