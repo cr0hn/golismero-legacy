@@ -76,33 +76,6 @@ class Orchestrator (object):
         # Configuration.
         self.__config = config
 
-        # Set the console configuration.
-        Console.level = config.verbose
-        Console.use_colors = config.colorize
-
-        # Search for plugins.
-        self.__pluginManager = PluginManager()
-        success, failure = self.__pluginManager.find_plugins(self.__config.plugins_folder)
-        if not success:
-            raise RuntimeError("Failed to find any plugins!")
-        self.__pluginManager.apply_black_and_white_lists(self.__config.enabled_plugins,
-                                                         self.__config.disabled_plugins)
-
-        # Load the UI plugin.
-        try:
-            self.__pluginManager.get_plugin_by_name("ui/%s" % self.__config.ui_mode)
-        except KeyError:
-            raise ValueError("No plugin found for UI mode: %r" % self.__config.ui_mode)
-        self.__pluginManager.load_plugin_by_name("ui/%s" % self.__config.ui_mode)
-
-        # Load the rest of the plugins.
-        for category in self.__pluginManager.CATEGORIES:
-            if category != "ui":
-                self.__pluginManager.load_plugins(category = category)
-
-        # Calculate the plugin dependencies.
-        self.__pluginManager.calculate_dependencies()
-
         # Incoming message queue.
         if getattr(config, "max_process", 0) <= 0:
             from Queue import Queue
@@ -116,6 +89,29 @@ class Orchestrator (object):
                                          msg_queue = self.__queue,
                                       audit_config = self.__config )
         Config._context = self.__context
+
+        # Set the console configuration.
+        Console.level = config.verbose
+        Console.use_colors = config.colorize
+
+        # Search for plugins.
+        self.__pluginManager = PluginManager()
+        success, failure = self.__pluginManager.find_plugins(
+            self.__config.plugins_folder, category = "ui")
+        if not success:
+            raise RuntimeError("Failed to find any UI plugins!")
+
+        # Load the UI plugin.
+        try:
+            self.__pluginManager.get_plugin_by_name("ui/%s" % self.__config.ui_mode)
+        except KeyError:
+            raise ValueError("No plugin found for UI mode: %r" % self.__config.ui_mode)
+        self.__pluginManager.load_plugin_by_name("ui/%s" % self.__config.ui_mode)
+
+        # Load the rest of the plugins.
+        for category in self.__pluginManager.CATEGORIES:
+            if category != "ui":
+                self.__pluginManager.load_plugins(category = category)
 
         # Within the Orchestrator process, keep a static reference to it.
         PluginContext._orchestrator = self
@@ -153,6 +149,14 @@ class Orchestrator (object):
             Logger.log_error("Failed to load %d plugins" % len(failure))
             for plugin_name in failure:
                 Logger.log_error_verbose("\t%s" % plugin_name)
+
+    @property
+    def config(self):
+        """
+        :returns: Orchestrator config.
+        :rtype: Orchestratorconfig
+        """
+        return self.__config
 
 
     #----------------------------------------------------------------------
@@ -508,3 +512,9 @@ class Orchestrator (object):
             self.cacheManager.close()
         except:
             pass
+
+        # Reset the plugin manager.
+        self.pluginManager.reset()
+
+        # Reset the execution context.
+        Config._context = None

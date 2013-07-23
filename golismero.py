@@ -285,6 +285,9 @@ def main():
         auditParams = AuditConfig()
         auditParams.profile = cmdParams.profile
         auditParams.profile_file = cmdParams.profile_file
+        auditParams.config_file = cmdParams.config_file
+        if auditParams.config_file:
+            auditParams.from_config_file(auditParams.config_file)
         if auditParams.profile_file:
             auditParams.from_config_file(auditParams.profile_file)
         auditParams.from_object(P)

@@ -91,6 +91,14 @@ class _HTTP(Singleton):
 
 
     #--------------------------------------------------------------------------
+    def _finalize(self):
+        """
+        .. warning: Called automatically by GoLismero. Do not call!
+        """
+        self.__session = None
+
+
+    #--------------------------------------------------------------------------
     def get_url(self, url, method = "GET", callback = None,
                      timeout = None, use_cache = None, allow_redirects = True):
         """
