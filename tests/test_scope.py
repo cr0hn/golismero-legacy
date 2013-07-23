@@ -58,38 +58,42 @@ def test_scope_example():
     audit_config.targets = ["www.example.com"]
     audit_config.include_subdomains = True
     orchestrator = testing.test_setup(audit_config = audit_config)
+    try:
 
-    assert None not in Config.audit_scope
-    assert "" not in Config.audit_scope
-    assert "www.example.com" in Config.audit_scope
-    assert "example.com" in Config.audit_scope
-    assert "com" not in Config.audit_scope
-    assert "subdomain.example.com" in Config.audit_scope
-    assert "subdomain.www.example.com" in Config.audit_scope
-    assert "www.example.org" not in Config.audit_scope
-    assert "wwwexample.com" not in Config.audit_scope
-    assert "www.wrong.com" not in Config.audit_scope
-    assert "127.0.0.1" not in Config.audit_scope
-    assert "::1" not in Config.audit_scope
-    assert "[::1]" not in Config.audit_scope
-    assert "http://www.example.com" in Config.audit_scope
-    assert "https://example.com" in Config.audit_scope
-    assert "ftp://ftp.example.com" in Config.audit_scope
-    assert "mailto://user@example.com" in Config.audit_scope
-##    assert "user@example.com" in Config.audit_scope
-    assert gethostbyname("www.example.com") in Config.audit_scope
-    for address in gethostbyname_ex("www.example.com")[2]:
-        assert address in Config.audit_scope
-    for register in DNS.get_a("www.example.com"):
-        assert register.address in Config.audit_scope
-    for register in DNS.get_aaaa("www.example.com"):
-        assert register.address in Config.audit_scope
-        assert "[%s]" % register.address in Config.audit_scope
-    for register in DNS.get_a("www.google.com"):
-        assert register.address not in Config.audit_scope
-    for register in DNS.get_aaaa("www.google.com"):
-        assert register.address not in Config.audit_scope
-        assert "[%s]" % register.address not in Config.audit_scope
+        assert None not in Config.audit_scope
+        assert "" not in Config.audit_scope
+        assert "www.example.com" in Config.audit_scope
+        assert "example.com" in Config.audit_scope
+        assert "com" not in Config.audit_scope
+        assert "subdomain.example.com" in Config.audit_scope
+        assert "subdomain.www.example.com" in Config.audit_scope
+        assert "www.example.org" not in Config.audit_scope
+        assert "wwwexample.com" not in Config.audit_scope
+        assert "www.wrong.com" not in Config.audit_scope
+        assert "127.0.0.1" not in Config.audit_scope
+        assert "::1" not in Config.audit_scope
+        assert "[::1]" not in Config.audit_scope
+        assert "http://www.example.com" in Config.audit_scope
+        assert "https://example.com" in Config.audit_scope
+        assert "ftp://ftp.example.com" in Config.audit_scope
+        assert "mailto://user@example.com" in Config.audit_scope
+    ##    assert "user@example.com" in Config.audit_scope
+        assert gethostbyname("www.example.com") in Config.audit_scope
+        for address in gethostbyname_ex("www.example.com")[2]:
+            assert address in Config.audit_scope
+        for register in DNS.get_a("www.example.com"):
+            assert register.address in Config.audit_scope
+        for register in DNS.get_aaaa("www.example.com"):
+            assert register.address in Config.audit_scope
+            assert "[%s]" % register.address in Config.audit_scope
+        for register in DNS.get_a("www.google.com"):
+            assert register.address not in Config.audit_scope
+        for register in DNS.get_aaaa("www.google.com"):
+            assert register.address not in Config.audit_scope
+            assert "[%s]" % register.address not in Config.audit_scope
+
+    finally:
+        testing.test_cleanup(orchestrator)
 
 
 def test_scope_localhost():
@@ -97,35 +101,37 @@ def test_scope_localhost():
     audit_config.targets = ["localhost"]
     audit_config.include_subdomains = True
     orchestrator = testing.test_setup(audit_config = audit_config)
+    try:
 
-    print Config.audit_scope
+        assert None not in Config.audit_scope
+        assert "" not in Config.audit_scope
+        assert "www.example.com" not in Config.audit_scope
+        assert "localhost.com" not in Config.audit_scope
+        assert "www.localhost.com" not in Config.audit_scope
+        assert "localhost" in Config.audit_scope
+        assert "subdomain.localhost" in Config.audit_scope
+        assert "127.0.0.1" in Config.audit_scope
+        assert "::1" in Config.audit_scope
+        assert "[::1]" in Config.audit_scope
+        assert "http://localhost" in Config.audit_scope
+        assert "mailto://user@localhost" in Config.audit_scope
+    ##    assert "user@localhost" in Config.audit_scope
+        assert gethostbyname("localhost") in Config.audit_scope
+        for address in gethostbyname_ex("localhost")[2]:
+            assert address in Config.audit_scope
+        for register in DNS.get_a("localhost"):
+            assert register.address in Config.audit_scope
+        for register in DNS.get_aaaa("localhost"):
+            assert register.address in Config.audit_scope
+            assert "[%s]" % register.address in Config.audit_scope
+        for register in DNS.get_a("www.google.com"):
+            assert register.address not in Config.audit_scope
+        for register in DNS.get_aaaa("www.google.com"):
+            assert register.address not in Config.audit_scope
+            assert "[%s]" % register.address not in Config.audit_scope
 
-    assert None not in Config.audit_scope
-    assert "" not in Config.audit_scope
-    assert "www.example.com" not in Config.audit_scope
-    assert "localhost.com" not in Config.audit_scope
-    assert "www.localhost.com" not in Config.audit_scope
-    assert "localhost" in Config.audit_scope
-    assert "subdomain.localhost" in Config.audit_scope
-    assert "127.0.0.1" in Config.audit_scope
-    assert "::1" in Config.audit_scope
-    assert "[::1]" in Config.audit_scope
-    assert "http://localhost" in Config.audit_scope
-    assert "mailto://user@localhost" in Config.audit_scope
-##    assert "user@localhost" in Config.audit_scope
-    assert gethostbyname("localhost") in Config.audit_scope
-    for address in gethostbyname_ex("localhost")[2]:
-        assert address in Config.audit_scope
-    for register in DNS.get_a("localhost"):
-        assert register.address in Config.audit_scope
-    for register in DNS.get_aaaa("localhost"):
-        assert register.address in Config.audit_scope
-        assert "[%s]" % register.address in Config.audit_scope
-    for register in DNS.get_a("www.google.com"):
-        assert register.address not in Config.audit_scope
-    for register in DNS.get_aaaa("www.google.com"):
-        assert register.address not in Config.audit_scope
-        assert "[%s]" % register.address not in Config.audit_scope
+    finally:
+        testing.test_cleanup(orchestrator)
 
 
 # Run all tests from the command line.
