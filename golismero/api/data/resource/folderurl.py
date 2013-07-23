@@ -209,4 +209,6 @@ class FolderUrl(Resource):
     #----------------------------------------------------------------------
     @property
     def discovered(self):
-        return [Domain(self.hostname)]
+        if self.is_in_scope():
+            return [Domain(self.hostname)]
+        return []

@@ -242,7 +242,8 @@ class Url(Resource):
 
 
     #----------------------------------------------------------------------
-
     @property
     def discovered(self):
-        return [Domain(self.hostname), BaseUrl(self.url)] + FolderUrl.from_url(self.url)
+        if self.is_in_scope():
+            return [Domain(self.hostname), BaseUrl(self.url)] + FolderUrl.from_url(self.url)
+        return []
