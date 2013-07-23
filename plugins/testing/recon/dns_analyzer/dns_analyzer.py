@@ -283,5 +283,6 @@ def _get_subdomains_bruteforcer(base_domain, updater_func, subdomain):
     updater_func(text="Looking for subdomain: %s" % m_domain)
 
     l_oks = DNS.get_a(m_domain, also_CNAME=True)
+    l_oks.extend(DNS.get_aaaa(m_domain, also_CNAME=True))
 
     return l_oks
