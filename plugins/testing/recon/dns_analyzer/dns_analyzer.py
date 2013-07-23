@@ -69,18 +69,17 @@ class DNSAnalizer(TestingPlugin):
         m_return = None
         if not self.state.check(m_domain):
             Logger.log_more_verbose("starting DNS analyzer plugin")
-            d        = DNS()
             m_return = []
 
             # Send information status
             self.update_status(progress=0.19, text="Making DNS zone transfer")
 
             # Make the zone transfer
-            m_return.extend(d.zone_transfer(m_domain))
+            m_return.extend(DNS.zone_transfer(m_domain))
 
             for l_type in DnsRegister.DNS_TYPES:
                 self.update_status(progress=0.03, text="Making '%s' DNS query" % l_type)
-                m_return.extend(d.resolve(m_domain, l_type))
+                m_return.extend(DNS.resolve(m_domain, l_type))
 
             # Set the domain parsed
             self.state.set(m_domain, True)
@@ -196,14 +195,11 @@ def _get_subdomains_bruteforcer(base_domain, subdomain):
     :param subdomain: string with the domain to process.
     :type subdomain: str
     """
-    # Manager for make DNS queries.
-    m_dom_manager = DNS()
 
     m_domain = "%s.%s" % (subdomain, base_domain)
 
     Logger.log_more_verbose("Looking for subdomain: %s" % m_domain)
 
-    l_oks = m_dom_manager.get_a(m_domain, also_CNAME=True)
+    l_oks = DNS.get_a(m_domain, also_CNAME=True)
 
     return l_oks
-

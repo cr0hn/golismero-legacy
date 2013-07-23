@@ -401,7 +401,8 @@ class Audit (object):
 
         # Add the targets to the database, but only if they're new.
         # (Makes sense when resuming a stopped audit).
-        for data in self.scope.get_targets():
+        target_data = self.scope.get_targets()
+        for data in target_data:
             if self.database.has_data_key(data.identity, data.data_type):
                 self.database.add(data)
 
@@ -410,8 +411,12 @@ class Audit (object):
         # can overwrite the targets with new information if available.
         self.importManager.import_results()
 
-        # Move to the next stage.
-        self.update_stage()
+##        # Move to the next stage.
+##        self.update_stage()
+
+        # XXX HACK
+        # Temporarily doing this because update_stage is broken.
+        self.send_msg(message_info=target_data)
 
 
     #----------------------------------------------------------------------
