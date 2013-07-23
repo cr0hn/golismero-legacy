@@ -243,7 +243,7 @@ class ServerFingerprinting(TestingPlugin):
         #
         # Analyze HTTP protocol
         #
-        m_server_name, m_server_version, m_canonical_name, m_webserver_complete_desc, m_related_webservers, m_others = http_analyzers(m_main_url)
+        m_server_name, m_server_version, m_canonical_name, m_webserver_complete_desc, m_related_webservers, m_others = http_analyzers(m_main_url, self.update_status_step, 1)
 
         Logger.log_more_verbose("Fingerprint - Server: %s | Version: %s" % (m_server_name, m_server_version))
 
@@ -396,7 +396,6 @@ def ttl_platform_detection(main_url):
 # Web server detection
 #
 #----------------------------------------------------------------------
-
 def check_raw_response(request, response):
 
     # Returns True to continue, False to cancel.
@@ -407,12 +406,18 @@ def check_raw_response(request, response):
 
     )
 
-def http_analyzers(main_url, number_of_entries=4):
+def http_analyzers(main_url, update_status_func, part_status=1, number_of_entries=4):
     """
     Analyze HTTP headers for detect the web server. Return a list with most possible web servers.
 
     :param main_url: Base url to test.
     :type main_url: str
+
+    :param update_status_func: function used to update the status of the process
+    :type update_status_func: function
+
+    :param part_status: the part of the global status that represent this function.
+    :type part_status: int
 
     :param number_of_entries: number of resutls tu return for most probable web servers detected.
     :type number_of_entries: int
@@ -457,6 +462,10 @@ def http_analyzers(main_url, number_of_entries=4):
 
     # Score counter
     m_counters = HTTPAnalyzer(debug=m_debug)
+
+    # Var used to update the status
+    m_data_len = len(m_actions)
+    i          = 1 # element in process
 
     for l_action, v in m_actions.iteritems():
         if m_debug:
@@ -514,6 +523,12 @@ def http_analyzers(main_url, number_of_entries=4):
         if m_debug:
             print "RESPONSE"
             print l_response.raw_headers
+
+
+        # Update the status
+        update_status_func(step=i, total=m_data_len, text="making '%s' test." % (l_wordlist), partial=part_status)
+        i += 1
+
 
         # Analyze for each wordlist
         #
