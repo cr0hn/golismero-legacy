@@ -417,7 +417,7 @@ class PluginManager (Singleton):
 
 
     #----------------------------------------------------------------------
-    def find_plugins(self, plugins_folder):
+    def find_plugins(self, plugins_folder = None):
         """
         Find plugins in the given folder.
 
@@ -434,6 +434,10 @@ class PluginManager (Singleton):
         :returns: A list of plugins loaded, and a list of plugins that failed to load.
         :rtype: tuple(list(str), list(str))
         """
+
+        # Default plugins folder if not given.
+        if not plugins_folder:
+            plugins_folder = path.join(path.split(__file__)[0], "..", "..", "plugins")
 
         # Make sure the plugins folder is an absolute path.
         plugins_folder = path.abspath(plugins_folder)

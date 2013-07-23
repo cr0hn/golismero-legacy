@@ -185,6 +185,25 @@ class AuditScope (object):
 
 
     #--------------------------------------------------------------------------
+    def __repr__(self):
+        result = ["<Audit scope:\n"]
+        if self.__addresses:
+            result.append("\tIP addresses:\n")
+            for address in sorted(self.__addresses):
+                result.append("\t\t%s\n" % address)
+        if self.__domains:
+            result.append("\tDomains:\n")
+            for domain in sorted(self.__domains):
+                result.append("\t\t%s\n" % domain)
+        if self.__web_pages:
+            result.append("\tWeb pages:\n")
+            for url in sorted(self.__web_pages):
+                result.append("\t\t%s\n" % url)
+        result.append(">")
+        return "".join(result)
+
+
+    #--------------------------------------------------------------------------
     def __contains__(self, target):
         """
         Tests if the given target is included in the current audit scope.
@@ -199,6 +218,9 @@ class AuditScope (object):
         # Trivial case.
         if not target:
             return False
+
+        # Keep the original string for error reporting.
+        original = target
 
         # If it's an URL...
         try:
@@ -225,9 +247,11 @@ class AuditScope (object):
 
         # If it's an IP address...
         try:
+            if target.startswith("[") and target.endswith("]"):
+                target = target[1:-1]
             IPAddress(target)
             address = target
-        except AddrFormatError:
+        except Exception:
             address = None
         if address is not None:
 
@@ -235,5 +259,5 @@ class AuditScope (object):
             return address in self.__addresses
 
         # We don't know what this is, so we'll consider it out of scope.
-        warnings.warn("Can't determine if this is out of scope or not: %r" % target)
+        warnings.warn("Can't determine if this is out of scope or not: %r" % original)
         return False

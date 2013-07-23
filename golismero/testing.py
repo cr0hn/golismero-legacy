@@ -34,6 +34,8 @@ __all__ = ["test_setup", "test_plugin"]
 
 from golismero.api.data import LocalDataCache
 from golismero.api.config import Config
+from golismero.api.net.cache import NetworkCache
+from golismero.api.net.http import HTTP
 from golismero.common import AuditConfig, OrchestratorConfig
 from golismero.main.orchestrator import Orchestrator
 from golismero.managers.auditmanager import Audit
@@ -89,6 +91,11 @@ def test_setup(orchestrator_config = None, audit_config = None):
         audit_config = audit_config,
         audit_scope  = audit_scope,
     )
+
+    # Initialize the environment.
+    HTTP._initialize()
+    NetworkCache._clear_local_cache()
+    LocalDataCache.on_run()
 
     # Return the Orchestrator instance.
     return orchestrator
