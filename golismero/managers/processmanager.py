@@ -391,6 +391,16 @@ class PluginContext (object):
 
 
     #----------------------------------------------------------------------
+    def is_local(self):
+        """
+        :returns: True if we're running inside the Orchestrator process,
+                  False otherwise.
+        :rtype: bool
+        """
+        return self.__orchestrator_pid == getpid()
+
+
+    #----------------------------------------------------------------------
     def send_ack(self):
         """
         Send ACK messages from the plugins to the Orchestrator.
@@ -462,9 +472,7 @@ class PluginContext (object):
         # calls using messages, because we'd deadlock
         # against ourselves, since the producer and
         # the consumer would be the same process.
-        if (message_type == MessageType.MSG_TYPE_RPC and
-           self.__orchestrator_pid == getpid()
-        ):
+        if message_type == MessageType.MSG_TYPE_RPC and self.is_local():
             self._orchestrator.rpcManager.execute_rpc(
                         self.audit_name, message_code, *message_info)
             return
@@ -491,7 +499,7 @@ class PluginContext (object):
         # Hack for urgent messages: if we're in the same process
         # as the Orchestrator, skip the queue and dispatch them now.
         if (message.priority >= MessagePriority.MSG_PRIORITY_HIGH and
-            self.__orchestrator_pid == getpid()
+            self.is_local()
         ):
             self._orchestrator.dispatch_msg(message)
             return
