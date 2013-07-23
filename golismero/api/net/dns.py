@@ -52,9 +52,8 @@ from netaddr.core import AddrFormatError
 #
 #------------------------------------------------------------------------------
 #
-# This code has been based in the borrowed code from dnsrecon project:
-#
-# Project site: https://github.com/darkoperator/dnsrecon
+# Some code borrowed from the dnsrecon project:
+# https://github.com/darkoperator/dnsrecon
 #
 class _DNS(Singleton):
 
@@ -64,17 +63,17 @@ class _DNS(Singleton):
     #----------------------------------------------------------------------
     def check_tcp_dns(self, address, dns_port=53):
         """
-        Function to check if a server is listening at port 53 TCP. This will aid
-        in IDS/IPS detection since a AXFR will not be tried if port 53 is found to
-        be closed.
+        Function to check if a server is listening at port 53 TCP. This
+        will aid in IDS/IPS detection since a AXFR will not be tried if
+        TCP port 53 is found to be closed.
 
-        :param address: IP or domain name.
+        :param address: IP address or domain name.
         :type address: str
 
-        :param dns_port: port number to connect to the server.
+        :param dns_port: Port number to connect to the server.
         :type dns_port: int
 
-        :return: True if server accepts TCP connections. False otherwise.
+        :return: True if server accepts TCP connections, False otherwise.
         :rtype: bool
         """
         if not isinstance(address, basestring):
@@ -106,17 +105,17 @@ class _DNS(Singleton):
         Special type of register is "ALL", that returns all of the registers
         returned by the query.
 
-        :param target: the name to resolve.
+        :param target: Name to resolve.
         :type target: str
 
-        :param type: The type of query: ALL, A, AAAA, NS, PTR...
-        :type type: int or str
+        :param type: Type of query: ALL, A, AAAA, NS, PTR...
+        :type type: int | str
 
-        :param nameservers: nameserver to use.
+        :param nameservers: Nameservers to use.
         :type nameservers: list(str)
 
-        :return: return a DnsRegister type.
-        :rtype: DnsRegister
+        :return: DNS registers.
+        :rtype: list(DnsRegister)
         """
         return self._make_request(type, target, nameservers)
 
@@ -124,20 +123,18 @@ class _DNS(Singleton):
     #----------------------------------------------------------------------
     def get_a(self, host, nameservers=None, also_CNAME=False):
         """
-        Function for resolving the A Record for a given host.
+        Resolve the A records for a given host.
 
-        Returns an Array of the A registers.
-
-        :param host: String with name of host to get the registers.
+        :param host: Target hostname.
         :type host: str
 
-        :param nameservers: nameserver to use.
+        :param nameservers: Nameservers to use.
         :type nameservers: list(str)
 
-        :param also_CNAME: set this var to True if you want to return also the CNAME Registers returned by the query.
+        :param also_CNAME: Set this var to True if you want to return also the CNAME Registers returned by the query.
         :tyep algo_CNAME: bool
 
-        :return: list with A registers.
+        :return: Type A registers.
         :rtype: list(DnsRegisterA)
         """
         r = self._make_request("A", host, nameservers, auto_resolve=not also_CNAME)
@@ -160,20 +157,18 @@ class _DNS(Singleton):
     #----------------------------------------------------------------------
     def get_aaaa(self, host, nameservers=None, also_CNAME=False):
         """
-        Function for resolving the A Record for a given host.
+        Resolve the A Record for a given host.
 
-        Returns an Array of the AAAA registers.
-
-        :param host: String with name of host to get the registers.
+        :param host: Target hostname.
         :type host: str
 
-        :param nameservers: nameserver to use.
+        :param nameservers: Nameservers to use.
         :type nameservers: list(str)
 
-        :param also_CNAME: set this var to True if you want to return also the CNAME Registers returned by the query.
+        :param also_CNAME: Set this var to True if you want to return also the CNAME Registers returned by the query.
         :tyep algo_CNAME: bool
 
-        :return: list with AAAA registers
+        :return: AAAA registers.
         :rtype: list(DnsRegisterAAAA)
         """
         r = self._make_request("AAAA", host, nameservers, auto_resolve=not also_CNAME)
@@ -197,17 +192,15 @@ class _DNS(Singleton):
     #----------------------------------------------------------------------
     def get_mx(self, host, nameservers=None):
         """
-        Function for resolving the MX Record for a given host.
+        Resolve the MX records for a given host.
 
-        Returns an Array of the MX registers.
-
-        :param host: String with name of host to get the registers.
+        :param host: Target hostname.
         :type host: str
 
-        :param nameservers: nameserver to use.
+        :param nameservers: Nameservers to use.
         :type nameservers: list(str)
 
-        :return: list with MX registers
+        :return: MX registers.
         :rtype: list(DnsRegisterMX)
         """
         return self._make_request("MX", host, nameservers)
@@ -216,16 +209,16 @@ class _DNS(Singleton):
     #----------------------------------------------------------------------
     def get_ns(self, host, nameservers=None):
         """
-        Function for NS Record resolving. Returns all NS records. Returns also the IP
-        address of the host both in IPv4 and IPv6. Returns an Array.
+        Returns all NS records. Also returns the IP
+        address of the host both in IPv4 and IPv6.
 
-        :param host: the target to make the request.
+        :param host: Target hostname.
         :type host: str
 
-        :param nameservers: nameserver to use.
+        :param nameservers: Nameservers to use.
         :type nameservers: list(str)
 
-        :return: list with NS registers
+        :return: NS registers.
         :rtype: list(DnsRegisterNS)
         """
         return self._make_request("NS", host, nameservers)
@@ -234,16 +227,16 @@ class _DNS(Singleton):
     #----------------------------------------------------------------------
     def get_soa(self, host, nameservers=None):
         """
-        Function for SOA Record resolving. Returns all SOA records. Returns also the IP
-        address of the host both in IPv4 and IPv6. Returns an Array.
+        Returns all SOA records. Also returns the IP
+        address of the host both in IPv4 and IPv6.
 
-        :param host: the target to make the request.
+        :param host: Target hostname.
         :type host: str
 
-        :param nameservers: nameserver to use.
+        :param nameservers: Nameservers to use.
         :type nameservers: list(str)
 
-        :return: list with SOA registers
+        :return: SOA registers.
         :rtype: list(DnsRegisterSOA)
         """
         return self._make_request("SOA", host, nameservers)
@@ -252,7 +245,7 @@ class _DNS(Singleton):
     #----------------------------------------------------------------------
     def get_spf(self, host, nameservers=None):
         """
-        Function for SPF Record resolving returns the string with the SPF definition.
+        Resolve SPF records.
 
         :param host: the target to make the request.
         :type host: str
@@ -260,7 +253,7 @@ class _DNS(Singleton):
         :param nameservers: nameserver to use.
         :type nameservers: list(str)
 
-        :return: list with SPF registers
+        :return: SPF registers.
         :rtype: list(DnsRegisterSPF)
         """
         return self._make_request("SPF", host, nameservers)
@@ -269,15 +262,15 @@ class _DNS(Singleton):
     #----------------------------------------------------------------------
     def get_txt(self, host, nameservers=None):
         """
-        Function for TXT Record resolving returns the string.
+        Resolve TXT records.
 
-        :param host: the target to make the request.
+        :param host: Target hostname.
         :type host: str
 
-        :param nameservers: nameserver to use.
+        :param nameservers: Nameservers to use.
         :type nameservers: list(str)
 
-        :return: list with TXT registers
+        :return: TXT registers.
         :rtype: list(DnsRegisterTXT)
         """
         return self._make_request("TXT", host, nameservers)
@@ -286,16 +279,15 @@ class _DNS(Singleton):
     #----------------------------------------------------------------------
     def get_ptr(self, ipaddress, nameservers=None):
         """
-        Function for resolving PTR Record given it's IPv4 or IPv6 Address got
-        the associated domain.
+        Resolve PTR records given it's IPv4 or IPv6 address.
 
-        :param ipaddress: IP address to make the request.
+        :param ipaddress: Target IP address.
         :type ipaddress: str
 
-        :param nameservers: nameserver to use.
+        :param nameservers: Nameservers to use.
         :type nameservers: list(str)
 
-        :return: list with PTR registers
+        :return: PTR registers.
         :rtype: list(DnsRegisterPTR)
         """
         if not isinstance(ipaddress, basestring):
@@ -329,13 +321,13 @@ class _DNS(Singleton):
         """
         Function for resolving SRV Records.
 
-        :param host: host to make the request.
+        :param host: Target hostname.
         :type host: str
 
-        :param nameservers: nameserver to use.
+        :param nameservers: Nameservers to use.
         :type nameservers: list(str)
 
-        :return: list with SRV registers
+        :return: SRV registers.
         :rtype: list(DnsRegisterSRV)
         """
         return self._make_request("SRV", host, nameservers)
@@ -347,13 +339,13 @@ class _DNS(Singleton):
         Function for querying for a NSEC record and retriving the rdata object.
         This function is used mostly for performing a Zone Walk against a zone.
 
-        :param host: host to make the request.
+        :param host: Target hostname.
         :type host: str
 
-        :param nameservers: nameserver to use.
+        :param nameservers: Nameservers to use.
         :type nameservers: list(str)
 
-        :return: list with NSEC registers
+        :return: NSEC registers.
         :rtype: list(DnsRegisterNSEC)
         """
         return self._make_request("NSEC", host, nameservers)
@@ -362,15 +354,16 @@ class _DNS(Singleton):
     #----------------------------------------------------------------------
     def zone_transfer(self, domain, nameservers = None):
         """
-        Function for testing for zone transfers for a given Domain.
+        Function for testing for zone transfers on a given Domain.
 
-        :param domain: string with the hostname or nameserver.
+        :param domain: Target hostname.
         :type domain: str
 
-        :param nameservers: list with an alternate nameservers.
+        :param nameservers: Alternate nameservers.
         :type nameservers: list(str)
 
-        :return: a list with DnsRegisters
+        :return: If successful, a list of DnsRegister objects.
+                 Otherwise, an empty list.
         :rtype: list(DnsRegister)
         """
         if not isinstance(domain, basestring):
@@ -558,8 +551,10 @@ class _DNS(Singleton):
     #
     def _from_wire(self, xfr, zone_factory=Zone, relativize=True):
         """
-        Method for turning returned data from a DNS AXFR in to RRSET, this method will not perform a
-        check origin on the zone data as the method included with dnspython
+        Method for turning returned data from a DNS AXFR to RRSET.
+
+        This method will not perform a check origin on the zone data
+        as the method included with dnspython.
         """
         z = None
 
@@ -592,17 +587,20 @@ class _DNS(Singleton):
         Get the list of IPs associated the register as parameter.
 
         If you pass CNAME register, you get an A/AAAA register:
+            >> cname = DnsRegisterCNAME("myalias.mysite.com")
+            >> a = Dns.get_ips(cname)
+            >> print a
+            [<DnsRegisterA object at 0x103ad9a50>]
+            >> print a[0]
+            <DnsRegisterA object at 0x103ad9a50>
+            >> print a[0].target
+            127.0.0.1
 
-        >> cname = DnsRegisterCNAME("myalias.mysite.com")
-        >> a = Dns.get_ips(cname)
-        >> print a
-        [<DnsRegisterA object at 0x103ad9a50>]
-        >> print a[0]
-        <DnsRegisterA object at 0x103ad9a50>
-        >> print a[0].target
-        127.0.0.1
-
-        :param register: A DNS Register. Valid registers are: DnsRegisterA, DnsRegisterAAAA, DnsRegisterCNAME DnsRegisterISDN, DnsRegisterNS, DnsRegisterNSAP, DnsRegisterPTR, DnsRegisterSOA, DnsRegisterSRV, DnsRegisterWKS, DnsRegisterX25
+        :param register: A DNS Register.
+            Valid registers are: DnsRegisterA, DnsRegisterAAAA,
+            DnsRegisterCNAME DnsRegisterISDN, DnsRegisterNS,
+            DnsRegisterNSAP, DnsRegisterPTR, DnsRegisterSOA,
+            DnsRegisterSRV, DnsRegisterWKS, DnsRegisterX25
         :type register: DnsRegister
 
         :return: A list with the A and AAAA registers.
@@ -649,21 +647,20 @@ class _DNS(Singleton):
     #----------------------------------------------------------------------
     def _dnslib2register(self, type, answer_in):
         """
-        Creates a DnsRegister from an dnslib input library.
+        Creates a DnsRegister from a dnslib register.
 
         Special type of register "ALL" that converts all the types of the
         registers.
 
-        :param type: the type of response to get: A, AAAA, CNAME...
+        :param type: Type of response to get: A, AAAA, CNAME...
         :type type: str
 
-        :param answer_in: object with the answer of external dns lib
+        :param answer_in: Object with the answer from dnslib.
         :type answer_in: dns.resolver.Answer
 
-        :return: Golismero DnsRegister subtype for the specific type.
+        :return: DNS register.
         :rtype: `list(DnsRegister)`
         """
-
 
         m_return        = []
         m_return_append = m_return.append
@@ -693,90 +690,109 @@ class _DNS(Singleton):
     #----------------------------------------------------------------------
     def __dnsregister2golismeroregister(self, register_type, answer):
         """
-        Transform an dnslib register in golismero register.
+        Transform a dnslib register into a DnsRegister.
 
-        :param register_type: string with the type of register
+        :param register_type: Type of register.
         :type register_type: str
 
-        :param answer: dnslib object with a Dns register.
+        :param answer: dnslib object with a DNS register data.
         :type answer: object
 
-        :return: Golismero Dns register.
+        :return: DNS register.
         :rtype: DnsRegister
         """
         m_return = None
 
-
         if register_type == "A":
             m_return = DnsRegisterA(answer.address)
+
         elif register_type == "AAAA":
             m_return = DnsRegisterAAAA(answer.address)
+
         elif register_type == "AFSDB":
             m_return = DnsRegisterAFSDB(answer.subtype, answer.hostname.to_text()[:-1])
+
         elif register_type == "CERT":
             m_return = DnsRegisterCERT(answer.algorithm,
                                        answer.certificate,
                                        answer.certificate_type,
                                        answer.key_tag)
+
         elif register_type == "CNAME":
             m_return = DnsRegisterCNAME(answer.target.to_text()[:-1])
+
         elif register_type == "DNSKEY":
             m_return = DnsRegisterDNSKEY(answer.algorithm,
                                          answer.flags,
                                          dns.rdata._hexify(answer.key),
                                          answer.protocol)
+
         elif register_type == "DS":
             m_return = DnsRegisterDS(answer.algorithm,
                                      dns.rdata._hexify(answer.digest),
                                      answer.digest_type,
                                      answer.key_tag)
+
         elif register_type == "HINFO":
             m_return = DnsRegisterHINFO(answer.cpu,
                                         answer.os)
+
         elif register_type == "IPSECKEY":
             m_return = DnsRegisterIPSECKEY(answer.algorithm,
                                            answer.gateway,
                                            answer.gateway_type,
                                            answer.key,
                                            answer.precedence)
+
         elif register_type == "ISDN":
             m_return = DnsRegisterISDN(answer.address,
                                        answer.subaddress)
+
         elif register_type == "LOC":
             m_return = DnsRegisterLOC(answer.latitude,
                                       answer.longitude,
                                       answer.altitude,
                                       answer.to_text())
+
         elif register_type == "MX":
             m_return = DnsRegisterMX(answer.exchange.to_text()[:-1],
                                      answer.preference)
+
         elif register_type == "NAPTR":
             m_return = DnsRegisterNAPTR(answer.order,
                                         answer.preference,
                                         answer.regexp,
                                         answer.replacement.to_text()[:-1],
                                         answer.service)
+
         elif register_type == "NS":
             m_return = DnsRegisterNS(answer.target.to_text()[:-1])
+
         elif register_type == "NSAP":
             m_return = DnsRegisterNSAP(answer.address)
+
         elif register_type == "NSEC":
             m_return_append(DnsRegisterNSEC(answer.next.to_text()[:-1]))
+
         elif register_type == "NSEC3":
             m_return = DnsRegisterNSEC3(answer.algorithm,
                                         answer.flags,
                                         answer.iterations,
                                         dns.rdata._hexify(answer.salt))
+
         elif register_type == "NSEC3PARAM":
             m_return = DnsRegisterNSEC3PARAM(answer.algorithm,
                                              answer.flags,
                                              answer.iterations,
                                              dns.rdata._hexify(answer.salt))
+
         elif register_type == "PTR":
             m_return = DnsRegisterPTR(answer.target.to_text()[:-1])
+
         elif register_type == "RP":
             m_return = DnsRegisterRP(answer.mbox.to_text()[:-1],
                                      answer.txt.to_text()[:-1])
+
         elif register_type == "RPSIG":
             m_return = DnsRegisterRRSIG(answer.algorithm,
                                         answer.expiration,
@@ -786,6 +802,7 @@ class _DNS(Singleton):
                                         answer.original_ttl,
                                         answer.signer,
                                         answer.type_coverded)
+
         elif register_type == "SIG":
             m_return = DnsRegisterSIG(answer.algorithm,
                                       answer.expiration,
@@ -795,26 +812,33 @@ class _DNS(Singleton):
                                       answer.original_ttl,
                                       answer.signer,
                                       answer.type_coverded)
+
         elif register_type == "SOA":
             m_return = DnsRegisterSOA(answer.mname.to_text()[:-1],
                                       answer.rname.to_text()[:-1],
                                       answer.refresh,
                                       answer.expire)
+
         elif register_type == "SPF":
             m_return = DnsRegisterSPF(answer.strings)
+
         elif register_type == "SRV":
             m_return = DnsRegisterSRV(answer.target.to_text()[:-1],
                                       answer.priority,
                                       answer.weight,
                                       answer.port)
+
         elif register_type == "TXT":
             m_return = DnsRegisterTXT(answer.strings)
+
         elif register_type == "WKS":
             m_return = DnsRegisterWKS(answer.address,
                                       answer.protocol,
                                       answer.bitmap)
+
         elif register_type == "X25":
             m_return = DnsRegisterX25(answer.address)
+
         else:
             raise ValueError("DNS register type '%s' is incorrect." % register_type)
 
@@ -824,16 +848,15 @@ class _DNS(Singleton):
     #----------------------------------------------------------------------
     def _make_request(self, register_type, host, nameservers=None, auto_resolve=True):
         """
-        Make a request, using dnslib, and return an unified type of data
-        RegisterXXXX.
+        Make a request using dnslib, and return a DNS register.
 
-        :param: register_type: of query: A, AAAA, CNAME...
+        :param: register_type: Type of query: A, AAAA, CNAME...
         :type register_type: str
 
-        :param host: Host where make the resquest.
+        :param host: Target host for the request.
         :type host: str
 
-        :param nameservers: list with a custom name servers
+        :param nameservers: Custom name servers.
         :type nameservers: list(str)
 
         :param auto_resolve: configure this function to transform de dnslib register to the golismero register.
