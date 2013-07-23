@@ -222,7 +222,7 @@ class Plugin (object):
         Config._context.send_status(progress, text)
 
     #----------------------------------------------------------------------
-    def update_status_step(self, step = None, total = None, **kwargs):
+    def update_status_step(self, step, total, text=None, **kwargs):
         """
         Plugins can call this method to tell the user of the current
         state of process for a concrete instant of time.
@@ -270,53 +270,33 @@ class Plugin (object):
         :param step: amount of values of total.
         :type step: int
 
-        :param partial: Optional value that represents the weight of the process has. Can be an int or long,
-                        representing the porcentual value (It'll be converted using 1/value), or a float percent.
-        :type partial: float|int|long
+        :param partial: Optional value that represents the weight of the process has.
+        :type partial: float
 
         :param text: Optional status text.
         :type text: str | None
         """
-        m_total   = None
-        m_step    = None
-        m_partial = None
 
-        # Validate total
-        if total is None:
-            raise ValueError("Expected int or float, got None instead")
-        else:
-            if type(total) in (int, long):
-                m_total = float(total)
-            elif type(total) is not float:
-                raise TypeError("Expected float, got %s instead", type(total))
-            else:
-                m_total = total
+        #
+        # Because this function will be called a lot of times, is not
+        # efficient (PoC was made) to check each param for types and
+        # ranges: > 0, etc. Instead, try/except runs very well
+        #
+        try:
+            m_total = float(total)
+            m_step  = int(step)
+            try:
+                m_partial = float(kwargs['partial'])
+            except KeyError:
+                m_partial = 1.0
 
-        # Validate step
-        if step is None:
-            raise ValueError("Expected int or float, got None instead")
-        else:
-            if type(step) not in (int, long):
-                raise TypeError("Expected float, got %s instead", type(step))
-            else:
-                m_step = step
+            m_process = (m_step/m_total)*m_partial
 
-        # Validate partial
-        if "partial" not in kwargs:
-            m_partial = 1.0
-        else:
-            l_partial = kwargs['partial']
-            if type(l_partial) in (int, long):
-                m_partial = float(1/l_partial)
-            elif type(l_partial) is not float:
-                raise TypeError("Expected float, got %s instead", type(l_partial))
-            else:
-                m_partial = l_partial
-
-        # Calculate
-        m_progress = (m_step/m_total) * m_partial
-
-        Config._context.send_status(m_progress, text)
+            Config._context.send_status(m_process, text)
+        except ValueError:
+            raise ValueError("input params must be numerics")
+        except ZeroDivisionError:
+            raise ValueError("Division by 0 detected")
 
 
 #------------------------------------------------------------------------------
