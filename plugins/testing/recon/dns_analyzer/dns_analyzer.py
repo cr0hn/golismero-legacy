@@ -35,6 +35,7 @@ from golismero.api.config import Config
 from golismero.api.data import discard_data
 from golismero.api.data.information.dns import DnsRegister
 from golismero.api.data.resource.domain import Domain
+from golismero.api.data.resource.ip import IP
 from golismero.api.logger import Logger
 from golismero.api.net.dns import DNS
 from golismero.api.parallel import pmap
@@ -67,12 +68,16 @@ class DNSAnalizer(TestingPlugin):
 
         # Checks if the hostname has been already processed
         m_return = None
+
         if not self.state.check(m_domain):
+
             Logger.log_more_verbose("starting DNS analyzer plugin")
             m_return = []
 
-            # Send information status
-            self.update_status(progress=0.19, text="Making DNS zone transfer")
+            m_reg_len = len(DnsRegister.DNS_TYPES)
+            for i, l_type in enumerate(DnsRegister.DNS_TYPES, start=1):
+                # Update status
+                self.update_status_step(step=i, total=m_reg_len, text="making '%s' DNS query" % l_type, partial=0.8)
 
             # Make the zone transfer
             m_return.extend(DNS.zone_transfer(m_domain))
@@ -91,6 +96,79 @@ class DNSAnalizer(TestingPlugin):
 
         return m_return
 
+#--------------------------------------------------------------------------
+#
+# DNS zone transfer
+#
+#--------------------------------------------------------------------------
+class DNSZoneTransfer(TestingPlugin):
+    """
+    Try to make a zone transfer
+    """
+
+
+    #----------------------------------------------------------------------
+    def get_accepted_info(self):
+        return [Domain]
+
+
+    #----------------------------------------------------------------------
+    def recv_info(self, info):
+
+        m_domain = info.hostname
+
+        # Checks if the hostname has been already processed
+        m_return = None
+
+        if not self.state.check(m_domain):
+
+            Logger.log_more_verbose("starting DNS zone transfer plugin")
+            d        = DNS()
+            m_return = []
+
+            # Update status
+            self.update_status(text="making DNS zone transfer")
+            #
+            # Make the zone transfer
+            #
+            m_ns_servers, m_zone_transfer = d.zone_transfer(m_domain, return_nameserver_used=True)
+
+            m_return_append = m_return.append
+            if m_zone_transfer:
+                for l_ns in m_ns_servers:
+                    # Create the vuln
+                    l_v        = DNSZoneTransfer(l_ns)
+                    l_resource = None
+
+                    # Is a IPaddress?
+                    try:
+                        ip     = IPAddress(l_ns)
+                        # Mark to not track
+                        LocalDataCache.on_autogeneration(ip)
+
+                        # Create the IP resource
+                        l_resource = IP(l_ns)
+                    except AddrFormatError:
+                        # Domain detected
+
+                        # Create the Domain resource
+                        l_resource = Domain(l_ns)
+
+                    # Associate the resource to the vuln
+                    l_v.add_resource(l_resource)
+
+                    # Append to the results: the resource and the vuln
+                    m_return_append(l_v)
+                    m_return_append(l_resource)
+
+
+            m_return.extend(m_ns_servers)
+
+
+            # Set the domain parsed
+            self.state.set(m_domain, True)
+
+        return m_return
 
 
 #--------------------------------------------------------------------------

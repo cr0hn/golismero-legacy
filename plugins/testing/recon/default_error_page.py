@@ -58,7 +58,17 @@ class DefaultErrorPagePlugin(TestingPlugin):
 
                 # Look for a match.
                 page_text = response.data
+
+                # Info for control the state
+                i        = 1
+                data_len = float(len(signatures))
+
                 for server_name, server_page in signatures.iteritems():
+
+                    # Update status
+                    self.update_status_step(step=i, total=data_len)
+                    i += 1
+
                     level = get_matching_level(page_text, server_page)
 
                     if level > 0.95:  # magic number :)

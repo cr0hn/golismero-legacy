@@ -292,6 +292,20 @@ def vuln_genereral_displayer(vulns):
     Displays the vulnerabilities.
     """
 
+
+    # This properties/methods are the common info for the vulnerability types.
+    PRIVATE_INFO = ['DEFAULTS', 'TYPE_INFORMATION', 'TYPE_RESOURCE',
+                    'TYPE_UNKNOWN', 'TYPE_VULNERABILITY', 'add_information',
+                    'add_link', 'add_resource', 'add_vulnerability', 'associated_informations',
+                    'associated_resources', 'associated_vulnerabilities', 'cve', 'cwe',
+                    'data_type', 'discovered', 'get_associated_informations_by_category',
+                    'get_associated_resources_by_category', 'get_associated_vulnerabilities_by_category',
+                    'get_linked_data', 'get_links', 'identity', 'impact', 'is_in_scope', 'linked_data',
+                    'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
+                    'merge', 'min_data', 'min_informations', 'min_resources', 'min_vulnerabilities',
+                    'references', 'reverse_merge', 'risk', 'severity', 'validate_link_minimums', 'vulnerability_type']
+
+
     if not vulns:
         return
 
@@ -301,6 +315,7 @@ def vuln_genereral_displayer(vulns):
     m_return        = []
     m_return_append = m_return.append
     for vuln in vulns:
+
         # Vuln name as raw format
         l_vuln_name      = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
         # Vuln name as display mode
@@ -312,9 +327,10 @@ def vuln_genereral_displayer(vulns):
             l_table.append("Vuln name: %s" % colorize(l_vuln_name_text, "white"))
             l_table.append("%s" % ("-" * len("Vuln name: %s" % l_vuln_name_text)))
 
-
-            # String value of handler
-            VULN_DISPLAYER[l_vuln_name](vuln, l_table.append)
+            # Get the vuln properties and add for display
+            for l_v_prop in dir(vuln):
+                if l_v_prop not in PRIVATE_INFO and not l_v_prop.startswith("_"):
+                    l_table.append("%s: %s" % (l_v_prop, colorize(getattr(vuln, l_v_prop), vuln.risk)))
 
             m_return_append(l_table)
 
@@ -323,36 +339,6 @@ def vuln_genereral_displayer(vulns):
             continue
 
     return m_return
-
-
-#----------------------------------------------------------------------
-def vuln_display_url_suspicious(vuln, func):
-    """Diplay the vuln: URL Suspicious"""
-    func("URL: %s" % colorize_substring(vuln.url.url, vuln.substring, "red"))
-    func("Suspicius text: %s" % colorize(vuln.substring, "red"))
-
-
-#----------------------------------------------------------------------
-def vuln_display_url_disclosure(vuln, func):
-    """Diplay the vuln: URL Disclosure"""
-    func("URL: %s" % colorize_substring(vuln.url.url, vuln.discovered_path, "red"))
-    func("Path discovered: %s" % colorize(vuln.discovered_path, "red"))
-
-
-#----------------------------------------------------------------------
-def vuln_display_default_error_page(vuln, func):
-    """Diplay the vuln: URL Disclosure"""
-
-    func("URL: %s" % colorize_substring(vuln.url.url, vuln.discovered_path, "red"))
-    func("Default error page for server: %s" % colorize(vuln.server_name, "red"))
-
-
-VULN_DISPLAYER = {
-    'url_suspicious'          : vuln_display_url_suspicious,
-    'url_disclosure'          : vuln_display_url_disclosure,
-    'default_error_page'      : vuln_display_default_error_page
-}
-
 
 #------------------------------------------------------------------------------
 class GolismeroTable:

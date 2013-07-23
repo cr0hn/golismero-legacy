@@ -221,6 +221,83 @@ class Plugin (object):
         """
         Config._context.send_status(progress, text)
 
+    #----------------------------------------------------------------------
+    def update_status_step(self, step, total, text=None, **kwargs):
+        """
+        Plugins can call this method to tell the user of the current
+        state of process for a concrete instant of time.
+
+
+        The step indicates the indicates the concrete value from a total
+        amount of information. The total amount of information to process
+        is repressented by 'total' var.
+
+        .. warning::
+           Do not override this method!
+
+
+        For example:
+
+        - step = 1
+        - total = 80
+        - The step == 1, represent the 1.25% of the total of process.
+
+        The optional partial param allow us to say the weight of the total
+        value respresent in the global status.
+
+        For example:
+
+        - The global process is the 100%.
+        - A concrete piece of code represent the 20% of the total process.
+        - The concrete piece has 80 values
+
+        Then, each step of status increment must be made in increments of 0.25%
+        until the total of percent value asignated to the piece of code: 20%:
+
+        0.25 * 80 values = 20% (the total percent for this piece of code)
+
+        Example:
+
+        >>> values_to_process = [0,1,2,4] # 40% of rest of task
+        >>> values_len = len(values_to_process)
+        >>> for i, val in enumerate(values_to_process, start=1):
+            update_status_step(i, values_len, partial=0.4, "Text for update")
+
+
+        :param total: the total amount of values to process.
+        :type total: float|int
+
+        :param step: amount of values of total.
+        :type step: int
+
+        :param partial: Optional value that represents the weight of the process has.
+        :type partial: float
+
+        :param text: Optional status text.
+        :type text: str | None
+        """
+
+        #
+        # Because this function will be called a lot of times, is not
+        # efficient (PoC was made) to check each param for types and
+        # ranges: > 0, etc. Instead, try/except runs very well
+        #
+        try:
+            m_total = float(total)
+            m_step  = int(step)
+            try:
+                m_partial = float(kwargs['partial'])
+            except KeyError:
+                m_partial = 1.0
+
+            m_process = (m_step/m_total)*m_partial
+
+            Config._context.send_status(m_process, text)
+        except ValueError:
+            raise ValueError("input params must be numerics")
+        except ZeroDivisionError:
+            raise ValueError("Division by 0 detected")
+
 
 #------------------------------------------------------------------------------
 class InformationPlugin (Plugin):

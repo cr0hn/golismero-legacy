@@ -89,26 +89,40 @@ class HarvesterPlugin(TestingPlugin):
         except ValueError:
             pass
 
+
+        # Var used to update status
+        m_data_len = len(self.SUPPORTED)
+
         # Search every supported engine.
         all_emails, all_hosts = set(), set()
-        for engine in self.SUPPORTED:
+        for i, engine in enumerate(self.SUPPORTED, start=1):
             try:
                 emails, hosts = self.search(engine, word, limit)
+
+                # Update status
+                self.update_status_step(step=i, total=m_data_len, text="searching in %s for '%s'" % (engine, word), patial=0.6)
             except Exception, e:
                 t = traceback.format_exc()
                 m = "theHarvester raised an exception: %s\n%s"
                 warnings.warn(m % (e, t))
                 continue
+
             all_emails.update(address.lower() for address in emails if address)
             all_hosts.update(name.lower() for name in hosts if name)
 
         # Adapt the data into our model.
         results = []
 
+        # Used for status
+        m_data_len = len(all_emails)
+
         # Email addresses.
-        for address in all_emails:
+        for i, address in enumerate(all_emails, start=1):
             try:
                 data = Email(address)
+
+                # Update status
+                self.update_status_step(step=i, total=m_data_len, text="processing mail '%s'" % address, patial=0.2)
             except Exception, e:
                 warnings.warn("Cannot parse email address: %r" % address)
                 continue
@@ -133,7 +147,13 @@ class HarvesterPlugin(TestingPlugin):
             all_names.add(name)
             all_names.add(real_name)
             all_names.update(aliaslist)
-            for name in all_names:
+
+            # For update the status
+            m_data_len = len(all_names)
+            for i, name in enumerate(all_names, start=1):
+                # Update status
+                self.update_status_step(step=i, total=m_data_len, text="processing hostname '%s'" % name, patial=0.2)
+
                 if name:
                     if name not in Config.audit_scope:
                         Logger.log_more_verbose("Hostname out of scope: %s" % name)

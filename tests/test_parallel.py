@@ -123,9 +123,9 @@ def test_long_data_input():
     print "Testing parallel with long data input"
 
     def test(x):
-        print x
+        return x
 
-    pmap(test, range(1005))
+    pmap(test, range(1000))
 
     print "Ended"
 

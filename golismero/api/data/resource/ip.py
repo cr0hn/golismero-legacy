@@ -34,6 +34,7 @@ __all__ = ["IP"]
 
 from . import Resource
 from .. import identity
+from .. import Config
 
 from netaddr import IPAddress
 
