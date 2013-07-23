@@ -36,7 +36,6 @@ from . import Resource
 from .. import identity
 
 from netaddr import IPAddress
-from netaddr.core import AddrFormatError
 
 
 #------------------------------------------------------------------------------
@@ -60,7 +59,7 @@ class IP(Resource):
 
         try:
             version = int( IPAddress(address).version )
-        except AddrFormatError:
+        except Exception:
             raise ValueError("Invalid IP address: %s" % address)
 
         # IP address and protocol version.
