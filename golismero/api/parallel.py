@@ -38,7 +38,8 @@ from thread import get_ident
 from threading import Semaphore, Thread
 from collections import Iterable
 
-#----------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
 def pmap(func, *args, **kwargs):
     """
     Run a function in parallel.
@@ -57,14 +58,23 @@ def pmap(func, *args, **kwargs):
         ...
         >>> pmap(addition, [1, 2, 3, 4, 5], [2, 4, 6, 8, 10])
         [3, 6, 9, 12, 15]
-
-        >>> def printer(x, my_list):
-               print "%s - %s" (x, str(my_list))
-
-        >>> pmap(printer, "fixed_text", [1,2])
+        >>> pmap((lambda x: x + 1), [1, 2, 3, 4, 5])
+        [2, 3, 4, 5, 6]
+        >>> def printer(x, y):
+               print "%s - %s" (x, y)
+        >>> from functools import partial
+        >>> pmap(partial(printer, "fixed_text"), [1, 2])
         fixed_text - 1
         fixed_text - 2
-
+        >>> class Point(object):
+        ...   def __init__(self, x, y):
+        ...     self.x = x
+        ...     self.y = y
+        ...   def __repr__(self):
+        ...     return "Point(%d, %d)" % (self.x, self.y)
+        ...
+        >>> pmap(Point, [1, 2, 3], [4, 5, 6])
+        [Point(1, 4), Point(2, 5), Point(3, 6)]
 
     .. warning: Unlike the built-in map() function, exceptions raised
                 by the callback function will be silently ignored.
@@ -125,7 +135,7 @@ def pmap(func, *args, **kwargs):
     return m_task_group.pack_output()
 
 
-#-------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class GolismeroTask(object):
     """
     A task to be executed.
@@ -161,7 +171,7 @@ class GolismeroTask(object):
         self.__output = output     # Dictionary for return values.
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def func(self):
         """
@@ -195,7 +205,7 @@ class GolismeroTask(object):
         return self.__output
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def run(self):
         """
         Run the task.
@@ -215,7 +225,7 @@ class GolismeroTask(object):
             pass
 
 
-#-------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class GolismeroTaskGroup(object):
     """
     A group of tasks to be executed.
@@ -240,7 +250,7 @@ class GolismeroTaskGroup(object):
         self.__output = {}         # Dictionary for return values.
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def func(self):
         """
@@ -266,7 +276,7 @@ class GolismeroTaskGroup(object):
         return self.__output
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __len__(self):
         """
         :returns: Number of individual tasks for this task group.
@@ -275,7 +285,7 @@ class GolismeroTaskGroup(object):
         return len(self.data)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __iter__(self):
         """
         :returns: Iterator of individual tasks for this task group.
@@ -289,7 +299,7 @@ class GolismeroTaskGroup(object):
             index += 1
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def pack_output(self):
         """
         Converts the output dictionary into an ordered list, where each
@@ -307,14 +317,14 @@ class GolismeroTaskGroup(object):
         return [ get(i) for i in xrange(max_index + 1) ]
 
 
-#-------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class GolismeroThread(Thread):
     """
     Worker threads.
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self):
 
         # Initialize our variables.
@@ -328,7 +338,7 @@ class GolismeroThread(Thread):
         super(GolismeroThread,self).__init__()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def run(self):
         """
         Thread run function.
@@ -360,7 +370,7 @@ class GolismeroThread(Thread):
                 self._callback(self)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def stop(self):
         """
         Signal the thread to stop.
@@ -369,7 +379,7 @@ class GolismeroThread(Thread):
         self.__sem_available.release()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def terminate(self):
         """
         Force the thread to terminate.
@@ -377,7 +387,7 @@ class GolismeroThread(Thread):
         raise NotImplementedError()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def add(self, task):
         """
         Add a task for this worker thread.
@@ -400,14 +410,14 @@ class GolismeroThread(Thread):
         self.__sem_available.release()
 
 
-#-------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class GolismeroPool(Thread):
     """
     Thread pool.
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, pool_size = 4):
         """
         :param pool_size: Maximum amount of concurrent threads allowed.
@@ -456,7 +466,7 @@ class GolismeroPool(Thread):
         self.start()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def run(self):
         """
         Execute incoming background tasks until signaled to stop.
@@ -501,7 +511,7 @@ class GolismeroPool(Thread):
                 f.add(task)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def _worker_thread_finished(self, thread):
 
         # Move the completed task from the busy set to the available set.
@@ -521,7 +531,7 @@ class GolismeroPool(Thread):
             self.__join = False
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def join_tasks(self):
         """
         Block until all tasks are completed.
@@ -530,7 +540,7 @@ class GolismeroPool(Thread):
         self.__sem_join.acquire()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def add(self, task_group):
         """
         Add a task group to the pool for execution.
@@ -546,7 +556,7 @@ class GolismeroPool(Thread):
         self.__sem_available_data.release()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def stop(self):
         """
         Stop all threads in the pool.
@@ -571,7 +581,7 @@ class GolismeroPool(Thread):
             self.join()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def terminate(self):
         """
         Force exit killing all threads.
