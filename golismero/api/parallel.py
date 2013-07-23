@@ -3,6 +3,24 @@
 
 """
 API for parallel execution within GoLismero plugins.
+
+.. note: It's often best to keep your plugins as simple as possible, breaking
+         down complex tasks into simple steps, and into multiple plugins if
+         necessary. That way GoLismero can take care of multiprocessing and
+         load balancing more efficiently.
+
+         Still, in some cases, it comes in handy to be able to run something
+         in parallel within a plugin. Just bear in mind that if your plugin
+         uses too many threads and it gets called often, the total number of
+         running threads in the machine would balloon quite fast!
+
+         Also, there are situations where threads won't help at all. For
+         example if the number of running threads is greater than the maximum
+         number of allowed connections to the target host. Additionally, in the
+         CPython VM, the Global Interpreter Lock (GIL) makes threads a lot less
+         efficient than they should be, so running pure-Python computation
+         tasks in parallel not only gives you no benefit, but may actually run
+         slower! See: `http://wiki.python.org/moin/GlobalInterpreterLock`_
 """
 
 __license__ = """
@@ -31,12 +49,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
 __all__ = ["pmap"]
 
-from thread import get_ident
-from threading import Semaphore, Thread
 from collections import Iterable
+from thread import get_ident
+from threading import RLock, Semaphore, Thread
 
 
 #------------------------------------------------------------------------------
@@ -85,7 +102,7 @@ def pmap(func, *args, **kwargs):
     :param args: One or more iterables or simple params containing the parameters for each call.
     :type args: simple_param, simple_param, iterable, iterable...
 
-    :keyword pool_size: Maximum amount of concurrent threads. Defaults to 4.
+    :keyword pool_size: Maximum number of concurrent threads. Defaults to 4.
     :type pool_size: int
 
     :return: List with returned results, in the same order as the input data.
@@ -107,28 +124,45 @@ def pmap(func, *args, **kwargs):
             msg = "Unknown keyword argument: "
         raise TypeError(msg + ", ".join(kwargs))
 
+    # Undocumented behavior of the built-in map() function:
+    # passing None as the callback works as the identity function.
+    # (This behavior was removed in Python 3).
+    if func is None:
+        return map(None, *args)
+
     # Interpolate the arguments.
     if len(args) == 1:
-        data = [ (x,) for x in args[0] ]
+        data = [ (x,) for x in args[0] ]  # force to 1-tuples
     else:
         data = map(None, *args)
 
+    # If there are no tasks to run, return an empty list.
+    # This is exactly how the built-in map() behaves.
+    if not data:
+        return []
+
+    # If there's only one task to run, just do it now.
+    # No need to run in parallel.
+    if len(data) == 1:
+        return [ func( *data[0] ) ]
 
     # Create the task group.
-    m_task_group = GolismeroTaskGroup(func, data)
+    m_task_group = TaskGroup(func, data)
 
     # Create the pool.
-    m_pool = GolismeroPool(pool_size)
+    m_pool = WorkerPool(pool_size)
+
     try:
 
         # Add the task and get the returned values.
-        m_pool.add(m_task_group)
+        m_pool.add_task(m_task_group)
 
         # Wait for the tasks to end.
         m_pool.join_tasks()
 
-    # Stop the pool.
     finally:
+
+        # Stop the pool.
         m_pool.stop()
 
     # Return the list of results.
@@ -136,7 +170,7 @@ def pmap(func, *args, **kwargs):
 
 
 #------------------------------------------------------------------------------
-class GolismeroTask(object):
+class Task(object):
     """
     A task to be executed.
     """
@@ -226,7 +260,7 @@ class GolismeroTask(object):
 
 
 #------------------------------------------------------------------------------
-class GolismeroTaskGroup(object):
+class TaskGroup(object):
     """
     A group of tasks to be executed.
     """
@@ -289,13 +323,13 @@ class GolismeroTaskGroup(object):
     def __iter__(self):
         """
         :returns: Iterator of individual tasks for this task group.
-        :rtype: iter(GolismeroTask)
+        :rtype: iter(Task)
         """
         func = self.func
         output = self.output
         index = 0
         for args in self.data:
-            yield GolismeroTask(func, args, index, output)
+            yield Task(func, args, index, output)
             index += 1
 
 
@@ -306,7 +340,7 @@ class GolismeroTaskGroup(object):
         element is the return value for each tuple of positional arguments.
         Missing elements are replaced with None.
 
-        .. warning: Do not call until join() has been called!
+        .. warning: Do not call before calling WorkerPool.join_tasks()!
         """
         output = self.output
         if not output:
@@ -318,7 +352,7 @@ class GolismeroTaskGroup(object):
 
 
 #------------------------------------------------------------------------------
-class GolismeroThread(Thread):
+class WorkerThread(Thread):
     """
     Worker threads.
     """
@@ -332,10 +366,14 @@ class GolismeroThread(Thread):
         self._callback         = None          # Callback set by the pool.
         self.__continue        = True          # Stop flag.
         self.__sem_available   = Semaphore(0)  # Semaphore for pending tasks.
+        self.__lock            = RLock()       # Lock to prevent reentrance.
+        self.__busy            = False         # Busy flag.
 
-        # Call the superclass constructor
-        # *after* initializing our variables.
-        super(GolismeroThread,self).__init__()
+        # Call the superclass constructor *after* initializing our variables.
+        super(WorkerThread, self).__init__()
+
+        # Set the thread as daemonic.
+        self.daemon = True
 
 
     #--------------------------------------------------------------------------
@@ -349,7 +387,7 @@ class GolismeroThread(Thread):
 
         # Check the user isn't a complete moron who doesn't read the docs.
         if self.ident != get_ident():
-            raise SyntaxError("Don't call GolismeroThread.run() yourself!")
+            raise SyntaxError("Don't call WorkerThread.run() yourself!")
 
         # Loop until signaled to stop.
         while True:
@@ -361,13 +399,22 @@ class GolismeroThread(Thread):
             if not self.__continue:
                 break
 
-            # Run the task.
-            if self.__task is not None:
-                self.__task.run()
+            # Prevent reentrance.
+            with self.__lock:
 
-            # Run the callback.
-            if self._callback is not None:
-                self._callback(self)
+                # Set the busy flag.
+                self.__busy = True
+
+                # Run the task.
+                if self.__task is not None:
+                    self.__task.run()
+
+                # Run the callback.
+                if self._callback is not None:
+                    self._callback(self)
+
+                # Clear the busy flag.
+                self.__busy = False
 
 
     #--------------------------------------------------------------------------
@@ -383,37 +430,66 @@ class GolismeroThread(Thread):
     def terminate(self):
         """
         Force the thread to terminate.
+
+        .. warning: Don't use this except in extreme circumstances!
+                    The terminated thread's code may not have a proper chance
+                    to clean up its resources or free its locks, and this may
+                    lead to memory leaks and/or deadlocks!
         """
-        raise NotImplementedError()
+
+        # For more details see:
+        # http://stackoverflow.com/a/15274929/426293
+
+        # Do nothing if the thread is already dead.
+        if not self.isAlive():
+            return
+
+        # Inject a fake KeyboardInterrupt exception.
+        # This is rather dangerous, since the exception may be raised anywhere,
+        # and usually Python code doesn't expect that, even though it should.
+        # This happens even within standard Python libraries!
+        import ctypes
+        exc = ctypes.py_object(KeyboardInterrupt)
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+            ctypes.c_long(self.ident), exc)
+        if res == 0:
+            raise SystemError("Nonexistent thread id?")
+        elif res > 1:
+            # If it returns a number greater than one, you're in trouble,
+            # and you should call it again with exc=NULL to revert the effect.
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(self.ident, None)
+            raise SystemError("PyThreadState_SetAsyncExc() failed")
 
 
     #--------------------------------------------------------------------------
-    def add(self, task):
+    def run_task(self, task):
         """
-        Add a task for this worker thread.
-
-        .. warning: This is not reentrant! If this method is called while
-                    another task is still running, weird things may happen!
+        Run a task in this worker thread.
 
         :param task: Task to run.
-        :type task: GolismeroTask
+        :type task: Task
         """
 
         # Validate the parameters.
-        if not isinstance(task, GolismeroTask):
-            raise TypeError("Expected GolismeroTask, got %s instead" % type(task))
+        if not isinstance(task, Task):
+            raise TypeError("Expected Task, got %s instead" % type(task))
 
-        # Set the task as current.
-        self.__task = task
+        # Prevent reentrance.
+        with self.__lock:
+            if self.__busy:
+                raise SystemError("Task is busy")
 
-        # Signal the thread to run the task.
-        self.__sem_available.release()
+            # Set the task as current.
+            self.__task = task
+
+            # Signal the thread to run the task.
+            self.__sem_available.release()
 
 
 #------------------------------------------------------------------------------
-class GolismeroPool(Thread):
+class WorkerPool(Thread):
     """
-    Thread pool.
+    Worker thread pool.
     """
 
 
@@ -429,6 +505,7 @@ class GolismeroPool(Thread):
             raise ValueError("pool_size must be greater than 0")
 
         # Synchronization.
+        self.__lock               = RLock()
         self.__sem_max_threads    = Semaphore(pool_size)
         self.__sem_available_data = Semaphore(0)
         self.__sem_join           = Semaphore(0)
@@ -451,16 +528,26 @@ class GolismeroPool(Thread):
         # Available worker threads.
         self.__available_workers = set()
 
+        # All worker threads.
+        self.__all_workers = set()
+
         # Setup the pool.
-        add = self.__available_workers.add
+        add1 = self.__available_workers.add
+        add2 = self.__all_workers.add
+        callback = self._worker_thread_finished
+        GT = WorkerThread
         for l_p in xrange(pool_size):
-            l_thread = GolismeroThread()
-            l_thread._callback = self._worker_thread_finished
-            add(l_thread)
+            l_thread = GT()
+            l_thread._callback = callback
+            add1(l_thread)
+            add2(l_thread)
             l_thread.start()
 
-        # Superclass constructor.
-        super(GolismeroPool, self).__init__()
+        # Call the superclass constructor *after* initializing our variables.
+        super(WorkerPool, self).__init__()
+
+        # Make the dispatcher thread daemonic.
+        self.daemon = True
 
         # Start the dispatcher thread.
         self.start()
@@ -477,23 +564,26 @@ class GolismeroPool(Thread):
 
         # Check the user isn't a complete moron who doesn't read the docs.
         if self.ident != get_ident():
-            raise SyntaxError("Don't call GolismeroPool.run() yourself!")
+            raise SyntaxError("Don't call WorkerPool.run() yourself!")
 
         while True:
 
             # Blocks until a task group is received.
             self.__sem_available_data.acquire()
 
-            # If stop is requested, break out of the loop.
-            if self.__stop:
-                break
+            # Acquire the lock to protect our data.
+            with self.__lock:
 
-            # Get task group to run.
-            task_group = self.__pending_tasks.pop()
+                # If stop is requested, break out of the loop.
+                if self.__stop:
+                    break
 
-            # The length of the input data tells us how many
-            # thread finish signals to expect.
-            self.__count_task += len(task_group)
+                # Get task group to run.
+                task_group = self.__pending_tasks.pop()
+
+                # The length of the input data tells us how many
+                # thread finish signals to expect.
+                self.__count_task += len(task_group)
 
             # For each individual task...
             for task in task_group:
@@ -501,34 +591,40 @@ class GolismeroPool(Thread):
                 # Block until a worker thread is available.
                 self.__sem_max_threads.acquire()
 
-                # Get a random available worker thread.
-                f = self.__available_workers.pop()
+                # Acquire the lock to protect our data.
+                with self.__lock:
 
-                # Mark the worker thread as busy.
-                self.__busy_workers.add(f)
+                    # Get a random available worker thread.
+                    f = self.__available_workers.pop()
+
+                    # Mark the worker thread as busy.
+                    self.__busy_workers.add(f)
 
                 # Send the task to the worker thread.
-                f.add(task)
+                f.run_task(task)
 
 
     #--------------------------------------------------------------------------
     def _worker_thread_finished(self, thread):
 
-        # Move the completed task from the busy set to the available set.
-        self.__busy_workers.remove(thread)
-        self.__available_workers.add(thread)
+        # Acquire the lock to protect our data.
+        with self.__lock:
 
-        # Signal the pool that a worker thread is now available.
-        self.__sem_max_threads.release()
+            # Move the completed task from the busy set to the available set.
+            self.__busy_workers.remove(thread)
+            self.__available_workers.add(thread)
 
-        # Decrement the currently running tasks counter.
-        self.__count_task -= 1
+            # Decrement the currently running tasks counter.
+            self.__count_task -= 1
 
-        # If no tasks are currently running and a join was requested,
-        # unlock the caller of join().
-        if self.__count_task <= 0 and self.__join:
-            self.__sem_join.release()
-            self.__join = False
+            # Signal the pool that a worker thread is now available.
+            self.__sem_max_threads.release()
+
+            # If no tasks are currently running and a join was requested,
+            # unlock the caller of join().
+            if self.__count_task <= 0 and self.__join:
+                self.__sem_join.release()
+                self.__join = False
 
 
     #--------------------------------------------------------------------------
@@ -536,24 +632,28 @@ class GolismeroPool(Thread):
         """
         Block until all tasks are completed.
         """
-        self.__join = True
+        with self.__lock:
+            self.__join = True
         self.__sem_join.acquire()
 
 
     #--------------------------------------------------------------------------
-    def add(self, task_group):
+    def add_task(self, task_group):
         """
         Add a task group to the pool for execution.
 
         :param task_group: A task group.
-        :type task_group: GolismeroTaskGroup
+        :type task_group: TaskGroup
         """
 
-        # Add task group to the pending tasks set.
-        self.__pending_tasks.add(task_group)
+        # Acquire the lock to protect our data.
+        with self.__lock:
 
-        # Signal the availability of new data.
-        self.__sem_available_data.release()
+            # Add task group to the pending tasks set.
+            self.__pending_tasks.add(task_group)
+
+            # Signal the availability of new data.
+            self.__sem_available_data.release()
 
 
     #--------------------------------------------------------------------------
@@ -564,17 +664,17 @@ class GolismeroPool(Thread):
         The pool cannot be used again after calling this method.
         """
 
-        # Signal the dispatcher thread we want to stop.
-        self.__stop = True
+        # Acquire the lock to protect our data.
+        with self.__lock:
 
-        # Signal all available worker threads to stop.
-        map(GolismeroThread.stop, self.__available_workers)
+            # Signal the dispatcher thread we want to stop.
+            self.__stop = True
 
-        # Signal all busy worker threads to stop.
-        map(GolismeroThread.stop, self.__busy_workers)
+            # Signal all worker threads to stop.
+            map(WorkerThread.stop, self.__all_workers)
 
-        # Unlock the main loop.
-        self.__sem_available_data.release()
+            # Unlock the main loop.
+            self.__sem_available_data.release()
 
         # Block until the dispatcher thread finishes.
         if self.ident != get_ident():
@@ -587,5 +687,17 @@ class GolismeroPool(Thread):
         Force exit killing all threads.
 
         The pool cannot be used again after calling this method.
+
+        .. warning: Don't use this except in extreme circumstances!
+                    The terminated thread's code may not have a proper chance
+                    to clean up its resources or free its locks, and this may
+                    lead to memory leaks and/or deadlocks!
         """
-        raise NotImplementedError()
+        import warnings
+        warnings.warn("WorkerPool.terminate() called!")
+        for worker in self.__all_workers:
+            try:
+                worker.terminate()
+            except:
+                import traceback
+                traceback.print_exc()
