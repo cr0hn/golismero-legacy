@@ -39,13 +39,13 @@ from .api.net.dns import DNS
 from .api.net.web_utils import DecomposedURL, split_hostname
 
 from netaddr import IPAddress, IPNetwork
-from netaddr.core import AddrFormatError
 
 import re
+import warnings
 
 
 #------------------------------------------------------------------------------
-class AuditScope (Singleton):
+class AuditScope (object):
     """
     Audit scope.
 
@@ -97,7 +97,7 @@ class AuditScope (Singleton):
                 try:
                     IPAddress(target)
                     address = target
-                except AddrFormatError:
+                except Exception:
                     address = None
                 if address is not None:
 
@@ -112,7 +112,7 @@ class AuditScope (Singleton):
                 else:
                     try:
                         network = IPNetwork(target)
-                    except AddrFormatError:
+                    except Exception:
                         network = None
                     if network is not None:
 
@@ -144,7 +144,7 @@ class AuditScope (Singleton):
                             try:
                                 IPAddress(host)
                                 self.__addresses.add(host)
-                            except AddrFormatError:
+                            except Exception:
                                 self.__domains.add( host.lower() )
 
         # If subdomains are allowed, we must include the parent domains.
@@ -162,11 +162,11 @@ class AuditScope (Singleton):
 
             # Resolve the IPv4 addresses.
             for register in DNS.get_a(domain):
-                self.__addresses.add(register.target)
+                self.__addresses.add(register.address)
 
             # Resolve the IPv6 addresses.
             for register in DNS.get_aaaa(domain):
-                self.__addresses.add(register.target)
+                self.__addresses.add(register.address)
 
 
     #--------------------------------------------------------------------------
@@ -235,4 +235,5 @@ class AuditScope (Singleton):
             return address in self.__addresses
 
         # We don't know what this is, so we'll consider it out of scope.
+        warnings.warn("Can't determine if this is out of scope or not: %r" % target)
         return False

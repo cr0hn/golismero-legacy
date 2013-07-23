@@ -34,7 +34,6 @@ __all__ = ["IP"]
 
 from . import Resource
 from .. import identity
-from ...net.web_utils import is_in_scope
 
 from netaddr import IPAddress
 from netaddr.core import AddrFormatError

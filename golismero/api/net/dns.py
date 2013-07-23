@@ -32,7 +32,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["DNS"]
 
-from ..data.information.dns import *
+from ..data.information.dns import *   # this is ok
+from ...common import Singleton
 
 import re
 import dns.query
@@ -55,7 +56,7 @@ from netaddr.core import AddrFormatError
 #
 # Project site: https://github.com/darkoperator/dnsrecon
 #
-class DNS(object):
+class _DNS(Singleton):
 
     REQUEST_TIMEOUT = 2.0 # In seconds
 
@@ -874,3 +875,6 @@ class DNS(object):
             return self._dnslib2register(register_type, answer)
         else:
             return answer
+
+# Instance the singleton.
+DNS = _DNS()

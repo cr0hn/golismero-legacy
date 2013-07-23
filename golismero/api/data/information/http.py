@@ -35,7 +35,7 @@ __all__ = ["HTTP_Request", "HTTP_Response"]
 from . import Information
 from .. import identity, overwrite
 from ...config import Config
-from ...net.web_utils import DecomposedURL, is_in_scope
+from ...net.web_utils import DecomposedURL
 
 import re
 import httplib

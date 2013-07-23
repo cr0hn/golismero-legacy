@@ -53,8 +53,6 @@ HOSTS = ["ns1.google.com", "twitter.com", "bing.com", "tuenti.es", "facebook.com
 
 def test_all_registers():
 
-    d = DNS()
-
     print
 
     for l_host in HOSTS:
@@ -66,7 +64,7 @@ def test_all_registers():
             print "   Type: " + l_dns_type
             print "   %s" % ("=" * (len(l_dns_type ) + 6))
 
-            r = d.resolve(l_host, l_dns_type)
+            r = DNS.resolve(l_host, l_dns_type)
 
             for i, c in enumerate(r):
                 l_properties = [x for x in c.__dict__ if "__" in x]
@@ -79,18 +77,16 @@ def test_all_registers():
 
 #----------------------------------------------------------------------
 def test_zone_transfer():
-    d = DNS()
-    print d.zone_transfer("173.194.34.224")
-    print d.zone_transfer("zonetransfer.me", ["ns12.zoneedit.com"])
+    print DNS.zone_transfer("173.194.34.224")
+    print DNS.zone_transfer("zonetransfer.me", ["ns12.zoneedit.com"])
 
 #----------------------------------------------------------------------
 def test_a_aaaa():
-    d = DNS()
 
     HOSTS = ["aaaa.terra.es"]
 
     for h in HOSTS:
-        r = d.get_a(h, also_CNAME=True)
+        r = DNS.get_a(h, also_CNAME=True)
 
         for kk in r:
 
@@ -107,10 +103,9 @@ def test_ptr():
     Try to make a inverse resolution
     """
     ips = ["173.194.34.197"] # google.com
-    d   = DNS()
 
     for ip in ips:
-        for t in d.get_ptr(ip):
+        for t in DNS.get_ptr(ip):
             print t.target
 
 
