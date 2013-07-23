@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-IPv4 address type.
+IP address type.
 """
 
 __license__ = """
@@ -35,8 +35,10 @@ __all__ = ["IP"]
 from . import Resource
 from .. import identity
 from ...net.web_utils import is_in_scope
+
 from netaddr import IPAddress
 from netaddr.core import AddrFormatError
+
 
 #------------------------------------------------------------------------------
 class IP(Resource):
@@ -48,30 +50,23 @@ class IP(Resource):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, address, version="auto"):
+    def __init__(self, address):
         """
-        :param address: IPv4 address.
+        :param address: IP address.
         :type address: str
-
-        :param version: version of IP protocolo: 4, 6 or auto to detect the version.
-        :param type: str(4|6|auto)
         """
-        if isinstance(version, basestring):
-            if version == "auto":
-                try:
-                    self.__version =  IPAddress(address).version
-                except AddrFormatError:
-                    raise ValueError("Wrong IP address")
-            elif version not in ("4", "6"):
-                raise ValueError("Valid versions for IP are: 4 or 6")
-            else:
-                self.__version = version
-        else:
-            raise TypeError("Expected basestring, got '%s'" % type(version))
 
+        if not isinstance(address, basestring):
+            raise TypeError("Expected str, got %r instead" % type(address))
 
-        # IP address.
+        try:
+            version = int( IPAddress(address).version )
+        except AddrFormatError:
+            raise ValueError("Invalid IP address: %s" % address)
+
+        # IP address and protocol version.
         self.__address = address
+        self.__version = version
 
         # Parent constructor.
         super(IP, self).__init__()
@@ -86,20 +81,25 @@ class IP(Resource):
     def __repr__(self):
         return "<IP address=%r>" % self.address
 
-    #----------------------------------------------------------------------
-    @property
-    def version(self):
-        """
-        :return: version of IP protocolo: 4 or 6.
-        :rtype: str(4|6)
-        """
-        return self.__version
 
     #----------------------------------------------------------------------
     @identity
     def address(self):
         """
-        :return: IPv4 address.
+        :return: IP address.
         :rtype: str
         """
         return self.__address
+
+
+    #----------------------------------------------------------------------
+    @property
+    def version(self):
+        """
+        :return: version of IP protocol: 4 or 6.
+        :rtype: int(4|6)
+        """
+        return self.__version
+
+
+    # TODO: check for scope
