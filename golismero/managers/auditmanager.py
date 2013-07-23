@@ -35,15 +35,18 @@ __all__ = ["AuditManager", "Audit"]
 from ..api.data import Data
 from ..api.data.resource import Resource
 from ..api.data.resource.url import Url
+from ..api.config import Config
 from ..common import AuditConfig
 from ..database.auditdb import AuditDB
 from ..managers.importmanager import ImportManager
+from ..managers.processmanager import PluginContext
 from ..managers.reportmanager import ReportManager
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 from ..messaging.notifier import AuditNotifier
 
 from datetime import datetime
+from os import getpid
 from warnings import catch_warnings, warn
 
 
@@ -547,6 +550,26 @@ class Audit (object):
         """
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
+
+        # Keep the original execution context.
+        old_context = Config._context
+
+        try:
+
+            # Update the execution context for this audit.
+            Config._context = PluginContext(getpid(), old_context.msg_queue,
+                                            audit_name   = self.name,
+                                            audit_config = self.params)
+
+            # Dispatch the message.
+            return self.__dispatch_msg(message)
+
+        finally:
+
+            # Restore the original execution context.
+            Config._context = old_context
+
+    def __dispatch_msg(self, message):
 
         # Get the database and the plugin manager.
         database = self.database
