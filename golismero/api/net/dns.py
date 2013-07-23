@@ -359,18 +359,27 @@ class DNS(object):
 
 
 	#----------------------------------------------------------------------
-	def zone_transfer(self, domain, nameservers = None):
+	def zone_transfer(self, domain, port=53, nameservers = None, return_nameserver_used=False):
 		"""
-		Function for testing for zone transfers for a given Domain.
+		Function for testing for zone transfers for a given Domain. By default
+		try to make a zone transfer in all name servers of the domain.
 
 		:param domain: string with the hostname or nameserver.
 		:type domain: str
 
+		:param port: port used to make the zone transfer.
+		:type port: int
+
 		:param nameservers: list with an alternate nameservers.
 		:type nameservers: list(str)
 
+		:param return_nameserver_used: if this param is set to true, the method return a tuple
+		                               with the nameservers used to make the zone transerfer, like:
+									   (set(name_servers as string), list(DnsRegister))
+		:type return_nameserver_used: bool
+
 		:return: a list with DnsRegisters
-		:rtype: list(DnsRegister)
+		:rtype: list(DnsRegister) | (set(str), list(DnsRegister)) if return_nameserver_used == True.
 		"""
 		if not isinstance(domain, basestring):
 			raise TypeError("Expected basestring, got '%s'" % type(domain))
@@ -385,6 +394,9 @@ class DNS(object):
 		# Results of zone transfer
 		zone_records        = []
 		zone_records_append = zone_records.append
+
+		# List of server with the zone transfer enabled
+		ns_zt_enabled       = set()
 
 		# Availabe DNS servers
 		ns_records   = None
@@ -422,9 +434,12 @@ class DNS(object):
 		# Make the transfer for each NS Server
 		#
 		for ns_srv in ns_records:
-			if self.check_tcp_dns(ns_srv):
+			if self.check_tcp_dns(ns_srv, port):
 				try:
 					zone = self._from_wire(dns.query.xfr(ns_srv, domain))
+
+					# Add the server to the servers with the zone transfer enabled
+					ns_zt_enabled.add(ns_srv)
 
 					for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.SOA):
 						for rdata in rdataset:
@@ -544,7 +559,10 @@ class DNS(object):
 				except:
 					pass
 
-		return zone_records
+		if return_nameserver_used:
+			return (ns_zt_enabled, zone_records)
+		else:
+			return zone_records
 
 
 	#----------------------------------------------------------------------
