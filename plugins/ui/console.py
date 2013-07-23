@@ -99,7 +99,7 @@ class ConsoleUIPlugin(UIPlugin):
                 m_id, m_progress, m_text = message.message_info
 
                 #The counter
-                m_progress_txt = colorize("[%s/100]" % "{:2d}".format(int(m_progress * 100)), "white")
+                m_progress_txt = colorize("[%s/100]" % "{:2d}".format(int((m_progress if m_progress else 1.0) * 100)), "white")
                 #m_text = "%s %s: Status: %s." % (m_progress_txt, m_id, m_text)
-                m_text = "%s Status: %s." % (m_progress_txt, m_text)
+                m_text = "%s Status: %s." % (m_progress_txt, (m_text if m_text else ""))
                 Console.display(m_text)
