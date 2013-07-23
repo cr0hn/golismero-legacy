@@ -36,8 +36,10 @@ from . import Resource
 from .baseurl import BaseUrl
 from .domain import Domain
 from .folderurl import FolderUrl
+from .ip import IP
 from .. import identity
-from ...net.web_utils import DecomposedURL, is_in_scope
+from ...config import Config
+from ...net.web_utils import DecomposedURL
 
 
 #------------------------------------------------------------------------------
@@ -141,7 +143,7 @@ class Url(Resource):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.url)
+        return self.url in Config.audit_scope
 
 
     #----------------------------------------------------------------------
@@ -245,5 +247,11 @@ class Url(Resource):
     @property
     def discovered(self):
         if self.is_in_scope():
-            return [Domain(self.hostname), BaseUrl(self.url)] + FolderUrl.from_url(self.url)
+            result = FolderUrl.from_url(self.url)
+            result.append( BaseUrl(self.url) )
+            try:
+                result.append( IP(self.hostname) )
+            except ValueError:
+                result.append( Domain(self.hostname) )
+            return result
         return []

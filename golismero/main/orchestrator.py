@@ -384,12 +384,15 @@ class Orchestrator (object):
         # Get the plugin information.
         info = self.__pluginManager.get_plugin_info_from_instance(plugin)[1]
 
-        # Get the audit configuration.
-        audit_config = self.__auditManager.get_audit(audit_name).params
+        # Get the audit configuration and scope.
+        audit = self.__auditManager.get_audit(audit_name)
+        audit_config = audit.config
+        audit_scope  = audit.scope
 
         # Return the context instance.
         return PluginContext(getpid(), self.__queue,
-                             ack_identity, info, audit_name, audit_config)
+                             ack_identity, info,
+                             audit_name, audit_config, audit_scope)
 
 
     #----------------------------------------------------------------------
@@ -435,8 +438,8 @@ class Orchestrator (object):
 
             # If we have initial audits, start them.
             # TODO: maybe this should be done by the UI plugins instead?
-            for params in audits:
-                self.add_audit(params)
+            for audit_config in audits:
+                self.add_audit(audit_config)
 
             # Message loop.
             while True:

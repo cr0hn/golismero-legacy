@@ -34,7 +34,7 @@ __all__ = ["HTTP"]
 
 from . import ConnectionSlot, NetworkException, NetworkOutOfScope
 from .cache import NetworkCache
-from .web_utils import is_in_scope, detect_auth_method, get_auth_obj
+from .web_utils import detect_auth_method, get_auth_obj
 from ..config import Config
 from ..data import LocalDataCache, discard_data
 from ..data.information.http import HTTP_Request, HTTP_Response, HTTP_Raw_Request
@@ -256,7 +256,7 @@ class _HTTP(Singleton):
 
                 # If the final URL is different from the request URL,
                 # abort if the new URL is out of scope.
-                if url != request.url and not is_in_scope(url):
+                if url != request.url and url not in Config.audit_scope:
                     raise NetworkOutOfScope("URL out of scope: %s" % url)
 
                 # Call the user-defined callback, and cancel if requested.
@@ -395,7 +395,7 @@ class _HTTP(Singleton):
             timeout = None
 
         # Check the request scope.
-        if not is_in_scope(host):
+        if host not in Config.audit_scope:
             raise NetworkOutOfScope("Host out of scope: %s" % host)
 
         # Get a connection slot.

@@ -35,6 +35,7 @@ __all__ = ["Config"]
 from ..common import Singleton
 
 
+#------------------------------------------------------------------------------
 class _Config (Singleton):
     """
     Current plugin and audit configuration.
@@ -48,7 +49,6 @@ class _Config (Singleton):
         >>> Config.plugin_name
         'my_plugin_name'
     """
-
 
     # The constructor tries to prevent the user
     # from instancing this class directly.
@@ -76,6 +76,15 @@ class _Config (Singleton):
         :rtype: AuditConfig
         """
         return self._context.audit_config
+
+
+    @property
+    def audit_scope(self):
+        """
+        :returns: Scope of the audit.
+        :rtype: AuditScope
+        """
+        return self._context.audit_scope
 
 
     @property
@@ -207,8 +216,7 @@ class _Config (Singleton):
             return False
 
 
-    #--------------------------------------------------------------------------
-
+#------------------------------------------------------------------------------
 
 # Instance the singleton.
 Config = _Config()

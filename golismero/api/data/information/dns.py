@@ -35,13 +35,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from .. import identity
 from . import Information
 from .text import Text
-from ..resource.ip  import IP
+from .. import identity
 from ..resource.domain import Domain
 from ..resource.email import Email
-from ...net.web_utils import is_in_scope
+from ..resource.ip  import IP
+from ...config import Config
 
 
 #------------------------------------------------------------------------------
@@ -480,8 +480,14 @@ class DnsRegisterAAAA(DnsRegister):
     #----------------------------------------------------------------------
     @property
     def discovered(self):
-        # TODO: check scope
-        return [IP(self.address)]
+        if self.is_in_scope():
+            return [IP(self.address)]
+        return []
+
+
+    #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return self.address in Config.audit_scope
 
 
 #------------------------------------------------------------------------------
@@ -542,7 +548,7 @@ class DnsRegisterAFSDB(DnsRegister):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.hostname)
+        return self.hostname in Config.audit_scope
 
 
 #------------------------------------------------------------------------------
@@ -721,7 +727,7 @@ class DnsRegisterCNAME(DnsRegister):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.target)
+        return self.target in Config.audit_scope
 
 
 #------------------------------------------------------------------------------
@@ -1196,7 +1202,7 @@ class DnsRegisterMX(DnsRegister):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.exchange)
+        return self.exchange in Config.audit_scope
 
 
 #------------------------------------------------------------------------------
@@ -1304,7 +1310,7 @@ class DnsRegisterNAPTR(DnsRegister):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.replacement)
+        return self.replacement in Config.audit_scope
 
 
 #------------------------------------------------------------------------------
@@ -1349,7 +1355,7 @@ class DnsRegisterNS(DnsRegister):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.target)
+        return self.target in Config.audit_scope
 
 
 #------------------------------------------------------------------------------
@@ -1383,6 +1389,19 @@ class DnsRegisterNSAP(DnsRegister):
         :rtype: str
         """
         return self.__address
+
+
+    #----------------------------------------------------------------------
+    @property
+    def discovered(self):
+        if self.is_in_scope():
+            return [IP(self.address)]
+        return []
+
+
+    #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return self.address in Config.audit_scope
 
 
 #------------------------------------------------------------------------------
@@ -1427,7 +1446,7 @@ class DnsRegisterNSEC(DnsRegister):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.next)
+        return self.next in Config.audit_scope
 
 
 #------------------------------------------------------------------------------
@@ -1606,7 +1625,7 @@ class DnsRegisterPTR(DnsRegister):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.target)
+        return self.target in Config.audit_scope
 
 
 #------------------------------------------------------------------------------
@@ -1662,16 +1681,16 @@ class DnsRegisterRP(DnsRegister):
     @property
     def discovered(self):
         result = []
-        if is_in_scope(self.mbox):
+        if self.mbox in Config.audit_scope:
             result.append( Email(self.mbox) )
-        if is_in_scope(self.txt):
+        if self.txt in Config.audit_scope:
             result.append( Domain(self.txt) )
         return result
 
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.mbox) or is_in_scope(self.txt)
+        return self.mbox in Config.audit_scope or self.txt in Config.audit_scope
 
 
 #------------------------------------------------------------------------------
@@ -1871,16 +1890,16 @@ class DnsRegisterSOA(DnsRegister):
     @property
     def discovered(self):
         result = []
-        if is_in_scope(self.mname):
+        if self.mname in Config.audit_scope:
             result.append( Domain(self.mname) )
-        if is_in_scope(self.rname):
+        if self.rname in Config.audit_scope:
             result.append( Domain(self.rname) )
         return result
 
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.mname) or is_in_scope(self.rname)
+        return self.mname in Config.audit_scope or self.rname in Config.audit_scope
 
 
 #------------------------------------------------------------------------------
@@ -2061,7 +2080,7 @@ class DnsRegisterSRV(DnsRegister):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.target)
+        return self.target in Config.audit_scope
 
 
 #------------------------------------------------------------------------------
@@ -2129,6 +2148,19 @@ class DnsRegisterWKS(DnsRegister):
         return self.__bitmap
 
 
+    #----------------------------------------------------------------------
+    @property
+    def discovered(self):
+        if self.is_in_scope():
+            return [IP(self.address)]
+        return []
+
+
+    #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return self.address in Config.audit_scope
+
+
 #------------------------------------------------------------------------------
 class DnsRegisterX25(DnsRegister):
     """
@@ -2160,3 +2192,16 @@ class DnsRegisterX25(DnsRegister):
         :rtype: str
         """
         return self.__address
+
+
+    #----------------------------------------------------------------------
+    @property
+    def discovered(self):
+        if self.is_in_scope():
+            return [IP(self.address)]
+        return []
+
+
+    #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return self.address in Config.audit_scope

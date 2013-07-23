@@ -1,7 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-__doc__ = """This plugin try to find hidden subdomains"""
+"""
+This plugin tries to find hidden subdomains.
+"""
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -29,23 +31,19 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
-
-from golismero.api.logger import Logger
-from golismero.api.parallel import pmap
-from golismero.api.net.dns import DNS
-from golismero.api.data.information.dns import DnsRegister
+from golismero.api.config import Config
 from golismero.api.data import discard_data
-from golismero.api.net.web_utils import is_in_scope
-from golismero.api.plugin import TestingPlugin
+from golismero.api.data.information.dns import DnsRegister
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
-from golismero.api.data.vulnerability.dns.dns_zone_transfer import DNSZoneTransfer
+from golismero.api.logger import Logger
+from golismero.api.net.dns import DNS
+from golismero.api.parallel import pmap
+from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist_api import WordListAPI
-from golismero.api.data import discard_data, LocalDataCache
 
-from netaddr import IPAddress, AddrFormatError
 from functools import partial
+
 
 #--------------------------------------------------------------------------
 #
@@ -74,7 +72,6 @@ class DNSAnalizer(TestingPlugin):
         if not self.state.check(m_domain):
 
             Logger.log_more_verbose("starting DNS analyzer plugin")
-            d        = DNS()
             m_return = []
 
             m_reg_len = len(DnsRegister.DNS_TYPES)
@@ -82,8 +79,12 @@ class DNSAnalizer(TestingPlugin):
                 # Update status
                 self.update_status_step(step=i, total=m_reg_len, text="making '%s' DNS query" % l_type, partial=0.8)
 
-                # Add register
-                m_return.extend(d.resolve(m_domain, l_type))
+            # Make the zone transfer
+            m_return.extend(DNS.zone_transfer(m_domain))
+
+            for l_type in DnsRegister.DNS_TYPES:
+                self.update_status(progress=0.03, text="Making '%s' DNS query" % l_type)
+                m_return.extend(DNS.resolve(m_domain, l_type))
 
             # Set the domain parsed
             self.state.set(m_domain, True)
@@ -228,7 +229,7 @@ class DNSBruteforcer(TestingPlugin):
                         if dom.type == "CNAME":
                             if not dom.target in m_domains_allready:
                                 m_domains_allready.append(dom.target)
-                                if is_in_scope(dom.target):
+                                if dom.target in Config.audit_scope:
                                     m_domains.add(dom)
                                 else:
                                     discard_data(dom)
@@ -272,14 +273,11 @@ def _get_subdomains_bruteforcer(base_domain, subdomain):
     :param subdomain: string with the domain to process.
     :type subdomain: str
     """
-    # Manager for make DNS queries.
-    m_dom_manager = DNS()
 
     m_domain = "%s.%s" % (subdomain, base_domain)
 
     Logger.log_more_verbose("Looking for subdomain: %s" % m_domain)
 
-    l_oks = m_dom_manager.get_a(m_domain, also_CNAME=True)
+    l_oks = DNS.get_a(m_domain, also_CNAME=True)
 
     return l_oks
-

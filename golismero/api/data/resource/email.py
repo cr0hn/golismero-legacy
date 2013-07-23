@@ -35,7 +35,7 @@ __all__ = ["Email"]
 from . import Resource
 from .domain import Domain
 from .. import identity
-from ...net.web_utils import is_in_scope
+from ...config import Config
 
 
 #------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ class Email(Resource):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.hostname)
+        return self.hostname in Config.audit_scope
 
 
     #----------------------------------------------------------------------

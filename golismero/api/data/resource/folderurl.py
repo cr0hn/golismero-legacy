@@ -35,7 +35,8 @@ __all__ = ["FolderUrl"]
 from . import Resource
 from .domain import Domain
 from .. import identity
-from ...net.web_utils import DecomposedURL, is_in_scope
+from ...config import Config
+from ...net.web_utils import DecomposedURL
 
 
 #------------------------------------------------------------------------------
@@ -153,7 +154,7 @@ class FolderUrl(Resource):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.url)
+        return self.url in Config.audit_scope
 
 
     #----------------------------------------------------------------------

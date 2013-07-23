@@ -36,7 +36,7 @@ from golismero.api.data.vulnerability.information_disclosure.url_disclosure impo
 from golismero.api.logger import Logger
 from golismero.api.net import NetworkException
 from golismero.api.net.http import HTTP
-from golismero.api.net.web_utils import DecomposedURL, is_in_scope
+from golismero.api.net.web_utils import DecomposedURL
 from golismero.api.text.matching_analyzer import MatchingAnalyzer, HTTP_response_headers_analyzer
 from golismero.api.text.wordlist_api import WordListAPI
 from golismero.api.text.text_utils import generate_random_string
@@ -310,7 +310,7 @@ def analyze_urls(info, urls_to_test):
     # Local use of URL
     m_url         = info.url
 
-    if not is_in_scope(m_url):
+    if m_url not in Config.audit_scope:
         return
 
     # Determine the HTTP Method

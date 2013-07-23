@@ -34,10 +34,9 @@ __all__ = ["IP"]
 
 from . import Resource
 from .. import identity
-from ...net.web_utils import is_in_scope
+from .. import Config
 
 from netaddr import IPAddress
-from netaddr.core import AddrFormatError
 
 
 #------------------------------------------------------------------------------
@@ -61,7 +60,7 @@ class IP(Resource):
 
         try:
             version = int( IPAddress(address).version )
-        except AddrFormatError:
+        except Exception:
             raise ValueError("Invalid IP address: %s" % address)
 
         # IP address and protocol version.
@@ -102,4 +101,6 @@ class IP(Resource):
         return self.__version
 
 
-    # TODO: check for scope
+    #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return self.address in Config.audit_scope

@@ -35,7 +35,7 @@ __all__ = ["HTTP_Request", "HTTP_Response"]
 from . import Information
 from .. import identity, overwrite
 from ...config import Config
-from ...net.web_utils import DecomposedURL, is_in_scope
+from ...net.web_utils import DecomposedURL
 
 import re
 import httplib
@@ -516,7 +516,7 @@ class HTTP_Request (Information):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.url)
+        return self.url in Config.audit_scope
 
 
     #----------------------------------------------------------------------

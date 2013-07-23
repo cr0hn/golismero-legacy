@@ -31,12 +31,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-from golismero.api.data import discard_data
-from golismero.api.data.resource.email import Email
-from golismero.api.data.resource.domain import Domain
 from golismero.api.config import Config
+from golismero.api.data import discard_data
+from golismero.api.data.resource.domain import Domain
+from golismero.api.data.resource.email import Email
 from golismero.api.logger import Logger
-from golismero.api.net.web_utils import is_in_scope
 from golismero.api.plugin import TestingPlugin
 
 import imp
@@ -137,7 +136,7 @@ class HarvesterPlugin(TestingPlugin):
 
         # Hostnames.
         for name in all_hosts:
-            if not is_in_scope("http://" + name):
+            if name not in Config.audit_scope:
                 Logger.log_more_verbose("Hostname out of scope: %s" % name)
                 continue
             try:
@@ -156,7 +155,7 @@ class HarvesterPlugin(TestingPlugin):
                 self.update_status_step(step=i, total=m_data_len, text="processing hostname '%s'" % name, patial=0.2)
 
                 if name:
-                    if not is_in_scope("http://" + name):
+                    if name not in Config.audit_scope:
                         Logger.log_more_verbose("Hostname out of scope: %s" % name)
                         continue
                     data = Domain(name, *addresslist)

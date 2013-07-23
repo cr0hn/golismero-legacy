@@ -26,13 +26,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from golismero.api.config import Config
 from golismero.api.data import discard_data
 from golismero.api.data.resource.baseurl import BaseUrl
 from golismero.api.data.resource.url import Url
 from golismero.api.logger import Logger
 from golismero.api.net import NetworkException, NetworkOutOfScope
 from golismero.api.net.http import HTTP
-from golismero.api.net.web_utils import download, generate_error_page_url, fix_url, is_in_scope
+from golismero.api.net.web_utils import download, generate_error_page_url, fix_url
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.matching_analyzer import MatchingAnalyzer
 
@@ -185,7 +186,7 @@ class Robots(TestingPlugin):
             m_analyzer = MatchingAnalyzer(m_response_error_page.data)
             for l_url in set(m_discovered_urls):
                 l_url = fix_url(l_url, m_url)
-                if is_in_scope(l_url):
+                if l_url in Config.audit_scope:
                     l_p = HTTP.get_url(l_url, callback=self.check_response)
                     if l_p:
                         match[l_url] = l_p
@@ -204,7 +205,7 @@ class Robots(TestingPlugin):
         else:
             for l_url in set(m_discovered_urls):
                 l_url = fix_url(l_url, m_url)
-                if is_in_scope(l_url):
+                if l_url in Config.audit_scope:
                     try:
                         l_p = HTTP.get_url(l_url, callback=self.check_response)
                     except NetworkException:
