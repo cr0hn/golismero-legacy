@@ -480,8 +480,14 @@ class DnsRegisterAAAA(DnsRegister):
     #----------------------------------------------------------------------
     @property
     def discovered(self):
-        # TODO: check scope
-        return [IP(self.address)]
+        if self.is_in_scope():
+            return [IP(self.address)]
+        return []
+
+
+    #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return self.address in Config.audit_scope
 
 
 #------------------------------------------------------------------------------
@@ -1385,6 +1391,19 @@ class DnsRegisterNSAP(DnsRegister):
         return self.__address
 
 
+    #----------------------------------------------------------------------
+    @property
+    def discovered(self):
+        if self.is_in_scope():
+            return [IP(self.address)]
+        return []
+
+
+    #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return self.address in Config.audit_scope
+
+
 #------------------------------------------------------------------------------
 class DnsRegisterNSEC(DnsRegister):
     """
@@ -2129,6 +2148,19 @@ class DnsRegisterWKS(DnsRegister):
         return self.__bitmap
 
 
+    #----------------------------------------------------------------------
+    @property
+    def discovered(self):
+        if self.is_in_scope():
+            return [IP(self.address)]
+        return []
+
+
+    #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return self.address in Config.audit_scope
+
+
 #------------------------------------------------------------------------------
 class DnsRegisterX25(DnsRegister):
     """
@@ -2160,3 +2192,16 @@ class DnsRegisterX25(DnsRegister):
         :rtype: str
         """
         return self.__address
+
+
+    #----------------------------------------------------------------------
+    @property
+    def discovered(self):
+        if self.is_in_scope():
+            return [IP(self.address)]
+        return []
+
+
+    #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return self.address in Config.audit_scope

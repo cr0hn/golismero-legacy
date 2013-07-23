@@ -101,4 +101,6 @@ class IP(Resource):
         return self.__version
 
 
-    # TODO: check for scope
+    #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return self.address in Config.audit_scope
