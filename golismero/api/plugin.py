@@ -287,6 +287,8 @@ class Plugin (object):
             m_step  = int(step)
             try:
                 m_partial = float(kwargs['partial'])
+                if m_partial <= 0 or m_partial > 1:
+                    raise ValueError("partial value must be in range: (0-1]")
             except KeyError:
                 m_partial = 1.0
 

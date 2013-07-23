@@ -30,11 +30,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["test_setup", "test_plugin"]
+__all__ = ["test_setup", "test_plugin", "test_cleanup"]
 
 from golismero.api.data import LocalDataCache
 from golismero.api.config import Config
-from golismero.common import AuditConfig, OrchestratorConfig
+from golismero.api.net.cache import NetworkCache
+from golismero.api.net.http import HTTP
+from golismero.common import AuditConfig, OrchestratorConfig, get_default_config_file
 from golismero.main.orchestrator import Orchestrator
 from golismero.managers.auditmanager import Audit
 from golismero.managers.processmanager import PluginContext
@@ -62,8 +64,18 @@ def test_setup(orchestrator_config = None, audit_config = None):
     # If no config was given, use the default.
     if orchestrator_config is None:
         orchestrator_config = OrchestratorConfig()
+    if not hasattr(orchestrator_config, "profile"):
+        orchestrator_config.profile = None
+        orchestrator_config.profile_file = None
+    if not hasattr(orchestrator_config, "config_file"):
+        orchestrator_config.config_file = get_default_config_file()
     if audit_config is None:
         audit_config = AuditConfig()
+    if not hasattr(audit_config, "profile"):
+        audit_config.profile = orchestrator_config.profile
+        audit_config.profile_file = orchestrator_config.profile_file
+    if not hasattr(audit_config, "config_file"):
+        audit_config.config_file = orchestrator_config.config_file
 
     # Get the audit name, or generate one if missing.
     audit_name = audit_config.audit_name
@@ -89,6 +101,11 @@ def test_setup(orchestrator_config = None, audit_config = None):
         audit_config = audit_config,
         audit_scope  = audit_scope,
     )
+
+    # Initialize the environment.
+    HTTP._initialize()
+    NetworkCache._clear_local_cache()
+    LocalDataCache.on_run()
 
     # Return the Orchestrator instance.
     return orchestrator
@@ -144,3 +161,19 @@ def test_plugin(orchestrator, plugin_name, data_or_msg):
 
         # Unload the plugin.
         Config._context._PluginContext__plugin_info = None
+
+
+#--------------------------------------------------------------------------
+def test_cleanup(orchestrator):
+    """
+    Cleanup the testing mock environment.
+
+    :param orchestrator: Orchestrator instance.
+    :type orchestrator: Orchestrator
+    """
+
+    NetworkCache._clear_local_cache()
+    LocalDataCache.on_run()
+    HTTP._finalize()
+
+    orchestrator.close()

@@ -263,24 +263,18 @@ class Audit (object):
         # Initialize the "report started" flag.
         self.__is_report_started = False
 
-        # Create the notifier.
-        self.__notifier = AuditNotifier(self)
-
-        # Create the import manager.
-        self.__import_manager = ImportManager(audit_config, orchestrator)
-
-        # Create the report manager.
-        self.__report_manager = ReportManager(audit_config, orchestrator)
-
-        # Create the database.
-        self.__database = AuditDB(self.__name, audit_config.audit_db)
-
         # Maximum number of links to follow.
         self.__followed_links = 0
         self.__show_max_links_warning = True
 
         # Number of unacknowledged messages.
         self.__expecting_ack = 0
+
+        # Initialize the managers to None.
+        self.__notifier = None
+        self.__import_manager = None
+        self.__report_manager = None
+        self.__database = None
 
 
     #----------------------------------------------------------------------
@@ -390,26 +384,73 @@ class Audit (object):
         # Reset the number of unacknowledged messages.
         self.__expecting_ack = 0
 
-        # Load testing plugins.
-        m_audit_plugins = self.orchestrator.pluginManager.load_plugins("testing")
+        # Keep the original execution context.
+        old_context = Config._context
 
-        # Register plugins with the notifier.
-        self.__notifier.add_multiple_plugins(m_audit_plugins)
+        try:
 
-        # Calculate the audit scope.
-        self.__audit_scope = AuditScope(self.config)
+            # Update the execution context for this audit.
+            Config._context = PluginContext(getpid(), old_context.msg_queue,
+                                            audit_name   = self.name,
+                                            audit_config = self.config)
 
-        # Add the targets to the database, but only if they're new.
-        # (Makes sense when resuming a stopped audit).
-        target_data = self.scope.get_targets()
-        for data in target_data:
-            if self.database.has_data_key(data.identity, data.data_type):
-                self.database.add(data)
+            # Calculate the audit scope.
+            # This is done here because some DNS queries may be made.
+            self.__audit_scope = AuditScope(self.config)
 
-        # Import external results.
-        # This is done after storing the targets, so the importers
-        # can overwrite the targets with new information if available.
-        self.importManager.import_results()
+            # Update the execution context again, with the scope.
+            Config._context = PluginContext(getpid(), old_context.msg_queue,
+                                            audit_name   = self.name,
+                                            audit_config = self.config,
+                                            audit_scope  = self.scope)
+
+            # Find the plugins.
+            success, failure = self.orchestrator.pluginManager.find_plugins(
+                self.orchestrator.config.plugins_folder)
+            if not success:
+                raise RuntimeError("Failed to find any plugins!")
+
+            # Apply the plugin black and white lists.
+            self.orchestrator.pluginManager.apply_black_and_white_lists(
+                self.config.enabled_plugins, self.config.disabled_plugins)
+
+            # Calculate the plugin dependencies.
+            self.orchestrator.pluginManager.calculate_dependencies()
+
+            # Create the notifier.
+            self.__notifier = AuditNotifier(self)
+
+            # Load the testing plugins.
+            m_audit_plugins = self.orchestrator.pluginManager.load_plugins("testing")
+
+            # Register the testing plugins with the notifier.
+            self.__notifier.add_multiple_plugins(m_audit_plugins)
+
+            # Create the import manager.
+            self.__import_manager = ImportManager(self.config, self.orchestrator)
+
+            # Create the report manager.
+            self.__report_manager = ReportManager(self.config, self.orchestrator)
+
+            # Create the database.
+            self.__database = AuditDB(self.name, self.config.audit_db)
+
+            # Add the targets to the database, but only if they're new.
+            # (Makes sense when resuming a stopped audit).
+            target_data = self.scope.get_targets()
+            for data in target_data:
+                if self.database.has_data_key(data.identity, data.data_type):
+                    self.database.add(data)
+
+            # Import external results.
+            # This is done after storing the targets, so the importers
+            # can overwrite the targets with new information if available.
+            self.importManager.import_results()
+
+        finally:
+
+            # Restore the original execution context.
+            Config._context = old_context
 
 ##        # Move to the next stage.
 ##        self.update_stage()

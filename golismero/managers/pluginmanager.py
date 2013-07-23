@@ -332,7 +332,7 @@ class PluginInfo (object):
             Config.audit_config and
             not Config.plugin_info
         ):
-            self.__read_config_file(Config.audit_config.config)
+            self.__read_config_file(Config.audit_config.config_file)
             self.__read_config_file(Config.audit_config.profile_file)
 
         # Load the plugin extra configuration sections as a dict of dicts.
@@ -404,6 +404,14 @@ class PluginManager (Singleton):
 
     #----------------------------------------------------------------------
     def __init__(self):
+        self.reset()
+
+
+    #--------------------------------------------------------------------------
+    def reset(self):
+        """
+        Reset the state of the plugin manager.
+        """
 
         # Dictionary to collect the info for each plugin found
         self.__plugins = {}    # plugin name -> plugin info
@@ -413,11 +421,11 @@ class PluginManager (Singleton):
 
         # Batches and stages of plugins
         self.__batches = []
-        self.__stages = {}
+        self.__stages  = {}
 
 
     #----------------------------------------------------------------------
-    def find_plugins(self, plugins_folder):
+    def find_plugins(self, plugins_folder = None, category = "all"):
         """
         Find plugins in the given folder.
 
@@ -431,9 +439,23 @@ class PluginManager (Singleton):
         :param plugins_folder: Folder where to look for plugins.
         :type plugins_folder: str
 
+        :param category: Category. Use "all" to get plugins from all categories.
+        :type category: str
+
         :returns: A list of plugins loaded, and a list of plugins that failed to load.
         :rtype: tuple(list(str), list(str))
         """
+
+        # Make sure the category is lowercase.
+        category = category.lower()
+
+        # Make sure the category exists, otherwise raise an exception.
+        if category != "all" and category not in self.CATEGORIES:
+            raise KeyError("Unknown plugin category: %r" % category)
+
+        # Default plugins folder if not given.
+        if not plugins_folder:
+            plugins_folder = path.join(path.split(__file__)[0], "..", "..", "plugins")
 
         # Make sure the plugins folder is an absolute path.
         plugins_folder = path.abspath(plugins_folder)
@@ -449,8 +471,14 @@ class PluginManager (Singleton):
         failure = list()
 
         # The first directory level is the category.
-        for category, _ in self.CATEGORIES.iteritems():
-            category_folder = path.join(plugins_folder, category)
+        for current_category, _ in self.CATEGORIES.iteritems():
+
+            # Skip if filtering this category.
+            if category != "all" and category != current_category:
+                continue
+
+            # Get the folder for this category.
+            category_folder = path.join(plugins_folder, current_category)
 
             # Skip missing folders.
             if not path.isdir(category_folder):
@@ -492,7 +520,8 @@ class PluginManager (Singleton):
                         success.append(plugin_name)
 
                     # On error add the plugin name to the list of failures.
-                    except Exception:
+                    except Exception, e:
+                        warnings.warn("Failure while loading plugins: %s" % e)
                         failure.append(plugin_name)
 
         return success, failure
