@@ -137,6 +137,11 @@ class _DNS(Singleton):
         :return: Type A registers.
         :rtype: list(DnsRegisterA)
         """
+
+        # Special case for localhost
+        if host.lower() == "localhost":
+            return [DnsRegisterA("127.0.0.1")]
+
         r = self._make_request("A", host, nameservers, auto_resolve=not also_CNAME)
 
         # Get all the register: CNAME and A
@@ -171,6 +176,11 @@ class _DNS(Singleton):
         :return: AAAA registers.
         :rtype: list(DnsRegisterAAAA)
         """
+
+        # Special case for localhost
+        if host.lower() == "localhost":
+            return [DnsRegisterAAAA("::1")]
+
         r = self._make_request("AAAA", host, nameservers, auto_resolve=not also_CNAME)
 
         if also_CNAME:
