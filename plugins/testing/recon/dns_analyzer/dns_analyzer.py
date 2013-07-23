@@ -1,7 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-__doc__ = """This plugin try to find hidden subdomains"""
+"""
+This plugin tries to find hidden subdomains.
+"""
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -29,19 +31,18 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
-
-from golismero.api.logger import Logger
-from golismero.api.parallel import pmap
-from golismero.api.net.dns import DNS
+from golismero.api.config import Config
+from golismero.api.data import discard_data
 from golismero.api.data.information.dns import DnsRegister
-from golismero.api.data import discard_data
-from golismero.api.net.web_utils import is_in_scope
-from golismero.api.plugin import TestingPlugin
 from golismero.api.data.resource.domain import Domain
+from golismero.api.logger import Logger
+from golismero.api.net.dns import DNS
+from golismero.api.parallel import pmap
+from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist_api import WordListAPI
-from golismero.api.data import discard_data
+
 from functools import partial
+
 
 #--------------------------------------------------------------------------
 #
@@ -151,7 +152,7 @@ class DNSBruteforcer(TestingPlugin):
                         if dom.type == "CNAME":
                             if not dom.target in m_domains_allready:
                                 m_domains_allready.append(dom.target)
-                                if is_in_scope(dom.target):
+                                if dom.target in Config.audit_scope:
                                     m_domains.add(dom)
                                 else:
                                     discard_data(dom)

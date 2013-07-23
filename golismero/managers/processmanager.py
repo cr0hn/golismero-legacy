@@ -284,7 +284,8 @@ class PluginContext (object):
     """
 
     def __init__(self, orchestrator_pid, msg_queue, ack_identity = None,
-                 plugin_info = None, audit_name = None, audit_config = None):
+                 plugin_info = None, audit_name = None, audit_config = None,
+                 audit_scope = None):
         """
         Serializable execution context for the plugins.
 
@@ -294,23 +295,27 @@ class PluginContext (object):
         :param msg_queue: Message queue where to send the responses.
         :type msg_queue: Queue
 
-        :param ack_identity: Identity hash of the current input data.
-        :type ack_identity: str
+        :param ack_identity: Identity hash of the current input data, or None if not running a plugin.
+        :type ack_identity: str | None
 
-        :param plugin_info: Plugin information.
-        :type plugin_info: PluginInfo
+        :param plugin_info: Plugin information, or None if not running a plugin.
+        :type plugin_info: PluginInfo | None
 
-        :param audit_name: Name of the audit.
-        :type audit_name: str
+        :param audit_name: Name of the audit, or None if not running an audit.
+        :type audit_name: str | None
 
-        :param audit_config: Name of the audit.
-        :type audit_config: str
+        :param audit_config: Parameters of the audit, or None if not running an audit.
+        :type audit_config: AuditConfig | None
+
+        :param audit_scope: Scope of the audit, or None if not running an audit.
+        :type audit_scope: AuditScope | None
         """
         self.__orchestrator_pid = orchestrator_pid
         self.__ack_identity     = ack_identity
         self.__plugin_info      = plugin_info
         self.__audit_name       = audit_name
         self.__audit_config     = audit_config
+        self.__audit_scope      = audit_scope
         self.__msg_queue        = msg_queue
 
     @property
@@ -333,9 +338,17 @@ class PluginContext (object):
     def audit_config(self):
         """"
         :returns: Parameters of the audit, or None if not running an audit.
-        :rtype: AuditConfig
+        :rtype: AuditConfig | None
         """
         return self.__audit_config
+
+    @property
+    def audit_scope(self):
+        """"
+        :returns: Scope of the audit, or None if not running an audit.
+        :rtype: AuditScope | None
+        """
+        return self.__audit_scope
 
     @property
     def ack_identity(self):

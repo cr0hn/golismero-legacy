@@ -26,26 +26,26 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from golismero.api.config import Config
 from golismero.api.data import discard_data
 from golismero.api.data.information import Information
 from golismero.api.data.information.http import HTTP_Raw_Request
 from golismero.api.data.information.webserver_fingerprint import WebServerFingerprint
 from golismero.api.data.resource.folderurl import FolderUrl
-from golismero.api.config import Config
 from golismero.api.logger import Logger
 from golismero.api.net import NetworkException
 from golismero.api.net.http import HTTP
 from golismero.api.net.scraper import extract_from_html, extract_from_text
-from golismero.api.net.web_utils import is_in_scope, DecomposedURL, download
+from golismero.api.net.web_utils import DecomposedURL, download
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.matching_analyzer import get_matching_level
 from golismero.api.text.wordlist_api import WordListAPI
 
-from repoze.lru import lru_cache
-from ping import do_ping_and_receive_ttl
 from collections import Counter, OrderedDict, defaultdict
-from urlparse import urljoin
+from ping import do_ping_and_receive_ttl
 from re import compile
+from repoze.lru import lru_cache
+from urlparse import urljoin
 
 
 SERVER_PATTERN = compile(r"([\w\W\s\d]+)[\s\/]+([\d\w\.]+)")
@@ -318,7 +318,7 @@ def basic_platform_detection(main_url):
     # Get the first link of the page that's in scope of the audit
     m_first_link = None
     for u in m_links:
-        if is_in_scope(u) and not any(x in u for x in m_forbidden):
+        if u in Config.audit_scope and not any(x in u for x in m_forbidden):
             m_first_link = u
             break
 

@@ -37,7 +37,8 @@ from .baseurl import BaseUrl
 from .domain import Domain
 from .folderurl import FolderUrl
 from .. import identity
-from ...net.web_utils import DecomposedURL, is_in_scope
+from ...config import Config
+from ...net.web_utils import DecomposedURL
 
 
 #------------------------------------------------------------------------------
@@ -141,7 +142,7 @@ class Url(Resource):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope(self.url)
+        return self.url in Config.audit_scope
 
 
     #----------------------------------------------------------------------

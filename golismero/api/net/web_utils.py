@@ -33,8 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = [
     "download", "data_from_http_response", "generate_user_agent",
     "fix_url", "check_auth", "get_auth_obj", "detect_auth_method",
-    "split_hostname", "get_audit_scope", "is_in_scope",
-    "generate_error_page_url", "DecomposedURL",
+    "split_hostname", "generate_error_page_url", "DecomposedURL",
 ]
 
 
@@ -47,7 +46,6 @@ from BeautifulSoup import BeautifulSoup
 from copy import deepcopy
 from posixpath import join, splitext, split
 from random import randint
-from repoze.lru import lru_cache
 from requests import Request, Session, codes
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests_ntlm import HttpNtlmAuth
@@ -262,8 +260,20 @@ def download(url, callback = None, timeout = None, allow_redirects = True):
 
 
 #----------------------------------------------------------------------
-
 def data_from_http_response(response):
+    """
+    Extracts data from an HTTP response.
+
+    :param response: HTTP response.
+    :type response: HTTP_Response
+
+    :returns: Extracted data, or None if no data was found.
+    :rtype: Data | None
+    """
+
+    # If we have no data, return None.
+    if not response.data:
+        return None
 
     # Get the MIME content type.
     content_type = response.content_type
@@ -451,95 +461,6 @@ def detect_auth_method(url):
         realm = matchobj.group(2)
 
     return scheme, realm
-
-
-#----------------------------------------------------------------------
-@lru_cache(maxsize=100, timeout=1*60*60)
-# The "audit_name" parameter is required for the cache.
-# No matter what PyLint says, don't remove it!
-def get_audit_scope(audit_name):
-    """
-    Get the domain names within the scope of the current audit.
-
-    Note that calling :ref:`is_in_scope`() is more accurate,
-    since previously unknown subdomains may be automatically
-    included in the scope.
-
-    .. warning:
-       This function may be removed in future versions of GoLismero.
-
-    :param audit_name: Name of the current audit.
-    :type audit_name: str
-
-    :return: Domains we're allowed to connect to.
-    :rtype: set(str)
-    """
-
-    # Parse all the target URLs.
-    # FIXME: this assumes all targets are URLs!
-    urls = map(DecomposedURL, Config.audit_config.targets)
-
-    # Include the domain names in the scope.
-    audit_scope = {x.hostname for x in urls}
-
-    # If subdomains are allowed, we must include the parent domains.
-    if Config.audit_config.include_subdomains:
-        for u in urls:
-            subdomain, domain, suffix = u.split_hostname()
-            if subdomain:
-                prefix = ".".join( (domain, suffix) )
-                for part in reversed(subdomain.split(".")):
-                    audit_scope.add(prefix)
-                    prefix = ".".join( (part, prefix) )
-
-    # Return the audit scope.
-    return audit_scope
-
-
-#----------------------------------------------------------------------
-def is_in_scope(url):
-    """
-    Checks if an URL is in scope for the current audit.
-
-    .. warning:
-       This function may be removed in future versions of GoLismero.
-
-    For example, if you're auditing the site www.mysite.com:
-
-    >>> from golismero.api.web_utils import is_in_scope
-    >>> is_in_scope("www.mysite.com")
-    True
-    >>> is_in_scope("www.another_site.com")
-    False
-
-    :param url: URL to check.
-    :type url: str
-
-    :returns: True if the URL is in scope, False otherwise.
-    :rtype: bool
-    """
-
-    # Trivial case.
-    if not url:
-        return False
-
-    # Parse the URL.
-    try:
-        p_url = DecomposedURL(url)
-    except Exception, e:
-        warn("Error parsing URL (%s): %s" % (url, e.message))
-        return False
-
-    # Set of domain names we're allowed to connect to.
-    audit_scope = get_audit_scope(Config.audit_name)
-
-    # Check domains, and subdomains too when requested.
-    # FIXME: IPv4 and IPv6 addresses are not handled!
-    hostname = p_url.hostname.lower()
-    return hostname in audit_scope or (
-        Config.audit_config.include_subdomains and
-        any(hostname.endswith("." + domain) for domain in audit_scope)
-    )
 
 
 #----------------------------------------------------------------------

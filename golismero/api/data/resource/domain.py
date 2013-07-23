@@ -35,7 +35,8 @@ __all__ = ["Domain"]
 from . import Resource
 from .ip import IP
 from .. import identity, merge
-from ...net.web_utils import is_in_scope, split_hostname
+from ...config import Config
+from ...net.web_utils import split_hostname
 
 
 #------------------------------------------------------------------------------
@@ -88,7 +89,7 @@ class Domain(Resource):
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return is_in_scope("http://%s" % self.__name)
+        return self.name in Config.audit_scope
 
 
     #----------------------------------------------------------------------
@@ -132,7 +133,7 @@ class Domain(Resource):
         if subdomain:
             prefix = ".".join( (domain, suffix) )
             for part in reversed(subdomain.split(".")):
-                if is_in_scope(prefix):
+                if prefix in Config.audit_scope:
                     result.append( Domain(prefix) )
                 prefix = ".".join( (part, prefix) )
         return result

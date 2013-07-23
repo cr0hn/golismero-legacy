@@ -37,6 +37,7 @@ from ..api.data.resource import Resource
 from ..api.data.resource.url import Url
 from ..api.config import Config
 from ..common import AuditConfig
+from ..scope import AuditScope
 from ..database.auditdb import AuditDB
 from ..managers.importmanager import ImportManager
 from ..managers.processmanager import PluginContext
@@ -84,29 +85,29 @@ class AuditManager (object):
 
 
     #----------------------------------------------------------------------
-    def new_audit(self, params):
+    def new_audit(self, audit_config):
         """
         Creates a new audit.
 
-        :param params: Parameters of the audit.
-        :type params: AuditConfig
+        :param audit_config: Parameters of the audit.
+        :type audit_config: AuditConfig
 
         :returns: Newly created audit.
         :rtype: Audit
         """
-        if not isinstance(params, AuditConfig):
-            raise TypeError("Expected AuditConfig, got %r instead" % type(params))
+        if not isinstance(audit_config, AuditConfig):
+            raise TypeError("Expected AuditConfig, got %r instead" % type(audit_config))
 
-        # Create the audit
-        m_audit = Audit(params, self.orchestrator)
+        # Create the audit.
+        m_audit = Audit(audit_config, self.orchestrator)
 
-        # Store it
+        # Store it.
         self.__audits[m_audit.name] = m_audit
 
         # Run!
         m_audit.run()
 
-        # Return it
+        # Return it.
         return m_audit
 
 
@@ -232,7 +233,7 @@ class Audit (object):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, auditParams, orchestrator):
+    def __init__(self, audit_config, orchestrator):
         """
         :param orchestrator: Orchestrator instance that will receive messages sent by this audit.
         :type orchestrator: Orchestrator
@@ -241,20 +242,20 @@ class Audit (object):
         :type auditParams: AuditConfig
         """
 
-        if not isinstance(auditParams, AuditConfig):
-            raise TypeError("Expected AuditConfig, got %s instead" % type(auditParams))
+        if not isinstance(audit_config, AuditConfig):
+            raise TypeError("Expected AuditConfig, got %s instead" % type(audit_config))
 
         # Keep the audit settings.
-        self.__params = auditParams
+        self.__audit_config = audit_config
 
         # Keep a reference to the Orchestrator.
         self.__orchestrator = orchestrator
 
         # Set the audit name.
-        self.__name = self.__params.audit_name
+        self.__name = self.__audit_config.audit_name
         if not self.__name:
             self.__name = self.generate_audit_name()
-            self.__params.audit_name = self.__name
+            self.__audit_config.audit_name = self.__name
 
         # Set the current stage to the first stage.
         self.__current_stage = orchestrator.pluginManager.min_stage
@@ -266,13 +267,13 @@ class Audit (object):
         self.__notifier = AuditNotifier(self)
 
         # Create the import manager.
-        self.__import_manager = ImportManager(auditParams, orchestrator)
+        self.__import_manager = ImportManager(audit_config, orchestrator)
 
         # Create the report manager.
-        self.__report_manager = ReportManager(auditParams, orchestrator)
+        self.__report_manager = ReportManager(audit_config, orchestrator)
 
         # Create the database.
-        self.__database = AuditDB(self.__name, auditParams.audit_db)
+        self.__database = AuditDB(self.__name, audit_config.audit_db)
 
         # Maximum number of links to follow.
         self.__followed_links = 0
@@ -301,12 +302,20 @@ class Audit (object):
         return self.__orchestrator
 
     @property
-    def params(self):
+    def config(self):
         """
         :returns: Audit configuration.
         :rtype: AuditConfig
         """
-        return self.__params
+        return self.__audit_config
+
+    @property
+    def scope(self):
+        """
+        :returns: Audit scope.
+        :rtype: AuditScope
+        """
+        return self.__audit_scope
 
     @property
     def database(self):
@@ -381,33 +390,28 @@ class Audit (object):
         # Reset the number of unacknowledged messages.
         self.__expecting_ack = 0
 
-        # Import external results.
-        self.importManager.import_results()
-
         # Load testing plugins.
         m_audit_plugins = self.orchestrator.pluginManager.load_plugins("testing")
 
         # Register plugins with the notifier.
         self.__notifier.add_multiple_plugins(m_audit_plugins)
 
-        # Send a message to the Orchestrator with all target URLs,
-        # followed by an ACK.
-        self.__expecting_ack += 1
-        try:
-            self.send_msg(
-                message_type = MessageType.MSG_TYPE_DATA,
-                message_info = [ Url(url) for url in self.params.targets ]
-            )
-        finally:
-            self.send_msg(
-                message_type = MessageType.MSG_TYPE_CONTROL,
-                message_code = MessageCode.MSG_CONTROL_ACK,
-                    priority = MessagePriority.MSG_PRIORITY_LOW
-            )
+        # Calculate the audit scope.
+        self.__audit_scope = AuditScope(self.config)
 
-        # TODO: instead of this, add the targets to the database if
-        # missing, then call update_stage(). That way we get the "resume"
-        # feature almost for free. :)
+        # Add the targets to the database, but only if they're new.
+        # (Makes sense when resuming a stopped audit).
+        for data in self.scope.get_targets():
+            if self.database.has_data_key(data.identity, data.data_type):
+                self.database.add(data)
+
+        # Import external results.
+        # This is done after storing the targets, so the importers
+        # can overwrite the targets with new information if available.
+        self.importManager.import_results()
+
+        # Move to the next stage.
+        self.update_stage()
 
 
     #----------------------------------------------------------------------
@@ -512,7 +516,7 @@ class Audit (object):
                     # XXX FIXME possible performance problem here!
                     datalist = map(database.get_data, pending)
 
-                    # If we don't have any suitable plugins for this data...
+                    # If we don't have any suitable plugins...
                     if not self.__notifier.is_runnable_stage(datalist, stage):
 
                         # Mark all data as having finished this stage.
@@ -522,7 +526,7 @@ class Audit (object):
                         # Skip to the next stage.
                         continue
 
-                    # Send the pending data.
+                    # Send the pending data to the Orchestrator.
                     self.send_msg(
                         message_type = MessageType.MSG_TYPE_DATA,
                         message_info = datalist,
@@ -559,7 +563,8 @@ class Audit (object):
             # Update the execution context for this audit.
             Config._context = PluginContext(getpid(), old_context.msg_queue,
                                             audit_name   = self.name,
-                                            audit_config = self.params)
+                                            audit_config = self.config,
+                                            audit_scope  = self.scope)
 
             # Dispatch the message.
             return self.__dispatch_msg(message)
@@ -599,13 +604,13 @@ class Audit (object):
                         self.__followed_links += 1
 
                         # Maximum number of links reached?
-                        if self.__params.max_links > 0 and self.__followed_links >= self.__params.max_links:
+                        if self.__audit_config.max_links > 0 and self.__followed_links >= self.__audit_config.max_links:
 
                             # Show a warning, but only once.
                             if self.__show_max_links_warning:
                                 self.__show_max_links_warning = False
                                 w = "Maximum number of links (%d) reached! Audit: %s"
-                                w = w % (self.__params.max_links, self.name)
+                                w = w % (self.__audit_config.max_links, self.name)
                                 with catch_warnings(record=True) as wlist:
                                     warn(w, RuntimeWarning)
                                 self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,

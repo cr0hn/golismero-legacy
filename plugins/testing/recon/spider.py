@@ -26,15 +26,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from golismero.api.logger import Logger
-from golismero.api.net import NetworkException
-from golismero.api.net.web_utils import download
-from golismero.api.plugin import TestingPlugin
+from golismero.api.config import Config
 from golismero.api.data.information import Information
 from golismero.api.data.resource.url import Url
-from golismero.api.config import Config
-from golismero.api.net.web_utils import is_in_scope
+from golismero.api.logger import Logger
+from golismero.api.net import NetworkException
 from golismero.api.net.scraper import extract_from_html, extract_from_text
+from golismero.api.net.web_utils import download
+from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist_api import WordListAPI
 
 
@@ -96,7 +95,7 @@ class Spider(TestingPlugin):
         m_return.extend(
             Url(url = u, depth = m_depth + 1, referer = m_url)
             for u in m_links
-            if is_in_scope(u) and not any(x in u for x in m_forbidden) )
+            if u in Config.audit_scope and not any(x in u for x in m_forbidden) )
 
         # Send the results
         return m_return

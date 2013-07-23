@@ -39,6 +39,7 @@ from golismero.main.orchestrator import Orchestrator
 from golismero.managers.auditmanager import Audit
 from golismero.managers.processmanager import PluginContext
 from golismero.messaging.message import Message
+from golismero.scope import AuditScope
 
 from os import getpid
 
@@ -73,13 +74,21 @@ def test_setup(orchestrator_config = None, audit_config = None):
     # Instance the Orchestrator.
     orchestrator = Orchestrator(orchestrator_config)
 
+    # Instance an Audit.
+    audit = Audit(audit_config, orchestrator)
+
+    # Calculate the audit scope.
+    audit_scope = AuditScope(audit_config)
+    audit._Audit__audit_scope = audit_scope
+
     # Setup a local plugin execution context.
-    context = PluginContext(
-        getpid(), orchestrator._Orchestrator__queue,
-        audit_name = audit_name,
+    Config._context  = PluginContext(
+        getpid(),
+        orchestrator._Orchestrator__queue,
+        audit_name   = audit_name,
         audit_config = audit_config,
+        audit_scope  = audit_scope,
     )
-    Config._context = context
 
     # Return the Orchestrator instance.
     return orchestrator
