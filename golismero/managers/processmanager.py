@@ -217,7 +217,8 @@ def _bootstrap(context, func, argv, argd):
                                 result = LocalDataCache.on_finish(result)
 
                                 # Always send back the input data as a result.
-                                result.append(input_data)
+                                if input_data not in result:
+                                    result.insert(0, input_data)
 
                                 # Send the result data to the Orchestrator.
                                 if result:

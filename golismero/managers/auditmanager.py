@@ -250,7 +250,7 @@ class Audit (object):
         # Set the audit name.
         self.__name = self.__params.audit_name
         if not self.__name:
-            self.__name = self.__generateAuditName()
+            self.__name = self.generate_audit_name()
             self.__params.audit_name = self.__name
 
         # Set the current stage to the first stage.
@@ -358,11 +358,12 @@ class Audit (object):
 
 
     #----------------------------------------------------------------------
-    def __generateAuditName(self):
+    @staticmethod
+    def generate_audit_name():
         """
-        Get a default name for this audit.
+        Generate a default name for a new audit.
 
-        :returns: Generated name for the audit.
+        :returns: Generated name.
         :rtype: str
         """
         return "golismero-" + datetime.now().strftime("%Y-%m-%d-%H_%M_%S")
