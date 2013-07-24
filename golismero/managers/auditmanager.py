@@ -404,11 +404,19 @@ class Audit (object):
                                             audit_config = self.config,
                                             audit_scope  = self.scope)
 
-            # Find the plugins.
+            # Find the testing plugins.
             success, failure = self.orchestrator.pluginManager.find_plugins(
-                self.orchestrator.config.plugins_folder)
+                self.orchestrator.config.plugins_folder, category="testing")
             if not success:
-                raise RuntimeError("Failed to find any plugins!")
+                raise RuntimeError("Failed to find any testing plugins!")
+
+            # Find the import plugins.
+            success, failure = self.orchestrator.pluginManager.find_plugins(
+                self.orchestrator.config.plugins_folder, category="import")
+
+            # Find the report plugins.
+            success, failure = self.orchestrator.pluginManager.find_plugins(
+                self.orchestrator.config.plugins_folder, category="report")
 
             # Apply the plugin black and white lists.
             self.orchestrator.pluginManager.apply_black_and_white_lists(
@@ -416,6 +424,11 @@ class Audit (object):
 
             # Calculate the plugin dependencies.
             self.orchestrator.pluginManager.calculate_dependencies()
+            all_stages = set()
+            for stage in self.orchestrator.pluginManager.stages.itervalues():
+                all_stages.update(stage)
+            if not all_stages:
+                raise RuntimeError("Failed to find any testing plugins!")
 
             # Create the notifier.
             self.__notifier = AuditNotifier(self)
@@ -554,8 +567,19 @@ class Audit (object):
                 pending = database.get_pending_data(stage)
                 if pending:
 
+                    # If the stage is empty...
+                    if not pluginManager.stages[stage]:
+
+                        # Mark all data as having finished this stage.
+                        for identity in pending:
+                            database.mark_stage_finished(identity, stage)
+
+                        # Skip to the next stage.
+                        continue
+
                     # Get the pending data.
                     # XXX FIXME possible performance problem here!
+                    # Maybe we should fetch the types only, not the whole thing yet
                     datalist = map(database.get_data, pending)
 
                     # If we don't have any suitable plugins...

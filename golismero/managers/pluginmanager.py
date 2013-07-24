@@ -588,11 +588,10 @@ class PluginManager (Singleton):
 
         :raises KeyError: The requested stage doesn't exist.
         """
-        if stage not in self.STAGES:
-            raise KeyError(stage)
+        stage_num = self.STAGES[stage]
         return { plugin_name
                  for plugin_name, plugin_info in self.__plugins.iteritems()
-                 if plugin_info.stage == stage }
+                 if plugin_info.stage == stage_num }
 
 
     #----------------------------------------------------------------------
@@ -939,7 +938,7 @@ class PluginManager (Singleton):
 
         # Store the plugin batches and stages.
         self.__batches = batches
-        self.__stages = stages
+        self.__stages  = stages
 
 
     #----------------------------------------------------------------------
