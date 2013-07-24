@@ -180,7 +180,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
                      severity_vectors['predictables'],
                      get_http_method(m_url),
                      m_store_info,
-                     self.update_status,
+                     self.update_status_step,
                      len(m_urls))
 
         # Process the URLs
@@ -231,12 +231,16 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
         m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
 
         # Create the partial funs
-        _f = partial(process_url, severity_vectors['predictables'], get_http_method(m_url), m_store_info, self.update_status)
+        _f = partial(process_url,
+                     severity_vectors['suffixes'],
+                     get_http_method(m_url),
+                     m_store_info,
+                     self.update_status_step,
+                     len(m_urls))
 
         # Process the URLs
-        for l_url in m_urls:
-            _f(l_url)
-
+        for i, l_url in enumerate(m_urls):
+            _f((i, l_url))
         # Generate and return the results.
         return generate_results(m_store_info.unique_texts)
 
@@ -282,11 +286,20 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
         m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
 
         # Create the partial funs
-        _f = partial(process_url, severity_vectors['prefixes'], get_http_method(m_url), m_store_info, self.update_status)
+        m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+
+        # Create the partial funs
+        _f = partial(process_url,
+                     severity_vectors['prefixes'],
+                     get_http_method(m_url),
+                     m_store_info,
+                     self.update_status_step,
+                     len(m_urls))
 
         # Process the URLs
-        for l_url in m_urls:
-            _f(l_url)
+        for i, l_url in enumerate(m_urls):
+            _f((i, l_url))
+
 
         # Generate and return the results.
         return generate_results(m_store_info.unique_texts)
@@ -333,11 +346,16 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
         m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
 
         # Create the partial funs
-        _f = partial(process_url, severity_vectors['file_extensions'], get_http_method(m_url), m_store_info, self.update_status)
+        _f = partial(process_url,
+                     severity_vectors['file_extensions'],
+                     get_http_method(m_url),
+                     m_store_info,
+                     self.update_status_step,
+                     len(m_urls))
 
         # Process the URLs
-        for l_url in m_urls:
-            _f(l_url)
+        for i, l_url in enumerate(m_urls):
+            _f((i, l_url))
 
         # Generate and return the results.
         return generate_results(m_store_info.unique_texts)
@@ -384,12 +402,16 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
         m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
 
         # Create the partial funs
-        _f = partial(process_url, severity_vectors['permutations'], get_http_method(m_url), m_store_info, self.update_status)
+        _f = partial(process_url,
+                     severity_vectors['permutations'],
+                     get_http_method(m_url),
+                     m_store_info,
+                     self.update_status_step,
+                     len(m_urls))
 
         # Process the URLs
-        for l_url in m_urls:
-            _f(l_url)
-
+        for i, l_url in enumerate(m_urls):
+            _f((i, l_url))
         # Generate and return the results.
         return generate_results(m_store_info.unique_texts)
 
@@ -435,11 +457,16 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
         m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
 
         # Create the partial funs
-        _f = partial(process_url, severity_vectors['directories'], get_http_method(m_url), m_store_info, self.update_status)
+        _f = partial(process_url,
+                     severity_vectors['directories'],
+                     get_http_method(m_url),
+                     m_store_info,
+                     self.update_status_step,
+                     len(m_urls))
 
         # Process the URLs
-        for l_url in m_urls:
-            _f(l_url)
+        for i, l_url in enumerate(m_urls):
+            _f((i, l_url))
 
         # Generate and return the results.
         return generate_results(m_store_info.unique_texts)
@@ -460,19 +487,19 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
     :param matcher: instance of MatchingAnalyzer object.
     :type matcher: `MatchingAnalyzer`
 
-    :param updater_func: update_status function to send updates
-    :type updater_func: update_status
+    :param updater_func: update_status_step function to send updates
+    :type updater_func: update_status_step
 
-    :param url: the URL to process.
-    :type url: str
+    :param total_urls: total number of URL to globally process.
+    :type total_urls: int
+
+    :param url: a tuple with data: (index, the URL to process)
+    :type url: tuple(int, str)
     """
-
-    updater_func("Bruteforcer - trying to discover URL %s" % url)
 
     i, url = url
 
-    print i
-    print url
+    updater_func(i, total_urls, text="Bruteforcer - trying to discover URL %s" % url)
 
     # Ge URL
     p = None
