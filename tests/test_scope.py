@@ -45,10 +45,10 @@ except NameError:
     _FIXED_PATH_ = True
 
 
-from golismero.testing import PluginTester
 from golismero.api.config import Config
 from golismero.api.net.dns import DNS
 from golismero.common import AuditConfig
+from golismero.testing import PluginTester
 
 from socket import gethostbyname, gethostbyname_ex
 

@@ -574,6 +574,14 @@ class OrchestratorConfig (Configuration):
 
 
     #----------------------------------------------------------------------
+
+    # Configuration files.
+    config_file  = get_default_config_file()
+    profile      = None
+    profile_file = None
+
+
+    #----------------------------------------------------------------------
     def check_params(self):
 
         # Validate the network connections limit.
@@ -672,6 +680,14 @@ class AuditConfig (Configuration):
         # Cookie
         "cookie": Configuration.string,
     }
+
+
+    #----------------------------------------------------------------------
+
+    # Configuration files.
+    config_file  = get_default_config_file()
+    profile      = None
+    profile_file = None
 
 
     #----------------------------------------------------------------------

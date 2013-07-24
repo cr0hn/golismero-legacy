@@ -333,7 +333,7 @@ class AdvancedListWordlist(AbstractWordlist):
         """
 
         if not wordlist:
-            raise ValueError("Empty wordlist got")
+            raise ValueError("Get empty wordlist")
 
         m_tmp_wordlist = None
         try:
@@ -660,7 +660,7 @@ class AdvancedDicWordlist(object):
 
     #----------------------------------------------------------------------
     def __len__(self):
-        return len(self.__wordlist   )
+        return len(self.__wordlist)
 
 
     #----------------------------------------------------------------------
