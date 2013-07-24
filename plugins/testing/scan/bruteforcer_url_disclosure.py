@@ -43,8 +43,8 @@ from golismero.api.text.wordlist_api import WordListAPI
 from golismero.api.text.text_utils import generate_random_string
 
 from golismero.api.plugin import TestingPlugin
-from collections import defaultdict
 from functools import partial
+from urlparse import urljoin
 
 import threading
 
@@ -157,17 +157,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
             # Use a copy of wordlist to avoid modify the original source
             l_loaded_wordlist = WordListAPI.get_advanced_wordlist_as_list(l_w)
 
-            #
-            # README!!!!!
-            #
-            # Here don't use urljoin because it doesn't works with complete URL. With urljoin:
-            #
-            # http://www.mysite.com/folder1/ + /folder/to/append/index.php
-            # ---> http://www.mysite.com/folder/to/append/index.php
-            # instead of
-            # ---> http://www.mysite.com/folder1/folder/to/append/index.php
-            #
-            m_urls_update(( "%s%s" % (m_url_fixed, l_wo[1:] if l_wo.startswith("/") else l_wo) for l_wo in l_loaded_wordlist))
+            m_urls_update((urljoin(m_url_fixed, (l_wo[1:] if l_wo.startswith("/") else l_wo)) for l_wo in l_loaded_wordlist))
 
         # Generates the error page
         m_error_response = get_error_page(m_url)
