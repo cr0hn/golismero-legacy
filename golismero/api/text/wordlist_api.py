@@ -368,6 +368,7 @@ class AdvancedListWordlist(AbstractWordlist):
     def __len__(self):
         return len(self.__wordlist)
 
+
     #----------------------------------------------------------------------
     def binary_search(self, word, low_pos=0, high_pos=None):
         i = bisect.bisect_left(self.__wordlist, word, lo=low_pos, hi=high_pos if high_pos else len(high_pos))
@@ -429,8 +430,7 @@ class AdvancedDicWordlist(object):
 
 
     #----------------------------------------------------------------------
-    #def __init__(self, wordlist, *argv, **karg): #, inteligence_load=False, separator = ";"):
-    def __init__(self, wordlist, inteligence_load=False, separator = ";"):
+    def __init__(self, wordlist, smart_load=False, separator = ";"):
         """
         Load a word list and conver it in a dict. The method used for the conversion
         are:
@@ -452,7 +452,7 @@ class AdvancedDicWordlist(object):
         {'one': [' value1', ' value3']}
 
 
-        If you set to True the param 'inteligence_load', the AdvancedDicWordlist will try to detect if the values
+        If you set to True the param 'smart_load', the AdvancedDicWordlist will try to detect if the values
         at the right of 'separator', found by the split, can be pooled as a list an put the values in it.
 
         Example:
@@ -460,7 +460,7 @@ class AdvancedDicWordlist(object):
         >>> f=open("wordlist.txt", "rU")
         >>> f.readlines()
         ['one; value1 value2, value3, value4 "value 5"', 'two; value6', 'one; value7']
-        >>> w = AdvancedDicWordlist("wordlist.txt", inteligence_load=True)
+        >>> w = AdvancedDicWordlist("wordlist.txt", smart_load=True)
         >>> w.matches_by_keys("one")
         {'one': ['value1', 'value2', 'value3', 'value4', 'value 5', 'value7']}
 
@@ -471,8 +471,8 @@ class AdvancedDicWordlist(object):
         :param separator: value used to split the lines
         :type separator: str
 
-        :param inteligence_load: Indicates if the wordlist must detect if the line has values that can be converted in a list.
-        :type inteligence_load: bool
+        :param smart_load: Indicates if the wordlist must detect if the line has values that can be converted in a list.
+        :type smart_load: bool
         """
 
         if not wordlist:
@@ -494,7 +494,7 @@ class AdvancedDicWordlist(object):
             if len(v) < 2:
                 continue
 
-            if inteligence_load:
+            if smart_load:
                 m_values = [i.group(0).strip().replace("'","").replace("\"","") for i in m_reg.finditer(v[1])]
 
                 try:
@@ -671,6 +671,7 @@ class AdvancedDicWordlist(object):
     #----------------------------------------------------------------------
     def iterkeys(self):
         return self.__wordlist.iterkeys()
+
 
     #----------------------------------------------------------------------
     def clone(self):
