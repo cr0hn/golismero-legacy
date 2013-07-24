@@ -204,7 +204,7 @@ class Plugin (object):
 
 
     #----------------------------------------------------------------------
-    def update_status(self, progress = None, text = None):
+    def update_status(self, text = None, progress = None):
         """
         Plugins can call this method to tell the user of the current
         progress of whatever the plugin is doing.
@@ -212,21 +212,21 @@ class Plugin (object):
         .. warning::
            Do not override this method!
 
+        :param text: Optional status text.
+        :type text: str | None
+
         :param progress: Progress percentage [0, 100] as a float,
                          or None to indicate progress can't be measured.
         :type progress: float | None
-
-        :param text: Optional status text.
-        :type text: str | None
         """
-        Config._context.send_status(progress, text)
+        Config._context.send_status(text, progress)
+
 
     #----------------------------------------------------------------------
     def update_status_step(self, step, total, text=None, **kwargs):
         """
         Plugins can call this method to tell the user of the current
         state of process for a concrete instant of time.
-
 
         The step indicates the indicates the concrete value from a total
         amount of information. The total amount of information to process
@@ -235,8 +235,7 @@ class Plugin (object):
         .. warning::
            Do not override this method!
 
-
-        For example:
+        Example:
 
         - step = 1
         - total = 80
@@ -245,7 +244,7 @@ class Plugin (object):
         The optional partial param allow us to say the weight of the total
         value respresent in the global status.
 
-        For example:
+        Example:
 
         - The global process is the 100%.
         - A concrete piece of code represent the 20% of the total process.
@@ -263,43 +262,34 @@ class Plugin (object):
         >>> for i, val in enumerate(values_to_process, start=1):
             update_status_step(i, values_len, partial=40, "Text for update")
 
-
         :param total: the total amount of values to process.
-        :type total: float|int
+        :type total: float | int
 
         :param step: amount of values of total.
-        :type step: int
+        :type step: float | int
 
-        :param partial: Optional value that represents the weight of the process has.
-        :type partial: int - (0-100]
+        :param partial: Optional value in the range [0, 100] that represents the weight of the process has.
+        :type partial: float | int
 
         :param text: Optional status text.
         :type text: str | None
         """
-
-        #
-        # Because this function will be called a lot of times, is not
-        # efficient (PoC was made) to check each param for types and
-        # ranges: > 0, etc. Instead, try/except runs very well
-        #
         try:
-            m_total = float(total)
-            m_step  = int(step)
-            try:
-                m_partial = float(kwargs['partial'])
-                if m_partial <= 0 or m_partial > 100:
-                    raise ValueError("partial value must be in range: (0-100]")
 
-            except KeyError:
-                m_partial = 100.0
+            m_total   = float(total)
+            m_step    = float(step)
+            m_partial = float(kwargs.get('partial', 100.0))
+            if 0.0 < m_partial <= 100.0:
+                m_progress = (m_step/m_total) * (m_partial/100.0)
+            else:
+                raise ValueError("partial value must be in range: [0, 100]")
 
-            m_process = (m_step/m_total) * (m_partial/100.0)
-
-            Config._context.send_status(m_process, text)
         except ValueError:
-            raise ValueError("input params must be numerics")
+            raise ValueError("Input parameters must be numeric")
         except ZeroDivisionError:
-            raise ValueError("Division by 0 detected")
+            raise ValueError("Total cannot be zero")
+
+        self.update_status(text, m_progress)
 
 
 #------------------------------------------------------------------------------

@@ -425,16 +425,16 @@ class PluginContext (object):
 
 
     #----------------------------------------------------------------------
-    def send_status(self, progress = None, text = None):
+    def send_status(self, text = None, progress = None):
         """
         Send status updates from the plugins to the Orchestrator.
+
+        :param text: Optional status text.
+        :type text: str | None
 
         :param progress: Progress percentage [0, 100] as a float,
                          or None to indicate progress can't be measured.
         :type progress: float | None
-
-        :param text: Optional status text.
-        :type text: str | None
         """
 
         # Validate the progress.
