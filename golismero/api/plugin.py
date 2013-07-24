@@ -261,7 +261,7 @@ class Plugin (object):
         >>> values_to_process = [0,1,2,4] # 40% of rest of task
         >>> values_len = len(values_to_process)
         >>> for i, val in enumerate(values_to_process, start=1):
-            update_status_step(i, values_len, partial=0.4, "Text for update")
+            update_status_step(i, values_len, partial=40, "Text for update")
 
 
         :param total: the total amount of values to process.
@@ -271,7 +271,7 @@ class Plugin (object):
         :type step: int
 
         :param partial: Optional value that represents the weight of the process has.
-        :type partial: float
+        :type partial: int - (0-100]
 
         :param text: Optional status text.
         :type text: str | None
@@ -287,12 +287,13 @@ class Plugin (object):
             m_step  = int(step)
             try:
                 m_partial = float(kwargs['partial'])
-                if m_partial <= 0 or m_partial > 1:
-                    raise ValueError("partial value must be in range: (0-1]")
-            except KeyError:
-                m_partial = 1.0
+                if m_partial <= 0 or m_partial > 100:
+                    raise ValueError("partial value must be in range: (0-100]")
 
-            m_process = (m_step/m_total)*m_partial
+            except KeyError:
+                m_partial = 100.0
+
+            m_process = (m_step/m_total) * (m_partial/100.0)
 
             Config._context.send_status(m_process, text)
         except ValueError:
