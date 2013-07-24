@@ -460,6 +460,24 @@ class Audit (object):
             # can overwrite the targets with new information if available.
             self.importManager.import_results()
 
+            # Discover new data from the data already in the database.
+            # Only add newly discovered data, to avoid overwriting anything.
+            # XXX FIXME performance
+            # XXX FIXME what about links?
+            existing = self.database.get_data_keys()
+            stack = list(existing)
+            while stack:
+                identity = stack.pop()
+                data = self.database.get_data(identity)
+                if data.is_in_scope(): # just in case...
+                    for data in data.discovered:
+                        identity = data.identity
+                        if identity not in existing and data.is_in_scope():
+                            self.database.add_data(data)
+                            existing.add(identity)
+                            stack.append(identity)
+            del existing
+
         finally:
 
             # Restore the original execution context.
@@ -580,7 +598,7 @@ class Audit (object):
                     # Get the pending data.
                     # XXX FIXME possible performance problem here!
                     # Maybe we should fetch the types only, not the whole thing yet
-                    datalist = map(database.get_data, pending)
+                    datalist = database.get_many_data(pending)
 
                     # If we don't have any suitable plugins...
                     if not self.__notifier.is_runnable_stage(datalist, stage):
