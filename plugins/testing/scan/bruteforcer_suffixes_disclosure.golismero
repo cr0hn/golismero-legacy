@@ -1,0 +1,20 @@
+[Core]
+Name = Bruteforce suffixes discovery
+Module = bruteforcer_url_disclosure.py
+Class = SuffixesDisclosureBruteforcer
+
+[Documentation]
+Description = Tries to discover URLs not linked anywhere in the page using a brute force approach ONLY in folders.
+Author = GoLismero project team
+Version = 0.1
+Website = https://github.com/cr0hn/golismero/
+Copyright = Copyright (C) 2011-2013 GoLismero Project
+License = GNU Public License
+
+
+#
+# Suffixes
+#
+
+[common_suffixes]
+w1 = golismero/Discovery/FilenameBruteforce/file-suffixes.txt

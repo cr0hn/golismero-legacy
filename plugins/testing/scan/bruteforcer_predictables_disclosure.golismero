@@ -1,8 +1,10 @@
 [Core]
-Name = Bruteforce URL discovery
+Name = Bruteforce predictables discovery
+Module = bruteforcer_url_disclosure.py
+Class = PredictablesDisclosureBruteforcer
 
 [Documentation]
-Description = Tries to discover URLs not linked anywhere in the page using a brute force approach.
+Description = Tries to discover URLs not linked anywhere in the page using a brute force approach ONLY in folders.
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/cr0hn/golismero/
@@ -78,39 +80,3 @@ w4 = golismero/Discovery/PredictableRes/microsoft.txt
 
 [CFM_predictables]
 w1 = fuzzdb/Discovery/PredictableRes/ColdFusion.fuzz.txt
-
-
-#
-# Prefixes
-#
-
-[common_prefixes]
-w1 = golismero/Discovery/FilenameBruteforce/file-prefix.txt
-w2 = fuzzdb/Discovery/FilenameBruteforce/copy_of.fuzz.txt
-
-
-#
-# Suffixes
-#
-
-[common_suffixes]
-w1 = golismero/Discovery/FilenameBruteforce/file-suffixes.txt
-
-
-#
-# Extensions by language
-#
-
-[common_extensions]
-w1 = golismero/Discovery/FilenameBruteforce/file-compressed-extensions.txt
-w2 = fuzzdb/Discovery/FilenameBruteforce/Extensions.Backup.fuzz.txt
-w2 = golismero/Discovery/FilenameBruteforce/file-extensions.txt
-
-[microsoft_extensions]
-w1 = golismero/Discovery/FilenameBruteforce/microsoft-file-extensions.txt
-
-[java_extensions]
-w1 = golismero/Discovery/FilenameBruteforce/java-file-extensions.txt
-
-[php_prefixes]
-w1 = golismero/Discovery/FilenameBruteforce/file-prefix.txt
