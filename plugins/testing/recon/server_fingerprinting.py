@@ -243,7 +243,7 @@ class ServerFingerprinting(TestingPlugin):
         #
         # Analyze HTTP protocol
         #
-        m_server_name, m_server_version, m_canonical_name, m_webserver_complete_desc, m_related_webservers, m_others = http_analyzers(m_main_url, self.update_status_step, 1)
+        m_server_name, m_server_version, m_canonical_name, m_webserver_complete_desc, m_related_webservers, m_others = http_analyzers(m_main_url, self.update_status_step, 100)
 
         Logger.log_more_verbose("Fingerprint - Server: %s | Version: %s" % (m_server_name, m_server_version))
 
@@ -406,7 +406,7 @@ def check_raw_response(request, response):
 
     )
 
-def http_analyzers(main_url, update_status_func, part_status=1, number_of_entries=4):
+def http_analyzers(main_url, update_status_func, part_status=100, number_of_entries=4):
     """
     Analyze HTTP headers for detect the web server. Return a list with most possible web servers.
 

@@ -100,7 +100,7 @@ class HarvesterPlugin(TestingPlugin):
                 emails, hosts = self.search(engine, word, limit)
 
                 # Update status
-                self.update_status_step(step=i, total=m_data_len, text="searching in %s for '%s'" % (engine, word), patial=0.6)
+                self.update_status_step(step=i, total=m_data_len, text="searching in %s for '%s'" % (engine, word), patial=60)
             except Exception, e:
                 t = traceback.format_exc()
                 m = "theHarvester raised an exception: %s\n%s"
@@ -122,7 +122,7 @@ class HarvesterPlugin(TestingPlugin):
                 data = Email(address)
 
                 # Update status
-                self.update_status_step(step=i, total=m_data_len, text="processing mail '%s'" % address, patial=0.2)
+                self.update_status_step(step=i, total=m_data_len, text="processing mail '%s'" % address, patial=20)
             except Exception, e:
                 warnings.warn("Cannot parse email address: %r" % address)
                 continue
@@ -152,7 +152,7 @@ class HarvesterPlugin(TestingPlugin):
             m_data_len = len(all_names)
             for i, name in enumerate(all_names, start=1):
                 # Update status
-                self.update_status_step(step=i, total=m_data_len, text="processing hostname '%s'" % name, patial=0.2)
+                self.update_status_step(step=i, total=m_data_len, text="processing hostname '%s'" % name, patial=20)
 
                 if name:
                     if name not in Config.audit_scope:
