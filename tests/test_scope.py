@@ -45,7 +45,7 @@ except NameError:
     _FIXED_PATH_ = True
 
 
-from golismero import testing
+from golismero.testing import PluginTester
 from golismero.api.config import Config
 from golismero.api.net.dns import DNS
 from golismero.common import AuditConfig
@@ -54,11 +54,11 @@ from socket import gethostbyname, gethostbyname_ex
 
 
 def test_scope_example():
+    print "Testing scope with: www.example.com"
     audit_config = AuditConfig()
     audit_config.targets = ["www.example.com"]
     audit_config.include_subdomains = True
-    orchestrator = testing.test_setup(audit_config = audit_config)
-    try:
+    with PluginTester(audit_config = audit_config):
 
         assert None not in Config.audit_scope
         assert "" not in Config.audit_scope
@@ -92,16 +92,13 @@ def test_scope_example():
             assert register.address not in Config.audit_scope
             assert "[%s]" % register.address not in Config.audit_scope
 
-    finally:
-        testing.test_cleanup(orchestrator)
-
 
 def test_scope_localhost():
+    print "Testing scope with: localhost"
     audit_config = AuditConfig()
     audit_config.targets = ["localhost"]
     audit_config.include_subdomains = True
-    orchestrator = testing.test_setup(audit_config = audit_config)
-    try:
+    with PluginTester(audit_config = audit_config):
 
         assert None not in Config.audit_scope
         assert "" not in Config.audit_scope
@@ -129,9 +126,6 @@ def test_scope_localhost():
         for register in DNS.get_aaaa("www.google.com"):
             assert register.address not in Config.audit_scope
             assert "[%s]" % register.address not in Config.audit_scope
-
-    finally:
-        testing.test_cleanup(orchestrator)
 
 
 # Run all tests from the command line.

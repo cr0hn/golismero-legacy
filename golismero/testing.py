@@ -30,7 +30,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["test_setup", "test_plugin", "test_cleanup"]
+__all__ = ["PluginTester"]
 
 from golismero.api.data import LocalDataCache
 from golismero.api.config import Config
@@ -46,134 +46,148 @@ from golismero.scope import AuditScope
 from os import getpid
 
 
-#--------------------------------------------------------------------------
-def test_setup(orchestrator_config = None, audit_config = None):
+#------------------------------------------------------------------------------
+class PluginTester(object):
     """
-    A simple testing bootstrap.
-
-    :param orchestrator_config: Optional orchestrator configuration.
-    :type orchestrator_config: OrchestratorConfig
-
-    :param audit_config: Optional audit configuration.
-    :type audit_config: AuditConfig
-
-    :returns: Orchestrator instance.
-    :rtype: Orchestrator
+    A simple plugin test bootstrap.
     """
 
-    # If no config was given, use the default.
-    if orchestrator_config is None:
-        orchestrator_config = OrchestratorConfig()
-    if not hasattr(orchestrator_config, "profile"):
-        orchestrator_config.profile = None
-        orchestrator_config.profile_file = None
-    if not hasattr(orchestrator_config, "config_file"):
-        orchestrator_config.config_file = get_default_config_file()
-    if audit_config is None:
-        audit_config = AuditConfig()
-    if not hasattr(audit_config, "profile"):
-        audit_config.profile = orchestrator_config.profile
-        audit_config.profile_file = orchestrator_config.profile_file
-    if not hasattr(audit_config, "config_file"):
-        audit_config.config_file = orchestrator_config.config_file
 
-    # Get the audit name, or generate one if missing.
-    audit_name = audit_config.audit_name
-    if not audit_name:
-        audit_name = Audit.generate_audit_name()
-        audit_config.audit_name = audit_name
+    #--------------------------------------------------------------------------
+    def __init__(self, orchestrator_config = None, audit_config = None):
+        """
+        :param orchestrator_config: Optional orchestrator configuration.
+        :type orchestrator_config: OrchestratorConfig
 
-    # Instance the Orchestrator.
-    orchestrator = Orchestrator(orchestrator_config)
+        :param audit_config: Optional audit configuration.
+        :type audit_config: AuditConfig
+        """
 
-    # Instance an Audit.
-    audit = Audit(audit_config, orchestrator)
+        # If no config was given, use the default.
+        if orchestrator_config is None:
+            orchestrator_config = OrchestratorConfig()
+        if not hasattr(orchestrator_config, "profile"):
+            orchestrator_config.profile = None
+            orchestrator_config.profile_file = None
+        if not hasattr(orchestrator_config, "config_file"):
+            orchestrator_config.config_file = get_default_config_file()
+        if audit_config is None:
+            audit_config = AuditConfig()
+        if not hasattr(audit_config, "profile"):
+            audit_config.profile = orchestrator_config.profile
+            audit_config.profile_file = orchestrator_config.profile_file
+        if not hasattr(audit_config, "config_file"):
+            audit_config.config_file = orchestrator_config.config_file
 
-    # Calculate the audit scope.
-    audit_scope = AuditScope(audit_config)
-    audit._Audit__audit_scope = audit_scope
+        # Get the audit name, or generate one if missing.
+        audit_name = audit_config.audit_name
+        if not audit_name:
+            audit_name = Audit.generate_audit_name()
+            audit_config.audit_name = audit_name
 
-    # Setup a local plugin execution context.
-    Config._context  = PluginContext(
-        getpid(),
-        orchestrator._Orchestrator__queue,
-        audit_name   = audit_name,
-        audit_config = audit_config,
-        audit_scope  = audit_scope,
-    )
+        # Instance the Orchestrator.
+        orchestrator = Orchestrator(orchestrator_config)
 
-    # Initialize the environment.
-    HTTP._initialize()
-    NetworkCache._clear_local_cache()
-    LocalDataCache.on_run()
+        # Instance an Audit.
+        audit = Audit(audit_config, orchestrator)
 
-    # Return the Orchestrator instance.
-    return orchestrator
+        # Calculate the audit scope.
+        audit_scope = AuditScope(audit_config)
+        audit._Audit__audit_scope = audit_scope
 
-
-#--------------------------------------------------------------------------
-def test_plugin(orchestrator, plugin_name, data_or_msg):
-    """
-    A simple testing invoker.
-
-    It's the caller's resposibility to check the input message queue of
-    the Orchestrator instance if the plugin sends any messages.
-
-    :param orchestrator: Instance returned by :ref:`_testing_bootstrap`().
-    :type orchestrator: Orchestrator
-
-    :param plugin_name: Name of the plugin to test.
-    :type plugin_name: str
-
-    :param data_or_msg: Data or message to send.
-    :type data_or_msg: Data | Message
-
-    :returns: Return value from the plugin.
-    :rtype: *
-    """
-
-    # Load the plugin.
-    plugin_info = orchestrator.pluginManager.get_plugin_by_name(plugin_name)
-    plugin = orchestrator.pluginManager.load_plugin_by_name(plugin_name)
-    Config._context._PluginContext__plugin_info = plugin_info
-
-    try:
+        # Setup a local plugin execution context.
+        Config._context  = PluginContext(
+            getpid(),
+            orchestrator._Orchestrator__queue,
+            audit_name   = audit_name,
+            audit_config = audit_config,
+            audit_scope  = audit_scope,
+        )
 
         # Initialize the environment.
         HTTP._initialize()
         NetworkCache._clear_local_cache()
+        LocalDataCache._enabled = True  # force enable
         LocalDataCache.on_run()
 
-        # If it's a message, send it and return.
-        if isinstance(data_or_msg, Message):
-            return plugin.recv_msg(data_or_msg)
-
-        # If it's data, run it through the plugin and return the results.
-        if not data_or_msg.is_in_scope():
-            return []
-        result = plugin.recv_info(data_or_msg)
-        result = LocalDataCache.on_finish(result)
-        if data_or_msg not in result:
-            result.insert(0, data_or_msg)
-        return result
-
-    finally:
-
-        # Unload the plugin.
-        Config._context._PluginContext__plugin_info = None
+        # Save the Orchestrator instance.
+        self.__orchestrator = orchestrator
 
 
-#--------------------------------------------------------------------------
-def test_cleanup(orchestrator):
-    """
-    Cleanup the testing mock environment.
+    #--------------------------------------------------------------------------
+    def __enter__(self):
+        return self
+    def __exit__(self, type, value, tb):
+        self.cleanup()
 
-    :param orchestrator: Orchestrator instance.
-    :type orchestrator: Orchestrator
-    """
 
-    NetworkCache._clear_local_cache()
-    LocalDataCache.on_run()
-    HTTP._finalize()
+    #--------------------------------------------------------------------------
+    @property
+    def orchestrator(self):
+        return self.__orchestrator
 
-    orchestrator.close()
+
+    #--------------------------------------------------------------------------
+    def run_plugin(self, plugin_name, data_or_msg):
+        """
+        Run the requested plugin. You can test both data and messages.
+
+        It's the caller's resposibility to check the input message queue of
+        the Orchestrator instance if the plugin sends any messages.
+
+        :param plugin_name: Name of the plugin to test.
+        :type plugin_name: str
+
+        :param data_or_msg: Data or message to send.
+        :type data_or_msg: Data | Message
+
+        :returns: Return value from the plugin.
+        :rtype: *
+        """
+
+        # Load the plugin.
+        plugin_info = self.orchestrator.pluginManager.get_plugin_by_name(plugin_name)
+        plugin = self.orchestrator.pluginManager.load_plugin_by_name(plugin_name)
+        Config._context._PluginContext__plugin_info = plugin_info
+
+        try:
+
+            # Initialize the environment.
+            HTTP._initialize()
+            NetworkCache._clear_local_cache()
+            LocalDataCache.on_run()
+
+            # If it's a message, send it and return.
+            if isinstance(data_or_msg, Message):
+                return plugin.recv_msg(data_or_msg)
+
+            # If it's data, run it through the plugin and return the results.
+            if not data_or_msg.is_in_scope():
+                return []
+            result = plugin.recv_info(data_or_msg)
+            result = LocalDataCache.on_finish(result)
+            if data_or_msg not in result:
+                result.insert(0, data_or_msg)
+            return result
+
+        finally:
+
+            # Unload the plugin.
+            Config._context._PluginContext__plugin_info = None
+
+
+    #--------------------------------------------------------------------------
+    def cleanup(self):
+        """
+        Cleanup the testing mock environment.
+
+        You can't call run_plugin() again after calling this method,
+        you'll need to create a new PluginTester instance.
+        """
+
+        NetworkCache._clear_local_cache()
+        LocalDataCache.on_run()
+        HTTP._finalize()
+
+        self.orchestrator.close()
+        del self.__orchestrator  # so we can't call run_plugin again
