@@ -71,19 +71,15 @@ class DNSAnalizer(TestingPlugin):
 
         if not self.state.check(m_domain):
 
-            Logger.log_more_verbose("starting DNS analyzer plugin")
+            self.update_status("starting DNS analyzer plugin")
             m_return = []
 
             m_reg_len = len(DnsRegister.DNS_TYPES)
             for i, l_type in enumerate(DnsRegister.DNS_TYPES, start=1):
                 # Update status
-                self.update_status_step(step=i, total=m_reg_len, text="making '%s' DNS query" % l_type, partial=0.8)
+                self.update_status_step(i, m_reg_len, "making '%s' DNS query" % l_type)
 
-            # Make the zone transfer
-            m_return.extend(DNS.zone_transfer(m_domain))
-
-            for l_type in DnsRegister.DNS_TYPES:
-                self.update_status(progress=0.03, text="Making '%s' DNS query" % l_type)
+                # Make the query
                 m_return.extend(DNS.resolve(m_domain, l_type))
 
             # Set the domain parsed
@@ -92,7 +88,7 @@ class DNSAnalizer(TestingPlugin):
             # Add the information to the host
             map(info.add_information, m_return)
 
-            Logger.log_more_verbose("Ending DNS analyzer plugin. Found %s registers" % str(len(m_return)))
+            self.update_status("Ending DNS analyzer plugin. Found %s registers" % str(len(m_return)))
 
         return m_return
 
@@ -122,12 +118,10 @@ class DNSZoneTransfer(TestingPlugin):
 
         if not self.state.check(m_domain):
 
-            Logger.log_more_verbose("starting DNS zone transfer plugin")
+            self.update_status("starting DNS zone transfer plugin")
             d        = DNS()
             m_return = []
 
-            # Update status
-            self.update_status(text="making DNS zone transfer")
             #
             # Make the zone transfer
             #
@@ -196,7 +190,7 @@ class DNSBruteforcer(TestingPlugin):
         m_return = None
         if not self.state.check(m_domain):
 
-            Logger.log_more_verbose("starting DNS bruteforcer plugin")
+            self.update_status("starting DNS bruteforcer plugin")
             #
             # Looking for
             #
@@ -208,7 +202,7 @@ class DNSBruteforcer(TestingPlugin):
             # Run parallely
             func_with_static_field = partial(_get_subdomains_bruteforcer, m_domain, self.update_status)
             r = pmap(func_with_static_field, m_subdomains, pool_size=10)
-            print m_domain
+
             #
             # Remove repeated
             #
@@ -252,7 +246,7 @@ class DNSBruteforcer(TestingPlugin):
             # Set the domain as processed
             self.state.set(m_domain, True)
 
-            Logger.log_more_verbose("Ending DNS analyzer plugin. Found %s subdomains" % str(len(m_return)))
+            self.update_status("Ending DNS analyzer plugin. Found %s subdomains" % str(len(m_return)))
 
 
         return m_return
@@ -279,7 +273,6 @@ def _get_subdomains_bruteforcer(base_domain, updater_func, subdomain):
 
     m_domain = "%s.%s" % (subdomain, base_domain)
 
-    Logger.log_more_verbose("Looking for subdomain: %s" % m_domain)
     updater_func(text="Looking for subdomain: %s" % m_domain)
 
     l_oks = DNS.get_a(m_domain, also_CNAME=True)
