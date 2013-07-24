@@ -61,19 +61,20 @@ def test_all_registers():
         print "^" * (len(l_host) + 7)
 
         for l_dns_type in DnsRegister.DNS_TYPES:
-            print "   Type: " + l_dns_type
-            print "   %s" % ("=" * (len(l_dns_type ) + 6))
 
             r = DNS.resolve(l_host, l_dns_type)
+            if r:
+                print "   Type: " + l_dns_type
+                print "   " + ("=" * (len(l_dns_type ) + 6))
 
-            for i, c in enumerate(r):
-                l_properties = [x for x in c.__dict__ if "__" in x]
+                for i, c in enumerate(r):
+                    l_properties = [x for x in c.__dict__ if "__" in x]
 
-                for l_prop in l_properties:
-                    l_p = l_prop.find("__") + 2
-                    print "     - %s: %s" % (l_prop[l_p:], getattr(c, l_prop))
+                    for l_prop in l_properties:
+                        l_p = l_prop.find("__") + 2
+                        print "     - %s: %s" % (l_prop[l_p:], getattr(c, l_prop))
 
-            print "   %s" % ("-" * 30)
+                print "   " + ("-" * 30)
 
 #----------------------------------------------------------------------
 def test_zone_transfer():

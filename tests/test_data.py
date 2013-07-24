@@ -82,6 +82,7 @@ def helper_test_dupes(clazz, prefix, numbers):
 
 # This test will make sure the data type ID numbers aren't repeated.
 def test_data_type_unique_ids():
+    print "Looking for duplicated data type IDs"
 
     # Test the base types.
     helper_test_dupes(Data, "TYPE_", set())
@@ -141,6 +142,7 @@ def helper_load_data_types():
 # This test will make sure all data types have a correct type ID.
 def test_data_types_have_id():
     print
+    print "Testing correctness of data type IDs"
     data_types = helper_load_data_types()
     assert len(data_types) > 0
     for clazz in data_types:
