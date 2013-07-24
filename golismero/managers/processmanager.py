@@ -429,7 +429,7 @@ class PluginContext (object):
         """
         Send status updates from the plugins to the Orchestrator.
 
-        :param progress: Progress percentage [0 - 100] as a float,
+        :param progress: Progress percentage [0, 100] as a float,
                          or None to indicate progress can't be measured.
         :type progress: float | None
 
@@ -449,7 +449,7 @@ class PluginContext (object):
                 progress = 100.0
 
         # Validate the text.
-        if text is not None and type(text) not in (str, unicode):
+        if text is not None and not isinstance(text, basestring):
             raise TypeError("Expected str or unicode, got %s instead", type(text))
 
         # Send the status message to the Orchestrator.
