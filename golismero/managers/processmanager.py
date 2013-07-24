@@ -429,7 +429,7 @@ class PluginContext (object):
         """
         Send status updates from the plugins to the Orchestrator.
 
-        :param progress: Progress percentage (0-100) as a float,
+        :param progress: Progress percentage [0 - 100] as a float,
                          or None to indicate progress can't be measured.
         :type progress: float | None
 
