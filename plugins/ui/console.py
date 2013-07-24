@@ -93,6 +93,7 @@ class ConsoleUIPlugin(UIPlugin):
 
             if Console.level >= Console.VERBOSE:
                 m_id, m_progress, m_text = message.message_info
+                m_plugin_name            = ' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")])
 
                 #The counter
                 if m_progress:
@@ -101,7 +102,7 @@ class ConsoleUIPlugin(UIPlugin):
                     m_progress_txt = colorize("[U]", "white")
 
                 #m_text = "%s %s: Status: %s." % (m_progress_txt, m_id, m_text)
-                m_text = "%s Status: %s" % (m_progress_txt, (m_text if m_text else "working"))
+                m_text = "%s %s: %s" % (m_progress_txt, m_plugin_name,  (m_text if m_text else "working"))
                 Console.display(m_text)
 
         # Process control messages
