@@ -96,9 +96,9 @@ class ConsoleUIPlugin(UIPlugin):
 
                 #The counter
                 if m_progress:
-                    m_progress_txt = colorize("[%s/100]" % "{:2d}".format(int(m_progress*100)), "white")
+                    m_progress_txt = colorize("[%s/100]" % "{:2.2f}".format(m_progress*100.0), "white")
                 else:
-                    m_progress_txt = colorize("[-/-]", "white")
+                    m_progress_txt = colorize("[U]", "white")
 
                 #m_text = "%s %s: Status: %s." % (m_progress_txt, m_id, m_text)
                 m_text = "%s Status: %s" % (m_progress_txt, (m_text if m_text else "working"))
