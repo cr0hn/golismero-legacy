@@ -92,7 +92,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
 
         m_url = info.url
 
-        self.update_status("Folder bruteforcer - Start to process URL: '%s'" % str(m_url))
+        self.update_status("Start to process URL: '%s'" % str(m_url))
 
         #
         # Get the remote web server fingerprint
@@ -198,14 +198,14 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
         if info.url not in Config.audit_scope:
             return
 
-        self.update_status("Url suffixes bruteforcer - Start to process URL: '%s'" % str(info.url))
+        self.update_status("Start to process URL: '%s'" % str(info.url))
 
         # Parse original URL
         m_url_parts = info.parsed_url
 
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status("Bruteforcer - skipping URL '%s'." % str(info))
+            self.update_status("skipping URL '%s'." % str(info))
             return
 
         #
@@ -253,14 +253,14 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
         if info.url not in Config.audit_scope:
             return
 
-        self.update_status("Url prefixes bruteforcer - Start to process URL: '%s'" % str(info.url))
+        self.update_status("Start to process URL: '%s'" % str(info.url))
 
         # Parse original URL
         m_url_parts = info.parsed_url
 
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status("Bruteforcer - skipping URL '%s'." % str(info))
+            self.update_status("skipping URL '%s'." % str(info))
             return
 
         #
@@ -313,14 +313,14 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
         if info.url not in Config.audit_scope:
             return
 
-        self.update_status("Url file extensions bruteforcer - Start to process URL: '%s'" % str(info.url))
+        self.update_status("Start to process URL: '%s'" % str(info.url))
 
         # Parse original URL
         m_url_parts = info.parsed_url
 
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status("Bruteforcer - skipping URL '%s'." % str(info))
+            self.update_status("skipping URL '%s'." % str(info))
             return
 
         #
@@ -369,14 +369,14 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
         if info.url not in Config.audit_scope:
             return
 
-        self.update_status("Url permutations bruteforcer - Start to process URL: '%s'" % str(info.url))
+        self.update_status("Start to process URL: '%s'" % str(info.url))
 
         # Parse original URL
         m_url_parts = info.parsed_url
 
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status("Bruteforcer - skipping URL '%s'." % str(info))
+            self.update_status("skipping URL '%s'." % str(info))
             return
 
         #
@@ -424,14 +424,14 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
         if info.url not in Config.audit_scope:
             return
 
-        self.update_status("Url file directories bruteforcer - Start to process URL: '%s'" % str(info.url))
+        self.update_status("Start to process URL: '%s'" % str(info.url))
 
         # Parse original URL
         m_url_parts = info.parsed_url
 
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status("Bruteforcer - skipping URL '%s'." % str(info))
+            self.update_status("skipping URL '%s'." % str(info))
             return
 
         #
@@ -489,7 +489,7 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
 
     i, url = url
 
-    updater_func(i, total_urls, text="Bruteforcer - trying to discover URL %s" % url)
+    updater_func(i, total_urls, text="trying to discover URL %s" % url)
 
     # Ge URL
     p = None
@@ -498,7 +498,7 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
         if p:
             discard_data(p)
     except NetworkException,e:
-        Logger.log_more_verbose("Bruteforcer - value error while processing: '%s'. Error: %s" % (l_url, e.message))
+        Logger.log_more_verbose("value error while processing: '%s'. Error: %s" % (l_url, e.message))
 
     # Check if the url is acceptable by comparing
     # the result content.
@@ -517,7 +517,7 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
 
         # Append for analyze and display info if is accepted
         if matcher.append(p.raw_response,url=url,risk = risk_level):
-            updater_func("Bruteforcer - Discovered partial url: '%s'" % url)
+            updater_func("Discovered partial url: '%s'" % url)
 
 
 #----------------------------------------------------------------------
