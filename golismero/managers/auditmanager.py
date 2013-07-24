@@ -439,8 +439,8 @@ class Audit (object):
             # (Makes sense when resuming a stopped audit).
             target_data = self.scope.get_targets()
             for data in target_data:
-                if self.database.has_data_key(data.identity, data.data_type):
-                    self.database.add(data)
+                if not self.database.has_data_key(data.identity, data.data_type):
+                    self.database.add_data(data)
 
             # Import external results.
             # This is done after storing the targets, so the importers
@@ -452,12 +452,8 @@ class Audit (object):
             # Restore the original execution context.
             Config._context = old_context
 
-##        # Move to the next stage.
-##        self.update_stage()
-
-        # XXX HACK
-        # Temporarily doing this because update_stage is broken.
-        self.send_msg(message_info=target_data)
+        # Move to the next stage.
+        self.update_stage()
 
 
     #----------------------------------------------------------------------
