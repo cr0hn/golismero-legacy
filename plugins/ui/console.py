@@ -70,10 +70,6 @@ class ConsoleUIPlugin(UIPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        # Ignore already seen data
-        #if info.identity in self.already_seen_info:
-            #return
-        #self.already_seen_info.add(info.identity)
 
         if Console.level >= Console.STANDARD:
 
@@ -100,10 +96,52 @@ class ConsoleUIPlugin(UIPlugin):
 
                 #The counter
                 if m_progress:
-                    m_progress_txt = colorize("[%s/100]" % "{:2d}".format(int(m_progress * 100)), "white")
+                    m_progress_txt = colorize("[%s/100]" % "{:2d}".format(int(m_progress*100)), "white")
                 else:
                     m_progress_txt = colorize("[-/-]", "white")
 
                 #m_text = "%s %s: Status: %s." % (m_progress_txt, m_id, m_text)
-                m_text = "%s Status: %s." % (m_progress_txt, (m_text if m_text else ""))
+                m_text = "%s Status: %s" % (m_progress_txt, (m_text if m_text else "working in process"))
                 Console.display(m_text)
+
+        # Process control messages
+        if message.message_type == MessageType.MSG_TYPE_CONTROL:
+
+            # Show log messages
+            # (The verbosity is sent by Logger)
+            #if message.message_code == MessageCode.MSG_CONTROL_LOG:
+                #(text, level, is_error) = message.message_info
+                #if Console.level >= level:
+                    #text = colorize(text, 'middle')
+                    #text = "[*] %s" % text
+                    #if is_error:
+                        #Console.display_error(text)
+                    #else:
+                        #Console.display(text)
+
+            # Show plugin errors
+            # (Only the description in standard level,
+            # full traceback in more verbose level)
+            if message.message_code == MessageCode.MSG_CONTROL_ERROR:
+                (description, traceback) = message.message_info
+                text = "[!] Plugin error: " + str(description)
+                text = colorize(text, 'critical')
+                traceback = colorize(traceback, 'critical')
+                Console.display_error(text)
+                Console.display_error_more_verbose(traceback)
+
+            # Show plugin warnings
+            # (Only the description in verbose level,
+            # full traceback in more verbose level)
+            elif message.message_code == MessageCode.MSG_CONTROL_WARNING:
+                for w in message.message_info:
+                    if Console.level >= Console.MORE_VERBOSE:
+                        formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
+                    elif Console.level >= Console.VERBOSE:
+                        formatted = warnings.formatwarning(w.message, w.category)
+                    else:
+                        formatted = None
+                    if formatted:
+                        text = "[!] Plugin warning: " + str(formatted)
+                        text = colorize(text, 'low')
+                        Console.display_error(text)
