@@ -12,7 +12,7 @@ Copyright = Copyright (C) 2011-2013 GoLismero Project
 License = GNU Public License
 
 
-[all]
+[common]
 w1 = fuzzdb/Discovery/PredictableRes/CGI_XPlatform.fuzz.txt
 
 #
