@@ -31,6 +31,7 @@ from golismero.api.data import discard_data
 from golismero.api.data.resource import Resource
 from golismero.api.data.information.webserver_fingerprint import WebServerFingerprint
 from golismero.api.data.resource.url import Url
+from golismero.api.data.resource.baseurl import BaseUrl
 from golismero.api.data.resource.folderurl import FolderUrl
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.logger import Logger
@@ -98,6 +99,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
         #
         m_webserver_finger = info.get_associated_informations_by_category(WebServerFingerprint.information_type)
 
+        m_wordlist = set()
         # There is fingerprinting information?
         if m_webserver_finger:
 
@@ -105,11 +107,19 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
 
             m_server_canonical_name = m_webserver_finger.name_canonical
             m_servers_related       = m_webserver_finger.related # Set with related web servers
+
             #
             # Load wordlists
             #
-            m_wordlist         = set()
             m_wordlist_update  = m_wordlist.update
+
+            # Common wordlist
+            try:
+                w = Config.plugin_extra_config["common"]
+                m_wordlist_update([l_w for l_w in w.itervalues()])
+            except KeyError:
+                pass
+
 
             # Wordlist of server name
             try:
@@ -126,48 +136,54 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
             except KeyError:
                 pass
 
-            # Load content of wordlists
-            m_urls           = set()
-            m_urls_update    = m_return.update
-            m_url            = m_url if m_url.endswith("/") else "%s/" % m_url
-
-            for l_w in m_wordlist:
-                # Use a copy of wordlist to avoid modify the original source
-                l_loaded_wordlist = WordListAPI.get_advanced_wordlist_as_list(l_w)
-
-                #
-                # README!!!!!
-                #
-                # Here don't use urljoin because it doesn't works with complete URL. With urljoin:
-                #
-                # http://www.mysite.com/folder1/ + /folder/to/append/index.php
-                # ---> http://www.mysite.com/folder/to/append/index.php
-                # instead of
-                # ---> http://www.mysite.com/folder1/folder/to/append/index.php
-                #
-                m_urls_update(( "%s%s" % (m_url, l_wo[1:] if l_wo.startswith("/") else l_wo) for l_wo in l_loaded_wordlist))
-
-
-            #return analyze_urls(info, {'predictables' : m_return})
-
-            # Generates the error page
-            m_error_response = get_error_page(m_url)
-
-            # Create the matching analyzer
-            m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
-
-            # Create the partial funs
-            _f = partial(process_url, severity_vectors['predictables'], m_store_info, update_status)
-
-            # Process the URLs
-            for l_url in m_urls:
-                _f(l_url)
-
-            # Generate and return the results.
-            return generate_results(m_store_info.unique_texts)
-
         else:
-            return None
+
+            # Common wordlists
+            try:
+                w = Config.plugin_extra_config["common"]
+                m_wordlist.update([l_w for l_w in w.itervalues()])
+            except KeyError:
+                pass
+
+
+        # Load content of wordlists
+        m_urls           = set()
+        m_urls_update    = m_urls.update
+
+        # Fixed Url
+        m_url_fixed      = m_url if m_url.endswith("/") else "%s/" % m_url
+
+        for l_w in m_wordlist:
+            # Use a copy of wordlist to avoid modify the original source
+            l_loaded_wordlist = WordListAPI.get_advanced_wordlist_as_list(l_w)
+
+            #
+            # README!!!!!
+            #
+            # Here don't use urljoin because it doesn't works with complete URL. With urljoin:
+            #
+            # http://www.mysite.com/folder1/ + /folder/to/append/index.php
+            # ---> http://www.mysite.com/folder/to/append/index.php
+            # instead of
+            # ---> http://www.mysite.com/folder1/folder/to/append/index.php
+            #
+            m_urls_update(( "%s%s" % (m_url_fixed, l_wo[1:] if l_wo.startswith("/") else l_wo) for l_wo in l_loaded_wordlist))
+
+        # Generates the error page
+        m_error_response = get_error_page(m_url)
+
+        # Create the matching analyzer
+        m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+
+        # Create the partial funs
+        _f = partial(process_url, severity_vectors['predictables'], get_http_method(m_url), m_store_info, self.update_status)
+
+        # Process the URLs
+        for l_url in m_urls:
+            _f(l_url)
+
+        # Generate and return the results.
+        return generate_results(m_store_info.unique_texts)
 
 #----------------------------------------------------------------------
 class SuffixesDisclosureBruteforcer(TestingPlugin):
@@ -210,7 +226,7 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
         m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
 
         # Create the partial funs
-        _f = partial(process_url, severity_vectors['predictables'], m_store_info, update_status)
+        _f = partial(process_url, severity_vectors['predictables'], get_http_method(m_url), m_store_info, self.update_status)
 
         # Process the URLs
         for l_url in m_urls:
@@ -261,7 +277,7 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
         m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
 
         # Create the partial funs
-        _f = partial(process_url, severity_vectors['prefixes'], m_store_info, update_status)
+        _f = partial(process_url, severity_vectors['prefixes'], get_http_method(m_url), m_store_info, self.update_status)
 
         # Process the URLs
         for l_url in m_urls:
@@ -312,7 +328,7 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
         m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
 
         # Create the partial funs
-        _f = partial(process_url, severity_vectors['file_extensions'], m_store_info, update_status)
+        _f = partial(process_url, severity_vectors['file_extensions'], get_http_method(m_url), m_store_info, self.update_status)
 
         # Process the URLs
         for l_url in m_urls:
@@ -363,7 +379,7 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
         m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
 
         # Create the partial funs
-        _f = partial(process_url, severity_vectors['permutations'], m_store_info, update_status)
+        _f = partial(process_url, severity_vectors['permutations'], get_http_method(m_url), m_store_info, self.update_status)
 
         # Process the URLs
         for l_url in m_urls:
@@ -414,7 +430,7 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
         m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
 
         # Create the partial funs
-        _f = partial(process_url, severity_vectors['directories'], m_store_info, update_status)
+        _f = partial(process_url, severity_vectors['directories'], get_http_method(m_url), m_store_info, self.update_status)
 
         # Process the URLs
         for l_url in m_urls:
