@@ -161,13 +161,35 @@ class PluginTester(object):
             if isinstance(data_or_msg, Message):
                 return plugin.recv_msg(data_or_msg)
 
-            # If it's data, run it through the plugin and return the results.
-            if not data_or_msg.is_in_scope():
+            # It's data.
+            data = data_or_msg
+
+            # If the data is out of scope, don't run the plugin.
+            if not data.is_in_scope():
                 return []
-            result = plugin.recv_info(data_or_msg)
+
+            # Make sure the plugin can actually process this type of data.
+            # Raise an exception if it doesn't.
+            found = False
+            for clazz in plugin.get_accepted_info():
+                if isinstance(data, clazz):
+                    found = True
+                    break
+            if not found:
+                msg = "Plugin %s cannot process data of type %s"
+                raise TypeError(msg % (plugin_name, type(data)))
+
+            # Call the plugin.
+            result = plugin.recv_info(data)
+
+            # Process the results.
             result = LocalDataCache.on_finish(result)
-            if data_or_msg not in result:
-                result.insert(0, data_or_msg)
+
+            # If the input data was not returned, make sure to add it.
+            if data not in result:
+                result.insert(0, data)
+
+            # Return the results.
             return result
 
         finally:
