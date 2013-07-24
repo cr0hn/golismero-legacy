@@ -56,7 +56,6 @@ from golismero.common import OrchestratorConfig, AuditConfig
 from golismero.database.auditdb import AuditDB
 from golismero.main.launcher import run
 from golismero.managers.pluginmanager import PluginManager
-from golismero.testing import PluginTester
 
 
 # Test GoLismero.
