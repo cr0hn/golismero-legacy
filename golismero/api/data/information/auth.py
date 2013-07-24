@@ -81,7 +81,7 @@ class Password(Information):
         :type password: str
         """
         self.__password = password
-        super(Username, self).__init__()
+        super(Password, self).__init__()
 
 
     #----------------------------------------------------------------------

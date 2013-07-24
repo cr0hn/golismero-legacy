@@ -118,7 +118,7 @@ class Domain(Resource):
         :return: the hostname of domain. i.e: www.mysite.com -> mysite.com
         :rtype: str
         """
-        subdomain, domain, suffix = split_hostname(self.name)
+        _, domain, suffix = split_hostname(self.name)
         return "%s.%s" % (domain, suffix)
 
 
