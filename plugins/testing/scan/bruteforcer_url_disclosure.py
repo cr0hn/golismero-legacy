@@ -176,11 +176,16 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
         m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
 
         # Create the partial funs
-        _f = partial(process_url, severity_vectors['predictables'], get_http_method(m_url), m_store_info, self.update_status)
+        _f = partial(process_url,
+                     severity_vectors['predictables'],
+                     get_http_method(m_url),
+                     m_store_info,
+                     self.update_status,
+                     len(m_urls))
 
         # Process the URLs
-        for l_url in m_urls:
-            _f(l_url)
+        for i, l_url in enumerate(m_urls):
+            _f((i, l_url))
 
         # Generate and return the results.
         return generate_results(m_store_info.unique_texts)
@@ -442,7 +447,7 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
 
 
 #----------------------------------------------------------------------
-def process_url(risk_level, method, matcher, updater_func, url):
+def process_url(risk_level, method, matcher, updater_func, total_urls, url):
     """
     Checks if an URL exits.
 
@@ -463,6 +468,11 @@ def process_url(risk_level, method, matcher, updater_func, url):
     """
 
     updater_func("Bruteforcer - trying to discover URL %s" % url)
+
+    i, url = url
+
+    print i
+    print url
 
     # Ge URL
     p = None
