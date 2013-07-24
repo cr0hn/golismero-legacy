@@ -87,9 +87,6 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        if info.url not in Config.audit_scope:
-            return
-
         m_url = info.url
 
         self.update_status("Folder bruteforcer - Start to process URL: '%s'" % str(m_url))
@@ -195,9 +192,6 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        if info.url not in Config.audit_scope:
-            return
-
         self.update_status("Url suffixes bruteforcer - Start to process URL: '%s'" % str(info.url))
 
         # Parse original URL
@@ -215,7 +209,7 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
         m_urls = make_url_with_suffixes(get_list_from_wordlist("common_suffixes"), m_url_parts)
 
         # Generates the error page
-        m_error_response = get_error_page(m_url)
+        m_error_response = get_error_page(info.url)
 
         # Create the matching analyzer
         m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
@@ -249,9 +243,6 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-
-        if info.url not in Config.audit_scope:
-            return
 
         self.update_status("Url prefixes bruteforcer - Start to process URL: '%s'" % str(info.url))
 
@@ -310,9 +301,6 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        if info.url not in Config.audit_scope:
-            return
-
         self.update_status("Url file extensions bruteforcer - Start to process URL: '%s'" % str(info.url))
 
         # Parse original URL
@@ -366,9 +354,6 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        if info.url not in Config.audit_scope:
-            return
-
         self.update_status("Url permutations bruteforcer - Start to process URL: '%s'" % str(info.url))
 
         # Parse original URL
@@ -420,9 +405,6 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
-
-        if info.url not in Config.audit_scope:
-            return
 
         self.update_status("Url file directories bruteforcer - Start to process URL: '%s'" % str(info.url))
 
@@ -498,7 +480,7 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
         if p:
             discard_data(p)
     except NetworkException,e:
-        Logger.log_more_verbose("Bruteforcer - value error while processing: '%s'. Error: %s" % (l_url, e.message))
+        Logger.log_more_verbose("Bruteforcer - value error while processing: '%s'. Error: %s" % (url, e.message))
 
     # Check if the url is acceptable by comparing
     # the result content.
@@ -623,9 +605,6 @@ def generate_results(unique_texts):
 
         # Set impact
         l_vuln.risk                = l_match.risk
-
-        # Link resource associated
-        l_vuln.associated_resource = info
 
         # Store
         m_results_append(l_url)

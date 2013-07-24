@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
-from golismero.api.data import discard_data
+from golismero.api.data import discard_data, LocalDataCache
 from golismero.api.data.information.dns import DnsRegister
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
@@ -43,6 +43,7 @@ from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist_api import WordListAPI
 
 from functools import partial
+from netaddr import IPAddress
 
 
 #--------------------------------------------------------------------------
@@ -136,14 +137,15 @@ class DNSZoneTransfer(TestingPlugin):
 
                     # Is a IPaddress?
                     try:
-                        ip     = IPAddress(l_ns)
-                        # Mark to not track
-                        LocalDataCache.on_autogeneration(ip)
+                        ip = IPAddress(l_ns)
+                    except Exception:
+                        ip = None
+                    if ip is not None:
 
                         # Create the IP resource
                         l_resource = IP(l_ns)
-                    except AddrFormatError:
-                        # Domain detected
+
+                    else:
 
                         # Create the Domain resource
                         l_resource = Domain(l_ns)

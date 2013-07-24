@@ -381,7 +381,7 @@ class DNSRegisterAlgorithm(DnsRegister):
             self.__algorithm_name  = DnsSEC.algorithm_to_text(algorithm)
             self.__algorithm_value = DnsSEC.text_to_algorithm(self.__algorithm_name)
         else:
-            raise TypeError("Not a valid algorithm, got %s" % type(subtype))
+            raise TypeError("Expected str or int, got %s instead" % type(algorithm))
 
         super(DNSRegisterAlgorithm, self).__init__(**kwargs)
 
@@ -1701,7 +1701,7 @@ class DnsRegisterRRSIG(DNSRegisterAlgorithm):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, algorithm, expiration, interception, key_tag, labels, original_ttl, signer, type_coverded, **kwargs):
+    def __init__(self, algorithm, expiration, interception, key_tag, labels, original_ttl, signer, type_covered, **kwargs):
         """
         :param algorithm: the DNSSEC algorithm for the certificate. Allowed values are in DnsSEC.ALGORITHM_BY_TEXT dict.
         :type algorithm: str | int
@@ -1736,7 +1736,7 @@ class DnsRegisterRRSIG(DNSRegisterAlgorithm):
         if not isinstance(signer, str):
             raise TypeError("Expected str, got '%s'" % type(signer))
         if not isinstance(type_coverded, int):
-            raise TypeError("Expected int, got '%s'" % type(type_coverded))
+            raise TypeError("Expected int, got '%s'" % type(type_covered))
 
         self.__expiration             = expiration
         self.__key_tag                = key_tag
