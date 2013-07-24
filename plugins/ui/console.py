@@ -101,7 +101,7 @@ class ConsoleUIPlugin(UIPlugin):
                     m_progress_txt = colorize("[-/-]", "white")
 
                 #m_text = "%s %s: Status: %s." % (m_progress_txt, m_id, m_text)
-                m_text = "%s Status: %s" % (m_progress_txt, (m_text if m_text else "working in process"))
+                m_text = "%s Status: %s" % (m_progress_txt, (m_text if m_text else "working"))
                 Console.display(m_text)
 
         # Process control messages
