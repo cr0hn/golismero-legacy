@@ -30,25 +30,55 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["FileManager"]
+
 from .config import Config
 from .logger import Logger
+from ..common import Singleton
 
 from os import path, listdir, walk
 
 import tempfile
 
 
-class FileManager (object):
+class _FileManager (Singleton):
     """
     File API for plugins.
     """
 
 
-    # TODO: this could be a singleton, with a protected method to update the config.
+    #----------------------------------------------------------------------
+    def __init__(self):
+        self.__plugin_path = None
 
 
     #----------------------------------------------------------------------
-    def __init__(self):
+    def _update_plugin_path(self):
+        """
+        Updates the plugin path using the current configuration.
+        Called automatically by the plugin bootstrap routine.
+
+        .. warning: Internally used by GoLismero, do not call!
+        """
+
+        # Despite what the docs say, what this actually does is
+        # clear the cache, so the next time the path is requested
+        # it's calculated. That way we don't spend time doing stuff
+        # that may not even be needed later.
+        self.__plugin_path = None
+
+
+    #----------------------------------------------------------------------
+    @property
+    def plugin_path(self):
+        """
+        :returns: Path to the current plugin's private data files.
+        :rtype: str
+        """
+
+        # Return the cached value.
+        if self.__plugin_path is not None:
+            return self.__plugin_path
 
         # Try to use the location of the plugin module file as the plugin path.
         plugin_path = path.abspath(Config.plugin_info.plugin_module)
@@ -71,8 +101,11 @@ class FileManager (object):
                 Logger.log_error("[%s] Cannot determine the plugin's path!" % name)
                 plugin_path = tempfile.gettempdir()
 
-        # Remember the plugin path.
+        # Cache the plugin path.
         self.__plugin_path = plugin_path
+
+        # Return the plugin path.
+        return self.__plugin_path
 
 
     #----------------------------------------------------------------------
@@ -89,10 +122,10 @@ class FileManager (object):
             raise ValueError("Absolute pathnames are not allowed: %r" % pathname)
 
         # Turn the pathname into a local pathname within the plugin folder.
-        pathname = path.join(self.__plugin_path, pathname)
+        pathname = path.join(self.plugin_path, pathname)
         pathname = path.abspath(pathname)
-        if not pathname.startswith(self.__plugin_path):
-            raise ValueError("Pathname may not be outside the plugin folder: %r" % self.__plugin_path)
+        if not pathname.startswith(self.plugin_path):
+            raise ValueError("Pathname may not be outside the plugin folder: %r" % self.plugin_path)
 
         # Return the sanitized pathname.
         return pathname
@@ -254,9 +287,15 @@ class FileManager (object):
 
         # List the folder contents and yield them,
         # fixing the base path to make it relative.
-        p = len(self.__plugin_path)
-        if not self.__plugin_path.endswith(path.sep):
+        p = len(self.plugin_path)
+        if not self.plugin_path.endswith(path.sep):
             p += 1
         for basepath, directories, files in walk(folder):
             basepath = basepath[p:]
             yield basepath, directories, files
+
+
+#----------------------------------------------------------------------
+
+# Instance the singleton.
+FileManager = _FileManager()
