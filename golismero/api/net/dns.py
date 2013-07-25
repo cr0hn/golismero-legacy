@@ -416,8 +416,8 @@ class _DNS(Singleton):
                 map(LocalDataCache.on_autogeneration, ns_tmp)
 
                 # Store only the IP address of the DNS servers
-                l_dns        = []
-                l_dns_append = l_dns.append
+                l_dns        = set()
+                l_dns_append = l_dns.add
                 for d in ns_tmp:
                     for t in self.get_ips(d):
                         l_dns_append(t.address)
@@ -435,8 +435,6 @@ class _DNS(Singleton):
                     # Mark for not tracking
                     LocalDataCache.on_autogeneration(d)
 
-                # Remove duplicates
-                ns_records = set(l_dns)
             else:
                 # The domain is an DNS server
                 ns_records = (domain)
