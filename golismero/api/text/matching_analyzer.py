@@ -38,13 +38,14 @@ from difflib import SequenceMatcher
 from diff_match_patch import diff_match_patch
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Text analyzer.
 
 def get_matching_level(text1, text2):
     """
-    Compare two text and return a value between 0-1 with the level of
-    difference. 0 is lowest and 1 the highest.
+    Compare two text and return a value between 0.0 and 1.0 with the level of
+    difference. 0.0 is lowest (absolutely different) and 1.0 the highest
+    (absolutely equal).
 
     - If text1 is more similar to text2, value will be near to 100.
     - If text1 is more different to text2, value will be near to 0.
@@ -55,15 +56,20 @@ def get_matching_level(text1, text2):
     :param text2: Second text to compare.
     :type text2: str
 
-    :returns: Floating point value between 0 and 1.
+    :returns: Floating point value between 0.0 and 1.0.
     :rtype: float
     """
-    if not text1 and not text2:
-        return 1 # If two text are empty => are equals
+    if not text1:
+        text1 = ""
+    if not text2:
+        text2 = ""
+
+    if text1 == text2:
+        return 1.0
 
     m_difference = abs(len(text1) - len(text2))
 
-    m_return_value = 0
+    m_return_value = 0.0
 
     CUTOFF_VALUE = 1000 # 200 (Min words of text) * 5 (The average letters contains a word)
 
@@ -81,7 +87,7 @@ def get_matching_level(text1, text2):
         # FIX IT!!!!!
         #
         # THIS CODE IS CURRENTLY UNUSABLE BECAUSE IT MUST TO RETURN A
-        # VALUE AND, AT THIS MOMENT, WE CAN ENSURE THAT.
+        # VALUE AND, AT THIS MOMENT, WE CAN'T ENSURE THAT.
         #
         #
 
@@ -91,27 +97,27 @@ def get_matching_level(text1, text2):
         #l_google_value = float(l_differ.diff_levenshtein(l_differ.diff_main(text1, text2)))
         p = l_differ.diff_main(text1, text2)
         l_google_value = float(l_differ.diff_levenshtein(p))
-        if l_google_value == 0:
-            l_google_value = 1
+        if l_google_value == 0.0:
+            l_google_value = 1.0
 
-        l_len_text2    = len(text2)
-        l_len_text1    = len(text1)
+        l_len_text2    = float(len(text2))
+        l_len_text1    = float(len(text1))
         # Calculate
-        m_return_value = abs( 1 - ((l_len_text1 - l_len_text2) / l_google_value ))
+        m_return_value = abs( 1.0 - ((l_len_text1 - l_len_text2) / l_google_value ))
 
-    return m_return_value
+    return float(m_return_value)
 
 
 #------------------------------------------------------------------------------
 class MatchingAnalyzerElement(object):
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, attrs):
         self.__attrs = attrs
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __getattr__(self, name):
         return self.__attrs[name]
 
@@ -126,7 +132,7 @@ class MatchingAnalyzer(object):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, base_text, matching_level = 0.52, deviation = 1.15):
 
         self.__base_text = base_text
@@ -143,7 +149,7 @@ class MatchingAnalyzer(object):
         self.__deviation = deviation
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def base_text(self):
         """
@@ -153,7 +159,7 @@ class MatchingAnalyzer(object):
         return self.__base_text
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def append(self, text, **kargs):
         """
         If the matching level is accepted,
@@ -183,7 +189,7 @@ class MatchingAnalyzer(object):
                 return False
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def unique_texts(self):
         """
@@ -197,7 +203,7 @@ class MatchingAnalyzer(object):
             yield ut
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def level_average(self):
         """
@@ -206,14 +212,14 @@ class MatchingAnalyzer(object):
         """
         if self.__new_data:
             if self.__results_matching_level:
-                self.__average_level = sum(self.__results_matching_level.itervalues()) / len(self.__results_matching_level)
+                self.__average_level = float(sum(self.__results_matching_level.itervalues())) / float(len(self.__results_matching_level))
             else:
                 self.__average_level = 0.0
 
         return self.__average_level
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __calculate(self):
         """
         Calculate the elements that are really different.
@@ -239,7 +245,7 @@ class MatchingAnalyzer(object):
             self.__new_data = False
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # HTTP response analyzer.
 
 def HTTP_response_headers_analyzer(response_header_1, response_header_2):
