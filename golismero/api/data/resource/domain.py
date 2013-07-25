@@ -126,9 +126,12 @@ class Domain(Resource):
 
     @property
     def discovered(self):
-        # TODO: check the IPs for scope too
         domain = self.name
-        result = [ IP(address) for address in self.addresses ]
+        result = [
+            IP(address)
+            for address in self.addresses
+            if address in Config.audit_scope
+        ]
         subdomain, domain, suffix = split_hostname(domain)
         if subdomain:
             prefix = ".".join( (domain, suffix) )

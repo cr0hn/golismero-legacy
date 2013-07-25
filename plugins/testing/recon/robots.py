@@ -95,7 +95,7 @@ class Robots(TestingPlugin):
         p = None
         try:
             # Update status
-            self.update_status(0.40, "Robots - looking for robots.txt in URL: '%s'" % m_url_robots_txt)
+            self.update_status("Robots - looking for robots.txt in URL: '%s'" % m_url_robots_txt, progress=0.40)
 
             p = download(m_url_robots_txt, self.check_download)
         except NetworkException, e:

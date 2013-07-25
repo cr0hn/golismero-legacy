@@ -120,13 +120,12 @@ class DNSZoneTransfer(TestingPlugin):
         if not self.state.check(m_domain):
 
             self.update_status("starting DNS zone transfer plugin")
-            d        = DNS()
             m_return = []
 
             #
             # Make the zone transfer
             #
-            m_ns_servers, m_zone_transfer = d.zone_transfer(m_domain, return_nameserver_used=True)
+            m_ns_servers, m_zone_transfer = DNS.zone_transfer(m_domain) #, return_nameserver_used=True)
 
             m_return_append = m_return.append
             if m_zone_transfer:

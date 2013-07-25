@@ -39,7 +39,6 @@ __all__ = [
 
 from . import NetworkOutOfScope
 from ..data import LocalDataCache
-from ..config import Config
 from ..text.text_utils import generate_random_string, split_first
 
 from BeautifulSoup import BeautifulSoup

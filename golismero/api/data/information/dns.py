@@ -441,8 +441,14 @@ class DnsRegisterA(DnsRegister):
     #----------------------------------------------------------------------
     @property
     def discovered(self):
-        # TODO: check scope
-        return [IP(self.address)]
+        if self.is_in_scope():
+            return [IP(self.address)]
+        return []
+
+
+    #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return self.address in Config.audit_scope
 
 
 #------------------------------------------------------------------------------
