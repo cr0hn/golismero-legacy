@@ -257,7 +257,7 @@ class Plugin (object):
 
 
     #----------------------------------------------------------------------
-    def update_status_step(self, step, **kwargs):
+    def update_status_step(self, step, total = 100.0, partial = 100.0, text = None):
         """
         Plugins can call this method to tell the user of the current
         state of process for a concrete instant of time.
@@ -295,11 +295,11 @@ class Plugin (object):
             for i, val in enumerate(values_to_process, start=1):
                 self.update_status_step(i, values_len, partial=40, text="Text for update")
 
-        :param total: the total amount of values to process.
-        :type total: float | int
-
         :param step: amount of values of total.
         :type step: float | int
+
+        :param total: the total amount of values to process.
+        :type total: float | int
 
         :param partial: Optional value in the range [0, 100] that represents the weight of the process has.
         :type partial: float | int
@@ -309,10 +309,9 @@ class Plugin (object):
         """
         try:
 
-            m_total   = float(kwargs.get("total", 100.0))
+            m_total   = float(total)
             m_step    = float(step)
-            text    = kwargs.get("text", None)
-            m_partial = float(kwargs.get('partial', 100.0))
+            m_partial = float(partial)
             if 0.0 < m_partial <= 100.0:
                 m_progress = (m_step/m_total) * (m_partial/100.0)
             else:
