@@ -1,6 +1,10 @@
 @echo off
+del flake8-out.log > nul 2> nul
+del flake8-err.log > nul 2> nul
 del pyflakes-out.log > nul 2> nul
 del pyflakes-err.log > nul 2> nul
+del pep8-out.log > nul 2> nul
+del pep8-err.log > nul 2> nul
 cd ..\golismero
 dir /b /s *.py > ..\_tmp.txt
 cd ..\plugins
