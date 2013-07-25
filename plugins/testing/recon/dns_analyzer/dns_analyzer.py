@@ -235,7 +235,7 @@ class DNSBruteforcer(TestingPlugin):
                         if dom.type == "A":
                             if dom.address not in m_ips_already:
                                 m_ips_already_append(dom.address)
-                                m_ips.add(dom)
+                                m_ips_add(dom)
 
                 # Unify
                 m_domains.update(m_ips)

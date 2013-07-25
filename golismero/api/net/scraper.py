@@ -35,8 +35,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["is_link", "extract_from_text", "extract_from_html"]
 
-from ..net.web_utils import DecomposedURL
-
 from BeautifulSoup import BeautifulSoup
 from urlparse import urldefrag, urljoin, urlparse
 
