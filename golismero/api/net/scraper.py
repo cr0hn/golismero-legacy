@@ -122,6 +122,18 @@ def extract_from_text(text, base_url, only_links = True):
     :rtype: set(str)
     """
 
+    # Trivial case.
+    if not text:
+        return set()
+
+    # Check the type.
+    if not isinstance(text, basestring):
+        raise TypeError("Expected string, got %s instead" % type(text))
+
+    # Make sure the text is really ASCII text.
+    # We don't support Unicode yet.
+    text = str(text)    # XXX FIXME
+
     # Set where the URLs will be collected.
     result = set()
     add_result = result.add
@@ -226,7 +238,7 @@ def extract_from_html(raw_html, base_url, only_links = True):
         # If we found an URL in this tag...
         if url is not None:
 
-            # Unicode urls are not supported.
+            # Unicode URLs are not supported.
             url = str(url)
 
             # Canonicalize the URL.
