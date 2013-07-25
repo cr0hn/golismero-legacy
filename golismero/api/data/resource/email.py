@@ -37,6 +37,8 @@ from .domain import Domain
 from .. import identity
 from ...config import Config
 
+import re
+
 
 #------------------------------------------------------------------------------
 class Email(Resource):
@@ -45,6 +47,10 @@ class Email(Resource):
     """
 
     resource_type = Resource.RESOURCE_EMAIL
+
+
+    # Crude regular expression for email address validation.
+    __re_validate = re.compile(r"[A-Za-z0-9\.\_\-]+\@[A-Za-z0-9\_\-\%]+\.[A-Za-z0-9\.\_\-\%]+")
 
 
     #----------------------------------------------------------------------
@@ -57,8 +63,18 @@ class Email(Resource):
         :type name: str | None
         """
 
+        # Check the data types.
+        if not isinstance(address, basestring):
+            raise TypeError("Expected string, got %s instead", type(address))
+        if name is not None and not isinstance(name, basestring):
+            raise TypeError("Expected string, got %s instead", type(name))
+
+        # Do a very rudimentary validation of the email address.
+        # This will at least keep users from confusing the order of the arguments.
+        if not self.__re_validate.match(address):
+            raise ValueError("Invalid email address: %s" % address)
+
         # Email address.
-        # TODO: sanitize the email addresses using a regular expression
         self.__address = address
 
         # Real name.

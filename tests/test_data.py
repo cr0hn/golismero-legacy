@@ -51,6 +51,12 @@ from golismero.api.data.information import Information
 from golismero.api.data.resource import Resource
 from golismero.api.data.vulnerability import Vulnerability
 
+# The local data cache.
+from golismero.api.data import LocalDataCache
+
+# The mock testing environment creator.
+from golismero.testing import PluginTester
+
 
 # Get the information and resource type IDs.
 INFORMATION_TYPES = {
@@ -176,10 +182,15 @@ def test_data_types_have_id():
 
 # This test makes sure the links work properly.
 def test_data_links():
+    with PluginTester():
+        helper_data_links()
 
-    # Reset the temporary data storage.
-    from golismero.api.data import LocalDataCache
-    LocalDataCache.on_run()
+
+# The actual test, without the boilerplate.
+def helper_data_links():
+
+    # Make sure the local data cache is enabled at this point.
+    LocalDataCache._enabled = True
 
     # Create some dummy data.
     from golismero.api.data.resource.url import Url
@@ -188,7 +199,7 @@ def test_data_links():
     d1 = Url("http://www.example.com/")
     d2 = Text("some text")
     d3 = UrlDisclosure(d1)
-    d1.add_resource(d2)
+    d1.add_information(d2)
 
     # Test validate_link_minimums().
     print "Testing Data.validate_link_minimums()"

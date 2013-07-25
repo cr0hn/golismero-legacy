@@ -814,9 +814,7 @@ class HTTP_Response (Information):
 
     #----------------------------------------------------------------------
 
-    # TODO: maybe the times should be collected instead of overwritten?
-
-    @overwrite
+    @overwrite  # TODO: maybe the times should be collected and/or averaged instead?
     def elapsed(self):
         """
         :returns: Time elapsed in seconds since the request was sent

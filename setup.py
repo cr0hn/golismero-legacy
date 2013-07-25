@@ -167,9 +167,9 @@ metadata = {
 
     # Setup instructions.
     'requires'          : ['BeautifulSoup', 'python_cjson', 'colorizer',
-                           'decorator', 'diff_match_patch', 'numpy',
+                           'decorator', 'diff_match_patch', 'netaddr',
                            'python_ntlm', 'repoze.lru', 'requests',
-                           'requests_ntlm'],
+                           'requests_ntlm', 'tldextract'],
     'provides'          : ['golismero'],
     'packages'          : packages,
     'package_dir'       : package_dir,

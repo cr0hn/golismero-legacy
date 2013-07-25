@@ -36,6 +36,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+
+__all__ = ["OpenvasManager"]
+
 from golismero.api.text.text_utils import generate_random_string
 
 import socket
@@ -127,6 +130,10 @@ class OpenvasTargetError(OpenvasException):
         super(OpenvasClientError, self).__init__()
 
 
+#------------------------------------------------------------------------------
+#
+# High level interface
+#
 #------------------------------------------------------------------------------
 class OpenvasManager(object):
     """
