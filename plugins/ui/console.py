@@ -89,7 +89,7 @@ class ConsoleUIPlugin(UIPlugin):
 
             if Console.level >= Console.VERBOSE:
                 m_id, m_progress, m_text = message.message_info
-                m_plugin_name            = ' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")])
+                m_plugin_name            = colorize(' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")]), "blue")
 
                 #The counter
                 if m_progress:
@@ -122,7 +122,7 @@ class ConsoleUIPlugin(UIPlugin):
             if message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 (description, traceback) = message.message_info
                 plugin_name = ' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")])
-                text        = "[!] Plugin '%s' error: %s " + (m_plugin_name, str(description))
+                text        = "[!] Plugin '%s' error: %s " % (colorize(plugin_name, "blue"), str(description))
                 text        = colorize(text, 'critical')
                 traceback   = colorize(traceback, 'critical')
                 Console.display_error(text)
@@ -141,6 +141,6 @@ class ConsoleUIPlugin(UIPlugin):
                         formatted = None
                     if formatted:
                         plugin_name = ' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")])
-                        text        = "[!] Plugin '%s' warning: %s " + (m_plugin_name, str(formatted))
+                        text        = "[!] Plugin '%s' warning: %s " % (colorize(plugin_name, "blue"), str(formatted))
                         text        = colorize(text, 'low')
                         Console.display_error(text)
