@@ -165,7 +165,7 @@ class AuditScope (object):
             dns_registers.extend( DNS.get_a(domain) )
 
             # Resolve the IPv6 addresses.
-            address_listDNS.get_aaaa(domain) )
+            dns_registers.extend( DNS.get_aaaa(domain) )
 
         # If no IP addresses could be resolved, abort the audit.
         if not dns_registers:
