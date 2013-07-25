@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["DNS"]
 
 from ..data.information.dns import *  # noqa
+from ..data import LocalDataCache
 from ...common import Singleton
 
 import dns.query
@@ -360,7 +361,7 @@ class _DNS(Singleton):
 
 
     #----------------------------------------------------------------------
-    def zone_transfer(self, domain, nameservers = None):
+    def zone_transfer(self, domain, nameservers = None, ns_allowed_zone_transfer=False):
         """
         Function for testing for zone transfers on a given Domain.
 
@@ -370,9 +371,14 @@ class _DNS(Singleton):
         :param nameservers: Alternate nameservers.
         :type nameservers: list(str)
 
+        :param ns_allowed_zone_transfer: is set to True, this funcion will return the list of
+                                         nameservers with zone transfer enabled.
+        :type ns_allowed_zone_transfer: bool
+
         :return: If successful, a list of DnsRegister objects.
-                 Otherwise, an empty list.
-        :rtype: list(DnsRegister)
+                 Otherwise, an empty list. If ns_allowed_zone_transfer is enabled, it will
+                 return a tuple as format: (set(servers with zone transfer enabled), list(DnsRegister))
+        :rtype: list(DnsRegister) | (set(str), list(DnsRegister))
         """
         if not isinstance(domain, basestring):
             raise TypeError("Expected basestring, got '%s'" % type(domain))
@@ -387,6 +393,8 @@ class _DNS(Singleton):
         # Results of zone transfer
         zone_records        = []
         zone_records_append = zone_records.append
+
+        ns_zone_enabled     = set()
 
         # Availabe DNS servers
         ns_records   = None
@@ -404,15 +412,28 @@ class _DNS(Singleton):
             #
             # If name server of the domain is NOT empty -> the domain is NOT a nameserver
             if ns_tmp:
+                # Mark for not tracking
+                map(LocalDataCache.on_autogeneration, ns_tmp)
+
                 # Store only the IP address of the DNS servers
                 l_dns        = []
-                l_dns_extend = l_dns.extend
+                l_dns_append = l_dns.append
                 for d in ns_tmp:
-                    l_dns_extend([t.address for t in self.get_ips(d)])
+                    for t in self.get_ips(d):
+                        l_dns_append(t.address)
+
+                        # Mark for not tracking
+                        LocalDataCache.on_autogeneration(t)
 
                 # Find SOA for Domain
                 for d in self.get_soa(domain):
-                    l_dns_extend([t.address for t in self.get_ips(d)])
+                    for t in self.get_ips(d):
+                        l_dns_append(t.address)
+
+                        # Mark for not tracking
+                        LocalDataCache.on_autogeneration(t)
+                    # Mark for not tracking
+                    LocalDataCache.on_autogeneration(d)
 
                 # Remove duplicates
                 ns_records = set(l_dns)
@@ -427,6 +448,11 @@ class _DNS(Singleton):
             if self.check_tcp_dns(ns_srv):
                 try:
                     zone = self._from_wire(dns.query.xfr(ns_srv, domain))
+
+                    # Store the ns used to the zone transfer
+                    if ns_allowed_zone_transfer:
+                        ns_zone_enabled.add(ns_srv)
+
 
                     for (name, rdataset) in zone.iterate_rdatasets(dns.rdatatype.SOA):
                         for rdata in rdataset:
@@ -546,7 +572,10 @@ class _DNS(Singleton):
                 except:
                     pass
 
-        return zone_records
+        if ns_allowed_zone_transfer:
+            return (ns_zone_enabled, zone_records)
+        else:
+            return zone_records
 
 
     #----------------------------------------------------------------------
@@ -682,7 +711,9 @@ class _DNS(Singleton):
 
                     # If register it different that we are looking for, skip it.
                     if type != register_type and type != "ALL":
+                        LocalDataCache.on_autogeneration(rdata)
                         continue
+
 
                     m_return_append(self.__dnsregister2golismeroregister(register_type, rdata))
         else:

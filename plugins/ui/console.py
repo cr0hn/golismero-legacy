@@ -89,6 +89,7 @@ class ConsoleUIPlugin(UIPlugin):
 
             if Console.level >= Console.VERBOSE:
                 m_id, m_progress, m_text = message.message_info
+                m_plugin_name            = colorize(' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")]), "blue")
 
                 #The counter
                 if m_progress:
@@ -97,7 +98,7 @@ class ConsoleUIPlugin(UIPlugin):
                     m_progress_txt = colorize("[U]", "white")
 
                 #m_text = "%s %s: Status: %s." % (m_progress_txt, m_id, m_text)
-                m_text = "%s Status: %s" % (m_progress_txt, (m_text if m_text else "working"))
+                m_text = "%s %s: %s" % (m_progress_txt, m_plugin_name,  (m_text if m_text else "working"))
                 Console.display(m_text)
 
         # Process control messages
@@ -120,9 +121,10 @@ class ConsoleUIPlugin(UIPlugin):
             # full traceback in more verbose level)
             if message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 (description, traceback) = message.message_info
-                text = "[!] Plugin error (%s): %s" % (message.plugin_name, description)
-                text = colorize(text, 'critical')
-                traceback = colorize(traceback, 'critical')
+                plugin_name = ' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")])
+                text        = "[!] Plugin '%s' error: %s " % (colorize(plugin_name, "blue"), str(description))
+                text        = colorize(text, 'critical')
+                traceback   = colorize(traceback, 'critical')
                 Console.display_error(text)
                 Console.display_error_more_verbose(traceback)
 
@@ -138,6 +140,7 @@ class ConsoleUIPlugin(UIPlugin):
                     else:
                         formatted = None
                     if formatted:
-                        text = "[!] Plugin warning (%s): %s" % (message.plugin_name, formatted)
-                        text = colorize(text, 'low')
+                        plugin_name = ' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")])
+                        text        = "[!] Plugin '%s' warning: %s " % (colorize(plugin_name, "blue"), str(formatted))
+                        text        = colorize(text, 'low')
                         Console.display_error(text)
