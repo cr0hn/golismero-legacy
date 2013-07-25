@@ -215,7 +215,6 @@ class Notifier (object):
         m_plugins_to_notify.update(self._notification_info_all)
 
         # Plugins that expect this type of info.
-        # TODO: should vulnerability types be processed like trees?
         m_type = None
         data_type = data.data_type
         if data_type == Data.TYPE_INFORMATION:
