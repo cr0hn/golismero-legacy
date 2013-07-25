@@ -35,15 +35,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["is_link", "extract_from_text", "extract_from_html"]
 
+from ..net.web_utils import DecomposedURL
+
 from BeautifulSoup import BeautifulSoup
-from urlparse import urldefrag, urljoin, urlparse
+from urlparse import urldefrag, urljoin
 
 import re
 
 #
 # TODO:
-#
-# + Use DecomposedURL instead of urlparse.
 #
 # + A generic "extract" function that uses the appropriate helper
 #   function to extract URLs, based on the content-type header.
@@ -82,7 +82,7 @@ def is_link(url, base_url):
         return False
 
     # Scripting and data URLs are not links.
-    scheme = urlparse(url)[0]
+    scheme = DecomposedURL(url).scheme
     if not scheme:
         scheme = ""
     scheme = scheme.lower()
