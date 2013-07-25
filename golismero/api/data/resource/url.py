@@ -91,6 +91,24 @@ class Url(Resource):
         :raises ValueError: Currently, relative URLs are not allowed.
         """
 
+        if not isinstance(url, basestring):
+            raise TypeError("Expected string, got %s instead" % type(url))
+        url = str(url)
+
+        if not isinstance(method, str):
+            raise TypeError("Expected string, got %s instead" % type(method))
+
+        if post_params is not None and not isinstance(post_params, dict):
+            raise TypeError("Expected dict, got %s instead" % type(post_params))
+
+        if not depth:
+            depth = 0
+        elif not isinstance(depth, int):
+            raise TypeError("Expected int, got %s instead" % type(depth))
+
+        if referer is not None and not isinstance(referer, str):
+            raise TypeError("Expected string, got %s instead" % type(referer))
+
         # Parse, verify and canonicalize the URL.
         # TODO: if relative, make it absolute using the referer when available.
         parsed = DecomposedURL(url)

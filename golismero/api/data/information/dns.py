@@ -102,7 +102,7 @@ class DnsSEC(object):
         :rtype: str
         """
         if not isinstance(alg, int):
-            raise TypeError("Expected int, got '%s'" % type(alg))
+            raise TypeError("Expected int, got %s instead" % type(alg))
 
         if alg not in DnsSEC.ALGORITHM_BY_TEXT.values():
             raise TypeError("Invalid algorithm '%s'" % alg)
@@ -118,7 +118,7 @@ class DnsSEC(object):
         :rtype: int
         """
         if not isinstance(alg, basestring):
-            raise TypeError("Expected basestring, got '%s'" % type(alg))
+            raise TypeError("Expected string, got %s instead" % type(alg))
 
         if alg not in DnsSEC.ALGORITHM_BY_TEXT:
             raise TypeError("Invalid algorithm '%s'" % alg)

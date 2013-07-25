@@ -55,7 +55,7 @@ class IP(Resource):
         :type address: str
         """
 
-        if not isinstance(address, basestring):
+        if not isinstance(address, str):
             raise TypeError("Expected str, got %r instead" % type(address))
 
         try:

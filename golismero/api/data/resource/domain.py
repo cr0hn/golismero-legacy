@@ -60,6 +60,14 @@ class Domain(Resource):
         :type addresses: tuple(str)
         """
 
+        if not isinstance(name, basestring):
+            raise TypeError("Expected string, got %s instead" % type(name))
+        name = str(name)
+
+        for address in addresses:
+            if not isinstance(address, str):
+                raise TypeError("Expected string, got %s instead" % type(address))
+
         # Domain name.
         self.__name = name
 

@@ -58,8 +58,21 @@ class Form(Information):
         :type parameters: iterable(str)
         """
 
+        if not isinstance(url, basestring):
+            raise TypeError("Expected string, got %s instead" % type(url))
+        url = str(url)
+
+        if not isinstance(method, str):
+            raise TypeError("Expected string, got %s instead" % type(method))
+
+        if isinstance(parameters, basestring):
+            raise TypeError("Expected tuple, got %s instead" % type(parameters))
+        for name in parameters:
+            if not isinstance(name, str):
+                raise TypeError("Expected string, got %s instead" % type(name))
+
         # Set the properties.
-        self.__url = str(url)
+        self.__url = url
         self.__method = method
         self.__parameters = tuple(sorted(set(parameters)))
 

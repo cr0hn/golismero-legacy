@@ -72,7 +72,6 @@ class WebServerFingerprint(Information):
         """
 
         # Check the data types.
-        # XXX this should probably be removed later, or only used in debug mode
         if not isinstance(name, str):
             raise TypeError("Expected str, got %s instead" % type(name))
         if not isinstance(version, str):

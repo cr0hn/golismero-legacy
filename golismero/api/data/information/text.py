@@ -51,6 +51,8 @@ class Text(Information):
         :param data: Plain text data.
         :type data: str
         """
+        if not isinstance(data, basestring):
+            raise TypeError("Expected string, got %s instead" % type(data))
 
         # Text.
         self.__raw_data = data

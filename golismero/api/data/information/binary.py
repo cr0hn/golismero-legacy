@@ -51,6 +51,8 @@ class Binary(Information):
         :param data: Raw bytes.
         :type data: str
         """
+        if type(data) is not str:
+            raise TypeError("Expected string, got %s instead" % type(data))
 
         # Raw bytes.
         self.__raw_data = data

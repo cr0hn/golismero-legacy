@@ -51,6 +51,8 @@ class Username(Information):
         :param name: Username.
         :type name: str
         """
+        if not isinstance(name, basestring):
+            raise TypeError("Expected string, got %s instead" % type(name))
         self.__name = name
         super(Username, self).__init__()
 
@@ -80,6 +82,8 @@ class Password(Information):
         :param password: Password.
         :type password: str
         """
+        if not isinstance(password, basestring):
+            raise TypeError("Expected string, got %s instead" % type(password))
         self.__password = password
         super(Password, self).__init__()
 
