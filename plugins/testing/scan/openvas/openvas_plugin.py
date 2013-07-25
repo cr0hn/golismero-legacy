@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-
 """
-Run the OpenVas scanner
+Run the OpenVas scanner.
 """
 
 __license__ = """
@@ -38,7 +36,8 @@ from golismero.api.plugin import TestingPlugin
 from threading import Semaphore
 from functools import partial
 
-# Import theHarvester as a library.
+# Import the OpenVAS libraries from the plugin data folder.
+# FIXME the library should go to thirdparty_libs once it's published!
 import os, sys
 cwd = os.path.abspath(os.path.split(__file__)[0])
 cwd = os.path.join(cwd, ".")
@@ -46,55 +45,60 @@ sys.path.insert(0, cwd)
 
 from openvas_lib import VulnscanManager
 
+
 #------------------------------------------------------------------------------
 class OpenVas(TestingPlugin):
-	"""
-	Run the OpenVas scanner
-	"""
+    """
+    Run the OpenVas scanner.
+    """
 
 
-	#----------------------------------------------------------------------
-	def get_accepted_info(self):
-		return [IP]
+    #----------------------------------------------------------------------
+    def get_accepted_info(self):
+        return [IP]
 
 
-	#----------------------------------------------------------------------
-	def recv_info(self, info):
+    #----------------------------------------------------------------------
+    def recv_info(self, info):
 
-		m_sem = Semaphore(0)
+        # Synchronization object to wait for completion.
+        # XXX FIXME this should be an event, not a semaphore
+        m_sem = Semaphore(0)
 
-		# Get the config
-		m_user      = Config.plugin_extra_config["Defaults"]["user"]
-		m_password  = Config.plugin_extra_config["Defaults"]["password"]
-		m_host      = Config.plugin_extra_config["Defaults"]["host"]
-		m_target    = info.address
-		m_profile   = Config.plugin_extra_config["Defaults"]["profile"]
+        # Get the config.
+        m_user      = Config.plugin_config["user"]
+        m_password  = Config.plugin_config["password"]
+        m_host      = Config.plugin_config["host"]
+        m_profile   = Config.plugin_config["profile"]
 
-		m_host      = "192.168.0.208"
-		m_target    = "8.8.0.0/24" #"192.168.0.194"
-		m_profile   = "empty"
+        # Get the target address.
+        m_target    = info.address
 
-		# Configure the scanner
-		m_scanner   = VulnscanManager.connectOpenVas(m_host,
-		                                             m_user,
-		                                             m_password)
-		# Launch the scanner
-		m_scan_id = m_scanner.launch_scan(m_target,
-		                                  profile=m_profile,
-		                                  callback_end=partial(lambda x: x.release(), m_sem),
-		                                  callback_progress=partial(self.update_status_step, text="openvas status scan"))
+        #---------------- XXX DEBUG -----------------
+        m_host      = "192.168.0.208"
+        m_target    = "8.8.0.0/24" #"192.168.0.194"
+        m_profile   = "empty"
+        #---------------- XXX DEBUG -----------------
 
-		# Wait
-		m_sem.acquire()
+        # Configure the scanner.
+        m_scanner   = VulnscanManager.connectOpenVas(m_host,
+                                                     m_user,
+                                                     m_password)
+        # Launch the scanner.
+        m_scan_id = m_scanner.launch_scan(m_target,
+                                          profile=m_profile,
+                                          callback_end=partial(lambda x: x.release(), m_sem),
+                                          callback_progress=partial(self.update_status_step, text="openvas status scan"))
 
-		#
-		# Get results
-		#
-		m_openvas_results = m_scanner.get_results(m_scan_id)
+        try:
 
-		#
-		# Remove the temporal scan
-		#
-		m_scanner.delete_scan(m_scan_id)
+            # Wait for completion.
+            m_sem.acquire()
 
+            # Get the scan results.
+            m_openvas_results = m_scanner.get_results(m_scan_id)
 
+        finally:
+
+            # Clean up.
+            m_scanner.delete_scan(m_scan_id)
