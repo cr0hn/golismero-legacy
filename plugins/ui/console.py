@@ -120,7 +120,7 @@ class ConsoleUIPlugin(UIPlugin):
             # full traceback in more verbose level)
             if message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 (description, traceback) = message.message_info
-                text = "[!] Plugin error: " + str(description)
+                text = "[!] Plugin error (%s): %s" % (message.plugin_name, description)
                 text = colorize(text, 'critical')
                 traceback = colorize(traceback, 'critical')
                 Console.display_error(text)
@@ -138,6 +138,6 @@ class ConsoleUIPlugin(UIPlugin):
                     else:
                         formatted = None
                     if formatted:
-                        text = "[!] Plugin warning: " + str(formatted)
+                        text = "[!] Plugin warning (%s): %s" % (message.plugin_name, formatted)
                         text = colorize(text, 'low')
                         Console.display_error(text)
