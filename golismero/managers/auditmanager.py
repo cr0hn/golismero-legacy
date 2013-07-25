@@ -111,12 +111,12 @@ class AuditManager (object):
             return m_audit
 
         # On error, abort.
-        except Exception:
+        except Exception, e:
             try:
-                self.remove_audit(m_audit)
+                self.remove_audit(m_audit.name)
             except Exception:
                 pass
-            raise
+            raise e
 
 
     #----------------------------------------------------------------------
