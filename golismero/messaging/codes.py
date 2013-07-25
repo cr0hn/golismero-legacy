@@ -192,6 +192,7 @@ class MessageCode(MessageConstants):
     # Data message codes
     #--------------------------------------------------------------------------
 
+    # All data messages use the same code
     MSG_DATA = 0
 
 
@@ -199,29 +200,31 @@ class MessageCode(MessageConstants):
     # Control message codes
     #--------------------------------------------------------------------------
 
-    # Global control
+    # Basic signaling
     MSG_CONTROL_ACK       = 0
     MSG_CONTROL_ERROR     = 1
     MSG_CONTROL_WARNING   = 2
     MSG_CONTROL_LOG       = 3
-    MSG_CONTROL_START     = 4
+
+    # Global control
+    ##MSG_CONTROL_START     = 4
     MSG_CONTROL_STOP      = 5
-    #MSG_CONTROL_PAUSE    = 6
-    #MSG_CONTROL_CONTINUE = 7
+    ##MSG_CONTROL_PAUSE    = 6
+    ##MSG_CONTROL_CONTINUE = 7
 
     # Audit control
-    MSG_CONTROL_START_AUDIT     = 10
+    ##MSG_CONTROL_START_AUDIT     = 10
     MSG_CONTROL_STOP_AUDIT      = 11
-    #MSG_CONTROL_PAUSE_AUDIT    = 12
-    #MSG_CONTROL_CONTINUE_AUDIT = 13
+    ##MSG_CONTROL_PAUSE_AUDIT    = 12
+    ##MSG_CONTROL_CONTINUE_AUDIT = 13
 
     # UI subsystem
     MSG_CONTROL_START_UI = 20
     MSG_CONTROL_STOP_UI  = 21
 
-    # Logging and reporting
-    MSG_CONTROL_START_REPORT = 30
-    #MSG_CONTROL_CANCEL_REPORT = 31
+    # Reporting
+    ##MSG_CONTROL_START_REPORT = 30
+    ##MSG_CONTROL_CANCEL_REPORT = 31
 
 
     #--------------------------------------------------------------------------
