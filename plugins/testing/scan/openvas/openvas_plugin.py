@@ -98,6 +98,11 @@ class OpenVas(TestingPlugin):
             # Get the scan results.
             m_openvas_results = m_scanner.get_results(m_scan_id)
 
+            # Convert the scan results to the GoLismero data model.
+            #
+            # XXX TODO
+            #
+
         finally:
 
             # Clean up.
