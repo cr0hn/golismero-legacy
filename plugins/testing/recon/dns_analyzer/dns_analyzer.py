@@ -77,7 +77,7 @@ class DNSAnalizer(TestingPlugin):
             m_reg_len = len(DnsRegister.DNS_TYPES)
             for i, l_type in enumerate(DnsRegister.DNS_TYPES, start=1):
                 # Update status
-                self.update_status_step(i, m_reg_len, "making '%s' DNS query" % l_type)
+                self.update_status_step(step=i, total=m_reg_len, text="making '%s' DNS query" % l_type)
 
                 # Make the query
                 m_return.extend(DNS.resolve(m_domain, l_type))

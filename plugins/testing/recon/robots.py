@@ -139,7 +139,7 @@ class Robots(TestingPlugin):
 
         for i, m_line in enumerate(m_lines, start=1):
             # Update status
-            self.update_status_step(i, m_lines_number, "checking URL %s/%s" % (str(i), str(m_lines_number)), partial=60)
+            self.update_status_step(step=i, total=m_lines_number, text="checking URL %s/%s" % (str(i), str(m_lines_number)), partial=60)
 
             # Remove comments
             m_octothorpe = m_line.find('#')

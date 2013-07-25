@@ -472,7 +472,7 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
 
     i, url = url
 
-    updater_func(i, total=total_urls, text="trying to discover URL %s" % url)
+    updater_func(step=i, total=total_urls, text="trying to discover URL %s" % url)
 
     # Ge URL
     p = None
@@ -500,7 +500,7 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
 
         # Append for analyze and display info if is accepted
         if matcher.append(p.raw_response,url=url,risk = risk_level):
-            updater_func("Discovered partial url: '%s'" % url)
+            updater_func(text="Discovered partial url: '%s'" % url)
 
 
 #----------------------------------------------------------------------
