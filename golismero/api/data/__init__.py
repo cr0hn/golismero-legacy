@@ -196,43 +196,45 @@ class _data_metaclass(type):
 
         # Check the data_type is not TYPE_UNKNOWN.
         if not cls.data_type:
-            raise TypeError(
-                "Error in %s.%s: Subclasses of Data MUST define their data_type!" % \
-                (cls.__module__, cls.__name__))
+            msg = "Error in %s.%s: Subclasses of Data MUST define their data_type!"
+            raise TypeError(msg % (cls.__module__, cls.__name__))
 
         # Check the information_type is not INFORMATION_UNKNOWN.
         if cls.data_type == Data.TYPE_INFORMATION:
             if not cls.information_type:
-                raise TypeError(
-                    "Error in %s.%s: Subclasses of Information MUST define their information_type!" % \
-                    (cls.__module__, cls.__name__))
+                msg = "Error in %s.%s: Subclasses of Information MUST define their information_type!"
+                raise TypeError(msg % (cls.__module__, cls.__name__))
 
         # Check the resource_type is not RESOURCE_UNKNOWN.
         elif cls.data_type == Data.TYPE_RESOURCE:
             if not cls.resource_type:
-                raise TypeError(
-                    "Error in %s.%s: Subclasses of Resource MUST define their resource_type!" % \
-                    (cls.__module__, cls.__name__))
+                msg = "Error in %s.%s: Subclasses of Resource MUST define their resource_type!"
+                raise TypeError(msg % (cls.__module__, cls.__name__))
 
-        # Check the vulnerability_type is not "generic".
+        # Automatically calculate the vulnerability type from the module name.
         elif cls.data_type == Data.TYPE_VULNERABILITY:
-            if cls.vulnerability_type == "generic":
-                raise TypeError(
-                    "Error in %s.%s: Subclasses of Vulnerability MUST define their vulnerability_type!" % \
-                    (cls.__module__, cls.__name__))
+            is_vuln_type_missing = "vulnerability_type" not in cls.__dict__
+            if cls.__module__.startswith("golismero.api.data.vulnerability."):
+                if is_vuln_type_missing:
+                    vuln_type = cls.__module__[33:]
+                    vuln_type = vuln_type.replace(".", "/")
+                    cls.vulnerability_type = vuln_type
+
+            # If we can't, at least make sure it's defined manually.
+            elif is_vuln_type_missing:
+                msg = "Error in %s.%s: Subclasses of Vulnerability MUST define their vulnerability_type!"
+                raise TypeError(msg % (cls.__module__, cls.__name__))
 
         # Check all @merge and @overwrite properties have setters.
         for name, prop in cls.__dict__.iteritems():
             if merge.is_mergeable_property(prop):
                 if prop.fset is None:
-                    raise TypeError(
-                        "Error in %s.%s.%s: Properties tagged with @merge MUST have a setter!" % \
-                        (cls.__module__, cls.__name__, name))
+                    msg = "Error in %s.%s.%s: Properties tagged with @merge MUST have a setter!"
+                    raise TypeError(msg % (cls.__module__, cls.__name__, name))
             elif overwrite.is_overwriteable_property(prop):
                 if prop.fset is None:
-                    raise TypeError(
-                        "Error in %s.%s.%s: Properties tagged with @overwrite MUST have a setter!" % \
-                        (cls.__module__, cls.__name__, name))
+                    msg = "Error in %s.%s.%s: Properties tagged with @overwrite MUST have a setter!"
+                    raise TypeError(msg % (cls.__module__, cls.__name__, name))
 
 
 #------------------------------------------------------------------------------
@@ -628,8 +630,8 @@ class Data(object):
         :returns: Set of Data objects.
         :rtype: set(Data)
         """
-        if Config._context.is_local():
-            return Database.get_many(links)
+        if not LocalDataCache._enabled:
+            return set( Database.get_many(links) )
         remote = set()
         instances = set()
         for ref in links:
