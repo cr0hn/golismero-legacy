@@ -257,7 +257,7 @@ class Plugin (object):
 
 
     #----------------------------------------------------------------------
-    def update_status_step(self, step, total = 100.0, partial = 100.0, text = None):
+    def update_status_step(self, step = None, total = 100.0, partial = 100.0, text = None):
         """
         Plugins can call this method to tell the user of the current
         state of process for a concrete instant of time.
@@ -309,13 +309,16 @@ class Plugin (object):
         """
         try:
 
-            m_total   = float(total)
-            m_step    = float(step)
-            m_partial = float(partial)
-            if 0.0 < m_partial <= 100.0:
-                m_progress = (m_step/m_total) * (m_partial/100.0)
+            if step is None:
+                m_progress = None
             else:
-                raise ValueError("partial value must be in range: [0, 100]")
+                m_total   = float(total)
+                m_step    = float(step)
+                m_partial = float(partial)
+                if 0.0 < m_partial <= 100.0:
+                    m_progress = (m_step/m_total) * (m_partial/100.0)
+                else:
+                    raise ValueError("partial value must be in range: [0, 100]")
 
         except ValueError:
             raise ValueError("Input parameters must be numeric")
