@@ -36,13 +36,13 @@ from golismero.api.data import discard_data
 from golismero.api.data.information.dns import DnsRegister
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
-from golismero.api.logger import Logger
 from golismero.api.net.dns import DNS
 from golismero.api.parallel import pmap
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist_api import WordListAPI
 
 from functools import partial
+from netaddr import IPAddress
 
 
 #--------------------------------------------------------------------------
@@ -119,13 +119,12 @@ class DNSZoneTransfer(TestingPlugin):
         if not self.state.check(m_domain):
 
             self.update_status("starting DNS zone transfer plugin")
-            d        = DNS()
             m_return = []
 
             #
             # Make the zone transfer
             #
-            m_ns_servers, m_zone_transfer = d.zone_transfer(m_domain, return_nameserver_used=True)
+            m_ns_servers, m_zone_transfer = DNS.zone_transfer(m_domain) #, return_nameserver_used=True)
 
             m_return_append = m_return.append
             if m_zone_transfer:
@@ -136,14 +135,15 @@ class DNSZoneTransfer(TestingPlugin):
 
                     # Is a IPaddress?
                     try:
-                        ip     = IPAddress(l_ns)
-                        # Mark to not track
-                        LocalDataCache.on_autogeneration(ip)
+                        ip = IPAddress(l_ns)
+                    except Exception:
+                        ip = None
+                    if ip is not None:
 
                         # Create the IP resource
                         l_resource = IP(l_ns)
-                    except AddrFormatError:
-                        # Domain detected
+
+                    else:
 
                         # Create the Domain resource
                         l_resource = Domain(l_ns)
@@ -197,7 +197,7 @@ class DNSBruteforcer(TestingPlugin):
             m_subdomains = WordListAPI.get_advanced_wordlist_as_list("subs_small.txt")
 
             # var used for update the plugin status
-            m_num_probes = len(m_subdomains)
+            #m_num_probes = len(m_subdomains)
 
             # Run parallely
             func_with_static_field = partial(_get_subdomains_bruteforcer, m_domain, self.update_status)
@@ -215,6 +215,7 @@ class DNSBruteforcer(TestingPlugin):
             m_ips                      = set()
             m_ips_add                  = m_ips.add
             m_ips_already              = []
+            m_ips_already_append       = m_ips_already.append
 
             if r:
                 for doms in r:
@@ -224,14 +225,14 @@ class DNSBruteforcer(TestingPlugin):
                             if not dom.target in m_domains_allready:
                                 m_domains_allready.append(dom.target)
                                 if dom.target in Config.audit_scope:
-                                    m_domains.add(dom)
+                                    m_domains_add(dom)
                                 else:
                                     discard_data(dom)
 
                         # IPs
                         if dom.type == "A":
                             if dom.address not in m_ips_already:
-                                m_ips_already.append(dom.address)
+                                m_ips_already_append(dom.address)
                                 m_ips.add(dom)
 
                 # Unify

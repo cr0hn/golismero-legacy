@@ -44,7 +44,7 @@ from ..messaging.codes import MessageCode
 
 
 #------------------------------------------------------------------------------
-class PluginState (Singleton):
+class _PluginState (Singleton):
     """
     Container of plugin state variables.
 
@@ -55,21 +55,32 @@ class PluginState (Singleton):
 
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def get(name):
+    __sentinel = object()
+    @classmethod
+    def get(cls, name, default = __sentinel):
         """
         Get the value of a state variable.
 
         :param name: Name of the variable.
         :type name: str
 
+        :param default: Optional default value. If set, when the name
+                        is not found the default is returned instead
+                        of raising KeyError.
+        :type default: *
+
         :returns: Value of the variable.
         :rtype: *
 
         :raises KeyError: The variable was not defined.
         """
-        return Config._context.remote_call(
-            MessageCode.MSG_RPC_STATE_GET, Config.plugin_name, name)
+        try:
+            return Config._context.remote_call(
+                MessageCode.MSG_RPC_STATE_GET, Config.plugin_name, name)
+        except KeyError:
+            if default is not cls.__sentinel:
+                return default
+            raise
 
 
     #----------------------------------------------------------------------
@@ -130,6 +141,29 @@ class PluginState (Singleton):
         """
         Config._context.async_remote_call(
             MessageCode.MSG_RPC_STATE_KEYS, Config.plugin_name)
+
+
+    #----------------------------------------------------------------------
+    # Overloaded operators.
+
+    def __getitem__(self, name):
+        'x.__getitem__(y) <==> x[y]'
+        return self.get(name)
+
+    def __setitem__(self, name, value):
+        'x.__setitem__(i, y) <==> x[i]=y'
+        return self.set(name, value)
+
+    def __delitem__(self, name):
+        'x.__delitem__(y) <==> del x[y]'
+        return self.remove(name)
+
+    def __contains__(self, name):
+        'D.__contains__(k) -> True if D has a key k, else False'
+        return self.check(name)
+
+# Instance the singleton.
+PluginState = _PluginState()
 
 
 #------------------------------------------------------------------------------
@@ -255,12 +289,11 @@ class Plugin (object):
 
         0.25 * 80 values = 20% (the total percent for this piece of code)
 
-        Example:
-
-        >>> values_to_process = [0,1,2,4] # 40% of rest of task
-        >>> values_len = len(values_to_process)
-        >>> for i, val in enumerate(values_to_process, start=1):
-            update_status_step(i, values_len, partial=40, "Text for update")
+        Example::
+            values_to_process = [0,1,2,4] # 40% of rest of task
+            values_len = len(values_to_process)
+            for i, val in enumerate(values_to_process, start=1):
+                self.update_status_step(i, values_len, partial=40, text="Text for update")
 
         :param total: the total amount of values to process.
         :type total: float | int

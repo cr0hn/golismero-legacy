@@ -27,10 +27,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.data import Data
-from golismero.api.data.resource import Resource
-from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
-from golismero.api.data.vulnerability.information_disclosure.default_error_page import DefaultErrorPage
-from golismero.api.data.vulnerability.information_disclosure.url_suspicious import SuspiciousURL
 from golismero.api.plugin import UIPlugin
 from golismero.main.console import Console, colorize, colorize_substring
 from golismero.messaging.codes import MessageType, MessageCode
@@ -125,9 +121,10 @@ class ConsoleUIPlugin(UIPlugin):
             # full traceback in more verbose level)
             if message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 (description, traceback) = message.message_info
-                text = "[!] Plugin error: " + str(description)
-                text = colorize(text, 'critical')
-                traceback = colorize(traceback, 'critical')
+                plugin_name = ' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")])
+                text        = "[!] Plugin '%s' error: %s " + (m_plugin_name, str(description))
+                text        = colorize(text, 'critical')
+                traceback   = colorize(traceback, 'critical')
                 Console.display_error(text)
                 Console.display_error_more_verbose(traceback)
 
@@ -143,6 +140,7 @@ class ConsoleUIPlugin(UIPlugin):
                     else:
                         formatted = None
                     if formatted:
-                        text = "[!] Plugin warning: " + str(formatted)
-                        text = colorize(text, 'low')
+                        plugin_name = ' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")])
+                        text        = "[!] Plugin '%s' warning: %s " + (m_plugin_name, str(formatted))
+                        text        = colorize(text, 'low')
                         Console.display_error(text)

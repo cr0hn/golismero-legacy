@@ -34,7 +34,6 @@ __all__ = ["AuditManager", "Audit"]
 
 from ..api.data import Data
 from ..api.data.resource import Resource
-from ..api.data.resource.url import Url
 from ..api.config import Config
 from ..common import AuditConfig
 from ..scope import AuditScope

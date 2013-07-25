@@ -85,13 +85,12 @@ class _WordListAPI(Singleton):
             m_return = open(self.__store[wordlist], "rU")
         except KeyError: # Wordlist is not in the internal database
             # Exits the file
-            m_file_manager = FileManager()
-            if not m_file_manager.exists(wordlist):
+            if not FileManager.exists(wordlist):
                 raise IOError("Wordlist file '%s' does not exist." % wordlist)
-            if not m_file_manager.isfile(wordlist):
+            if not FileManager.isfile(wordlist):
                 raise TypeError("Wordlist '%s' is not a file." % wordlist)
 
-            m_return = m_file_manager.open(wordlist, "rU")
+            m_return = FileManager.open(wordlist, "rU")
 
         return m_return
 

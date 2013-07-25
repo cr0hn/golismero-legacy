@@ -51,7 +51,7 @@ from golismero.api.parallel import *
 from thread import get_ident
 from threading import enumerate
 from random import randint
-from time import sleep
+from time import sleep, time
 
 
 # Tests the parallel execution with random data.
@@ -125,9 +125,11 @@ def test_long_data_input():
     def test(x):
         return x
 
+    t1 = time()
     pmap(test, range(1000))
+    t2 = time()
 
-    print "Ended"
+    print "Ended in %.2f seconds" % (t2 - t1)
 
 
 

@@ -36,7 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Message"]
 
-from .codes import *  # this is ok
+from .codes import *  # noqa
 
 from time import time
 

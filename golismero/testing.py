@@ -34,6 +34,7 @@ __all__ = ["PluginTester"]
 
 from golismero.api.data import LocalDataCache
 from golismero.api.config import Config
+from golismero.api.file import FileManager
 from golismero.api.net.cache import NetworkCache
 from golismero.api.net.http import HTTP
 from golismero.common import AuditConfig, OrchestratorConfig, get_default_config_file
@@ -107,6 +108,7 @@ class PluginTester(object):
         # Initialize the environment.
         HTTP._initialize()
         NetworkCache._clear_local_cache()
+        FileManager._update_plugin_path()
         LocalDataCache._enabled = True  # force enable
         LocalDataCache.on_run()
 
@@ -155,6 +157,7 @@ class PluginTester(object):
             # Initialize the environment.
             HTTP._initialize()
             NetworkCache._clear_local_cache()
+            FileManager._update_plugin_path()
             LocalDataCache.on_run()
 
             # If it's a message, send it and return.
@@ -207,6 +210,7 @@ class PluginTester(object):
         you'll need to create a new PluginTester instance.
         """
 
+        FileManager._update_plugin_path()
         NetworkCache._clear_local_cache()
         LocalDataCache.on_run()
         HTTP._finalize()

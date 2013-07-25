@@ -27,7 +27,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
-from golismero.api.data import discard_data
 from golismero.api.data.resource.baseurl import BaseUrl
 from golismero.api.data.resource.url import Url
 from golismero.api.logger import Logger
@@ -95,7 +94,7 @@ class Robots(TestingPlugin):
         p = None
         try:
             # Update status
-            self.update_status(0.40, "Robots - looking for robots.txt in URL: '%s'" % m_url_robots_txt)
+            self.update_status("Robots - looking for robots.txt in URL: '%s'" % m_url_robots_txt, progress=0.40)
 
             p = download(m_url_robots_txt, self.check_download)
         except NetworkException, e:

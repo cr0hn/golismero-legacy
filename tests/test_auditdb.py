@@ -91,7 +91,7 @@ def helper_test_auditdb_consistency(db, key, data):
     d1 = Url("http://www.example.com/" + key)
     d2 = Text(data)
     d3 = UrlDisclosure(d1)
-    d1.add_resource(d2)
+    d1.add_information(d2)
     assert d1.links == {d2.identity, d3.identity}
     assert d2.links == {d1.identity}
     assert d3.links == {d1.identity}
@@ -232,7 +232,7 @@ def helper_auditdb_stress(n):
             d1 = Url("http://www.example.com/" + generate_random_string())
             d2 = Text(generate_random_string())
             d3 = UrlDisclosure(d1)
-            d1.add_resource(d2)
+            d1.add_information(d2)
             disk.add_data(d1)
             disk.add_data(d2)
             disk.add_data(d3)
@@ -300,7 +300,7 @@ def test_auditdb_dump():
             d1 = Url("http://www.example.com/" + generate_random_string())
             d2 = Text(generate_random_string())
             d3 = UrlDisclosure(d1)
-            d1.add_resource(d2)
+            d1.add_information(d2)
             disk.add_data(d1)
             disk.add_data(d2)
             disk.add_data(d3)

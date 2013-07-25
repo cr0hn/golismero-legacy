@@ -51,7 +51,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["pmap"]
 
-from collections import Iterable
 from thread import get_ident
 from threading import RLock, Semaphore, Thread
 
@@ -78,7 +77,8 @@ def pmap(func, *args, **kwargs):
         >>> pmap((lambda x: x + 1), [1, 2, 3, 4, 5])
         [2, 3, 4, 5, 6]
         >>> def printer(x, y):
-               print "%s - %s" (x, y)
+        ...    print "%s - %s" (x, y)
+        ...
         >>> from functools import partial
         >>> pmap(partial(printer, "fixed_text"), [1, 2])
         fixed_text - 1

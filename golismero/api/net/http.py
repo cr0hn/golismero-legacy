@@ -213,7 +213,8 @@ class _HTTP(Singleton):
 
                 # Call the user-defined callback.
                 if callback is not None:
-                    cont = callback(request, url,
+                    cont = callback(request,
+                                    request.url,
                                     response.status,
                                     response.content_length,
                                     response.content_type)
