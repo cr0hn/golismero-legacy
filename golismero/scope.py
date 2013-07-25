@@ -231,7 +231,9 @@ class AuditScope (object):
 
         # Check the data type.
         if not isinstance(target, str):
-            raise TypeError("Expected str, got %s instead" % type(target))
+            if not isinstance(target, unicode):
+                raise TypeError("Expected str, got %s instead" % type(target))
+            target = str(target)
 
         # Keep the original string for error reporting.
         original = target
