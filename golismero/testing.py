@@ -38,6 +38,7 @@ from golismero.api.file import FileManager
 from golismero.api.net.cache import NetworkCache
 from golismero.api.net.http import HTTP
 from golismero.common import AuditConfig, OrchestratorConfig, get_default_config_file
+from golismero.database.auditdb import AuditDB
 from golismero.main.orchestrator import Orchestrator
 from golismero.managers.auditmanager import Audit
 from golismero.managers.processmanager import PluginContext
@@ -95,6 +96,12 @@ class PluginTester(object):
         # Calculate the audit scope.
         audit_scope = AuditScope(audit_config)
         audit._Audit__audit_scope = audit_scope
+
+        # Create the audit database.
+        audit._Audit__database = AuditDB(audit_name, audit_config.audit_db)
+
+        # Register the Audit with the AuditManager.
+        orchestrator.auditManager._AuditManager__audits[audit_name] = audit
 
         # Setup a local plugin execution context.
         Config._context  = PluginContext(
