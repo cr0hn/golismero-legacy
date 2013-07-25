@@ -168,7 +168,7 @@ class AuditScope (object):
             dns_registers.extend( DNS.get_aaaa(domain) )
 
         # If no IP addresses could be resolved, abort the audit.
-        if not dns_registers:
+        if self.__domains and not dns_registers:
             raise RuntimeError(
                 "No IP addresses could be resolved from"
                 " the target domains, aborting audit!"
