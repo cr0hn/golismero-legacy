@@ -38,8 +38,6 @@ from golismero.api.data.resource.email import Email
 from golismero.api.logger import Logger
 from golismero.api.plugin import TestingPlugin
 
-import imp
-import functools
 import os, os.path
 import socket
 import StringIO
@@ -52,9 +50,8 @@ cwd = os.path.abspath(os.path.split(__file__)[0])
 cwd = os.path.join(cwd, "theharvester")
 sys.path.insert(0, cwd)
 try:
-    import lib
     import discovery
-    from discovery import *
+    from discovery import *   # noqa
 finally:
     sys.path.remove(cwd)
 del cwd

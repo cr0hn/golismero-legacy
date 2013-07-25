@@ -1741,7 +1741,7 @@ class DnsRegisterRRSIG(DNSRegisterAlgorithm):
             raise TypeError("Expected long, got '%s'" % type(original_ttl))
         if not isinstance(signer, str):
             raise TypeError("Expected str, got '%s'" % type(signer))
-        if not isinstance(type_coverded, int):
+        if not isinstance(type_covered, int):
             raise TypeError("Expected int, got '%s'" % type(type_covered))
 
         self.__expiration             = expiration

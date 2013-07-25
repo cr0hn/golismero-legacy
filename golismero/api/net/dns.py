@@ -32,16 +32,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["DNS"]
 
-from ..data.information.dns import *
+from ..data.information.dns import *  # noqa
 from ...common import Singleton
 
-import re
 import dns.query
 import dns.resolver
 import dns.reversename
 import socket
+
 from dns.zone import *
-from dns.dnssec import algorithm_to_text
 from netaddr import IPAddress
 from netaddr.core import AddrFormatError
 
@@ -314,7 +313,6 @@ class _DNS(Singleton):
         m_ip = str(dns.reversename.from_address(ipaddress))
 
         # Get the IPs
-        m_return      = None
         if m_ip:
             if m_ipobj.version == "4":
                 m_name = m_ip.replace(".in-addr.arpa.", "")
@@ -675,7 +673,6 @@ class _DNS(Singleton):
         m_return        = []
         m_return_append = m_return.append
 
-        m_iter = None
         if isinstance(answer_in, dns.resolver.Answer):
 
             for ardata in answer_in.response.answer:
@@ -687,9 +684,7 @@ class _DNS(Singleton):
                     if type != register_type and type != "ALL":
                         continue
 
-                    answer = rdata
-
-                    m_return_append(self.__dnsregister2golismeroregister(register_type, answer))
+                    m_return_append(self.__dnsregister2golismeroregister(register_type, rdata))
         else:
             register_type = DnsRegister.id2name(answer_in.rdtype)
             m_return_append(self.__dnsregister2golismeroregister(register_type, answer_in))
@@ -887,7 +882,7 @@ class _DNS(Singleton):
             else:
                 raise TypeError("Expected list, got '%s'" % type(nameservers))
 
-        m_query_obj           = None
+        m_query_obj = None
 
         if nameservers:
             m_query_obj             = dns.resolver.Resolver(configure=False)
@@ -901,7 +896,7 @@ class _DNS(Singleton):
 
         try:
             answer = m_query_obj.query(host, register_type)
-        except Exception, e:
+        except Exception:
             return []
 
         if auto_resolve:

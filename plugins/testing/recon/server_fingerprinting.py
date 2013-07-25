@@ -502,7 +502,6 @@ def http_analyzers(main_url, update_status_func, part_status=100, number_of_entr
         # Do the connection
         l_response = None
         try:
-            from golismero.api.data import LocalDataCache
             m_raw_request = HTTP_Raw_Request(l_raw_request)
             discard_data(m_raw_request)
             l_response = HTTP.make_raw_request(
@@ -1283,7 +1282,7 @@ def extend_items(all_items, already_parsed, related, ref = None):
         iis: IIS, ISA
         hyperion: #iis
 
-    The `related` dict returns:
+    The `related` dict would be:
 
         >>> print related
         defaultdict(<type 'set'>, {'iis': set(['hyperion'])})

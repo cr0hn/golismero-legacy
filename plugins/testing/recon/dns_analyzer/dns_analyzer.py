@@ -32,11 +32,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
-from golismero.api.data import discard_data, LocalDataCache
+from golismero.api.data import discard_data
 from golismero.api.data.information.dns import DnsRegister
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
-from golismero.api.logger import Logger
 from golismero.api.net.dns import DNS
 from golismero.api.parallel import pmap
 from golismero.api.plugin import TestingPlugin
@@ -198,7 +197,7 @@ class DNSBruteforcer(TestingPlugin):
             m_subdomains = WordListAPI.get_advanced_wordlist_as_list("subs_small.txt")
 
             # var used for update the plugin status
-            m_num_probes = len(m_subdomains)
+            #m_num_probes = len(m_subdomains)
 
             # Run parallely
             func_with_static_field = partial(_get_subdomains_bruteforcer, m_domain, self.update_status)
@@ -216,6 +215,7 @@ class DNSBruteforcer(TestingPlugin):
             m_ips                      = set()
             m_ips_add                  = m_ips.add
             m_ips_already              = []
+            m_ips_already_append       = m_ips_already.append
 
             if r:
                 for doms in r:
@@ -225,14 +225,14 @@ class DNSBruteforcer(TestingPlugin):
                             if not dom.target in m_domains_allready:
                                 m_domains_allready.append(dom.target)
                                 if dom.target in Config.audit_scope:
-                                    m_domains.add(dom)
+                                    m_domains_add(dom)
                                 else:
                                     discard_data(dom)
 
                         # IPs
                         if dom.type == "A":
                             if dom.address not in m_ips_already:
-                                m_ips_already.append(dom.address)
+                                m_ips_already_append(dom.address)
                                 m_ips.add(dom)
 
                 # Unify
