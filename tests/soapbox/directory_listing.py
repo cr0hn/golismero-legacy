@@ -57,28 +57,26 @@ class DirectoryListingPlugin(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        #return main_folder_url(info)
-        return
+        # XXX TO DO
+        pass
 
 
-#----------------------------------------------------------------------
-def main_folder_url(info):
-    """
-    Main function for folder URL plugin.
+#------------------------------------------------------------------------------
+# Examples of directory listings for the most popular web servers.
 
-    :param info: Folder URL type
-    :type info: FolderUrl
+DATA = {
 
-    :return: Directory Listing vulnerability.
-    :rtype:
-    """
+'PWS':
 
-    DATA = {
-        'PWS'       : """<html>
+"""<html>
     <head><title>Index of /</title></head>
     <body bgcolor="white">
     <h1>Index of /</h1><hr><pre><a href="../">../</a>""",
-        'Apache 2.2': """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+#------------------------------------------------------------------------------
+'Apache 2.2':
+
+"""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <html>
  <head>
   <title>Index of /</title>
@@ -88,7 +86,11 @@ def main_folder_url(info):
 <ul><li><a href="daily-live/"> daily-live/</a></li>
 <li><a href="daily-preinstalled/"> daily-preinstalled/</a></li>
 <li><a href="edubuntu/"> edubuntu/</a></li>""",
-        'Apache 2.2.16'          : """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+#------------------------------------------------------------------------------
+'Apache 2.2.16':
+
+"""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <html>
  <head>
   <title>Index of /</title>
@@ -100,7 +102,10 @@ def main_folder_url(info):
 <tr><td valign="top"><img src="/icons/layout.gif" alt="[   ]"></td><td><a href="10_Things_I_Hate_About_You_1x01_-_Pilot.pdf">10_Things_I_Hate_About_You_1x01_-_Pilot.pdf</a></td><td align="right">07-Nov-2009 13:52  </td><td align="right"> 95K</td><td>&nbsp;</td></tr>
 <tr><td valign="top"><img src="/icons/folder.gif" alt="[""",
 
-        'lighttpd/1.4.31'       : """<?xml version="1.0" encoding="utf-8"?>
+#------------------------------------------------------------------------------
+'lighttpd/1.4.31':
+
+"""<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
@@ -130,16 +135,5 @@ div.foot { font: 90% monospace; color: #787878; padding-top: 4px;}
 <tr><td class="n"><a href="6.0.6001.18000.367-KRMSDK_EN.iso">6.0.6001.18000.367-KRMSDK_EN.iso</a></td><td class="m">2010-Apr-20 11:46:33</td><td class="s">1.3G</td><td class="t">application/octet-stream</td></tr>
 <tr><td class="n"><a href="6001.18000.080118-1840-kb3aikl_en.iso">6001.18000.080118-1840-kb3aikl_en.iso</a></td><td class="m">2009-Jan-19 02:07:02</td><td class="s">1.3G</td><td class="t">application/octet-stream</td></tr>
 <tr><td class="n"><a href="""
-        }
 
-
-    # Check if Url ends with "/". If that, return. Only folder Url will
-    # Manage this type of Urls
-    if isinstance(info, Url) and info.url.endswith("/"):
-        return
-
-
-
-    # Make a request to try to get a directory listing
-
-
+}
