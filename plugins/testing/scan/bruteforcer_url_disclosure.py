@@ -28,10 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.config import Config
 from golismero.api.data import discard_data
-from golismero.api.data.resource import Resource
 from golismero.api.data.information.webserver_fingerprint import WebServerFingerprint
 from golismero.api.data.resource.url import Url
-from golismero.api.data.resource.baseurl import BaseUrl
 from golismero.api.data.resource.folderurl import FolderUrl
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.logger import Logger
@@ -45,8 +43,6 @@ from golismero.api.text.text_utils import generate_random_string
 from golismero.api.plugin import TestingPlugin
 from functools import partial
 from urlparse import urljoin
-
-import threading
 
 
 __doc__ = """
@@ -195,6 +191,7 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
         self.update_status("Url suffixes bruteforcer - Start to process URL: '%s'" % str(info.url))
 
         # Parse original URL
+        m_url = info.url
         m_url_parts = info.parsed_url
 
         # If file is a javascript, css or image, do not run
@@ -247,6 +244,7 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
         self.update_status("Url prefixes bruteforcer - Start to process URL: '%s'" % str(info.url))
 
         # Parse original URL
+        m_url = info.url
         m_url_parts = info.parsed_url
 
         # If file is a javascript, css or image, do not run
@@ -304,6 +302,7 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
         self.update_status("Url file extensions bruteforcer - Start to process URL: '%s'" % str(info.url))
 
         # Parse original URL
+        m_url = info.url
         m_url_parts = info.parsed_url
 
         # If file is a javascript, css or image, do not run
@@ -357,6 +356,7 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
         self.update_status("Url permutations bruteforcer - Start to process URL: '%s'" % str(info.url))
 
         # Parse original URL
+        m_url = info.url
         m_url_parts = info.parsed_url
 
         # If file is a javascript, css or image, do not run
@@ -409,6 +409,7 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
         self.update_status("Url file directories bruteforcer - Start to process URL: '%s'" % str(info.url))
 
         # Parse original URL
+        m_url = info.url
         m_url_parts = info.parsed_url
 
         # If file is a javascript, css or image, do not run
@@ -568,8 +569,6 @@ def get_error_page(url):
     :return: a string with the content of response.
     :rtype: str
     """
-    # Determine the HTTP Method
-    m_http_method = get_http_method(url)
 
     #
     # Generate an error in server to get an error page, using a random string
