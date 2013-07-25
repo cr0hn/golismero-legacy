@@ -44,7 +44,7 @@ from ..messaging.codes import MessageCode
 
 
 #------------------------------------------------------------------------------
-class PluginState (Singleton):
+class _PluginState (Singleton):
     """
     Container of plugin state variables.
 
@@ -56,8 +56,8 @@ class PluginState (Singleton):
 
     #----------------------------------------------------------------------
     __sentinel = object()
-    @staticmethod
-    def get(name, default = __sentinel):
+    @classmethod
+    def get(cls, name, default = __sentinel):
         """
         Get the value of a state variable.
 
@@ -78,7 +78,7 @@ class PluginState (Singleton):
             return Config._context.remote_call(
                 MessageCode.MSG_RPC_STATE_GET, Config.plugin_name, name)
         except KeyError:
-            if default is not self.__sentinel:
+            if default is not cls.__sentinel:
                 return default
             raise
 
@@ -161,6 +161,9 @@ class PluginState (Singleton):
     def __contains__(self, name):
         'D.__contains__(k) -> True if D has a key k, else False'
         return self.check(name)
+
+# Instance the singleton.
+PluginState = _PluginState()
 
 
 #------------------------------------------------------------------------------
