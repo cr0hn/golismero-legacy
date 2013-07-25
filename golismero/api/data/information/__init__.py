@@ -55,24 +55,29 @@ class Information(Data):
     INFORMATION_FORM             = 1001  # HTML form
     INFORMATION_PLAIN_TEXT       = 1002  # Text file
     INFORMATION_BINARY           = 1003  # Binary file of unknown type
-    #INFORMATION_EXECUTABLE       = 1004  # Executable file (various platforms)
-    #INFORMATION_IMAGE            = 1005  # Image file
-    #INFORMATION_PDF              = 1006  # PDF file
-    #INFORMATION_DOCUMENT         = 1007  # Document file (various formats)
-    INFORMATION_USERNAME         = 1008  # Username
-    INFORMATION_PASSWORD         = 1009  # Password
+    ##INFORMATION_EXECUTABLE       = 1004  # Executable file (various platforms)
+    ##INFORMATION_IMAGE            = 1005  # Image file
+    ##INFORMATION_VIDEO            = 1006  # Video file
+    ##INFORMATION_PDF              = 1007  # PDF file
+    ##INFORMATION_FLASH            = 1008  # Flash file
+    ##INFORMATION_DOCUMENT         = 1009  # Document file (various formats)
+
+    # Assets
+    INFORMATION_USERNAME         = 1100  # Username
+    INFORMATION_PASSWORD         = 1101  # Password
+    ##INFORMATION_DATABASE_DUMP    = 1102  # Database dump in SQL format
 
     # Protocol captures
-    INFORMATION_HTTP_REQUEST     = 1500  # HTTP request
-    INFORMATION_HTTP_RAW_REQUEST = 1501  # Raw HTTP request
-    INFORMATION_HTTP_RESPONSE    = 1502  # HTTP response
-    INFORMATION_DNS_REGISTER     = 1512  # DNS responses
+    INFORMATION_HTTP_REQUEST     = 1200  # HTTP request
+    INFORMATION_HTTP_RAW_REQUEST = 1201  # Raw HTTP request
+    INFORMATION_HTTP_RESPONSE    = 1202  # HTTP response
+    INFORMATION_DNS_REGISTER     = 1212  # DNS responses
 
     # Fingerprints
-    INFORMATION_WEB_SERVER_FINGERPRINT = 2000  # HTTP server fingerprint
-    #INFORMATION_WEB_APP_FINGERPRINT    = 2001  # Web application fingerprint
-    #INFORMATION_NETWORK_FINGERPRINT    = 2002  # Network fingerprint
-    #INFORMATION_OS_FINGERPRINT         = 2003  # Operating system fingerprint
+    INFORMATION_WEB_SERVER_FINGERPRINT = 1300  # HTTP server fingerprint
+    ##INFORMATION_WEB_APP_FINGERPRINT    = 1301  # Web application fingerprint
+    ##INFORMATION_NETWORK_FINGERPRINT    = 1302  # Network fingerprint
+    ##INFORMATION_OS_FINGERPRINT         = 1303  # Operating system fingerprint
 
 
     #----------------------------------------------------------------------
