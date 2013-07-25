@@ -104,10 +104,19 @@ class AuditManager (object):
         self.__audits[m_audit.name] = m_audit
 
         # Run!
-        m_audit.run()
+        try:
+            m_audit.run()
 
-        # Return it.
-        return m_audit
+            # Return it.
+            return m_audit
+
+        # On error, abort.
+        except Exception:
+            try:
+                self.remove_audit(m_audit)
+            except Exception:
+                pass
+            raise
 
 
     #----------------------------------------------------------------------

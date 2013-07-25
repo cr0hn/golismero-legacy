@@ -157,16 +157,26 @@ class AuditScope (object):
                         self.__domains.add(prefix)
                         prefix = ".".join( (part, prefix) )
 
-        # For each domain name...
+        # Resolve each domain name.
+        dns_registers = []
         for domain in self.__domains:
 
             # Resolve the IPv4 addresses.
-            for register in DNS.get_a(domain):
-                self.__addresses.add(register.address)
+            dns_registers.extend( DNS.get_a(domain) )
 
             # Resolve the IPv6 addresses.
-            for register in DNS.get_aaaa(domain):
-                self.__addresses.add(register.address)
+            address_listDNS.get_aaaa(domain) )
+
+        # If no IP addresses could be resolved, abort the audit.
+        if not dns_registers:
+            raise RuntimeError(
+                "No IP addresses could be resolved from"
+                " the target domains, aborting audit!"
+            )
+
+        # Add the addresses to the set of target addresses.
+        for register in dns_registers:
+            self.__addresses.add(register.address)
 
 
     #--------------------------------------------------------------------------
