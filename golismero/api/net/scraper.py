@@ -38,13 +38,16 @@ __all__ = ["is_link", "extract_from_text", "extract_from_html"]
 from ..net.web_utils import DecomposedURL
 
 from BeautifulSoup import BeautifulSoup
-from urlparse import urldefrag, urljoin
+from urlparse import urldefrag, urljoin, urlparse
 
 import re
 
 #
 # TODO:
 #
+# + Use DecomposedURL instead of urlparse. It's not as simple
+#   as it sounds, because we also need to add the urljoin
+#   functionality (urldefrag is already there).
 # + A generic "extract" function that uses the appropriate helper
 #   function to extract URLs, based on the content-type header.
 #
@@ -76,23 +79,31 @@ def is_link(url, base_url):
     :returns: True if the URL points to another page or resource, False otherwise.
     :rtype: bool
     """
+    try:
 
-    # URLs that point to the same page in a different fragment are not links.
-    if urldefrag(url)[0] == base_url:
+        # Make sure the URL is absolute.
+        url = urljoin(base_url, url)
+
+        # Scripting and data URLs are not links.
+        scheme = urlparse(url)[0]
+        if not scheme:
+            scheme = ""
+        scheme = scheme.lower()
+        if scheme.endswith("://"):
+            scheme = scheme[:-3]
+        if scheme in ("javascript", "vbscript", "data"):
+            return False
+
+        # URLs that point to the same page in a different fragment are not links.
+        if urldefrag(url)[0] == base_url:
+            return False
+
+        # All other URLs are links.
+        return True
+
+    # On any parsing error assume it's not a link.
+    except Exception:
         return False
-
-    # Scripting and data URLs are not links.
-    scheme = DecomposedURL(url).scheme
-    if not scheme:
-        scheme = ""
-    scheme = scheme.lower()
-    if scheme.endswith("://"):
-        scheme = scheme[:-3]
-    if scheme in ("javascript", "vbscript", "data"):
-        return False
-
-    # All other URLs are links.
-    return True
 
 
 #----------------------------------------------------------------------
