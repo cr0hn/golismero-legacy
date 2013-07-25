@@ -84,39 +84,41 @@ class ConsoleUIPlugin(UIPlugin):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
-        if message.message_type == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
-            m_plugin_name  = message.plugin_name if message.plugin_name else "/NO_NAME_PLUGIN"
-            m_plugin_name  = colorize(' '.join([x.capitalize() for x in m_plugin_name[m_plugin_name.rfind("/") + 1:].split("_")]), "blue")
-            m_text         = "[ init ] Starting plugin: %s" % m_plugin_name
+        # Process status messages
+        if message.message_type == MessageType.MSG_TYPE_STATUS:
 
-            Console.display(m_text)
+            if message.message_type == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
+                m_plugin_name  = message.plugin_name if message.plugin_name else "/NO_NAME_PLUGIN"
+                m_plugin_name  = colorize(' '.join([x.capitalize() for x in m_plugin_name[m_plugin_name.rfind("/") + 1:].split("_")]), "blue")
+                m_text         = "[ init ] Starting plugin: %s" % m_plugin_name
 
-        elif message.message_type == MessageCode.MSG_STATUS_PLUGIN_END:
-            m_plugin_name  = message.plugin_name if message.plugin_name else "/NO_NAME_PLUGIN"
-            m_plugin_name  = colorize(' '.join([x.capitalize() for x in m_plugin_name[m_plugin_name.rfind("/") + 1:].split("_")]), "blue")
-            m_text         = "[ end ] Ending plugin: %s" % m_plugin_name
-
-            Console.display(m_text)
-
-        elif message.message_type == MessageType.MSG_TYPE_STATUS and \
-           message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
-
-            if Console.level >= Console.VERBOSE:
-                m_id, m_progress, m_text = message.message_info
-                m_plugin_name            = colorize(' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")]), "blue")
-
-                #The counter
-                if m_progress:
-                    m_progress_txt = colorize("[%s/100]" % "{:2.2f}".format(m_progress*100.0), "white")
-                else:
-                    m_progress_txt = colorize("[U]", "white")
-
-                #m_text = "%s %s: Status: %s." % (m_progress_txt, m_id, m_text)
-                m_text = "%s %s: %s" % (m_progress_txt, m_plugin_name,  (m_text if m_text else "working"))
                 Console.display(m_text)
 
+            elif message.message_type == MessageCode.MSG_STATUS_PLUGIN_END:
+                m_plugin_name  = message.plugin_name if message.plugin_name else "/NO_NAME_PLUGIN"
+                m_plugin_name  = colorize(' '.join([x.capitalize() for x in m_plugin_name[m_plugin_name.rfind("/") + 1:].split("_")]), "blue")
+                m_text         = "[ end ] Ending plugin: %s" % m_plugin_name
+
+                Console.display(m_text)
+
+            elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
+
+                if Console.level >= Console.VERBOSE:
+                    m_id, m_progress, m_text = message.message_info
+                    m_plugin_name            = colorize(' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")]), "blue")
+
+                    #The counter
+                    if m_progress:
+                        m_progress_txt = colorize("[%s/100]" % "{:2.2f}".format(m_progress*100.0), "white")
+                    else:
+                        m_progress_txt = colorize("[U]", "white")
+
+                    #m_text = "%s %s: Status: %s." % (m_progress_txt, m_id, m_text)
+                    m_text = "%s %s: %s" % (m_progress_txt, m_plugin_name,  (m_text if m_text else "working"))
+                    Console.display(m_text)
+
         # Process control messages
-        if message.message_type == MessageType.MSG_TYPE_CONTROL:
+        elif message.message_type == MessageType.MSG_TYPE_CONTROL:
 
             # Show log messages
             # (The verbosity is sent by Logger)
