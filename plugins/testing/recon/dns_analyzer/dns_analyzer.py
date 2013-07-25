@@ -124,7 +124,7 @@ class DNSZoneTransfer(TestingPlugin):
             #
             # Make the zone transfer
             #
-            m_ns_servers, m_zone_transfer = DNS.zone_transfer(m_domain) #, return_nameserver_used=True)
+            m_ns_servers, m_zone_transfer = DNS.zone_transfer(m_domain, return_nameserver_used=True)
 
             m_return_append = m_return.append
             if m_zone_transfer:
