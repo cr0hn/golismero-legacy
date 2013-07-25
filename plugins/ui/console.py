@@ -84,7 +84,21 @@ class ConsoleUIPlugin(UIPlugin):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))
 
-        if message.message_type == MessageType.MSG_TYPE_STATUS and \
+        if message.message_type == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
+            m_plugin_name  = message.plugin_name if message.plugin_name else "/NO_NAME_PLUGIN"
+            m_plugin_name  = colorize(' '.join([x.capitalize() for x in m_plugin_name[m_plugin_name.rfind("/") + 1:].split("_")]), "blue")
+            m_text         = "[ init ] Starting plugin: %s" % m_plugin_name
+
+            Console.display(m_text)
+
+        elif message.message_type == MessageCode.MSG_STATUS_PLUGIN_END:
+            m_plugin_name  = message.plugin_name if message.plugin_name else "/NO_NAME_PLUGIN"
+            m_plugin_name  = colorize(' '.join([x.capitalize() for x in m_plugin_name[m_plugin_name.rfind("/") + 1:].split("_")]), "blue")
+            m_text         = "[ end ] Ending plugin: %s" % m_plugin_name
+
+            Console.display(m_text)
+
+        elif message.message_type == MessageType.MSG_TYPE_STATUS and \
            message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
 
             if Console.level >= Console.VERBOSE:
