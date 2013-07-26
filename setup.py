@@ -186,8 +186,8 @@ metadata = {
     'maintainer'        : __author__,
     'maintainer_email'  : __email__,
     'license'           : __license__,
-    'url'               : 'https://code.google.com/p/golismero/',
-    'download_url'      : 'https://code.google.com/p/golismero/downloads/list',
+    'url'               : 'http://golismero-project.com/',
+    'download_url'      : 'https://github.com/cr0hn/golismero/zipball/master',
     'classifiers'       : [
                         'Development Status :: 3 - Alpha',
                         'Environment :: Console',
