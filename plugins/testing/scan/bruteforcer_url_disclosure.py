@@ -472,7 +472,7 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
 
     i, url = url
 
-    updater_func(i, total_urls, text="trying to discover URL %s" % url)
+    updater_func(i, total=total_urls, text="trying to discover URL %s" % url)
 
     # Ge URL
     p = None
