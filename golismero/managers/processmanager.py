@@ -50,7 +50,7 @@ from multiprocessing import Manager
 from multiprocessing import Process as _Original_Process
 from multiprocessing.pool import Pool as _Original_Pool
 from os import getpid
-from warnings import catch_warnings
+from warnings import catch_warnings, simplefilter
 from traceback import format_exc, print_exc, format_exception_only, format_list
 from signal import signal, SIGINT
 
@@ -155,6 +155,7 @@ def _bootstrap(context, func, argv, argd):
 
                     # Catch all warnings.
                     with catch_warnings(record=True) as plugin_warnings:
+                        simplefilter("always")
 
                         # Configure the plugin.
                         Config._context = context

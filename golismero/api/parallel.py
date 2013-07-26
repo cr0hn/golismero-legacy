@@ -770,7 +770,7 @@ class WorkerPool(Thread):
                     lead to memory leaks and/or deadlocks!
         """
         import warnings
-        warnings.warn("WorkerPool.terminate() called!")
+        warnings.warn("WorkerPool.terminate() called!", stacklevel=2)
         for worker in self.__all_workers:
             try:
                 worker.terminate()

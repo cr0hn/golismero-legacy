@@ -275,5 +275,8 @@ class AuditScope (object):
             return address in self.__addresses
 
         # We don't know what this is, so we'll consider it out of scope.
-        warnings.warn("Can't determine if this is out of scope or not: %r" % original)
+        warnings.warn(
+            "Can't determine if this is out of scope or not: %r" % original,
+            stacklevel=2
+        )
         return False

@@ -685,7 +685,9 @@ class Audit (object):
 
                 # Check the type.
                 if not isinstance(data, Data):
-                    warn("TypeError: Expected Data, got %r instead" % type(data), RuntimeWarning)
+                    warn(
+                        "TypeError: Expected Data, got %r instead"
+                        % type(data), RuntimeWarning, stacklevel=3)
                     continue
 
                 # Is the data new?

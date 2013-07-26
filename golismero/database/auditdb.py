@@ -819,7 +819,7 @@ class AuditSQLiteDB (BaseAuditDB):
         elif data_type == Data.TYPE_UNKNOWN:
             warnings.warn(
                 "Received %s object of type TYPE_UNKNOWN" % type(data),
-                RuntimeWarning)
+                RuntimeWarning, stacklevel=3)
             if   isinstance(data, Information):
                 data.data_type = Data.TYPE_INFORMATION
                 table = "information"
@@ -827,7 +827,7 @@ class AuditSQLiteDB (BaseAuditDB):
                 if dtype == Information.INFORMATION_UNKNOWN:
                     warnings.warn(
                         "Received %s object of subtype INFORMATION_UNKNOWN" % type(data),
-                        RuntimeWarning)
+                        RuntimeWarning, stacklevel=3)
             elif isinstance(data, Resource):
                 data.data_type = Data.TYPE_RESOURCE
                 table = "resource"
@@ -835,7 +835,7 @@ class AuditSQLiteDB (BaseAuditDB):
                 if dtype == Resource.RESOURCE_UNKNOWN:
                     warnings.warn(
                         "Received %s object of subtype RESOURCE_UNKNOWN" % type(data),
-                        RuntimeWarning)
+                        RuntimeWarning, stacklevel=3)
             elif isinstance(data, Vulnerability):
                 data.data_type = Data.TYPE_VULNERABILITY
                 table = "vulnerability"

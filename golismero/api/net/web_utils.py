@@ -1088,7 +1088,8 @@ class DecomposedURL(object):
         if not fragment:
             fragment = ''
         elif fragment.startswith('#'):
-            warn("You don't need to use a leading '#' when setting the fragment, this may be an error!")
+            warn("You don't need to use a leading '#' when setting the"
+                 " fragment, this may be an error!", stacklevel=3)
         self.__fragment = fragment
 
     @property
@@ -1119,7 +1120,8 @@ class DecomposedURL(object):
     @query.setter
     def query(self, query):
         if query and query.startswith('?'):
-            warn("You don't need to use a leading '?' when setting the query string, this may be an error!")
+            warn("You don't need to use a leading '?' when setting the query"
+                 " string, this may be an error!", stacklevel=3)
         if not query:
             query_params = {}
         else:

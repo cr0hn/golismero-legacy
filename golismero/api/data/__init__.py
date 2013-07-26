@@ -504,7 +504,7 @@ class Data(object):
                     if prop is not None:
                         msg = "Mergeable read-only properties make no sense! Ignoring: %s.%s"
                         msg %= (cls.__name__, key)
-                        warn(msg)
+                        warn(msg, stacklevel=4)
 
         # Overwrite strategy.
         elif overwrite.is_overwriteable_property(prop):
@@ -520,7 +520,7 @@ class Data(object):
             except AttributeError:
                 msg = "Overwriteable read-only properties make no sense! Ignoring: %s.%s"
                 msg %= (cls.__name__, key)
-                warn(msg)
+                warn(msg, stacklevel=4)
 
 
     @classmethod
