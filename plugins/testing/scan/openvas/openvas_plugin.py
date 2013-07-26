@@ -71,7 +71,7 @@ class OpenVas(TestingPlugin):
 		m_profile   = Config.plugin_extra_config["Defaults"]["profile"]
 
 		m_host      = "192.168.0.208"
-		m_target    = "192.168.0.194"
+		m_target    = "8.8.0.0/24" #"192.168.0.194"
 		m_profile   = "empty"
 
 		# Configure the scanner
@@ -79,7 +79,10 @@ class OpenVas(TestingPlugin):
 		                                             m_user,
 		                                             m_password)
 		# Launch the scanner
-		m_scan_id = m_scanner.launch_scan(m_target, profile=m_profile, callback=partial(lambda x: x.release(), m_sem))
+		m_scan_id = m_scanner.launch_scan(m_target,
+		                                  profile=m_profile,
+		                                  callback_end=partial(lambda x: x.release(), m_sem),
+		                                  callback_progress=partial(self.update_status_step, text="openvas status scan"))
 
 		# Wait
 		m_sem.acquire()
