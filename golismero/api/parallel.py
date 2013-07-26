@@ -52,7 +52,83 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["pmap"]
 
 from thread import get_ident
-from threading import RLock, Semaphore, Thread
+from threading import RLock, Semaphore, Thread, Event, Timer
+
+
+#------------------------------------------------------------------------------
+#
+#
+# This function was taken from: http://stackoverflow.com/q/5179467
+#
+#
+def setInterval(interval, times = -1):
+    """
+    This is a decorator for periodically executen a function.
+
+    Example:
+
+    >>> from golismero.api.parallel import setInterval
+    >>> from time import gmtime, strftime
+    >>> @setInterval(2) # Execute each 2 seconds
+        def my_func()
+          print strftime("%Y-%m-%d %H:%M:%S", gmtime())
+
+    >>> handler = my_func()
+    2013-07-25 22:40:55
+    2013-07-25 22:40:57
+    2013-07-25 22:40:59
+    2013-07-25 22:41:01
+
+    >>> handler.set() # Stop the execution
+    >>>
+    >>> @setInterval(2, 3) # Each 2 seconds. 3 times.
+        def my_func()
+           print strftime("%Y-%m-%d %H:%M:%S", gmtime())
+
+    >>> handler = my_func()
+    2013-07-25 22:40:55
+    2013-07-25 22:40:57
+    2013-07-25 22:40:59
+
+
+    :param: interval: time, in seconds, how often the function is executed.
+    :type interval: float | int
+
+    :param times: maximun number of times the function will be executed.
+    :type times: int
+    """
+    if isinstance(interval, int):
+        interval = float(interval)
+    elif not isinstance(interval, float):
+        raise TypeError("Expected int or float, got '%s'" % type(interval))
+    if not isinstance(times, int):
+        raise TypeError("Expected int, got '%s'" % type(times))
+
+
+
+    # This will be the actual decorator,
+    # with fixed interval and times parameter
+    def outer_wrap(function):
+        # This will be the function to be
+        # called
+        def wrap(*args, **kwargs):
+            stop = Event()
+
+            # This is another function to be executed
+            # in a different thread to simulate setInterval
+            def inner_wrap():
+                i = 0
+                while i != times and not stop.isSet():
+                    stop.wait(interval)
+                    function(*args, **kwargs)
+                    i += 1
+
+            t = Timer(0, inner_wrap)
+            t.daemon = True
+            t.start()
+            return stop
+        return wrap
+    return outer_wrap
 
 
 #------------------------------------------------------------------------------
