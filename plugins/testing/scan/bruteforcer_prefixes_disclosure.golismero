@@ -4,7 +4,7 @@ Module = bruteforcer_url_disclosure.py
 Class = PrefixesDisclosureBruteforcer
 
 [Documentation]
-Description = Tries to discover URLs not linked anywhere in the page using a brute force approach ONLY in folders.
+Description = Tries to discover URLs adding some prefixes to the URL: www.site.com/index.php -> www.site.com/~index.php
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/cr0hn/golismero/

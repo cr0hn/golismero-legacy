@@ -4,7 +4,7 @@ Module = bruteforcer_url_disclosure.py
 Class = PredictablesDisclosureBruteforcer
 
 [Documentation]
-Description = Tries to discover URLs not linked anywhere in the page using a brute force approach ONLY in folders.
+Description = Tries to discover URLs using default of each kind of server. i.e: (Apache) www.site.com/error_log
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/cr0hn/golismero/
