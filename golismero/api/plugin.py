@@ -257,7 +257,7 @@ class Plugin (object):
 
 
     #----------------------------------------------------------------------
-    def update_status_step(self, step, total, text=None, **kwargs):
+    def update_status_step(self, step, **kwargs):
         """
         Plugins can call this method to tell the user of the current
         state of process for a concrete instant of time.
@@ -309,8 +309,9 @@ class Plugin (object):
         """
         try:
 
-            m_total   = float(total)
+            m_total   = float(kwargs.get("total", 100.0))
             m_step    = float(step)
+            text    = kwargs.get("text", None)
             m_partial = float(kwargs.get('partial', 100.0))
             if 0.0 < m_partial <= 100.0:
                 m_progress = (m_step/m_total) * (m_partial/100.0)
