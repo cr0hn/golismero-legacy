@@ -12,6 +12,78 @@ title: Home
 
 <p>GoLismero 2.0 is in beta status and under active development. You can download and test it.</p>
 
+<h3>What's GoLismero 2.0?</h3>
+
+<p>GoLismero is an open source framework for security testing. It's currently geared towards web security, but it can easily be expanded to other kinds of scans.</p>
+
+<p>The most interesting features of the framework are:</p>
+
+<ul>
+  <li><b>Real platform independence</b>. Tested on Windows, Linux, *BSD and OS X.</li>
+  <li><b>No</b> native library <b>dependencies</b>. All of the framework has been written in pure Python.</li>
+  <li><b>Good performance</b> when compared with other frameworks written in Python and other scripting languages.</li>
+  <li>Very easy to use.</li>
+  <li>Plugin development is <b>extremely simple.</b></li>
+  <li>The framework also <b>collects and unifies</b> the results of well known tools: <b>sqlmap, xsser, openvas, dnsrecon, theharvester...</b></li>
+  <li>Integration with standards: CWE, CVE and OWASP.</li>
+  <li>Designed for <b>cluster deployment</b> in mind (not available yet).</li>
+</ul>
+
+<h3>Quick manual</h3>
+
+<p>Use GoLismero 2.0 is ver easy. Bellow some basics commands to start to use it:</p>
+
+<h4>How to install GoLismero 2.0?</h4>
+
+<p>Currently GoLismero 2.0 is <b>under active development</b>. Then, there isn't in the main branch of the github project. To download it, you must write:</p>
+
+<pre>git clone -b 2.0.0 https://github.com/cr0hn/golismero.git golismero-2.0</pre>
+
+<h4>Basic usage</h4>
+
+<p>This command will launch GoLismero with all plugins enabled:</p>
+
+<pre>python golismero.py http://mysite.com</pre>
+
+<h4>Available plugins</h4>
+
+<p>If you want display the available plugins, you must write:</p>
+
+<pre>python golismero.py --plugin-list</pre>
+
+<img src="/images/tutorials/quick_start/plugin_list.png" alt="list with de availables plugins" />
+
+<h4>Select specific plugin</h4>
+
+<p>Currently, the command line usage when you want to enable only some plugins, is not very intuitive (we're working to improve that).</p>
+
+<p>If you want run only the dns transfer plugin, you must write:</p>
+
+<pre>python golismero.py http://mysite.com -d all -e report -e dns_zone_transfer</pre>
+
+<img src="/images/tutorials/quick_start/zone_transfer.png" alt="zone transfer example" />
+
+<p>If you want run only the plugin for discover hidden files in the web server, you must write:</p>
+
+<pre>python golismero.py http://mysite.com -d all -e report -e bruteforcer_predictables_disclosure</pre>
+
+<img src="/images/tutorials/quick_start/bruteforcer_predictables.png" alt="looking for predictable files." />
+
+<h3>What's will be the next features?</h3>
+
+<p>The next features in golismero will be:</p>
+
+<ul>
+  <li>Ncurses/Web page as UI</li> 
+  <li>Export resutls in HTML</li>
+  <li>Import more tools</li>
+</ul>
+
+<h3>any bug found?</h3>
+
+<p>If you have found some bug, you can report it using the github issues system at <a href="https://github.com/cr0hn/golismero/issues?state=open">issues</a></p>
+
+
 <h3>
 <a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
 
