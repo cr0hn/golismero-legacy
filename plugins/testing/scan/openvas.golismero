@@ -1,6 +1,6 @@
 [Core]
 Name = Openvas scanner
-Module = openvas_plugin/openvas_plugin.py
+Module = openvas/openvas_plugin.py
 
 [Documentation]
 Description = Run the OpenVas scanner and import the results
@@ -9,3 +9,10 @@ Version = 0.1
 Website = https://github.com/cr0hn/golismero/
 Copyright = Copyright (C) 2011-2013 GoLismero Project
 License = GNU Public License
+
+
+[Defaults]
+user     = admin
+password = admin
+host     = 127.0.0.1
+profile  = Full and fast
