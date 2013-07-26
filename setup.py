@@ -166,9 +166,9 @@ if os.path.sep == '\\':
 metadata = {
 
     # Setup instructions.
-    'requires'          : ['BeautifulSoup', 'python_cjson', 'colorizer',
-                           'decorator', 'diff_match_patch', 'netaddr',
-                           'python_ntlm', 'repoze.lru', 'requests',
+    'requires'          : ['BeautifulSoup', 'colorizer', 'decorator', 'django',
+                           'diff_match_patch', 'dnspython', 'netaddr', 'ntlk',
+                           'python_cjson', 'repoze.lru', 'requests',
                            'requests_ntlm', 'tldextract'],
     'provides'          : ['golismero'],
     'packages'          : packages,
