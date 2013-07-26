@@ -51,6 +51,7 @@ import socket
 import ssl
 import re
 from collections import Iterable
+from xml.etree.ElementTree import dump, tostring
 
 #
 #
@@ -257,6 +258,7 @@ class VulnscanManager(object):
 
         >>> from threading import Semaphore
         >>> from functools import partial
+        >>> def my_print_status(i): print str(i)
         >>> def my_launch_scanner():
 
                Sem = Semaphore(0)
@@ -265,7 +267,7 @@ class VulnscanManager(object):
                manager = VulnscanManager.connectOpenVas("localhost", "admin", "admin)
 
                # Launch
-               manager.launch_scan(target, profile="empty", callback=partial(lambda x: x.release(), sem))
+               manager.launch_scan(target, profile="empty", callback_end=partial(lambda x: x.release(), sem), callback_progress=my_print_status)
 
                # Wait
                Sem.acquire()
@@ -274,6 +276,11 @@ class VulnscanManager(object):
                print "finished!"
 
         >>> my_launch_scanner() # It can take some time
+        0
+        10
+        39
+        60
+        90
         finished!
 
 
@@ -283,17 +290,22 @@ class VulnscanManager(object):
         :param profile: scan profile in the Openvas server
         :type profile: str
 
-        :param callback: if this param is set, the process will run in background
-                         and call the function specified in this var when the
-                         scan ends.
-        :type callback: function
+        :param callback_end: if this param is set, the process will run in background
+                             and call the function specified in this var when the
+                             scan ends.
+        :type callback_end: function
 
-        :return: ID of the audit
-        :rtype: str
+        :param callback_progress: is param set, it will be called, each 10 seconds, with the percentaje
+                                 of the sacan as a float number.
+        :type callback_progress: function(int)
+
+        :return: a tupple with the Id of the audit and the Id of the target: (ID_scan, ID_target)
+        :rtype: (str, str)
         """
-        profile       = kwargs.get("profile", None)
-        call_back     = kwargs.get("callback", None)
-
+        profile              = kwargs.get("profile", None)
+        call_back_end        = kwargs.get("callback_end", None)
+        call_back_progress   = kwargs.get("callback_progress", None)
+        call_back_progress(1)
         if not (isinstance(target, basestring) or isinstance(target, Iterable)):
             raise TypeError("Expected basestring or iterable, got '%s'" % type(target))
         if not isinstance(profile, basestring):
@@ -344,12 +356,13 @@ class VulnscanManager(object):
         #
         # Callback is set?
         #
-        if call_back:
+        if call_back_end or call_back_progress:
             # schedule a function to run each 10 seconds to check the estate in the server
-            self.__function_handle = self._callback(call_back)
+            self.__function_handle = self._callback(call_back_end, call_back_progress)
             self.__task_id         = m_task_id
+            self.__target_id       = m_target_id
 
-        return m_task_id
+        return (m_task_id, m_target_id)
 
     #----------------------------------------------------------------------
     def delete_scan(self, scan_id):
@@ -360,6 +373,18 @@ class VulnscanManager(object):
         :type scan_id: str
         """
         self.__manager.delete_task(scan_id)
+
+
+    #----------------------------------------------------------------------
+    def delete_target(self, target_id):
+        """
+        Delete specified target Id in the Openvas server.
+
+        :param target_id: Id of scan
+        :type target_id: str
+        """
+        self.__manager.delete_target(target_id)
+
 
 
     #----------------------------------------------------------------------
@@ -386,6 +411,22 @@ class VulnscanManager(object):
         return self._transform(m_response)
 
     #----------------------------------------------------------------------
+    def get_progress(self, scan_id):
+        """
+        Get the status of a scan.
+
+        :param scan_id: id of the scan.
+        :type scan_id: str
+
+        :return: a float number between 0-100
+        :rtype: float
+        """
+        if not isinstance(scan_id, basestring):
+            raise TypeError("Expected basestring, got '%s'" % type(scan_id))
+
+        return self.__manager.get_tasks_progress(scan_id)
+
+    #----------------------------------------------------------------------
     def stop_audit(self, scan_id):
         """"""
         raise NotImplemented("Not implemented yet")
@@ -398,6 +439,7 @@ class VulnscanManager(object):
         :rtype: {profile_name: ID}
         """
         return self.__manager.get_configs_ids()
+
     #----------------------------------------------------------------------
     @property
     def get_all_scans(self):
@@ -497,7 +539,7 @@ class VulnscanManager(object):
 
     #----------------------------------------------------------------------
     @setInterval(10.0)
-    def _callback(self, func):
+    def _callback(self, func_end, func_status):
         """
         Call this function each 10 seconds
         """
@@ -506,8 +548,17 @@ class VulnscanManager(object):
             # Task is finished. Stop the callback interval
             self.__function_handle.set()
 
+            # Then, remove the target
+            self.delete_target(self.__target_id)
+
             # Call the callback function
-            func()
+            if func_end:
+                func_end()
+
+        if func_status:
+            t = self.get_progress(self.__task_id)
+            func_status(t)
+
 
 
 #
@@ -738,6 +789,20 @@ class OMPv4(object):
 
         return self.xml(request, xml_result=True).get("id")
 
+    def delete_target(self, target_id):
+        """
+        Delete a target in OpenVas server.
+
+        :param target_id: target id
+        :type target_id: str
+
+        :raises: RunTimeError, ClientError, ServerError
+        """
+
+        request =  """<delete_target target_id="%s" />""" % (target_id)
+
+
+
     #----------------------------------------------------------------------
     def get_configs(self, config_id=None):
         """
@@ -831,6 +896,45 @@ class OMPv4(object):
             return {name : m_return[name]}
         else:
             return m_return
+
+    #----------------------------------------------------------------------
+    def get_tasks_progress(self, task_id):
+        """
+        Get the progress of the task
+
+        :param task_id: Id of the task
+        :type task_id: str
+
+        :return: a float number between 0-100
+        :rtype: float
+
+        :raises: RunTimeError, ClientError, ServerError
+        """
+        if not isinstance(task_id, basestring):
+            raise TypeError("Expected basestring, got '%s'" % type(task_id))
+
+        m_sum_progress = 0.0 # Partial progress
+        m_progress_len = 0.0 # All of tasks
+
+        for x in self.get_tasks().findall("task"):
+            if x.get("id") == task_id:
+                # Looking for each task for each target
+                l_status = x.find("status").text
+                if l_status == "Running":
+
+                    for l_p in x.findall("progress"):
+                        for l_hp in l_p.findall("host_progress"):
+                            for r in  l_hp.findall("host"):
+                                q = tostring(r)
+                                if q:
+                                    v = q[q.rfind(">") + 1:]
+                                    m_progress_len += 1.0
+                                    m_sum_progress += float(v)
+
+        try:
+            return (m_sum_progress/m_progress_len)
+        except ZeroDivisionError:
+            return 0.0
 
     #----------------------------------------------------------------------
     def get_tasks_ids_by_status(self, status="Done"):
@@ -964,8 +1068,18 @@ class OMPv4(object):
                 data = data.encode('utf-8')
             self.socket.send(data)
         parser = etree.XMLTreeBuilder()
+        m_errors = 0
         while 1:
-            res = self.socket.recv(BLOCK_SIZE)
+            try:
+                res = self.socket.recv(BLOCK_SIZE)
+            except ssl.SSLError:
+                m_errors += 1
+
+                if m_errors > 3:
+                    break
+
+                continue
+
             parser.feed(res)
             if len(res) < BLOCK_SIZE:
                 break
