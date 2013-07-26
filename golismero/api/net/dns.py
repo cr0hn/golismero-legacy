@@ -435,6 +435,8 @@ class _DNS(Singleton):
                     # Mark for not tracking
                     LocalDataCache.on_autogeneration(d)
 
+                ns_records = l_dns
+
             else:
                 # The domain is an DNS server
                 ns_records = (domain)
