@@ -14,7 +14,7 @@ Natural language API.
    https://twitter.com/z0mbiehunt3r
 """
 
-"""
+__license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
@@ -65,12 +65,10 @@ def _calculate_languages_ratios(text):
 
     languages_ratios = {}
 
-    '''
-    nltk.wordpunct_tokenize() splits all punctuations into separate tokens
-
-    >>> wordpunct_tokenize("That's thirty minutes away. I'll be there in ten.")
-    ['That', "'", 's', 'thirty', 'minutes', 'away', '.', 'I', "'", 'll', 'be', 'there', 'in', 'ten', '.']
-    '''
+    # nltk.wordpunct_tokenize() splits all punctuations into separate tokens
+    #
+    # >>> wordpunct_tokenize("That's thirty minutes away. I'll be there in ten.")
+    # ['That', "'", 's', 'thirty', 'minutes', 'away', '.', 'I', "'", 'll', 'be', 'there', 'in', 'ten', '.']
 
     tokens = wordpunct_tokenize(text)
     words = [word.lower() for word in tokens]

@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
-from golismero.api.data import LocalDataCache
+from golismero.api.data import discard_data
 from golismero.api.data.information.dns import DnsRegister
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
@@ -128,9 +128,7 @@ class DNSZoneTransfer(TestingPlugin):
 
             m_return_append = m_return.append
             if m_zone_transfer:
-
-                # Mark the the register for not tracking
-                map(LocalDataCache.on_autogeneration, m_zone_transfer)
+                m_return.extend(m_zone_transfer)
 
                 for l_ns in m_ns_servers:
                     # Create the vuln
@@ -231,13 +229,13 @@ class DNSBruteforcer(TestingPlugin):
                                 if dom.target in Config.audit_scope:
                                     m_domains_add(dom)
                                 else:
-                                    LocalDataCache.on_autogeneration(dom)
+                                    discard_data(dom)
 
                         # IPs
                         if dom.type == "A":
                             if dom.address not in m_ips_already:
                                 m_ips_already_append(dom.address)
-                                m_ips.add(dom)
+                                m_ips_add(dom)
 
                 # Unify
                 m_domains.update(m_ips)

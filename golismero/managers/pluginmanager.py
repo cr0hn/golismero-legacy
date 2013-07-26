@@ -419,9 +419,9 @@ class PluginManager (Singleton):
         # Dictionary to cache the plugin instances
         self.__cache = {}
 
-        # Batches and stages of plugins
-        self.__batches = []
-        self.__stages  = {}
+        # Batches and stages of plugins (see calculate_dependencies)
+        self.__batches = None   # list
+        self.__stages  = None   # dict
 
 
     #----------------------------------------------------------------------
