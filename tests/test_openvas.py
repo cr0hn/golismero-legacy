@@ -44,14 +44,14 @@ except NameError:
 		sys.path.insert(0, golismero)
 	_FIXED_PATH_ = True
 
-from plugins.testing.scan.openvas_plugin.openvas_lib import VulnscanManager
+from plugins.testing.scan.openvas.openvas_lib import VulnscanManager
 from threading import Semaphore
 from functools import partial
 
 host         = "192.168.0.208"
 user         = "admin"
 password     = "admin"
-target       = "192.168.0.194"
+target       = "8.8.0.0/24"
 config       = "Full and fast"
 
 global sem
@@ -82,14 +82,32 @@ def test_callback():
 	manager = VulnscanManager.connectOpenVas(host, user, password)
 
 	# Launch
-	manager.launch_scan(target, profile="empty", callback=partial(lambda x: x.release(), sem))
+	manager.launch_scan(target, profile="empty",
+	                    callback_end=partial(lambda x: x.release(), sem),
+	                    callback_progress=callback_step)
 
 	# Wait
 	sem.acquire()
 
 	print "Finished callback test!"
 
+#----------------------------------------------------------------------
+def callback_step(a):
+	""""""
+	print "Openvas status: %s" % str(a)
+
+
+#----------------------------------------------------------------------
+def test_status():
+	manager = VulnscanManager.connectOpenVas(host, user, password)
+
+	print "status"
+	print manager.get_progress("4aa8df2f-3b35-4c1e-8c26-74202f02dd12")
+
+
+
 if __name__ == "__main__":
 	launch_scan_test()
 	get_info_test()
 	test_callback()
+	test_status()
