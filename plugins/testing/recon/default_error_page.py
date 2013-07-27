@@ -280,7 +280,7 @@ the <a href="http://nginx.org/r/error_log">error log</a> for details.</p>
     You either supplied the wrong credentials (e.g., bad password), or your
     browser doesn't understand how to supply the credentials required.
 
-  	<p></p>
+        <p></p>
 
     In case you are allowed to request the document, please
     check your user-id and password and try again.

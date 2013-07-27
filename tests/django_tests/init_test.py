@@ -26,30 +26,25 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-
-
-
-
-
 from django.conf import settings
 
 settings.configure(
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-                'NAME': './fichero.db',                      # Or path to database file if using sqlite3.
-            }
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+            'NAME': './fichero.db',                      # Or path to database file if using sqlite3.
+        }
         },
-        INSTALLED_APPS=('data',)
-        )
+    INSTALLED_APPS=('data',)
+)
 
 from data.models import *
 
 from django.core.management import call_command
 
 if __name__=='__main__':
-	call_command('syncdb')
+    call_command('syncdb')
 
-	a = One()
-	a.text1 = "aaa"
-	a.save()
+    a = One()
+    a.text1 = "aaa"
+    a.save()

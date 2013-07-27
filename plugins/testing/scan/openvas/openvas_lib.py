@@ -630,12 +630,12 @@ class OMPv4(object):
     Internal manager for OpenVAS low level operations.
 
     ..note:
-    	This class is based in code from the original OpenVAS plugin:
+        This class is based in code from the original OpenVAS plugin:
 
-    	https://pypi.python.org/pypi/openvas.omplib
+        https://pypi.python.org/pypi/openvas.omplib
 
     ..warning:
-    	This code is only compatible with OMP 4.0.
+        This code is only compatible with OMP 4.0.
     """
 
     TIMEOUT  = 10
@@ -765,11 +765,11 @@ class OMPv4(object):
             config = "Full and fast"
 
         request =  """<create_task>
-	    <name>%s</name>
-	    <comment>%s</comment>
-	    <config id="%s"/>
-	    <target id="%s"/>
-	    </create_task>""" % (name, comment, config, target)
+            <name>%s</name>
+            <comment>%s</comment>
+            <config id="%s"/>
+            <target id="%s"/>
+            </create_task>""" % (name, comment, config, target)
 
         return self.xml(request, xml_result=True).get("id")
 
@@ -800,10 +800,10 @@ class OMPv4(object):
             m_targets = ",".join(hosts)
 
         request =  """<create_target>
-		<name>%s</name>
-		<hosts>%s</hosts>
-		<comment>%s</comment>
-	    </create_target>""" % (name, m_targets, comment)
+            <name>%s</name>
+            <hosts>%s</hosts>
+            <comment>%s</comment>
+        </create_target>""" % (name, m_targets, comment)
 
         return self.xml(request, xml_result=True).get("id")
 
@@ -1058,11 +1058,11 @@ class OMPv4(object):
             raise TypeError("Expected string, got %s instead" % type(password))
 
         m_request = """<authenticate>
-		<credentials>
-		  <username>%s</username>
-		  <password>%s</password>
-		</credentials>
-	  </authenticate>""" % (username, password)
+            <credentials>
+              <username>%s</username>
+              <password>%s</password>
+            </credentials>
+        </authenticate>""" % (username, password)
 
         try:
             self._text_command(m_request)

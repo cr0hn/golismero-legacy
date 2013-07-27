@@ -32,17 +32,17 @@ import sys
 import os
 from os import path
 try:
-	_FIXED_PATH_
+    _FIXED_PATH_
 except NameError:
-	here = path.split(path.abspath(__file__))[0]
-	if not here:  # if it fails use cwd instead
-		here = path.abspath(os.getcwd())
-	golismero = path.join(here, "..")
-	thirdparty_libs = path.join(golismero, "thirdparty_libs")
-	if path.exists(thirdparty_libs):
-		sys.path.insert(0, thirdparty_libs)
-		sys.path.insert(0, golismero)
-	_FIXED_PATH_ = True
+    here = path.split(path.abspath(__file__))[0]
+    if not here:  # if it fails use cwd instead
+        here = path.abspath(os.getcwd())
+    golismero = path.join(here, "..")
+    thirdparty_libs = path.join(golismero, "thirdparty_libs")
+    if path.exists(thirdparty_libs):
+        sys.path.insert(0, thirdparty_libs)
+        sys.path.insert(0, golismero)
+    _FIXED_PATH_ = True
 
 
 from golismero.api.parallel import setInterval
@@ -56,26 +56,26 @@ sem     = None
 
 @setInterval(2)
 def test_interval():
-	""""""
-	global num
+    """"""
+    global num
 
-	if num < 1:
-		print "Finish!"
-		handler.set()
-		sem.release()
-	else:
-		#print "[%s] Iteration %s" % (strftime("%Y-%m-%d %H:%M:%S", gmtime()), str(num))
-		print "%s" % (strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-		num -= 1
+    if num < 1:
+        print "Finish!"
+        handler.set()
+        sem.release()
+    else:
+        #print "[%s] Iteration %s" % (strftime("%Y-%m-%d %H:%M:%S", gmtime()), str(num))
+        print "%s" % (strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+        num -= 1
 
 
 
 if __name__ == "__main__":
 
-	print "Start the setInterval"
-	sem = Semaphore(0)
+    print "Start the setInterval"
+    sem = Semaphore(0)
 
-	handler = test_interval()
+    handler = test_interval()
 
-	# Wait
-	sem.acquire()
+    # Wait
+    sem.acquire()
