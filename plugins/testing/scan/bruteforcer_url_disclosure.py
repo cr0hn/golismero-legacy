@@ -33,7 +33,6 @@ from golismero.api.data.resource.url import Url
 from golismero.api.data.resource.folderurl import FolderUrl
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.logger import Logger
-from golismero.api.net import NetworkException
 from golismero.api.net.http import HTTP
 from golismero.api.net.web_utils import DecomposedURL
 from golismero.api.text.matching_analyzer import MatchingAnalyzer, HTTP_response_headers_analyzer
