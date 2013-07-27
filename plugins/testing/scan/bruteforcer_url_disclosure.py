@@ -155,7 +155,11 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
         m_error_response = get_error_page(m_url)
 
         # Create the matching analyzer
-        m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+        try:
+            m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+        except ValueError:
+            # Thereis not information
+            return
 
         # Create the partial funs
         _f = partial(process_url,
@@ -208,7 +212,11 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
         m_error_response = get_error_page(m_url)
 
         # Create the matching analyzer
-        m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+        try:
+            m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+        except ValueError:
+            # Thereis not information
+            return
 
         # Create the partial funs
         _f = partial(process_url,
@@ -261,10 +269,11 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
         m_error_response = get_error_page(m_url)
 
         # Create the matching analyzer
-        m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
-
-        # Create the partial funs
-        m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+        try:
+            m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+        except ValueError:
+            # Thereis not information
+            return
 
         # Create the partial funs
         _f = partial(process_url,
@@ -319,7 +328,11 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
         m_error_response = get_error_page(m_url)
 
         # Create the matching analyzer
-        m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+        try:
+            m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+        except ValueError:
+            # Thereis not information
+            return
 
         # Create the partial funs
         _f = partial(process_url,
@@ -373,7 +386,11 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
         m_error_response = get_error_page(m_url)
 
         # Create the matching analyzer
-        m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+        try:
+            m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+        except ValueError:
+            # Thereis not information
+            return
 
         # Create the partial funs
         _f = partial(process_url,
@@ -426,7 +443,11 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
         m_error_response = get_error_page(m_url)
 
         # Create the matching analyzer
-        m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+        try:
+            m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+        except ValueError:
+            # Thereis not information
+            return
 
         # Create the partial funs
         _f = partial(process_url,
