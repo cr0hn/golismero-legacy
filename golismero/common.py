@@ -412,6 +412,9 @@ class Configuration (object):
         if name.startswith("_"):
             msg = "Option name %r is a protected Python identifier"
             raise SyntaxError(msg % name)
+        if parser is not None and not callable(parser):
+            msg = "Option parser cannot be of type %s"
+            raise SyntaxError(msg % type(parser))
         setattr(self, name, default)
 
 
