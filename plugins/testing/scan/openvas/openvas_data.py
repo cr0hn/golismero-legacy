@@ -29,11 +29,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["OpenvasPort"]
+__all__ = ["OpenVASPort"]
 
 
 #------------------------------------------------------------------------------
-class OpenvasPort:
+class OpenVASPort:
     """
     Port definition.
     """
@@ -96,7 +96,7 @@ class OpenvasPort:
 
 
 #----------------------------------------------------------------------
-class OpenvasNVT(object):
+class OpenVASNVT(object):
     """
     OpenVas NVT structure.
     """
@@ -187,7 +187,7 @@ class OpenvasNVT(object):
             if not isinstance(tags, basestring):
                 raise TypeError("Expected string, got %s instead" % type(tags))
 
-        cls                   = OpenvasNVT()
+        cls                   = OpenVASNVT()
         cls.__oid             = oid
         cls.__name            = name
         cls.__cvss_base       = cvss_base
@@ -212,9 +212,9 @@ class OpenvasNVT(object):
     def make_empty_object(cls):
         """
         :return: make and empty object
-        :rtype: OpenvasNVT
+        :rtype: OpenVASNVT
         """
-        return OpenvasNVT()
+        return OpenVASNVT()
 
 
     #----------------------------------------------------------------------
@@ -538,7 +538,7 @@ class OpenvasNVT(object):
 
 
 #------------------------------------------------------------------------------
-class OpenvasOverride(object):
+class OpenVASOverride(object):
     """
     Override object of OpenVas results.
     """
@@ -563,9 +563,9 @@ class OpenvasOverride(object):
         if not isinstance(orphan, bool):
             raise TypeError("Expected bool, got %s instead" % type(orphan))
 
-        cls                   = OpenvasOverride()
+        cls                   = OpenVASOverride()
         cls.__nvt_oid         = oid
-        cls.__nvt_name        = nvt_name
+        cls.__nvt_name        = name
         cls.__text            = text
         cls.__text_is_excerpt = text_is_excerpt
         cls.__threat          = threat
@@ -579,7 +579,7 @@ class OpenvasOverride(object):
     @classmethod
     def make_empty_object(cls):
 
-        cls                   = OpenvasOverride()
+        cls                   = OpenVASOverride()
         cls.__nvt_oid         = None
         cls.__nvt_name        = None
         cls.__text            = None
@@ -746,7 +746,7 @@ class OpenvasOverride(object):
 
 
 #------------------------------------------------------------------------------
-class OpenvasNotes(object):
+class OpenVASNotes(object):
     """
     Store the notes for a results object.
     """
@@ -761,8 +761,8 @@ class OpenvasNotes(object):
             raise TypeError("Expected string, got %s instead" % type(name))
         if not isinstance(text, basestring):
             raise TypeError("Expected string, got %s instead" % type(text))
-        if not isinstance(text_excerpt, bool):
-            raise TypeError("Expected bool, got %s instead" % type(text_excerpt))
+        if not isinstance(text_is_excerpt, bool):
+            raise TypeError("Expected bool, got %s instead" % type(text_is_excerpt))
         if not isinstance(orphan, bool):
             raise TypeError("Expected bool, got %s instead" % type(orphan))
 
@@ -824,7 +824,7 @@ class OpenvasNotes(object):
 
 
 #------------------------------------------------------------------------------
-class OpenvasResult(object):
+class OpenVASResult(object):
     """
     Main structure to store audit results.
     """
@@ -840,23 +840,23 @@ class OpenvasResult(object):
             raise TypeError("Expected string, got %s instead" % type(host))
         if not isinstance(port, basestring):
             raise TypeError("Expected string, got %s instead" % type(port))
-        if not isinstance(nvt, OpenVas):
-            raise TypeError("Expected OpenVas, got %s instead" % type(nvt))
+        if not isinstance(nvt, OpenVASNVT):
+            raise TypeError("Expected OpenVASNVT, got %s instead" % type(nvt))
         if isinstance(threat, basestring):
             if threat not in ("High", "Medium", "Low", "Log", "Debug"):
                 raise ValueError("Value incorrect. Allowed values are: High|Medium|Low|Log|Debug")
         else:
-            raise TypeError("Expected OpenvasThreat, got %s instead" % type(threat))
+            raise TypeError("Expected OpenVASThreat, got %s instead" % type(threat))
 
         if not isinstance(description, basestring):
             raise TypeError("Expected string, got %s instead" % type(description))
-        if not isinstance(notes, OpenvasNotes):
-            raise TypeError("Expected OpenvasNotes, got %s instead" % type(notes))
-        if not isinstance(overrides, OpenvasOverride):
-            raise TypeError("Expected OpenvasOverride, got %s instead" % type(overrides))
+        if not isinstance(notes, OpenVASNotes):
+            raise TypeError("Expected OpenVASNotes, got %s instead" % type(notes))
+        if not isinstance(overrides, OpenVASOverride):
+            raise TypeError("Expected OpenVASOverride, got %s instead" % type(overrides))
 
 
-        cls                  = OpenvasResult()
+        cls                  = OpenVASResult()
         cls.__id             = id
         cls.__subnet         = subnet
         cls.__host           = host
@@ -875,9 +875,9 @@ class OpenvasResult(object):
     def make_empty_object(cls):
         """
         :return: Creates a empty object
-        :rtype: OpenvasResult
+        :rtype: OpenVASResult
         """
-        cls                  = OpenvasResult()
+        cls                  = OpenVASResult()
         cls.__id             = None
         cls.__subnet         = None
         cls.__host           = None
@@ -939,7 +939,7 @@ class OpenvasResult(object):
     @property
     def port(self):
         """
-        :rtype: OpenvasPort
+        :rtype: OpenVASPort
         """
         return self.__port
 
@@ -948,9 +948,9 @@ class OpenvasResult(object):
     @port.setter
     def port(self, val):
         """
-        :type val: OpenvasPort
+        :type val: OpenVASPort
         """
-        if not isinstance(val, OpenvasPort):
+        if not isinstance(val, OpenVASPort):
             raise TypeError("Expected int, got %s instead" % type(val))
 
         self.__port = val
@@ -983,7 +983,7 @@ class OpenvasResult(object):
     def nvt(self):
         """
         :return:
-        :rtype:
+        :rtype: OpenVASNVT
         """
         return self.__nvt
 
@@ -992,10 +992,10 @@ class OpenvasResult(object):
     @nvt.setter
     def nvt(self, val):
         """
-        :type val: OpenvasNVT
+        :type val: OpenVASNVT
         """
-        if not isinstance(val, OpenvasNVT):
-            raise TypeError("Expected OpenvasNVT, got %s instead" % type(val))
+        if not isinstance(val, OpenVASNVT):
+            raise TypeError("Expected OpenVASNVT, got %s instead" % type(val))
 
         self.__nvt = val
 
@@ -1061,10 +1061,10 @@ class OpenvasResult(object):
     @notes.setter
     def notes(self, val):
         """
-        :type val: OpenvasNotes
+        :type val: OpenVASNotes
         """
-        if not isinstance(val, OpenvasNotes):
-            raise TypeError("Expected OpenvasNotes, got %s instead" % type(val))
+        if not isinstance(val, OpenVASNotes):
+            raise TypeError("Expected OpenVASNotes, got %s instead" % type(val))
 
         self.__notes = val
 
@@ -1083,9 +1083,9 @@ class OpenvasResult(object):
     @overrides.setter
     def overrides(self, val):
         """
-        :type val: OpenvasOverride
+        :type val: OpenVASOverride
         """
-        if not isinstance(val, OpenvasOverride):
-            raise TypeError("Expected OpenvasOverride, got %s instead" % type(val))
+        if not isinstance(val, OpenVASOverride):
+            raise TypeError("Expected OpenVASOverride, got %s instead" % type(val))
 
         self.__overrides = val

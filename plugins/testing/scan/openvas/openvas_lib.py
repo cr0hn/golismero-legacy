@@ -41,7 +41,7 @@ cwd = os.path.abspath(os.path.split(__file__)[0])
 cwd = os.path.join(cwd, ".")
 sys.path.insert(0, cwd)
 
-from openvas_data import *
+from openvas_data import *  # noqa
 
 import socket
 import ssl
@@ -410,7 +410,7 @@ class VulnscanManager(object):
 
         m_response = None
         try:
-            m_response = self.__manager.xml('<get_results task_id="%s"/>' % scan_id, xml_result=True)
+            m_response = self.__manager.make_xml_request('<get_results task_id="%s"/>' % scan_id, xml_result=True)
         except ServerError, e:
             raise VulnscanServerError("Can't get the results for the task %s. Error: %s" % (scan_id, e.message))
 
@@ -698,7 +698,7 @@ class OMPv4(object):
 
 
     #----------------------------------------------------------------------
-    def xml(self, xmldata, xml_result=False):
+    def make_xml_request(self, xmldata, xml_result=False):
         """
         Low-level interface to send OMP XML to the manager.
 
@@ -737,6 +737,8 @@ class OMPv4(object):
 
         request =  """<delete_task task_id="%s" />""" % (task_id)
 
+        self.make_xml_request(request, xml_result=True)
+
 
     #----------------------------------------------------------------------
     def create_task(self, name, target, config=None, comment=""):
@@ -771,7 +773,7 @@ class OMPv4(object):
             <target id="%s"/>
             </create_task>""" % (name, comment, config, target)
 
-        return self.xml(request, xml_result=True).get("id")
+        return self.make_xml_request(request, xml_result=True).get("id")
 
 
     #----------------------------------------------------------------------
@@ -805,7 +807,7 @@ class OMPv4(object):
             <comment>%s</comment>
         </create_target>""" % (name, m_targets, comment)
 
-        return self.xml(request, xml_result=True).get("id")
+        return self.make_xml_request(request, xml_result=True).get("id")
 
 
     #----------------------------------------------------------------------
@@ -820,6 +822,8 @@ class OMPv4(object):
         """
 
         request =  """<delete_target target_id="%s" />""" % (target_id)
+
+        self.make_xml_request(request, xml_result=True)
 
 
     #----------------------------------------------------------------------
@@ -838,9 +842,9 @@ class OMPv4(object):
         """
         # Recover all config from OpenVAS
         if config_id:
-            return self.xml('<get_configs config_id="%s"/>' % config_id, xml_result=True)
+            return self.make_xml_request('<get_configs config_id="%s"/>' % config_id, xml_result=True)
         else:
-            return self.xml("<get_configs />", xml_result=True)
+            return self.make_xml_request("<get_configs />", xml_result=True)
 
 
     #----------------------------------------------------------------------
@@ -885,9 +889,9 @@ class OMPv4(object):
         """
         # Recover all config from OpenVAS
         if task_id:
-            return self.xml('<get_tasks id="%s"/>' % name, xml_result=True)
+            return self.make_xml_request('<get_tasks id="%s"/>' % name, xml_result=True)
         else:
-            return self.xml("<get_tasks/>", xml_result=True)
+            return self.make_xml_request("<get_tasks/>", xml_result=True)
 
 
     #----------------------------------------------------------------------
@@ -1029,7 +1033,7 @@ class OMPv4(object):
 
         m_query = '<start_task task_id="%s"/>' % task_id
 
-        self.xml(m_query, xml_result=True)
+        self.make_xml_request(m_query, xml_result=True)
 
 
     #----------------------------------------------------------------------
