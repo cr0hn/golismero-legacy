@@ -109,7 +109,7 @@ class ConsoleUIPlugin(UIPlugin):
 
                     #The counter
                     if m_progress:
-                        m_progress_txt = colorize("[%s%%]" % "{:2.2f}".format(m_progress*100.0), "white")
+                        m_progress_txt = colorize("[%i%%]" % int(m_progress*100.0), "white")
                     else:
                         m_progress_txt = colorize("[U]", "white")
 

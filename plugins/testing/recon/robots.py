@@ -98,7 +98,7 @@ class Robots(TestingPlugin):
 
             p = download(m_url_robots_txt, self.check_download)
         except NetworkException, e:
-            Logger.log_more_verbose("Robots - value error while processing: '%s'. Error: %s" % (m_url_robots_txt, e.message))
+            Logger.log_more_verbose("Robots - value error while processing: '%s'. Error: %s" % (m_url_robots_txt, str(e)))
             return
         except NetworkOutOfScope:
             Logger.log_more_verbose("Robots - Url '%s' is out of scope" % (m_url_robots_txt))

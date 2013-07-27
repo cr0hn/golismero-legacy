@@ -71,7 +71,7 @@ class Spider(TestingPlugin):
             p = download(m_url, self.check_download, allow_redirects=allow_redirects)
 
         except NetworkException,e:
-            Logger.log_more_verbose("Spider - error while processing: '%s': %s" % (m_url, e.message))
+            Logger.log_more_verbose("Spider - error while processing: '%s': %s" % (m_url, str(e)))
 
         # If error p == None => return
         if not p:

@@ -336,7 +336,7 @@ class VulnscanManager(object):
         try:
             m_target_id = self.__manager.create_target(m_target_name, target, "Temportal target from golismero OpenVAS plugin")
         except ServerError, e:
-            raise VulnscanTargetError("The target already exits on the server. Error: %s" % e.message)
+            raise VulnscanTargetError("The target already exits on the server. Error: %s" % str(e))
 
         # Get the profile ID by their name
         m_profile_id      = None
@@ -344,7 +344,7 @@ class VulnscanManager(object):
             tmp           = self.__manager.get_configs_ids(profile)
             m_profile_id  = tmp[profile]
         except ServerError:
-            raise VulnscanProfileError("The profile select not exits int the server. Error: %s" % e.message)
+            raise VulnscanProfileError("The profile select not exits int the server. Error: %s" % str(e))
         except KeyError:
             raise VulnscanProfileError("The profile select not exits int the server")
 
@@ -353,13 +353,13 @@ class VulnscanManager(object):
         try:
             m_task_id = self.__manager.create_task(m_job_name, m_target_id, config=m_profile_id, comment="scan from golismero OpenVAS plugin")
         except ServerError, e:
-            raise VulnscanScanError("The target selected not exits in the server. Error: %s" % e.message)
+            raise VulnscanScanError("The target selected not exits in the server. Error: %s" % str(e))
 
         # Start the scan
         try:
             self.__manager.start_task(m_task_id)
         except ServerError, e:
-            raise VulnscanScanError("Unknown error while try to start the task '%s'. Error: %s" % (m_task_id, e.message))
+            raise VulnscanScanError("Unknown error while try to start the task '%s'. Error: %s" % (m_task_id, str(e)))
 
         # Callback is set?
         if call_back_end or call_back_progress:
@@ -412,7 +412,7 @@ class VulnscanManager(object):
         try:
             m_response = self.__manager.make_xml_request('<get_results task_id="%s"/>' % scan_id, xml_result=True)
         except ServerError, e:
-            raise VulnscanServerError("Can't get the results for the task %s. Error: %s" % (scan_id, e.message))
+            raise VulnscanServerError("Can't get the results for the task %s. Error: %s" % (scan_id, str(e)))
 
         return self._transform(m_response)
 
@@ -671,7 +671,7 @@ class OMPv4(object):
         try:
             sock.connect((host, int(port)))
         except socket.error, e:
-            raise ServerError("Error while connection to the server. Error: %s" % e.message)
+            raise ServerError("Error while connection to the server. Error: %s" % str(e))
 
         # Create and configure object
         cls         = OMPv4()

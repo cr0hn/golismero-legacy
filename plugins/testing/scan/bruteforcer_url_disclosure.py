@@ -501,7 +501,7 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
         if p:
             discard_data(p)
     except Exception, e:
-        Logger.log_more_verbose("Error while processing: '%s': %s" % (url, e.message))
+        Logger.log_more_verbose("Error while processing: '%s': %s" % (url, str(e)))
 
     # Check if the url is acceptable by comparing
     # the result content.
@@ -519,7 +519,7 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
                 if p:
                     discard_data(p)
             except Exception, e:
-                Logger.log_more_verbose("Error while processing: '%s': %s" % (url, e.message))
+                Logger.log_more_verbose("Error while processing: '%s': %s" % (url, str(e)))
 
         # Append for analyze and display info if is accepted
         if matcher.append(p.raw_response,url=url,risk = risk_level):
@@ -934,5 +934,5 @@ def get_list_from_wordlist(wordlist):
 
         return m_commom_wordlists
     except KeyError,e:
-        Logger.log_error_more_verbose(e.message)
+        Logger.log_error_more_verbose(str(e))
         return set()

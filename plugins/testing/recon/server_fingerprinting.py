@@ -512,7 +512,7 @@ def http_analyzers(main_url, update_status_func, part_status=100, number_of_entr
             if l_response:
                 discard_data(l_response)
         except NetworkException,e:
-            Logger.log_error_more_verbose("Server-Fingerprint plugin: No response for URL (%s) '%s'. Message: %s" % (l_method, l_url, e.message))
+            Logger.log_error_more_verbose("Server-Fingerprint plugin: No response for URL (%s) '%s'. Message: %s" % (l_method, l_url, str(e)))
             continue
 
         if not l_response:
