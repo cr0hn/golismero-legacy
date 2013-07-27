@@ -490,7 +490,7 @@ class _HTTP(Singleton):
 
             # On socket errors, send an exception.
             except error, e:
-                raise NetworkException(e.message)
+                raise NetworkException(str(e))
 
 
 #------------------------------------------------------------------------------

@@ -291,7 +291,7 @@ class Console (object):
                 sys.stdout.write("%s\n" % message)
                 sys.stdout.flush()
         except Exception,e:
-            print "[!] Error while writing to output onsole: %s" % e.message
+            print "[!] Error while writing to output onsole: %s" % str(e)
 
 
     #----------------------------------------------------------------------
@@ -347,7 +347,7 @@ class Console (object):
                 sys.stderr.write("%s\n" % message)
                 sys.stderr.flush()
         except Exception,e:
-            print "[!] Error while writing to error console: %s" % e.message
+            print "[!] Error while writing to error console: %s" % str(e)
 
 
     #----------------------------------------------------------------------

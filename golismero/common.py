@@ -788,7 +788,7 @@ class AuditConfig (Configuration):
             try:
                 re.compile(self.subdomain_regex)
             except re.error, e:
-                raise ValueError("Regular expression not valid: %s." % e.message)
+                raise ValueError("Regular expression not valid: %s." % str(e))
 
         # Validate the recursion depth.
         if self.depth is not None and self.depth < 0:

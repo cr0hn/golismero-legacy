@@ -131,7 +131,7 @@ class ReportManager (object):
             try:
                 notifier.start_report(self.__plugins[plugin_name], output_file)
             except Exception, e:
-                Logger.log_error("Failed to start report for file %r: %s" % (output_file, e.message))
+                Logger.log_error("Failed to start report for file %r: %s" % (output_file, str(e)))
                 Logger.log_error_more_verbose(format_exc())
             count += 1
         return count

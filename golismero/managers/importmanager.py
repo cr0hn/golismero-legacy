@@ -139,7 +139,7 @@ class ImportManager (object):
                 finally:
                     Config._context = old_context
             except Exception, e:
-                Logger.log_error("Failed to import results from file %r: %s" % (input_file, e.message))
+                Logger.log_error("Failed to import results from file %r: %s" % (input_file, str(e)))
                 Logger.log_error_more_verbose(format_exc())
             count += 1
         return count

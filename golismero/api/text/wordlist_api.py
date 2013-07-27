@@ -208,7 +208,7 @@ def SimpleWordList(wordlist):
                 yield line
 
     except IOError, e:
-        Logger.log_error("Error opening wordlist. Error: %s " % e.message)
+        Logger.log_error("Error opening wordlist. Error: %s " % str(e))
 
 
 #------------------------------------------------------------------------------
@@ -338,7 +338,7 @@ class AdvancedListWordlist(AbstractWordlist):
         try:
             m_tmp_wordlist = wordlist.readlines()
         except IOError, e:
-            raise IOError("Error when trying to open wordlist. Error: %s" + e.message)
+            raise IOError("Error when trying to open wordlist. Error: %s" + str(e))
 
         self.__wordlist   = [w.replace("\n","") for w in m_tmp_wordlist]
 
@@ -483,7 +483,7 @@ class AdvancedDicWordlist(object):
         try:
             m_tmp_wordlist = wordlist.readlines()
         except IOError, e:
-            raise IOError("Error when trying to open wordlist. Error: %s" % e.message)
+            raise IOError("Error when trying to open wordlist. Error: %s" % str(e))
 
         self.__wordlist = {}
         m_reg           = re.compile(r"([#A-Za-z\d]+|[\'\"][\w\d\s]+[\'\"])")

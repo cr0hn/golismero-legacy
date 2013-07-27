@@ -234,7 +234,7 @@ def _bootstrap(context, func, argv, argd):
                                     except Exception, e:
                                         context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                                                          message_code = MessageCode.MSG_CONTROL_ERROR,
-                                                         message_info = (e.message, format_exc()),
+                                                         message_info = (str(e), format_exc()),
                                                              priority = MessagePriority.MSG_PRIORITY_HIGH)
 
                 # Send plugin warnings to the Orchestrator.
@@ -248,14 +248,14 @@ def _bootstrap(context, func, argv, argd):
                         except Exception, e:
                             context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                                              message_code = MessageCode.MSG_CONTROL_ERROR,
-                                             message_info = (e.message, format_exc()),
+                                             message_info = (str(e), format_exc()),
                                                  priority = MessagePriority.MSG_PRIORITY_HIGH)
 
             # Tell the Orchestrator there's been an error.
             except Exception, e:
                 context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                                  message_code = MessageCode.MSG_CONTROL_ERROR,
-                                 message_info = (e.message, format_exc()),
+                                 message_info = (str(e), format_exc()),
                                      priority = MessagePriority.MSG_PRIORITY_HIGH)
 
         # Send back an ACK.
