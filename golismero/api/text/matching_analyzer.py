@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-404 or not found pages analyzer.
+Text analyzer API
 """
 
 __license__ = """
@@ -129,31 +129,69 @@ class MatchingAnalyzer(object):
 
     Compares any number of texts from a base text and generates
     an iterator with those that are sufficiently different.
+
+    Example:
+
+    We want compare some texts with a base text, to know
+    if the non-base text are similars to the base text:
+
+    >>> from golismero.api.net.web_utils import download
+    >>> t_base    = "THIS IS A BASE TEXT IN UPPERCASE"
+    >>> t_other1  = "THIS A OTHER TEXT IN UPPERCASE"
+    >>> t_other2  = "this is a very different text, compared with base text"
+    >>> t_other3  = "BASE TEXT IN UPPERCASE"
+    >>>
+    >>> m_a = MatchingAnalyzer(t_base) # Set the base page
+    >>> m_a.append(t_other1, var2=4) # Compare and add one var
+    True
+    >>> m_a.append(t_other2)
+    False
+    >>> m_a.append(t_other3, other3_var="Other")
+    True
+    >>> for l_unique in m_a.unique_texts: # Get all similar texts
+        print l_unique
+
+    <MatchingAnalyzerElement instance at 0x910c0fcb0>
+    <MatchingAnalyzerElement instance at 0x198380290>
+
+    >>> for l_unique in m_a.unique_texts: # Get all similar texts
+        print dir(l_unique)
+
+     ['__doc__', '__init__', '__module__', 'var2']
+     ['__doc__', '__init__', '__module__', 'other3_var']
+
+
     """
 
 
     #--------------------------------------------------------------------------
     def __init__(self, base_text, matching_level = 0.52, deviation = 1.15):
+        if not isinstance(base_text, basestring):
+            raise TypeError("Expected basestring , got '%s'" % type(base_text))
+        if not isinstance(matching_level, float):
+            raise TypeError("Expected float, got '%s'" % type(matching_level))
+        if not isinstance(deviation, float):
+            raise TypeError("Expected float, got '%s'" % type(deviation))
 
-        self.__base_text = base_text
-        self.__unique_strings = []
-        self.__new_data = False
-        self.__average_level = 0.0
+        self.__base_text       = base_text
+        self.__unique_strings  = []
+        self.__new_data        = False
+        self.__average_level   = 0.0
 
         # Results
         self.__results_matching_level = {}
-        self.__results_other_args = {}
+        self.__results_other_args     = {}
 
         # Advanced values
         self.__matching_level = matching_level
-        self.__deviation = deviation
+        self.__deviation      = deviation
 
 
     #--------------------------------------------------------------------------
     @property
     def base_text(self):
         """
-        :returns: Base text for comparison.
+        :returns: Base text used for comparison.
         :rtype: str
         """
         return self.__base_text
@@ -162,13 +200,23 @@ class MatchingAnalyzer(object):
     #--------------------------------------------------------------------------
     def append(self, text, **kargs):
         """
-        If the matching level is accepted,
-        store it along with all the keyword arguments.
+        If the matching level of text var is sufficient similar
+        to the base_text, then, store the text, and anything vars as
+        **kargs associated with this text.
 
-        :param text: Text to compare.
+        Example:
+
+        >>> base_text = "MY BASE TEXT 1"
+        >>> ma = MatchingAnalyzer(base_text)
+        >>> ma.append("MY TEXT")
+        True
+        >>> ma.append("OTHER KIND of info")
+        False
+
+        :param text: Text to compare with te base text.
         :type text: str
 
-        :returns: True if the text is accepted, False otherwise.
+        :returns: True if the text is accepted as equal, False otherwise.
         :rtype: bool
         """
         if text:
@@ -187,13 +235,15 @@ class MatchingAnalyzer(object):
                 return True
             else:
                 return False
+        else:
+            return False
 
 
     #--------------------------------------------------------------------------
     @property
     def unique_texts(self):
         """
-        :returns: Iterable with unique texts.
+        :returns: Iterable with the similar texts.
         :rtype: iter(str)
         """
         if self.__new_data:
