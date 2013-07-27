@@ -111,7 +111,11 @@ def test_ptr():
 
 
 if __name__ == "__main__":
+    print
+    print "-" * 79
     test_all_registers()
     test_zone_transfer()
     test_a_aaaa()
     test_ptr()
+    print "-" * 79
+    print
