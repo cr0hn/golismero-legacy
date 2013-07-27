@@ -109,7 +109,7 @@ class ConsoleUIPlugin(UIPlugin):
 
                     #The counter
                     if m_progress:
-                        m_progress_txt = colorize("[%s/100]" % "{:2.2f}".format(m_progress*100.0), "white")
+                        m_progress_txt = colorize("[%s%%]" % "{:2.2f}".format(m_progress*100.0), "white")
                     else:
                         m_progress_txt = colorize("[U]", "white")
 
@@ -122,15 +122,15 @@ class ConsoleUIPlugin(UIPlugin):
 
             # Show log messages
             # (The verbosity is sent by Logger)
-            #if message.message_code == MessageCode.MSG_CONTROL_LOG:
-                #(text, level, is_error) = message.message_info
-                #if Console.level >= level:
-                    #text = colorize(text, 'middle')
-                    #text = "[*] %s" % text
-                    #if is_error:
-                        #Console.display_error(text)
-                    #else:
-                        #Console.display(text)
+            if message.message_code == MessageCode.MSG_CONTROL_LOG:
+                (text, level, is_error) = message.message_info
+                if Console.level >= level:
+                    text = colorize(text, 'middle')
+                    text = "[*] %s" % text
+                    if is_error:
+                        Console.display_error(text)
+                    else:
+                        Console.display(text)
 
             # Show plugin errors
             # (Only the description in standard level,
