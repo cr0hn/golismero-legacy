@@ -43,12 +43,12 @@ from diff_match_patch import diff_match_patch
 
 def get_matching_level(text1, text2):
     """
-    Compare two text and return a value between 0.0 and 1.0 with the level of
-    difference. 0.0 is lowest (absolutely different) and 1.0 the highest
+    Compare two texts and return a value between 0.0 and 1.0 with the level of
+    difference where 0.0 is lowest (absolutely different) and 1.0 the highest
     (absolutely equal).
 
-    - If text1 is more similar to text2, value will be near to 100.
-    - If text1 is more different to text2, value will be near to 0.
+    - If text1 is more similar to text2, value will be near 100.0.
+    - If text1 is more different to text2, value will be near 0.0.
 
     :param text1: First text to compare.
     :type text1: str
@@ -63,6 +63,11 @@ def get_matching_level(text1, text2):
         text1 = ""
     if not text2:
         text2 = ""
+
+    if not isinstance(text1, basestring):
+        raise TypeError("Expected string , got %s instead" % type(text1))
+    if not isinstance(text2, basestring):
+        raise TypeError("Expected string , got %s instead" % type(text2))
 
     if text1 == text2:
         return 1.0
@@ -159,19 +164,19 @@ class MatchingAnalyzer(object):
 
      ['__doc__', '__init__', '__module__', 'var2']
      ['__doc__', '__init__', '__module__', 'other3_var']
-
-
     """
 
 
     #--------------------------------------------------------------------------
     def __init__(self, base_text, matching_level = 0.52, deviation = 1.15):
+        if not base_text:
+            raise ValueError("Base text cannot be empty")
         if not isinstance(base_text, basestring):
-            raise TypeError("Expected basestring , got '%s'" % type(base_text))
+            raise TypeError("Expected string , got %s instead" % type(base_text))
         if not isinstance(matching_level, float):
-            raise TypeError("Expected float, got '%s'" % type(matching_level))
+            raise TypeError("Expected float, got %s instead" % type(matching_level))
         if not isinstance(deviation, float):
-            raise TypeError("Expected float, got '%s'" % type(deviation))
+            raise TypeError("Expected float, got %s instead" % type(deviation))
 
         self.__base_text       = base_text
         self.__unique_strings  = []
@@ -213,7 +218,7 @@ class MatchingAnalyzer(object):
         >>> ma.append("OTHER KIND of info")
         False
 
-        :param text: Text to compare with te base text.
+        :param text: Text to compare with the base text.
         :type text: str
 
         :returns: True if the text is accepted as equal, False otherwise.

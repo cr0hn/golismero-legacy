@@ -474,14 +474,14 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
 
     updater_func(step=i, total=total_urls, text="trying to discover URL %s" % url)
 
-    # Ge URL
+    # Get URL
     p = None
     try:
         p = HTTP.get_url(url, use_cache=False, method=method)
         if p:
             discard_data(p)
-    except NetworkException,e:
-        Logger.log_more_verbose("value error while processing: '%s'. Error: %s" % (url, e.message))
+    except Exception, e:
+        Logger.log_more_verbose("Error while processing: '%s': %s" % (url, e.message))
 
     # Check if the url is acceptable by comparing
     # the result content.
@@ -494,9 +494,12 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
 
         # If the method used to get URL was HEAD, get complete URL
         if method != "GET":
-            p = HTTP.get_url(url, use_cache=False, method="GET")
-            if p:
-                discard_data(p)
+            try:
+                p = HTTP.get_url(url, use_cache=False, method="GET")
+                if p:
+                    discard_data(p)
+            except Exception, e:
+                Logger.log_more_verbose("Error while processing: '%s': %s" % (url, e.message))
 
         # Append for analyze and display info if is accepted
         if matcher.append(p.raw_response,url=url,risk = risk_level):
