@@ -80,15 +80,16 @@ class OpenVas(TestingPlugin):
         m_profile   = "empty"
         #---------------- XXX DEBUG -----------------
 
-        # Configure the scanner.
-        m_scanner   = VulnscanManager.connectOpenVas(m_host,
-                                                     m_user,
-                                                     m_password)
+        # Connect to the scanner.
+        m_scanner = VulnscanManager(m_host, m_user, m_password)
+
         # Launch the scanner.
-        m_scan_id = m_scanner.launch_scan(m_target,
-                                          profile=m_profile,
-                                          callback_end=partial(lambda x: x.release(), m_sem),
-                                          callback_progress=partial(self.update_status_step, text="openvas status scan"))
+        m_scan_id = m_scanner.launch_scan(
+            m_target,
+            profile = m_profile,
+            callback_end = partial(lambda x: x.release(), m_sem),
+            callback_progress = partial(self.update_status_step, text="openvas status scan")
+        )
 
         try:
 
