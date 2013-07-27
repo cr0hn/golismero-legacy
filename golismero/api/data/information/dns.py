@@ -1715,8 +1715,8 @@ class DnsRegisterRRSIG(DNSRegisterAlgorithm):
         :param expiration: signature expiration time
         :type expiration: long
 
-        :param interception:
-        :type interception:
+        :param interception: signature inception time
+        :type interception: long
 
         :param key_tag: the key tag.
         :type key_tag: int
@@ -1798,14 +1798,14 @@ class DnsRegisterRRSIG(DNSRegisterAlgorithm):
         return self.__expiration
 
 
-    ###----------------------------------------------------------------------
-    ##@identity
-    ##def interception(self):
-    ##    """
-    ##    :return:
-    ##    :rtype:
-    ##    """
-    ##    return self.__interception
+    #----------------------------------------------------------------------
+    @identity
+    def interception(self):
+        """
+        :return: signature inception time
+        :rtype: long
+        """
+        return self.__interception
 
 
     #----------------------------------------------------------------------
