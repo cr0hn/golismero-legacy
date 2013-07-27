@@ -49,69 +49,71 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["pmap"]
+__all__ = ["pmap", "setInterval", "TaskGroup", "WorkerPool"]
 
 from thread import get_ident
 from threading import RLock, Semaphore, Thread, Event, Timer
 
 
 #------------------------------------------------------------------------------
-#
-#
-# This function was taken from: http://stackoverflow.com/q/5179467
-#
-#
 def setInterval(interval, times = -1):
     """
-    This is a decorator for periodically executen a function.
+    This is a decorator to execute a function periodically using a timer.
+    The function is executed in a background thread.
 
     Example:
 
-    >>> from golismero.api.parallel import setInterval
-    >>> from time import gmtime, strftime
-    >>> @setInterval(2) # Execute each 2 seconds
-        def my_func()
-          print strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        >>> from golismero.api.parallel import setInterval
+        >>> from time import gmtime, strftime
+        >>> @setInterval(2) # Execute every 2 seconds until stopped.
+        ... def my_func()
+        ...     print strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        ...
+        >>> handler = my_func()
+        2013-07-25 22:40:55
+        2013-07-25 22:40:57
+        2013-07-25 22:40:59
+        2013-07-25 22:41:01
+        >>> handler.set() # Stop the execution.
+        >>> @setInterval(2, 3) # Every 2 seconds, 3 times.
+        ... def my_func()
+        ...     print strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        ...
+        >>> handler = my_func()
+        2013-07-25 22:40:55
+        2013-07-25 22:40:57
+        2013-07-25 22:40:59
 
-    >>> handler = my_func()
-    2013-07-25 22:40:55
-    2013-07-25 22:40:57
-    2013-07-25 22:40:59
-    2013-07-25 22:41:01
-
-    >>> handler.set() # Stop the execution
-    >>>
-    >>> @setInterval(2, 3) # Each 2 seconds. 3 times.
-        def my_func()
-           print strftime("%Y-%m-%d %H:%M:%S", gmtime())
-
-    >>> handler = my_func()
-    2013-07-25 22:40:55
-    2013-07-25 22:40:57
-    2013-07-25 22:40:59
-
-
-    :param: interval: time, in seconds, how often the function is executed.
+    :param: interval: Interval in seconds of how often the function will be
+                      executed.
     :type interval: float | int
 
-    :param times: maximun number of times the function will be executed.
+    :param times: Maximum number of times the function will be executed.
+                  Negative values cause the function to be executed until
+                  manually stopped, or until the process dies.
     :type times: int
     """
+
+    # Validate the parameters.
     if isinstance(interval, int):
         interval = float(interval)
     elif not isinstance(interval, float):
-        raise TypeError("Expected int or float, got '%s'" % type(interval))
+        raise TypeError("Expected int or float, got %s instead" % type(interval))
     if not isinstance(times, int):
-        raise TypeError("Expected int, got '%s'" % type(times))
+        raise TypeError("Expected int, got %s instead" % type(times))
 
-
+    # Code adapted from: http://stackoverflow.com/q/5179467
 
     # This will be the actual decorator,
     # with fixed interval and times parameter
     def outer_wrap(function):
+        if not callable(function):
+            raise TypeError("Expected function, got %s instead" % type(function))
+
         # This will be the function to be
         # called
         def wrap(*args, **kwargs):
+
             stop = Event()
 
             # This is another function to be executed
@@ -126,8 +128,11 @@ def setInterval(interval, times = -1):
             t = Timer(0, inner_wrap)
             t.daemon = True
             t.start()
+
             return stop
+
         return wrap
+
     return outer_wrap
 
 
@@ -231,7 +236,7 @@ def pmap(func, *args, **kwargs):
     try:
 
         # Add the task and get the returned values.
-        m_pool.add_task(m_task_group)
+        m_pool.add_task_group(m_task_group)
 
         # Wait for the tasks to end.
         m_pool.join_tasks()
@@ -714,7 +719,7 @@ class WorkerPool(Thread):
 
 
     #--------------------------------------------------------------------------
-    def add_task(self, task_group):
+    def add_task_group(self, task_group):
         """
         Add a task group to the pool for execution.
 
