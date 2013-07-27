@@ -33,7 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.config import Config
 from golismero.api.data.resource.ip import IP
 from golismero.api.plugin import TestingPlugin
-from threading import Semaphore
+
+from threading import Event
 from functools import partial
 
 # Import the OpenVAS libraries from the plugin data folder.
@@ -55,21 +56,39 @@ class OpenVas(TestingPlugin):
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [IP]
+
+        # Disable the plugin if the password is not set.
+        if "password" in Config.plugin_config:
+            return [IP]
+        return []
 
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
         # Synchronization object to wait for completion.
-        # XXX FIXME this should be an event, not a semaphore
-        m_sem = Semaphore(0)
+        m_event = Event()
 
         # Get the config.
-        m_user      = Config.plugin_config["user"]
-        m_password  = Config.plugin_config["password"]
-        m_host      = Config.plugin_config["host"]
-        m_profile   = Config.plugin_config["profile"]
+        m_user      = Config.plugin_config.get("user", "admin")
+        m_password  = Config.plugin_config.get["password"]
+        m_host      = Config.plugin_config.get("host", "127.0.0.1")
+        m_port      = Config.plugin_config.get("port", "9390")
+        m_timeout   = Config.plugin_config.get("timeout", "30")
+        m_profile   = Config.plugin_config.get("profile", "Full and fast")
+
+        # Sanitize the port and timeout.
+        try:
+            m_port = int(m_port)
+        except Exception:
+            m_port = 9390
+        if m_timeout.lower().strip() in ("inf", "infinite", "none"):
+            m_timeout = None
+        else:
+            try:
+                m_timeout = int(m_timeout)
+            except Exception:
+                m_timeout = None
 
         # Get the target address.
         m_target    = info.address
@@ -81,20 +100,20 @@ class OpenVas(TestingPlugin):
         #---------------- XXX DEBUG -----------------
 
         # Connect to the scanner.
-        m_scanner = VulnscanManager(m_host, m_user, m_password)
+        m_scanner = VulnscanManager(m_host, m_user, m_password, m_port, m_timeout)
 
         # Launch the scanner.
         m_scan_id = m_scanner.launch_scan(
             m_target,
             profile = m_profile,
-            callback_end = partial(lambda x: x.release(), m_sem),
+            callback_end = partial(lambda x: x.set(), m_event),
             callback_progress = partial(self.update_status_step, text="openvas status scan")
         )
 
         try:
 
             # Wait for completion.
-            m_sem.acquire()
+            m_event.wait()
 
             # Get the scan results.
             m_openvas_results = m_scanner.get_results(m_scan_id)

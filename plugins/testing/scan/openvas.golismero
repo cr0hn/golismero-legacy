@@ -10,8 +10,12 @@ Website = https://github.com/cr0hn/golismero/
 Copyright = Copyright (C) 2011-2013 GoLismero Project
 License = GNU Public License
 
-[Defaults]
-user     = admin
-password = admin
-host     = 127.0.0.1
-profile  = Full and fast
+[Configuration]
+
+# Example configuration
+# profile  = Full and fast
+# user     = admin
+# password = admin
+# host     = 127.0.0.1
+# port     = 9390
+# timeout  = 30
