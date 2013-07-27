@@ -130,7 +130,7 @@ class _NetworkCache(Singleton):
 
 
     #----------------------------------------------------------------------
-    def remove(self, audit, key, protocol):
+    def remove(self, key, protocol):
         """
         Remove a network resource from the cache.
 

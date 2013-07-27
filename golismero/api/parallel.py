@@ -612,7 +612,7 @@ class WorkerPool(Thread):
         add2 = self.__all_workers.add
         callback = self._worker_thread_finished
         GT = WorkerThread
-        for l_p in xrange(pool_size):
+        for _ in xrange(pool_size):
             l_thread = GT()
             l_thread._callback = callback
             add1(l_thread)
