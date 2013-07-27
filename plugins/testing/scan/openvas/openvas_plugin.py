@@ -56,11 +56,7 @@ class OpenVas(TestingPlugin):
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
-
-        # Disable the plugin if the password is not set.
-        if "password" in Config.plugin_config:
-            return [IP]
-        return []
+        return [IP]
 
 
     #----------------------------------------------------------------------
@@ -71,7 +67,7 @@ class OpenVas(TestingPlugin):
 
         # Get the config.
         m_user      = Config.plugin_config.get("user", "admin")
-        m_password  = Config.plugin_config.get["password"]
+        m_password  = Config.plugin_config.get("password", "admin")
         m_host      = Config.plugin_config.get("host", "127.0.0.1")
         m_port      = Config.plugin_config.get("port", "9390")
         m_timeout   = Config.plugin_config.get("timeout", "30")
