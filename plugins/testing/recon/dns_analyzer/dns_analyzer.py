@@ -65,10 +65,9 @@ class DNSAnalizer(TestingPlugin):
     def recv_info(self, info):
 
         m_domain = info.hostname
-
-        # Checks if the hostname has been already processed
         m_return = None
 
+        # Checks if the hostname has been already processed
         if not self.state.check(m_domain):
 
             self.update_status("starting DNS analyzer plugin")
@@ -91,6 +90,7 @@ class DNSAnalizer(TestingPlugin):
             self.update_status("Ending DNS analyzer plugin. Found %s registers" % str(len(m_return)))
 
         return m_return
+
 
 #--------------------------------------------------------------------------
 #
@@ -212,7 +212,7 @@ class DNSBruteforcer(TestingPlugin):
             # The results
             m_domains                  = set()
             m_domains_add              = m_domains.add
-            m_domains_allready         = []
+            m_domains_already          = []
 
             m_ips                      = set()
             m_ips_add                  = m_ips.add
@@ -224,8 +224,8 @@ class DNSBruteforcer(TestingPlugin):
                     for dom in doms:
                         # Domains
                         if dom.type == "CNAME":
-                            if not dom.target in m_domains_allready:
-                                m_domains_allready.append(dom.target)
+                            if not dom.target in m_domains_already:
+                                m_domains_already_append(dom.target)
                                 if dom.target in Config.audit_scope:
                                     m_domains_add(dom)
                                 else:

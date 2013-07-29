@@ -332,15 +332,12 @@ class AdvancedListWordlist(AbstractWordlist):
         """
 
         if not wordlist:
-            raise ValueError("Get empty wordlist")
+            raise ValueError("Got empty wordlist")
 
-        m_tmp_wordlist = None
         try:
-            m_tmp_wordlist = wordlist.readlines()
+            self.__wordlist = list( SimpleWordList(wordlist) )
         except IOError, e:
-            raise IOError("Error when trying to open wordlist. Error: %s" + str(e))
-
-        self.__wordlist   = [w.replace("\n","") for w in m_tmp_wordlist]
+            raise IOError("Error when trying to open wordlist: %s" + str(e))
 
 
     #----------------------------------------------------------------------
