@@ -316,7 +316,7 @@ class Plugin (object):
                 m_step    = float(step)
                 m_partial = float(partial)
                 if 0.0 < m_partial <= 100.0:
-                    m_progress = (m_step/m_total) * (m_partial/100.0)
+                    m_progress = (m_step/m_total) * (m_partial)
                 else:
                     raise ValueError("partial value must be in range: [0, 100]")
 
