@@ -59,15 +59,12 @@ class DefaultErrorPagePlugin(TestingPlugin):
                 # Look for a match.
                 page_text = response.data
 
-                # Info for control the state
-                i        = 1
-                data_len = float(len(signatures))
-
-                for server_name, server_page in signatures.iteritems():
+                total = float(len(signatures))
+                for step, (server_name, server_page) in enumerate(signatures.iteritems()):
 
                     # Update status
-                    self.update_status_step(step=i, total=data_len)
-                    i += 1
+                    progress = float(step) / total
+                    self.update_status(progress=progress)
 
                     level = get_matching_level(page_text, server_page)
 
