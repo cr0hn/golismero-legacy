@@ -38,6 +38,8 @@ from golismero.api.data.resource.email import Email
 from golismero.api.logger import Logger
 from golismero.api.plugin import TestingPlugin
 
+import imp
+import functools
 import os, os.path
 import socket
 import StringIO
@@ -50,8 +52,9 @@ cwd = os.path.abspath(os.path.split(__file__)[0])
 cwd = os.path.join(cwd, "theharvester")
 sys.path.insert(0, cwd)
 try:
+    import lib
     import discovery
-    from discovery import *   # noqa
+    from discovery import *
 finally:
     sys.path.remove(cwd)
 del cwd
@@ -86,40 +89,26 @@ class HarvesterPlugin(TestingPlugin):
         except ValueError:
             pass
 
-
-        # Var used to update status
-        m_data_len = len(self.SUPPORTED)
-
         # Search every supported engine.
         all_emails, all_hosts = set(), set()
-        for i, engine in enumerate(self.SUPPORTED, start=1):
+        for engine in self.SUPPORTED:
             try:
                 emails, hosts = self.search(engine, word, limit)
-
-                # Update status
-                self.update_status_step(step=i, total=m_data_len, text="searching in %s for '%s'" % (engine, word), partial=60)
             except Exception, e:
                 t = traceback.format_exc()
                 m = "theHarvester raised an exception: %s\n%s"
                 warnings.warn(m % (e, t))
                 continue
-
             all_emails.update(address.lower() for address in emails if address)
             all_hosts.update(name.lower() for name in hosts if name)
 
         # Adapt the data into our model.
         results = []
 
-        # Used for status
-        m_data_len = len(all_emails)
-
         # Email addresses.
-        for i, address in enumerate(all_emails, start=1):
+        for address in all_emails:
             try:
                 data = Email(address)
-
-                # Update status
-                self.update_status_step(step=i, total=m_data_len, text="processing mail '%s'" % address, partial=20)
             except Exception, e:
                 warnings.warn("Cannot parse email address: %r" % address)
                 continue
@@ -144,13 +133,7 @@ class HarvesterPlugin(TestingPlugin):
             all_names.add(name)
             all_names.add(real_name)
             all_names.update(aliaslist)
-
-            # For update the status
-            m_data_len = len(all_names)
-            for i, name in enumerate(all_names, start=1):
-                # Update status
-                self.update_status_step(step=i, total=m_data_len, text="processing hostname '%s'" % name, partial=20)
-
+            for name in all_names:
                 if name:
                     if name not in Config.audit_scope:
                         Logger.log_more_verbose("Hostname out of scope: %s" % name)
