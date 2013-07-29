@@ -33,7 +33,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["ReportManager"]
 
 from ..api.logger import Logger
-from .pluginmanager import PluginManager
 
 from traceback import format_exc
 
@@ -46,27 +45,27 @@ class ReportManager (object):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, config, orchestrator):
+    def __init__(self, orchestrator, audit):
         """
-        :param config: Audit configuration.
-        :type config: AuditConfig.
-
         :param orchestrator: Orchestrator instance.
         :type orchestrator: Orchestrator
+
+        :param audit: Audit instance.
+        :type audit: Audit
         """
 
         # Keep a reference to the audit configuration.
-        self.__config = config
+        self.__config = audit.config
 
         # Keep a reference to the Orchestrator.
         self.__orchestrator = orchestrator
 
         # Load the report plugins.
-        self.__plugins = PluginManager().load_plugins("report")
+        self.__plugins = audit.pluginManager.load_plugins("report")
 
         # Map report plugins to output files.
         self.__reporters = {}
-        for output_file in config.reports:
+        for output_file in self.__config.reports:
             if output_file in self.__reporters:
                 continue
             found = [name for name, plugin in self.__plugins.iteritems()
@@ -135,3 +134,14 @@ class ReportManager (object):
                 Logger.log_error_more_verbose(format_exc())
             count += 1
         return count
+
+
+    #----------------------------------------------------------------------
+    def close(self):
+        """
+        Release all resources held by this manager.
+        """
+        self.__config       = None
+        self.__orchestrator = None
+        self.__plugins      = None
+        self.__reporters    = None

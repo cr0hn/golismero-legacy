@@ -34,7 +34,7 @@ __all__ = ["PluginManager", "PluginInfo"]
 
 from ..api.config import Config
 from ..api.plugin import UIPlugin, ImportPlugin, TestingPlugin, ReportPlugin
-from ..common import Singleton, Configuration
+from ..common import Configuration, OrchestratorConfig, AuditConfig
 
 from os import path, walk
 from keyword import iskeyword
@@ -44,6 +44,12 @@ from ConfigParser import RawConfigParser
 import re
 import imp
 import warnings
+
+
+#----------------------------------------------------------------------
+# Helpers for instance creation without calling __init__().
+class _EmptyNewStyleClass (object):
+    pass
 
 
 #----------------------------------------------------------------------
@@ -79,8 +85,8 @@ class PluginInfo (object):
     @property
     def stage(self):
         """
-        :returns: Plugin stage.
-        :rtype: str
+        :returns: Plugin stage number.
+        :rtype: int
         """
         return self.__stage
 
@@ -190,7 +196,7 @@ class PluginInfo (object):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, plugin_name, descriptor_file):
+    def __init__(self, plugin_name, descriptor_file, global_config):
         """
         Load a plugin descriptor file.
 
@@ -241,16 +247,16 @@ class PluginInfo (object):
         if not stage:
             try:
                 subcategory  = plugin_name.split("/")[1].lower()
-                self.__stage = PluginManager.STAGES[subcategory]
+                self.__stage = self.STAGES[subcategory]
             except Exception:
                 self.__stage = 1
         else:
             try:
-                self.__stage = PluginManager.STAGES[stage.lower()]
+                self.__stage = self.STAGES[stage.lower()]
             except KeyError:
                 try:
                     self.__stage = int(stage)
-                    if self.__stage not in PluginManager.STAGES.values():
+                    if self.__stage not in self.STAGES.values():
                         raise ValueError()
                 except Exception:
                     msg = "Error parsing %r: invalid execution stage: %r"
@@ -328,12 +334,8 @@ class PluginInfo (object):
             self.__plugin_config = dict()
 
         # Override the plugin configuration from the global config file(s).
-        if (Config._has_context and
-            Config.audit_config and
-            not Config.plugin_info
-        ):
-            self.__read_config_file(Config.audit_config.config_file)
-            self.__read_config_file(Config.audit_config.profile_file)
+        self.__read_config_file(global_config.config_file)
+        self.__read_config_file(global_config.profile_file)
 
         # Load the plugin extra configuration sections as a dict of dicts.
         # All sections not parsed above will be included here.
@@ -342,6 +344,67 @@ class PluginInfo (object):
             if section not in ("Core", "Documentation", "Configuration"):
                 options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
                 self.__plugin_extra_config[section] = options
+
+
+    #----------------------------------------------------------------------
+    def __copy__(self):
+        raise NotImplementedError("Only deep copies, please!")
+
+
+    #----------------------------------------------------------------------
+    def __deepcopy__(self):
+
+        # Create a new empty object.
+        instance = _EmptyNewStyleClass()
+        instance.__class__ = self.__class__
+
+        # Copy the properties.
+        instance.__plugin_name         = self.__plugin_name
+        instance.__descriptor_file     = self.__descriptor_file
+        instance.__display_name        = self.__display_name
+        instance.__stage               = self.__stage
+        instance.__recursive           = self.__recursive
+        instance.__plugin_module       = self.__plugin_module
+        instance.__plugin_class        = self.__plugin_class
+        instance.__dependencies        = self.__dependencies
+        instance.__description         = self.__description
+        instance.__version             = self.__version
+        instance.__author              = self.__author
+        instance.__copyright           = self.__copyright
+        instance.__license             = self.__license
+        instance.__website             = self.__website
+        instance.__plugin_config       = self.__plugin_config.copy()
+        instance.__plugin_extra_config = {
+            k: v.copy()
+            for (k, v) in self.__plugin_extra_config.iteritems()
+        }
+
+        # Return the new instance.
+        return instance
+
+
+    #----------------------------------------------------------------------
+    def customize_for_audit(self, audit_config):
+        """
+        Return a new PluginInfo instance with its configuration overriden
+        by the audit settings.
+
+        :param audit_config: Audit settings.
+        :type audit_config: AuditConfig
+
+        :returns: New, customized PluginInfo instance.
+        :rtype: PluginInfo
+        """
+
+        # Check the argument type.
+        if not isinstance(audit_config, AuditConfig):
+            raise TypeError("Expected AuditConfig, got %s instead" % type(audit_config))
+
+        # Make a customized copy and return it.
+        new_instance = self.__deepcopy__()
+        new_instance.__read_config_file(audit_config.config_file)
+        new_instance.__read_config_file(audit_config.profile_file)
+        return new_instance
 
 
     #----------------------------------------------------------------------
@@ -373,7 +436,7 @@ class PluginInfo (object):
 
 
 #----------------------------------------------------------------------
-class PluginManager (Singleton):
+class PluginManager (object):
     """
     Plugin Manager.
     """
@@ -404,14 +467,6 @@ class PluginManager (Singleton):
 
     #----------------------------------------------------------------------
     def __init__(self):
-        self.reset()
-
-
-    #--------------------------------------------------------------------------
-    def reset(self):
-        """
-        Reset the state of the plugin manager.
-        """
 
         # Dictionary to collect the info for each plugin found
         self.__plugins = {}    # plugin name -> plugin info
@@ -419,13 +474,9 @@ class PluginManager (Singleton):
         # Dictionary to cache the plugin instances
         self.__cache = {}
 
-        # Batches and stages of plugins (see calculate_dependencies)
-        self.__batches = None   # list
-        self.__stages  = None   # dict
-
 
     #----------------------------------------------------------------------
-    def find_plugins(self, plugins_folder = None, category = "all"):
+    def find_plugins(self, orchestrator_config):
         """
         Find plugins in the given folder.
 
@@ -436,33 +487,39 @@ class PluginManager (Singleton):
         The code for each plugin must be in a Python script within the same
         folder as the ".golismero" file, or within any subdirectory of it.
 
-        :param plugins_folder: Folder where to look for plugins.
-        :type plugins_folder: str
-
-        :param category: Category. Use "all" to get plugins from all categories.
-        :type category: str
+        :param orchestrator_config: Orchestrator settings.
+        :type orchestrator_config: OrchestratorConfig
 
         :returns: A list of plugins loaded, and a list of plugins that failed to load.
         :rtype: tuple(list(str), list(str))
         """
 
-        # Make sure the category is lowercase.
-        category = category.lower()
+        # XXX FIXME: this forces the plugin folder structure, but
+        # we should be able to parse the categories from the config
+        # file instead if the user wants to store all plugins together.
 
-        # Make sure the category exists, otherwise raise an exception.
-        if category != "all" and category not in self.CATEGORIES:
-            raise KeyError("Unknown plugin category: %r" % category)
+        # Check the argument type.
+        if not isinstance(orchestrator_config, OrchestratorConfig):
+            raise TypeError("Expected OrchestratorConfig, got %s instead" % type(orchestrator_config))
+
+        # Get the plugins folder.
+        plugins_folder = orchestrator_config.plugins_folder
 
         # Default plugins folder if not given.
         if not plugins_folder:
             plugins_folder = path.join(path.split(__file__)[0], "..", "..", "plugins")
+            plugins_folder = path.abspath(plugins_folder)
 
         # Make sure the plugins folder is an absolute path.
         plugins_folder = path.abspath(plugins_folder)
 
         # Raise an exception if the plugins folder doesn't exist or isn't a folder.
         if not path.isdir(plugins_folder):
-            raise ValueError("Invalid plugin folder: %s" % plugins_folder)
+            raise ValueError("Invalid plugins folder: %s" % plugins_folder)
+
+        # Update the Orchestrator config if needed.
+        if orchestrator_config.plugins_folder != plugins_folder:
+            orchestrator_config.plugins_folder = plugins_folder
 
         # List to collect the plugins that loaded successfully.
         success = list()
@@ -472,10 +529,6 @@ class PluginManager (Singleton):
 
         # The first directory level is the category.
         for current_category, _ in self.CATEGORIES.iteritems():
-
-            # Skip if filtering this category.
-            if category != "all" and category != current_category:
-                continue
 
             # Get the folder for this category.
             category_folder = path.join(plugins_folder, current_category)
@@ -511,7 +564,7 @@ class PluginManager (Singleton):
 
                     # Parse the plugin descriptor file.
                     try:
-                        plugin_info = PluginInfo(plugin_name, fname)
+                        plugin_info = PluginInfo(plugin_name, fname, orchestrator_config)
 
                         # Collect the plugin info.
                         self.__plugins[plugin_name] = plugin_info
@@ -524,6 +577,7 @@ class PluginManager (Singleton):
                         warnings.warn("Failure while loading plugins: %s" % e)
                         failure.append(plugin_name)
 
+        # Return the successes and failures.
         return success, failure
 
 
@@ -532,13 +586,15 @@ class PluginManager (Singleton):
         """
         Get info on the available plugins, optionally filtering by category.
 
-        :param category: Category. Use "all" to get plugins from all categories.
+        :param category: Category or stage.
+            Use "all" to get plugins from all categories.
+            Use "testing" to get all testing plugins for all stages.
         :type category: str
 
         :returns: Mapping of plugin names to instances of PluginInfo.
         :rtype: dict(str -> PluginInfo)
 
-        :raises KeyError: The requested category doesn't exist.
+        :raises KeyError: The requested category or stage doesn't exist.
         """
 
         # Make sure the category is lowercase.
@@ -548,15 +604,21 @@ class PluginManager (Singleton):
         if category == "all":
             return self.__plugins.copy()
 
-        # Make sure the category exists, otherwise raise an exception.
-        if category not in self.CATEGORIES:
-            raise KeyError("Unknown plugin category: %r" % category)
+        # If it's a category, get only the plugins that match the category.
+        if category in self.CATEGORIES:
+            return { plugin_name: plugin_info
+                     for plugin_name, plugin_info in self.__plugins.iteritems()
+                     if plugin_info.category == category }
 
-        # Get only the plugins that match the category.
-        category = category + "/"
-        return { plugin_name: plugin_info
-                 for plugin_name, plugin_info in self.__plugins.iteritems()
-                 if plugin_name.startswith(category) }
+        # If it's a stage, get only the plugins that match the stage.
+        if category in self.STAGES:
+            stage_num = self.STAGES[category]
+            return { plugin_name
+                     for plugin_name, plugin_info in self.__plugins.iteritems()
+                     if plugin_info.stage == stage_num }
+
+        # If it's neither, it's an error.
+        raise KeyError("Unknown plugin category or stage: %r" % category)
 
 
     #----------------------------------------------------------------------
@@ -564,34 +626,17 @@ class PluginManager (Singleton):
         """
         Get the names of the available plugins, optionally filtering by category.
 
-        :param category: Category. Use "all" to get plugins from all categories.
+        :param category: Category or stage.
+            Use "all" to get plugins from all categories.
+            Use "testing" to get all testing plugins for all stages.
         :type category: str
 
         :returns: Plugin names.
         :rtype: set(str)
 
-        :raises KeyError: The requested category doesn't exist.
+        :raises KeyError: The requested category or stage doesn't exist.
         """
-        return set(self.get_plugins(category).keys())
-
-
-    #----------------------------------------------------------------------
-    def get_plugin_names_for_stage(self, stage):
-        """
-        Get the names of the available plugins, filtering by stage.
-
-        :param stage: Stage.
-        :type stage: str
-
-        :returns: Plugin names.
-        :rtype: set(str)
-
-        :raises KeyError: The requested stage doesn't exist.
-        """
-        stage_num = self.STAGES[stage]
-        return { plugin_name
-                 for plugin_name, plugin_info in self.__plugins.iteritems()
-                 if plugin_info.stage == stage_num }
+        return set(self.get_plugins(category).iterkeys())
 
 
     #----------------------------------------------------------------------
@@ -608,9 +653,12 @@ class PluginManager (Singleton):
         :raises KeyError: The requested plugin doesn't exist.
         """
         try:
-            return self.get_plugins()[plugin_name]
+            return self.__plugins[plugin_name]
         except KeyError:
             raise KeyError("Plugin not found: %r" % plugin_name)
+
+    # Alias.
+    __getitem__ = get_plugin_by_name
 
 
     #----------------------------------------------------------------------
@@ -630,147 +678,31 @@ class PluginManager (Singleton):
 
 
     #----------------------------------------------------------------------
-    def apply_black_and_white_lists(self, enabled_plugins = ("all",), disabled_plugins = ()):
-        """
-        Apply the black and white lists.
-
-        This removes all plugins that weren't approved by those lists from the manager.
-
-        :param enabled_plugins: List of enabled plugins, by name. Use "all" to enable all plugins (save those in disabled_plugins).
-        :type enabled_plugins: list
-
-        :param disabled_plugins: List of disabled plugins, by name. Use "all" to disable all plugins (save those in enabled_plugins).
-        :type disabled_plugins: list
-
-        :raises ValueError: The lists were incorrect or conflicting.
-        """
-
-        # Remove duplicates in black and white lists.
-        blacklist_approach = False
-        if "all" in enabled_plugins:
-            enabled_plugins    = {"all"}
-        if "all" in disabled_plugins:
-            disabled_plugins   = {"all"}
-            blacklist_approach = True
-        enabled_plugins  = set(enabled_plugins)
-        disabled_plugins = set(disabled_plugins)
-
-        # Check for consistency in black and white lists.
-        conflicting_entries = enabled_plugins.intersection(disabled_plugins)
-        if conflicting_entries:
-            if len(conflicting_entries) > 1:
-                msg = "The same entries are present in both black and white lists: %s"
-                msg %= ", ".join(conflicting_entries)
-            else:
-                msg = "The same entry (%s) is present in both black and white lists"
-                msg %= conflicting_entries.pop()
-            raise ValueError(msg)
-
-        # Expand the black and white lists.
-        disabled_plugins = self.__expand_plugin_list(disabled_plugins, "blacklist")
-        enabled_plugins  = self.__expand_plugin_list(enabled_plugins,  "whitelist")
-
-        # Apply the black and white lists.
-        plugins = self.get_plugin_names()
-        if blacklist_approach:
-            plugins.intersection_update(enabled_plugins) # use only enabled plugins
-        else:
-            plugins.difference_update(disabled_plugins)  # use all but disabled plugins
-
-        # The UI plugins cannot be disabled.
-        plugins.update(self.get_plugin_names("ui"))
-
-        # Remove all plugins except those approved.
-        self.__plugins = { plugin_name: plugin_info
-                           for plugin_name, plugin_info in self.__plugins.iteritems()
-                           if plugin_name in plugins }
-
-
-    #----------------------------------------------------------------------
-    def __expand_plugin_list(self, plugin_list, list_name):
-
-        # Convert "all" to the entire list of plugins.
-        if "all" in plugin_list:
-            plugin_list = self.get_plugin_names()
-        else:
-
-            # Convert categories to plugin names.
-            for category in self.CATEGORIES:
-                if category in plugin_list:
-                    plugin_list.remove(category)
-                    plugin_list.update(self.get_plugin_names(category))
-
-            # Convert stages to plugin names.
-            for stage in self.STAGES:
-                if stage in plugin_list:
-                    plugin_list.remove(stage)
-                    plugin_list.update(self.get_plugin_names_for_stage(stage))
-
-        # Guess partial plugin names in the list.
-        # Also make sure all the plugins in the list exist.
-        missing_plugins = set()
-        all_plugins = self.get_plugin_names()
-        for name in sorted(plugin_list):
-            if name not in all_plugins:
-                matching_plugins = set(self.search_plugins_by_name(name).keys())
-                if not matching_plugins:
-                    missing_plugins.add(name)
-                if len(matching_plugins) > 1:
-                    msg = ("Ambiguous entry in %s (%r)"
-                           " may refer to any of the following plugins: %s")
-                    msg %= (list_name, name, ", ".join(sorted(matching_plugins)))
-                    raise ValueError(msg)
-                plugin_list.remove(name)
-                plugin_list.update(matching_plugins)
-        if missing_plugins:
-            if len(missing_plugins) > 1:
-                msg = "Unknown plugins in %s: %s"
-                msg %= (list_name, ", ".join(sorted(missing_plugins)))
-            else:
-                msg = "Unknown plugin in %s: %s"
-                msg %= (list_name, missing_plugins.pop())
-            raise KeyError(msg)
-
-        # Return the expanded list.
-        return plugin_list
-
-
-    #----------------------------------------------------------------------
     def load_plugins(self, category = "all"):
         """
         Get info on the available plugins, optionally filtering by category.
 
-        :param category: Category. Use "all" to load plugins from all categories.
+        :param category: Category or stage.
+            Use "all" to get plugins from all categories.
+            Use "testing" to get all testing plugins for all stages.
         :type category: str
 
         :returns: Mapping of plugin names to Plugin instances.
         :rtype: dict(str -> Plugin)
 
-        :raises KeyError: The requested plugin or category doesn't exist.
+        :raises KeyError: The requested category or stage doesn't exist.
         :raises Exception: Plugins may throw exceptions if they fail to load.
         """
-
-        # Sanitize the category.
-        category = category.strip().lower()
-
-        # Make sure the category exists, otherwise raise an exception.
-        if category != "all" and category not in self.CATEGORIES:
-            raise KeyError("Unknown plugin category: %r" % category)
-
-        # Get the list of all plugins for the requested category.
-        plugins = self.get_plugin_names(category)
-
-        # Load each requested plugin.
-        return { name : self.load_plugin_by_name(name) for name in plugins }
+        return {
+            name : self.load_plugin_by_name(name)
+            for name in sorted( self.get_plugin_names(category) )
+        }
 
 
     #----------------------------------------------------------------------
     def load_plugin_by_name(self, name):
         """
         Load the requested plugin by name.
-
-        Plugins are only loaded once.
-        Subsequent calls to this method yield always the same Plugin instance.
 
         :param name: Name of the plugin to load.
         :type name: str
@@ -868,14 +800,313 @@ class PluginManager (Singleton):
         :type instance: Plugin
 
         :returns: tuple(str, PluginInfo) -- Plugin name and information.
+        :raises KeyError: Plugin instance not found.
         """
         for (name, value) in self.__cache.iteritems():
             if value is instance:
                 return (name, self.__plugins[name])
+        try:
+            r = repr(instance)
+        except Exception:
+            r = repr(id(instance))
+        raise KeyError("Plugin instance not found: " + r)
 
 
     #----------------------------------------------------------------------
-    def calculate_dependencies(self):
+    def get_plugin_manager_for_audit(self, audit):
+        """
+        Instance an audit-specific plugin manager.
+
+        :param audit: Audit.
+        :type audit: Audit
+
+        :returns: Plugin manager for this audit.
+        :rtype: AuditPluginManager
+
+        :raises ValueError: Configuration error.
+        """
+        return AuditPluginManager(
+            self, audit.orchestrator.config, audit.config
+        )
+
+
+    #--------------------------------------------------------------------------
+    def close(self):
+        """
+        Release all resources held by this manager.
+        """
+        self.__plugins = None
+        self.__cache   = None
+
+
+#----------------------------------------------------------------------
+class AuditPluginManager (PluginManager):
+    """
+    Plugin manager for audits.
+    """
+
+
+    #----------------------------------------------------------------------
+    def __init__(self, pluginManager, orchestratorConfig, auditConfig):
+
+        # Superclass constructor.
+        super(AuditPluginManager, self).__init__()
+
+        # Keep a reference to the plugin manager of the orchestrator.
+        self.__pluginManager = pluginManager
+
+        # Batches and stages of plugins (see calculate_dependencies)
+        self.__batches = None   # list
+        self.__stages  = None   # dict
+
+        # Apply the plugin black and white lists, and all the overrides.
+        self._PluginManager__plugins = self.__apply_config(auditConfig)
+
+        # Calculate the dependencies.
+        self.__calculate_dependencies()
+
+
+    #----------------------------------------------------------------------
+
+    @property
+    def pluginManager(self):
+        """
+        :returns: Plugin manager.
+        :rtype: PluginManager
+        """
+        return self.__pluginManager
+
+
+    @property
+    def batches(self):
+        """
+        :returns: Plugin execution batches.
+        :rtype: list(set(str))
+        """
+        return self.__batches
+
+
+    @property
+    def stages(self):
+        """
+        :returns: Mapping of stage names to plugin names for each stage.
+        :rtype: dict(str -> set(str))
+        """
+        return self.__stages
+
+
+    #----------------------------------------------------------------------
+    def __apply_config(self, auditConfig):
+        """
+        Apply the black and white lists.
+        This controls which plugins are loaded and which aren't.
+
+        :param auditConfig: Audit configuration.
+        :type auditConfig: AuditConfig
+
+        :returns: Mapping of the approved plugin names to
+                  reconfigured instances of PluginInfo.
+        :rtype: dict(str -> PluginInfo)
+
+        :raises ValueError: Configuration error.
+        :raises KeyError: Configuration error.
+        """
+
+        # Check the argument type.
+        if not isinstance(auditConfig, AuditConfig):
+            raise TypeError("Expected AuditConfig, got %s instead" % type(auditConfig))
+
+        # Get the black and white lists and the plugin load overrides.
+        enabled_plugins       = auditConfig.enabled_plugins
+        disabled_plugins      = auditConfig.disabled_plugins
+        plugin_load_overrides = auditConfig.plugin_load_overrides
+
+        # Dumb check.
+        if not enabled_plugins and not disabled_plugins and not plugin_load_overrides:
+            raise ValueError("No plugins selected for audit!")
+
+        # Get all the plugin names.
+        all_plugins = self.pluginManager.get_plugin_names()
+        if not all_plugins:
+            raise SyntaxError("Internal error!")
+
+        # Remove duplicates in black and white lists.
+        blacklist_approach = False
+        if "all" in enabled_plugins:
+            enabled_plugins    = {"all"}
+        if "all" in disabled_plugins:
+            disabled_plugins   = {"all"}
+            blacklist_approach = True
+        enabled_plugins  = set(enabled_plugins)
+        disabled_plugins = set(disabled_plugins)
+
+        # Check for consistency in black and white lists.
+        conflicting_entries = enabled_plugins.intersection(disabled_plugins)
+        if conflicting_entries:
+            if len(conflicting_entries) > 1:
+                msg = "The same entries are present in both black and white lists: %s"
+                msg %= ", ".join(conflicting_entries)
+            else:
+                msg = "The same entry (%s) is present in both black and white lists"
+                msg %= conflicting_entries.pop()
+            raise ValueError(msg)
+
+        # Expand the black and white lists.
+        disabled_plugins = self.__expand_plugin_list(disabled_plugins, "blacklist")
+        enabled_plugins  = self.__expand_plugin_list(enabled_plugins,  "whitelist")
+
+        # Apply the black and white lists.
+        if blacklist_approach:
+            plugins = all_plugins.intersection(enabled_plugins) # use only enabled plugins
+        else:
+            plugins = all_plugins.difference(disabled_plugins)  # use all but disabled plugins
+
+        # Process the plugin load overrides.
+        # First, get the category (subcategory for "testing") of each one,
+        # and find out if there are only enables but no disables for a given category.
+        # Then for those, insert a disable command for the category before the first enable.
+        # For all commands, symbolic plugin names are replaced with sets of full IDs.
+        if plugin_load_overrides:
+            overrides = []
+            have_enables = {}
+            have_disables = {}
+            index = 0
+            for flag, token in plugin_load_overrides:
+                have_dict = have_enables if flag else have_disables
+                token = token.strip().lower()
+                if token in self.CATEGORIES:
+                    if token == "testing":
+                        for stage in self.STAGES:
+                            if stage not in have_dict:
+                                have_dict[stage] = index
+                            values = self.pluginManager.get_plugin_names(stage)
+                            overrides.append( (flag, values) )
+                        index += 1
+                        continue
+                    stage  = token
+                    values = self.pluginManager.get_plugin_names(token)
+                elif token in self.STAGES:
+                    stage  = token
+                    values = self.pluginManager.get_plugin_names(token)
+                elif token in all_plugins:
+                    values = (token,)
+                    info = self.pluginManager.get_plugin_by_name(token)
+                    if info.category == "testing":
+                        stage = info.stage
+                    else:
+                        stage = info.category
+                else:
+                    matching_plugins = self.pluginManager.search_plugins_by_name(token)
+                    if not matching_plugins:
+                        raise ValueError("Unknown plugin: %s" % token)
+                    if len(matching_plugins) > 1:
+                        msg = ("Ambiguous plugin name %r"
+                               " may refer to any of the following plugins: %s")
+                        msg %= (token, ", ".join(sorted(matching_plugins.iterkeys)))
+                        raise ValueError(msg)
+                    name, info = matching_plugins.items()[0]
+                    values = (name,)
+                    if info.category == "testing":
+                        stage = info.stage
+                    else:
+                        stage = info.category
+                if stage not in have_dict:
+                    have_dict[stage] = index
+                overrides.append( (flag, values) )
+                index += 1
+            only_enables = set(have_enables.iterkeys())
+            only_enables.difference_update(have_disables.iterkeys())
+            only_enables_idx = [ (have_enables[stage], stage) for stage in only_enables ]
+            only_enables_idx.sort()
+            for offset, (index, stage) in enumerate(only_enables_idx):
+                index  = have_enables[stage]
+                values = self.pluginManager.get_plugin_names(stage)
+                overrides.insert(index + offset, (False, values))
+
+            # Apply the processed plugin load overrides.
+            for enable, names in overrides:
+                if enable:
+                    plugins.update(names)
+                else:
+                    plugins.difference_update(names)
+
+        # The UI plugins cannot be disabled.
+        plugins.update( self.pluginManager.get_plugin_names("ui") )
+
+        # Return a customized copy of the approved plugins info.
+        return {
+            name: self.pluginManager[name].customize_for_audit(auditConfig)
+            for name in plugins
+        }
+
+
+    #----------------------------------------------------------------------
+    def __expand_plugin_list(self, plugin_list, list_name):
+        """
+        Expand aliases in a plugin black/white list.
+
+        :param plugin_list: Plugin black/white list.
+        :type plugin_list: set
+
+        :param list_name: Name of the list ("blacklist" or "whitelist").
+        :type list_name: str
+
+        :returns: Black/white list with expanded aliases.
+        :rtype: set
+
+        :raises ValueError: Configuration error.
+        :raises KeyError: Configuration error.
+        """
+
+        # Convert "all" to the entire list of plugins.
+        if "all" in plugin_list:
+            plugin_list = self.pluginManager.get_plugin_names()
+        else:
+
+            # Convert categories to plugin names.
+            for category in self.CATEGORIES:
+                if category in plugin_list:
+                    plugin_list.remove(category)
+                    plugin_list.update(self.pluginManager.get_plugin_names(category))
+
+            # Convert stages to plugin names.
+            for stage in self.STAGES:
+                if stage in plugin_list:
+                    plugin_list.remove(stage)
+                    plugin_list.update(self.pluginManager.get_plugin_names(stage))
+
+        # Guess partial plugin names in the list.
+        # Also make sure all the plugins in the list exist.
+        missing_plugins = set()
+        all_plugins = self.pluginManager.get_plugin_names()
+        for name in sorted(plugin_list):
+            if name not in all_plugins:
+                matching_plugins = set(self.pluginManager.search_plugins_by_name(name).keys())
+                if not matching_plugins:
+                    missing_plugins.add(name)
+                    continue
+                if len(matching_plugins) > 1:
+                    msg = ("Ambiguous entry in %s (%r)"
+                           " may refer to any of the following plugins: %s")
+                    msg %= (list_name, name, ", ".join(sorted(matching_plugins)))
+                    raise ValueError(msg)
+                plugin_list.remove(name)
+                plugin_list.update(matching_plugins)
+        if missing_plugins:
+            if len(missing_plugins) > 1:
+                msg = "Unknown plugins in %s: %s"
+                msg %= (list_name, ", ".join(sorted(missing_plugins)))
+            else:
+                msg = "Unknown plugin in %s: %s"
+                msg %= (list_name, missing_plugins.pop())
+            raise KeyError(msg)
+
+        # Return the expanded list.
+        return plugin_list
+
+
+    #----------------------------------------------------------------------
+    def __calculate_dependencies(self):
         """
         Generate a dependency graph for all plugins found, and calculate
         the batches of plugins that can be run concurrently.
@@ -962,18 +1193,49 @@ class PluginManager (Singleton):
 
 
     #----------------------------------------------------------------------
-    @property
-    def batches(self):
+    def find_plugins(self, plugins_folder = None):
         """
-        :returns: Plugin execution batches.
-        :rtype: list(set(str))
+        .. warning: This method is not available for audits.
         """
-        return self.__batches
+        raise NotImplementedError("Not available for audits!")
 
-    @property
-    def stages(self):
+
+    #----------------------------------------------------------------------
+    def get_plugin_manager_for_audit(self, audit):
         """
-        :returns: Mapping of stage names to plugin names for each stage.
-        :rtype: dict(str -> set(str))
+        .. warning: This method is not available for audits.
         """
-        return self.__stages
+        raise NotImplementedError("Not available for audits!")
+
+
+    #----------------------------------------------------------------------
+    def load_plugin_by_name(self, name):
+
+        # Get the plugin info. Fails if the plugin is disabled.
+        info = self.get_plugin_by_name(name)
+
+        # Make the global plugin manager load it, so we can share the cache.
+        instance = self.pluginManager.load_plugin_by_name(name)
+
+        # Fix the classname locally.
+        info._fix_classname(instance.__class__.__name__)
+
+        # Return the plugin instance.
+        return instance
+
+
+    #----------------------------------------------------------------------
+    def get_plugin_info_from_instance(self, instance):
+
+        # Cached by the global plugin manager.
+        return self.pluginManager.get_plugin_info_from_instance(instance)
+
+
+    #--------------------------------------------------------------------------
+    def close(self):
+        try:
+            super(AuditPluginManager, self).close()
+        finally:
+            self.__pluginManager = None
+            self.__batches       = None
+            self.__stages        = None

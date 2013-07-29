@@ -76,6 +76,17 @@ class Notifier (object):
 
 
     #----------------------------------------------------------------------
+    def close(self):
+        """
+        Release all resources held by this notifier.
+        """
+        self._notification_info_all = None
+        self._notification_info_map = None
+        self._notification_msg_list = None
+        self._map_name_to_plugin    = None
+
+
+    #----------------------------------------------------------------------
     def add_multiple_plugins(self, plugins):
         """
         Add multiple plugins.
@@ -310,7 +321,7 @@ class AuditNotifier(Notifier):
         :returns: Plugin manager.
         :rtype: PluginManager
         """
-        return self.__audit.orchestrator.pluginManager
+        return self.__audit.pluginManager
 
     @property
     def current_stage(self):
@@ -614,6 +625,16 @@ class AuditNotifier(Notifier):
         self.__run_plugin(plugin, "generate_report", output_file)
 
 
+    #----------------------------------------------------------------------
+    def close(self):
+        """
+        Release all resources held by this notifier.
+        """
+        self.__audit = None
+        self.__processing = None
+        super(AuditNotifier, self).close()
+
+
 #------------------------------------------------------------------------------
 #
 # Notifier for User Interface manager
@@ -720,3 +741,12 @@ class UINotifier(Notifier):
             ##msg = "Plugin %s raised an exception:\n%s"
             ##msg = msg % (plugin.__class__.__name__, format_exc())
             ##Logger.log_error(msg)
+
+
+    #----------------------------------------------------------------------
+    def close(self):
+        """
+        Release all resources held by this notifier.
+        """
+        self.__orchestrator = None
+        super(UINotifier, self).close()

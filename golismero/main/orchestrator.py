@@ -96,22 +96,17 @@ class Orchestrator (object):
 
         # Search for plugins.
         self.__pluginManager = PluginManager()
-        success, failure = self.__pluginManager.find_plugins(
-            self.__config.plugins_folder, category = "ui")
+        success, failure = self.pluginManager.find_plugins(self.__config)
         if not success:
-            raise RuntimeError("Failed to find any UI plugins!")
+            raise RuntimeError("Failed to find any plugins!")
 
         # Load the UI plugin.
+        ui_plugin_name = "ui/%s" % self.__config.ui_mode
         try:
-            self.__pluginManager.get_plugin_by_name("ui/%s" % self.__config.ui_mode)
+            self.pluginManager.get_plugin_by_name(ui_plugin_name)
         except KeyError:
             raise ValueError("No plugin found for UI mode: %r" % self.__config.ui_mode)
-        self.__pluginManager.load_plugin_by_name("ui/%s" % self.__config.ui_mode)
-
-        # Load the rest of the plugins.
-        for category in self.__pluginManager.CATEGORIES:
-            if category != "ui":
-                self.__pluginManager.load_plugins(category = category)
+        self.pluginManager.load_plugin_by_name(ui_plugin_name)
 
         # Within the Orchestrator process, keep a static reference to it.
         PluginContext._orchestrator = self
@@ -131,14 +126,14 @@ class Orchestrator (object):
         self.__rpcManager = RPCManager(self)
 
         # Process manager.
-        self.__processManager = ProcessManager(self, self.__config)
+        self.__processManager = ProcessManager(self)
         self.__processManager.start()
 
         # Audit manager.
-        self.__auditManager = AuditManager(self, self.__config)
+        self.__auditManager = AuditManager(self)
 
         # UI manager.
-        self.__ui = UIManager(self, self.__config)
+        self.__ui = UIManager(self)
 
         # Signal handler to catch Ctrl-C.
         self.__old_signal_action = signal(SIGINT, self.__control_c_handler)
@@ -385,13 +380,13 @@ class Orchestrator (object):
         :rtype: PluginContext
         """
 
-        # Get the plugin information.
-        info = self.__pluginManager.get_plugin_info_from_instance(plugin)[1]
-
         # Get the audit configuration and scope.
-        audit = self.__auditManager.get_audit(audit_name)
+        audit = self.auditManager.get_audit(audit_name)
         audit_config = audit.config
         audit_scope  = audit.scope
+
+        # Get the plugin information.
+        info = audit.pluginManager.get_plugin_info_from_instance(plugin)[1]
 
         # Return the context instance.
         return PluginContext(getpid(), self.__queue,
@@ -487,34 +482,56 @@ class Orchestrator (object):
         """
         Release all resources held by the Orchestrator.
         """
-
-        # Stop the process manager.
+        # This looks horrible, I know :(
         try:
-            self.processManager.stop()
-        except:
-            pass
+            try:
+                try:
+                    try:
+                        try:
+                            try:
 
-        # TODO: dump any pending messages and store the current state.
-        # See: http://stackoverflow.com/questions/1540822/dumping-a-multiprocessing-queue-into-a-list
+                                # Stop the process manager.
+                                self.processManager.stop()
 
-        # Stop the audit manager.
-        try:
-            self.auditManager.close()
-        except:
-            pass
+                            finally:
 
-        # Compact and close the cache database.
-        try:
-            self.cacheManager.compact()
-        except:
-            pass
-        try:
-            self.cacheManager.close()
-        except:
-            pass
+                                # TODO: dump any pending messages and store the current state.
+                                # See: http://stackoverflow.com/questions/1540822/dumping-a-multiprocessing-queue-into-a-list
+                                pass
 
-        # Reset the plugin manager.
-        self.pluginManager.reset()
+                        finally:
 
-        # Reset the execution context.
-        Config._context = None
+                            # Stop the audit manager.
+                            self.auditManager.close()
+
+                    finally:
+
+                        # Compact the cache database.
+                        self.cacheManager.compact()
+
+                finally:
+
+                    # Close the cache database.
+                    self.cacheManager.close()
+
+            finally:
+
+                # Close the plugin manager.
+                self.pluginManager.close()
+
+        finally:
+
+            # Reset the execution context.
+            Config._context = None
+
+            # Break circular references.
+            self.__auditManager   = None
+            self.__cache          = None
+            self.__config         = None
+            self.__netManager     = None
+            self.__pluginManager  = None
+            self.__processManager = None
+            self.__rpcManager     = None
+            self.__queue          = None
+            self.__queue_manager  = None
+            self.__ui             = None

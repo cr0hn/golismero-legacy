@@ -32,11 +32,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["AuditScope"]
 
-from .api.data.resource.domain import Domain
-from .api.data.resource.ip import IP
-from .api.data.resource.url import Url
-from .api.net.dns import DNS
-from .api.net.web_utils import DecomposedURL, split_hostname
+from ..api.data.resource.domain import Domain
+from ..api.data.resource.ip import IP
+from ..api.data.resource.url import Url
+from ..api.net.dns import DNS
+from ..api.net.web_utils import DecomposedURL, split_hostname
 
 from netaddr import IPAddress, IPNetwork
 

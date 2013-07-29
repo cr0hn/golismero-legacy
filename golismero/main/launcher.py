@@ -63,12 +63,8 @@ def run(options, *audits):
     :raises TypeError: Invalid configuration objects.
     """
 
-    # Validate the arguments.
-    if not isinstance(options, OrchestratorConfig):
-        raise TypeError("Expected OrchestratorConfig, got %s instead" % type(options))
-    for params in audits:
-        if not isinstance(params, AuditConfig):
-            raise TypeError("Expected AuditConfig, got %s instead" % type(params))
+    # Validate and sanitize the arguments.
+    options, audits = _sanitize_config(options, audits)
 
     # Set the console verbosity level.
     Console.level = options.verbose
@@ -110,3 +106,59 @@ def run(options, *audits):
         return e.code
     Console.display("GoLismero finished at %s" % datetime.datetime.now())
     return 0
+
+
+#----------------------------------------------------------------------
+def _sanitize_config(options, audits):
+    """
+    Validate and sanitize the arguments to the launcher.
+
+    :param options: Orchestrator settings.
+    :type options: OrchestratorConfig
+
+    :param audits: Audit settings.
+    :type audits: AuditConfig
+
+    :returns: Sanitized options.
+    :rtype: tuple(OrchestratorConfig, tuple(AuditConfig...))
+
+    :raise TypeError: Bad argument types.
+    """
+
+    # Process the Orchestrator config.
+    if options is None:
+        options = OrchestratorConfig()
+    elif not isinstance(options, OrchestratorConfig):
+        raise TypeError("Expected OrchestratorConfig, got %s instead" % type(options))
+    if not hasattr(options, "profile"):
+        options.profile = None
+        options.profile_file = None
+    if not hasattr(options, "config_file"):
+        options.config_file = get_default_config_file()
+    if not hasattr(options, "plugin_load_overrides"):
+        options.plugin_load_overrides = []
+    options.check_params()
+
+    # Process the Audit config.
+    sane_audits = []
+    for params in audits:
+        if params is None:
+            params = AuditConfig()
+        elif not isinstance(params, AuditConfig):
+            raise TypeError("Expected AuditConfig, got %s instead" % type(params))
+        if not hasattr(params, "profile"):
+            params.profile = options.profile
+            params.profile_file = options.profile_file
+        if not hasattr(params, "config_file"):
+            params.config_file = options.config_file
+        if not hasattr(params, "plugin_load_overrides"):
+            params.plugin_load_overrides = options.plugin_load_overrides
+        if not hasattr(params, "targets") or not params.targets:
+            if not hasattr(options, "targets"):
+                raise ValueError("No targets selected!")
+            params.targets = list(options.targets)
+        params.check_params()
+        sane_audits.append(params)
+
+    # Return the sanitized options.
+    return options, tuple(sane_audits)

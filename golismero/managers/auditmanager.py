@@ -32,15 +32,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["AuditManager", "Audit"]
 
+from .importmanager import ImportManager
+from .processmanager import PluginContext
+from .reportmanager import ReportManager
 from ..api.data import Data
 from ..api.data.resource import Resource
 from ..api.config import Config
 from ..common import AuditConfig
-from ..scope import AuditScope
 from ..database.auditdb import AuditDB
-from ..managers.importmanager import ImportManager
-from ..managers.processmanager import PluginContext
-from ..managers.reportmanager import ReportManager
+from ..main.scope import AuditScope
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 from ..messaging.notifier import AuditNotifier
@@ -57,13 +57,10 @@ class AuditManager (object):
     """
 
     #----------------------------------------------------------------------
-    def __init__(self, orchestrator, config):
+    def __init__(self, orchestrator):
         """
         :param orchestrator: Core to send messages to.
         :type orchestrator: Orchestrator
-
-        :param config: Global configuration object.
-        :type config: OrchestratorConfig
         """
 
         # Create the dictionary where we'll store the Audit objects.
@@ -226,6 +223,7 @@ class AuditManager (object):
         """
         Release all resources held by all audits.
         """
+        self.__orchestrator = None
         for name in self.__audits.keys(): # not iterkeys, will be modified
             try:
                 self.remove_audit(name)
@@ -243,11 +241,11 @@ class Audit (object):
     #----------------------------------------------------------------------
     def __init__(self, audit_config, orchestrator):
         """
+        :param audit_config: Audit configuration.
+        :type audit_config: AuditConfig
+
         :param orchestrator: Orchestrator instance that will receive messages sent by this audit.
         :type orchestrator: Orchestrator
-
-        :param auditParams: Audit configuration.
-        :type auditParams: AuditConfig
         """
 
         if not isinstance(audit_config, AuditConfig):
@@ -280,6 +278,7 @@ class Audit (object):
 
         # Initialize the managers to None.
         self.__notifier = None
+        self.__plugin_manager = None
         self.__import_manager = None
         self.__report_manager = None
         self.__database = None
@@ -326,6 +325,14 @@ class Audit (object):
         :rtype: AuditDB
         """
         return self.__database
+
+    @property
+    def pluginManager(self):
+        """
+        :returns: Audit plugin manager.
+        :rtype: AuditPluginManager
+        """
+        return self.__plugin_manager
 
     @property
     def importManager(self):
@@ -412,46 +419,25 @@ class Audit (object):
                                             audit_config = self.config,
                                             audit_scope  = self.scope)
 
-            # Find the testing plugins.
-            success, failure = self.orchestrator.pluginManager.find_plugins(
-                self.orchestrator.config.plugins_folder, category="testing")
-            if not success:
-                raise RuntimeError("Failed to find any testing plugins!")
+            # Create the plugin manager for this audit.
+            self.__plugin_manager = self.orchestrator.pluginManager.get_plugin_manager_for_audit(self)
 
-            # Find the import plugins.
-            success, failure = self.orchestrator.pluginManager.find_plugins(
-                self.orchestrator.config.plugins_folder, category="import")
-
-            # Find the report plugins.
-            success, failure = self.orchestrator.pluginManager.find_plugins(
-                self.orchestrator.config.plugins_folder, category="report")
-
-            # Apply the plugin black and white lists.
-            self.orchestrator.pluginManager.apply_black_and_white_lists(
-                self.config.enabled_plugins, self.config.disabled_plugins)
-
-            # Calculate the plugin dependencies.
-            self.orchestrator.pluginManager.calculate_dependencies()
-            all_stages = set()
-            for stage in self.orchestrator.pluginManager.stages.itervalues():
-                all_stages.update(stage)
-            if not all_stages:
+            # Load the testing plugins.
+            m_audit_plugins = self.pluginManager.load_plugins("testing")
+            if not m_audit_plugins:
                 raise RuntimeError("Failed to find any testing plugins!")
 
             # Create the notifier.
             self.__notifier = AuditNotifier(self)
 
-            # Load the testing plugins.
-            m_audit_plugins = self.orchestrator.pluginManager.load_plugins("testing")
-
             # Register the testing plugins with the notifier.
             self.__notifier.add_multiple_plugins(m_audit_plugins)
 
             # Create the import manager.
-            self.__import_manager = ImportManager(self.config, self.orchestrator)
+            self.__import_manager = ImportManager(self.orchestrator, self)
 
             # Create the report manager.
-            self.__report_manager = ReportManager(self.config, self.orchestrator)
+            self.__report_manager = ReportManager(self.orchestrator, self)
 
             # Create the database.
             self.__database = AuditDB(self.name, self.config.audit_db)
@@ -585,7 +571,7 @@ class Audit (object):
 
             # Get the database and the plugin manager.
             database = self.database
-            pluginManager = self.orchestrator.pluginManager
+            pluginManager = self.pluginManager
 
             # Look for the earliest stage with pending data.
             for stage in xrange(pluginManager.min_stage, pluginManager.max_stage + 1):
@@ -670,7 +656,7 @@ class Audit (object):
 
         # Get the database and the plugin manager.
         database = self.database
-        pluginManager = self.orchestrator.pluginManager
+        pluginManager = self.pluginManager
 
         # Is it data?
         if message.message_type == MessageType.MSG_TYPE_DATA:
@@ -804,7 +790,30 @@ class Audit (object):
         """
         Release all resources held by this audit.
         """
+        # This looks horrible, I know :(
         try:
-            self.database.compact()
+            try:
+                try:
+                    try:
+                        try:
+                            try:
+                                self.database.compact()
+                            finally:
+                                self.database.close()
+                        finally:
+                            self.__notifier.close()
+                    finally:
+                        self.__plugin_manager.close()
+                finally:
+                    self.__import_manager.close()
+            finally:
+                self.__report_manager.close()
         finally:
-            self.database.close()
+            self.__database       = None
+            self.__orchestrator   = None
+            self.__notifier       = None
+            self.__audit_config   = None
+            self.__audit_scope    = None
+            self.__plugin_manager = None
+            self.__import_manager = None
+            self.__report_manager = None

@@ -55,7 +55,7 @@ from golismero.api.data.vulnerability import Vulnerability
 from golismero.api.data import LocalDataCache
 
 # The mock testing environment creator.
-from golismero.testing import PluginTester
+from golismero.main.testing import PluginTester
 
 
 # Get the information and resource type IDs.

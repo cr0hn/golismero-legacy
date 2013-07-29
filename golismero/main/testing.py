@@ -32,18 +32,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["PluginTester"]
 
-from golismero.api.data import LocalDataCache
-from golismero.api.config import Config
-from golismero.api.file import FileManager
-from golismero.api.net.cache import NetworkCache
-from golismero.api.net.http import HTTP
-from golismero.common import AuditConfig, OrchestratorConfig, get_default_config_file
-from golismero.database.auditdb import AuditDB
-from golismero.main.orchestrator import Orchestrator
-from golismero.managers.auditmanager import Audit
-from golismero.managers.processmanager import PluginContext
-from golismero.messaging.message import Message
-from golismero.scope import AuditScope
+from .launcher import _sanitize_config
+from .orchestrator import Orchestrator
+from .scope import AuditScope
+from ..api.data import LocalDataCache
+from ..api.config import Config
+from ..api.file import FileManager
+from ..api.net.cache import NetworkCache
+from ..api.net.http import HTTP
+from ..common import AuditConfig, OrchestratorConfig, get_default_config_file
+from ..database.auditdb import AuditDB
+from ..managers.auditmanager import Audit
+from ..managers.processmanager import PluginContext
+from ..messaging.message import Message
 
 from os import getpid
 
@@ -51,7 +52,17 @@ from os import getpid
 #------------------------------------------------------------------------------
 class PluginTester(object):
     """
-    A simple plugin test bootstrap.
+    Setup a mock environment to test plugins.
+
+    Example:
+        >>> from golismero.api.data.resource.baseurl import BaseUrl
+        >>> from golismero.main.testing import PluginTester
+        >>> with PluginTester() as t:
+        ...    t.audit.config.targets = ["http://www.example.com/"]
+        ...    u = BaseUrl("http://www.example.com/")
+        ...    print t.run_plugin("testing/recon/robots", u)
+        ...
+        [<BaseUrl url='http://www.example.com/'>]
     """
 
 
@@ -65,62 +76,20 @@ class PluginTester(object):
         :type audit_config: AuditConfig
         """
 
-        # If no config was given, use the default.
+        # Sanitize the config.
         if orchestrator_config is None:
             orchestrator_config = OrchestratorConfig()
-        if not hasattr(orchestrator_config, "profile"):
-            orchestrator_config.profile = None
-            orchestrator_config.profile_file = None
-        if not hasattr(orchestrator_config, "config_file"):
-            orchestrator_config.config_file = get_default_config_file()
-        if audit_config is None:
-            audit_config = AuditConfig()
-        if not hasattr(audit_config, "profile"):
-            audit_config.profile = orchestrator_config.profile
-            audit_config.profile_file = orchestrator_config.profile_file
-        if not hasattr(audit_config, "config_file"):
-            audit_config.config_file = orchestrator_config.config_file
+            orchestrator_config.targets = ["http://www.example.com/"]
+        orchestrator_config, (audit_config,) = \
+            _sanitize_config(orchestrator_config, (audit_config,))
 
-        # Get the audit name, or generate one if missing.
-        audit_name = audit_config.audit_name
-        if not audit_name:
-            audit_name = Audit.generate_audit_name()
-            audit_config.audit_name = audit_name
+        # Save the config.
+        self.__orchestrator_config = orchestrator_config
+        self.__audit_config = audit_config
 
-        # Instance the Orchestrator.
-        orchestrator = Orchestrator(orchestrator_config)
-
-        # Instance an Audit.
-        audit = Audit(audit_config, orchestrator)
-
-        # Calculate the audit scope.
-        audit_scope = AuditScope(audit_config)
-        audit._Audit__audit_scope = audit_scope
-
-        # Create the audit database.
-        audit._Audit__database = AuditDB(audit_name, audit_config.audit_db)
-
-        # Register the Audit with the AuditManager.
-        orchestrator.auditManager._AuditManager__audits[audit_name] = audit
-
-        # Setup a local plugin execution context.
-        Config._context  = PluginContext(
-            getpid(),
-            orchestrator._Orchestrator__queue,
-            audit_name   = audit_name,
-            audit_config = audit_config,
-            audit_scope  = audit_scope,
-        )
-
-        # Initialize the environment.
-        HTTP._initialize()
-        NetworkCache._clear_local_cache()
-        FileManager._update_plugin_path()
-        LocalDataCache._enabled = True  # force enable
-        LocalDataCache.on_run()
-
-        # Save the Orchestrator instance.
-        self.__orchestrator = orchestrator
+        # Don't initialize the environment yet.
+        self.__orchestrator = None
+        self.__audit = None
 
 
     #--------------------------------------------------------------------------
@@ -134,6 +103,77 @@ class PluginTester(object):
     @property
     def orchestrator(self):
         return self.__orchestrator
+
+    @property
+    def audit(self):
+        return self.__audit
+
+    @property
+    def orchestrator_config(self):
+        return self.__orchestrator_config
+
+    @property
+    def audit_config(self):
+        return self.__audit_config
+
+
+    #--------------------------------------------------------------------------
+    def __init_environment(self):
+
+        # Do nothing if the environment has already been initialized.
+        if self.audit is not None:
+            return
+
+        # Get the audit name, or generate one if missing.
+        audit_name = self.audit_config.audit_name
+        if not audit_name:
+            audit_name = Audit.generate_audit_name()
+            self.audit_config.audit_name = audit_name
+
+        # Instance the Orchestrator.
+        orchestrator = Orchestrator(self.orchestrator_config)
+
+        # Instance an Audit.
+        audit = Audit(self.audit_config, orchestrator)
+
+        # Calculate the audit scope.
+        audit_scope = AuditScope(self.audit_config)
+        audit._Audit__audit_scope = audit_scope
+
+        # Create the audit plugin manager.
+        plugin_manager = orchestrator.pluginManager.get_plugin_manager_for_audit(audit)
+        audit._Audit__plugin_manager = plugin_manager
+
+        # Load all the plugins.
+        plugins = plugin_manager.load_plugins()
+        if not plugins:
+            raise RuntimeError("Failed to find any plugins!")
+
+        # Create the audit database.
+        audit._Audit__database = AuditDB(audit_name, self.audit_config.audit_db)
+
+        # Register the Audit with the AuditManager.
+        orchestrator.auditManager._AuditManager__audits[audit_name] = audit
+
+        # Setup a local plugin execution context.
+        Config._context  = PluginContext(
+            getpid(),
+            orchestrator._Orchestrator__queue,
+            audit_name   = audit_name,
+            audit_config = self.audit_config,
+            audit_scope  = audit_scope,
+        )
+
+        # Initialize the environment.
+        HTTP._initialize()
+        NetworkCache._clear_local_cache()
+        FileManager._update_plugin_path()
+        LocalDataCache._enabled = True  # force enable
+        LocalDataCache.on_run()
+
+        # Save the Orchestrator and Audit instances.
+        self.__orchestrator = orchestrator
+        self.__audit = audit
 
 
     #--------------------------------------------------------------------------
@@ -154,9 +194,12 @@ class PluginTester(object):
         :rtype: *
         """
 
+        # Make sure the environment is initialized.
+        self.__init_environment()
+
         # Load the plugin.
-        plugin_info = self.orchestrator.pluginManager.get_plugin_by_name(plugin_name)
-        plugin = self.orchestrator.pluginManager.load_plugin_by_name(plugin_name)
+        plugin_info = self.audit.pluginManager.get_plugin_by_name(plugin_name)
+        plugin = self.audit.pluginManager.load_plugin_by_name(plugin_name)
         Config._context._PluginContext__plugin_info = plugin_info
 
         try:
@@ -211,10 +254,7 @@ class PluginTester(object):
     #--------------------------------------------------------------------------
     def cleanup(self):
         """
-        Cleanup the testing mock environment.
-
-        You can't call run_plugin() again after calling this method,
-        you'll need to create a new PluginTester instance.
+        Cleanup the mock environment.
         """
 
         FileManager._update_plugin_path()
@@ -222,5 +262,8 @@ class PluginTester(object):
         LocalDataCache.on_run()
         HTTP._finalize()
 
-        self.orchestrator.close()
-        del self.__orchestrator  # so we can't call run_plugin again
+        if self.orchestrator is not None:
+            self.orchestrator.close()
+
+        self.__audit = None
+        self.__orchestrator = None

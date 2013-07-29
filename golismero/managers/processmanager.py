@@ -848,15 +848,15 @@ class ProcessManager (object):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, orchestrator, config):
+    def __init__(self, orchestrator):
         """
         :param orchestrator: Orchestrator to send messages to.
         :type orchestrator: Orchestrator
-
-        :param config: Global configuration.
-        :type config: OrchestratorConfig
         """
+
         self.__launcher = None
+
+        config = orchestrator.config
 
         # Maximum number of processes to create
         self.__max_processes       = getattr(config, "max_process",         None)

@@ -32,7 +32,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["UIManager"]
 
-from .pluginmanager import PluginManager
 from ..messaging.codes import MessageType, MessageCode
 from ..messaging.message import Message
 from ..messaging.notifier import UINotifier
@@ -46,13 +45,10 @@ class UIManager (object):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, orchestrator, config):
+    def __init__(self, orchestrator):
         """
         :param orchestrator: Orchestrator instance.
         :type orchestrator: Orchestrator
-
-        :param config: Configuration of the audit.
-        :type config: AuditConfig
         """
 
         # Keep a reference to the Orchestrator.
@@ -62,8 +58,13 @@ class UIManager (object):
         self.__notifier = UINotifier(orchestrator)
 
         # Load the selected UI plugin.
-        name = "ui/%s" % config.ui_mode
-        p = PluginManager().load_plugin_by_name(name)
+        mode = orchestrator.config.ui_mode
+        name = "ui/%s" % mode
+        try:
+            orchestrator.pluginManager.get_plugin_by_name(name)
+        except KeyError:
+            raise ValueError("No plugin found for UI mode: %r" % mode)
+        p = orchestrator.pluginManager.load_plugin_by_name(name)
 
         # Configure plugin to be its own the target of messages and add to notifier.
         p._set_observer(self)
@@ -87,7 +88,7 @@ class UIManager (object):
         """
         message = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                           message_code = MessageCode.MSG_CONTROL_START_UI)
-        self.__orchestrator.dispatch_msg(message)
+        self.orchestrator.dispatch_msg(message)
 
 
     #----------------------------------------------------------------------
@@ -97,7 +98,7 @@ class UIManager (object):
         """
         message = Message(message_type = MessageType.MSG_TYPE_CONTROL,
                           message_code = MessageCode.MSG_CONTROL_STOP_UI)
-        self.__orchestrator.dispatch_msg(message)
+        self.orchestrator.dispatch_msg(message)
 
 
     #----------------------------------------------------------------------
@@ -116,3 +117,15 @@ class UIManager (object):
             message.message_code != MessageCode.MSG_CONTROL_ACK
         ):
             self.__notifier.notify(message)
+
+
+    #----------------------------------------------------------------------
+    def close(self):
+        """
+        Release all resources held by this manager.
+        """
+        try:
+            self.__notifier.close()
+        finally:
+            self.__orchestrator = None
+            self.__notifier     = None
