@@ -796,18 +796,19 @@ class Audit (object):
                 try:
                     try:
                         try:
-                            try:
-                                self.database.compact()
-                            finally:
-                                self.database.close()
+                            if self.database is not None:
+                                try:
+                                    self.database.compact()
+                                finally:
+                                    self.database.close()
                         finally:
-                            self.__notifier.close()
+                            if self.__notifier is not None: self.__notifier.close()
                     finally:
-                        self.__plugin_manager.close()
+                        if self.__plugin_manager is not None: self.__plugin_manager.close()
                 finally:
-                    self.__import_manager.close()
+                    if self.__import_manager is not None: self.__import_manager.close()
             finally:
-                self.__report_manager.close()
+                if self.__report_manager is not None: self.__report_manager.close()
         finally:
             self.__database       = None
             self.__orchestrator   = None

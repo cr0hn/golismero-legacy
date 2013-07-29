@@ -54,7 +54,7 @@ class _PluginState (Singleton):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     __sentinel = object()
     @classmethod
     def get(cls, name, default = __sentinel):
@@ -83,7 +83,7 @@ class _PluginState (Singleton):
             raise
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @staticmethod
     def check(name):
         """
@@ -99,7 +99,7 @@ class _PluginState (Singleton):
             MessageCode.MSG_RPC_STATE_CHECK, Config.plugin_name, name)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @staticmethod
     def set(name, value):
         """
@@ -115,7 +115,7 @@ class _PluginState (Singleton):
             MessageCode.MSG_RPC_STATE_ADD, Config.plugin_name, name, value)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @staticmethod
     def remove(name):
         """
@@ -130,7 +130,7 @@ class _PluginState (Singleton):
             MessageCode.MSG_RPC_STATE_REMOVE, Config.plugin_name, name)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @staticmethod
     def get_names():
         """
@@ -143,7 +143,7 @@ class _PluginState (Singleton):
             MessageCode.MSG_RPC_STATE_KEYS, Config.plugin_name)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Overloaded operators.
 
     def __getitem__(self, name):
@@ -187,7 +187,7 @@ class Plugin (object):
     state = PluginState
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def check_input_params(self, inputParams):
         """
         Optional method to check input parameters passed by the user.
@@ -205,7 +205,7 @@ class Plugin (object):
         pass
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def display_help(self):
         """
         Optional method to display the help message for this plugin.
@@ -228,7 +228,7 @@ class Plugin (object):
         return text
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def _set_observer(self, observer):
         """
         .. warning::
@@ -237,7 +237,7 @@ class Plugin (object):
         return
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def update_status(self, text = None, progress = None):
         """
         Plugins can call this method to tell the user of the current
@@ -256,7 +256,7 @@ class Plugin (object):
         Config._context.send_status(text, progress)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def update_status_step(self, step = None, total = 100.0, partial = 100.0, text = None):
         """
         Plugins can call this method to tell the user of the current
@@ -336,7 +336,7 @@ class InformationPlugin (Plugin):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def recv_info(self, info):
         """
         Callback method to receive data to be processed.
@@ -350,7 +350,7 @@ class InformationPlugin (Plugin):
         raise NotImplementedError("Plugins must implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         """
         Return a list of constants describing
@@ -373,7 +373,12 @@ class UIPlugin (InformationPlugin):
     PLUGIN_TYPE = Plugin.PLUGIN_TYPE_UI
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    def get_accepted_info(self):
+        return None               # Most UI plugins will want all data objects.
+
+
+    #--------------------------------------------------------------------------
     def recv_msg(self, message):
         """
         Callback method to receive control messages to be processed.
@@ -384,7 +389,7 @@ class UIPlugin (InformationPlugin):
         raise NotImplementedError("Plugins must implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def send_msg(self, message):
         """
         Plugins call this method to send messages back to GoLismero.
@@ -395,7 +400,7 @@ class UIPlugin (InformationPlugin):
         self.__observer_ref.send_msg(message)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def _set_observer(self, observer):
         self.__observer_ref = observer
 
@@ -412,7 +417,7 @@ class ImportPlugin (Plugin):
     PLUGIN_TYPE = Plugin.PLUGIN_TYPE_IMPORT
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def is_supported(self, input_file):
         """
         Determine if this plugin supports the requested file format.
@@ -428,7 +433,7 @@ class ImportPlugin (Plugin):
         raise NotImplementedError("Plugins must implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def import_results(self, input_file):
         """
         Run plugin and import the results into the audit database.
@@ -464,7 +469,7 @@ class ReportPlugin (Plugin):
     PLUGIN_TYPE = Plugin.PLUGIN_TYPE_REPORT
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def is_supported(self, output_file):
         """
         Determine if this plugin supports the requested file format.
@@ -480,7 +485,7 @@ class ReportPlugin (Plugin):
         raise NotImplementedError("Plugins must implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def generate_report(self, output_file):
         """
         Run plugin and generate the report.

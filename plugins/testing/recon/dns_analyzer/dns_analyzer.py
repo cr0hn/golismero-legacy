@@ -75,10 +75,10 @@ class DNSAnalizer(TestingPlugin):
             m_return = []
 
             m_reg_len = len(DnsRegister.DNS_TYPES)
-            for i, l_type in enumerate(DnsRegister.DNS_TYPES):
+            for l_step, l_type in enumerate(DnsRegister.DNS_TYPES):
 
                 # Update status
-                progress = (float(i) / float(m_reg_len)) * 100.0
+                progress = (float(l_step) / float(m_reg_len)) * 100.0
                 self.update_status(progress=progress, text="Making %r DNS query" % l_type)
 
                 # Make the query
@@ -286,7 +286,7 @@ class DNSBruteforcer(TestingPlugin):
         m_domain = "%s.%s" % (subdomain, self.base_domain)
 
         completed = self.completed.inc()
-        progress = float(completed) / float(self.total)
+        progress  = (float(completed) / float(self.total)) * 100.0
         text = "Looking for subdomain: %s" % m_domain
 
         self.update_status(progress=progress, text=text)

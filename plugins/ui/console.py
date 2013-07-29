@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.data import Data
+from golismero.api.data.vulnerability import Vulnerability
 from golismero.api.plugin import UIPlugin
 from golismero.main.console import Console, colorize, colorize_substring
 from golismero.messaging.codes import MessageType, MessageCode
@@ -55,34 +56,33 @@ class ConsoleUIPlugin(UIPlugin):
 
     #----------------------------------------------------------------------
     def __init__(self):
-        self.already_seen_info = set()
-
-
-    #----------------------------------------------------------------------
-    def get_accepted_info(self):
-        return None
+        self.already_seen_info = set()   # set(str)
 
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
+        # Don't print anything if console output is disabled.
+        if Console.level < Console.STANDARD:
+            return
 
-        if Console.level >= Console.STANDARD:
+        # Filter out info we've already seen.
+        if info.identity in self.already_seen_info:
+            return
+        self.already_seen_info.add(info.identity)
 
-            # Messages with vulnerability types
-            if  info.data_type == Data.TYPE_VULNERABILITY:
-                l_text = "%s Vulnerability '%s' dicovered. Risk level: %s." % (
-                    colorize("<!>", info.risk),
-                    colorize(info.vulnerability_type, info.risk),
-                    colorize(str(info.risk), info.risk)
-                )
+        # Print newly discovered vulnerabilities.
+        if info.data_type == Data.TYPE_VULNERABILITY:
+            text = "%s Vulnerability '%s' dicovered. Risk level: %s." % (
+                colorize("<!>", info.risk),
+                colorize(info.vulnerability_type, info.risk),
+                colorize(str(info.risk), info.risk)
+            )
+            Console.display(text)
 
-                Console.display(l_text)
 
     #----------------------------------------------------------------------
     def recv_msg(self, message):
-        if not isinstance(message, Message):
-            raise TypeError("Expected Message, got %s instead" % type(message))
 
         # Process status messages
         if message.message_type == MessageType.MSG_TYPE_STATUS:
@@ -105,9 +105,10 @@ class ConsoleUIPlugin(UIPlugin):
 
                 if Console.level >= Console.VERBOSE:
                     m_id, m_progress, m_text = message.message_info
-                    m_plugin_name            = colorize(' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")]), "blue")
 
-                    #The counter
+                    # XXX TODO: add an API to query information about plugins
+                    m_plugin_name = colorize(' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")]), "blue")
+
                     if m_progress:
                         m_progress_h = int(m_progress)
                         m_progress_l = int((m_progress - float(m_progress_h)) * 100)
@@ -115,8 +116,8 @@ class ConsoleUIPlugin(UIPlugin):
                     else:
                         m_progress_txt = colorize("[*]", "white")
 
-                    #m_text = "%s %s: Status: %s." % (m_progress_txt, m_id, m_text)
-                    m_text = "%s %s: %s" % (m_progress_txt, m_plugin_name,  (m_text if m_text else "working"))
+                    m_text = "%s %s: %s" % (m_progress_txt, m_plugin_name, (m_text if m_text else "working"))
+
                     Console.display(m_text)
 
         # Process control messages
