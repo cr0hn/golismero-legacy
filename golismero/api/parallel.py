@@ -49,16 +49,64 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["pmap", "setInterval", "TaskGroup", "WorkerPool"]
+__all__ = ["pmap", "setInterval", "TaskGroup", "WorkerPool", "Counter"]
 
 from thread import get_ident
 from threading import RLock, Semaphore, Thread, Event, Timer
 
 
 #------------------------------------------------------------------------------
+class Counter (object):
+    """
+    Thread-safe counter.
+    """
+
+    def __init__(self, init_val = 0):
+        if type(init_val) not in (int, long, float):
+            raise TypeError("Expected a number, got %s instead" % type(init_val))
+        self.__value = init_val
+        self.__lock  = RLock()
+
+    def reset(self):
+        return self.setvalue(0)
+
+    def inc(self):
+        return self.add(1)
+
+    def dec(self):
+        return self.sub(1)
+
+    def add(self, offset):
+        if type(offset) not in (int, long, float):
+            raise TypeError("Expected a number, got %s instead" % type(offset))
+        with self.__lock:
+            self.__value += offset
+            return self.__value
+
+    def sub(self, offset):
+        if type(offset) not in (int, long, float):
+            raise TypeError("Expected a number, got %s instead" % type(offset))
+        with self.__lock:
+            self.__value -= offset
+            return self.__value
+
+    def setvalue(self, value):
+        if type(value) not in (int, long, float):
+            raise TypeError("Expected a number, got %s instead" % type(value))
+        with self.__lock:
+            old_value = self.__value
+            self.__value = value
+            return old_value
+
+    def getvalue(self):
+        with self.__lock:
+            return self.__value
+
+
+#------------------------------------------------------------------------------
 def setInterval(interval, times = -1):
     """
-    This is a decorator to execute a function periodically using a timer.
+    Decorator to execute a function periodically using a timer.
     The function is executed in a background thread.
 
     Example:
