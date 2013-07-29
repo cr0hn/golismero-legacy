@@ -87,26 +87,31 @@ class Robots(TestingPlugin):
     def recv_info(self, info):
         m_return = []
 
-        # Get the url of hosts
         m_url = info.url
+        m_hostname = info.hostname
         m_url_robots_txt = urljoin(m_url, 'robots.txt')
 
         p = None
         try:
-            # Update status
-            self.update_status("Robots - looking for robots.txt in URL: '%s'" % m_url_robots_txt, progress=0.40)
+            msg = "Looking for robots.txt in %s" % m_hostname
+            Logger.log_more_verbose(msg)
+
+            self.update_status(progress=0, text=msg)
 
             p = download(m_url_robots_txt, self.check_download)
-        except NetworkException, e:
-            Logger.log_more_verbose("Robots - value error while processing: '%s'. Error: %s" % (m_url_robots_txt, str(e)))
-            return
+
+            self.update_status(progress=40.0)
+
         except NetworkOutOfScope:
-            Logger.log_more_verbose("Robots - Url '%s' is out of scope" % (m_url_robots_txt))
+            Logger.log_more_verbose("Url %r is out of scope" % (m_url_robots_txt))
+            return
+        except Exception, e:
+            Logger.log_more_verbose("Error while processing %r: %s" % (m_url_robots_txt, str(e)))
             return
 
         # Check for errors
         if not p:
-            Logger.log_more_verbose("Robots - no robots.txt found.")
+            Logger.log_more_verbose("No robots.txt found.")
             return
 
 
@@ -135,11 +140,14 @@ class Robots(TestingPlugin):
         m_lines                  = m_robots_text.splitlines()
 
         # Var used to update the status
-        m_lines_number           = float(len(m_lines))
+        m_lines_count            = len(m_lines)
+        m_total                  = float(m_lines_count * 60)
 
-        for i, m_line in enumerate(m_lines, start=1):
+        for m_step, m_line in enumerate(m_lines, start=1):
+
             # Update status
-            self.update_status_step(step=i, total=m_lines_number, text="checking URL %s/%s" % (str(i), str(m_lines_number)), partial=60)
+            progress = (float(m_step) / m_total) + 40.0
+            self.update_status(progress=progress, text="Checking URL %d/%d" % (m_step, m_lines_count))
 
             # Remove comments
             m_octothorpe = m_line.find('#')
