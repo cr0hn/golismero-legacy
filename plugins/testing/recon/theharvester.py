@@ -90,9 +90,13 @@ class HarvesterPlugin(TestingPlugin):
             pass
 
         # Search every supported engine.
+        total = float(len(self.SUPPORTED))
         all_emails, all_hosts = set(), set()
         for engine in self.SUPPORTED:
             try:
+                progress = float(step * 80) / total
+                text = "Searching keyword %r in %s" % (word, engine)
+                self.update_status(progress=progress, text=text)
                 emails, hosts = self.search(engine, word, limit)
             except Exception, e:
                 t = traceback.format_exc()
@@ -101,12 +105,17 @@ class HarvesterPlugin(TestingPlugin):
                 continue
             all_emails.update(address.lower() for address in emails if address)
             all_hosts.update(name.lower() for name in hosts if name)
+        self.update_status(progress=80, text="Search complete for keyword %r" % word)
 
         # Adapt the data into our model.
         results = []
 
         # Email addresses.
         for address in all_emails:
+            if address[0] == "[":   # known bug in theHarvester
+                address[1:]
+                if not address:
+                    continue
             try:
                 data = Email(address)
             except Exception, e:
@@ -121,11 +130,16 @@ class HarvesterPlugin(TestingPlugin):
                 discard_data(data)
 
         # Hostnames.
+        visited = set()
+        total = float(len(all_hosts))
         for name in all_hosts:
+            visited.add(name)
             if name not in Config.audit_scope:
                 Logger.log_more_verbose("Hostname out of scope: %s" % name)
                 continue
             try:
+                progress = (float(step * 20) / total) + 80.0
+                self.update_status(progress=progress, text="Checking hostname: %s" % name)
                 real_name, aliaslist, addresslist = socket.gethostbyname_ex(name)
             except socket.error:
                 continue
@@ -134,13 +148,18 @@ class HarvesterPlugin(TestingPlugin):
             all_names.add(real_name)
             all_names.update(aliaslist)
             for name in all_names:
-                if name:
+                if name and name not in visited:
+                    visited.add(name)
                     if name not in Config.audit_scope:
                         Logger.log_more_verbose("Hostname out of scope: %s" % name)
                         continue
                     data = Domain(name, *addresslist)
                     data.add_resource(info)
                     results.append(data)
+
+        text = "Found %d emails and %d hostnames for keyword %r"
+        text = text % (len(all_emails), len(all_hosts), word)
+        self.update_status(progress=100, text=text)
 
         # Return the data.
         return results
