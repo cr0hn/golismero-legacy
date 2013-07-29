@@ -92,7 +92,7 @@ class HarvesterPlugin(TestingPlugin):
         # Search every supported engine.
         total = float(len(self.SUPPORTED))
         all_emails, all_hosts = set(), set()
-        for engine in self.SUPPORTED:
+        for step, engine in enumerate(self.SUPPORTED):
             try:
                 progress = float(step * 80) / total
                 text = "Searching keyword %r in %s" % (word, engine)
@@ -132,7 +132,7 @@ class HarvesterPlugin(TestingPlugin):
         # Hostnames.
         visited = set()
         total = float(len(all_hosts))
-        for name in all_hosts:
+        for step, name in enumerate(all_hosts):
             visited.add(name)
             if name not in Config.audit_scope:
                 Logger.log_more_verbose("Hostname out of scope: %s" % name)

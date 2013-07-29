@@ -90,7 +90,7 @@ class ConsoleUIPlugin(UIPlugin):
             if message.message_type == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
                 m_plugin_name  = message.plugin_name if message.plugin_name else "/NO_NAME_PLUGIN"
                 m_plugin_name  = colorize(' '.join([x.capitalize() for x in m_plugin_name[m_plugin_name.rfind("/") + 1:].split("_")]), "blue")
-                m_text         = "[0%] Starting plugin: %s" % m_plugin_name
+                m_text         = "[  0%] Starting plugin: %s" % m_plugin_name
 
                 Console.display(m_text)
 
@@ -109,9 +109,11 @@ class ConsoleUIPlugin(UIPlugin):
 
                     #The counter
                     if m_progress:
-                        m_progress_txt = colorize("[%i%%]" % m_progress, "white")
+                        m_progress_h = int(m_progress)
+                        m_progress_l = int((m_progress - float(m_progress_h)) * 100)
+                        m_progress_txt = colorize("[%3s.%.2i%%]" % (m_progress_h, m_progress_l), "white")
                     else:
-                        m_progress_txt = colorize("[...]", "white")
+                        m_progress_txt = colorize("[*]", "white")
 
                     #m_text = "%s %s: Status: %s." % (m_progress_txt, m_id, m_text)
                     m_text = "%s %s: %s" % (m_progress_txt, m_plugin_name,  (m_text if m_text else "working"))
