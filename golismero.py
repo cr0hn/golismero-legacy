@@ -134,34 +134,16 @@ from golismero.managers.processmanager import PluginContext
 # --enable-plugin
 class EnablePluginAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        assert self.dest == "enabled_plugins"
-        values = values.strip()
-        if values.lower() == "all":
-            namespace.enabled_plugins  = ["all"]
-            namespace.disabled_plugins = []
-        else:
-            enabled_plugins = getattr(namespace, "enabled_plugins", [])
-            if "all" not in enabled_plugins:
-                enabled_plugins.append(values)
-            disabled_plugins = getattr(namespace, "disabled_plugins", [])
-            if values in disabled_plugins:
-                disabled_plugins.remove(values)
+        overrides = getattr(namespace, self.dest, [])
+        overrides.append( (True, values) )
+        setattr(namespace, self.dest, overrides)
 
 # --disable-plugin
 class DisablePluginAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        assert self.dest == "disabled_plugins"
-        values = values.strip()
-        if values.lower() == "all":
-            namespace.enabled_plugins  = []
-            namespace.disabled_plugins = ["all"]
-        else:
-            disabled_plugins = getattr(namespace, "disabled_plugins", [])
-            if "all" not in disabled_plugins:
-                disabled_plugins.append(values)
-            enabled_plugins = getattr(namespace, "enabled_plugins", [])
-            if values in enabled_plugins:
-                enabled_plugins.remove(values)
+        overrides = getattr(namespace, self.dest, [])
+        overrides.append( (False, values) )
+        setattr(namespace, self.dest, overrides)
 
 # --no-output
 class ResetListAction(argparse.Action):
@@ -234,8 +216,8 @@ def cmdline_parser():
     gr_net.add_argument("--volatile-cache", action="store_false", default=None, dest="use_cache_db", help="use a volatile network cache [default in standalone mode]")
 
     gr_plugins = parser.add_argument_group("plugin options")
-    gr_plugins.add_argument("-e", "--enable-plugin", metavar="NAME", action=EnablePluginAction, dest="enabled_plugins", default=list(OrchestratorConfig().enabled_plugins), help="customize which plugins to load")
-    gr_plugins.add_argument("-d", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="disabled_plugins", default=list(OrchestratorConfig().disabled_plugins), help="customize which plugins not to load")
+    gr_plugins.add_argument("-e", "--enable-plugin", metavar="NAME", action=EnablePluginAction, default=[], dest="plugin_load_overrides", help="enable a plugin")
+    gr_plugins.add_argument("-d", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="plugin_load_overrides", help="disable a plugin")
     gr_plugins.add_argument("--max-process", metavar="N", type=int, default=None, help="maximum number of plugins to run concurrently")
     gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
     gr_plugins.add_argument("--plugin-list", action="store_true", default=False, help="list available plugins and quit")
@@ -280,6 +262,7 @@ def main():
             cmdParams.profile = None
             cmdParams.profile_file = None
         cmdParams.from_object(P)
+        cmdParams.plugin_load_overrides = P.plugin_load_overrides
 
         # Load the target audit options.
         auditParams = AuditConfig()
@@ -291,6 +274,7 @@ def main():
         if auditParams.profile_file:
             auditParams.from_config_file(auditParams.profile_file)
         auditParams.from_object(P)
+        auditParams.plugin_load_overrides = P.plugin_load_overrides
 
     # Show exceptions as command line parsing errors.
     except Exception, e:
@@ -323,9 +307,9 @@ def main():
         # Load the plugins list
         try:
             manager = PluginManager()
-            manager.find_plugins(plugins_folder)
+            manager.find_plugins(cmdParams)
         except Exception, e:
-            print "[!] Error loading plugins list: %s" % e.message
+            print "[!] Error loading plugins list: %s" % str(e)
             exit(1)
 
         # Show the list of plugins.
@@ -342,13 +326,13 @@ def main():
                 info = ui_plugins[name]
                 print "+ %s: %s" % (name[3:], info.description)
 
-        # Report plugins...
-        report_plugins = manager.get_plugins("report")
-        if ui_plugins:
+        # Import plugins...
+        import_plugins = manager.get_plugins("import")
+        if import_plugins:
             print
-            print "-= Report plugins =-"
-            for name in sorted(report_plugins.keys()):
-                info = report_plugins[name]
+            print "-= Import plugins =-"
+            for name in sorted(import_plugins.keys()):
+                info = import_plugins[name]
                 print "+ %s: %s" % (name[7:], info.description)
 
         # Testing plugins...
@@ -371,6 +355,15 @@ def main():
                         info = testing_plugins["testing/%s/%s" % (stage, name)]
                         print "+ %s: %s" % (name, info.description)
 
+        # Report plugins...
+        report_plugins = manager.get_plugins("report")
+        if report_plugins:
+            print
+            print "-= Report plugins =-"
+            for name in sorted(report_plugins.keys()):
+                info = report_plugins[name]
+                print "+ %s: %s" % (name[7:], info.description)
+
         if os.sep != "\\":
             print
         exit(0)
@@ -386,7 +379,7 @@ def main():
             manager = PluginManager()
             manager.find_plugins(plugins_folder)
         except Exception, e:
-            print "[!] Error loading plugins list: %s" % e.message
+            print "[!] Error loading plugins list: %s" % str(e)
             exit(1)
 
         # Show the plugin information.
@@ -429,7 +422,7 @@ def main():
             print "[!] Plugin name not found"
             exit(1)
         except Exception, e:
-            print "[!] Error recovering plugin info: %s" % e.message
+            print "[!] Error recovering plugin info: %s" % str(e)
             exit(1)
         exit(0)
 
@@ -473,114 +466,8 @@ def main():
 
     #------------------------------------------------------------
     # Launch GoLismero.
-
-
-    # Background job mode disabled for now, until we
-    # find a way to make screen.py work without hacks.
     launcher.run(cmdParams, auditParams)
     exit(0)
-
-
-
-
-    # (horrible spaghetti code follows)
-
-    # Background process. Forward all I/O through a TCP/IP socket.
-    if P.forward_io:
-        import socket
-        try:
-            host, port = P.forward_io.split(":")
-            host, port = host.strip(), port.strip()
-            try:
-                port = int(port)
-            except Exception:
-                port = socket.getservbyname(port)
-            assert 0 < port < 65535
-            socket.gethostbyname(host)
-        except Exception:
-            print "[!] Error: invalid address: %s" % P.forward_io
-            exit(1)
-        s = socket.socket()
-        try:
-            s.connect((host, port))
-            fd = s.makefile("r+", 0)
-            try:
-                stdin, stdout, stderr = sys.stdin, sys.stdout, sys.stderr
-                try:
-                    sys.stdin, sys.stdout, sys.stderr = fd, fd, fd
-                    try:
-                        launcher.run(cmdParams, auditParams)
-                    except Exception:
-                        import traceback
-                        traceback.print_exc()
-                        raise
-                finally:
-                    sys.stdin, sys.stdout, sys.stderr = stdin, stdout, stderr
-            finally:
-                fd.close()
-        finally:
-            try:
-                try:
-                    s.shutdown(2)
-                finally:
-                    s.close()
-            except Exception:
-                pass
-
-    # Foreground process. Receive all forwarded I/O from the background process.
-    else:
-        import subprocess, socket, select, colorizer
-        if P.colorize:
-            colorizer.init()
-        s = socket.socket()
-        try:
-            s.bind(("127.0.0.1",0))
-            s.listen(1)
-            port = s.getsockname()[1]
-            executable = sys.executable
-            if executable.lower().endswith("python.exe"):
-                executable = executable[:-10] + "pythonw.exe"
-            with open(os.devnull, "r+") as null_fd:
-                process = subprocess.Popen(
-                    [executable] + sys.argv + ["--forward-io", "127.0.0.1:%d" % port],
-                    stdin = null_fd, stdout = null_fd, stderr = null_fd)
-                try:
-                    try:
-                        a = s.accept()[0]
-                        try:
-                            while True:
-                                try:
-                                    r, w, e = select.select([a],[],[a])
-                                except KeyboardInterrupt:
-                                    if os.sep == "\\":
-                                        import ctypes
-                                        ctypes.windll.kernel32.GenerateConsoleCtrlEvent(0, process.pid) # CTRL_C_EVENT
-                                    else:
-                                        import signal
-                                        process.send_signal(signal.SIGINT)
-                                if e:
-                                    print "[!] Socket error!"
-                                    sys.stdout.flush()
-                                    raise Exception("Socket error")
-                                if r:
-                                    d = a.recv(65335)
-                                    if not d: break
-                                    sys.stdout.write(d)
-                                    sys.stdout.flush()
-                                if w:
-                                    a.sendall(sys.stdin.read(65335))
-                        finally:
-                            try:
-                                a.shutdown(2)
-                            finally:
-                                a.close()
-                    except Exception:
-                        process.terminate()
-                        raise
-                finally:
-                    process.wait()
-        finally:
-            s.close()
 
 
 #------------------------------------------------------------
