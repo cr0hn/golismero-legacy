@@ -75,7 +75,7 @@ class DNSAnalizer(TestingPlugin):
             m_return = []
 
             m_reg_len = len(DnsRegister.DNS_TYPES)
-            for i, l_type in enumerate(DnsRegister.DNS_TYPES, start=1):
+            for i, l_type in enumerate(DnsRegister.DNS_TYPES):
 
                 # Update status
                 progress = (float(i) / float(m_reg_len)) * 100.0

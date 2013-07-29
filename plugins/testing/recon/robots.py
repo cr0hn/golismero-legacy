@@ -141,12 +141,12 @@ class Robots(TestingPlugin):
 
         # Var used to update the status
         m_lines_count            = len(m_lines)
-        m_total                  = float(m_lines_count * 60)
+        m_total                  = float(m_lines_count)
 
-        for m_step, m_line in enumerate(m_lines, start=1):
+        for m_step, m_line in enumerate(m_lines):
 
             # Update status
-            progress = (float(m_step) / m_total) + 40.0
+            progress = (float(m_step * 60) / m_total) + 40.0
             self.update_status(progress=progress, text="Checking URL %d/%d" % (m_step, m_lines_count))
 
             # Remove comments
