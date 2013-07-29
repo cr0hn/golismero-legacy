@@ -36,12 +36,12 @@ from golismero.api.data import discard_data
 from golismero.api.data.information.dns import DnsRegister
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
+from golismero.api.logger import Logger
 from golismero.api.net.dns import DNS
-from golismero.api.parallel import pmap
+from golismero.api.parallel import pmap, Counter
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist_api import WordListAPI
 
-from functools import partial
 from netaddr import IPAddress
 
 
@@ -70,13 +70,16 @@ class DNSAnalizer(TestingPlugin):
         # Checks if the hostname has been already processed
         if not self.state.check(m_domain):
 
-            self.update_status("starting DNS analyzer plugin")
+            self.update_status(progress=0)
+            Logger.log_verbose("Starting DNS analyzer plugin")
             m_return = []
 
             m_reg_len = len(DnsRegister.DNS_TYPES)
             for i, l_type in enumerate(DnsRegister.DNS_TYPES, start=1):
+
                 # Update status
-                self.update_status_step(step=i, total=m_reg_len, text="making '%s' DNS query" % l_type)
+                progress = (float(i) / float(m_reg_len)) * 100.0
+                self.update_status(progress=progress, text="Making %r DNS query" % l_type)
 
                 # Make the query
                 m_return.extend(DNS.resolve(m_domain, l_type))
@@ -87,7 +90,8 @@ class DNSAnalizer(TestingPlugin):
             # Add the information to the host
             map(info.add_information, m_return)
 
-            self.update_status("Ending DNS analyzer plugin. Found %s registers" % str(len(m_return)))
+            self.update_status(progress=100)
+            Logger.log_verbose("Ending DNS analyzer plugin, found %d registers" % len(m_return))
 
         return m_return
 
@@ -118,7 +122,7 @@ class DNSZoneTransfer(TestingPlugin):
 
         if not self.state.check(m_domain):
 
-            self.update_status("starting DNS zone transfer plugin")
+            self.update_status(text="Starting DNS zone transfer plugin", progress=0)
             m_return = []
 
             #
@@ -128,6 +132,9 @@ class DNSZoneTransfer(TestingPlugin):
 
             m_return_append = m_return.append
             if m_zone_transfer:
+
+                self.update_status(text="DNS zone transfer successful", progress=100)
+
                 m_return.extend(m_zone_transfer)
 
                 for l_ns in m_ns_servers:
@@ -157,9 +164,10 @@ class DNSZoneTransfer(TestingPlugin):
                     m_return_append(l_v)
                     m_return_append(l_resource)
 
+            else:
+                self.update_status(text="DNS zone transfer failed, server not vulnerable", progress=100)
 
             m_return.extend(m_ns_servers)
-
 
             # Set the domain parsed
             self.state.set(m_domain, True)
@@ -192,18 +200,17 @@ class DNSBruteforcer(TestingPlugin):
         m_return = None
         if not self.state.check(m_domain):
 
-            self.update_status("starting DNS bruteforcer plugin")
+            self.update_status(progress=0)
             #
             # Looking for
             #
             m_subdomains = WordListAPI.get_advanced_wordlist_as_list("subs_small.txt")
 
-            # var used for update the plugin status
-            #m_num_probes = len(m_subdomains)
-
-            # Run parallely
-            func_with_static_field = partial(_get_subdomains_bruteforcer, m_domain, self.update_status)
-            r = pmap(func_with_static_field, m_subdomains, pool_size=10)
+            # Run in parallel
+            self.base_domain = m_domain
+            self.completed = Counter(0)
+            self.total = len(m_subdomains)
+            r = pmap(self.get_subdomains_bruteforcer, m_subdomains, pool_size=10)
 
             #
             # Remove repeated
@@ -249,36 +256,42 @@ class DNSBruteforcer(TestingPlugin):
             # Set the domain as processed
             self.state.set(m_domain, True)
 
-            self.update_status("Ending DNS analyzer plugin. Found %s subdomains" % str(len(m_return)))
+            self.update_status(progress=100)
 
+            Logger.log_verbose("DNS analyzer plugin found %d subdomains" % len(m_return))
+            Logger.log_very_verbose("\t" + "\n\t".join(m_return))
 
         return m_return
 
 
-#----------------------------------------------------------------------
-def _get_subdomains_bruteforcer(base_domain, updater_func, subdomain):
-    """
-    Try to discover subdomains using bruteforce. This function is
-    prepared to run parallely.
+    #----------------------------------------------------------------------
+    def get_subdomains_bruteforcer(self, subdomain):
+        """
+        Try to discover subdomains using bruteforce. This function is
+        prepared to run in parallel.
 
-    To try to make as less as possible connections, discovered_domains
-    contains a list with already discovered domains.
+        To try to make as less as possible connections, discovered_domains
+        contains a list with already discovered domains.
 
-    :param base_domain: string with de domain to make the test.
-    :type base_domain: str
+        :param base_domain: string with de domain to make the test.
+        :type base_domain: str
 
-    :param updater_func: function to update the state of the process.
-    :type updater_func: update_status
+        :param updater_func: function to update the state of the process.
+        :type updater_func: update_status
 
-    :param subdomain: string with the domain to process.
-    :type subdomain: str
-    """
+        :param subdomain: string with the domain to process.
+        :type subdomain: str
+        """
 
-    m_domain = "%s.%s" % (subdomain, base_domain)
+        m_domain = "%s.%s" % (subdomain, self.base_domain)
 
-    updater_func(text="Looking for subdomain: %s" % m_domain)
+        completed = self.completed.inc()
+        progress = float(completed) / float(self.total)
+        text = "Looking for subdomain: %s" % m_domain
 
-    l_oks = DNS.get_a(m_domain, also_CNAME=True)
-    l_oks.extend(DNS.get_aaaa(m_domain, also_CNAME=True))
+        self.update_status(progress=progress, text=text)
 
-    return l_oks
+        l_oks = DNS.get_a(m_domain, also_CNAME=True)
+        l_oks.extend(DNS.get_aaaa(m_domain, also_CNAME=True))
+
+        return l_oks
