@@ -36,7 +36,7 @@ from ..api.data.resource.domain import Domain
 from ..api.data.resource.ip import IP
 from ..api.data.resource.url import Url
 from ..api.net.dns import DNS
-from ..api.net.web_utils import DecomposedURL, split_hostname
+from ..api.net.web_utils import ParsedURL, split_hostname
 
 from netaddr import IPAddress, IPNetwork
 
@@ -130,7 +130,7 @@ class AuditScope (object):
                     # If it's an URL...
                     else:
                         try:
-                            parsed_url = DecomposedURL(target)
+                            parsed_url = ParsedURL(target)
                             url = parsed_url.url
                         except Exception:
                             url = None
@@ -240,7 +240,7 @@ class AuditScope (object):
 
         # If it's an URL...
         try:
-            parsed_url = DecomposedURL(target)
+            parsed_url = ParsedURL(target)
         except Exception:
             parsed_url = None
         if parsed_url is not None:

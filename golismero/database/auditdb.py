@@ -43,7 +43,7 @@ from ..messaging.codes import MessageCode
 from ..managers.rpcmanager import implementor
 
 import collections
-import urlparse  # cannot use DecomposeURL here!
+import urlparse  # cannot use ParsedURL here!
 import warnings
 
 # Lazy imports

@@ -35,7 +35,7 @@ __all__ = ["HTTP_Request", "HTTP_Response"]
 from . import Information
 from .. import identity, overwrite
 from ...config import Config
-from ...net.web_utils import DecomposedURL
+from ...net.web_utils import ParsedURL
 
 import re
 import httplib
@@ -455,7 +455,7 @@ class HTTP_Request (Information):
         self.__post_data = post_data
 
         # URL.
-        self.__parsed_url = DecomposedURL(url)
+        self.__parsed_url = ParsedURL(url)
         self.__url = self.__parsed_url.url
 
         # HTTP headers.
@@ -576,7 +576,7 @@ class HTTP_Request (Information):
     def parsed_url(self):
         """
         :returns: URL split to its components.
-        :rtype: DecomposedURL
+        :rtype: ParsedURL
         """
         return self.__parsed_url
 

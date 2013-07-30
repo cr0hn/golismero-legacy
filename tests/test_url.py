@@ -46,7 +46,7 @@ except NameError:
 
 
 # Imports
-from golismero.api.net.web_utils import DecomposedURL
+from golismero.api.net.web_utils import ParsedURL
 from warnings import catch_warnings
 
 
@@ -215,7 +215,7 @@ simple = (
 def test_url_parser():
     for case in simple:
         url = case['url']
-        d = DecomposedURL(url)
+        d = ParsedURL(url)
         for key, value in case.iteritems():
             try:
                 assert getattr(d, key) == value
@@ -233,12 +233,12 @@ def test_url_parser():
 def test_url_parser_custom():
 
     # Relative URLs.
-    assert DecomposedURL("/index.html", base_url="http://www.example.com").url == "http://www.example.com/index.html"
-    assert DecomposedURL("index.html", base_url="http://www.example.com/folder/").url == "http://www.example.com/folder/index.html"
-    assert DecomposedURL("index.html", base_url="http://www.example.com/folder").url == "http://www.example.com/index.html"
+    assert ParsedURL("/index.html", base_url="http://www.example.com").url == "http://www.example.com/index.html"
+    assert ParsedURL("index.html", base_url="http://www.example.com/folder/").url == "http://www.example.com/folder/index.html"
+    assert ParsedURL("index.html", base_url="http://www.example.com/folder").url == "http://www.example.com/index.html"
 
     # Setters.
-    d = DecomposedURL("http://www.example.com")
+    d = ParsedURL("http://www.example.com")
     assert d.path == "/"
     d.path = "/index.html"
     assert d.url == "http://www.example.com/index.html"

@@ -342,16 +342,16 @@ golismero/api/net/web_utils.py:1108: Warning (W): TODO: according to this: https
 golismero/api/net/web_utils.py:1135: Warning (W): XXX DEBUG
 golismero/api/net/web_utils.py:1286: Warning (W): TODO: roll back changes if it fails
 golismero/api/net/web_utils.py:390: Error (E, check_auth): Instance of 'LookupDict' has no 'ok' member
-golismero/api/net/web_utils.py:1134: Warning (W, DecomposedURL.query): Catching too general exception Exception
-golismero/api/net/web_utils.py:1128: Warning (W, DecomposedURL.query): Used builtin function 'map'
-golismero/api/net/web_utils.py:1151: Warning (W, DecomposedURL.query_params): Attribute '__query_params' defined outside __init__
-golismero/api/net/web_utils.py:1152: Warning (W, DecomposedURL.query_params): Attribute '__query' defined outside __init__
-golismero/api/net/web_utils.py:1051: Warning (W, DecomposedURL.host): Attribute '__host' defined outside __init__
-golismero/api/net/web_utils.py:1080: Warning (W, DecomposedURL.path): Attribute '__path' defined outside __init__
-golismero/api/net/web_utils.py:1066: Warning (W, DecomposedURL.port): Attribute '__port' defined outside __init__
-golismero/api/net/web_utils.py:1316: Warning (W, DecomposedURL.auth): Attribute '__password' defined outside __init__
-golismero/api/net/web_utils.py:1092: Warning (W, DecomposedURL.fragment): Attribute '__fragment' defined outside __init__
-golismero/api/net/web_utils.py:1315: Warning (W, DecomposedURL.auth): Attribute '__username' defined outside __init__
+golismero/api/net/web_utils.py:1134: Warning (W, ParsedURL.query): Catching too general exception Exception
+golismero/api/net/web_utils.py:1128: Warning (W, ParsedURL.query): Used builtin function 'map'
+golismero/api/net/web_utils.py:1151: Warning (W, ParsedURL.query_params): Attribute '__query_params' defined outside __init__
+golismero/api/net/web_utils.py:1152: Warning (W, ParsedURL.query_params): Attribute '__query' defined outside __init__
+golismero/api/net/web_utils.py:1051: Warning (W, ParsedURL.host): Attribute '__host' defined outside __init__
+golismero/api/net/web_utils.py:1080: Warning (W, ParsedURL.path): Attribute '__path' defined outside __init__
+golismero/api/net/web_utils.py:1066: Warning (W, ParsedURL.port): Attribute '__port' defined outside __init__
+golismero/api/net/web_utils.py:1316: Warning (W, ParsedURL.auth): Attribute '__password' defined outside __init__
+golismero/api/net/web_utils.py:1092: Warning (W, ParsedURL.fragment): Attribute '__fragment' defined outside __init__
+golismero/api/net/web_utils.py:1315: Warning (W, ParsedURL.auth): Attribute '__username' defined outside __init__
 golismero/api/net/web_utils.py:1651: Error (E, HTMLParser.title): Instance of 'ResultSet' has no 'name' member (but some types could not be inferred)
 golismero/api/net/__init__.py:93: Warning (W): FIXME
 golismero/api/net/__init__.py:89: Warning (W, ConnectionSlot.__enter__): Access to a protected member _context of a client class

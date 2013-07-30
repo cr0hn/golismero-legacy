@@ -43,7 +43,7 @@ import re
 #
 # TODO:
 #
-# + Use DecomposedURL instead of urlparse. It's not as simple
+# + Use ParsedURL instead of urlparse. It's not as simple
 #   as it sounds, because we also need to add the urljoin
 #   functionality (urldefrag is already there).
 # + A generic "extract" function that uses the appropriate helper

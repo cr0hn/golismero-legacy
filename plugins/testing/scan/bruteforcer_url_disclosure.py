@@ -34,7 +34,7 @@ from golismero.api.data.resource.folderurl import FolderUrl
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.logger import Logger
 from golismero.api.net.http import HTTP
-from golismero.api.net.web_utils import DecomposedURL
+from golismero.api.net.web_utils import ParsedURL
 from golismero.api.text.matching_analyzer import MatchingAnalyzer, HTTP_response_headers_analyzer
 from golismero.api.text.wordlist_api import WordListAPI
 from golismero.api.text.text_utils import generate_random_string
@@ -651,14 +651,14 @@ def make_url_with_prefixes(wordlist, url_parts):
     :type wordlist: WordList
 
     :param url_parts: Parsed URL to mutate.
-    :type url_parts: DecomposedURL
+    :type url_parts: ParsedURL
 
     :returns: a set with urls.
     :rtype: set
     """
 
-    if not isinstance(url_parts, DecomposedURL):
-        raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
+    if not isinstance(url_parts, ParsedURL):
+        raise TypeError("Expected ParsedURL, got %s instead" % type(url_parts))
 
     if not wordlist:
         raise ValueError("Internal error!")
@@ -689,14 +689,14 @@ def make_url_with_suffixes(wordlist, url_parts):
     :type wordlist: WordList
 
     :param url_parts: Parsed URL to mutate.
-    :type url_parts: DecomposedURL
+    :type url_parts: ParsedURL
 
     :returns: a set with urls.
     :rtype: set
     """
 
-    if not isinstance(url_parts, DecomposedURL):
-        raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
+    if not isinstance(url_parts, ParsedURL):
+        raise TypeError("Expected ParsedURL, got %s instead" % type(url_parts))
 
     if not wordlist:
         raise ValueError("Internal error!")
@@ -724,14 +724,14 @@ def make_url_mutate_filename(url_parts):
     Creates a set of URLs with mutated filenames.
 
     :param url_parts: Parsed URL to mutate.
-    :type url_parts: DecomposedURL
+    :type url_parts: ParsedURL
 
     :return: a set with URLs
     :rtype: set
     """
 
-    if not isinstance(url_parts, DecomposedURL):
-        raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
+    if not isinstance(url_parts, ParsedURL):
+        raise TypeError("Expected ParsedURL, got %s instead" % type(url_parts))
 
     # Change extension to upper case
     m_new                = url_parts.copy()
@@ -763,14 +763,14 @@ def make_url_changing_folder_name(url_parts):
     Creates a set of URLs with prefixes.
 
     :param url_parts: Parsed URL to mutate.
-    :type url_parts: DecomposedURL
+    :type url_parts: ParsedURL
 
     :returns: a set with urls.
     :rtype: set
     """
 
-    if not isinstance(url_parts, DecomposedURL):
-        raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
+    if not isinstance(url_parts, ParsedURL):
+        raise TypeError("Expected ParsedURL, got %s instead" % type(url_parts))
 
 
     # Making predictables
@@ -798,14 +798,14 @@ def make_url_with_files_or_folder(wordlist, url_parts):
     :type wordlist: WordList
 
     :param url_parts: Parsed URL to mutate.
-    :type url_parts: DecomposedURL
+    :type url_parts: ParsedURL
 
     :return: a set with URLs
     :rtype: set
     """
 
-    if not isinstance(url_parts, DecomposedURL):
-        raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
+    if not isinstance(url_parts, ParsedURL):
+        raise TypeError("Expected ParsedURL, got %s instead" % type(url_parts))
 
     if not wordlist:
         raise ValueError("Internal error!")
@@ -867,14 +867,14 @@ def make_url_changing_extensions(wordlist, url_parts):
     :type wordlist: WordList
 
     :param url_parts: Parsed URL to mutate.
-    :type url_parts: DecomposedURL
+    :type url_parts: ParsedURL
 
     :return: a set with the URLs
     :rtype: set
     """
 
-    if not isinstance(url_parts, DecomposedURL):
-        raise TypeError("Expected DecomposedURL, got %s instead" % type(url_parts))
+    if not isinstance(url_parts, ParsedURL):
+        raise TypeError("Expected ParsedURL, got %s instead" % type(url_parts))
 
     if not wordlist:
         raise ValueError("Internal error!")
@@ -909,7 +909,7 @@ def is_folder_url(url_parts):
     then ==> Return False
 
     :param url_parts: Parsed URL to test.
-    :type url_parts: DecomposedURL
+    :type url_parts: ParsedURL
 
     :return: True if it's a folder, False otherwise.
     :rtype: bool

@@ -39,7 +39,7 @@ from .folderurl import FolderUrl
 from .ip import IP
 from .. import identity
 from ...config import Config
-from ...net.web_utils import DecomposedURL
+from ...net.web_utils import ParsedURL
 
 
 #------------------------------------------------------------------------------
@@ -111,7 +111,7 @@ class Url(Resource):
 
         # Parse, verify and canonicalize the URL.
         # TODO: if relative, make it absolute using the referer when available.
-        parsed = DecomposedURL(url)
+        parsed = ParsedURL(url)
         if not parsed.host or not parsed.scheme:
             raise ValueError("Only absolute URLs must be used!")
         url = parsed.url
@@ -197,7 +197,7 @@ class Url(Resource):
     def parsed_url(self):
         """
         :return: URL in decomposed form.
-        :rtype: DecomposedURL
+        :rtype: ParsedURL
         """
         return self.__parsed_url
 

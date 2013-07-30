@@ -36,7 +36,7 @@ from golismero.api.logger import Logger
 from golismero.api.net import NetworkException
 from golismero.api.net.http import HTTP
 from golismero.api.net.scraper import extract_from_html, extract_from_text
-from golismero.api.net.web_utils import DecomposedURL, download
+from golismero.api.net.web_utils import ParsedURL, download
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.matching_analyzer import get_matching_level
 from golismero.api.text.wordlist_api import WordListAPI
@@ -236,7 +236,7 @@ class ServerFingerprinting(TestingPlugin):
         #
         #
         #basic_platform_detection(m_main_url, m_conn)
-        #m_platform = ttl_platform_detection(DecomposedURL(m_main_url).hostname)
+        #m_platform = ttl_platform_detection(ParsedURL(m_main_url).hostname)
         #if m_platform:
             #Logger.log_more_verbose("Fingerprint - Plaform: %s" % ','.join(m_platform.keys()))
 
@@ -364,7 +364,7 @@ def ttl_platform_detection(main_url):
 
     # Do a ping
     try:
-        m_ttl               = do_ping_and_receive_ttl(DecomposedURL(main_url).hostname, 2)
+        m_ttl               = do_ping_and_receive_ttl(ParsedURL(main_url).hostname, 2)
 
         # Load words for the wordlist
         l_wordlist_instance = WordListAPI.get_advanced_wordlist_as_dict(Config.plugin_extra_config["Wordlist_ttl"]["ttl"])
@@ -452,7 +452,7 @@ def http_analyzers(main_url, update_status_func, part_status=100, number_of_entr
 
 
     # Store results for others HTTP params
-    m_d                   = DecomposedURL(main_url)
+    m_d                   = ParsedURL(main_url)
     m_hostname            = m_d.hostname
     m_port                = m_d.port
     m_debug               = False # Only for develop

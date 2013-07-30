@@ -36,7 +36,7 @@ from . import Resource
 from .domain import Domain
 from .. import identity
 from ...config import Config
-from ...net.web_utils import DecomposedURL
+from ...net.web_utils import ParsedURL
 
 
 #------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ class FolderUrl(Resource):
         url = str(url)
 
         # Parse, verify and canonicalize the URL.
-        parsed = DecomposedURL(url)
+        parsed = ParsedURL(url)
         if not parsed.host or not parsed.scheme:
             raise ValueError("Only absolute URLs must be used!")
         if not parsed.path.endswith("/"):
@@ -118,7 +118,7 @@ class FolderUrl(Resource):
         assert isinstance(url, basestring)
 
         # Parse, verify and canonicalize the URL.
-        parsed = DecomposedURL(url)
+        parsed = ParsedURL(url)
         if not parsed.host or not parsed.scheme:
             raise ValueError("Only absolute URLs must be used!")
 
@@ -176,7 +176,7 @@ class FolderUrl(Resource):
     def parsed_url(self):
         """
         :return: Parsed URL.
-        :rtype: DecomposedURL
+        :rtype: ParsedURL
         """
         return self.__parsed_url
 

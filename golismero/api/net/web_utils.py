@@ -33,7 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = [
     "download", "data_from_http_response", "generate_user_agent",
     "fix_url", "check_auth", "get_auth_obj", "detect_auth_method",
-    "split_hostname", "generate_error_page_url", "DecomposedURL",
+    "split_hostname", "generate_error_page_url", "ParsedURL",
+    "parse_url",
 ]
 
 
@@ -222,7 +223,7 @@ def download(url, callback = None, timeout = None, allow_redirects = True):
 
             # Get the name.
             # TODO: parse the Content-Disposition header.
-            name = DecomposedURL(url).filename
+            name = ParsedURL(url).filename
             if not name:
                 name = request.parsed_url.filename
                 if not name:
@@ -333,7 +334,7 @@ def fix_url(url, base_url=None):
     :return: Canonical URL.
     :rtype: str
     """
-    parsed = DecomposedURL(url)
+    parsed = ParsedURL(url)
     if not parsed.scheme:
         parsed.scheme = 'http://'
 
@@ -469,11 +470,11 @@ def split_hostname(hostname):
 
     For example:
 
-    >>> from golismero.api.web_utils import DecomposedURL
-    >>> d = DecomposedURL("http://www.example.com/")
+    >>> from golismero.api.web_utils import ParsedURL
+    >>> d = ParsedURL("http://www.example.com/")
     >>> d.split_hostname()
     ('www', 'example', 'com')
-    >>> d = DecomposedURL("http://some.subdomain.of.example.co.uk/")
+    >>> d = ParsedURL("http://some.subdomain.of.example.co.uk/")
     >>> d.split_hostname()
     ('some.subdomain.of', 'example', 'co.uk')
     >>> '.'.join(d.split_hostname())
@@ -508,15 +509,34 @@ def generate_error_page_url(url):
     :return: Generated URL.
     :rtype: str
     """
-    m_parsed_url = DecomposedURL(url)
+    m_parsed_url = ParsedURL(url)
     m_parsed_url.path = m_parsed_url.path + generate_random_string()
     return m_parsed_url.url
 
 
 #----------------------------------------------------------------------
-class DecomposedURL(object):
+def parse_url(url, base_url = None):
     """
-    Decomposed URL, that is, broken down to its parts.
+    Parse an URL and return a mutable object with all its parts.
+
+    For more details see: :ref:`ParsedURL`
+
+    :param url: URL to parse.
+    :type url: str
+
+    :param base_url: Optional base URL.
+    :type base_url: str
+
+    :returns: Mutable object with access to the URL parts.
+    :rtype: ParsedURL
+    """
+    return ParsedURL(url, base_url)
+
+
+#----------------------------------------------------------------------
+class ParsedURL (object):
+    """
+    Parse an URL and return a mutable object with all its parts.
 
     For example, the following URL:
 
@@ -563,9 +583,9 @@ class DecomposedURL(object):
 
     Example:
 
-    >>> from golismero.api.web_utils import DecomposedURL
+    >>> from golismero.api.web_utils import ParsedURL
     >>> url="http://user:pass@www.site.com/folder/index.php?param1=val1&b#anchor"
-    >>> r = DecomposedURL(url)
+    >>> r = ParsedURL(url)
     >>> r.scheme
     'http'
     >>> r.filename
@@ -742,7 +762,7 @@ class DecomposedURL(object):
     def copy(self):
         """
         :returns: A copy of this object.
-        :rtype: DecomposedURL
+        :rtype: ParsedURL
         """
         return deepcopy(self)
 
@@ -779,8 +799,8 @@ class DecomposedURL(object):
 
         By default every component of the path is tested:
 
-        >>> from golismero.api.web_utils import DecomposedURL
-        >>> d = DecomposedURL("http://www.example.com/download.php/filename/file.pdf")
+        >>> from golismero.api.web_utils import ParsedURL
+        >>> d = ParsedURL("http://www.example.com/download.php/filename/file.pdf")
         >>> d.match_extension(".php")
         True
         >>> d.match_extension(".pdf")
@@ -790,8 +810,8 @@ class DecomposedURL(object):
 
         However you can set the 'directory_allowed' to False to check only the last component:
 
-        >>> from golismero.api.web_utils import DecomposedURL
-        >>> d = DecomposedURL("http://www.example.com/download.php/filename/file.pdf")
+        >>> from golismero.api.web_utils import ParsedURL
+        >>> d = ParsedURL("http://www.example.com/download.php/filename/file.pdf")
         >>> d.match_extension(".php", directory_allowed = True)
         True
         >>> d.match_extension(".php", directory_allowed = False)
@@ -799,8 +819,8 @@ class DecomposedURL(object):
 
         Double extension is supported, as it can come in handy when analyzing malware URLs:
 
-        >>> from golismero.api.web_utils import DecomposedURL
-        >>> d = DecomposedURL("http://www.example.com/malicious.pdf.exe")
+        >>> from golismero.api.web_utils import ParsedURL
+        >>> d = ParsedURL("http://www.example.com/malicious.pdf.exe")
         >>> d.filebase
         'malicious.pdf'
         >>> d.extension
@@ -812,8 +832,8 @@ class DecomposedURL(object):
 
         The double extension support can be disabled by setting the 'double_allowed' argument to False:
 
-        >>> from golismero.api.web_utils import DecomposedURL
-        >>> d = DecomposedURL("http://www.example.com/malicious.pdf.exe")
+        >>> from golismero.api.web_utils import ParsedURL
+        >>> d = ParsedURL("http://www.example.com/malicious.pdf.exe")
         >>> d.match_extension(".pdf", double_allowed = True)
         True
         >>> d.match_extension(".pdf", double_allowed = False)
@@ -821,8 +841,8 @@ class DecomposedURL(object):
 
         String comparisons are case insensitive by default:
 
-        >>> from golismero.api.web_utils import DecomposedURL
-        >>> d = DecomposedURL("http://www.example.com/index.html")
+        >>> from golismero.api.web_utils import ParsedURL
+        >>> d = ParsedURL("http://www.example.com/index.html")
         >>> d.match_extension(".html")
         True
         >>> d.match_extension(".HTML")
@@ -830,8 +850,8 @@ class DecomposedURL(object):
 
         This too can be configured, just set 'case_insensitive' to False:
 
-        >>> from golismero.api.web_utils import DecomposedURL
-        >>> d = DecomposedURL("http://www.example.com/index.html")
+        >>> from golismero.api.web_utils import ParsedURL
+        >>> d = ParsedURL("http://www.example.com/index.html")
         >>> d.match_extension(".HTML", case_insensitive = True)
         True
         >>> d.match_extension(".HTML", case_insensitive = False)
@@ -886,15 +906,15 @@ class DecomposedURL(object):
 
         By default every component of the path is parsed:
 
-        >>> from golismero.api.web_utils import DecomposedURL
-        >>> d = DecomposedURL("http://www.example.com/download.php/filename/file.pdf")
+        >>> from golismero.api.web_utils import ParsedURL
+        >>> d = ParsedURL("http://www.example.com/download.php/filename/file.pdf")
         >>> d.get_all_extensions()
         ['.php', '.pdf']
 
         However you can set the 'directory_allowed' to False to parse only the last component:
 
-        >>> from golismero.api.web_utils import DecomposedURL
-        >>> d = DecomposedURL("http://www.example.com/download.php/filename/file.pdf")
+        >>> from golismero.api.web_utils import ParsedURL
+        >>> d = ParsedURL("http://www.example.com/download.php/filename/file.pdf")
         >>> d.get_all_extensions(directory_allowed = False)
         ['.pdf']
         >>> d.get_all_extensions(directory_allowed = True)
@@ -902,8 +922,8 @@ class DecomposedURL(object):
 
         Double extension is supported, as it can come in handy when analyzing malware URLs:
 
-        >>> from golismero.api.web_utils import DecomposedURL
-        >>> d = DecomposedURL("http://www.example.com/malicious.pdf.exe")
+        >>> from golismero.api.web_utils import ParsedURL
+        >>> d = ParsedURL("http://www.example.com/malicious.pdf.exe")
         >>> d.filebase
         'malicious.pdf'
         >>> d.extension
@@ -913,8 +933,8 @@ class DecomposedURL(object):
 
         The double extension support can be disabled by setting the 'double_allowed' argument to False:
 
-        >>> from golismero.api.web_utils import DecomposedURL
-        >>> d = DecomposedURL("http://www.example.com/malicious.pdf.exe")
+        >>> from golismero.api.web_utils import ParsedURL
+        >>> d = ParsedURL("http://www.example.com/malicious.pdf.exe")
         >>> d.get_all_extensions(double_allowed = False)
         ['.exe']
         >>> d.get_all_extensions(double_allowed = True)
@@ -954,11 +974,11 @@ class DecomposedURL(object):
 
         For example:
 
-        >>> from golismero.api.web_utils import DecomposedURL
-        >>> d = DecomposedURL("http://www.example.com/")
+        >>> from golismero.api.web_utils import ParsedURL
+        >>> d = ParsedURL("http://www.example.com/")
         >>> d.split_hostname()
         ('www', 'example', 'com')
-        >>> d = DecomposedURL("http://some.subdomain.of.example.co.uk/")
+        >>> d = ParsedURL("http://some.subdomain.of.example.co.uk/")
         >>> d.split_hostname()
         ('some.subdomain.of', 'example', 'co.uk')
         >>> '.'.join(d.split_hostname())
@@ -1166,8 +1186,8 @@ class DecomposedURL(object):
 
         Example:
 
-        >>> from golismero.api.web_utils import DecomposedURL
-        >>> d = DecomposedURL("http://www.example.com/malicious.pdf.exe")
+        >>> from golismero.api.web_utils import ParsedURL
+        >>> d = ParsedURL("http://www.example.com/malicious.pdf.exe")
         >>> d.filename
         'malicious.pdf.exe'
         >>> d.filebase

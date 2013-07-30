@@ -47,7 +47,7 @@ except NameError:
 
 # Imports.
 from golismero.api.data.information.http import HTTP_Headers, HTTP_Request, HTTP_Response
-from golismero.api.net.web_utils import DecomposedURL
+from golismero.api.net.web_utils import ParsedURL
 
 
 # Test cases for HTTP headers.
@@ -293,7 +293,7 @@ def test_http_request():
     request = HTTP_Request("http://www.example.com/index.html")
     assert request.method == "GET"
     assert request.url == "http://www.example.com/index.html"
-    assert isinstance(request.parsed_url, DecomposedURL)
+    assert isinstance(request.parsed_url, ParsedURL)
     assert request.protocol == "HTTP"
     assert request.version == "1.1"
     assert isinstance(request.headers, HTTP_Headers)
@@ -312,7 +312,7 @@ def test_http_request():
     request = HTTP_Request("http://www.example.com/form.php", post_data="hola=manola")
     assert request.method == "POST"
     assert request.url == "http://www.example.com/form.php"
-    assert isinstance(request.parsed_url, DecomposedURL)
+    assert isinstance(request.parsed_url, ParsedURL)
     assert request.protocol == "HTTP"
     assert request.version == "1.1"
     assert isinstance(request.headers, HTTP_Headers)
@@ -332,7 +332,7 @@ def test_http_request():
     request = HTTP_Request("http://www.example.com/index.html", headers=t_headers, version="1.0")
     assert request.method == "GET"
     assert request.url == "http://www.example.com/index.html"
-    assert isinstance(request.parsed_url, DecomposedURL)
+    assert isinstance(request.parsed_url, ParsedURL)
     assert request.protocol == "HTTP"
     assert request.version == "1.0"
     assert request.headers.to_tuple() == t_headers
@@ -352,7 +352,7 @@ def test_http_request():
     request = HTTP_Request("http://www.example.com/index.html", headers=d_headers, version="1.0")
     assert request.method == "GET"
     assert request.url == "http://www.example.com/index.html"
-    assert isinstance(request.parsed_url, DecomposedURL)
+    assert isinstance(request.parsed_url, ParsedURL)
     assert request.protocol == "HTTP"
     assert request.version == "1.0"
     assert request.headers.to_tuple() == tuple(sorted(d_headers.items()))
@@ -372,7 +372,7 @@ def test_http_request():
     request = HTTP_Request("http://www.example.com/form.php?hola=manola", headers=o_headers, version="1.0")
     assert request.method == "GET"
     assert request.url == "http://www.example.com/form.php?hola=manola"
-    assert isinstance(request.parsed_url, DecomposedURL)
+    assert isinstance(request.parsed_url, ParsedURL)
     assert request.protocol == "HTTP"
     assert request.version == "1.0"
     assert request.headers is o_headers
@@ -391,7 +391,7 @@ def test_http_request():
     request = HTTP_Request("http://www.example.com/form.php", post_data="hola=manola", headers=t_headers, version="1.0")
     assert request.method == "POST"
     assert request.url == "http://www.example.com/form.php"
-    assert isinstance(request.parsed_url, DecomposedURL)
+    assert isinstance(request.parsed_url, ParsedURL)
     assert request.protocol == "HTTP"
     assert request.version == "1.0"
     assert request.headers.to_tuple() == t_headers
