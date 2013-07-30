@@ -1181,7 +1181,7 @@ def calculate_server_track(server_name):
     # web servers.
     #
     # Load keys an related servers
-    m_servers_keys, m_servers_related_tmp = get_fingerprinting_wordlist(Config.plugin_extra_config["keywords"]["w1"])
+    m_servers_keys, m_servers_related_tmp = get_fingerprinting_wordlist(Config.plugin_config["keywords"])
 
     # Looking for web server in the keys
     m_resultsc = Counter()

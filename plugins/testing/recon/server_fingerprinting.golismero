@@ -9,10 +9,8 @@ Website = https://github.com/cr0hn/golismero/
 Copyright = Copyright (C) 2011-2013 GoLismero Project
 License = GNU Public License
 
-
-[keywords]
-w1 = fingerprint/webservers_keywords.txt
-
+[Configuration]
+keywords = fingerprint/webservers_keywords.txt
 
 [Wordlist_get]
 accept-range            = fingerprint/httprecon/get_existing/accept-range.fdb
@@ -35,7 +33,6 @@ vary-capitalize         = fingerprint/httprecon/get_existing/vary-capitalize.fdb
 vary-delimiter          = fingerprint/httprecon/get_existing/vary-delimiter.fdb
 vary-order              = fingerprint/httprecon/get_existing/vary-order.fdb
 x-powered-by            = fingerprint/httprecon/get_existing/x-powered-by.fdb
-
 
 [Wordlist_get_long]
 accept-range            = fingerprint/httprecon/get_long/accept-range.fdb
@@ -154,7 +151,6 @@ options-public          = fingerprint/httprecon/delete_existing/options-public.f
 options-allowed         = fingerprint/httprecon/delete_existing/options-allowed.fdb
 options-delimited       = fingerprint/httprecon/delete_existing/options-delimited.fdb
 
-
 [Wordlist_attack]
 accept-range            = fingerprint/httprecon/attack_request/accept-range.fdb
 banner                  = fingerprint/httprecon/attack_request/banner.fdb
@@ -223,7 +219,6 @@ vary-capitalize         = fingerprint/httprecon/wrong_version/vary-capitalize.fd
 vary-delimiter          = fingerprint/httprecon/wrong_version/vary-delimiter.fdb
 vary-order              = fingerprint/httprecon/wrong_version/vary-order.fdb
 x-powered-by            = fingerprint/httprecon/wrong_version/x-powered-by.fdb
-
 
 [Wordlist_ttl]
 ttl                     = fingerprint/ttls.txt
