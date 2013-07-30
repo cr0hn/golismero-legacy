@@ -1314,7 +1314,7 @@ class AuditDB (BaseAuditDB):
         :param audit_db: Database connection string in URL format.
         :type audit_db: str
         """
-        parsed = urlparse.urlparse(audit_db)  # cannot use DecomposeURL here!
+        parsed = urlparse.urlparse(audit_db)  # cannot use our own parser here!
         scheme = parsed.scheme.lower()
 
         if scheme == "memory":

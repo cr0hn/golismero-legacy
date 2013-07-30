@@ -119,8 +119,7 @@ from os import getenv, getpid
 
 from golismero.api.config import Config
 from golismero.common import OrchestratorConfig, AuditConfig, \
-                             get_default_config_file, get_profile, \
-                             get_available_profiles
+                             get_profile, get_available_profiles
 from golismero.main import launcher
 from golismero.main.console import get_terminal_size
 from golismero.main.orchestrator import Orchestrator
@@ -175,7 +174,7 @@ def cmdline_parser():
     parser.add_argument("targets", metavar="TARGET", nargs="*", help="one or more target web sites")
 
     gr_main = parser.add_argument_group("main options")
-    gr_main.add_argument("--config", metavar="FILE", help="global configuration file", default=get_default_config_file())
+    gr_main.add_argument("--config", metavar="FILE", help="global configuration file")
     gr_main.add_argument("-p", "--profile", metavar="NAME", help="profile to use")
     gr_main.add_argument("--profile-list", action="store_true", default=False, help="list available profiles and quit")
     gr_main.add_argument("--ui-mode", metavar="MODE", help="UI mode")
@@ -251,16 +250,13 @@ def main():
             cmdParams.config_file = path.abspath(P.config)
             if not path.isfile(cmdParams.config_file):
                 raise ValueError("File not found: %r" % cmdParams.config_file)
-            cmdParams.from_config_file(cmdParams.config_file)
-        else:
-            cmdParams.config_file = None
+        if cmdParams.config_file:
+            cmdParams.from_config_file(cmdParams.config_file, allow_profile = True)
         if P.profile:
             cmdParams.profile = P.profile
             cmdParams.profile_file = get_profile(cmdParams.profile)
+        if cmdParams.profile_file:
             cmdParams.from_config_file(cmdParams.profile_file)
-        else:
-            cmdParams.profile = None
-            cmdParams.profile_file = None
         cmdParams.from_object(P)
         cmdParams.plugin_load_overrides = P.plugin_load_overrides
 

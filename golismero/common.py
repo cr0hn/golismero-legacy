@@ -142,7 +142,8 @@ def get_default_config_file():
     config_file = path.join(get_user_settings_folder(), "golismero.cfg")
     if not path.isfile(config_file):
         config_file = path.split(path.abspath(__file__))[0]
-        config_file = path.join(config_file, "golismero.cfg")
+        config_file = path.join(config_file, "..", "golismero.cfg")
+        config_file = path.abspath(config_file)
         if not path.isfile(config_file):
             config_file = None
     return config_file
@@ -507,16 +508,27 @@ class Configuration (object):
 
 
     #----------------------------------------------------------------------
-    def from_config_file(self, config_file):
+    def from_config_file(self, config_file, allow_profile = False):
         """
         Get the settings from a configuration file.
 
         :param config_file: Configuration file.
         :type config_file: str
+
+        :param allow_profile: True to allow reading the profile name
+            from the config file, False to forbid it. Global config
+            files should allow setting a default profile, but profile
+            config files should not, as it wouldn't make sense.
         """
         parser = RawConfigParser()
         parser.read(config_file)
         options = { k:v for k,v in parser.items("golismero") if v }
+        if "profile" in options:
+            if allow_profile:
+                self.profile = options["profile"]
+                self.profile_file = get_profile(self.profile)
+            else:
+                del options["profile"]
         self.from_dictionary(options)
 
 
@@ -559,14 +571,14 @@ class OrchestratorConfig (Configuration):
         "plugins_folder": Configuration.string,
 
         # Maximum number of processes to execute plugins
-        "max_process": (Configuration.integer, 10),
+        "max_process": (Configuration.integer, 4 if path.sep == "\\" else 20),
 
         #
         # Network options
         #
 
         # Maximum number of connections per host
-        "max_connections": (Configuration.integer, 50),
+        "max_connections": (Configuration.integer, 20),
 
         # Use persistent cache?
         # True: yes
