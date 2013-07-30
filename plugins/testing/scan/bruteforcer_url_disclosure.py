@@ -70,6 +70,7 @@ severity_vectors = {
     "directories": 2
 }
 
+
 #----------------------------------------------------------------------
 class PredictablesDisclosureBruteforcer(TestingPlugin):
 
@@ -84,7 +85,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
 
         m_url = info.url
 
-        self.update_status("Start to process URL: '%s'" % str(m_url))
+        self.update_status("Start to process URL: %r" % m_url)
 
         #
         # Get the remote web server fingerprint
@@ -176,6 +177,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
         # Generate and return the results.
         return generate_results(m_store_info.unique_texts)
 
+
 #----------------------------------------------------------------------
 class SuffixesDisclosureBruteforcer(TestingPlugin):
     """
@@ -191,15 +193,15 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        self.update_status("Start to process URL: '%s'" % str(info.url))
-
         # Parse original URL
         m_url = info.url
         m_url_parts = info.parsed_url
 
+        self.update_status(progress=0, text="Bruteforcing URL: %s" % m_url)
+
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status("skipping URL '%s'." % str(info))
+            self.update_status(progress=100, text="Skipping URL: %s" % m_url)
             return
 
         #
@@ -229,6 +231,7 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
         # Process the URLs
         for i, l_url in enumerate(m_urls):
             _f((i, l_url))
+
         # Generate and return the results.
         return generate_results(m_store_info.unique_texts)
 
@@ -248,15 +251,15 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        self.update_status("Start to process URL: '%s'" % str(info.url))
-
         # Parse original URL
         m_url = info.url
         m_url_parts = info.parsed_url
 
+        self.update_status(progress=0, text="Bruteforcing URL: %s" % m_url)
+
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status("skipping URL '%s'." % str(info))
+            self.update_status(progress=100, text="Skipping URL: %s" % m_url)
             return
 
         #
@@ -307,15 +310,15 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        self.update_status("Start to process URL: '%s'" % str(info.url))
-
         # Parse original URL
         m_url = info.url
         m_url_parts = info.parsed_url
 
+        self.update_status(progress=0, text="Start to process URL: %s" % m_url)
+
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status("skipping URL '%s'." % str(info))
+            self.update_status(progress=100, text="Skipping URL: %s" % m_url)
             return
 
         #
@@ -365,15 +368,15 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        self.update_status("Start to process URL: '%s'" % str(info.url))
-
         # Parse original URL
         m_url = info.url
         m_url_parts = info.parsed_url
 
+        self.update_status(progress=0, text="Bruteforcing URL: '%s'" % m_url)
+
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status("skipping URL '%s'." % str(info))
+            self.update_status(progress=100, text="Skipping URL: %s" % m_url)
             return
 
         #
@@ -422,15 +425,15 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        self.update_status("Start to process URL: '%s'" % str(info.url))
-
         # Parse original URL
         m_url = info.url
         m_url_parts = info.parsed_url
 
+        self.update_status(progress=0, text="Bruteforcing URL: %s" % m_url)
+
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status("skipping URL '%s'." % str(info))
+            self.update_status(progress=100, text="Skipping URL: %s" % m_url)
             return
 
         #
@@ -463,7 +466,6 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
 
         # Generate and return the results.
         return generate_results(m_store_info.unique_texts)
-
 
 
 #----------------------------------------------------------------------
@@ -603,6 +605,7 @@ def get_error_page(url):
     m_error_response = HTTP.get_url(m_error_url)
     discard_data(m_error_response)
     m_error_response = m_error_response.data
+
 
 #----------------------------------------------------------------------
 def generate_results(unique_texts):
