@@ -343,7 +343,7 @@ class VulnscanManager(object):
         try:
             tmp           = self.__manager.get_configs_ids(profile)
             m_profile_id  = tmp[profile]
-        except ServerError:
+        except ServerError, e:
             raise VulnscanProfileError("The profile select not exits int the server. Error: %s" % str(e))
         except KeyError:
             raise VulnscanProfileError("The profile select not exits int the server")

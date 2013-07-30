@@ -247,16 +247,16 @@ class PluginInfo (object):
         if not stage:
             try:
                 subcategory  = plugin_name.split("/")[1].lower()
-                self.__stage = self.STAGES[subcategory]
+                self.__stage = PluginManager.STAGES[subcategory]
             except Exception:
                 self.__stage = 1
         else:
             try:
-                self.__stage = self.STAGES[stage.lower()]
+                self.__stage = PluginManager.STAGES[stage.lower()]
             except KeyError:
                 try:
                     self.__stage = int(stage)
-                    if self.__stage not in self.STAGES.values():
+                    if self.__stage not in PluginManager.STAGES.values():
                         raise ValueError()
                 except Exception:
                     msg = "Error parsing %r: invalid execution stage: %r"

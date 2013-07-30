@@ -220,6 +220,7 @@ class DNSBruteforcer(TestingPlugin):
             m_domains                  = set()
             m_domains_add              = m_domains.add
             m_domains_already          = []
+            m_domains_already_append   = m_domains_already.append
 
             m_ips                      = set()
             m_ips_add                  = m_ips.add

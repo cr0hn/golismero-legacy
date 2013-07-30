@@ -38,7 +38,6 @@ from ..common import Singleton
 
 from os import path, listdir, walk
 
-import re
 import tempfile
 
 

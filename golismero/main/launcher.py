@@ -35,7 +35,7 @@ __all__ = ["run"]
 from .console import Console
 from .orchestrator import Orchestrator
 from ..api.net.web_utils import detect_auth_method, check_auth
-from ..common import OrchestratorConfig, AuditConfig
+from ..common import OrchestratorConfig, AuditConfig, get_default_config_file
 
 import datetime
 import traceback
