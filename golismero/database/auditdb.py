@@ -624,8 +624,6 @@ class AuditSQLiteDB (BaseAuditDB):
     #----------------------------------------------------------------------
     def __init__(self, audit_name, filename = None):
         """
-        Constructor.
-
         :param audit_name: Audit name.
         :type audit_name: str
 
@@ -637,7 +635,11 @@ class AuditSQLiteDB (BaseAuditDB):
         if sqlite3 is None:
             import sqlite3
         if not filename:
-            filename = audit_name + ".db"
+            filename = "".join(
+                (c if c in "-_~" or c.isalnum() else "_")
+                for c in audit_name
+            )
+            filename = filename + ".db"
         self.__db = sqlite3.connect(filename)
         self.__cursor = None
         self.__busy = False

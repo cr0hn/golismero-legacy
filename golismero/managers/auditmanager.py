@@ -38,6 +38,7 @@ from .reportmanager import ReportManager
 from ..api.data import Data
 from ..api.data.resource import Resource
 from ..api.config import Config
+from ..api.text.text_utils import generate_random_string
 from ..common import AuditConfig
 from ..database.auditdb import AuditDB
 from ..main.scope import AuditScope
@@ -387,7 +388,7 @@ class Audit (object):
         :returns: Generated name.
         :rtype: str
         """
-        return "golismero-" + datetime.now().strftime("%Y-%m-%d-%H_%M_%S")
+        return "golismero-" + generate_random_string()
 
 
     #----------------------------------------------------------------------
