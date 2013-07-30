@@ -4,7 +4,6 @@ from __future__ import with_statement
 import threading
 import time
 import uuid
-import inspect
 
 
 _MARKER = object()
@@ -271,30 +270,23 @@ class lru_cache(object):
     timeout parameter specifies after how many seconds a cached entry should
     be considered invalid.
     """
-    def __init__(self, maxsize, cache=None, timeout=None, param_name=None): # cache is an arg to serve tests
+    def __init__(self, maxsize, cache=None, timeout=None): # cache is an arg to serve tests
         if cache is None:
             if timeout is None:
                 cache = LRUCache(maxsize)
             else:
                 cache = ExpiringLRUCache(maxsize, default_timeout=timeout)
-        self.cache       = cache
-        self.param_name  = param_name
+        self.cache = cache
 
     def __call__(self, f):
         cache = self.cache
         marker = _MARKER
-
-        def lru_cached(*arg, **kw):
+        def lru_cached(*arg):
             val = cache.get(arg, marker)
-            ff_ret = None
             if val is marker:
-                ff_ret = f(*arg, **kw)
-                cache.put(arg, ff_ret)
-            else:
-                ff_ret = val
-
-            return ff_ret
-
+                val = f(*arg)
+                cache.put(arg, val)
+            return val
         lru_cached.__module__ = f.__module__
         lru_cached.__name__ = f.__name__
         lru_cached.__doc__ = f.__doc__
@@ -336,10 +328,10 @@ class CacheMaker(object):
             timeout = self._timeout
 
         return name, maxsize, timeout
-
+    
     def lrucache(self, name=None, maxsize=None):
         """Named arguments:
-
+        
         - name (optional) is a string, and should be unique amongst all caches
 
         - maxsize (optional) is an int, overriding any default value set by
@@ -358,15 +350,15 @@ class CacheMaker(object):
           the constructor
 
         - timeout (optional) is an int, overriding any default value set by
-          the constructor or the default value (%d seconds)
+          the constructor or the default value (%d seconds)  
         """ % _DEFAULT_TIMEOUT
         name, maxsize, timeout = self._resolve_setting(name, maxsize, timeout)
         cache = self._cache[name] = ExpiringLRUCache(maxsize, timeout)
         return lru_cache(maxsize, cache, timeout)
-
+    
     def clear(self, *names):
         """Clear the given cache(s).
-
+        
         If no 'names' are passed, clear all caches.
         """
         if len(names) == 0:

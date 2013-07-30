@@ -36,7 +36,7 @@ from os import walk
 from os.path import join, sep, abspath
 from golismero.api.text.matching_analyzer import get_matching_level
 from golismero.api.file import FileManager
-from repoze.lru import lru_cache
+#from repoze.lru import lru_cache
 import bisect
 import re
 import copy
@@ -154,7 +154,7 @@ class _WordListAPI(Singleton):
 
 
     #----------------------------------------------------------------------
-    @lru_cache(maxsize=30)
+    #@lru_cache(maxsize=30)
     def get_advanced_wordlist_as_dict(self, wordlist, separator=";", smart_load=False):
         """
         Get an AdvancedDicWordlist.
@@ -177,7 +177,7 @@ class _WordListAPI(Singleton):
 
 
     #----------------------------------------------------------------------
-    @lru_cache(maxsize=30)
+    #@lru_cache(maxsize=30)
     def get_advanced_wordlist_as_list(self, wordlist_name):
         """
         Get an AdvancedListWordlist.

@@ -44,7 +44,7 @@ from golismero.api.text.wordlist_api import WordListAPI
 from collections import Counter, OrderedDict, defaultdict
 from ping import do_ping_and_receive_ttl
 from re import compile
-from repoze.lru import lru_cache
+#from repoze.lru import lru_cache
 from urlparse import urljoin
 
 
@@ -1124,7 +1124,7 @@ class HTTPAnalyzer(object):
 # Aux functions
 #
 #----------------------------------------------------------------------
-@lru_cache(maxsize=100)
+#@lru_cache(maxsize=100)
 def calculate_server_track(server_name):
     """
     from nginx/1.5.1-r2 -> ("nginx", "1.5.1")
@@ -1216,7 +1216,7 @@ def calculate_server_track(server_name):
 
 
 #----------------------------------------------------------------------
-@lru_cache(maxsize=100)
+#@lru_cache(maxsize=100)
 def nindex(str_in, substr, nth):
     """
     From and string get nth ocurrence of substr
@@ -1241,7 +1241,7 @@ def nindex(str_in, substr, nth):
 
 
 #----------------------------------------------------------------------
-@lru_cache(maxsize=2)
+#@lru_cache(maxsize=2)
 def get_fingerprinting_wordlist(wordlist):
     """
     Load the wordlist of fingerprints and prepare the info in a dict.
