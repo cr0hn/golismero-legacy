@@ -40,6 +40,8 @@ If you want display the available plugins, you must write:
 
 ```python golismero.py --plugin-list```
 
+![Plugin list example](http://golismero-project.com/images/tutorials/quick_start/plugin_list.png "Plugin list example")
+
 Select a specific plugin
 ------------------------
 
@@ -49,9 +51,13 @@ If you want to run only the dns transfer plugin, you must write:
 
 ```python golismero.py http://mysite.com -d all -e report -e dns_zone_transfer```
 
+![Zone transfer example](http://golismero-project.com/images/tutorials/quick_start/zone_transfer.png "Zone transfer example")
+
 If you want to run only the plugin to discover hidden files in the web server, you must write:
 
 ```python golismero.py http://mysite.com -d all -e report -e bruteforcer_predictables_disclosure```
+
+![Bruteforcer example](http://golismero-project.com/images/tutorials/quick_start/bruteforcer_predictables.png "Bruteforcer example")
 
 What will be the next features?
 ===============================
