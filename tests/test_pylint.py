@@ -359,8 +359,8 @@ golismero/api/net/__init__.py:97: Warning (W, ConnectionSlot.__exit__): Redefini
 golismero/api/net/__init__.py:98: Warning (W, ConnectionSlot.__exit__): Access to a protected member _context of a client class
 golismero/api/net/__init__.py:89: Warning (W, ConnectionSlot.__enter__): Attribute '__token' defined outside __init__
 golismero/api/text/text_utils.py:41: Warning (W): Uses of a deprecated module 'string'
-golismero/api/text/wordlist_api.py:410: Warning (W, AdvancedListWordlist.clone): Access to a protected member __wordlist of a client class
-golismero/api/text/wordlist_api.py:678: Warning (W, AdvancedDicWordlist.clone): Access to a protected member __wordlist of a client class
+golismero/api/text/wordlist.py:410: Warning (W, AdvancedListWordlist.clone): Access to a protected member __wordlist of a client class
+golismero/api/text/wordlist.py:678: Warning (W, AdvancedDicWordlist.clone): Access to a protected member __wordlist of a client class
 golismero/database/auditdb.py:936: Warning (W): TODO: optimize by checking multiple identities in the same query,
 golismero/database/auditdb.py:1003: Warning (W): TODO: optimize by checking multiple identities in the same query,
 golismero/database/auditdb.py:401: Warning (W, AuditMemoryDB): Method '_atom' is abstract in class 'BaseDB' but is not overridden

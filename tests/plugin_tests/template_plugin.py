@@ -67,7 +67,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # from golismero.api.text.matching_analyzer import get_matching_level
 #
 # - Wordlists (for bruteforcing):
-# from golismero.api.text.wordlist_api import WordListAPI
+# from golismero.api.text.wordlist import WordListLoader
 #
 
 

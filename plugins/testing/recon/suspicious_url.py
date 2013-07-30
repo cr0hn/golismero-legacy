@@ -30,7 +30,7 @@ from golismero.api.config import Config
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.information_disclosure.url_suspicious import SuspiciousURL
 from golismero.api.plugin import TestingPlugin
-from golismero.api.text.wordlist_api import WordListAPI
+from golismero.api.text.wordlist import WordListLoader
 from golismero.api.text.text_utils import calculate_shannon_entropy
 
 
@@ -55,8 +55,8 @@ class SuspiciousURLPlugin(TestingPlugin):
         # Find suspicious URLs by matching against known substrings.
 
         # Load wordlists
-        m_wordlist_middle     = WordListAPI.get_wordlist(Config.plugin_extra_config['Wordlist_middle']['wordlist'])
-        m_wordlist_extensions = WordListAPI.get_wordlist(Config.plugin_extra_config['Wordlist_extensions']['wordlist'])
+        m_wordlist_middle     = WordListLoader.get_wordlist(Config.plugin_extra_config['Wordlist_middle']['wordlist'])
+        m_wordlist_extensions = WordListLoader.get_wordlist(Config.plugin_extra_config['Wordlist_extensions']['wordlist'])
 
         # Add matching keywords at any positions of URL.
         m_results.extend([SuspiciousURL(info, x)

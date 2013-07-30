@@ -20,7 +20,7 @@ Text utils
 Wordlist utils
 --------------
 
-.. automodule:: golismero.api.text.wordlist_api
+.. automodule:: golismero.api.text.wordlist
    :members:
 
 Natural language

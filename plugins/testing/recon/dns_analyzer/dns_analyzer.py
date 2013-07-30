@@ -40,7 +40,7 @@ from golismero.api.logger import Logger
 from golismero.api.net.dns import DNS
 from golismero.api.parallel import pmap, Counter
 from golismero.api.plugin import TestingPlugin
-from golismero.api.text.wordlist_api import WordListAPI
+from golismero.api.text.wordlist import WordListLoader
 
 from netaddr import IPAddress
 
@@ -204,7 +204,7 @@ class DNSBruteforcer(TestingPlugin):
             #
             # Looking for
             #
-            m_subdomains = WordListAPI.get_advanced_wordlist_as_list("subs_small.txt")
+            m_subdomains = WordListLoader.get_advanced_wordlist_as_list("subs_small.txt")
 
             # Run in parallel
             self.base_domain = m_domain

@@ -36,7 +36,7 @@ from golismero.api.logger import Logger
 from golismero.api.net.http import HTTP
 from golismero.api.net.web_utils import ParsedURL
 from golismero.api.text.matching_analyzer import MatchingAnalyzer, HTTP_response_headers_analyzer
-from golismero.api.text.wordlist_api import WordListAPI
+from golismero.api.text.wordlist import WordListLoader
 from golismero.api.text.text_utils import generate_random_string
 
 from golismero.api.plugin import TestingPlugin
@@ -148,7 +148,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
 
         for l_w in m_wordlist:
             # Use a copy of wordlist to avoid modify the original source
-            l_loaded_wordlist = WordListAPI.get_advanced_wordlist_as_list(l_w)
+            l_loaded_wordlist = WordListLoader.get_advanced_wordlist_as_list(l_w)
 
             m_urls_update((urljoin(m_url_fixed, (l_wo[1:] if l_wo.startswith("/") else l_wo)) for l_wo in l_loaded_wordlist))
 
@@ -558,7 +558,7 @@ def load_wordlists(wordlists):
     # Load the wordlist
     m_return = {}
     for k, w_paths in m_tmp_wordlist.iteritems():
-        m_return[k] = [WordListAPI.get_wordlist(w) for w in w_paths]
+        m_return[k] = [WordListLoader.get_wordlist(w) for w in w_paths]
 
     return m_return
 
@@ -933,7 +933,7 @@ def get_list_from_wordlist(wordlist):
         m_commom_wordlists = set()
 
         for v in Config.plugin_extra_config[wordlist].itervalues():
-            m_commom_wordlists.update(WordListAPI.get_advanced_wordlist_as_list(v))
+            m_commom_wordlists.update(WordListLoader.get_advanced_wordlist_as_list(v))
 
         return m_commom_wordlists
     except KeyError,e:

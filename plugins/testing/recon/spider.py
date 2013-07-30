@@ -34,7 +34,7 @@ from golismero.api.net import NetworkException
 from golismero.api.net.scraper import extract_from_html, extract_from_text
 from golismero.api.net.web_utils import download
 from golismero.api.plugin import TestingPlugin
-from golismero.api.text.wordlist_api import WordListAPI
+from golismero.api.text.wordlist import WordListLoader
 
 
 #----------------------------------------------------------------------
@@ -89,7 +89,7 @@ class Spider(TestingPlugin):
             m_links = extract_from_text(p.raw_data, m_url)
 
         # Do not follow URLs that contain certain keywords
-        m_forbidden = WordListAPI.get_wordlist(Config.plugin_config["wordlist_no_spider"])
+        m_forbidden = WordListLoader.get_wordlist(Config.plugin_config["wordlist_no_spider"])
 
         # Convert to Url data type and filter out out of scope and forbidden URLs
         m_return.extend(

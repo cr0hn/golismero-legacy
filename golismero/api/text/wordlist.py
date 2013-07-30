@@ -30,7 +30,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["WordListAPI"]
+__all__ = ["WordListLoader"]
 
 from os import walk
 from os.path import join, sep, abspath
@@ -46,7 +46,7 @@ from ...common import Singleton, get_wordlists_folder
 
 
 #------------------------------------------------------------------------------
-class _WordListAPI(Singleton):
+class _WordListLoader(Singleton):
     """
     Wordlist API.
     """
@@ -301,7 +301,7 @@ class AdvancedListWordlist(AbstractWordlist):
 
     Example:
 
-        >>> from golismero.api.text.wordlist_api import AdvancedListWordlist
+        >>> from golismero.api.text.wordlist import AdvancedListWordlist
         >>> a = AdvancedListWordlist("./wordlist/golismero/no_spiderable_urls.txt")
         >>> "exit" in a
         True
@@ -679,4 +679,4 @@ class AdvancedDicWordlist(object):
 
 #--------------------------------------------------------------------------
 # Singleton.
-WordListAPI = _WordListAPI()
+WordListLoader = _WordListLoader()
