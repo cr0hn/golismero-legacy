@@ -46,7 +46,6 @@ from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 from ..messaging.notifier import AuditNotifier
 
-from datetime import datetime
 from os import getpid
 from warnings import catch_warnings, warn
 
