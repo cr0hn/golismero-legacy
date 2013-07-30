@@ -38,21 +38,23 @@ from ..common import Singleton
 
 from os import path, listdir, walk
 
+import re
 import tempfile
 
 
+#------------------------------------------------------------------------------
 class _FileManager (Singleton):
     """
     File API for plugins.
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self):
         self.__plugin_path = None
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def _update_plugin_path(self):
         """
         Updates the plugin path using the current configuration.
@@ -68,7 +70,7 @@ class _FileManager (Singleton):
         self.__plugin_path = None
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def plugin_path(self):
         """
@@ -88,7 +90,8 @@ class _FileManager (Singleton):
             plugin_path += ".py"
         plugin_path = path.split(plugin_path)[0]
 
-        # If that fails for some reason, use the location of the config file instead.
+        # If that fails for some reason,
+        # use the location of the config file instead.
         if not path.exists(plugin_path):
             plugin_path = path.abspath(Config.plugin_info.plugin_descriptor)
             plugin_path = path.split(plugin_path)[0]
@@ -98,7 +101,8 @@ class _FileManager (Singleton):
                 name = Config.plugin_info.plugin_class
                 if not name:
                     name = Config.plugin_info.display_name
-                Logger.log_error("[%s] Cannot determine the plugin's path!" % name)
+                msg = "[%s] Cannot determine the plugin's path!"
+                Logger.log_error(msg % name)
                 plugin_path = tempfile.gettempdir()
 
         # Cache the plugin path.
@@ -108,7 +112,7 @@ class _FileManager (Singleton):
         return self.__plugin_path
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __sanitize(self, pathname):
         """
         Makes sure the given pathname lies within the plugin folder.
@@ -119,19 +123,21 @@ class _FileManager (Singleton):
 
         # Absolute pathnames are not allowed.
         if path.isabs(pathname):
-            raise ValueError("Absolute pathnames are not allowed: %r" % pathname)
+            msg = "Absolute pathnames are not allowed: %r"
+            raise ValueError(msg % pathname)
 
         # Turn the pathname into a local pathname within the plugin folder.
         pathname = path.join(self.plugin_path, pathname)
         pathname = path.abspath(pathname)
         if not pathname.startswith(self.plugin_path):
-            raise ValueError("Pathname may not be outside the plugin folder: %r" % self.plugin_path)
+            msg = "Pathname may not be outside the plugin folder: %r"
+            raise ValueError(msg % self.plugin_path)
 
         # Return the sanitized pathname.
         return pathname
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def open_tmp_file(self):
         """
         Open a new temporary file. Temporary files have random names and are
@@ -144,7 +150,7 @@ class _FileManager (Singleton):
         return fd, fd.name
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def open(self, filename, mode = "rb"):
         """
         Open a local file in the plugin's folder.
@@ -169,7 +175,7 @@ class _FileManager (Singleton):
         return open(filename, mode)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def exists(self, filename):
         """
         Determine if the given file exists within the plugin folder.
@@ -188,15 +194,17 @@ class _FileManager (Singleton):
         return path.exists(filename)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def isfile(self, filename):
         """
-        Determine if the given filename points to an existing file within the plugin folder.
+        Determine if the given filename points to an existing file
+        within the plugin folder.
 
         :param filename: Name of the file to test.
         :type filename: str
 
-        :returns: True if the file exists, False if it doesn't or is not a file.
+        :returns: True if the file exists,
+                  False if it doesn't or is not a file.
         :rtype: bool
         """
 
@@ -207,15 +215,17 @@ class _FileManager (Singleton):
         return path.isfile(filename)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def isdir(self, filename):
         """
-        Determine if the given filename points to an existing subfolder of the plugin folder.
+        Determine if the given filename points to an existing subfolder
+        of the plugin folder.
 
         :param filename: Name of the folder to test.
         :type filename: str
 
-        :returns: True if the folder exists, False if it doesn't or is not a folder.
+        :returns: True if the folder exists,
+                  False if it doesn't or is not a folder.
         :rtype: bool
         """
 
@@ -226,10 +236,11 @@ class _FileManager (Singleton):
         return path.isdir(filename)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def samefile(self, f1, f2):
         """
-        Determine if the two given filenames point to the same file within the plugin folder.
+        Determine if the two given filenames point to the same file
+        within the plugin folder.
 
         :param f1: Name of the first file to test.
         :type f1: str
@@ -249,12 +260,13 @@ class _FileManager (Singleton):
         return path.samefile(f1, f2)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def listdir(self, folder = "."):
         """
         List all files and folders within the plugin folder.
 
-        :param folder: Optional subfolder name. Defaults to the plugin folder itself.
+        :param folder: Optional subfolder name.
+                       Defaults to the plugin folder itself.
         :type folder: str
 
         :returns: List of file and folder names.
@@ -268,17 +280,19 @@ class _FileManager (Singleton):
         return listdir(folder)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def walk(self, folder = "."):
         """
         Recursively list all files and folders within the plugin folder.
 
         Works exactly like the standard os.walk() function.
 
-        :param folder: Optional subfolder name. Defaults to the plugin folder itself.
+        :param folder: Optional subfolder name.
+                       Defaults to the plugin folder itself.
         :type folder: str
 
-        :returns: Iterator of tuples containing the base path, and the file and folder names.
+        :returns: Iterator of tuples containing the base path,
+                  and the file and folder names.
         :rtype: iter
         """
 
@@ -295,7 +309,7 @@ class _FileManager (Singleton):
             yield basepath, directories, files
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 # Instance the singleton.
 FileManager = _FileManager()
