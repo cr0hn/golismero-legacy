@@ -114,7 +114,7 @@ def setInterval(interval, times = -1):
         >>> from golismero.api.parallel import setInterval
         >>> from time import gmtime, strftime
         >>> @setInterval(2) # Execute every 2 seconds until stopped.
-        ... def my_func()
+        ... def my_func():
         ...     print strftime("%Y-%m-%d %H:%M:%S", gmtime())
         ...
         >>> handler = my_func()
@@ -124,7 +124,7 @@ def setInterval(interval, times = -1):
         2013-07-25 22:41:01
         >>> handler.set() # Stop the execution.
         >>> @setInterval(2, 3) # Every 2 seconds, 3 times.
-        ... def my_func()
+        ... def my_func():
         ...     print strftime("%Y-%m-%d %H:%M:%S", gmtime())
         ...
         >>> handler = my_func()
