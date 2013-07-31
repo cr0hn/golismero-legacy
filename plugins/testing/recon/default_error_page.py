@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.data import discard_data
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.information_disclosure.default_error_page import DefaultErrorPage
-from golismero.api.text.matching_analyzer import get_matching_level
+from golismero.api.text.matching_analyzer import get_diff_ratio
 from golismero.api.net.http import HTTP
 from golismero.api.plugin import TestingPlugin
 
@@ -66,7 +66,7 @@ class DefaultErrorPagePlugin(TestingPlugin):
                     progress = float(step) / total
                     self.update_status(progress=progress)
 
-                    level = get_matching_level(page_text, server_page)
+                    level = get_diff_ratio(page_text, server_page)
 
                     if level > 0.95:  # magic number :)
 

@@ -5,13 +5,9 @@
 Natural language API.
 
 .. info:
-   Acknowledgments:
-
-   Much of this code was borrowed form z0mbiehunt3r (with his permission):
-
-   http://blog.alejandronolla.com/2013/05/15/detecting-text-language-with-python-and-nltk/
-
-   https://twitter.com/z0mbiehunt3r
+   Acknowledgments go to `z0mbiehunt3r <https://twitter.com/z0mbiehunt3r>`_ for his ideas and help.
+   `Check out his blog <http://blog.alejandronolla.com/2013/05/15/detecting-text-language-with-python-and-nltk/>`_
+   to know where this module originally came from!
 """
 
 __license__ = """
@@ -41,73 +37,89 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-__all__ = ["detect_language"]
+__all__ = ["get_words", "detect_language", "calculate_language_scores"]
 
-try:
-    from nltk import wordpunct_tokenize
-    from nltk.corpus import stopwords
-except ImportError:
-    print "Can't import nltk libraries"
+from nltk import wordpunct_tokenize
+from nltk.corpus import stopwords
 
 
 #----------------------------------------------------------------------
-def _calculate_languages_ratios(text):
+def get_words(text, min_length = None, max_length = None):
     """
-    Calculate probability of given text to be written in several languages and
-    return a dictionary that looks like {'french': 2, 'spanish': 4, 'english': 0}
+    Parse the given text as natural language and extract words from it.
+    Optionally filter the words by minimum and/or maximum length.
 
-    :param text: Text whose language want to be detected
+    :param text: Text to parse.
     :type text: str
 
-    :return: Dictionary with languages and unique stopwords seen in analyzed text
-    :rtype: dict
+    :param min_length: Minimum length required. Use None for no limit.
+    :type min_length: int | None
+
+    :param min_length: Maximum length allowed. Use None for no limit.
+    :type min_length: int | None
+
+    :return: Set of unique words extracted from the text.
+    :rtype: set(str)
     """
 
-    languages_ratios = {}
+    # Split the text into separate tokens, using natural language
+    # punctuation signs. Then filter out by min/max length, and tokens
+    # that aren't strictly alphabetic. Finally, convert the words to
+    # lowercase form.
+    return {
+        word.lower() for word in wordpunct_tokenize(text) if
+        (
+            word.isalpha() and
+            (min_length is None or len(word) >= min_length) and
+            (max_length is None or len(word) <= max_length)
+        )
+    }
 
-    # nltk.wordpunct_tokenize() splits all punctuations into separate tokens
-    #
-    # >>> wordpunct_tokenize("That's thirty minutes away. I'll be there in ten.")
-    # ['That', "'", 's', 'thirty', 'minutes', 'away', '.', 'I', "'", 'll', 'be', 'there', 'in', 'ten', '.']
 
-    tokens = wordpunct_tokenize(text)
-    words = [word.lower() for word in tokens]
+#----------------------------------------------------------------------
+def calculate_language_scores(text):
+    """
+    Calculate probability of given text to be written in several languages and
+    return a dictionary that looks like {'french': 2, 'spanish': 4, 'english': 0}.
 
-    # Compute per language included in nltk number of unique stopwords appearing in analyzed text
-    for language in stopwords.fileids():
-        stopwords_set = set(stopwords.words(language))
-        words_set = set(words)
-        common_elements = words_set.intersection(stopwords_set)
+    :param text: Text to analyze.
+    :type text: str
 
-        languages_ratios[language] = len(common_elements) # language "score"
+    :return: Dictionary with languages and unique stopwords seen in analyzed text.
+    :rtype: dict(str -> int)
+    """
 
-    return languages_ratios
+    # Split the text into separate tokens, using natural language punctuation signs.
+    words = {word.lower() for word in wordpunct_tokenize(text)}
+
+    # Return the number of stopwords found per language.
+    return {
+        len( words.intersection( stopwords.words(language) ) )
+        for language in stopwords.fileids()
+    }
 
 
 #----------------------------------------------------------------------
 def detect_language(text):
     """
-    Calculate probability of given text to be written in several languages and
-    return the highest scored.
+    Calculate the probability of given text to be written in different
+    languages and return the highest scoring one.
+
+    Also see: :ref:`calculate_language_scores`
 
     Example:
+        >>> text= "Hello my name is Golismero and I'm a function"
+        >>> detect_language(text)
+        'english'
+        >>> text_spanish= "Hola mi nombre es Golismero y soy una funcion"
+        >>> detect_language(text)
+        'spanish'
 
-    >>> text= "Hello my name is Golismero and I'm a function"
-    >>> detect_language(text)
-    'english'
-    >>> text_spanish= "Hola mi nombre es golismero y soy una funcion"
-    >>> detect_language(text)
-    'spanish'
-
-    :param text: Text whose language want to be detected
+    :param text: Text to analyze.
     :type text: str
 
-    :return: Most scored language guessed
+    :return: Detected language.
     :rtype: str
     """
-
-    ratios = _calculate_languages_ratios(text)
-
-    most_rated_language = max(ratios, key=ratios.get)
-
-    return most_rated_language
+    scores = calculate_language_scores(text)
+    return max(scores, key=scores.get)

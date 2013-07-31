@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Text analyzer API
+Text diff/match analyzer API.
 """
 
 __license__ = """
@@ -30,25 +30,18 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["get_diff_ratio", "MatchingAnalyzer"]
 
-__all__ = ["get_matching_level", "MatchingAnalyzerElement", "MatchingAnalyzer", "HTTP_response_headers_analyzer"]
-
-import hashlib
 from difflib import SequenceMatcher
-from diff_match_patch import diff_match_patch
 
 
 #------------------------------------------------------------------------------
-# Text analyzer.
-
-def get_matching_level(text1, text2):
+def get_diff_ratio(text1, text2):
     """
-    Compare two texts and return a value between 0.0 and 1.0 with the level of
-    difference where 0.0 is lowest (absolutely different) and 1.0 the highest
-    (absolutely equal).
-
-    - If text1 is more similar to text2, value will be near 100.0.
-    - If text1 is more different to text2, value will be near 0.0.
+    Compare two texts and return a floating point value between 0 and 1 with
+    the difference ratio, with 0 being absolutely different and 1 being
+    absolutely equal - the more similar the two texts are, the closer the ratio
+    will be to 1.
 
     :param text1: First text to compare.
     :type text1: str
@@ -56,69 +49,58 @@ def get_matching_level(text1, text2):
     :param text2: Second text to compare.
     :type text2: str
 
-    :returns: Floating point value between 0.0 and 1.0.
+    :returns: Floating point value between 0 and 1.
     :rtype: float
     """
+
+    # Solve some trivial type errors (like using None).
     if not text1:
         text1 = ""
     if not text2:
         text2 = ""
 
+    # Check for type errors we can't fix.
     if not isinstance(text1, basestring):
-        raise TypeError("Expected string , got %s instead" % type(text1))
+        raise TypeError("Expected string, got %s instead" % type(text1))
     if not isinstance(text2, basestring):
-        raise TypeError("Expected string , got %s instead" % type(text2))
+        raise TypeError("Expected string, got %s instead" % type(text2))
 
+    # Trivial case, the two texts are identical.
     if text1 == text2:
         return 1.0
 
-    m_difference = abs(len(text1) - len(text2))
-
-    m_return_value = 0.0
-
-    CUTOFF_VALUE = 1000 # 200 (Min words of text) * 5 (The average letters contains a word)
-
-
-    # Select the algorithm to make de diff.
-    # - Google method: More efficient with texts more similar.
-    # - difflib: More efficient with texts very different.
-    if m_difference > CUTOFF_VALUE or 1==1:
-        # difflib method
-        m_return_value = SequenceMatcher(None, text1, text2).ratio()
-
-    else:
-        #
-        #
-        # FIX IT!!!!!
-        #
-        # THIS CODE IS CURRENTLY UNUSABLE BECAUSE IT MUST TO RETURN A
-        # VALUE AND, AT THIS MOMENT, WE CAN'T ENSURE THAT.
-        #
-        #
-
-        # Google method
-        l_differ       = diff_match_patch()
-        # Levenshtein comparation value
-        #l_google_value = float(l_differ.diff_levenshtein(l_differ.diff_main(text1, text2)))
-        p = l_differ.diff_main(text1, text2)
-        l_google_value = float(l_differ.diff_levenshtein(p))
-        if l_google_value == 0.0:
-            l_google_value = 1.0
-
-        l_len_text2    = float(len(text2))
-        l_len_text1    = float(len(text1))
-        # Calculate
-        m_return_value = abs( 1.0 - ((l_len_text1 - l_len_text2) / l_google_value ))
-
-    return float(m_return_value)
+    # Use the difflib sequence matcher to calculate the ratio.
+    m = SequenceMatcher(a=text1, b=text2)
+    return m.ratio()
 
 
 #------------------------------------------------------------------------------
 class MatchingAnalyzerElement(object):
+    """
+    Match element of the :ref:`MatchingAnalyzer`.
+
+    :ivar text: Text.
+    :type text: str
+
+    :ivar ratio: Difference ratio against the base text.
+    :type ratio: float
+    """
 
 
     #--------------------------------------------------------------------------
-    def __init__(self, attrs):
+    def __init__(self, text, ratio, attrs):
+        """
+        :param text: Text.
+        :type text: str
+
+        :param ratio: Difference ratio against the base text.
+        :type ratio: float
+
+        :param attrs: Custom attributes dictionary.
+        :type attrs: dict(str -> *)
+        """
+        self.text    = text
+        self.ratio   = ratio
         self.__attrs = attrs
 
 
@@ -130,93 +112,81 @@ class MatchingAnalyzerElement(object):
 #------------------------------------------------------------------------------
 class MatchingAnalyzer(object):
     """
-    Text analyzer.
+    Text matching analyzer.
 
     Compares any number of texts from a base text and generates
     an iterator with those that are sufficiently different.
-
-    Example:
-
-    We want compare some texts with a base text, to know
-    if the non-base text are similars to the base text:
-
-    >>> from golismero.api.net.web_utils import download
-    >>> t_base    = "THIS IS A BASE TEXT IN UPPERCASE"
-    >>> t_other1  = "THIS A OTHER TEXT IN UPPERCASE"
-    >>> t_other2  = "this is a very different text, compared with base text"
-    >>> t_other3  = "BASE TEXT IN UPPERCASE"
-    >>>
-    >>> m_a = MatchingAnalyzer(t_base) # Set the base page
-    >>> m_a.append(t_other1, var2=4) # Compare and add one var
-    True
-    >>> m_a.append(t_other2)
-    False
-    >>> m_a.append(t_other3, other3_var="Other")
-    True
-    >>> for l_unique in m_a.unique_texts: # Get all similar texts
-        print l_unique
-
-    <MatchingAnalyzerElement instance at 0x910c0fcb0>
-    <MatchingAnalyzerElement instance at 0x198380290>
-
-    >>> for l_unique in m_a.unique_texts: # Get all similar texts
-        print dir(l_unique)
-
-     ['__doc__', '__init__', '__module__', 'var2']
-     ['__doc__', '__init__', '__module__', 'other3_var']
     """
 
 
     #--------------------------------------------------------------------------
-    def __init__(self, base_text, matching_level = 0.52, deviation = 1.15):
+    def __init__(self, base_text, min_ratio = 0.52, min_deviation = 1.15):
+        """
+        :param base_text: Base text to be used for comparisons.
+        :type base_text: str
+
+        :param min_ratio: Minimum diff ratio to consider two texts as different.
+        :type min_ratio: float
+
+        :param min_deviation: Minimum deviation from the average to consider
+            texts to be unique.
+        :type min_deviation: float
+        """
         if not base_text:
             raise ValueError("Base text cannot be empty")
         if not isinstance(base_text, basestring):
             raise TypeError("Expected string , got %s instead" % type(base_text))
-        if not isinstance(matching_level, float):
-            raise TypeError("Expected float, got %s instead" % type(matching_level))
-        if not isinstance(deviation, float):
-            raise TypeError("Expected float, got %s instead" % type(deviation))
+        if not isinstance(min_ratio, float):
+            raise TypeError("Expected float, got %s instead" % type(min_ratio))
+        if not isinstance(min_deviation, float):
+            raise TypeError("Expected float, got %s instead" % type(min_deviation))
 
-        self.__base_text       = base_text
-        self.__unique_strings  = []
-        self.__new_data        = False
-        self.__average_level   = 0.0
+        self.__base_text      = base_text
+        self.__min_ratio      = min_ratio
+        self.__min_deviation  = min_deviation
 
-        # Results
-        self.__results_matching_level = {}
-        self.__results_other_args     = {}
-
-        # Advanced values
-        self.__matching_level = matching_level
-        self.__deviation      = deviation
+        self.__matches        = []
+        self.__unique_strings = None
+        self.__average_ratio  = None
 
 
     #--------------------------------------------------------------------------
     @property
     def base_text(self):
         """
-        :returns: Base text used for comparison.
+        :returns: Base text to be used for comparisons.
         :rtype: str
         """
         return self.__base_text
 
 
     #--------------------------------------------------------------------------
-    def append(self, text, **kargs):
+    @property
+    def min_ratio(self):
+        """
+        :returns: Minimum diff ratio to consider two texts as different.
+        :rtype: float
+        """
+        return self.__min_ratio
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def min_deviation(self):
+        """
+        :returns: Minimum deviation from the average to consider
+            texts to be unique.
+        :rtype: float
+        """
+        return self.__min_deviation
+
+
+    #--------------------------------------------------------------------------
+    def analyze(self, text, **kwargs):
         """
         If the matching level of text var is sufficient similar
         to the base_text, then, store the text, and anything vars as
         **kargs associated with this text.
-
-        Example:
-
-        >>> base_text = "MY BASE TEXT 1"
-        >>> ma = MatchingAnalyzer(base_text)
-        >>> ma.append("MY TEXT")
-        True
-        >>> ma.append("OTHER KIND of info")
-        False
 
         :param text: Text to compare with the base text.
         :type text: str
@@ -224,110 +194,98 @@ class MatchingAnalyzer(object):
         :returns: True if the text is accepted as equal, False otherwise.
         :rtype: bool
         """
+
+        # Ignore empty text.
         if text:
-            l_matching_level = get_matching_level(self.__base_text, text)
 
-            if l_matching_level < self.__matching_level:
-                # Set to new data received
-                self.__new_data = True
+            # Calculate the diff ratio.
+            ratio = get_diff_ratio(self.__base_text, text)
 
-                l_key = hashlib.md5(text).hexdigest()
+            # If it's lower than our boundary...
+            if ratio < self.__min_ratio:
 
-                # Append to partial results
-                self.__results_matching_level[l_key] = l_matching_level
-                self.__results_other_args[l_key] = kargs
+                # Invalidate the caches.
+                self.__clear_caches()
 
+                # Save the results.
+                match = MatchingAnalyzerElement(text, ratio, kwargs)
+                self.__matches.append(match)
+
+                # Text accepted.
                 return True
+
+        # Text rejected.
+        return False
+
+
+    #--------------------------------------------------------------------------
+    def __clear_caches(self):
+        self.__average_ratio  = None
+        self.__unique_strings = None
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def average_ratio(self):
+        """
+        :returns: Average diff ratio.
+        :rtype: float
+        """
+
+        # If the cache is empty, calculate.
+        if self.__average_ratio is None:
+            if self.__matches:
+                ratios = sum(match.ratio for match in self.__matches)
+                count  = len(self.__matches)
+                self.__average_ratio = float(ratios) / float(count)
             else:
-                return False
-        else:
-            return False
+                self.__average_ratio = 0.0
+
+        # Return the cached value.
+        return self.__average_ratio
 
 
     #--------------------------------------------------------------------------
     @property
     def unique_texts(self):
         """
-        :returns: Iterable with the similar texts.
-        :rtype: iter(str)
+        :returns: List of unique texts.
+        :rtype: list(str)
         """
-        if self.__new_data:
-            self.__calculate()
 
-        for ut in self.__unique_strings:
-            yield ut
+        # If the cache is empty, calculate.
+        if self.__unique_strings is None:
+            self.__calculate_unique_texts()
+
+        # Return results from the cache.
+        return list(self.__unique_strings)
 
 
     #--------------------------------------------------------------------------
-    @property
-    def level_average(self):
-        """
-        :returns: Average matching level.
-        :rtype: float
-        """
-        if self.__new_data:
-            if self.__results_matching_level:
-                self.__average_level = float(sum(self.__results_matching_level.itervalues())) / float(len(self.__results_matching_level))
-            else:
-                self.__average_level = 0.0
+    def __calculate_unique_texts(self):
 
-        return self.__average_level
+        # Empty results list.
+        self.__unique_strings = []
 
+        # Get the average deviation.
+        average = self.average_ratio
 
-    #--------------------------------------------------------------------------
-    def __calculate(self):
-        """
-        Calculate the elements that are really different.
+        # Skip if the ratio is 0.
+        if not average:
 
-        Calculate the level of correpondence for all elements. We calculate the
-        deviation of 5%. All elements in of these deviation are part of same page of
-        error, and then skip it.
+            # Optimization.
+            append    = self.__unique_strings.append
+            deviation = self.__min_deviation
 
-        .. warning: Private method, do not call!
-        """
-        if self.level_average:
-            m_average = self.level_average
-            m_unique_strings_append = self.__unique_strings.append
+            # For each match element...
+            for match in self.__matches:
 
-            for l_key, l_info in self.__results_matching_level.iteritems():
-                l_value = l_info # Original value
-                l_value_deviation = l_value * self.__deviation # 15% of deviation
+                # Get the ratio and calculate the max deviation.
+                ratio    = match.ratio
+                deviated = ratio * deviation
 
-                # NOT value < average < value * 5% => skip
-                if not (l_value < m_average and m_average < l_value_deviation):
-                    m_unique_strings_append(MatchingAnalyzerElement(self.__results_other_args[l_key]))
+                # Skip matches under the max deviation.
+                if not (ratio < average < deviated):
 
-            self.__new_data = False
-
-
-#------------------------------------------------------------------------------
-# HTTP response analyzer.
-
-def HTTP_response_headers_analyzer(response_header_1, response_header_2):
-    """
-    Does a HTTP comparison to determinate if two HTTP response matches with the
-    same content without need the body content. To do that, remove some HTTP headers
-    (like Date or Cache info).
-
-    Return a value between 0-1 with the level of difference. 0 is lowest and 1 the highest.
-
-    - If response_header_1 is more similar to response_header_2, value will be near to 100.
-    - If response_header_1 is more different to response_header_2, value will be near to 0.
-
-    :param response_header_1: text with http response headers.
-    :type response_header_1: str
-
-    :param response_header_2: text with http response headers.
-    :type response_header_2: str
-    """
-
-    m_invalid_headers = [
-        "Date",
-        "Expires",
-        "Last-Modified",
-    ]
-
-    m_res1 = ''.join([ "%s:%s" % (k,v) for k,v in response_header_1.iteritems() if k not in m_invalid_headers ])
-    m_res2 = ''.join([ "%s:%s" % (k,v) for k,v in response_header_2.iteritems() if k not in m_invalid_headers ])
-
-    return get_matching_level(m_res1, m_res2)
+                    # Append the result.
+                    append(match)

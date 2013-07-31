@@ -34,7 +34,7 @@ __all__ = ["WordListLoader"]
 
 from os import walk
 from os.path import join, sep, abspath
-from golismero.api.text.matching_analyzer import get_matching_level
+from golismero.api.text.matching_analyzer import get_diff_ratio
 from golismero.api.file import FileManager
 #from repoze.lru import lru_cache
 import bisect
@@ -553,7 +553,7 @@ class AdvancedDicWordlist(object):
             if word in i:
                 continue
 
-            m_return_append((i, v, get_matching_level(word, i)))
+            m_return_append((i, v, get_diff_ratio(word, i)))
 
         return m_return
 
@@ -621,7 +621,7 @@ class AdvancedDicWordlist(object):
 
             for l in v:
                 if word == l:
-                    m_return_append((l, v, get_matching_level(word, l)))
+                    m_return_append((l, v, get_diff_ratio(word, l)))
 
         return m_return
 

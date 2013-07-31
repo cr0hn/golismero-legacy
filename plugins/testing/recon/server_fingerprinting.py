@@ -38,7 +38,7 @@ from golismero.api.net.http import HTTP
 from golismero.api.net.scraper import extract_from_html, extract_from_text
 from golismero.api.net.web_utils import ParsedURL, download
 from golismero.api.plugin import TestingPlugin
-from golismero.api.text.matching_analyzer import get_matching_level
+from golismero.api.text.matching_analyzer import get_diff_ratio
 from golismero.api.text.wordlist import WordListLoader
 
 from collections import Counter, OrderedDict, defaultdict
@@ -337,7 +337,7 @@ def basic_platform_detection(main_url):
     # Compare them
     m_orig_data      = m_response_orig.raw_response  if m_response_orig  else ""
     m_upper_data     = m_response_upper.raw_response if m_response_upper else ""
-    m_match_level    = get_matching_level(m_orig_data, m_upper_data)
+    m_match_level    = get_diff_ratio(m_orig_data, m_upper_data)
 
     # If the responses are equal by 90%, two URL are the same => Windows; else => *NIX
     m_return = None

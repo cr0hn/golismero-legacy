@@ -35,7 +35,7 @@ from golismero.api.data.vulnerability.information_disclosure.url_disclosure impo
 from golismero.api.logger import Logger
 from golismero.api.net.http import HTTP
 from golismero.api.net.web_utils import ParsedURL
-from golismero.api.text.matching_analyzer import MatchingAnalyzer, HTTP_response_headers_analyzer
+from golismero.api.text.matching_analyzer import MatchingAnalyzer, get_diff_ratio
 from golismero.api.text.wordlist import WordListLoader
 from golismero.api.text.text_utils import generate_random_string
 
@@ -157,7 +157,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
 
         # Create the matching analyzer
         try:
-            m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+            m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
         except ValueError:
             # Thereis not information
             return
@@ -215,7 +215,7 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
 
         # Create the matching analyzer
         try:
-            m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+            m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
         except ValueError:
             # Thereis not information
             return
@@ -273,7 +273,7 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
 
         # Create the matching analyzer
         try:
-            m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+            m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
         except ValueError:
             # Thereis not information
             return
@@ -332,7 +332,7 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
 
         # Create the matching analyzer
         try:
-            m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+            m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
         except ValueError:
             # Thereis not information
             return
@@ -390,7 +390,7 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
 
         # Create the matching analyzer
         try:
-            m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+            m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
         except ValueError:
             # Thereis not information
             return
@@ -447,7 +447,7 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
 
         # Create the matching analyzer
         try:
-            m_store_info = MatchingAnalyzer(m_error_response, matching_level=0.65)
+            m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
         except ValueError:
             # Thereis not information
             return
@@ -524,7 +524,7 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
                 Logger.log_more_verbose("Error while processing: '%s': %s" % (url, str(e)))
 
         # Append for analyze and display info if is accepted
-        if matcher.append(p.raw_response,url=url,risk = risk_level):
+        if matcher.analyze(p.raw_response, url=url, risk=risk_level):
             updater_func(text="Discovered partial url: '%s'" % url)
 
 
@@ -581,6 +581,39 @@ def get_http_method(url):
 
     # Check if HEAD reponse is different that GET response, to ensure that results are valids
     return "HEAD" if HTTP_response_headers_analyzer(m_head_response.headers, m_get_response.headers) < 0.90 else "GET"
+
+
+#------------------------------------------------------------------------------
+# HTTP response analyzer.
+
+def HTTP_response_headers_analyzer(response_header_1, response_header_2):
+    """
+    Does a HTTP comparison to determinate if two HTTP response matches with the
+    same content without need the body content. To do that, remove some HTTP headers
+    (like Date or Cache info).
+
+    Return a value between 0-1 with the level of difference. 0 is lowest and 1 the highest.
+
+    - If response_header_1 is more similar to response_header_2, value will be near to 100.
+    - If response_header_1 is more different to response_header_2, value will be near to 0.
+
+    :param response_header_1: text with http response headers.
+    :type response_header_1: http headers
+
+    :param response_header_2: text with http response headers.
+    :type response_header_2: http headers
+    """
+
+    m_invalid_headers = [
+        "Date",
+        "Expires",
+        "Last-Modified",
+    ]
+
+    m_res1 = ''.join([ "%s:%s" % (k,v) for k,v in response_header_1.iteritems() if k not in m_invalid_headers ])
+    m_res2 = ''.join([ "%s:%s" % (k,v) for k,v in response_header_2.iteritems() if k not in m_invalid_headers ])
+
+    return get_diff_ratio(m_res1, m_res2)
 
 
 #----------------------------------------------------------------------
