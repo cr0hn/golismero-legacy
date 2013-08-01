@@ -49,7 +49,7 @@ import warnings
 
 # Import theHarvester as a library.
 cwd = os.path.abspath(os.path.split(__file__)[0])
-cwd = os.path.join(cwd, "theharvester")
+cwd = os.path.join(cwd, "theHarvester")
 sys.path.insert(0, cwd)
 try:
     import lib
