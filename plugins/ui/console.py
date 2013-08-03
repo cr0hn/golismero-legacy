@@ -88,14 +88,14 @@ class ConsoleUIPlugin(UIPlugin):
         if message.message_type == MessageType.MSG_TYPE_STATUS:
 
             if message.message_type == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
-                m_plugin_name = get_plugin_info(message.plugin_name).display_name
+                m_plugin_name = self.get_plugin_name(message)
                 m_plugin_name = colorize(m_plugin_name, "blue")
                 m_text        = "[  0%] Starting plugin: %s" % m_plugin_name
 
                 Console.display(m_text)
 
             elif message.message_type == MessageCode.MSG_STATUS_PLUGIN_END:
-                m_plugin_name = get_plugin_info(message.plugin_name).display_name
+                m_plugin_name = self.get_plugin_name(message)
                 m_plugin_name = colorize(m_plugin_name, "blue")
                 m_text        = "[100%] Ending plugin: %s" % m_plugin_name
 
@@ -106,7 +106,7 @@ class ConsoleUIPlugin(UIPlugin):
                 if Console.level >= Console.VERBOSE:
                     m_id, m_progress, m_text = message.message_info
 
-                    m_plugin_name = get_plugin_info(message.plugin_name).display_name
+                    m_plugin_name = self.get_plugin_name(message)
                     m_plugin_name = colorize(m_plugin_name, "blue")
 
                     if m_progress:
@@ -129,7 +129,7 @@ class ConsoleUIPlugin(UIPlugin):
                 (text, level, is_error) = message.message_info
                 if Console.level >= level:
                     try:
-                        m_plugin_name = get_plugin_info(message.plugin_name).display_name
+                        m_plugin_name = self.get_plugin_name(message)
                     except Exception:
                         m_plugin_name = "GoLismero"
                     m_plugin_name = colorize(m_plugin_name, 'blue')
@@ -146,7 +146,7 @@ class ConsoleUIPlugin(UIPlugin):
             if message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 (description, traceback) = message.message_info
                 try:
-                    m_plugin_name = get_plugin_info(message.plugin_name).display_name
+                    m_plugin_name = self.get_plugin_name(message)
                 except Exception:
                     m_plugin_name = "GoLismero"
                 text        = "[!] Plugin '%s' error: %s " % (m_plugin_name, str(description))
@@ -168,9 +168,15 @@ class ConsoleUIPlugin(UIPlugin):
                         formatted = None
                     if formatted:
                         try:
-                            m_plugin_name = get_plugin_info(message.plugin_name).display_name
+                            m_plugin_name = self.get_plugin_name(message)
                         except Exception:
                             m_plugin_name = "GoLismero"
                         text = "[!] Plugin '%s' warning: %s " % (m_plugin_name, str(formatted))
                         text = colorize(text, 'low')
                         Console.display_error(text)
+
+    @staticmethod
+    def get_plugin_name(message):
+        if message.plugin_name:
+            return get_plugin_info(message.plugin_name).display_name
+        return "GoLismero"
