@@ -60,6 +60,10 @@ class ConnectionSlot (object):
 
     def __init__(self, hostname, number = 1):
         """
+        .. warning: Currently requesting more than one slot is not supported.
+            There's a good reason for this, so don't try using this class
+            multiple times to work around the limitation!
+
         :param hostname: Hostname to connect to.
         :type hostname: str
 
@@ -105,6 +109,10 @@ def slot(fn, number = 1):
     """
     Decorator for methods and functions
     that request a network slot when called.
+
+    .. warning: Currently requesting more than one slot is not supported.
+        There's a good reason for this, so don't try using this decorator
+        multiple times to work around the limitation!
 
     :param fn: Method or function to decorate.
     :type fn: callable

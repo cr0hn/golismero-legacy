@@ -37,12 +37,13 @@ from ..common import random
 from ..messaging.codes import MessageCode
 
 from collections import defaultdict
+from threading import BoundedSemaphore, RLock
 
 
 #----------------------------------------------------------------------
 # RPC implementors for the network connection manager API.
 
-@implementor(MessageCode.MSG_RPC_REQUEST_SLOT)
+@implementor(MessageCode.MSG_RPC_REQUEST_SLOT, blocking=True)
 def rpc_netdb_request_slot(orchestrator, audit_name, *argv, **argd):
     return orchestrator.netManager.request_slot(audit_name, *argv, **argd)
 
@@ -68,10 +69,16 @@ class NetworkManager (object):
         # Keep a reference to the global configuration.
         self.__config = config
 
-        # Map of hosts to global connection count.
-        self.__hosts = defaultdict(int)   # host -> count
+        # Lock to access the internal structures.
+        self.__rlock = RLock()
 
-        # Map of audits to hosts connection counts.
+        # Map of hosts to global connection count.
+        self.__counts = defaultdict(int)   # host -> int
+
+        # Map of hosts to global connection semaphores.
+        self.__semaphores = defaultdict(self.__create_semaphore) # host -> sem
+
+        # Map of audit tokens.
         self.__tokens = defaultdict(dict) # audit -> token -> (host, number)
 
 
@@ -86,9 +93,19 @@ class NetworkManager (object):
 
 
     #----------------------------------------------------------------------
+    def __create_semaphore(self):
+        return BoundedSemaphore(self.max_connections)
+
+
+    #----------------------------------------------------------------------
     def request_slot(self, audit_name, host, number = 1):
         """
         Request the given number of connection slots for a host.
+        Blocks until the requested slots become available.
+
+        .. warning: Currently requesting more than one slot is not supported.
+            There's a good reason for this, so don't try calling this method
+            multiple times to work around the limitation!
 
         :param audit_name: Audit name.
         :type audit_name: str
@@ -99,17 +116,39 @@ class NetworkManager (object):
         :param number: Number of connection slots to request.
         :type number: int
 
-        :returns: Request token on success, None on failure.
-        :rtype: str | None
+        :returns: Request token.
+        :rtype: str
         """
-        if number != abs(number):
-            raise ValueError("Number of slots can't be negative!")
-        host = host.lower()
-        if self.__hosts[host] + number <= self.max_connections:
-            token = "%.8X|%s" % (random.randint(0, 0x7FFFFFFF), host)
-            self.__tokens[audit_name][token] = (host, number)
-            self.__hosts[host] += number
-            return token
+        if number != 1:
+            raise NotImplementedError()
+        #if number <= 0:
+        #    raise ValueError("Number of slots can't be negative")
+        #if number > self.max_connections:
+        #    raise ValueError("Requested too many slots")
+        token = None
+        host  = host.lower()
+        print "Requested!"
+        with self.__rlock:
+            sem = self.__semaphores[host]
+            self.__tokens[audit_name] # make sure it exists
+        sem.acquire()
+        try:
+            with self.__rlock:
+                if audit_name not in self.__tokens:
+                    raise RuntimeError("Audit is shutting down")
+                token = "%.8X|%s" % (random.randint(0, 0x7FFFFFFF), host)
+                self.__tokens[audit_name][token] = (host, number)
+                self.__counts[host] += 1
+                print "Granted!", token
+                return token
+        except:
+            try:
+                if token is not None:
+                    with self.__rlock:
+                        del self.__tokens[audit_name][token]
+            finally:
+                sem.release()
+            raise
 
 
     #----------------------------------------------------------------------
@@ -125,13 +164,21 @@ class NetworkManager (object):
         :param token: Request token.
         :type token: str
         """
+        print "Releasing!", token
         try:
-            host, number = self.__tokens[audit_name].pop(token)
-            self.__hosts[host] -= number
-            if self.__hosts[host] <= 0:
-                del self.__hosts[host]
+            with self.__rlock:
+                host, number = self.__tokens[audit_name].pop(token)
+                sem = self.__semaphores[host]
+                try:
+                    self.__counts[host] -= number
+                    if self.__counts[host] <= 0:
+                        del self.__counts[host]
+                        del self.__semaphores[host]
+                finally:
+                    sem.release()
         except Exception:
             pass
+        print "Released!", token
 
 
     #----------------------------------------------------------------------
@@ -142,7 +189,16 @@ class NetworkManager (object):
         :param audit_name: Audit name.
         :type audit_name: str
         """
-        for host, number in self.__tokens.pop(audit_name, {}).itervalues():
-            self.__hosts[host] -= number
-            if self.__hosts[host] <= 0:
-                del self.__hosts[host]
+        with self.__rlock:
+            for host, number in self.__tokens.pop(audit_name, {}).itervalues():
+                try:
+                    sem = self.__semaphores[host]
+                    try:
+                        self.__counts[host] -= number
+                        if self.__counts[host] <= 0:
+                            del self.__counts[host]
+                            del self.__semaphores[host]
+                    finally:
+                        sem.release()
+                except:
+                    pass

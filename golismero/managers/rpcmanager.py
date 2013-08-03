@@ -36,6 +36,7 @@ from ..common import pickle
 from ..messaging.codes import MessageCode, MSG_RPC_CODES
 
 from functools import partial
+from threading import Thread
 
 import sys
 import warnings
@@ -43,31 +44,44 @@ import traceback
 
 
 #------------------------------------------------------------------------------
-# Decorator to automatically register RPC implementors at import time.
+# Decorators to automatically register RPC implementors at import time.
 
 # Global map of RPC codes to implementors.
+# dict( int -> tuple(callable, bool) )
 rpcMap = {}
 
-def implementor(rpc_code):
+def implementor(rpc_code, blocking=False):
     """
     RPC implementation function.
     """
-    return partial(_add_implementor, rpc_code)
+    return partial(_add_implementor, rpc_code, blocking)
 
-def _add_implementor(rpc_code, fn):
-    """
-    RPC implementation function.
-    """
+def _add_implementor(rpc_code, blocking, fn):
+
+    # Validate the argument types.
+    if type(rpc_code) is not int:
+        raise TypeError("Expected int, got %s instead" % type(rpc_code))
+    if type(blocking) is not bool:
+        raise TypeError("Expected bool, got %s instead" % type(blocking))
+    if not callable(fn):
+        raise TypeError("Expected callable, got %s instead" % type(fn))
+
+    # Validate the RPC code.
     if rpc_code in rpcMap:
         try:
             msg = "Duplicated RPC implementors for code %d: %s and %s"
-            msg %= (rpc_code, rpcMap[rpc_code].__name__, fn.__name__)
+            msg %= (rpc_code, rpcMap[rpc_code][0].__name__, fn.__name__)
         except Exception:
             msg = "Duplicated RPC implementors for code: %d" % rpc_code
         raise SyntaxError(msg)
-    rpcMap[rpc_code] = fn
+
     # TODO: use introspection to validate the function signature
-    return fn  # no function wrapping is needed :)
+
+    # Register the implementor.
+    rpcMap[rpc_code] = (fn, blocking)
+
+    # Return the implementor. No wrapping is needed! :)
+    return fn
 
 
 #------------------------------------------------------------------------------
@@ -79,9 +93,14 @@ def rpc_bulk(orchestrator, audit_name, rpc_code, *arguments):
     # Get the implementor for the RPC code.
     # Raise NotImplementedError if it's not defined.
     try:
-        method = rpcMap[rpc_code]
+        method, blocking = rpcMap[rpc_code]
     except KeyError:
         raise NotImplementedError("RPC code not implemented: %r" % rpc_code)
+
+    # This can't be done with blocking implementors!
+    if blocking:
+        raise NotImplementedError(
+            "Cannot run blocking RPC calls in bulk. Code: %r" % rpc_code)
 
     # Prepare a partial function call to the implementor.
     caller = partial(method, orchestrator, audit_name)
@@ -116,7 +135,7 @@ class RPCManager (object):
         if missing:
             msg  = "Missing RPC implementors for codes: %s"
             msg %= ", ".join(str(x) for x in sorted(missing))
-            warnings.warn(msg, RuntimeWarning)
+            raise SyntaxError(msg)
 
 
     #----------------------------------------------------------------------
@@ -130,7 +149,7 @@ class RPCManager (object):
 
 
     #----------------------------------------------------------------------
-    def execute_rpc(self, audit_name, rpc_code, response_queue, argv, argd):
+    def execute_rpc(self, audit_name, rpc_code, response_queue, args, kwargs):
         """
         Honor a remote procedure call request from a plugin.
 
@@ -143,29 +162,78 @@ class RPCManager (object):
         :param response_queue: Response queue.
         :type response_queue: Queue
 
-        :param argv: Positional arguments to the call.
-        :type argv: tuple
+        :param args: Positional arguments to the call.
+        :type args: tuple
 
-        :param argd: Keyword arguments to the call.
-        :type argd: dict
+        :param kwargs: Keyword arguments to the call.
+        :type kwargs: dict
         """
-        success = True
         try:
 
             # Get the implementor for the RPC code.
             # Raise NotImplementedError if it's not defined.
             try:
-                method = self.__rpcMap[rpc_code]
+                target, blocking = self.__rpcMap[rpc_code]
             except KeyError:
-                raise NotImplementedError("RPC code not implemented: %r" % rpc_code)
+                raise NotImplementedError(
+                    "RPC code not implemented: %r" % rpc_code)
+
+            # If it's a blocking call...
+            if blocking:
+
+                # Run the implementor in a new thread.
+                thread = Thread(
+                    target = self.execute_rpc_implementor,
+                    args = (audit_name, target, response_queue, args, kwargs),
+                )
+                thread.daemon = True
+                thread.start()
+
+            # If it's a non-blocking call...
+            else:
+
+                # Call the implementor directly.
+                self.execute_rpc_implementor(
+                    audit_name, target, response_queue, args, kwargs)
+
+        # Catch exceptions and send them back.
+        except Exception:
+            if response_queue:
+                error = self.prepare_exception(*sys.exc_info())
+                response_queue.put_nowait( (False, error) )
+
+
+    #----------------------------------------------------------------------
+    def execute_rpc_implementor(self, audit_name, target, response_queue, args, kwargs):
+        """
+        Honor a remote procedure call request from a plugin.
+
+        :param audit_name: Name of the audit requesting the call.
+        :type audit_name: str
+
+        :param target: RPC implementor function.
+        :type target: callable
+
+        :param response_queue: Response queue.
+        :type response_queue: Queue
+
+        :param args: Positional arguments to the call.
+        :type args: tuple
+
+        :param kwargs: Keyword arguments to the call.
+        :type kwargs: dict
+        """
+        success = True
+        try:
 
             # Call the implementor and get the response.
-            response = method(self.__orchestrator, audit_name, *argv, **argd)
+            response = target(self.orchestrator, audit_name, *args, **kwargs)
 
         # Catch exceptions and prepare them for sending.
         except Exception:
-            success  = False
-            response = self.__prepare_exception(*sys.exc_info())
+            if response_queue:
+                success  = False
+                response = self.prepare_exception(*sys.exc_info())
 
         # If the call was synchronous, send the response/error back to the plugin.
         if response_queue:
@@ -174,7 +242,7 @@ class RPCManager (object):
 
     #----------------------------------------------------------------------
     @staticmethod
-    def __prepare_exception(exc_type, exc_value, exc_traceback):
+    def prepare_exception(exc_type, exc_value, exc_traceback):
         """
         Prepare an exception for sending back to the plugins.
 
