@@ -38,6 +38,7 @@ from .reportmanager import ReportManager
 from ..api.data import Data
 from ..api.data.resource import Resource
 from ..api.config import Config
+from ..api.logger import Logger
 from ..api.text.text_utils import generate_random_string
 from ..common import AuditConfig
 from ..database.auditdb import AuditDB
@@ -441,6 +442,9 @@ class Audit (object):
 
             # Create the database.
             self.__database = AuditDB(self.name, self.config.audit_db)
+            if hasattr(self.__database, "filename"):
+                Logger.log_verbose(
+                    "Audit database: %s" % self.database.filename)
 
             # Add the targets to the database, but only if they're new.
             # (Makes sense when resuming a stopped audit).

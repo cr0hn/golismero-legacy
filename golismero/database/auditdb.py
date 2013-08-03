@@ -113,7 +113,7 @@ class BaseAuditDB (BaseDB):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, audit_name):
         """
         :param audit_name: Audit name.
@@ -122,6 +122,7 @@ class BaseAuditDB (BaseDB):
         self.__audit_name = audit_name
 
 
+    #--------------------------------------------------------------------------
     @property
     def audit_name(self):
         """
@@ -131,7 +132,17 @@ class BaseAuditDB (BaseDB):
         return self.__audit_name
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    @property
+    def connection_url(self):
+        """
+        :returns: Connection URL for this database.
+        :rtype: str
+        """
+        raise NotImplementedError()
+
+
+    #--------------------------------------------------------------------------
     def add_data(self, data):
         """
         Add data to the database.
@@ -144,7 +155,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def remove_data(self, identity, data_type = None):
         """
         Remove data given its identity hash.
@@ -163,7 +174,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def has_data_key(self, identity, data_type = None):
         """
         Check if a data object with the given
@@ -180,7 +191,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_data(self, identity, data_type = None):
         """
         Get an object given its identity hash.
@@ -199,7 +210,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_many_data(self, identities, data_type = None):
         """
         Get multiple objects given their identity hashes.
@@ -218,7 +229,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_data_keys(self, data_type = None, data_subtype = None):
         """
         Get a list of identity hashes for all objects of the requested
@@ -235,7 +246,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_data_types(self, identities):
         """
         Get a set of data types and subtypes for all objects
@@ -249,7 +260,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_data_count(self, data_type = None, data_subtype = None):
         """
         Count all objects of the requested type,
@@ -266,7 +277,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def add_state_variable(self, plugin_name, key, value):
         """
         Add a plugin state variable to the database.
@@ -283,7 +294,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def remove_state_variable(self, plugin_name, key):
         """
         Remove a plugin state variable from the database.
@@ -297,7 +308,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def has_state_variable(self, plugin_name, key):
         """
         Check if plugin state variable is present in the database.
@@ -313,7 +324,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_state_variable(self, plugin_name, key):
         """
         Get the value of a plugin state variable given its name.
@@ -329,7 +340,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_state_variable_names(self, plugin_name):
         """
         Get all plugin state variable names in the database.
@@ -342,7 +353,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def mark_plugin_finished(self, identity, plugin_name):
         """
         Mark the data as having been processed by the plugin.
@@ -356,7 +367,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def mark_stage_finished(self, identity, stage):
         """
         Mark the data as having completed the stage.
@@ -370,7 +381,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_past_plugins(self, identity):
         """
         Get the plugins that have already processed the given data.
@@ -383,7 +394,7 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_pending_data(self, stage):
         """
         Get the identities of the data objects that haven't yet completed
@@ -404,7 +415,7 @@ class AuditMemoryDB (BaseAuditDB):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, audit_name):
         super(AuditMemoryDB, self).__init__(audit_name)
         self.__results = dict()
@@ -413,17 +424,23 @@ class AuditMemoryDB (BaseAuditDB):
         self.__stages  = collections.defaultdict(int)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    @property
+    def connection_url(self):
+        return "memory://"
+
+
+    #--------------------------------------------------------------------------
     def encode(self, data):
         return data
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def decode(self, data):
         return data
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def add_data(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
@@ -435,7 +452,7 @@ class AuditMemoryDB (BaseAuditDB):
         return True
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def remove_data(self, identity, data_type = None):
         try:
             if data_type is None or self.__results[identity].data_type == data_type:
@@ -446,12 +463,12 @@ class AuditMemoryDB (BaseAuditDB):
         return False
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def has_data_key(self, identity, data_type = None):
         return self.get_data(identity, data_type) is not None
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_data(self, identity, data_type = None):
         data = self.__results.get(identity, None)
         if data_type is not None and data is not None and data.data_type != data_type:
@@ -465,7 +482,7 @@ class AuditMemoryDB (BaseAuditDB):
         return [ data for data in result if data ]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_data_keys(self, data_type = None, data_subtype = None):
 
         # Ugly but (hopefully) efficient code follows.
@@ -499,7 +516,7 @@ class AuditMemoryDB (BaseAuditDB):
             "Unknown data type: %r" % data_type)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_data_types(self, identities):
         result = { self.__get_data_type(identity) for identity in identities }
         try:
@@ -522,7 +539,7 @@ class AuditMemoryDB (BaseAuditDB):
         return None
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_data_count(self, data_type = None, data_subtype = None):
 
         # Ugly but (hopefully) efficient code follows.
@@ -555,47 +572,47 @@ class AuditMemoryDB (BaseAuditDB):
             "Unknown data type: %r" % data_type)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def add_state_variable(self, plugin_name, key, value):
         self.__state[plugin_name][key] = value
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def remove_state_variable(self, plugin_name, key):
         del self.__state[plugin_name][key]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def has_state_variable(self, plugin_name, key):
         return key in self.__state[plugin_name]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_state_variable(self, plugin_name, key):
         return self.__state[plugin_name][key]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_state_variable_names(self, plugin_name):
         return set(self.__state[plugin_name].iterkeys())
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def mark_plugin_finished(self, identity, plugin_name):
         self.__history[identity].add(plugin_name)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def mark_stage_finished(self, identity, stage):
         self.__stages[identity] = stage
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_past_plugins(self, identity):
         return self.__history[identity]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_pending_data(self, stage):
         pending = {i for i,n in self.__stages.iteritems() if n < stage}
         missing = set(self.__results.iterkeys())
@@ -604,7 +621,7 @@ class AuditMemoryDB (BaseAuditDB):
         return pending
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def close(self):
         self.__results = dict()
         self.__state = collections.defaultdict(dict)
@@ -621,7 +638,7 @@ class AuditSQLiteDB (BaseAuditDB):
     SCHEMA_VERSION = 1
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, audit_name, filename = None):
         """
         :param audit_name: Audit name.
@@ -640,13 +657,30 @@ class AuditSQLiteDB (BaseAuditDB):
                 for c in audit_name
             )
             filename = filename + ".db"
+        self.__filename = filename
         self.__db = sqlite3.connect(filename)
         self.__cursor = None
         self.__busy = False
         self.__create()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    @property
+    def filename(self):
+        """
+        :returns: SQLite file name.
+        :rtype: str
+        """
+        return self.__filename
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def connection_url(self):
+        return "sqlite://" + self.filename
+
+
+    #--------------------------------------------------------------------------
     def encode(self, data):
 
         # Encode the data.
@@ -656,7 +690,7 @@ class AuditSQLiteDB (BaseAuditDB):
         return sqlite3.Binary(data)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def _atom(self, fn, argv, argd):
         # this will fail for multithreaded accesses,
         # but sqlite is not multithreaded either
@@ -669,7 +703,7 @@ class AuditSQLiteDB (BaseAuditDB):
             self.__busy = False
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def _transaction(self, fn, argv, argd):
         """
         Execute a transactional operation.
@@ -693,7 +727,7 @@ class AuditSQLiteDB (BaseAuditDB):
             self.__busy = False
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def __create(self):
         """
@@ -806,7 +840,7 @@ class AuditSQLiteDB (BaseAuditDB):
                 (self.SCHEMA_VERSION, self.audit_name))
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __get_data_table_and_type(self, data):
         data_type = data.data_type
         if   data_type == Data.TYPE_INFORMATION:
@@ -851,7 +885,7 @@ class AuditSQLiteDB (BaseAuditDB):
         return table, dtype
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def add_data(self, data):
         if not isinstance(data, Data):
@@ -873,7 +907,7 @@ class AuditSQLiteDB (BaseAuditDB):
         return is_new
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def remove_data(self, identity, data_type = None):
         if data_type is None:
@@ -905,7 +939,7 @@ class AuditSQLiteDB (BaseAuditDB):
         return False
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def has_data_key(self, identity, data_type = None):
         if data_type is None:
@@ -928,7 +962,7 @@ class AuditSQLiteDB (BaseAuditDB):
         return False
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def get_data(self, identity, data_type = None):
         return self.__get_data(identity, data_type)
@@ -963,7 +997,7 @@ class AuditSQLiteDB (BaseAuditDB):
                 return self.decode(row[0])
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def get_data_keys(self, data_type = None, data_subtype = None):
 
@@ -999,7 +1033,7 @@ class AuditSQLiteDB (BaseAuditDB):
         return { str(row[0]) for row in self.__cursor.fetchall() }
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def get_data_types(self, identities):
         # TODO: optimize by checking multiple identities in the same query,
@@ -1028,7 +1062,7 @@ class AuditSQLiteDB (BaseAuditDB):
                 return data_type, subtype_filter(row[0])
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def get_data_count(self, data_type = None, data_subtype = None):
 
@@ -1063,7 +1097,7 @@ class AuditSQLiteDB (BaseAuditDB):
         return int(self.__cursor.fetchone()[0])
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def add_state_variable(self, plugin_name, key, value):
         if type(plugin_name) is not str:
@@ -1096,7 +1130,7 @@ class AuditSQLiteDB (BaseAuditDB):
             (plugin_id, key, self.encode(value)))
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def remove_state_variable(self, plugin_name, key):
         if type(plugin_name) is not str:
@@ -1117,7 +1151,7 @@ class AuditSQLiteDB (BaseAuditDB):
             (plugin_id, key))
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def has_state_variable(self, plugin_name, key):
         if type(plugin_name) is not str:
@@ -1142,7 +1176,7 @@ class AuditSQLiteDB (BaseAuditDB):
         return bool(self.__cursor.fetchone()[0])
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def get_state_variable(self, plugin_name, key):
         if type(plugin_name) is not str:
@@ -1165,7 +1199,7 @@ class AuditSQLiteDB (BaseAuditDB):
         return self.decode(self.__cursor.fetchone()[0])
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def get_state_variable_names(self, plugin_name):
         if type(plugin_name) is not str:
@@ -1187,7 +1221,7 @@ class AuditSQLiteDB (BaseAuditDB):
         return {str(row[0]) for row in self.__cursor.fetchall()}
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def mark_plugin_finished(self, identity, plugin_name):
         if type(identity) is not str:
@@ -1220,7 +1254,7 @@ class AuditSQLiteDB (BaseAuditDB):
             (plugin_id, identity))
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def mark_stage_finished(self, identity, stage):
         if type(identity) is not str:
@@ -1248,7 +1282,7 @@ class AuditSQLiteDB (BaseAuditDB):
                 (identity, stage))
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def get_past_plugins(self, identity):
         if type(identity) is not str:
@@ -1264,7 +1298,7 @@ class AuditSQLiteDB (BaseAuditDB):
         return set()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @transactional
     def get_pending_data(self, stage):
         if type(stage) is not int:
@@ -1278,7 +1312,7 @@ class AuditSQLiteDB (BaseAuditDB):
         return set()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @atomic
     def dump(self, filename):
         with open(filename, 'w') as f:
@@ -1286,7 +1320,7 @@ class AuditSQLiteDB (BaseAuditDB):
                 f.write(line + "\n")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @atomic
     def close(self):
         try:
@@ -1306,6 +1340,8 @@ class AuditDB (BaseAuditDB):
     The database type is chosen automatically based on the connection string.
     """
 
+
+    #--------------------------------------------------------------------------
     def __new__(cls, audit_name, audit_db):
         """
         :param audit_name: Audit name.
