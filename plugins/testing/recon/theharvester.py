@@ -133,6 +133,10 @@ class HarvesterPlugin(TestingPlugin):
         visited = set()
         total = float(len(all_hosts))
         for step, name in enumerate(all_hosts):
+            if name[0] == ".":   # known bug in theHarvester
+                name[1:]
+                if not name:
+                    continue
             visited.add(name)
             if name not in Config.audit_scope:
                 Logger.log_more_verbose("Hostname out of scope: %s" % name)

@@ -260,7 +260,7 @@ class DNSBruteforcer(TestingPlugin):
             self.update_status(progress=100)
 
             Logger.log_verbose("DNS analyzer plugin found %d subdomains" % len(m_return))
-            Logger.log_very_verbose("\t" + "\n\t".join(m_return))
+            Logger.log_more_verbose("\t" + "\n\t".join(m_return))
 
         return m_return
 
