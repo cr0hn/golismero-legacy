@@ -387,7 +387,7 @@ class Audit (object):
         :returns: Generated name.
         :rtype: str
         """
-        return "golismero-" + generate_random_string()
+        return "golismero-" + generate_random_string(length=8)
 
 
     #----------------------------------------------------------------------
