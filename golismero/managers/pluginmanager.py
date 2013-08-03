@@ -32,8 +32,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["PluginManager", "PluginInfo"]
 
+from .rpcmanager import implementor
 from ..api.plugin import UIPlugin, ImportPlugin, TestingPlugin, ReportPlugin
 from ..common import Configuration, OrchestratorConfig, AuditConfig
+from ..messaging.codes import MessageCode
 
 from os import path, walk
 from keyword import iskeyword
@@ -49,6 +51,14 @@ import warnings
 # Helpers for instance creation without calling __init__().
 class _EmptyNewStyleClass (object):
     pass
+
+
+#----------------------------------------------------------------------
+# RPC implementors for the plugin manager API.
+
+@implementor(MessageCode.MSG_RPC_PLUGIN_GET_INFO)
+def rpc_plugin_get_info(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).pluginManager.get_plugin_by_name(*argv, **argd)
 
 
 #----------------------------------------------------------------------

@@ -36,11 +36,35 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["UIPlugin", "ImportPlugin", "TestingPlugin", "ReportPlugin"]
+__all__ = [
+    "UIPlugin", "ImportPlugin", "TestingPlugin", "ReportPlugin",
+    "get_plugin_info",
+]
 
 from .config import Config
 from ..common import Singleton
 from ..messaging.codes import MessageCode
+
+
+#------------------------------------------------------------------------------
+def get_plugin_info(plugin_name = None):
+    """
+    Get the plugin information for the requested plugin.
+
+    :param plugin_name: Full plugin name.
+        Example: "testing/recon/spider".
+        Defaults to the calling plugin name.
+    :type plugin_name: str
+
+    :returns: Plugin information.
+    :rtype: PluginInfo
+
+    :raises KeyError: The plugin was not found.
+    """
+    if not plugin_name:
+        plugin_name = Config.plugin_name
+    return Config._context.remote_call(
+        MessageCode.MSG_RPC_PLUGIN_GET_INFO, plugin_name)
 
 
 #------------------------------------------------------------------------------

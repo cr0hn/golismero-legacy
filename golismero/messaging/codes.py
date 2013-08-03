@@ -235,31 +235,34 @@ class MessageCode(MessageConstants):
     MSG_RPC_BULK = 0
 
     # Cache API
-    MSG_RPC_CACHE_GET     = 1
-    MSG_RPC_CACHE_SET     = 2
-    MSG_RPC_CACHE_CHECK   = 3
-    MSG_RPC_CACHE_REMOVE  = 4
+    MSG_RPC_CACHE_GET       = 1
+    MSG_RPC_CACHE_SET       = 2
+    MSG_RPC_CACHE_CHECK     = 3
+    MSG_RPC_CACHE_REMOVE    = 4
 
     # Data API
-    MSG_RPC_DATA_ADD      = 10
-    MSG_RPC_DATA_REMOVE   = 11
-    MSG_RPC_DATA_CHECK    = 12
-    MSG_RPC_DATA_GET      = 13
-    MSG_RPC_DATA_GET_MANY = 14
-    MSG_RPC_DATA_KEYS     = 15
-    MSG_RPC_DATA_COUNT    = 16
-    MSG_RPC_DATA_PLUGINS  = 17
+    MSG_RPC_DATA_ADD        = 10
+    MSG_RPC_DATA_REMOVE     = 11
+    MSG_RPC_DATA_CHECK      = 12
+    MSG_RPC_DATA_GET        = 13
+    MSG_RPC_DATA_GET_MANY   = 14
+    MSG_RPC_DATA_KEYS       = 15
+    MSG_RPC_DATA_COUNT      = 16
+    MSG_RPC_DATA_PLUGINS    = 17
 
     # Plugin state API
-    MSG_RPC_STATE_ADD     = 20
-    MSG_RPC_STATE_REMOVE  = 21
-    MSG_RPC_STATE_CHECK   = 22
-    MSG_RPC_STATE_GET     = 23
-    MSG_RPC_STATE_KEYS    = 24
+    MSG_RPC_STATE_ADD       = 20
+    MSG_RPC_STATE_REMOVE    = 21
+    MSG_RPC_STATE_CHECK     = 22
+    MSG_RPC_STATE_GET       = 23
+    MSG_RPC_STATE_KEYS      = 24
 
     # Network API
-    MSG_RPC_REQUEST_SLOT  = 30
-    MSG_RPC_RELEASE_SLOT  = 31
+    MSG_RPC_REQUEST_SLOT    = 30
+    MSG_RPC_RELEASE_SLOT    = 31
+
+    # Plugin API
+    MSG_RPC_PLUGIN_GET_INFO = 40
 
 
     #--------------------------------------------------------------------------

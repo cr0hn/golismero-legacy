@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.data import Data
 from golismero.api.data.vulnerability import Vulnerability
-from golismero.api.plugin import UIPlugin
+from golismero.api.plugin import UIPlugin, get_plugin_info
 from golismero.main.console import Console, colorize, colorize_substring
 from golismero.messaging.codes import MessageType, MessageCode
 from golismero.messaging.message import Message
@@ -88,16 +88,16 @@ class ConsoleUIPlugin(UIPlugin):
         if message.message_type == MessageType.MSG_TYPE_STATUS:
 
             if message.message_type == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
-                m_plugin_name  = message.plugin_name if message.plugin_name else "/NO_NAME_PLUGIN"
-                m_plugin_name  = colorize(' '.join([x.capitalize() for x in m_plugin_name[m_plugin_name.rfind("/") + 1:].split("_")]), "blue")
-                m_text         = "[  0%] Starting plugin: %s" % m_plugin_name
+                m_plugin_name = get_plugin_info(message.plugin_name).display_name
+                m_plugin_name = colorize(m_plugin_name, "blue")
+                m_text        = "[  0%] Starting plugin: %s" % m_plugin_name
 
                 Console.display(m_text)
 
             elif message.message_type == MessageCode.MSG_STATUS_PLUGIN_END:
-                m_plugin_name  = message.plugin_name if message.plugin_name else "/NO_NAME_PLUGIN"
-                m_plugin_name  = colorize(' '.join([x.capitalize() for x in m_plugin_name[m_plugin_name.rfind("/") + 1:].split("_")]), "blue")
-                m_text         = "[100%] Ending plugin: %s" % m_plugin_name
+                m_plugin_name = get_plugin_info(message.plugin_name).display_name
+                m_plugin_name = colorize(m_plugin_name, "blue")
+                m_text        = "[100%] Ending plugin: %s" % m_plugin_name
 
                 Console.display(m_text)
 
@@ -106,12 +106,12 @@ class ConsoleUIPlugin(UIPlugin):
                 if Console.level >= Console.VERBOSE:
                     m_id, m_progress, m_text = message.message_info
 
-                    # XXX TODO: add an API to query information about plugins
-                    m_plugin_name = colorize(' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")]), "blue")
+                    m_plugin_name = get_plugin_info(message.plugin_name).display_name
+                    m_plugin_name = colorize(m_plugin_name, "blue")
 
                     if m_progress:
-                        m_progress_h = int(m_progress)
-                        m_progress_l = int((m_progress - float(m_progress_h)) * 100)
+                        m_progress_h   = int(m_progress)
+                        m_progress_l   = int((m_progress - float(m_progress_h)) * 100)
                         m_progress_txt = colorize("[%3s.%.2i%%]" % (m_progress_h, m_progress_l), "white")
                     else:
                         m_progress_txt = colorize("[*]", "white")
@@ -128,8 +128,13 @@ class ConsoleUIPlugin(UIPlugin):
             if message.message_code == MessageCode.MSG_CONTROL_LOG:
                 (text, level, is_error) = message.message_info
                 if Console.level >= level:
+                    try:
+                        m_plugin_name = get_plugin_info(message.plugin_name).display_name
+                    except Exception:
+                        m_plugin_name = "GoLismero"
+                    m_plugin_name = colorize(m_plugin_name, 'blue')
                     text = colorize(text, 'middle')
-                    text = "[*] %s" % text
+                    text = "[*] %s: %s" % (m_plugin_name, text)
                     if is_error:
                         Console.display_error(text)
                     else:
@@ -140,8 +145,11 @@ class ConsoleUIPlugin(UIPlugin):
             # full traceback in more verbose level)
             if message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 (description, traceback) = message.message_info
-                plugin_name = ' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")])
-                text        = "[!] Plugin '%s' error: %s " % (colorize(plugin_name, "blue"), str(description))
+                try:
+                    m_plugin_name = get_plugin_info(message.plugin_name).display_name
+                except Exception:
+                    m_plugin_name = "GoLismero"
+                text        = "[!] Plugin '%s' error: %s " % (m_plugin_name, str(description))
                 text        = colorize(text, 'critical')
                 traceback   = colorize(traceback, 'critical')
                 Console.display_error(text)
@@ -159,7 +167,10 @@ class ConsoleUIPlugin(UIPlugin):
                     else:
                         formatted = None
                     if formatted:
-                        plugin_name = ' '.join([x.capitalize() for x in message.plugin_name[message.plugin_name.rfind("/") + 1:].split("_")])
-                        text        = "[!] Plugin '%s' warning: %s " % (colorize(plugin_name, "blue"), str(formatted))
-                        text        = colorize(text, 'low')
+                        try:
+                            m_plugin_name = get_plugin_info(message.plugin_name).display_name
+                        except Exception:
+                            m_plugin_name = "GoLismero"
+                        text = "[!] Plugin '%s' warning: %s " % (m_plugin_name, str(formatted))
+                        text = colorize(text, 'low')
                         Console.display_error(text)
