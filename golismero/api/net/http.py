@@ -100,7 +100,7 @@ class _HTTP(Singleton):
 
     #--------------------------------------------------------------------------
     def get_url(self, url, method = "GET", callback = None,
-                     timeout = None, use_cache = None, allow_redirects = True):
+                     timeout = 10.0, use_cache = None, allow_redirects = True):
         """
         Send a simple HTTP request to the server and get the response back.
 
@@ -113,8 +113,10 @@ class _HTTP(Singleton):
         :param callback: Callback function.
         :type callback: callable
 
-        :param timeout: Timeout in seconds, or None for no timeout.
-        :type timeout: int | float | None
+        :param timeout: Timeout in seconds.
+            The minimum value is 0.5 and the maximum is 100.0. Any other values
+            will be silently converted to either one of them.
+        :type timeout: int | float
 
         :param use_cache: Control the use of the cache.
                           Use True to force the use of the cache,
@@ -140,7 +142,7 @@ class _HTTP(Singleton):
 
     #--------------------------------------------------------------------------
     def make_request(self, request, callback = None,
-                     timeout = None, use_cache = None,
+                     timeout = 10.0, use_cache = None,
                      allow_redirects = True):
         """
         Send an HTTP request to the server and get the response back.
@@ -151,8 +153,10 @@ class _HTTP(Singleton):
         :param callback: Callback function.
         :type callback: callable
 
-        :param timeout: Timeout in seconds, or None for no timeout.
-        :type timeout: int | float | None
+        :param timeout: Timeout in seconds.
+            The minimum value is 0.5 and the maximum is 100.0. Any other values
+            will be silently converted to either one of them.
+        :type timeout: int | float
 
         :param use_cache: Control the use of the cache.
                           Use True to force the use of the cache,
@@ -182,16 +186,22 @@ class _HTTP(Singleton):
                 "Expected callable (function, class, instance with __call__),"
                 " got %s instead" % type(callback)
             )
-        if timeout:
-            timeout = float(timeout)
-        else:
-            timeout = None
         if use_cache not in (True, False, None):
             raise TypeError("Expected bool or None, got %s instead" % type(use_cache))
 
         # Check the request scope.
         if not request.is_in_scope():
             raise NetworkOutOfScope("URL out of scope: %s" % request.url)
+
+        # Sanitize the timeout value.
+        if timeout:
+            timeout = float(timeout)
+            if timeout > 100.0:
+                timeout = 100.0
+            elif timeout < 0.5:
+                timeout = 0.5
+        else:
+            timeout = 0.5
 
         # If the cache is enabled, try to fetch the cached response.
         cache_key = None
@@ -333,7 +343,7 @@ class _HTTP(Singleton):
 
     #--------------------------------------------------------------------------
     def make_raw_request(self, raw_request, host, port = 80, proto = "http",
-                 callback = None, timeout = None):
+                 callback = None, timeout = 10.0):
         """
         Send a raw HTTP request to the server and get the response back.
 
@@ -357,8 +367,10 @@ class _HTTP(Singleton):
         :param callback: Callback function.
         :type callback: callable
 
-        :param timeout: Timeout in seconds, or None for no timeout.
-        :type timeout: int | float | None
+        :param timeout: Timeout in seconds.
+            The minimum value is 0.5 and the maximum is 100.0. Any other values
+            will be silently converted to either one of them.
+        :type timeout: int | float
 
         :param use_cache: Control the use of the cache.
                           Use True to force the use of the cache,
@@ -398,14 +410,20 @@ class _HTTP(Singleton):
                 "Expected callable (function, class, instance with __call__),"
                 " got %s instead" % type(callback)
             )
-        if timeout:
-            timeout = float(timeout)
-        else:
-            timeout = None
 
         # Check the request scope.
         if host not in Config.audit_scope:
             raise NetworkOutOfScope("Host out of scope: %s" % host)
+
+        # Sanitize the timeout value.
+        if timeout:
+            timeout = float(timeout)
+            if timeout > 100.0:
+                timeout = 100.0
+            elif timeout < 0.5:
+                timeout = 0.5
+        else:
+            timeout = 0.5
 
         # Get a connection slot.
         with ConnectionSlot(host):

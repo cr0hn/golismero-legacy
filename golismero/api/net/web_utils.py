@@ -103,7 +103,7 @@ def generate_user_agent():
 
 
 #----------------------------------------------------------------------
-def download(url, callback = None, timeout = None, allow_redirects = True):
+def download(url, callback = None, timeout = 10.0, allow_redirects = True):
     """
     Download the file pointed to by the given URL.
 
@@ -162,8 +162,10 @@ def download(url, callback = None, timeout = None, allow_redirects = True):
     :param callback: Callback function.
     :type callback: callable
 
-    :param timeout: Timeout in seconds, or None for no timeout.
-    :type timeout: int | float | None
+    :param timeout: Timeout in seconds.
+            The minimum value is 0.5 and the maximum is 100.0. Any other values
+            will be silently converted to either one of them.
+    :type timeout: int | float
 
     :param allow_redirects: True to follow redirections, False otherwise.
     :type allow_redirects: bool
@@ -215,7 +217,8 @@ def download(url, callback = None, timeout = None, allow_redirects = True):
     if callback is None:
         temp_callback = None
     else:
-        def temp_callback(request, url, status_code, content_length, content_type):
+        def temp_callback(
+                    request, url, status_code, content_length, content_type):
 
             # Abort if not successful.
             if status_code != "200":
