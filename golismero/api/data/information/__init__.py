@@ -77,7 +77,7 @@ class Information(Data):
     INFORMATION_WEB_SERVER_FINGERPRINT = 1300  # HTTP server fingerprint
     ##INFORMATION_WEB_APP_FINGERPRINT    = 1301  # Web application fingerprint
     ##INFORMATION_NETWORK_FINGERPRINT    = 1302  # Network fingerprint
-    ##INFORMATION_OS_FINGERPRINT         = 1303  # Operating system fingerprint
+    INFORMATION_OS_FINGERPRINT         = 1303  # Operating system fingerprint
 
 
     #----------------------------------------------------------------------
