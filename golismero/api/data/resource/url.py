@@ -33,9 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["Url"]
 
 from . import Resource
-from .baseurl import BaseUrl
 from .domain import Domain
-from .folderurl import FolderUrl
 from .ip import IP
 from .. import identity
 from ...config import Config
@@ -43,7 +41,108 @@ from ...net.web_utils import ParsedURL
 
 
 #------------------------------------------------------------------------------
-class Url(Resource):
+class _AbstractUrl(Resource):
+    """
+    Abstract class for all URL based resources.
+    """
+
+
+    #----------------------------------------------------------------------
+    def __init__(self, url):
+        """
+        :param url: Absolute URL.
+        :type url: str
+
+        :raises ValueError: Relative URLs are not allowed.
+        """
+
+        if not isinstance(url, basestring):
+            raise TypeError("Expected string, got %s instead" % type(url))
+        url = str(url)
+
+        # Parse, verify and canonicalize the URL.
+        # TODO: if relative, make it absolute using the referer when available.
+        parsed = ParsedURL(url)
+        if not parsed.host or not parsed.scheme:
+            raise ValueError("Only absolute URLs must be used!")
+        url = parsed.url
+
+        # URL.
+        self.__url = url
+
+        # Parsed URL.
+        self.__parsed_url = parsed
+
+        # Parent constructor.
+        super(_AbstractUrl, self).__init__()
+
+
+    #----------------------------------------------------------------------
+
+    @identity
+    def url(self):
+        """
+        :return: URL in canonical form.
+        :rtype: str
+        """
+        return self.__url
+
+
+    #----------------------------------------------------------------------
+
+    @property
+    def parsed_url(self):
+        """
+        :return: URL in decomposed form.
+        :rtype: ParsedURL
+        """
+        return self.__parsed_url
+
+    @property
+    def hostname(self):
+        """
+        :return: Hostname this URL points to.
+        :rtype: str
+        """
+        return self.__parsed_url.hostname
+
+    @property
+    def path(self):
+        """
+        :return: Path component of the URL.
+        :rtype: str
+        """
+        return self.__parsed_url.path
+
+    @property
+    def is_https(self):
+        """
+        :return: True if it's HTTPS, False otherwise.
+        :rtype: bool
+        """
+        return self.parsed_url.schema == "https"
+
+
+    #----------------------------------------------------------------------
+    def __str__(self):
+        return self.url
+
+
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        cls = self.__class__.__name__
+        if "." in cls:
+            cls = cls[ cls.rfind(".") + 1 : ]
+        return "<%s url=%r>" % (cls, self.url)
+
+
+    #----------------------------------------------------------------------
+    def is_in_scope(self):
+        return self.url in Config.audit_scope
+
+
+#------------------------------------------------------------------------------
+class Url(_AbstractUrl):
     """
     Universal Resource Locator (URL).
 
@@ -91,65 +190,26 @@ class Url(Resource):
         :raises ValueError: Currently, relative URLs are not allowed.
         """
 
-        if not isinstance(url, basestring):
-            raise TypeError("Expected string, got %s instead" % type(url))
-        url = str(url)
-
+        # Validate the argument types.
         if not isinstance(method, str):
             raise TypeError("Expected string, got %s instead" % type(method))
-
         if post_params is not None and not isinstance(post_params, dict):
             raise TypeError("Expected dict, got %s instead" % type(post_params))
-
         if not depth:
             depth = 0
         elif not isinstance(depth, int):
             raise TypeError("Expected int, got %s instead" % type(depth))
-
         if referer is not None and not isinstance(referer, str):
             raise TypeError("Expected string, got %s instead" % type(referer))
 
-        # Parse, verify and canonicalize the URL.
-        # TODO: if relative, make it absolute using the referer when available.
-        parsed = ParsedURL(url)
-        if not parsed.host or not parsed.scheme:
-            raise ValueError("Only absolute URLs must be used!")
-        url = parsed.url
-
-        # URL.
-        self.__url = url
-
-        # Parsed URL.
-        self.__parsed_url = parsed
-
-        # Method.
+        # Save the properties.
         self.__method = method.strip().upper() if method else "GET"
-
-        # POST params.
         self.__post_params = post_params if post_params else {}
-
-        # Encrypted?
-        self.__is_https = url.lower().startswith("https://")
-
-        # Depth.
-        assert type(depth) == int
         self.__depth = depth
-
-        # Referer.
-        if referer is not None:
-            assert isinstance(referer, basestring)
         self.__referer = referer
 
-        # Discovered resources.
-        self.__discovered = None
-
-        # Parent constructor.
-        super(Url, self).__init__()
-
-
-    #----------------------------------------------------------------------
-    def __str__(self):
-        return self.url
+        # Call the parent constructor.
+        super(Url, self).__init__(url)
 
 
     #----------------------------------------------------------------------
@@ -160,19 +220,6 @@ class Url(Resource):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.url in Config.audit_scope
-
-
-    #----------------------------------------------------------------------
-
-    @identity
-    def url(self):
-        """
-        :return: URL in canonical form.
-        :rtype: str
-        """
-        return self.__url
 
     @identity
     def method(self):
@@ -194,22 +241,6 @@ class Url(Resource):
     #----------------------------------------------------------------------
 
     @property
-    def parsed_url(self):
-        """
-        :return: URL in decomposed form.
-        :rtype: ParsedURL
-        """
-        return self.__parsed_url
-
-    @property
-    def hostname(self):
-        """
-        :return: Hostname this URL points to.
-        :rtype: str
-        """
-        return self.__parsed_url.hostname
-
-    @property
     def url_params(self):
         """
         :return: GET parameters.
@@ -219,14 +250,6 @@ class Url(Resource):
         if type(query) not in (str, unicode):
             return query
         return {}
-
-    @property
-    def is_https(self):
-        """
-        :return: True if it's HTTPS, False otherwise.
-        :rtype: bool
-        """
-        return self.__is_https
 
     @property
     def has_url_param(self):
@@ -267,6 +290,185 @@ class Url(Resource):
         if self.is_in_scope():
             result = FolderUrl.from_url(self.url)
             result.append( BaseUrl(self.url) )
+            try:
+                result.append( IP(self.hostname) )
+            except ValueError:
+                result.append( Domain(self.hostname) )
+            return result
+        return []
+
+
+#------------------------------------------------------------------------------
+class BaseUrl(_AbstractUrl):
+    """
+    Base URL.
+
+    Unlike the Url type, which refers to any URL, this type is strictly for
+    root level URLs in a web server. Plugins that only run once per web server
+    should probably receive this data type.
+
+    For example, a plugin receiving both BaseUrl and Url may get this input:
+
+    - BaseUrl("http://www.my_site.com/")
+    - Url("http://www.my_site.com/")
+    - Url("http://www.my_site.com/index.php")
+    - Url("http://www.my_site.com/admin.php")
+    - Url("http://www.my_site.com/login.php")
+
+    Notice how the root level URL is sent twice,
+    once as BaseUrl and again the more generic Url.
+    """
+
+    resource_type = Resource.RESOURCE_BASE_URL
+
+
+    #----------------------------------------------------------------------
+    def __init__(self, url):
+        """
+        :param url: Any **absolute** URL. The base will be extracted from it.
+        :type url: str
+
+        :raises ValueError: Only absolute URLs must be used.
+        """
+
+        # Validate the argument types.
+        if not isinstance(url, basestring):
+            raise TypeError("Expected string, got %s instead" % type(url))
+        url = str(url)
+
+        # Parse, verify and canonicalize the URL.
+        parsed = ParsedURL(url)
+        if not parsed.host or not parsed.scheme:
+            raise ValueError("Only absolute URLs must be used!")
+
+        # Convert it into a base URL.
+        parsed.auth = None
+        parsed.path = "/"
+        parsed.fragment = None
+        parsed.query = None
+        parsed.query_char = None
+        url = parsed.url
+
+        # Call the parent constructor.
+        super(BaseUrl, self).__init__(url)
+
+
+    #----------------------------------------------------------------------
+    @property
+    def discovered(self):
+        if self.is_in_scope():
+            return [Domain(self.hostname)]
+        return []
+
+
+#------------------------------------------------------------------------------
+class FolderUrl(_AbstractUrl):
+    """
+    Folder URL.
+
+    Unlike the Url type, which refers to an URL that's linked or somehow found
+    to be valid, the FolderUrl type refers to inferred URLs to folders detected
+    within another URL.
+
+    This makes it semantically different, since there's no guarantee that the
+    URL actually points to a valid resource, nor that it belongs to the normal
+    web access flow.
+
+    For example, a plugin receiving both FolderUrl and Url may get this input:
+
+    - Url("http://www.my_site.com/wp-content/uploads/2013/06/attachment.pdf")
+    - FolderUrl("http://www.my_site.com/wp-content/uploads/2013/06/")
+    - FolderUrl("http://www.my_site.com/wp-content/uploads/2013/")
+    - FolderUrl("http://www.my_site.com/wp-content/uploads/")
+    - FolderUrl("http://www.my_site.com/wp-content/")
+
+    Note that the folder URLs may or may not be sent again as an Url object.
+    For example, for a site that has a link to the "incoming" directory in its
+    index page, we may get something like this:
+
+    - Url("http://www.my_site.com/index.html")
+    - Url("http://www.my_site.com/incoming/")
+    - FolderUrl("http://www.my_site.com/incoming/")
+
+    FolderUrl objects are never sent for the root folder of a web site.
+    For that, see the BaseUrl data type.
+    """
+
+    resource_type = Resource.RESOURCE_FOLDER_URL
+
+
+    #----------------------------------------------------------------------
+    def __init__(self, url):
+        """
+        :param url: Absolute URL to a folder.
+        :type url: str
+
+        :raises ValueError: The URL wasn't absolute or didn't point to a folder.
+        """
+
+        if not isinstance(url, basestring):
+            raise TypeError("Expected string, got %s instead" % type(url))
+        url = str(url)
+
+        # Parse, verify and canonicalize the URL.
+        parsed = ParsedURL(url)
+        if not parsed.host or not parsed.scheme:
+            raise ValueError("Only absolute URLs must be used!")
+        if not parsed.path.endswith("/"):
+            raise ValueError("URL does not point to a folder!")
+
+        # Call the parent constructor.
+        super(FolderUrl, self).__init__(parsed.url)
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def from_url(url):
+        """
+        :param url: Any **absolute** URL. The folder will be extracted from it.
+        :type url: str
+
+        :returns: Inferred folder URLs.
+        :rtype: list(FolderUrl)
+
+        :raises ValueError: Only absolute URLs must be used.
+        """
+        assert isinstance(url, basestring)
+
+        # Parse, verify and canonicalize the URL.
+        parsed = ParsedURL(url)
+        if not parsed.host or not parsed.scheme:
+            raise ValueError("Only absolute URLs must be used!")
+
+        # Extract the folders from the path.
+        path = parsed.path
+        folders = path.split("/")
+        if not path.endswith("/"):
+            folders.pop()
+
+        # Convert the URL to a base URL.
+        parsed.auth = None
+        parsed.path = "/"
+        parsed.fragment = None
+        parsed.query = None
+        parsed.query_char = None
+
+        # Generate a new folder URL for each folder.
+        folder_urls = {parsed.url}
+        for folder in folders:
+            if folder:
+                parsed.path += folder + "/"
+                folder_urls.add(parsed.url)
+
+        # Return the generated URLs.
+        return [FolderUrl(x) for x in folder_urls]
+
+
+    #----------------------------------------------------------------------
+    @property
+    def discovered(self):
+        if self.is_in_scope():
+            result = [ BaseUrl(self.url) ]
             try:
                 result.append( IP(self.hostname) )
             except ValueError:
