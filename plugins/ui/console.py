@@ -109,7 +109,7 @@ class ConsoleUIPlugin(UIPlugin):
                     m_plugin_name = self.get_plugin_name(message)
                     m_plugin_name = colorize(m_plugin_name, "blue")
 
-                    if m_progress:
+                    if m_progress is not None:
                         m_progress_h   = int(m_progress)
                         m_progress_l   = int((m_progress - float(m_progress_h)) * 100)
                         m_progress_txt = colorize("[%3s.%.2i%%]" % (m_progress_h, m_progress_l), "white")
