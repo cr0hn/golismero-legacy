@@ -116,6 +116,12 @@ class ConsoleUIPlugin(UIPlugin):
                     else:
                         m_progress_txt = colorize("[*]", "white")
 
+
+                    print m_progress_txt
+                    print m_plugin_name
+                    print m_text
+
+
                     m_text = "%s %s: %s" % (m_progress_txt, m_plugin_name, (m_text if m_text else "working"))
 
                     Console.display(m_text)
@@ -163,7 +169,7 @@ class ConsoleUIPlugin(UIPlugin):
                     if Console.level >= Console.MORE_VERBOSE:
                         formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
                     elif Console.level >= Console.VERBOSE:
-                        formatted = warnings.formatwarning(w.message, w.category)
+                        formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
                     else:
                         formatted = None
                     if formatted:
