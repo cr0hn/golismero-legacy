@@ -40,7 +40,7 @@ if __name__ == "__main__":
     sys.path.insert(0, thirdparty_libs)
     sys.path.insert(0, root)
 
-from golismero.api.net.web_utils import DecomposedURL
+from golismero.api.net.web_utils import parse_url
 
 from pprint import pprint
 from timeit import Timer, default_repeat
@@ -48,7 +48,7 @@ from unittest import TestCase, main
 
 
 #--------------------------------------------------------------------------
-class Test_DecomposedURL (TestCase):
+class Test_ParsedURL (TestCase):
 
 
     #--------------------------------------------------------------------------
@@ -95,8 +95,8 @@ class Test_DecomposedURL (TestCase):
 
     def test_normal(self):
         for url in self.__normal:
-            ##pprint(DecomposedURL(url).url)
-            self.assertEqual(DecomposedURL(url).url, url)
+            ##pprint(parse_url(url).url)
+            self.assertEqual(parse_url(url).url, url)
 
 
     #--------------------------------------------------------------------------
@@ -172,7 +172,7 @@ class Test_DecomposedURL (TestCase):
         for url_list in self.__equivalent:
             normalized = set()
             for url in url_list:
-                normalized.add(DecomposedURL(url).url)
+                normalized.add(parse_url(url).url)
             ##pprint(normalized)
             self.assertEqual(len(normalized), 1)
 
@@ -189,8 +189,8 @@ class Test_DecomposedURL (TestCase):
 
     def test_relative(self):
         for url in self.__normal:
-            ##pprint(DecomposedURL(url, 'http://example.com/path/').url)
-            self.assertEqual(DecomposedURL(url, 'http://example.com/path/').url, url)
+            ##pprint(parse_url(url, 'http://example.com/path/').url)
+            self.assertEqual(parse_url(url, 'http://example.com/path/').url, url)
 
 
     #--------------------------------------------------------------------------
@@ -210,17 +210,17 @@ class Test_DecomposedURL (TestCase):
         "http:example.com",
     )
 
-    def __decompose_url(self, url):
-        return DecomposedURL(url).url
+    def __parse_url(self, url):
+        return parse_url(url).url
 
     def test_errors(self):
         for url in self.__errors:
-            self.assertRaises(ValueError, self.__decompose_url, url)
+            self.assertRaises(ValueError, self.__parse_url, url)
 
 
 #--------------------------------------------------------------------------
 def _benchmark():
-    return DecomposedURL('http://example.com/path?query=string&param=value&orphan#fragment_id').url
+    return parse_url('http://example.com/path?query=string&param=value&orphan#fragment_id').url
 
 # Some code borrowed from the timeit module.
 def benchmark(number = 0, precision = 3, verbose = True):
