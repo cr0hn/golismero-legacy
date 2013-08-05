@@ -226,19 +226,7 @@ class ServerFingerprinting(TestingPlugin):
 
         m_main_url = info.url
 
-        Logger.log_more_verbose("Starting fingerprinting plugin for site: %s" % m_main_url)
-
-        #
-        # Detect the platform: Windows or *NIX
-        #
-        #
-        # FIXME: Improve platform detection
-        #
-        #
-        #basic_platform_detection(m_main_url, m_conn)
-        #m_platform = ttl_platform_detection(ParsedURL(m_main_url).hostname)
-        #if m_platform:
-            #Logger.log_more_verbose("Fingerprint - Plaform: %s" % ','.join(m_platform.keys()))
+        Logger.log_more_verbose("Starting webserver fingerprinting plugin for site: %s" % m_main_url)
 
         #
         # Analyze HTTP protocol
@@ -258,153 +246,9 @@ class ServerFingerprinting(TestingPlugin):
 
 #----------------------------------------------------------------------
 #
-# Platform detection
-#
-#----------------------------------------------------------------------
-
-def check_download(url, name, content_length, content_type):
-
-    # Returns True to continue or False to cancel.
-    return (
-
-        # Check the file type is text.
-        content_type and content_type.strip().lower().startswith("text/") and
-
-        # Check the file is not too big.
-        content_length and content_length < 100000
-    )
-
-def check_response(request, url, status_code, content_length, content_type):
-
-    # Returns True to continue, False to cancel.
-    return (
-
-        # Check the content length is not too large.
-        content_length is not None and content_length < 200000
-
-    )
-
-def basic_platform_detection(main_url):
-    """
-    Detect if platform is Windows or \*NIX. To do this, get the first link, in scope, and
-    does two resquest. If are the same response, then, platform are Windows. Else are \*NIX.
-
-    :returns: Name of platforms: Windows, \*NIX or unknown.
-    :rtype: str
-    """
-    m_forbidden = (
-        "logout",
-        "logoff",
-        "exit",
-        "sigout",
-        "signout",
-    )
-
-    # Get the main web page
-    m_r = download(main_url, check_download)
-    if not m_r:
-        return "unknown"
-    discard_data(m_r)
-
-    # Get the first link
-    if m_r.information_type == Information.INFORMATION_HTML:
-        m_links = extract_from_html(m_r.raw_data, main_url)
-    else:
-        m_links = extract_from_text(m_r.raw_data, main_url)
-
-    if not m_links:
-        return "unknown"
-
-    # Get the first link of the page that's in scope of the audit
-    m_first_link = None
-    for u in m_links:
-        if u in Config.audit_scope and not any(x in u for x in m_forbidden):
-            m_first_link = u
-            break
-
-    if not m_first_link:
-        return "unknown"
-
-    # Now get two request to the links. One to the original URL and other
-    # as upper URL.
-
-    # Original
-    m_response_orig  = HTTP.get_url(m_first_link, callback=check_response)
-    discard_data(m_response_orig)
-    # Uppercase
-    m_response_upper = HTTP.get_url(m_first_link.upper(), callback=check_response)
-    discard_data(m_response_upper)
-    # Compare them
-    m_orig_data      = m_response_orig.raw_response  if m_response_orig  else ""
-    m_upper_data     = m_response_upper.raw_response if m_response_upper else ""
-    m_match_level    = get_diff_ratio(m_orig_data, m_upper_data)
-
-    # If the responses are equal by 90%, two URL are the same => Windows; else => *NIX
-    m_return = None
-    if m_match_level > 0.95:
-        m_return = "Windows"
-    else:
-        m_return = "*NIX"
-
-    return m_return
-
-
-#----------------------------------------------------------------------
-def ttl_platform_detection(main_url):
-    """
-    This function tries to recognize the remote platform doing a ping and analyzing the
-    TTL of IP header response.
-
-    :param main_url: Base url to test.
-    :type main_url: str
-
-    :return: Possible platforms.
-    :rtype: dict(OS, version)
-    """
-
-    # Do a ping
-    try:
-        m_ttl               = do_ping_and_receive_ttl(ParsedURL(main_url).hostname, 2)
-
-        # Load words for the wordlist
-        l_wordlist_instance = WordListLoader.get_advanced_wordlist_as_dict(Config.plugin_extra_config["Wordlist_ttl"]["ttl"])
-        # Looking for matches
-        l_matches           = l_wordlist_instance.matches_by_value(m_ttl)
-
-        if l_matches:
-            m_ret = {}
-            for v in l_matches:
-                sp = v.split("|")
-                k = sp[0].strip()
-                v = sp[1].strip()
-                m_ret[k] = v
-
-            return m_ret
-        else:
-            return {}
-    except EnvironmentError:
-        Logger.log_error("[!] You can't run the platform detection plugin if you're not root.")
-        return {}
-    except Exception, e:
-        Logger.log_error("[!] Platform detection failed, reason: %s" % e)
-        return {}
-
-
-
-#----------------------------------------------------------------------
-#
 # Web server detection
 #
 #----------------------------------------------------------------------
-def check_raw_response(request, response):
-
-    # Returns True to continue, False to cancel.
-    return (
-
-        # Check the content length is not too large.
-        response.content_length is not None and response.content_length < 200000
-
-    )
 
 def http_analyzers(main_url, update_status_func, part_status=100, number_of_entries=4):
     """
@@ -1124,6 +968,39 @@ class HTTPAnalyzer(object):
 # Aux functions
 #
 #----------------------------------------------------------------------
+def check_download(url, name, content_length, content_type):
+
+    # Returns True to continue or False to cancel.
+    return (
+
+        # Check the file type is text.
+        content_type and content_type.strip().lower().startswith("text/") and
+
+        # Check the file is not too big.
+        content_length and content_length < 100000
+    )
+
+def check_raw_response(request, response):
+
+    # Returns True to continue, False to cancel.
+    return (
+
+        # Check the content length is not too large.
+        response.content_length is not None and response.content_length < 200000
+
+    )
+
+
+def check_response(request, url, status_code, content_length, content_type):
+
+    # Returns True to continue, False to cancel.
+    return (
+
+        # Check the content length is not too large.
+        content_length is not None and content_length < 200000
+
+    )
+
 #@lru_cache(maxsize=100)
 def calculate_server_track(server_name):
     """

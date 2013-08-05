@@ -1,8 +1,8 @@
 [Core]
-Name = Server Fingerprinting plugin
+Name = Web Server fingerprinting plugin
 
 [Documentation]
-Description = Fingerprinter for server
+Description = Fingerprinter for web server
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/cr0hn/golismero/

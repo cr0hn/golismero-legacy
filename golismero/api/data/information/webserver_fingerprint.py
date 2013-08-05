@@ -55,7 +55,7 @@ class WebServerFingerprint(Information):
         :param name: Web server name as raw format. The name is taken from a raw banner with internal filters, and It can has errors with unusual servers. If you want to ensure that this is correct, use name_canonical instead. I.E: "Ricoh Aficio 1045 5.23 Web-Server 3.0" -> name = "Ricoh Aficio 1045 5.23 Web-Server"
         :type name: str
 
-        :param version: Web server sersion. Example: "2.4"
+        :param version: Web server version. Example: "2.4"
         :type version: str
 
         :param banner: Complete description for web server. Example: "Apache 2.2.23 ((Unix) mod_ssl/2.2.23 OpenSSL/1.0.1e-fips)"

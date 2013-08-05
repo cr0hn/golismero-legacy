@@ -54,7 +54,7 @@ if __name__ == "__main__":
     os.environ['PYCHECKER'] = ('--stdlib --keepgoing --limit 500 '
                                '--blacklist BeautifulSoup,colorizer'
                                ',decorator,diff_match_patch,distutils,django'
-                               ',httpparser,nltk,ping,prettytable,repoze'
+                               ',httpparser,nltk,repoze'
                                ',requests,requests_ntlm,_socket,ssl,_ssl'
                                ',select,_tkinter,yaml')
     import pychecker.checker # Not included in thirdparty_libs on purpose!
