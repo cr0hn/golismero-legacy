@@ -116,12 +116,6 @@ class ConsoleUIPlugin(UIPlugin):
                     else:
                         m_progress_txt = colorize("[*]", "white")
 
-
-                    print m_progress_txt
-                    print m_plugin_name
-                    print m_text
-
-
                     m_text = "%s %s: %s" % (m_progress_txt, m_plugin_name, (m_text if m_text else "working"))
 
                     Console.display(m_text)
