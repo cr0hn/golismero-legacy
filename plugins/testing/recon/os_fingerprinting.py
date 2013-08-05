@@ -95,7 +95,7 @@ class OSFingerprinting(TestingPlugin):
 
         FINGERPRINT_METHODS_OS_AND_VERSION = {
             'ttl'                  : {
-                'function'   : ttl_platform_detection,
+                'function'   : self.ttl_platform_detection,
                 'weight'     : 2
             }
         }
@@ -114,7 +114,7 @@ class OSFingerprinting(TestingPlugin):
             FUNCTIONS = ['ttl']
 
             # Try to detect if remote system is a Windows
-            is_windows = is_URL_in_windows
+            is_windows = self.is_URL_in_windows(m_host)
 
         # Logging
         Logger.log_more_verbose("Starting OS fingerprinting plugin for site: %s" % m_host)
@@ -182,115 +182,115 @@ class OSFingerprinting(TestingPlugin):
         return m_return
 
 
-#----------------------------------------------------------------------
-#
-# Platform detection methods
-#
-#----------------------------------------------------------------------
-def is_URL_in_windows(main_url):
-    """
-    Detect if platform is Windows or \*NIX. To do this, get the first link, in scope, and
-    does two resquest. If are the same response, then, platform are Windows. Else are \*NIX.
+    #----------------------------------------------------------------------
+    #
+    # Platform detection methods
+    #
+    #----------------------------------------------------------------------
+    def is_URL_in_windows(self, main_url):
+        """
+        Detect if platform is Windows or \*NIX. To do this, get the first link, in scope, and
+        does two resquest. If are the same response, then, platform are Windows. Else are \*NIX.
 
-    :returns: True, if the remote host is a Windows system. False is *NIX or None if unknown.
-    :rtype: bool
-    """
-    m_forbidden = (
-        "logout",
-        "logoff",
-        "exit",
-        "sigout",
-        "signout",
-    )
+        :returns: True, if the remote host is a Windows system. False is *NIX or None if unknown.
+        :rtype: bool
+        """
+        m_forbidden = (
+            "logout",
+            "logoff",
+            "exit",
+            "sigout",
+            "signout",
+        )
 
-    # Get the main web page
-    m_r = download(main_url, check_download)
-    if not m_r:
-        return None
-    discard_data(m_r)
+        # Get the main web page
+        m_r = download(main_url, check_download)
+        if not m_r:
+            return None
+        discard_data(m_r)
 
-    # Get the first link
-    if m_r.information_type == Information.INFORMATION_HTML:
-        m_links = extract_from_html(m_r.raw_data, main_url)
-    else:
-        m_links = extract_from_text(m_r.raw_data, main_url)
-
-    if not m_links:
-        return None
-
-    # Get the first link of the page that's in scope of the audit
-    m_first_link = None
-    for u in m_links:
-        if u in Config.audit_scope and not any(x in u for x in m_forbidden):
-            m_first_link = u
-            break
-
-    if not m_first_link:
-        return None
-
-    # Now get two request to the links. One to the original URL and other
-    # as upper URL.
-
-    # Original
-    m_response_orig  = HTTP.get_url(m_first_link, callback=check_response)
-    discard_data(m_response_orig)
-    # Uppercase
-    m_response_upper = HTTP.get_url(m_first_link.upper(), callback=check_response)
-    discard_data(m_response_upper)
-    # Compare them
-    m_orig_data      = m_response_orig.raw_response  if m_response_orig  else ""
-    m_upper_data     = m_response_upper.raw_response if m_response_upper else ""
-    m_match_level    = get_diff_ratio(m_orig_data, m_upper_data)
-
-    # If the responses are equal by 90%, two URL are the same => Windows; else => *NIX
-    m_return = None
-    if m_match_level > 0.95:
-        m_return = True
-    else:
-        m_return = False
-
-    return m_return
-
-
-#----------------------------------------------------------------------
-def ttl_platform_detection(main_url):
-    """
-    This function tries to recognize the remote platform doing a ping and analyzing the
-    TTL of IP header response.
-
-    :param main_url: Base url to test.
-    :type main_url: str
-
-    :return: Possible platforms.
-    :rtype: list(tuple(OS, version))
-    """
-
-    # Do a ping
-    try:
-        m_ttl               = do_ping_and_receive_ttl(ParsedURL(main_url).hostname, 2)
-
-        # Load words for the wordlist
-        l_wordlist_instance = WordListLoader.get_advanced_wordlist_as_dict(Config.plugin_extra_config["Wordlist_ttl"]["ttl"])
-        # Looking for matches
-        l_matches           = l_wordlist_instance.matches_by_value(m_ttl)
-
-        if l_matches:
-            m_ret = {}
-            for v in l_matches:
-                sp = v.split("|")
-                k = sp[0].strip()
-                v = sp[1].strip()
-                m_ret[k] = v
-
-            return [(k,v) for k,v in m_ret.iteritems()]
+        # Get the first link
+        if m_r.information_type == Information.INFORMATION_HTML:
+            m_links = extract_from_html(m_r.raw_data, main_url)
         else:
+            m_links = extract_from_text(m_r.raw_data, main_url)
+
+        if not m_links:
+            return None
+
+        # Get the first link of the page that's in scope of the audit
+        m_first_link = None
+        for u in m_links:
+            if u in Config.audit_scope and not any(x in u for x in m_forbidden):
+                m_first_link = u
+                break
+
+        if not m_first_link:
+            return None
+
+        # Now get two request to the links. One to the original URL and other
+        # as upper URL.
+
+        # Original
+        m_response_orig  = HTTP.get_url(m_first_link, callback=check_response)
+        discard_data(m_response_orig)
+        # Uppercase
+        m_response_upper = HTTP.get_url(m_first_link.upper(), callback=check_response)
+        discard_data(m_response_upper)
+        # Compare them
+        m_orig_data      = m_response_orig.raw_response  if m_response_orig  else ""
+        m_upper_data     = m_response_upper.raw_response if m_response_upper else ""
+        m_match_level    = get_diff_ratio(m_orig_data, m_upper_data)
+
+        # If the responses are equal by 90%, two URL are the same => Windows; else => *NIX
+        m_return = None
+        if m_match_level > 0.95:
+            m_return = True
+        else:
+            m_return = False
+
+        return m_return
+
+
+    #----------------------------------------------------------------------
+    def ttl_platform_detection(self, main_url):
+        """
+        This function tries to recognize the remote platform doing a ping and analyzing the
+        TTL of IP header response.
+
+        :param main_url: Base url to test.
+        :type main_url: str
+
+        :return: Possible platforms.
+        :rtype: list(tuple(OS, version))
+        """
+
+        # Do a ping
+        try:
+            m_ttl               = do_ping_and_receive_ttl(ParsedURL(main_url).hostname, 2)
+
+            # Load words for the wordlist
+            l_wordlist_instance = WordListLoader.get_advanced_wordlist_as_dict(Config.plugin_extra_config["Wordlist_ttl"]["ttl"])
+            # Looking for matches
+            l_matches           = l_wordlist_instance.matches_by_value(m_ttl)
+
+            if l_matches:
+                m_ret = {}
+                for v in l_matches:
+                    sp = v.split("|")
+                    k = sp[0].strip()
+                    v = sp[1].strip()
+                    m_ret[k] = v
+
+                return [(k,v) for k,v in m_ret.iteritems()]
+            else:
+                return {}
+        except EnvironmentError:
+            Logger.log_error("[!] You can't run the platform detection plugin if you're not root.")
             return {}
-    except EnvironmentError:
-        Logger.log_error("[!] You can't run the platform detection plugin if you're not root.")
-        return {}
-    except Exception, e:
-        Logger.log_error("[!] Platform detection failed, reason: %s" % e)
-        return {}
+        except Exception, e:
+            Logger.log_error("[!] Platform detection failed, reason: %s" % e)
+            return {}
 
 
 
