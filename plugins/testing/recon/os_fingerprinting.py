@@ -42,7 +42,9 @@ from golismero.api.data.resource.domain import Domain
 # Informations
 from golismero.api.data.information.os_fingerprint import OSFingerprint
 
-
+import os
+import os.path
+import sys
 from collections import Counter, OrderedDict, defaultdict
 
 
@@ -291,6 +293,3 @@ class OSFingerprinting(TestingPlugin):
         except Exception, e:
             Logger.log_error("[!] Platform detection failed, reason: %s" % e)
             return {}
-
-
-

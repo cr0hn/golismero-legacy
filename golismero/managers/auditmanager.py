@@ -110,6 +110,7 @@ class AuditManager (object):
 
         # On error, abort.
         except Exception, e:
+            ##raise  # XXX DEBUG
             try:
                 self.remove_audit(m_audit.name)
             except Exception:
