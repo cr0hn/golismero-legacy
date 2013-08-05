@@ -46,6 +46,9 @@ class _AbstractUrl(Resource):
     Abstract class for all URL based resources.
     """
 
+    # Not true, but this bypasses an integrity check in the metaclass.
+    resource_type = Resource.RESOURCE_URL
+
 
     #----------------------------------------------------------------------
     def __init__(self, url):
