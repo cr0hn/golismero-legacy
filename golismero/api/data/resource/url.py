@@ -107,7 +107,7 @@ class _AbstractUrl(Resource):
         :return: Hostname this URL points to.
         :rtype: str
         """
-        return self.__parsed_url.hostname
+        return self.parsed_url.hostname
 
     @property
     def path(self):
@@ -115,7 +115,7 @@ class _AbstractUrl(Resource):
         :return: Path component of the URL.
         :rtype: str
         """
-        return self.__parsed_url.path
+        return self.parsed_url.path
 
     @property
     def is_https(self):
@@ -249,7 +249,7 @@ class Url(_AbstractUrl):
         :return: GET parameters.
         :rtype: dict(str -> str)
         """
-        query = self.__parsed_url.query
+        query = self.parsed_url.query
         if type(query) not in (str, unicode):
             return query
         return {}

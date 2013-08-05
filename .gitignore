@@ -20,6 +20,7 @@ golismero_2/TODO.txt
 *.dbm
 *.sql
 *.sqlite
+*-journal
 
 # Backup file extensions
 *.bak
