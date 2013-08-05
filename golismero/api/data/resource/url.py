@@ -123,7 +123,7 @@ class _AbstractUrl(Resource):
         :return: True if it's HTTPS, False otherwise.
         :rtype: bool
         """
-        return self.parsed_url.schema == "https"
+        return self.parsed_url.scheme == "https"
 
 
     #----------------------------------------------------------------------
