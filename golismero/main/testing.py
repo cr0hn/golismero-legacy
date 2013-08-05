@@ -55,7 +55,7 @@ class PluginTester(object):
     Setup a mock environment to test plugins.
 
     Example:
-        >>> from golismero.api.data.resource.baseurl import BaseUrl
+        >>> from golismero.api.data.resource.url import BaseUrl
         >>> from golismero.main.testing import PluginTester
         >>> with PluginTester() as t:
         ...    t.audit.config.targets = ["http://www.example.com/"]

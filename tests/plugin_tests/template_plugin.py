@@ -44,8 +44,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # from golismero.api.data.information.binary import Binary
 #
 # - Resource types:
-# from golismero.api.data.resource.url import Url
-# from golismero.api.data.resource.baseurl import BaseUrl
+# from golismero.api.data.resource.url import Url, BaseUrl, FolderUrl
 # from golismero.api.data.resource.domain import Domain
 #
 # - Vulnerability types:

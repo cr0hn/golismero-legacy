@@ -26,8 +26,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from golismero.api.data.resource.folderurl import FolderUrl
-from golismero.api.data.resource.url import Url
+from golismero.api.data.resource.url import FolderUrl, Url
 
 # - Vulnerability types:
 # from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
