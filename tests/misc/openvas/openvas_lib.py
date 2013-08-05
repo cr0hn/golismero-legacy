@@ -645,6 +645,21 @@ class OMPv4(object):
     def __init__(cls, host, username, password, port=9390, timeout=None):
         """
         Open a connection to the manager and authenticate the user.
+
+        :param host: string with host where OpenVas manager are running.
+        :type host: str
+
+        :param username: user name in the OpenVas manager.
+        :type username: str
+
+        :param password: user password.
+        :type password: str
+
+        :param port: port of the OpenVas Manager
+        :type port: int
+
+        :param timeout: timeout for connection, in seconds.
+        :type timeout: int
         """
 
         if not isinstance(host, basestring):
