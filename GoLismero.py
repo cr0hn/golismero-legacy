@@ -19,7 +19,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 '''
 
-import argparse 
+import argparse
 from libs.updater import *
 from libs.io_functions import *
 from api import *
@@ -31,18 +31,18 @@ import textwrap
 __version__ = "0.2"
 __prog__ = "GoLISMERO"
 __examples__ = '''
-Examples:	 
-- GoLISMERO.py -t site.com -c 
-- GoLISMERO.py -t site.com -c -A links -x 
-- GoLISMERO.py -t site.com -m -c -A links -o results.html -F html -x	 
-- GoLISMERO.py -t site.com -c -A links -o wfuzz_script.sh -F wfuzz 
+Examples:
+- GoLISMERO.py -t site.com -c
+- GoLISMERO.py -t site.com -c -A links -x
+- GoLISMERO.py -t site.com -m -c -A links -o results.html -F html -x
+- GoLISMERO.py -t site.com -c -A links -o wfuzz_script.sh -F wfuzz
 - GoLISMERO.py -t site.com -A links --no-css --no-script --no-images --no-mail -c -x
-  or GoLISMERO.py -t site.com -A links -nc -ns -ni -nm  
+  or GoLISMERO.py -t site.com -A links -nc -ns -ni -nm
   or GoLISMERO.py -t site.com -A links --no-all
-  or GoLISMERO.py -t site.com -A links -na	 
-	 
-  For more examples you can see EXAMPLES.txt 
-	 ''' 
+  or GoLISMERO.py -t site.com -A links -na
+
+  For more examples you can see EXAMPLES.txt
+	 '''
 
 
 # Parameters
@@ -52,7 +52,7 @@ def Credits():
 	print ""
 	print "%s - The Web Knife." % (__prog__)
 	print ""
-	print "Daniel Garcia Garcia - dani@iniqua.com | dani@estotengoqueprobarlo.es"
+	print "Daniel Garcia - cr0hn-[X]-cr0hn.com (@ggdaniel)"
 	print ""
 
 
@@ -85,13 +85,13 @@ if __name__ == '__main__':
 	parser.add_argument('-f','--finger', action='store', dest='finger', help='fingerprint web aplication. As default not selected. (not implemented yet) ', default =  None)
 	parser.add_argument('--follow', action='store_true', help='follow redirect. As default not redirect.')
 	P = parser.parse_args()
-	
+
 	if P.update is True:
 		print "[i] Updating..."
 		update()
 		print ""
 		exit(0)
-	
+
 	# Asociamos variable globales
 	PARAMETERS.RECURSIVITY = P.recursivity
 	PARAMETERS.OUTPUT_FILE = P.output
@@ -114,7 +114,7 @@ if __name__ == '__main__':
 	PARAMETERS.FOLLOW = P.follow
 	PARAMETERS.VERSION = P.V
 	PARAMETERS.VULNS = P.search_vulns
-	
+
 	# Mostrar version
 	if PARAMETERS.VERSION is True:
 		print "%s version is '%s'" % (__prog__, __version__)
@@ -127,7 +127,7 @@ if __name__ == '__main__':
 		PARAMETERS.IS_NJS = True
 		PARAMETERS.IS_NIMG = True
 		PARAMETERS.IS_NMAIL = True
-	
+
 	try:
 		GoLISMERO_Main(PARAMETERS)
 	except IOError,e:
@@ -135,6 +135,6 @@ if __name__ == '__main__':
 		print str(e)
 		print ""
 		sys.exit(1)
-		
+
 	# Mostrar resultados
 	ShowScreenResults(PARAMETERS)
