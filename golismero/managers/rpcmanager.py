@@ -39,7 +39,6 @@ from functools import partial
 from threading import Thread
 
 import sys
-import warnings
 import traceback
 
 
