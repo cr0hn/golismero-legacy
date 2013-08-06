@@ -127,7 +127,9 @@ class NetworkManager (object):
         #    raise ValueError("Requested too many slots")
         token = None
         host  = host.lower()
-        print "Requested!"
+
+        # XXX DEBUG
+        #print "Requested!"
         with self.__rlock:
             sem = self.__semaphores[host]
             self.__tokens[audit_name] # make sure it exists
@@ -139,7 +141,8 @@ class NetworkManager (object):
                 token = "%.8X|%s" % (random.randint(0, 0x7FFFFFFF), host)
                 self.__tokens[audit_name][token] = (host, number)
                 self.__counts[host] += 1
-                print "Granted!", token
+                # XXX DEBUG
+                #print "Granted!", token
                 return token
         except:
             try:
@@ -164,7 +167,8 @@ class NetworkManager (object):
         :param token: Request token.
         :type token: str
         """
-        print "Releasing!", token
+        # XX DEBUG
+        #print "Releasing!", token
         try:
             with self.__rlock:
                 host, number = self.__tokens[audit_name].pop(token)
@@ -178,7 +182,9 @@ class NetworkManager (object):
                     sem.release()
         except Exception:
             pass
-        print "Released!", token
+
+        # XXX DEBUG
+        #print "Released!", token
 
 
     #----------------------------------------------------------------------
