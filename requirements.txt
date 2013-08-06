@@ -1,0 +1,15 @@
+BeautifulSoup
+colorizer
+decorator
+django
+diff_match_patch
+dnspython
+netaddr
+ntlk
+python_cjson
+repoze.lru
+requests
+requests_ntlm
+tldextract
+yaml
+decorator
