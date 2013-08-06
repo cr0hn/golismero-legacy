@@ -92,7 +92,7 @@
 
 __all__ = ["do_ping_and_receive_ttl"]
 
-import os, sys, socket, struct, select, time
+import os, socket, struct, select, time
 
 # From /usr/include/linux/icmp.h; your milage may vary.
 ICMP_ECHO_REQUEST = 8 # Seems to be the same on Solaris.

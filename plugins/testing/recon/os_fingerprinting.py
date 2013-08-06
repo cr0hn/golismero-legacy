@@ -29,9 +29,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.config import Config
 from golismero.api.logger import Logger
 from golismero.api.data import discard_data
-from golismero.api.net import NetworkException
+from golismero.api.net.http import HTTP
+from golismero.api.net.scraper import extract_from_html
+from golismero.api.net.scraper import extract_from_html, extract_from_text
 from golismero.api.plugin import TestingPlugin
 from golismero.api.net.web_utils import ParsedURL, download
+from golismero.api.text.wordlist import WordListLoader
 
 from golismero.api.text.matching_analyzer import get_diff_ratio
 
@@ -40,12 +43,13 @@ from golismero.api.data.resource.ip import IP
 from golismero.api.data.resource.domain import Domain
 
 # Informations
+from golismero.api.data.information import Information
 from golismero.api.data.information.os_fingerprint import OSFingerprint
 
 import os
 import os.path
 import sys
-from collections import Counter, OrderedDict, defaultdict
+from collections import Counter
 
 
 __doc__ = """
@@ -125,8 +129,10 @@ class OSFingerprinting(TestingPlugin):
         m_counter = Counter()
         # Run functions
         for f in FUNCTIONS:
-            l_function   = FINGERPRINT_METHODS[f]['function']
-            l_weight     = FINGERPRINT_METHODS[f]['weight']
+            l_function   = FINGERPRINT_METHODS_OS_AND_VERSION[f]['function']
+
+            ### For future use
+            ### l_weight     = FINGERPRINT_METHODS_OS_AND_VERSION[f]['weight']
 
             # Run
             results      = l_function(m_host)
@@ -206,7 +212,7 @@ class OSFingerprinting(TestingPlugin):
         )
 
         # Get the main web page
-        m_r = download(main_url, check_download)
+        m_r = download(main_url, callback=self.check_download)
         if not m_r:
             return None
         discard_data(m_r)
@@ -234,10 +240,10 @@ class OSFingerprinting(TestingPlugin):
         # as upper URL.
 
         # Original
-        m_response_orig  = HTTP.get_url(m_first_link, callback=check_response)
+        m_response_orig  = HTTP.get_url(m_first_link, callback=self.check_response)
         discard_data(m_response_orig)
         # Uppercase
-        m_response_upper = HTTP.get_url(m_first_link.upper(), callback=check_response)
+        m_response_upper = HTTP.get_url(m_first_link.upper(), callback=self.check_response)
         discard_data(m_response_upper)
         # Compare them
         m_orig_data      = m_response_orig.raw_response  if m_response_orig  else ""
@@ -293,3 +299,32 @@ class OSFingerprinting(TestingPlugin):
         except Exception, e:
             Logger.log_error("[!] Platform detection failed, reason: %s" % e)
             return {}
+
+
+    #----------------------------------------------------------------------
+    #
+    # Aux functions
+    #
+    #----------------------------------------------------------------------
+    def check_download(self, url, name, content_length, content_type):
+
+        # Returns True to continue or False to cancel.
+        return (
+
+            # Check the file type is text.
+            content_type and content_type.strip().lower().startswith("text/") and
+
+            # Check the file is not too big.
+            content_length and content_length < 100000
+        )
+
+
+    def check_response(self, request, url, status_code, content_length, content_type):
+
+        # Returns True to continue, False to cancel.
+        return (
+
+            # Check the content length is not too large.
+            content_length is not None and content_length < 200000
+
+        )

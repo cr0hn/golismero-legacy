@@ -28,21 +28,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.config import Config
 from golismero.api.data import discard_data
-from golismero.api.data.information import Information
 from golismero.api.data.information.http import HTTP_Raw_Request
 from golismero.api.data.information.webserver_fingerprint import WebServerFingerprint
 from golismero.api.data.resource.url import FolderUrl
 from golismero.api.logger import Logger
 from golismero.api.net import NetworkException
 from golismero.api.net.http import HTTP
-from golismero.api.net.scraper import extract_from_html, extract_from_text
-from golismero.api.net.web_utils import ParsedURL, download
+from golismero.api.net.web_utils import ParsedURL
 from golismero.api.plugin import TestingPlugin
-from golismero.api.text.matching_analyzer import get_diff_ratio
 from golismero.api.text.wordlist import WordListLoader
 
 from collections import Counter, OrderedDict, defaultdict
-from ping import do_ping_and_receive_ttl
 from re import compile
 #from repoze.lru import lru_cache
 from urlparse import urljoin
@@ -969,18 +965,6 @@ class HTTPAnalyzer(object):
 # Aux functions
 #
 #----------------------------------------------------------------------
-def check_download(url, name, content_length, content_type):
-
-    # Returns True to continue or False to cancel.
-    return (
-
-        # Check the file type is text.
-        content_type and content_type.strip().lower().startswith("text/") and
-
-        # Check the file is not too big.
-        content_length and content_length < 100000
-    )
-
 def check_raw_response(request, response):
 
     # Returns True to continue, False to cancel.
@@ -991,16 +975,6 @@ def check_raw_response(request, response):
 
     )
 
-
-def check_response(request, url, status_code, content_length, content_type):
-
-    # Returns True to continue, False to cancel.
-    return (
-
-        # Check the content length is not too large.
-        content_length is not None and content_length < 200000
-
-    )
 
 #@lru_cache(maxsize=100)
 def calculate_server_track(server_name):

@@ -67,7 +67,7 @@ class OSFingerprint(Information):
 
         # Check the data types.
         if not isinstance(family, str):
-            raise TypeError("Expected str, got %s instead" % type(name))
+            raise TypeError("Expected str, got %s instead" % type(family))
 
         if version:
             if not isinstance(version, str):
@@ -87,7 +87,7 @@ class OSFingerprint(Information):
                     raise TypeError("Expected float, got %s instead" % type(v))
 
         # OS name.
-        self.__name           = name
+        self.__family         = family
 
         # OS version.
         self.__version        = version
@@ -102,7 +102,7 @@ class OSFingerprint(Information):
     #----------------------------------------------------------------------
     def __repr__(self):
         return "<OSFingerprint server='%s-%s'>" % (
-            self.__name,
+            self.__family,
             self.__version
         )
 
@@ -113,7 +113,7 @@ class OSFingerprint(Information):
         :return: OS name.
         :rtype: str
         """
-        return self.__name
+        return self.__family
 
 
     #----------------------------------------------------------------------
