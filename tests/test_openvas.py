@@ -107,7 +107,8 @@ def test_status():
 
 
 if __name__ == "__main__":
-    launch_scan_test()
-    get_info_test()
-    test_callback()
-    test_status()
+    pass
+    #launch_scan_test()
+    #get_info_test()
+    #test_callback()
+    #test_status()
