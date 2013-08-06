@@ -113,7 +113,7 @@ class NiktoPlugin(TestingPlugin):
 
             # Run Nikto and capture the text output.
             Logger.log("Launching Nikto against: %s" % info.hostname)
-            self.update_status(progress = 0, text = "running Nikto")
+            self.update_status(progress = 0)
             output, code = run_external_tool(command, args)
 
             # Log the output in extra verbose mode.
@@ -145,7 +145,7 @@ class NiktoPlugin(TestingPlugin):
             except Exception, e:
                 Logger.log_error_verbose(str(e))
                 Logger.log_error_more_verbose(format_exc())
-            self.update_status(progress = 100, text="finished")
+            self.update_status(progress = 100)
 
             # Log how many results we found.
             Logger.log(

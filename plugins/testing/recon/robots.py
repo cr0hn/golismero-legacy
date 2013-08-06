@@ -95,8 +95,6 @@ class Robots(TestingPlugin):
             msg = "Looking for robots.txt in %s" % m_hostname
             Logger.log_more_verbose(msg)
 
-            self.update_status(progress=0, text=msg)
-
             p = download(m_url_robots_txt, self.check_download)
 
             self.update_status(progress=40.0)
@@ -146,7 +144,8 @@ class Robots(TestingPlugin):
 
             # Update status
             progress = (float(m_step * 60) / m_total) + 40.0
-            self.update_status(progress=progress, text="Checking URL %d/%d" % (m_step, m_lines_count))
+            self.update_status(progress=progress)
+            Logger.log_verbose("Checking URL %d/%d" % (m_step, m_lines_count))
 
             # Remove comments
             m_octothorpe = m_line.find('#')

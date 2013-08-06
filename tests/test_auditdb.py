@@ -51,9 +51,34 @@ from golismero.api.data.information.text import Text
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.text.text_utils import generate_random_string
-from golismero.database.auditdb import AuditDB
+from golismero.database.auditdb import AuditDB, BaseAuditDB
 import time
 import os
+import inspect
+
+
+# Tests the audit DB interfaces.
+def test_auditdb_interfaces():
+    print "Testing the AuditDB interfaces..."
+    from golismero.database import auditdb
+    for name in dir(auditdb):
+        if name[0] == "_":
+            continue
+        cls = getattr(auditdb, name)
+        if inspect.isclass(cls) and cls is not AuditDB and cls is not BaseAuditDB and issubclass(cls, BaseAuditDB):
+            print ("..." + cls.__name__),
+            missing = {
+                name for name in dir(cls) if (
+                    name[0] != "_" and
+                    name not in ("audit_name", "compact", "dump", "decode", "encode") and
+                    name not in cls.__dict__
+                )
+            }
+            if missing:
+                print "FAIL!"
+                print "Missing methods: " + ", ".join(sorted(missing))
+                assert False
+            print "Ok."
 
 
 # Tests the audit DB for consistency.
@@ -318,6 +343,7 @@ def test_auditdb_dump():
 
 # Run all tests from the command line.
 if __name__ == "__main__":
+    test_auditdb_interfaces()
     test_auditdb_dump()
     test_auditdb_consistency()
     test_auditdb_stress()

@@ -103,7 +103,7 @@ class OpenVas(TestingPlugin):
             m_target,
             profile = m_profile,
             callback_end = partial(lambda x: x.set(), m_event),
-            callback_progress = partial(self.update_status, text="openvas status scan")
+            callback_progress = self.update_status
         )
 
         try:

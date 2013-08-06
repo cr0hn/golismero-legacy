@@ -162,30 +162,20 @@ scripts = ['golismero.py']
 if os.path.sep == '\\':
     scripts.append('golismero.bat')
 
+# Requirements.
+with open(os.path.join(here, 'requirements.txt'), 'rU') as f:
+    requires = [x for x in (x.strip() for x in f) if x and not x[0] == '#']
+
 # Set the parameters for the setup script.
 metadata = {
 
     # Setup instructions.
-    'requires'          : ['BeautifulSoup',
-                           'colorizer',
-                           'decorator',
-                           'django',
-                           'diff_match_patch',
-                           'dnspython',
-                           'netaddr',
-                           'ntlk',
-                           'python_cjson',
-                           'repoze.lru',
-                           'requests',
-                           'requests_ntlm',
-                           'tldextract',
-                           'yaml',
-                           'decorator'],
     'provides'          : ['golismero'],
     'packages'          : packages,
     'package_dir'       : package_dir,
     'package_data'      : package_data,
     'scripts'           : scripts,
+    'requires'          : requires,
 
     # Metadata.
     'name'              : 'golismero',

@@ -84,7 +84,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
 
         m_url = info.url
 
-        self.update_status("Start to process URL: %r" % m_url)
+        Logger.log_more_verbose("Start to process URL: %r" % m_url)
 
         #
         # Get the remote web server fingerprint
@@ -196,11 +196,11 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
         m_url = info.url
         m_url_parts = info.parsed_url
 
-        self.update_status(progress=0, text="Bruteforcing URL: %s" % m_url)
+        Logger.log_more_verbose("Bruteforcing URL: %s" % m_url)
 
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status(progress=100, text="Skipping URL: %s" % m_url)
+            Logger.log_more_verbose("Skipping URL: %s" % m_url)
             return
 
         #
@@ -254,11 +254,11 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
         m_url = info.url
         m_url_parts = info.parsed_url
 
-        self.update_status(progress=0, text="Bruteforcing URL: %s" % m_url)
+        Logger.log_more_verbose("Bruteforcing URL: %s" % m_url)
 
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status(progress=100, text="Skipping URL: %s" % m_url)
+            Logger.log_more_verbose("Skipping URL: %s" % m_url)
             return
 
         #
@@ -313,11 +313,11 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
         m_url = info.url
         m_url_parts = info.parsed_url
 
-        self.update_status(progress=0, text="Start to process URL: %s" % m_url)
+        Logger.log_more_verbose("Start to process URL: %s" % m_url)
 
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status(progress=100, text="Skipping URL: %s" % m_url)
+            Logger.log_more_verbose("Skipping URL: %s" % m_url)
             return
 
         #
@@ -371,11 +371,11 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
         m_url = info.url
         m_url_parts = info.parsed_url
 
-        self.update_status(progress=0, text="Bruteforcing URL: '%s'" % m_url)
+        Logger.log_more_verbose("Bruteforcing URL: '%s'" % m_url)
 
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status(progress=100, text="Skipping URL: %s" % m_url)
+            Logger.log_more_verbose("Skipping URL: %s" % m_url)
             return
 
         #
@@ -428,11 +428,11 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
         m_url = info.url
         m_url_parts = info.parsed_url
 
-        self.update_status(progress=0, text="Bruteforcing URL: %s" % m_url)
+        Logger.log_more_verbose("Bruteforcing URL: %s" % m_url)
 
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
-            self.update_status(progress=100, text="Skipping URL: %s" % m_url)
+            Logger.log_more_verbose("Skipping URL: %s" % m_url)
             return
 
         #
@@ -493,7 +493,8 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
 
     i, url = url
 
-    updater_func(step=i, total=total_urls, text="trying to discover URL %s" % url)
+    updater_func(step=i, total=total_urls)
+    Logger.log_more_verbose("Trying to discover URL %s" % url)
 
     # Get URL
     p = None

@@ -70,7 +70,6 @@ class DNSAnalizer(TestingPlugin):
         # Checks if the hostname has been already processed
         if not self.state.check(m_domain):
 
-            self.update_status(progress=0)
             Logger.log_verbose("Starting DNS analyzer plugin")
             m_return = []
 
@@ -79,7 +78,8 @@ class DNSAnalizer(TestingPlugin):
 
                 # Update status
                 progress = (float(l_step) / float(m_reg_len)) * 100.0
-                self.update_status(progress=progress, text="Making %r DNS query" % l_type)
+                self.update_status(progress=progress)
+                Logger.log_more_verbose("Making %r DNS query" % l_type)
 
                 # Make the query
                 m_return.extend(DNS.resolve(m_domain, l_type))
@@ -90,7 +90,6 @@ class DNSAnalizer(TestingPlugin):
             # Add the information to the host
             map(info.add_information, m_return)
 
-            self.update_status(progress=100)
             Logger.log_verbose("Ending DNS analyzer plugin, found %d registers" % len(m_return))
 
         return m_return
@@ -122,7 +121,7 @@ class DNSZoneTransfer(TestingPlugin):
 
         if not self.state.check(m_domain):
 
-            self.update_status(text="Starting DNS zone transfer plugin", progress=0)
+            Logger.log_more_verbose("Starting DNS zone transfer plugin")
             m_return = []
 
             #
@@ -133,7 +132,7 @@ class DNSZoneTransfer(TestingPlugin):
             m_return_append = m_return.append
             if m_zone_transfer:
 
-                self.update_status(text="DNS zone transfer successful", progress=100)
+                Logger.log_more_verbose("DNS zone transfer successful")
 
                 m_return.extend(m_zone_transfer)
 
@@ -165,7 +164,7 @@ class DNSZoneTransfer(TestingPlugin):
                     m_return_append(l_resource)
 
             else:
-                self.update_status(text="DNS zone transfer failed, server not vulnerable", progress=100)
+                Logger.log_more_verbose("DNS zone transfer failed, server not vulnerable")
 
             m_return.extend(m_ns_servers)
 
@@ -200,7 +199,6 @@ class DNSBruteforcer(TestingPlugin):
         m_return = None
         if not self.state.check(m_domain):
 
-            self.update_status(progress=0)
             #
             # Looking for
             #
@@ -257,8 +255,6 @@ class DNSBruteforcer(TestingPlugin):
             # Set the domain as processed
             self.state.set(m_domain, True)
 
-            self.update_status(progress=100)
-
             Logger.log_verbose("DNS analyzer plugin found %d subdomains" % len(m_return))
             Logger.log_more_verbose("\t" + "\n\t".join(m_return))
 
@@ -288,9 +284,9 @@ class DNSBruteforcer(TestingPlugin):
 
         completed = self.completed.inc()
         progress  = (float(completed) / float(self.total)) * 100.0
-        text = "Looking for subdomain: %s" % m_domain
 
-        self.update_status(progress=progress, text=text)
+        self.update_status(progress=progress)
+        Logger.log_more_verbose("Looking for subdomain: %s" % m_domain)
 
         l_oks = DNS.get_a(m_domain, also_CNAME=True)
         l_oks.extend(DNS.get_aaaa(m_domain, also_CNAME=True))

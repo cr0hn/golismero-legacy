@@ -38,7 +38,7 @@ from golismero.api.data.resource import Resource
 from golismero.api.data.information import Information
 
 # XXX HACK
-from golismero.main.console import colorize, colorize_substring
+from golismero.main.console import colorize
 
 
 class ScreenReport(ReportPlugin):
