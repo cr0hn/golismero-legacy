@@ -336,26 +336,26 @@ class Plugin (object):
 
 
     #--------------------------------------------------------------------------
-    def update_status(self, text = None, progress = None):
+    def update_status(self, progress = None):
         """
         Plugins can call this method to tell the user of the current
         progress of whatever the plugin is doing.
 
         .. warning::
-           Do not override this method!
+            Do not override this method!
 
-        :param text: Optional status text.
-        :type text: str | None
+        .. note::
+            This method may not be supported in future versions of GoLismero.
 
         :param progress: Progress percentage [0, 100] as a float,
                          or None to indicate progress can't be measured.
         :type progress: float | None
         """
-        Config._context.send_status(text, progress)
+        Config._context.send_status(progress)
 
 
     #--------------------------------------------------------------------------
-    def update_status_step(self, step = None, total = 100.0, partial = 100.0, text = None):
+    def update_status_step(self, step = None, total = 100.0, partial = 100.0):
         """
         Plugins can call this method to tell the user of the current
         state of process for a concrete instant of time.
@@ -365,7 +365,10 @@ class Plugin (object):
         is repressented by 'total' var.
 
         .. warning::
-           Do not override this method!
+            Do not override this method!
+
+        .. note::
+            This method may not be supported in future versions of GoLismero.
 
         Example:
 
@@ -391,7 +394,7 @@ class Plugin (object):
             values_to_process = [0,1,2,4] # 40% of rest of task
             values_len = len(values_to_process)
             for i, val in enumerate(values_to_process, start=1):
-                self.update_status_step(i, values_len, partial=40, text="Text for update")
+                self.update_status_step(i, values_len, partial=40)
 
         :param step: amount of values of total.
         :type step: float | int
@@ -401,9 +404,6 @@ class Plugin (object):
 
         :param partial: Optional value in the range [0, 100] that represents the weight of the process has.
         :type partial: float | int
-
-        :param text: Optional status text.
-        :type text: str | None
         """
         try:
 
@@ -423,7 +423,7 @@ class Plugin (object):
         except ZeroDivisionError:
             raise ValueError("Total cannot be zero")
 
-        self.update_status(text, m_progress)
+        self.update_status(progress = m_progress)
 
 
 #------------------------------------------------------------------------------

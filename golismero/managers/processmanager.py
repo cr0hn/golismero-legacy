@@ -430,7 +430,7 @@ class PluginContext (object):
 
 
     #----------------------------------------------------------------------
-    def send_status(self, text = None, progress = None):
+    def send_status(self, progress = None):
         """
         Send status updates from the plugins to the Orchestrator.
 
@@ -453,14 +453,10 @@ class PluginContext (object):
             elif progress > 100.0:
                 progress = 100.0
 
-        # Validate the text.
-        if text is not None and not isinstance(text, basestring):
-            raise TypeError("Expected str or unicode, got %s instead", type(text))
-
         # Send the status message to the Orchestrator.
         self.send_msg(message_type = MessageType.MSG_TYPE_STATUS,
                       message_code = MessageCode.MSG_STATUS_PLUGIN_STEP,
-                      message_info = (self.ack_identity, progress, text),
+                      message_info = (self.ack_identity, progress),
                           priority = MessagePriority.MSG_PRIORITY_MEDIUM)
 
 

@@ -369,7 +369,8 @@ def http_analyzers(main_url, update_status_func, part_status=100, number_of_entr
 
 
         # Update the status
-        update_status_func(step=i, total=m_data_len, text="making '%s' test." % (l_wordlist), partial=part_status)
+        update_status_func(step=i, total=m_data_len, partial=part_status)
+        Logger.log_more_verbose("Making '%s' test." % (l_wordlist))
         i += 1
 
 

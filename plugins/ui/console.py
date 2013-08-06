@@ -88,21 +88,21 @@ class ConsoleUIPlugin(UIPlugin):
             if message.message_type == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
                 m_plugin_name = self.get_plugin_name(message)
                 m_plugin_name = colorize(m_plugin_name, "blue")
-                m_text        = "[  0%] Starting plugin: %s" % m_plugin_name
+                m_text        = "[  0%] %s: Started." % m_plugin_name
 
                 Console.display(m_text)
 
             elif message.message_type == MessageCode.MSG_STATUS_PLUGIN_END:
                 m_plugin_name = self.get_plugin_name(message)
                 m_plugin_name = colorize(m_plugin_name, "blue")
-                m_text        = "[100%] Ending plugin: %s" % m_plugin_name
+                m_text        = "[100%] %s: Finished." % m_plugin_name
 
                 Console.display(m_text)
 
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
 
                 if Console.level >= Console.VERBOSE:
-                    m_id, m_progress, m_text = message.message_info
+                    m_id, m_progress = message.message_info
 
                     m_plugin_name = self.get_plugin_name(message)
                     m_plugin_name = colorize(m_plugin_name, "blue")
@@ -114,7 +114,7 @@ class ConsoleUIPlugin(UIPlugin):
                     else:
                         m_progress_txt = colorize("[*]", "white")
 
-                    m_text = "%s %s: %s" % (m_progress_txt, m_plugin_name, (m_text if m_text else "working"))
+                    m_text = "%s %s: Working..." % (m_progress_txt, m_plugin_name)
 
                     Console.display(m_text)
 

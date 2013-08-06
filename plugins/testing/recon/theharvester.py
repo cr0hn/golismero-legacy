@@ -91,9 +91,8 @@ class HarvesterPlugin(TestingPlugin):
         all_emails, all_hosts = set(), set()
         for step, engine in enumerate(self.SUPPORTED):
             try:
-                progress = float(step * 80) / total
-                text = "Searching keyword %r in %s" % (word, engine)
-                self.update_status(progress=progress, text=text)
+                Logger.log_verbose("Searching keyword %r in %s" % (word, engine))
+                self.update_status(progress=float(step * 80) / total)
                 emails, hosts = self.search(engine, word, limit)
             except Exception, e:
                 t = traceback.format_exc()
@@ -102,7 +101,8 @@ class HarvesterPlugin(TestingPlugin):
                 continue
             all_emails.update(address.lower() for address in emails if address)
             all_hosts.update(name.lower() for name in hosts if name)
-        self.update_status(progress=80, text="Search complete for keyword %r" % word)
+        self.update_status(progress=80)
+        Logger.log_more_verbose("Search complete for keyword %r" % word)
 
         # Adapt the data into our model.
         results = []
@@ -139,8 +139,8 @@ class HarvesterPlugin(TestingPlugin):
                 Logger.log_more_verbose("Hostname out of scope: %s" % name)
                 continue
             try:
-                progress = (float(step * 20) / total) + 80.0
-                self.update_status(progress=progress, text="Checking hostname: %s" % name)
+                self.update_status(progress=(float(step * 20) / total) + 80.0)
+                Logger.log_more_verbose("Checking hostname: %s" % name)
                 real_name, aliaslist, addresslist = socket.gethostbyname_ex(name)
             except socket.error:
                 continue
@@ -160,7 +160,7 @@ class HarvesterPlugin(TestingPlugin):
 
         text = "Found %d emails and %d hostnames for keyword %r"
         text = text % (len(all_emails), len(all_hosts), word)
-        self.update_status(progress=100, text=text)
+        Logger.log_more_verbose(text)
 
         # Return the data.
         return results
