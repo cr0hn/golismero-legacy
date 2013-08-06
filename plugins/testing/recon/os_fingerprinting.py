@@ -116,7 +116,7 @@ class OSFingerprinting(TestingPlugin):
             m_host = info.address
             FUNCTIONS = ['ttl']
         else: # Domain
-            m_host = info.name
+            m_host = "http://%s" % info.name
             FUNCTIONS = ['ttl']
 
             # Try to detect if remote system is a Windows
