@@ -118,7 +118,7 @@ class PluginTester(object):
 
 
     #--------------------------------------------------------------------------
-    def __init_environment(self):
+    def init_environment(self):
 
         # Do nothing if the environment has already been initialized.
         if self.audit is not None:
@@ -195,7 +195,7 @@ class PluginTester(object):
         """
 
         # Make sure the environment is initialized.
-        self.__init_environment()
+        self.init_environment()
 
         # Load the plugin.
         plugin_info = self.audit.pluginManager.get_plugin_by_name(plugin_name)
