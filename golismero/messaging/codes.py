@@ -193,7 +193,7 @@ class MessageCode(MessageConstants):
     #--------------------------------------------------------------------------
 
     # All data messages use the same code
-    MSG_DATA = 0
+    MSG_DATA                       = 0
 
 
     #--------------------------------------------------------------------------
@@ -201,30 +201,30 @@ class MessageCode(MessageConstants):
     #--------------------------------------------------------------------------
 
     # Basic signaling
-    MSG_CONTROL_ACK       = 0
-    MSG_CONTROL_ERROR     = 1
-    MSG_CONTROL_WARNING   = 2
-    MSG_CONTROL_LOG       = 3
+    MSG_CONTROL_ACK                = 0
+    MSG_CONTROL_ERROR              = 1
+    MSG_CONTROL_WARNING            = 2
+    MSG_CONTROL_LOG                = 3
 
     # Global control
-    ##MSG_CONTROL_START     = 4
-    MSG_CONTROL_STOP      = 5
-    ##MSG_CONTROL_PAUSE    = 6
-    ##MSG_CONTROL_CONTINUE = 7
+    ##MSG_CONTROL_START             = 4
+    MSG_CONTROL_STOP               = 5
+    ##MSG_CONTROL_PAUSE             = 6
+    ##MSG_CONTROL_CONTINUE          = 7
 
     # Audit control
-    ##MSG_CONTROL_START_AUDIT     = 10
-    MSG_CONTROL_STOP_AUDIT      = 11
-    ##MSG_CONTROL_PAUSE_AUDIT    = 12
-    ##MSG_CONTROL_CONTINUE_AUDIT = 13
+    ##MSG_CONTROL_START_AUDIT       = 10
+    MSG_CONTROL_STOP_AUDIT         = 11
+    ##MSG_CONTROL_PAUSE_AUDIT       = 12
+    ##MSG_CONTROL_CONTINUE_AUDIT    = 13
 
     # UI subsystem
-    MSG_CONTROL_START_UI = 20
-    MSG_CONTROL_STOP_UI  = 21
+    MSG_CONTROL_START_UI           = 20
+    MSG_CONTROL_STOP_UI            = 21
 
     # Reporting
-    ##MSG_CONTROL_START_REPORT = 30
-    ##MSG_CONTROL_CANCEL_REPORT = 31
+    ##MSG_CONTROL_START_REPORT      = 30
+    ##MSG_CONTROL_CANCEL_REPORT     = 31
 
 
     #--------------------------------------------------------------------------
@@ -232,46 +232,61 @@ class MessageCode(MessageConstants):
     #--------------------------------------------------------------------------
 
     # Bulk requests
-    MSG_RPC_BULK = 0
-
-    # Cache API
-    MSG_RPC_CACHE_GET       = 1
-    MSG_RPC_CACHE_SET       = 2
-    MSG_RPC_CACHE_CHECK     = 3
-    MSG_RPC_CACHE_REMOVE    = 4
-
-    # Data API
-    MSG_RPC_DATA_ADD        = 10
-    MSG_RPC_DATA_REMOVE     = 11
-    MSG_RPC_DATA_CHECK      = 12
-    MSG_RPC_DATA_GET        = 13
-    MSG_RPC_DATA_GET_MANY   = 14
-    MSG_RPC_DATA_KEYS       = 15
-    MSG_RPC_DATA_COUNT      = 16
-    MSG_RPC_DATA_PLUGINS    = 17
-
-    # Plugin state API
-    MSG_RPC_STATE_ADD       = 20
-    MSG_RPC_STATE_REMOVE    = 21
-    MSG_RPC_STATE_CHECK     = 22
-    MSG_RPC_STATE_GET       = 23
-    MSG_RPC_STATE_KEYS      = 24
+    MSG_RPC_BULK                   = 0
 
     # Network API
-    MSG_RPC_REQUEST_SLOT    = 30
-    MSG_RPC_RELEASE_SLOT    = 31
+    MSG_RPC_REQUEST_SLOT           = 1
+    MSG_RPC_RELEASE_SLOT           = 2
+    MSG_RPC_CACHE_GET              = 3
+    MSG_RPC_CACHE_SET              = 4
+    MSG_RPC_CACHE_CHECK            = 5
+    MSG_RPC_CACHE_REMOVE           = 6
+
+    # Data API
+    MSG_RPC_DATA_ADD               = 10
+    MSG_RPC_DATA_REMOVE            = 11
+    MSG_RPC_DATA_CHECK             = 12
+    MSG_RPC_DATA_GET               = 13
+    MSG_RPC_DATA_GET_MANY          = 14
+    MSG_RPC_DATA_KEYS              = 15
+    MSG_RPC_DATA_COUNT             = 16
+    MSG_RPC_DATA_PLUGINS           = 17
 
     # Plugin API
-    MSG_RPC_PLUGIN_GET_INFO = 40
+    MSG_RPC_PLUGIN_GET_INFO        = 20
+    MSG_RPC_STATE_ADD              = 21
+    MSG_RPC_STATE_REMOVE           = 22
+    MSG_RPC_STATE_CHECK            = 23
+    MSG_RPC_STATE_GET              = 24
+    MSG_RPC_STATE_KEYS             = 25
+
+    # Shared map API
+    MSG_RPC_SHARED_MAP_GET         = 40
+    MSG_RPC_SHARED_MAP_CHECK_ALL   = 41
+    MSG_RPC_SHARED_MAP_CHECK_ANY   = 42
+    MSG_RPC_SHARED_MAP_CHECK_EACH  = 43
+    MSG_RPC_SHARED_MAP_POP         = 44
+    MSG_RPC_SHARED_MAP_PUT         = 45
+    MSG_RPC_SHARED_MAP_SWAP        = 46
+    MSG_RPC_SHARED_MAP_DELETE      = 47
+    MSG_RPC_SHARED_MAP_KEYS        = 48
+
+    # Shared heap API
+    MSG_RPC_SHARED_HEAP_CHECK_ALL  = 50
+    MSG_RPC_SHARED_HEAP_CHECK_ANY  = 51
+    MSG_RPC_SHARED_HEAP_CHECK_EACH = 52
+    MSG_RPC_SHARED_HEAP_POP        = 53
+    MSG_RPC_SHARED_HEAP_ADD        = 54
+    MSG_RPC_SHARED_HEAP_REMOVE     = 55
 
 
     #--------------------------------------------------------------------------
     # Status message codes
     #--------------------------------------------------------------------------
 
-    MSG_STATUS_PLUGIN_BEGIN = 0
-    MSG_STATUS_PLUGIN_END   = 1
-    MSG_STATUS_PLUGIN_STEP  = 2
+    MSG_STATUS_PLUGIN_BEGIN        = 0
+    MSG_STATUS_PLUGIN_END          = 1
+    MSG_STATUS_PLUGIN_STEP         = 2
 
 
 #------------------------------------------------------------------------------

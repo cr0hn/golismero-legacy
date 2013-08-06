@@ -39,10 +39,12 @@ from ..api.data import Data
 from ..api.data.information import Information
 from ..api.data.resource import Resource
 from ..api.data.vulnerability import Vulnerability
+##from ..api.shared import check_value   # FIXME do server-side checks too!
 from ..messaging.codes import MessageCode
 from ..managers.rpcmanager import implementor
 
 import collections
+import md5
 import urlparse  # cannot use ParsedURL here!
 import warnings
 
@@ -104,6 +106,66 @@ def rpc_plugin_state_get(orchestrator, audit_name, *argv, **argd):
 @implementor(MessageCode.MSG_RPC_STATE_KEYS)
 def rpc_plugin_state_keys(orchestrator, audit_name, *argv, **argd):
     return orchestrator.auditManager.get_audit(audit_name).database.get_state_variable_names(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_MAP_GET)
+def rpc_shared_map_get(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_mapped_values(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_MAP_CHECK_ALL)
+def rpc_shared_map_check_all(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_all_mapped_keys(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_MAP_CHECK_ANY)
+def rpc_shared_map_check_any(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_any_mapped_key(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_MAP_CHECK_EACH)
+def rpc_shared_map_check_each(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_each_mapped_key(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_MAP_POP)
+def rpc_shared_map_pop(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.pop_mapped_values(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_MAP_PUT)
+def rpc_shared_map_put(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.put_mapped_values(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_MAP_SWAP)
+def rpc_shared_map_swap(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.swap_mapped_values(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_MAP_DELETE)
+def rpc_shared_map_delete(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.delete_mapped_values(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_MAP_KEYS)
+def rpc_shared_map_keys(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_mapped_keys(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_HEAP_CHECK_ALL)
+def rpc_shared_heap_check_all(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_all_shared_values(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_HEAP_CHECK_ANY)
+def rpc_shared_heap_check_any(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_any_shared_value(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_HEAP_CHECK_EACH)
+def rpc_shared_heap_check_each(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_each_shared_value(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_HEAP_POP)
+def rpc_shared_heap_pop(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.pop_shared_values(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_HEAP_ADD)
+def rpc_shared_heap_add(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.add_shared_values(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_SHARED_HEAP_REMOVE)
+def rpc_shared_heap_remove(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.remove_shared_values(*argv, **argd)
 
 
 #------------------------------------------------------------------------------
@@ -408,6 +470,259 @@ class BaseAuditDB (BaseDB):
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
+    #--------------------------------------------------------------------------
+    def get_mapped_values(self, shared_id, keys):
+        """
+        Get the values mapped in the requested shared map.
+
+        :param shared_id: Shared map ID.
+        :type shared_id: str
+
+        :param key: Keys to look for.
+        :type key: tuple( immutable, ... )
+
+        :returns: Values mapped to the requested keys, in the same order.
+        :rtype: tuple( immutable, ... )
+
+        :raises KeyError: Not all keys were mapped.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def has_all_mapped_keys(self, shared_id, keys):
+        """
+        Check if all of the given keys has been defined.
+
+        :param shared_id: Shared map ID.
+        :type shared_id: str
+
+        :param keys: Keys to look for.
+        :type keys: tuple( immutable, ... )
+
+        :returns: True if all keys were defined, False otherwise.
+        :rtype: bool
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def has_any_mapped_key(self, shared_id, keys):
+        """
+        Check if any of the given keys has been defined.
+
+        :param shared_id: Shared map ID.
+        :type shared_id: str
+
+        :param keys: Keys to look for.
+        :type keys: tuple( immutable, ... )
+
+        :returns: True if any of the keys was defined, False otherwise.
+        :rtype: bool
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def has_each_mapped_key(self, shared_id, keys):
+        """
+        Check if each of the given keys has been defined.
+
+        :param shared_id: Shared map ID.
+        :type shared_id: str
+
+        :param keys: Keys to look for.
+        :type keys: tuple( immutable, ... )
+
+        :returns: Tuple with the results, in the same order, for each key.
+            True for each defined key, False for each undefined key.
+        :rtype: tuple( bool, ... )
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def pop_mapped_values(self, shared_id, keys):
+        """
+        Get the values for the given keys and remove them from the map.
+
+        :param shared_id: Shared map ID.
+        :type shared_id: str
+
+        :param keys: Keys to look for.
+        :type keys: tuple(immutable, ...)
+
+        :returns: Values mapped to the requested keys, in the same order.
+        :rtype: tuple(immutable, ...)
+
+        :raises KeyError: Not all keys were mapped.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def put_mapped_values(self, shared_id, items):
+        """
+        Map the given keys to the given values.
+
+        :param shared_id: Shared map ID.
+        :type shared_id: str
+
+        :param items: Keys and values to map, in (key, value) tuples.
+        :type items: tuple( tuple(immutable, immutable), ... )
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def swap_mapped_values(self, shared_id, items):
+        """
+        Map the given keys to the given values, and return the previous values.
+
+        :param shared_id: Shared map ID.
+        :type shared_id: str
+
+        :param items: Keys and values to map, in (key, value) tuples.
+        :type items: tuple( tuple(immutable, immutable), ... )
+
+        :returns: Previous mapped values, if any, in the same order.
+            None for each missing key.
+        :rtype: tuple( immutable | None, ... )
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def delete_mapped_values(self, shared_id, keys):
+        """
+        Delete the given keys from the map.
+
+        .. note: If any of the keys was not defined, no error is raised.
+
+        :param shared_id: Shared map ID.
+        :type shared_id: str
+
+        :param keys: Keys to delete.
+        :type keys: tuple( immutable, ... )
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def get_mapped_keys(self, shared_id):
+        """
+        Get the values mapped in the requested shared map.
+
+        :param shared_id: Shared map ID.
+        :type shared_id: str
+
+        :returns: Keys defined in this shared map.
+        :rtype: set(immutable)
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def has_all_shared_values(self, shared_id, values):
+        """
+        Check if all of the given values are present in the shared container.
+
+        :param shared_id: Shared container ID.
+        :type shared_id: str
+
+        :param values: Values to look for.
+        :type values: tuple( immutable, ... )
+
+        :returns: True if all of the values were found, False otherwise.
+        :rtype: bool
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def has_any_shared_value(self, shared_id, values):
+        """
+        Check if any of the given values are present in the shared container.
+
+        :param shared_id: Shared container ID.
+        :type shared_id: str
+
+        :param values: Values to look for.
+        :type values: tuple( immutable, ... )
+
+        :returns: True if any of the values was found, False otherwise.
+        :rtype: bool
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def has_each_shared_value(self, shared_id, values):
+        """
+        Check if each of the given values is present in the shared container.
+
+        :param shared_id: Shared container ID.
+        :type shared_id: str
+
+        :param values: Values to look for.
+        :type values: tuple( immutable, ... )
+
+        :returns: Tuple with the results, in the same order, for each value.
+            True for each value found, False for each not found.
+        :rtype: tuple( bool, ... )
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def pop_shared_values(self, shared_id, maximum):
+        """
+        Get multiple random values from the shared container and remove them.
+
+        :param shared_id: Shared container ID.
+        :type shared_id: str
+
+        :param maximum: Maximum number of values to retrieve.
+            This method may return less than this number if there aren't enough
+            values in the shared container.
+
+        :returns: Values removed from the shared container, in any order.
+            If the shared container was empty, returns an empty tuple.
+        :rtype: tuple( immutable, ... )
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def add_shared_values(self, shared_id, values):
+        """
+        Add the given values to the shared container.
+
+        :param shared_id: Shared container ID.
+        :type shared_id: str
+
+        :param values: Values to add.
+        :type values: tuple( immutable, ... )
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def remove_shared_values(self, shared_id, values):
+        """
+        Remove the given values from the shared container.
+
+        .. note: If any of the values was not found, no error is raised.
+
+        :param shared_id: Shared container ID.
+        :type shared_id: str
+
+        :param values: Values to remove.
+        :type values: tuple( immutable, ... )
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
 #------------------------------------------------------------------------------
 class AuditMemoryDB (BaseAuditDB):
     """
@@ -418,10 +733,22 @@ class AuditMemoryDB (BaseAuditDB):
     #--------------------------------------------------------------------------
     def __init__(self, audit_name):
         super(AuditMemoryDB, self).__init__(audit_name)
-        self.__results = dict()
-        self.__state   = collections.defaultdict(dict)
-        self.__history = collections.defaultdict(set)
-        self.__stages  = collections.defaultdict(int)
+        self.__results      = dict()
+        self.__state        = collections.defaultdict(dict)
+        self.__history      = collections.defaultdict(set)
+        self.__stages       = collections.defaultdict(int)
+        self.__shared_maps  = collections.defaultdict(dict)
+        self.__shared_heaps = collections.defaultdict(set)
+
+
+    #--------------------------------------------------------------------------
+    def close(self):
+        self.__results      = dict()
+        self.__state        = collections.defaultdict(dict)
+        self.__history      = collections.defaultdict(set)
+        self.__stages       = collections.defaultdict(int)
+        self.__shared_maps  = collections.defaultdict(dict)
+        self.__shared_heaps = collections.defaultdict(set)
 
 
     #--------------------------------------------------------------------------
@@ -622,10 +949,107 @@ class AuditMemoryDB (BaseAuditDB):
 
 
     #--------------------------------------------------------------------------
-    def close(self):
-        self.__results = dict()
-        self.__state = collections.defaultdict(dict)
-        self.__history = collections.defaultdict(set)
+    def get_mapped_values(self, shared_id, keys):
+        d = self.__shared_maps[shared_id]
+        return tuple( d[key] for key in keys )
+
+
+    #--------------------------------------------------------------------------
+    def has_all_mapped_keys(self, shared_id, keys):
+        d = self.__shared_maps[shared_id]
+        return all( key in d for key in keys )
+
+
+    #--------------------------------------------------------------------------
+    def has_any_mapped_key(self, shared_id, keys):
+        d = self.__shared_maps[shared_id]
+        return any( key in d for key in keys )
+
+
+    #--------------------------------------------------------------------------
+    def has_each_mapped_key(self, shared_id, keys):
+        d = self.__shared_maps[shared_id]
+        return tuple( key in d for key in keys )
+
+
+    #--------------------------------------------------------------------------
+    def pop_mapped_values(self, shared_id, keys):
+        d = self.__shared_maps[shared_id]
+        try:
+            values = []
+            for key in keys:
+                values.append( d.pop(key) )
+        except KeyError:
+            for index, key in enumerate(keys):
+                d[key] = values[index]
+            raise
+        return tuple(values)
+
+
+    #--------------------------------------------------------------------------
+    def put_mapped_values(self, shared_id, items):
+        self.__shared_maps[shared_id].update(items)
+
+
+    #--------------------------------------------------------------------------
+    def swap_mapped_values(self, shared_id, items):
+        d = self.__shared_maps[shared_id]
+        old = []
+        for key, value in items:
+            old.append( d.get(key, None) )
+            d[key] = value
+        return tuple(old)
+
+
+    #--------------------------------------------------------------------------
+    def delete_mapped_values(self, shared_id, keys):
+        self.pop_mapped_values(shared_id, keys)
+
+
+    #--------------------------------------------------------------------------
+    def get_mapped_keys(self, shared_id):
+        return set( self.__shared_maps[shared_id].iterkeys() )
+
+
+    #--------------------------------------------------------------------------
+    def has_all_shared_values(self, shared_id, values):
+        d = self.__shared_heaps[shared_id]
+        return all(value in d for value in values)
+
+
+    #--------------------------------------------------------------------------
+    def has_any_shared_value(self, shared_id, values):
+        d = self.__shared_heaps[shared_id]
+        return any(value in d for value in values)
+
+
+    #--------------------------------------------------------------------------
+    def has_each_shared_value(self, shared_id, values):
+        d = self.__shared_heaps[shared_id]
+        return tuple(value in d for value in values)
+
+
+    #--------------------------------------------------------------------------
+    def pop_shared_values(self, shared_id, maximum):
+        d = self.__shared_heaps[shared_id]
+        result = []
+        while maximum != 0:  # don't do > 0, we want -1 to be infinite
+            maximum -= 1
+            try:
+                result.append( d.pop() )
+            except KeyError:
+                break
+        return tuple(result)
+
+
+    #--------------------------------------------------------------------------
+    def add_shared_values(self, shared_id, values):
+        self.__shared_heaps[shared_id].update(values)
+
+
+    #--------------------------------------------------------------------------
+    def remove_shared_values(self, shared_id, values):
+        self.__shared_heaps[shared_id].difference_update(values)
 
 
 #------------------------------------------------------------------------------
@@ -688,6 +1112,21 @@ class AuditSQLiteDB (BaseAuditDB):
 
         # Tell SQLite the encoded data is a BLOB and not a TEXT.
         return sqlite3.Binary(data)
+
+
+    #--------------------------------------------------------------------------
+    def get_hash(self, data):
+        """
+        Calculate a hash of the given data.
+        """
+
+        # Encode the data as raw bytes.
+        data = super(AuditSQLiteDB, self).encode(data)
+
+        # Return the MD5 hexadecimal digest of the data.
+        h = md5.new()
+        h.update(data)
+        return h.hexdigest()
 
 
     #--------------------------------------------------------------------------
@@ -830,6 +1269,27 @@ class AuditSQLiteDB (BaseAuditDB):
                 identity STRING NOT NULL,
                 stage INTEGER NOT NULL DEFAULT 0,
                 UNIQUE(identity) ON CONFLICT REPLACE
+            );
+
+            ----------------------------------------------------------
+            -- Tables to store the plugins shared data.
+            ----------------------------------------------------------
+
+            CREATE TABLE shared_map (
+                rowid INTEGER PRIMARY KEY,
+                shared_id STRING NOT NULL,
+                key_hash STRING NOT NULL,
+                key BLOB NOT NULL,
+                value BLOB NOT NULL,
+                UNIQUE(shared_id, key_hash) ON CONFLICT REPLACE
+            );
+
+            CREATE TABLE shared_heap (
+                rowid INTEGER PRIMARY KEY,
+                shared_id STRING NOT NULL,
+                value_hash STRING NOT NULL,
+                value BLOB NOT NULL,
+                UNIQUE(shared_id, value_hash) ON CONFLICT IGNORE
             );
 
             """)
@@ -1169,9 +1629,9 @@ class AuditSQLiteDB (BaseAuditDB):
         plugin_id = rows[0]
 
         # Check if the state variable is defined.
-        self.__cursor.execute((
+        self.__cursor.execute(
             "SELECT COUNT(rowid) FROM state"
-            " WHERE plugin_id = ? AND key = ? LIMIT 1"),
+            " WHERE plugin_id = ? AND key = ? LIMIT 1",
             (plugin_id, key))
         return bool(self.__cursor.fetchone()[0])
 
@@ -1192,9 +1652,9 @@ class AuditSQLiteDB (BaseAuditDB):
         plugin_id = rows[0]
 
         # Get the state variable value, fail if missing.
-        self.__cursor.execute((
+        self.__cursor.execute(
             "SELECT value FROM state"
-            " WHERE plugin_id = ? AND key = ? LIMIT 1;"),
+            " WHERE plugin_id = ? AND key = ? LIMIT 1;",
             (plugin_id, key))
         return self.decode(self.__cursor.fetchone()[0])
 
@@ -1287,10 +1747,10 @@ class AuditSQLiteDB (BaseAuditDB):
     def get_past_plugins(self, identity):
         if type(identity) is not str:
             raise TypeError("Expected string, got %s" % type(identity))
-        self.__cursor.execute((
+        self.__cursor.execute(
             "SELECT plugin.name FROM plugin, history"
             " WHERE history.plugin_id = plugin.rowid AND"
-            "       history.identity = ?;"),
+            "       history.identity = ?;",
             (identity,))
         rows = self.__cursor.fetchall()
         if rows:
@@ -1310,6 +1770,246 @@ class AuditSQLiteDB (BaseAuditDB):
         if rows:
             return { str(x[0]) for x in rows }
         return set()
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def get_mapped_values(self, shared_id, keys):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        return self.__get_mapped_values(shared_id, keys)
+
+    def __get_mapped_values(self, shared_id, keys):
+        values = []
+        for key in keys:
+            self.__cursor.execute(
+                "SELECT value FROM shared_map"
+                " WHERE shared_id = ? AND key_hash = ? LIMIT 1;",
+                (shared_id, self.get_hash(key)))
+            rows = self.__cursor.fetchone()
+            if not rows:
+                raise KeyError(key)
+            values.append( self.decode( rows[0] ) )
+        return tuple(values)
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def has_all_mapped_keys(self, shared_id, keys):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        result = True
+        for key in keys:
+            self.__cursor.execute(
+                "SELECT COUNT(rowid) FROM shared_map"
+                " WHERE shared_id = ? AND key_hash = ? LIMIT 1;",
+                (shared_id, self.get_hash(key)))
+            found = bool( self.__cursor.fetchone()[0] )
+            result = result and found
+            if not result:
+                break
+        return result
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def has_any_mapped_key(self, shared_id, keys):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        for key in keys:
+            self.__cursor.execute(
+                "SELECT COUNT(rowid) FROM shared_map"
+                " WHERE shared_id = ? AND key_hash = ? LIMIT 1;",
+                (shared_id, self.get_hash(key)))
+            found = bool( self.__cursor.fetchone()[0] )
+            if found:
+                return True
+        return False
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def has_each_mapped_key(self, shared_id, keys):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        result = []
+        for key in keys:
+            self.__cursor.execute(
+                "SELECT COUNT(rowid) FROM shared_map"
+                " WHERE shared_id = ? AND key_hash = ? LIMIT 1;",
+                (shared_id, self.get_hash(key)))
+            found = bool( self.__cursor.fetchone()[0] )
+            result.append(found)
+        return tuple(result)
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def pop_mapped_values(self, shared_id, keys):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        keys = tuple(keys)
+        values = self.__get_mapped_values(shared_id, keys)
+        self.__delete_mapped_values(shared_id, keys)
+        return values
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def put_mapped_values(self, shared_id, items):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        for key, value in items:
+            self.__cursor.execute(
+                "INSERT INTO shared_map VALUES (NULL, ?, ?, ?, ?);",
+                (shared_id, self.get_hash(key),
+                 self.encode(key), self.encode(value)))
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def swap_mapped_values(self, shared_id, items):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        old_values = []
+        for key, value in items:
+            self.__cursor.execute(
+                "SELECT value FROM shared_map"
+                " WHERE shared_id = ? AND key_hash = ? LIMIT 1;",
+                (shared_id, self.get_hash(key)))
+            rows = self.__cursor.fetchone()
+            if rows:
+                old = self.decode( rows[0] )
+            else:
+                old = None
+            old_values.append(old)
+            if old != value:
+                self.__cursor.execute(
+                    "INSERT INTO shared_map VALUES (NULL, ?, ?, ?, ?);",
+                    (shared_id, self.get_hash(key),
+                     self.encode(key), self.encode(value)))
+        return tuple(old_values)
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def delete_mapped_values(self, shared_id, keys):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        self.__delete_mapped_values(shared_id, keys)
+
+    def __delete_mapped_values(self, shared_id, keys):
+        for key in keys:
+            self.__cursor.execute(
+                "DELETE FROM shared_map"
+                " WHERE shared_id = ? AND key_hash = ?;",
+                (shared_id, self.get_hash(key)))
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def get_mapped_keys(self, shared_id):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        self.__cursor.execute(
+            "SELECT key FROM shared_map WHERE shared_id = ?;",
+            (shared_id,))
+        return { self.decode(row[0]) for row in self.__cursor.fetchall() }
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def has_all_shared_values(self, shared_id, values):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        result = True
+        for value in values:
+            self.__cursor.execute(
+                "SELECT COUNT(rowid) FROM shared_heap"
+                " WHERE shared_id = ? AND value_hash = ? LIMIT 1;",
+                (shared_id, self.get_hash(value)))
+            found = bool( self.__cursor.fetchone()[0] )
+            result = result and found
+            if not result:
+                break
+        return result
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def has_any_shared_value(self, shared_id, values):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        for value in values:
+            self.__cursor.execute(
+                "SELECT COUNT(rowid) FROM shared_heap"
+                " WHERE shared_id = ? AND value_hash = ? LIMIT 1;",
+                (shared_id, self.get_hash(value)))
+            found = bool( self.__cursor.fetchone()[0] )
+            if found:
+                return True
+        return False
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def has_each_shared_value(self, shared_id, values):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        result = []
+        for value in values:
+            self.__cursor.execute(
+                "SELECT COUNT(rowid) FROM shared_heap"
+                " WHERE shared_id = ? AND value_hash = ? LIMIT 1;",
+                (shared_id, self.get_hash(value)))
+            found = bool( self.__cursor.fetchone()[0] )
+            result.append(found)
+        return tuple(result)
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def pop_shared_values(self, shared_id, maximum):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        result = ()
+        if maximum:
+            self.__cursor.execute(
+                "SELECT rowid, value FROM shared_heap"
+                " WHERE shared_id = ?" +
+                (" LIMIT %d;" % maximum) if maximum > 0 else ";",
+                (shared_id,))
+            rows = self.__cursor.fetchall()
+            result = tuple(self.decode(value) for _, value in rows)
+            for rowid, _ in rows:
+                self.__cursor.execute(
+                    "DELETE FROM shared_heap"
+                    " WHERE shared_id = ? AND rowid = ?;",
+                    (shared_id, rowid))
+        return result
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def add_shared_values(self, shared_id, values):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        for value in values:
+            self.__cursor.execute(
+                "INSERT INTO shared_heap VALUES (NULL, ?, ?, ?);",
+                (shared_id, self.get_hash(value), self.encode(value)))
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def remove_shared_values(self, shared_id, values):
+        if type(shared_id) is not str:
+            raise TypeError("Expected str, got %s" % type(shared_id))
+        for value in values:
+            self.__cursor.execute(
+                "DELETE FROM shared_heap"
+                " WHERE shared_id = ? AND value_hash = ?;",
+                (shared_id, self.get_hash(value)))
 
 
     #--------------------------------------------------------------------------

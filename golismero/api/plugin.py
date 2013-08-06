@@ -6,9 +6,10 @@ This module contains the base classes for GoLismero plugins.
 
 To write your own plugin, you must derive from one of the following base classes:
 
+- :py:class:`.ImportPlugin`: To write a plugin to load results from other tools.
 - :py:class:`.TestingPlugin`: To write a testing/hacking plugin.
+- :py:class:`.ReportPlugin`: To write a plugin to report the results.
 - :py:class:`.UIPlugin`: To write a User Interface plugin.
-- :py:class:`.ReportPlugin`: to write a plugin to report the results.
 """
 
 __license__ = """
@@ -38,12 +39,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = [
     "UIPlugin", "ImportPlugin", "TestingPlugin", "ReportPlugin",
-    "get_plugin_info",
+    "get_plugin_info", "PluginState",
 ]
 
 from .config import Config
-from ..common import Singleton
+from .shared import check_value
 from ..messaging.codes import MessageCode
+
+# Sentinel value.
+_sentinel = object()
 
 
 #------------------------------------------------------------------------------
@@ -68,7 +72,7 @@ def get_plugin_info(plugin_name = None):
 
 
 #------------------------------------------------------------------------------
-class _PluginState (Singleton):
+class PluginState (object):
     """
     Container of plugin state variables.
 
@@ -79,9 +83,29 @@ class _PluginState (Singleton):
 
 
     #--------------------------------------------------------------------------
-    __sentinel = object()
-    @classmethod
-    def get(cls, name, default = __sentinel):
+    def __init__(self, plugin_name = None):
+        """
+        :param plugin_name: Plugin name.
+            If ommitted, the calling plugin state variables are accessed.
+        :type plugin_name: str
+        """
+        if not plugin_name:
+            plugin_name = Config.plugin_name
+        self.__plugin_name = plugin_name
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def plugin_name(self):
+        """
+        :returns: Name of the plugin these state variables belong to.
+        :rtype: str
+        """
+        return self.__plugin_name
+
+
+    #--------------------------------------------------------------------------
+    def get(self, name, default = _sentinel):
         """
         Get the value of a state variable.
 
@@ -98,20 +122,36 @@ class _PluginState (Singleton):
 
         :raises KeyError: The variable was not defined.
         """
+        if not type(name) in (str, unicode):
+            raise TypeError("Expected str or unicode, got %s instead" % type(name))
         try:
             return Config._context.remote_call(
-                MessageCode.MSG_RPC_STATE_GET, Config.plugin_name, name)
+                MessageCode.MSG_RPC_STATE_GET, self.plugin_name, name)
         except KeyError:
-            if default is not cls.__sentinel:
+            if default is not _sentinel:
                 return default
             raise
 
 
     #--------------------------------------------------------------------------
-    @staticmethod
-    def check(name):
+    def check(self, name):
         """
         Check if a state variable has been defined.
+
+        .. warning: Due to the asynchronous nature of GoLismero plugins, it's
+            possible that another instance of the plugin may remove or add new
+            variables right after you call this method.
+
+            Therefore this pattern is NOT recommended:
+                myvar = None
+                if "myvar" in self.state:
+                    myvar = self.state["myvar"]
+
+            You should do this instead:
+                try:
+                    myvar = self.state["myvar"]
+                except KeyError:
+                    myvar = None
 
         :param name: Name of the variable to test.
         :type name: str
@@ -119,13 +159,14 @@ class _PluginState (Singleton):
         :returns: True if the variable was defined, False otherwise.
         :rtype: bool
         """
+        if not type(name) in (str, unicode):
+            raise TypeError("Expected str or unicode, got %s instead" % type(name))
         return Config._context.remote_call(
-            MessageCode.MSG_RPC_STATE_CHECK, Config.plugin_name, name)
+            MessageCode.MSG_RPC_STATE_CHECK, self.plugin_name, name)
 
 
     #--------------------------------------------------------------------------
-    @staticmethod
-    def set(name, value):
+    def set(self, name, value):
         """
         Set the value of a state variable.
 
@@ -135,13 +176,15 @@ class _PluginState (Singleton):
         :param value: Value of the variable.
         :type value: *
         """
+        if not type(name) in (str, unicode):
+            raise TypeError("Expected str or unicode, got %s instead" % type(name))
+        check_value(value)
         Config._context.async_remote_call(
-            MessageCode.MSG_RPC_STATE_ADD, Config.plugin_name, name, value)
+            MessageCode.MSG_RPC_STATE_ADD, self.plugin_name, name, value)
 
 
     #--------------------------------------------------------------------------
-    @staticmethod
-    def remove(name):
+    def remove(self, name):
         """
         Remove a state variable.
 
@@ -150,21 +193,44 @@ class _PluginState (Singleton):
 
         :raises KeyError: The variable was not defined.
         """
+        if not type(name) in (str, unicode):
+            raise TypeError("Expected str or unicode, got %s instead" % type(name))
         Config._context.async_remote_call(
-            MessageCode.MSG_RPC_STATE_REMOVE, Config.plugin_name, name)
+            MessageCode.MSG_RPC_STATE_REMOVE, self.plugin_name, name)
 
 
     #--------------------------------------------------------------------------
-    @staticmethod
-    def get_names():
+    def get_names(self):
         """
         Get the names of the defined state variables.
+
+        .. warning: Due to the asynchronous nature of GoLismero plugins, it's
+            possible the list of variables is not accurate - another instance
+            of the plugin may remove or add new variables right after you call
+            this method.
+
+            Therefore this pattern is NOT recommended::
+                myvar = None
+                if "myvar" in self.state.get_names():
+                    myvar = self.state["myvar"]      # wrong!
+
+            You should do this instead::
+                try:
+                    myvar = self.state["myvar"]
+                except KeyError:                     # right!
+                    myvar = None
+
+            This pattern is also WRONG: it would fail if a key is removed,
+            and would miss newly created keys::
+                data = {}
+                for key in self.state.get_names():
+                    data[key] = self.state.get(key)  # wrong!
 
         :returns: Names of the defined state variables.
         :rtype: set(str)
         """
         Config._context.async_remote_call(
-            MessageCode.MSG_RPC_STATE_KEYS, Config.plugin_name)
+            MessageCode.MSG_RPC_STATE_KEYS, self.plugin_name)
 
 
     #--------------------------------------------------------------------------
@@ -186,8 +252,9 @@ class _PluginState (Singleton):
         'D.__contains__(k) -> True if D has a key k, else False'
         return self.check(name)
 
-# Instance the singleton.
-PluginState = _PluginState()
+    def keys(self):
+        "D.keys() -> list of D's keys"
+        return list( self.get_names() )
 
 
 #------------------------------------------------------------------------------
@@ -207,8 +274,15 @@ class Plugin (object):
 
     PLUGIN_TYPE = PLUGIN_TYPE_ABSTRACT
 
-    # Useful alias for the plugin state container.
-    state = PluginState
+
+    #--------------------------------------------------------------------------
+    @property
+    def state(self):
+        """
+        :returns: Shared plugin state variables.
+        :rtype: PluginState
+        """
+        return PluginState()
 
 
     #--------------------------------------------------------------------------
@@ -353,10 +427,12 @@ class Plugin (object):
 
 
 #------------------------------------------------------------------------------
-class InformationPlugin (Plugin):
+class _InformationPlugin (Plugin):
     """
     Information plugins are the ones that receive information, and may also
     send it back. Thus they can form feedback loops among each other.
+
+    .. warning: This is an abstract class, do not use it!
     """
 
 
@@ -387,7 +463,7 @@ class InformationPlugin (Plugin):
 
 
 #------------------------------------------------------------------------------
-class UIPlugin (InformationPlugin):
+class UIPlugin (_InformationPlugin):
     """
     User Interface plugins control the way in which the user interacts with GoLismero.
 
@@ -472,7 +548,7 @@ class ImportPlugin (Plugin):
 
 
 #------------------------------------------------------------------------------
-class TestingPlugin (InformationPlugin):
+class TestingPlugin (_InformationPlugin):
     """
     Testing plugins are the ones that perform the security tests.
 
