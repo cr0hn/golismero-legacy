@@ -70,321 +70,311 @@ class ScreenReport(ReportPlugin):
         # Displayers
         #
         if Config.audit_config.only_vulns:
-            general_display_only_vulns()
+            self.general_display_only_vulns()
         else:
-            general_display_by_resource()
+            self.general_display_by_resource()
 
         print
 
 
-#----------------------------------------------------------------------
-#
-# Common functions
-#
-#----------------------------------------------------------------------
-def common_get_resources(data_type=None, data_subtype=None):
-    """
-    Get a list of resources.
+    #----------------------------------------------------------------------
+    #
+    # Common functions
+    #
+    #----------------------------------------------------------------------
+    def common_get_resources(self, data_type=None, data_subtype=None):
+        """
+        Get a list of resources.
 
-    :return: List of resources.
-    :rtype: list(Resource)
-    """
-    # Get each resource
-    m_resource = None
-    m_len_urls = Database.count(data_type, data_type)
-    if m_len_urls < 200:   # increase as you see fit...
-        # fast but memory consuming method
-        m_resource   = Database.get_many( Database.keys(data_type=data_type, data_subtype=data_subtype))
-    else:
-        # slow but lean method
-        m_resource   = Database.iterate(data_type=data_type, data_subtype=data_subtype)
+        :return: List of resources.
+        :rtype: list(Resource)
+        """
+        # Get each resource
+        m_resource = None
+        m_len_urls = Database.count(data_type, data_type)
+        if m_len_urls < 200:   # increase as you see fit...
+            # fast but memory consuming method
+            m_resource   = Database.get_many( Database.keys(data_type=data_type, data_subtype=data_subtype))
+        else:
+            # slow but lean method
+            m_resource   = Database.iterate(data_type=data_type, data_subtype=data_subtype)
 
-    return m_resource
-
-
+        return m_resource
 
 
-def common_display_general_summary():
-    """
-    Display the general summary.
-    """
-
-    # ----------------------------------------
-    # Discovered resources
-    # ----------------------------------------
-    print "\n-# %s #- "% colorize("Summary", "yellow")
 
 
-    # Fingerprint
-    print "\n-- %s -- "% colorize("Target summary", "yellow")
-    print "   +",
-
-    m_table  = GolismeroTable(init_spaces=3)
-
-    m_tmp_data = common_get_resources(data_type=Data.TYPE_INFORMATION, data_subtype=Information.INFORMATION_WEB_SERVER_FINGERPRINT)
-
-    # Fingerprint
-    if m_tmp_data: # There are data
-        # For each host
-        for l_host in m_tmp_data:
-            t = '\n| -'.join(["%s - %s" % (l.url, colorize("Apache", "yellow")) for l in l_host.associated_resources if hasattr(l, "url")])
-            m_table.add_row("Fingerprint: \n| -%s" % t)
-    else:
-        m_table.add_row("Main web server: %s" % colorize("Unknown", "yellow"))
-
-    # Vhosts
-    #m_table.add_row(["Vhosts", colorize("1", "yellow")])
-    #m_table.add_row(["+  Vhosts2", colorize("1", "yellow")])
-
-    # Audited hosts
-    m_table.add_row("Hosts audited: %s" % colorize(len(common_get_resources(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_DOMAIN)), "yellow"))
-
-    # Total vulns
-    m_table.add_row("Total vulns: %s" % str(len(common_get_resources(data_type=Data.TYPE_VULNERABILITY))))
-
-    # Set align
-    print m_table.get_content()
-
-
-#----------------------------------------------------------------------
-#
-# Main display modes
-#
-#----------------------------------------------------------------------
-def general_display_only_vulns():
-
-    # ----------------------------------------
-    # General summary
-    # ----------------------------------------
-    common_display_general_summary()
-
-    m_v = vuln_genereral_displayer(common_get_resources(data_type=Data.TYPE_VULNERABILITY))
-
-    m_table = GolismeroTable(title="Vulnerabilities", init_spaces=0)
-    if m_v:
-        m_table.add_row(m_v)
-
-    print
-    print m_table.get_content()
-    if not m_v:
-        print
-        print "No vulnerabilities found."
-
-
-#----------------------------------------------------------------------
-def general_display_by_resource():
-    """
-    This function displays the results like this:
-
-    >>>
-    [ 1 ] www.website.com/Param1=Value1&Param2=Value2
-          +-----------------+
-          | Vulnerabilities |
-          +------------------+-----------------------------+
-          |   Vuln name:     |        Url suspicious       |
-          +------------------+-----------------------------+
-          |       URL:       | http://website.com/admin    |
-          | Suspicius text:  |            admin            |
-          +------------------+-----------------------------+
-    [ 2 ] www.website.com/contact/
-    [ 3 ] www.website.com/Param1
-    """
-
-    # ----------------------------------------
-    # General summary
-    # ----------------------------------------
-    common_display_general_summary()
-
-    # ----------------------------------------
-    # Get the resource list
-    # ----------------------------------------
-    m_all_resources = set([x.resource_type for x in common_get_resources(data_type=Data.TYPE_RESOURCE)])
-
-    # There are some types that calls the same function for process it. To avoid to call 2 o more times the same
-    # function, filter it:
-    m_functions_to_call = set([RESOURCE_DISPLAYER[f] for f in m_all_resources if f in RESOURCE_DISPLAYER])
-
-    for x in m_functions_to_call:
-        x()
-
-
-#----------------------------------------------------------------------
-#
-# Concrete displayers each type of resource
-#
-#----------------------------------------------------------------------
-def concrete_display_web_resources():
-    """
-    Display the results of web analysis.
-    """
-
-
-    # The main porperties of the resources
-    MAIN_PROPERTIES = {
-        'URL'           : 'url',
-        'BASE_URL'      : 'url',
-        'FOLDER_URL'    : 'url',
-        'DOMAIN'        : 'name',
-        'IP'            : 'address',
-        'EMAIL'         : 'address'
-    }
-
-
-    # This properties/methods are the common info for the vulnerability types.
-    PRIVATE_INFO = ['DEFAULTS', 'TYPE', 'add_information', 'RESOURCE',
-                    'add_link', 'add_resource', 'add_vulnerability', 'associated_informations',
-                    'associated_resources', 'associated_vulnerabilities', 'cve', 'cwe',
-                    'data_type', 'discovered', 'get_associated_informations_by_category',
-                    'get_associated_resources_by_category', 'get_associated_vulnerabilities_by_category',
-                    'get_linked_data', 'get_links', 'identity', 'impact', 'is_in_scope', 'linked_data',
-                    'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
-                    'merge', 'min_data', 'min_informations', 'min_resources', 'min_vulnerabilities',
-                    'references', 'reverse_merge', 'risk', 'severity', 'validate_link_minimums', 'vulnerability_type',
-                    'resource_type']
-
-    # Get all type of resources
-    m_all_resources = set([x for x in dir(Resource) if x.startswith("RESOURCE")])
-
-    for l_resource in m_all_resources:
-
-        # Get resources URL resources
-        resource = common_get_resources(Data.TYPE_RESOURCE, getattr(Resource, l_resource))
-
-        if not resource:
-            continue
+    def common_display_general_summary(self):
+        """
+        Display the general summary.
+        """
 
         # ----------------------------------------
         # Discovered resources
         # ----------------------------------------
-        print "\n- %s - \n"% colorize(l_resource.replace("RESOURCE_", "").lower().replace("_", " ").capitalize(), "yellow")
-
-        for i, r in enumerate(resource, start=1):
-            l_b = StringIO()
-
-            # Url to print
-            l_resource     = colorize(getattr(r, MAIN_PROPERTIES[l_resource.replace("RESOURCE_", "")]), "white")
-
-            #
-            # Display the resource
-            #
-            l_b.write("  [%s] %s" % (colorize('{:^5}'.format(i), "Blue"), l_resource))
-
-            # Displayer table
-            l_table = GolismeroTable(init_spaces=10)
-
-            m_valid_params = set()
-
-            # Get all no trivial properties
-            for x in dir(r):
-                found = False
-                for y in PRIVATE_INFO:
-                    if x.startswith("_") or x.startswith(y):
-                        found = True
-                        break
-
-                if not found:
-                    m_valid_params.add(x)
-
-                found = False
-
-            #
-            # Display resource params
-            #
-            for l_p in m_valid_params:
-                l_print_value = getattr(r, l_p)
-
-                if l_print_value is not None:
-
-                    # String data
-                    if isinstance(l_print_value, basestring):
-                        l_table.add_row("%s: %s" % (l_p.capitalize(), getattr(r, l_p)))
-
-                    # Dict data
-                    if isinstance(l_print_value, dict) and len(l_print_value) > 0:
-                        l_table.add_row([ "%s: %s" % (k.capitalize(), v) for k, v in l_print_value.iteritems()], cell_title= l_p.replace("_", " ").capitalize())
-
-                    # List data
-                    if isinstance(l_print_value, list) and len(l_print_value) > 0:
-                        l_table.add_row(l_print_value, cell_title= l_p.replace("_", " ").capitalize())
-
-            #
-            # Display the vulns
-            #
-            if r.associated_vulnerabilities:
-                l_table.add_row(vuln_genereral_displayer(r.associated_vulnerabilities), "Vulnerabilities")
-
-            a = l_table.get_content()
-            if a:
-                l_b.write(a)
-
-            print l_b.getvalue()
-
-RESOURCE_DISPLAYER = {
-    # Web related: URL + Base_URL
-    Resource.RESOURCE_URL          : concrete_display_web_resources,
-    Resource.RESOURCE_BASE_URL     : concrete_display_web_resources
-}
+        print "\n-# %s #- "% colorize("Summary", "yellow")
 
 
-#----------------------------------------------------------------------
-#
-# Concrete vulnerability displayers
-#
-# All functions must return an string
-#
-#----------------------------------------------------------------------
-def vuln_genereral_displayer(vulns):
-    """
-    Displays the vulnerabilities.
-    """
+        # Fingerprint
+        print "\n-- %s -- "% colorize("Target summary", "yellow")
+        print "   +",
+
+        m_table  = GolismeroTable(init_spaces=3)
+
+        m_tmp_data = self.common_get_resources(data_type=Data.TYPE_INFORMATION, data_subtype=Information.INFORMATION_WEB_SERVER_FINGERPRINT)
+
+        # Fingerprint
+        if m_tmp_data: # There are data
+            # For each host
+            for l_host in m_tmp_data:
+                t = '\n| -'.join(["%s - %s" % (l.url, colorize("Apache", "yellow")) for l in l_host.associated_resources if hasattr(l, "url")])
+                m_table.add_row("Fingerprint: \n| -%s" % t)
+        else:
+            m_table.add_row("Main web server: %s" % colorize("Unknown", "yellow"))
+
+        # Vhosts
+        #m_table.add_row(["Vhosts", colorize("1", "yellow")])
+        #m_table.add_row(["+  Vhosts2", colorize("1", "yellow")])
+
+        # Audited hosts
+        m_table.add_row("Hosts audited: %s" % colorize(len(self.common_get_resources(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_DOMAIN)), "yellow"))
+
+        # Total vulns
+        m_table.add_row("Total vulns: %s" % str(len(self.common_get_resources(data_type=Data.TYPE_VULNERABILITY))))
+
+        # Set align
+        print m_table.get_content()
 
 
-    # This properties/methods are the common info for the vulnerability types.
-    PRIVATE_INFO = ['DEFAULTS', 'TYPE_INFORMATION', 'TYPE_RESOURCE',
-                    'TYPE_UNKNOWN', 'TYPE_VULNERABILITY', 'add_information',
-                    'add_link', 'add_resource', 'add_vulnerability', 'associated_informations',
-                    'associated_resources', 'associated_vulnerabilities', 'cve', 'cwe',
-                    'data_type', 'discovered', 'get_associated_informations_by_category',
-                    'get_associated_resources_by_category', 'get_associated_vulnerabilities_by_category',
-                    'get_linked_data', 'get_links', 'identity', 'impact', 'is_in_scope', 'linked_data',
-                    'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
-                    'merge', 'min_data', 'min_informations', 'min_resources', 'min_vulnerabilities',
-                    'references', 'reverse_merge', 'risk', 'severity', 'validate_link_minimums', 'vulnerability_type']
-
-
-    if not vulns:
-        return
-
+    #----------------------------------------------------------------------
     #
-    # Display the info
+    # Main display modes
     #
-    m_return        = []
-    m_return_append = m_return.append
-    for vuln in vulns:
+    #----------------------------------------------------------------------
+    def general_display_only_vulns(self):
 
-        # Vuln name as raw format
-        l_vuln_name      = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
-        # Vuln name as display mode
-        l_vuln_name_text = l_vuln_name.replace("_", " ").capitalize()
+        # ----------------------------------------
+        # General summary
+        # ----------------------------------------
+        self.common_display_general_summary()
 
-        # Call to the function resposible to display the vuln info
-        try:
-            l_table      = []
-            l_table.append("Vuln name: %s" % colorize(l_vuln_name_text, "white"))
-            l_table.append("%s" % ("-" * len("Vuln name: %s" % l_vuln_name_text)))
+        m_v = self.vuln_genereral_displayer(self.common_get_resources(data_type=Data.TYPE_VULNERABILITY))
 
-            # Get the vuln properties and add for display
-            for l_v_prop in dir(vuln):
-                if l_v_prop not in PRIVATE_INFO and not l_v_prop.startswith("_"):
-                    l_table.append("%s: %s" % (l_v_prop, colorize(getattr(vuln, l_v_prop), vuln.risk)))
+        m_table = GolismeroTable(title="Vulnerabilities", init_spaces=0)
+        if m_v:
+            m_table.add_row(m_v)
 
-            m_return_append(l_table)
+        print
+        print m_table.get_content()
+        if not m_v:
+            print
+            print "No vulnerabilities found."
 
-        except KeyError:
-            print "Function to display '%s' function are not available" % l_vuln_name
-            continue
 
-    return m_return
+    #----------------------------------------------------------------------
+    def general_display_by_resource(self):
+        """
+        This function displays the results like this:
+
+        >>>
+        [ 1 ] www.website.com/Param1=Value1&Param2=Value2
+              +-----------------+
+              | Vulnerabilities |
+              +------------------+-----------------------------+
+              |   Vuln name:     |        Url suspicious       |
+              +------------------+-----------------------------+
+              |       URL:       | http://website.com/admin    |
+              | Suspicius text:  |            admin            |
+              +------------------+-----------------------------+
+        [ 2 ] www.website.com/contact/
+        [ 3 ] www.website.com/Param1
+        """
+
+        # ----------------------------------------
+        # General summary
+        # ----------------------------------------
+        self.common_display_general_summary()
+
+        # ----------------------------------------
+        # Get the resource list
+        # ----------------------------------------
+        m_all_resources = set([x.resource_type for x in self.common_get_resources(data_type=Data.TYPE_RESOURCE)])
+
+        self.concrete_display_resources()
+
+
+    #----------------------------------------------------------------------
+    #
+    # Concrete displayers each type of resource
+    #
+    #----------------------------------------------------------------------
+    def concrete_display_resources(self):
+        """
+        Display the results of web analysis.
+        """
+
+
+        # The main porperties of the resources
+        MAIN_PROPERTIES = {
+            'URL'           : 'url',
+            'BASE_URL'      : 'url',
+            'FOLDER_URL'    : 'url',
+            'DOMAIN'        : 'name',
+            'IP'            : 'address',
+            'EMAIL'         : 'address'
+        }
+
+
+        # This properties/methods are the common info for the vulnerability types.
+        PRIVATE_INFO = ['DEFAULTS', 'TYPE', 'add_information', 'RESOURCE',
+                        'add_link', 'add_resource', 'add_vulnerability', 'associated_informations',
+                        'associated_resources', 'associated_vulnerabilities', 'cve', 'cwe',
+                        'data_type', 'discovered', 'get_associated_informations_by_category',
+                        'get_associated_resources_by_category', 'get_associated_vulnerabilities_by_category',
+                        'get_linked_data', 'get_links', 'identity', 'impact', 'is_in_scope', 'linked_data',
+                        'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
+                        'merge', 'min_data', 'min_informations', 'min_resources', 'min_vulnerabilities',
+                        'references', 'reverse_merge', 'risk', 'severity', 'validate_link_minimums', 'vulnerability_type',
+                        'resource_type']
+
+        # Get all type of resources
+        m_all_resources = set([x for x in dir(Resource) if x.startswith("RESOURCE")])
+
+        for l_resource in m_all_resources:
+
+            # Get resources URL resources
+            resource = self.common_get_resources(Data.TYPE_RESOURCE, getattr(Resource, l_resource))
+
+            if not resource:
+                continue
+
+            # ----------------------------------------
+            # Discovered resources
+            # ----------------------------------------
+            print "\n - %s - \n"% colorize(l_resource.replace("RESOURCE_", "").lower().replace("_", " ").capitalize(), "yellow")
+
+            for i, r in enumerate(resource, start=1):
+                l_b = StringIO()
+
+                # Url to print
+                l_resource     = colorize(getattr(r, MAIN_PROPERTIES[l_resource.replace("RESOURCE_", "")]), "white")
+
+                #
+                # Display the resource
+                #
+                l_b.write(" [%s] %s" % (colorize('{:^5}'.format(i), "Blue"), l_resource))
+
+                # Displayer table
+                l_table = GolismeroTable(init_spaces=10)
+
+                m_valid_params = set()
+
+                # Get all no trivial properties
+                for x in dir(r):
+                    found = False
+                    for y in PRIVATE_INFO:
+                        if x.startswith("_") or x.startswith(y):
+                            found = True
+                            break
+
+                    if not found:
+                        m_valid_params.add(x)
+
+                    found = False
+
+                #
+                # Display resource params
+                #
+                for l_p in m_valid_params:
+                    l_print_value = getattr(r, l_p)
+
+                    if l_print_value is not None:
+
+                        # String data
+                        if isinstance(l_print_value, basestring):
+                            l_table.add_row("%s: %s" % (l_p.capitalize(), getattr(r, l_p)))
+
+                        # Dict data
+                        if isinstance(l_print_value, dict) and len(l_print_value) > 0:
+                            l_table.add_row([ "%s: %s" % (k.capitalize(), v) for k, v in l_print_value.iteritems()], cell_title= l_p.replace("_", " ").capitalize())
+
+                        # List data
+                        if isinstance(l_print_value, list) and len(l_print_value) > 0:
+                            l_table.add_row(l_print_value, cell_title= l_p.replace("_", " ").capitalize())
+
+                #
+                # Display the vulns
+                #
+                if r.associated_vulnerabilities:
+                    l_table.add_row(self.vuln_genereral_displayer(r.associated_vulnerabilities), "Vulnerabilities")
+
+                a = l_table.get_content()
+                if a:
+                    l_b.write(a)
+
+                print l_b.getvalue()
+
+
+
+    #----------------------------------------------------------------------
+    #
+    # Concrete vulnerability displayers
+    #
+    # All functions must return an string
+    #
+    #----------------------------------------------------------------------
+    def vuln_genereral_displayer(self, vulns):
+        """
+        Displays the vulnerabilities.
+        """
+
+
+        # This properties/methods are the common info for the vulnerability types.
+        PRIVATE_INFO = ['DEFAULTS', 'TYPE_INFORMATION', 'TYPE_RESOURCE',
+                        'TYPE_UNKNOWN', 'TYPE_VULNERABILITY', 'add_information',
+                        'add_link', 'add_resource', 'add_vulnerability', 'associated_informations',
+                        'associated_resources', 'associated_vulnerabilities', 'cve', 'cwe',
+                        'data_type', 'discovered', 'get_associated_informations_by_category',
+                        'get_associated_resources_by_category', 'get_associated_vulnerabilities_by_category',
+                        'get_linked_data', 'get_links', 'identity', 'impact', 'is_in_scope', 'linked_data',
+                        'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
+                        'merge', 'min_data', 'min_informations', 'min_resources', 'min_vulnerabilities',
+                        'references', 'reverse_merge', 'risk', 'severity', 'validate_link_minimums', 'vulnerability_type']
+
+
+        if not vulns:
+            return
+
+        #
+        # Display the info
+        #
+        m_return        = []
+        m_return_append = m_return.append
+        for vuln in vulns:
+
+            # Vuln name as raw format
+            l_vuln_name      = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
+            # Vuln name as display mode
+            l_vuln_name_text = l_vuln_name.replace("_", " ").capitalize()
+
+            # Call to the function resposible to display the vuln info
+            try:
+                l_table      = []
+                l_table.append("Vuln name: %s" % colorize(l_vuln_name_text, "white"))
+                l_table.append("%s" % ("-" * len("Vuln name: %s" % l_vuln_name_text)))
+
+                # Get the vuln properties and add for display
+                for l_v_prop in dir(vuln):
+                    if l_v_prop not in PRIVATE_INFO and not l_v_prop.startswith("_"):
+                        l_table.append("%s: %s" % (l_v_prop, colorize(getattr(vuln, l_v_prop), vuln.risk)))
+
+                m_return_append(l_table)
+
+            except KeyError:
+                print "Function to display '%s' function are not available" % l_vuln_name
+                continue
+
+        return m_return
 
 #------------------------------------------------------------------------------
 class GolismeroTable:
