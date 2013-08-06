@@ -256,13 +256,13 @@ class ScreenReport(ReportPlugin):
             for i, r in enumerate(resource, start=1):
                 l_b = StringIO()
 
-                # Url to print
-                l_resource     = colorize(getattr(r, MAIN_PROPERTIES[l_resource.replace("RESOURCE_", "")]), "white")
+                # Resource to print
+                l_resource_info     = colorize(getattr(r, MAIN_PROPERTIES[l_resource.replace("RESOURCE_", "")]), "white")
 
                 #
                 # Display the resource
                 #
-                l_b.write(" [%s] %s" % (colorize('{:^5}'.format(i), "Blue"), l_resource))
+                l_b.write(" [%s] %s" % (colorize('{:^5}'.format(i), "Blue"), l_resource_info))
 
                 # Displayer table
                 l_table = GolismeroTable(init_spaces=10)
