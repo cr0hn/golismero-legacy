@@ -218,60 +218,106 @@ def concrete_display_web_resources():
     Display the results of web analysis.
     """
 
-    # Get resources URL resources
-    resource = common_get_resources(Data.TYPE_RESOURCE, Resource.RESOURCE_URL)
 
-    # ----------------------------------------
-    # Discovered resources
-    # ----------------------------------------
-    print "\n- %s - \n"% colorize("Web resources", "yellow")
+    # The main porperties of the resources
+    MAIN_PROPERTIES = {
+        'URL'           : 'url',
+        'BASE_URL'      : 'url',
+        'FOLDER_URL'    : 'url',
+        'DOMAIN'        : 'name',
+        'IP'            : 'address',
+        'EMAIL'         : 'address'
+    }
 
-    i = 0
 
-    for u in resource:
-        l_b = StringIO()
-        # Initial vars
-        i             += 1
-        # Url to print
-        l_url          = colorize(u.url, "white")
+    # This properties/methods are the common info for the vulnerability types.
+    PRIVATE_INFO = ['DEFAULTS', 'TYPE', 'add_information', 'RESOURCE',
+                    'add_link', 'add_resource', 'add_vulnerability', 'associated_informations',
+                    'associated_resources', 'associated_vulnerabilities', 'cve', 'cwe',
+                    'data_type', 'discovered', 'get_associated_informations_by_category',
+                    'get_associated_resources_by_category', 'get_associated_vulnerabilities_by_category',
+                    'get_linked_data', 'get_links', 'identity', 'impact', 'is_in_scope', 'linked_data',
+                    'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
+                    'merge', 'min_data', 'min_informations', 'min_resources', 'min_vulnerabilities',
+                    'references', 'reverse_merge', 'risk', 'severity', 'validate_link_minimums', 'vulnerability_type',
+                    'resource_type']
 
-        #
-        # Display URL and method
-        #
-        l_b.write("  [%s] (%s) %s" % (colorize('{:^5}'.format(i), "Blue"), u.method, l_url))
+    # Get all type of resources
+    m_all_resources = set([x for x in dir(Resource) if x.startswith("RESOURCE")])
 
-        # Displayer table
-        l_table = GolismeroTable(init_spaces=10)
+    for l_resource in m_all_resources:
 
-        #
-        # Display URL params
-        #
-        # GET
-        if u.has_url_param:
-            l_vals        = []
-            l_vals_append = l_vals.append
-            for p,v in u.url_params().iteritems():
-                l_vals_append([p,v])
+        # Get resources URL resources
+        resource = common_get_resources(Data.TYPE_RESOURCE, getattr(Resource, l_resource))
 
-            l_table.add_row(l_vals, "Params type: GET")
+        if not resource:
+            continue
 
-        # POST
-        if u.has_post_param:
-            l_vals        = []
-            l_vals_append = l_vals.append
-            for p,v in u.post_params().iteritems():
-                l_vals_append([p,v])
+        # ----------------------------------------
+        # Discovered resources
+        # ----------------------------------------
+        print "\n- %s - \n"% colorize(l_resource.replace("RESOURCE_", "").lower().replace("_", " ").capitalize(), "yellow")
 
-            l_table.add_row(l_vals, "Params type: POST")
+        for i, r in enumerate(resource, start=1):
+            l_b = StringIO()
 
-        if u.associated_vulnerabilities:
-            l_table.add_row(vuln_genereral_displayer(u.associated_vulnerabilities), "Vulnerabilities")
+            # Url to print
+            l_resource     = colorize(getattr(r, MAIN_PROPERTIES[l_resource.replace("RESOURCE_", "")]), "white")
 
-        a = l_table.get_content()
-        if a:
-            l_b.write(a)
+            #
+            # Display the resource
+            #
+            l_b.write("  [%s] %s" % (colorize('{:^5}'.format(i), "Blue"), l_resource))
 
-        print l_b.getvalue()
+            # Displayer table
+            l_table = GolismeroTable(init_spaces=10)
+
+            m_valid_params = set()
+
+            # Get all no trivial properties
+            for x in dir(r):
+                found = False
+                for y in PRIVATE_INFO:
+                    if x.startswith("_") or x.startswith(y):
+                        found = True
+                        break
+
+                if not found:
+                    m_valid_params.add(x)
+
+                found = False
+
+            #
+            # Display resource params
+            #
+            for l_p in m_valid_params:
+                l_print_value = getattr(r, l_p)
+
+                if l_print_value is not None:
+
+                    # String data
+                    if isinstance(l_print_value, basestring):
+                        l_table.add_row("%s: %s" % (l_p.capitalize(), getattr(r, l_p)))
+
+                    # Dict data
+                    if isinstance(l_print_value, dict) and len(l_print_value) > 0:
+                        l_table.add_row([ "%s: %s" % (k.capitalize(), v) for k, v in l_print_value.iteritems()], cell_title= l_p.replace("_", " ").capitalize())
+
+                    # List data
+                    if isinstance(l_print_value, list) and len(l_print_value) > 0:
+                        l_table.add_row(l_print_value, cell_title= l_p.replace("_", " ").capitalize())
+
+            #
+            # Display the vulns
+            #
+            if r.associated_vulnerabilities:
+                l_table.add_row(vuln_genereral_displayer(r.associated_vulnerabilities), "Vulnerabilities")
+
+            a = l_table.get_content()
+            if a:
+                l_b.write(a)
+
+            print l_b.getvalue()
 
 RESOURCE_DISPLAYER = {
     # Web related: URL + Base_URL
@@ -372,8 +418,8 @@ class GolismeroTable:
         """
         Add a row to the table.
 
-        :param row_info: list with info of each line.
-        :type row_info: list
+        :param row_info: list or string with info to display in the row.
+        :type row_info: list(str) | str
 
         :param cell_title: title for the next rows
         :type cell_title: str
