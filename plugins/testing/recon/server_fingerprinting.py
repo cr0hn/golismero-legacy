@@ -40,7 +40,6 @@ from golismero.api.text.wordlist import WordListLoader
 
 from collections import Counter, OrderedDict, defaultdict
 from re import compile
-#from repoze.lru import lru_cache
 from urlparse import urljoin
 
 
@@ -976,7 +975,6 @@ def check_raw_response(request, response):
     )
 
 
-#@lru_cache(maxsize=100)
 def calculate_server_track(server_name):
     """
     from nginx/1.5.1-r2 -> ("nginx", "1.5.1")
@@ -1068,7 +1066,6 @@ def calculate_server_track(server_name):
 
 
 #----------------------------------------------------------------------
-#@lru_cache(maxsize=100)
 def nindex(str_in, substr, nth):
     """
     From and string get nth ocurrence of substr
@@ -1093,7 +1090,6 @@ def nindex(str_in, substr, nth):
 
 
 #----------------------------------------------------------------------
-#@lru_cache(maxsize=2)
 def get_fingerprinting_wordlist(wordlist):
     """
     Load the wordlist of fingerprints and prepare the info in a dict.
