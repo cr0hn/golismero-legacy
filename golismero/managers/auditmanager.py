@@ -49,6 +49,7 @@ from ..messaging.notifier import AuditNotifier
 
 from os import getpid
 from warnings import catch_warnings, warn
+from time import time
 
 
 #--------------------------------------------------------------------------
@@ -776,6 +777,8 @@ class Audit (object):
         # An ACK is expected after launching the report plugins.
         self.__expecting_ack += 1
         try:
+            # Before generate the report, set the audito stop time
+            self.__audit_config.stop_time = int(time())
 
             # Mark the report generation as started for this audit.
             self.__is_report_started = True
