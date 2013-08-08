@@ -459,6 +459,9 @@ def main():
     except Exception, e:
         parser.error(e.message)
 
+    if not auditParams.targets:
+        parser.error("no targets selected!")
+
 
     #------------------------------------------------------------
     # Launch GoLismero.

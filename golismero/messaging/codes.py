@@ -207,24 +207,24 @@ class MessageCode(MessageConstants):
     MSG_CONTROL_LOG                = 3
 
     # Global control
-    ##MSG_CONTROL_START             = 4
+    ##MSG_CONTROL_START              = 4
     MSG_CONTROL_STOP               = 5
-    ##MSG_CONTROL_PAUSE             = 6
-    ##MSG_CONTROL_CONTINUE          = 7
+    ##MSG_CONTROL_PAUSE              = 6
+    ##MSG_CONTROL_CONTINUE           = 7
 
     # Audit control
-    ##MSG_CONTROL_START_AUDIT       = 10
+    MSG_CONTROL_START_AUDIT        = 10
     MSG_CONTROL_STOP_AUDIT         = 11
-    ##MSG_CONTROL_PAUSE_AUDIT       = 12
-    ##MSG_CONTROL_CONTINUE_AUDIT    = 13
+    ##MSG_CONTROL_PAUSE_AUDIT        = 12
+    ##MSG_CONTROL_CONTINUE_AUDIT     = 13
 
     # UI subsystem
     MSG_CONTROL_START_UI           = 20
     MSG_CONTROL_STOP_UI            = 21
 
     # Reporting
-    ##MSG_CONTROL_START_REPORT      = 30
-    ##MSG_CONTROL_CANCEL_REPORT     = 31
+    ##MSG_CONTROL_START_REPORT       = 30
+    ##MSG_CONTROL_CANCEL_REPORT      = 31
 
 
     #--------------------------------------------------------------------------
@@ -278,6 +278,11 @@ class MessageCode(MessageConstants):
     MSG_RPC_SHARED_HEAP_POP        = 53
     MSG_RPC_SHARED_HEAP_ADD        = 54
     MSG_RPC_SHARED_HEAP_REMOVE     = 55
+
+    # Audit information
+    MSG_RPC_AUDIT_COUNT            = 60
+    MSG_RPC_AUDIT_NAMES            = 61
+    MSG_RPC_AUDIT_CONFIG           = 62
 
 
     #--------------------------------------------------------------------------

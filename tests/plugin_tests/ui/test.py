@@ -26,6 +26,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from golismero.api.audit import get_audit_count
+from golismero.api.config import Config
 from golismero.api.data import Data
 from golismero.api.data.db import Database
 from golismero.api.plugin import UIPlugin
@@ -87,7 +89,16 @@ class TestUIPlugin(UIPlugin):
 
         if message.message_type == MessageType.MSG_TYPE_CONTROL:
 
-            if message.message_code == MessageCode.MSG_CONTROL_LOG:
+            if message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
+                if get_audit_count() == 1:
+                    Config._context.send_msg(
+                        message_type = MessageType.MSG_TYPE_CONTROL,
+                        message_code = MessageCode.MSG_CONTROL_STOP,
+                        message_info = True,
+                            priority = MessagePriority.MSG_PRIORITY_LOW
+                    )
+
+            elif message.message_code == MessageCode.MSG_CONTROL_LOG:
                 (text, level, is_error) = message.message_info
                 if is_error:
                     print colorize(text, "magenta")

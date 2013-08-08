@@ -327,15 +327,6 @@ class Plugin (object):
 
 
     #--------------------------------------------------------------------------
-    def _set_observer(self, observer):
-        """
-        .. warning::
-           Called internally by GoLismero. Do not call or override!
-        """
-        return
-
-
-    #--------------------------------------------------------------------------
     def update_status(self, progress = None):
         """
         Plugins can call this method to tell the user of the current
@@ -487,22 +478,6 @@ class UIPlugin (_InformationPlugin):
         :type message: Message
         """
         raise NotImplementedError("Plugins must implement this method!")
-
-
-    #--------------------------------------------------------------------------
-    def send_msg(self, message):
-        """
-        Plugins call this method to send messages back to GoLismero.
-
-        .. warning::
-           Do not override this method!
-        """
-        self.__observer_ref.send_msg(message)
-
-
-    #--------------------------------------------------------------------------
-    def _set_observer(self, observer):
-        self.__observer_ref = observer
 
 
 #------------------------------------------------------------------------------

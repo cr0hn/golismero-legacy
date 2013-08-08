@@ -26,10 +26,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from golismero.api.audit import get_audit_count
+from golismero.api.config import Config
 from golismero.api.data import Data
 from golismero.api.plugin import UIPlugin, get_plugin_info
 from golismero.main.console import Console, colorize
-from golismero.messaging.codes import MessageType, MessageCode
+from golismero.messaging.codes import MessageType, MessageCode, MessagePriority
 
 import warnings
 
@@ -121,9 +123,20 @@ class ConsoleUIPlugin(UIPlugin):
         # Process control messages
         elif message.message_type == MessageType.MSG_TYPE_CONTROL:
 
+            # When an audit is finished, check if there are more running audits.
+            # If there aren't any, stop the Orchestrator.
+            if message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
+                if get_audit_count() == 1:  # this is the last one
+                    Config._context.send_msg(  # XXX FIXME hide this from plugins!
+                        message_type = MessageType.MSG_TYPE_CONTROL,
+                        message_code = MessageCode.MSG_CONTROL_STOP,
+                        message_info = True,  # True for finished, False for user cancel
+                            priority = MessagePriority.MSG_PRIORITY_LOW
+                    )
+
             # Show log messages
             # (The verbosity is sent by Logger)
-            if message.message_code == MessageCode.MSG_CONTROL_LOG:
+            elif message.message_code == MessageCode.MSG_CONTROL_LOG:
                 (text, level, is_error) = message.message_info
                 if Console.level >= level:
                     try:

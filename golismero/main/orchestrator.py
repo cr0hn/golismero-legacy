@@ -444,13 +444,6 @@ class Orchestrator (object):
             while True:
                 try:
 
-                    # In standalone mode, if all audits have finished we have to stop.
-                    if not self.__auditManager.has_audits():
-                        m = Message(message_type = MessageType.MSG_TYPE_CONTROL,
-                                    message_code = MessageCode.MSG_CONTROL_STOP,
-                                    message_info = True)  # True for finished, False for user cancel
-                        self.enqueue_msg(m)
-
                     # Wait for a message to arrive.
                     try:
                         message = self.__queue.get()
