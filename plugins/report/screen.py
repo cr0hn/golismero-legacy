@@ -26,6 +26,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+import sys
 from cStringIO import StringIO
 
 from golismero.api.plugin import ReportPlugin
@@ -38,22 +39,39 @@ from golismero.api.data.resource import Resource
 from golismero.api.data.information import Information
 
 # XXX HACK
-from golismero.main.console import colorize
+from golismero.main.console import Console, colorize
 
 
+#------------------------------------------------------------------------------
 class ScreenReport(ReportPlugin):
     """
-    Plugin to display reports on screen.
+    Plugin to display reports on screen or to a plain text file.
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def is_supported(self, output_file):
-        return not output_file or output_file == "-"
+        return (
+            not output_file
+            or output_file == "-"
+            or output_file.lower().endswith(".txt")
+        )
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def generate_report(self, output_file):
+        if output_file and output_file.lower().endswith(".txt"):
+            self.__color = False
+            with open(output_file, mode='w') as self.__fd:
+                self.__write_report()
+        else:
+            self.__color = Console.use_colors
+            self.__fd = sys.stdout
+            self.__write_report()
+
+
+    #--------------------------------------------------------------------------
+    def __write_report(self):
 
         #
         # Plugin vars
@@ -62,27 +80,37 @@ class ScreenReport(ReportPlugin):
         # ----------------------------------------
         # Header
         # ----------------------------------------
-        print
-        print
-        print "--= %s =--" % colorize("Report", "cyan")
+        print >>self.__fd, ""
+        print >>self.__fd, ""
+        print >>self.__fd, "--= %s =--" % self.__colorize("Report", "cyan")
 
         #
         # Displayers
         #
         if Config.audit_config.only_vulns:
-            self.general_display_only_vulns()
+            self.__general_display_only_vulns()
         else:
-            self.general_display_by_resource()
+            self.__general_display_by_resource()
 
-        print
+        print >>self.__fd, ""
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     #
     # Common functions
     #
-    #----------------------------------------------------------------------
-    def common_get_resources(self, data_type=None, data_subtype=None):
+    #--------------------------------------------------------------------------
+
+
+    #--------------------------------------------------------------------------
+    def __colorize(self, txt, level_or_color):
+        if self.__color:
+            return colorize(txt, level_or_color)
+        return txt
+
+
+    #--------------------------------------------------------------------------
+    def __common_get_resources(self, data_type=None, data_subtype=None):
         """
         Get a list of resources.
 
@@ -102,9 +130,8 @@ class ScreenReport(ReportPlugin):
         return m_resource
 
 
-
-
-    def common_display_general_summary(self):
+    #--------------------------------------------------------------------------
+    def __common_display_general_summary(self):
         """
         Display the general summary.
         """
@@ -112,67 +139,70 @@ class ScreenReport(ReportPlugin):
         # ----------------------------------------
         # Discovered resources
         # ----------------------------------------
-        print "\n-# %s #- "% colorize("Summary", "yellow")
+        print >>self.__fd, "\n-# %s #- "% self.__colorize("Summary", "yellow")
 
 
         # Fingerprint
-        print "\n-- %s -- "% colorize("Target summary", "yellow")
-        print "   +",
+        print >>self.__fd, "\n-- %s -- "% self.__colorize("Target summary", "yellow")
+        print >>self.__fd, "   +",
 
         m_table  = GolismeroTable(init_spaces=3)
 
-        m_tmp_data = self.common_get_resources(data_type=Data.TYPE_INFORMATION, data_subtype=Information.INFORMATION_WEB_SERVER_FINGERPRINT)
+        m_tmp_data = self.__common_get_resources(data_type=Data.TYPE_INFORMATION, data_subtype=Information.INFORMATION_WEB_SERVER_FINGERPRINT)
 
         # Fingerprint
         if m_tmp_data: # There are data
             # For each host
             for l_host in m_tmp_data:
-                t = '\n| -'.join(["%s - %s" % (l.url, colorize("Apache", "yellow")) for l in l_host.associated_resources if hasattr(l, "url")])
+                t = '\n| -'.join(["%s - %s" % (l.url, self.__colorize("Apache", "yellow")) for l in l_host.associated_resources if hasattr(l, "url")])
                 m_table.add_row("Fingerprint: \n| -%s" % t)
         else:
-            m_table.add_row("Main web server: %s" % colorize("Unknown", "yellow"))
+            m_table.add_row("Main web server: %s" % self.__colorize("Unknown", "yellow"))
 
         # Vhosts
-        #m_table.add_row(["Vhosts", colorize("1", "yellow")])
-        #m_table.add_row(["+  Vhosts2", colorize("1", "yellow")])
+        #m_table.add_row(["Vhosts", self.__colorize("1", "yellow")])
+        #m_table.add_row(["+  Vhosts2", self.__colorize("1", "yellow")])
 
         # Audited hosts
-        m_table.add_row("Hosts audited: %s" % colorize(len(self.common_get_resources(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_DOMAIN)), "yellow"))
+        m_table.add_row("Hosts audited: %s" % self.__colorize(len(self.__common_get_resources(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_DOMAIN)), "yellow"))
 
         # Total vulns
-        m_table.add_row("Total vulns: %s" % str(len(self.common_get_resources(data_type=Data.TYPE_VULNERABILITY))))
+        m_table.add_row("Total vulns: %s" % str(len(self.__common_get_resources(data_type=Data.TYPE_VULNERABILITY))))
 
         # Set align
-        print m_table.get_content()
+        print >>self.__fd, m_table.get_content()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     #
     # Main display modes
     #
-    #----------------------------------------------------------------------
-    def general_display_only_vulns(self):
+    #--------------------------------------------------------------------------
+
+
+    #--------------------------------------------------------------------------
+    def __general_display_only_vulns(self):
 
         # ----------------------------------------
         # General summary
         # ----------------------------------------
-        self.common_display_general_summary()
+        self.__common_display_general_summary()
 
-        m_v = self.vuln_genereral_displayer(self.common_get_resources(data_type=Data.TYPE_VULNERABILITY))
+        m_v = self.__vuln_genereral_displayer(self.__common_get_resources(data_type=Data.TYPE_VULNERABILITY))
 
         m_table = GolismeroTable(title="Vulnerabilities", init_spaces=0)
         if m_v:
             m_table.add_row(m_v)
 
-        print
-        print m_table.get_content()
+        print >>self.__fd, ""
+        print >>self.__fd, m_table.get_content()
         if not m_v:
-            print
-            print "No vulnerabilities found."
+            print >>self.__fd, ""
+            print >>self.__fd, "No vulnerabilities found."
 
 
-    #----------------------------------------------------------------------
-    def general_display_by_resource(self):
+    #--------------------------------------------------------------------------
+    def __general_display_by_resource(self):
         """
         This function displays the results like this:
 
@@ -193,20 +223,23 @@ class ScreenReport(ReportPlugin):
         # ----------------------------------------
         # General summary
         # ----------------------------------------
-        self.common_display_general_summary()
+        self.__common_display_general_summary()
 
         # ----------------------------------------
         # Display the resources
         # ----------------------------------------
-        self.concrete_display_resources()
+        self.__concrete_display_resources()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     #
     # Concrete displayers each type of resource
     #
-    #----------------------------------------------------------------------
-    def concrete_display_resources(self):
+    #--------------------------------------------------------------------------
+
+
+    #--------------------------------------------------------------------------
+    def __concrete_display_resources(self):
         """
         Display the results of web analysis.
         """
@@ -217,7 +250,7 @@ class ScreenReport(ReportPlugin):
             'URL'           : 'url',
             'BASE_URL'      : 'url',
             'FOLDER_URL'    : 'url',
-            'DOMAIN'        : 'name',
+            'DOMAIN'        : 'hostname',
             'IP'            : 'address',
             'EMAIL'         : 'address'
         }
@@ -241,7 +274,7 @@ class ScreenReport(ReportPlugin):
         for l_resource in m_all_resources:
 
             # Get resources URL resources
-            resource = self.common_get_resources(Data.TYPE_RESOURCE, getattr(Resource, l_resource))
+            resource = self.__common_get_resources(Data.TYPE_RESOURCE, getattr(Resource, l_resource))
 
             if not resource:
                 continue
@@ -249,18 +282,18 @@ class ScreenReport(ReportPlugin):
             # ----------------------------------------
             # Discovered resources
             # ----------------------------------------
-            print "\n - %s - \n"% colorize(l_resource.replace("RESOURCE_", "").lower().replace("_", " ").capitalize(), "yellow")
+            print >>self.__fd, "\n - %s - \n"% self.__colorize(l_resource.replace("RESOURCE_", "").lower().replace("_", " ").capitalize(), "yellow")
 
             for i, r in enumerate(resource, start=1):
                 l_b = StringIO()
 
                 # Resource to print
-                l_resource_info     = colorize(getattr(r, MAIN_PROPERTIES[l_resource.replace("RESOURCE_", "")]), "white")
+                l_resource_info     = self.__colorize(getattr(r, MAIN_PROPERTIES[l_resource.replace("RESOURCE_", "")]), "white")
 
                 #
                 # Display the resource
                 #
-                l_b.write(" [%s] %s" % (colorize('{:^5}'.format(i), "Blue"), l_resource_info))
+                l_b.write(" [%s] %s" % (self.__colorize('{:^5}'.format(i), "Blue"), l_resource_info))
 
                 # Displayer table
                 l_table = GolismeroTable(init_spaces=10)
@@ -304,24 +337,26 @@ class ScreenReport(ReportPlugin):
                 # Display the vulns
                 #
                 if r.associated_vulnerabilities:
-                    l_table.add_row(self.vuln_genereral_displayer(r.associated_vulnerabilities), "Vulnerabilities")
+                    l_table.add_row(self.__vuln_genereral_displayer(r.associated_vulnerabilities), "Vulnerabilities")
 
                 a = l_table.get_content()
                 if a:
                     l_b.write(a)
 
-                print l_b.getvalue()
+                print >>self.__fd, l_b.getvalue()
 
 
-
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     #
     # Concrete vulnerability displayers
     #
     # All functions must return an string
     #
-    #----------------------------------------------------------------------
-    def vuln_genereral_displayer(self, vulns):
+    #--------------------------------------------------------------------------
+
+
+    #--------------------------------------------------------------------------
+    def __vuln_genereral_displayer(self, vulns):
         """
         Displays the vulnerabilities.
         """
@@ -358,29 +393,31 @@ class ScreenReport(ReportPlugin):
             # Call to the function resposible to display the vuln info
             try:
                 l_table      = []
-                l_table.append("Vuln name: %s" % colorize(l_vuln_name_text, "white"))
+                l_table.append("Vuln name: %s" % self.__colorize(l_vuln_name_text, "white"))
                 l_table.append("%s" % ("-" * len("Vuln name: %s" % l_vuln_name_text)))
 
                 # Get the vuln properties and add for display
                 for l_v_prop in dir(vuln):
                     if l_v_prop not in PRIVATE_INFO and not l_v_prop.startswith("_"):
-                        l_table.append("%s: %s" % (l_v_prop, colorize(getattr(vuln, l_v_prop), vuln.risk)))
+                        l_table.append("%s: %s" % (l_v_prop, self.__colorize(getattr(vuln, l_v_prop), vuln.risk)))
 
                 m_return_append(l_table)
 
             except KeyError:
-                print "Function to display '%s' function are not available" % l_vuln_name
+                print >>self.__fd, "Function to display '%s' function are not available" % l_vuln_name
                 continue
 
         return m_return
 
+
 #------------------------------------------------------------------------------
 class GolismeroTable:
     """
-    This class represent the information like a "table" as a custom format.
+    This class represents the information as an ASCII art table.
     """
 
-    #----------------------------------------------------------------------
+
+    #--------------------------------------------------------------------------
     def __init__(self, title="", init_spaces_title=0, init_spaces=8, title_color = "red"):
         """
         :param init_spaces: inital spaces
@@ -397,11 +434,11 @@ class GolismeroTable:
 
         if title:
             self.__title.write("+%s+\n" % ("-" * (len(title) + 3)))
-            self.__title.write("| %s  |\n" % (colorize(title, title_color)))
+            self.__title.write("| %s  |\n" % (self.__colorize(title, title_color)))
             self.__title.write("+%s+\n" % ("-" * (len(title) + 3)))
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def add_row(self, row_info, cell_title = ""):
         """
         Add a row to the table.
@@ -430,11 +467,10 @@ class GolismeroTable:
                 self.__text.write("\n+-\n")
 
 
-
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_content(self):
         """
-        Get an string with the table
+        Get a string with the table.
         """
 
         m_return = StringIO()
