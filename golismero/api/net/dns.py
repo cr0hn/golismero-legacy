@@ -711,7 +711,6 @@ class _DNS(Singleton):
 
                     # If register it different that we are looking for, skip it.
                     if type != register_type and type != "ALL":
-                        LocalDataCache.on_autogeneration(rdata)
                         continue
 
 
