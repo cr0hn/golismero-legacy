@@ -76,6 +76,63 @@ def main(output_file):
     c['execution_time']    = 10
     c['summary_vulns']     = {'total': 26, 'high' : 10 , 'middle': 5, 'low': 10, 'informational': 1}
 
+
+    c['info_by_resource']  = [
+        {
+            # Resource type URL
+            'resource_type' : "URL",
+            'info'          : [
+                # Resource 1
+                {
+                    # Index of row
+                    'index'  :  '1',
+
+                    # Resource info
+                    'resource' : {
+                        'URI'       : "http",
+                        'main_info' : "http://www.mytest.site.com"
+                    },
+
+                    # Vulns
+                    'vulns'  : [
+                        {
+                            'level'   : 'high',
+                            'number'  : '4'
+                        }
+                    ]
+                },
+
+                # Resource 2
+                {
+                    # Index of row
+                    'index'  :  '2',
+
+                    # Resource info
+                    'resource' : {
+                        'URI'       : "http",
+                        'main_info' : "http://www.othersite.com"
+                    },
+
+                    # Vulns
+                    'vulns'  : [
+                        {
+                            'level'   : 'high',
+                            'number'  : '2'
+                        },
+                        {
+                            'level'   : 'middle',
+                            'number'  : '23'
+                        },
+                        {
+                            'level'   : 'low',
+                            'number'  : '1'
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+
     #
     # Write the output
     #
