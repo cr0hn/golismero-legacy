@@ -131,7 +131,7 @@ class ReportManager (object):
         # Skip the magic plugin "report/screen".
         count = 0
         for output_file, plugin_name in self.__reporters.iteritems():
-            if plugin_name == "report/screen":
+            if plugin_name == "report/screen" and (not output_file or output_file == "-"):
                 continue
             try:
                 notifier.start_report(self.__plugins[plugin_name], output_file)
@@ -162,11 +162,15 @@ class ReportManager (object):
         if "report/screen" not in self.__reporters.values():
             return 0
 
-        # Get the dummy filename for the screen report plugin.
-        # In the future it might mean something.
+        # Get the filename for the screen report plugin.
         for output_file, plugin_name in self.__reporters.iteritems():
             if plugin_name == "report/screen":
                 break
+
+        # Skip if the filename is real, instead of the dummy
+        # filename used to indicate we want console output.
+        if output_file and output_file != "-":
+            return 0
 
         # Run the screen report plugin.
         try:
