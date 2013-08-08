@@ -222,10 +222,6 @@ class MessageCode(MessageConstants):
     MSG_CONTROL_START_UI           = 20
     MSG_CONTROL_STOP_UI            = 21
 
-    # Reporting
-    ##MSG_CONTROL_START_REPORT       = 30
-    ##MSG_CONTROL_CANCEL_REPORT      = 31
-
 
     #--------------------------------------------------------------------------
     # RPC message codes
@@ -289,9 +285,10 @@ class MessageCode(MessageConstants):
     # Status message codes
     #--------------------------------------------------------------------------
 
-    MSG_STATUS_PLUGIN_BEGIN        = 0
-    MSG_STATUS_PLUGIN_END          = 1
-    MSG_STATUS_PLUGIN_STEP         = 2
+    MSG_STATUS_STAGE_UPDATE        = 0
+    MSG_STATUS_PLUGIN_BEGIN        = 1
+    MSG_STATUS_PLUGIN_END          = 2
+    MSG_STATUS_PLUGIN_STEP         = 3
 
 
 #------------------------------------------------------------------------------

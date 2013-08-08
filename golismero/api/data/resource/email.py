@@ -37,8 +37,6 @@ from .domain import Domain
 from .. import identity
 from ...config import Config
 
-import re
-
 
 #------------------------------------------------------------------------------
 class Email(Resource):
@@ -47,10 +45,6 @@ class Email(Resource):
     """
 
     resource_type = Resource.RESOURCE_EMAIL
-
-
-    # Crude regular expression for email address validation.
-    __re_validate = re.compile(r"[A-Za-z0-9\.\_\-]+\@[A-Za-z0-9\_\-\%]+\.[A-Za-z0-9\.\_\-\%]+")
 
 
     #----------------------------------------------------------------------
@@ -71,7 +65,7 @@ class Email(Resource):
 
         # Do a very rudimentary validation of the email address.
         # This will at least keep users from confusing the order of the arguments.
-        if not self.__re_validate.match(address):
+        if "@" not in address or not address[0].isalnum() or not address[-1].isalnum():
             raise ValueError("Invalid email address: %s" % address)
 
         # Email address.

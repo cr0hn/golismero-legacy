@@ -74,7 +74,7 @@ class AuditManager (object):
     Manage and control audits.
     """
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, orchestrator):
         """
         :param orchestrator: Core to send messages to.
@@ -88,7 +88,7 @@ class AuditManager (object):
         self.__orchestrator = orchestrator
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def orchestrator(self):
         """
@@ -98,7 +98,7 @@ class AuditManager (object):
         return self.__orchestrator
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def new_audit(self, audit_config):
         """
         Creates a new audit.
@@ -127,7 +127,7 @@ class AuditManager (object):
 
         # On error, abort.
         except Exception, e:
-            ##raise  # XXX DEBUG
+            raise  # XXX DEBUG
             try:
                 self.remove_audit(m_audit.name)
             except Exception:
@@ -135,7 +135,7 @@ class AuditManager (object):
             raise e
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_audit_count(self):
         """
         Get the number of currently running audits.
@@ -146,7 +146,7 @@ class AuditManager (object):
         return len(self.__audits)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_audit_names(self):
         """
         Get the names of the currently running audits.
@@ -157,7 +157,7 @@ class AuditManager (object):
         return {audit.name for audit in self.__audits}
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_all_audits(self):
         """
         Get the currently running audits.
@@ -168,7 +168,7 @@ class AuditManager (object):
         return self.__audits
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_audit(self, name):
         """
         Get an instance of an audit by its name.
@@ -184,7 +184,7 @@ class AuditManager (object):
         return self.__audits[name]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def remove_audit(self, name):
         """
         Delete an instance of an audit by its name.
@@ -207,7 +207,7 @@ class AuditManager (object):
                 self.orchestrator.cacheManager.clean(name)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def dispatch_msg(self, message):
         """
         Process an incoming message from the Orchestrator.
@@ -248,7 +248,7 @@ class AuditManager (object):
         return True
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def close(self):
         """
         Release all resources held by all audits.
@@ -268,7 +268,7 @@ class Audit (object):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, audit_config, orchestrator):
         """
         :param audit_config: Audit configuration.
@@ -314,7 +314,7 @@ class Audit (object):
         self.__database = None
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     @property
     def name(self):
@@ -381,7 +381,7 @@ class Audit (object):
         return self.__report_manager
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     @property
     def expecting_ack(self):
@@ -408,7 +408,7 @@ class Audit (object):
         return self.__is_report_started
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @staticmethod
     def generate_audit_name():
         """
@@ -420,7 +420,7 @@ class Audit (object):
         return "golismero-" + generate_random_string(length=8)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def run(self):
         """
         Start execution of an audit.
@@ -482,6 +482,14 @@ class Audit (object):
                 if not self.database.has_data_key(data.identity, data.data_type):
                     self.database.add_data(data)
 
+            # Tell the UI we're about to run the import plugins.
+            self.send_msg(
+                message_type = MessageType.MSG_TYPE_STATUS,
+                message_code = MessageCode.MSG_STATUS_STAGE_UPDATE,
+                message_info = "import",
+                    priority = MessagePriority.MSG_PRIORITY_HIGH,
+            )
+
             # Import external results.
             # This is done after storing the targets, so the importers
             # can overwrite the targets with new information if available.
@@ -514,7 +522,7 @@ class Audit (object):
         self.update_stage()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def send_info(self, data):
         """
         Send data to the Orchestrator.
@@ -526,7 +534,7 @@ class Audit (object):
                              message_info = [data])
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def send_msg(self, message_type = MessageType.MSG_TYPE_DATA,
                        message_code = MessageCode.MSG_DATA,
                        message_info = None,
@@ -554,7 +562,7 @@ class Audit (object):
         self.orchestrator.enqueue_msg(m)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def acknowledge(self, message):
         """
         Got an ACK for a message sent from this audit to the plugins.
@@ -584,15 +592,31 @@ class Audit (object):
                 self.update_stage()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def update_stage(self):
         """
         Sets the current stage to the minimum needed to process pending data.
         When the last stage is completed, sends the audit stop message.
         """
 
+        # Get the database and the plugin manager.
+        database = self.database
+        pluginManager = self.pluginManager
+
         # If the reports are finished...
         if self.__is_report_started:
+
+            #
+            # Run the magic plugin "report/screen" here, after all other
+            # report plugins have finished running. This is needed so
+            # the output from the screen reporter doesn't get mixed with
+            # the log messages and errors from the other reporters.
+            #
+            # The screen report plugin is run by the UI notifier instead
+            # of the normal plugin notifier, so it runs in-process and
+            # waits until the plugin is finished before returning.
+            #
+            self.__report_manager.generate_screen_report(self.orchestrator.uiManager.notifier)
 
             # Send the audit end message.
             self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
@@ -601,10 +625,6 @@ class Audit (object):
 
         # If the reports are not yet launched...
         else:
-
-            # Get the database and the plugin manager.
-            database = self.database
-            pluginManager = self.pluginManager
 
             # Look for the earliest stage with pending data.
             for stage in xrange(pluginManager.min_stage, pluginManager.max_stage + 1):
@@ -637,9 +657,18 @@ class Audit (object):
                         # Skip to the next stage.
                         continue
 
+                    # Tell the Orchestrator we just moved to another stage.
+                    stage_name = pluginManager.get_stage_name_from_value(stage)
+                    self.send_msg(
+                        message_type = MessageType.MSG_TYPE_STATUS,
+                        message_code = MessageCode.MSG_STATUS_STAGE_UPDATE,
+                        message_info = stage_name,
+                    )
+
                     # Send the pending data to the Orchestrator.
                     self.send_msg(
                         message_type = MessageType.MSG_TYPE_DATA,
+                        message_code = MessageCode.MSG_DATA,
                         message_info = datalist,
                     )
 
@@ -652,7 +681,7 @@ class Audit (object):
             self.generate_reports()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def dispatch_msg(self, message):
         """
         Send messages to the plugins of this audit.
@@ -791,7 +820,7 @@ class Audit (object):
         return False
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def generate_reports(self):
         """
         Start the generation of reports for the audit.
@@ -808,6 +837,13 @@ class Audit (object):
             # Mark the report generation as started for this audit.
             self.__is_report_started = True
 
+            # Tell the UI we've started generating the reports.
+            self.send_msg(
+                message_type = MessageType.MSG_TYPE_STATUS,
+                message_code = MessageCode.MSG_STATUS_STAGE_UPDATE,
+                message_info = "report",
+            )
+
             # Start the report generation.
             self.__expecting_ack += self.__report_manager.generate_reports(self.__notifier)
 
@@ -818,7 +854,7 @@ class Audit (object):
                               priority = MessagePriority.MSG_PRIORITY_LOW)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def close(self):
         """
         Release all resources held by this audit.

@@ -488,9 +488,9 @@ golismero/messaging/notifier.py:241: Warning (W): XXX DEBUG
 golismero/messaging/notifier.py:391: Warning (W): FIXME this is very inefficient!
 golismero/messaging/notifier.py:560: Warning (W): XXXXXXXXXXXXXXXXXXXXXXX NOTE XXXXXXXXXXXXXXXXXXXXXXX
 golismero/messaging/notifier.py:706: Warning (W): FIXME: maybe we want to raise an exception here instead.
-golismero/messaging/notifier.py:722: Warning (W, UINotifier.__run_plugin): Access to a protected member _context of a client class
-golismero/messaging/notifier.py:722: Warning (W, UINotifier.__run_plugin): Access to a protected member _context of a client class
-golismero/messaging/notifier.py:722: Warning (W, UINotifier.__run_plugin): Access to a protected member _context of a client class
-golismero/messaging/notifier.py:726: Warning (W, UINotifier.__run_plugin): Access to a protected member _context of a client class
-golismero/messaging/notifier.py:726: Warning (W, UINotifier.__run_plugin): Access to a protected member _context of a client class
+golismero/messaging/notifier.py:722: Warning (W, OrchestratorNotifier.__run_plugin): Access to a protected member _context of a client class
+golismero/messaging/notifier.py:722: Warning (W, OrchestratorNotifier.__run_plugin): Access to a protected member _context of a client class
+golismero/messaging/notifier.py:722: Warning (W, OrchestratorNotifier.__run_plugin): Access to a protected member _context of a client class
+golismero/messaging/notifier.py:726: Warning (W, OrchestratorNotifier.__run_plugin): Access to a protected member _context of a client class
+golismero/messaging/notifier.py:726: Warning (W, OrchestratorNotifier.__run_plugin): Access to a protected member _context of a client class
 golismero/messaging/notifier.py:729: Warning (W): XXX this allows UI plugins to have state, do we really want this?

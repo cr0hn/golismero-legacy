@@ -64,7 +64,12 @@ class DNSAnalizer(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        m_domain = info.hostname
+        m_domain = info.root
+
+        # Skips localhost
+        if m_domain == "localhost":
+            return
+
         m_return = None
 
         # Checks if the hostname has been already processed
@@ -114,11 +119,15 @@ class DNSZoneTransfer(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        m_domain = info.hostname
+        m_domain = info.root
 
-        # Checks if the hostname has been already processed
+        # Skips localhost
+        if m_domain == "localhost":
+            return
+
         m_return = None
 
+        # Checks if the hostname has been already processed
         if not self.state.check(m_domain):
 
             Logger.log_more_verbose("Starting DNS zone transfer plugin")
@@ -181,7 +190,7 @@ class DNSZoneTransfer(TestingPlugin):
 #--------------------------------------------------------------------------
 class DNSBruteforcer(TestingPlugin):
     """
-    Find subdomains bruteforzing
+    Find subdomains by brute force.
     """
 
 
@@ -193,10 +202,15 @@ class DNSBruteforcer(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        m_domain = info.hostname
+        m_domain = info.root
+
+        # Skips localhost
+        if m_domain == "localhost":
+            return
+
+        m_return = None
 
         # Checks if the hostname has been already processed
-        m_return = None
         if not self.state.check(m_domain):
 
             #

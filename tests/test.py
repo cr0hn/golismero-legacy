@@ -74,6 +74,7 @@ def test():
         "audit_name": "test_audit",
         "audit_db": "sqlite://test_audit.db",
     })
+    ##audit.plugin_load_overrides = [(True, "recon/test")]  # XXX DEBUG shorter run
 
     try:
         os.unlink("%s.db" % audit.audit_name)

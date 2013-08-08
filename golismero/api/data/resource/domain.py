@@ -51,28 +51,18 @@ class Domain(Resource):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, name, *addresses):
+    def __init__(self, hostname):
         """
-        :param name: Domain name.
-        :type name: str
-
-        :param addresses: IP address or addresses it resolves to.
-        :type addresses: tuple(str)
+        :param hostname: Domain name.
+        :type hostname: str
         """
 
-        if not isinstance(name, basestring):
-            raise TypeError("Expected string, got %s instead" % type(name))
-        name = str(name)
-
-        for address in addresses:
-            if not isinstance(address, str):
-                raise TypeError("Expected string, got %s instead" % type(address))
+        if not isinstance(hostname, basestring):
+            raise TypeError("Expected string, got %s instead" % type(hostname))
+        hostname = str(hostname)
 
         # Domain name.
-        self.__name = name
-
-        # IP addresses.
-        self.__addresses = addresses
+        self.__hostname = hostname
 
         # Parent constructor.
         super(Domain, self).__init__()
@@ -80,66 +70,48 @@ class Domain(Resource):
 
     #----------------------------------------------------------------------
     def __str__(self):
-        if self.addresses:
-            return "(Domain) %s (%s)" % (
-                self.name,
-                ", ".join(self.addresses),
-            )
-        return "(Domain) %s" % self.name
+        return self.hostname
 
 
     #----------------------------------------------------------------------
     def __repr__(self):
-        s = "<Domain name=%r, addresses=%r>"
-        s %= (self.name, self.addresses)
-        return s
+        return "<Domain name=%r>" % self.hostname
 
 
     #----------------------------------------------------------------------
     def is_in_scope(self):
-        return self.name in Config.audit_scope
+        return self.hostname in Config.audit_scope
 
 
     #----------------------------------------------------------------------
     @identity
-    def name(self):
+    def hostname(self):
         """
         :return: Domain name.
         :rtype: str
         """
-        return self.__name
+        return self.__hostname
 
-
-    #----------------------------------------------------------------------
-    @merge
-    def addresses(self):
-        """
-        :return: IP address or addresses this domain name resolves to.
-        :rtype: tuple(str)
-        """
-        return self.__addresses
 
     #----------------------------------------------------------------------
     @property
-    def hostname(self):
+    def root(self):
         """
-        :return: the hostname of domain. i.e: www.mysite.com -> mysite.com
+        :return: Root domain. i.e: www.mysite.com -> mysite.com
         :rtype: str
         """
-        _, domain, suffix = split_hostname(self.name)
-        return "%s.%s" % (domain, suffix)
+        _, domain, suffix = split_hostname(self.hostname)
+        if suffix:
+            return "%s.%s" % (domain, suffix)
+        return domain
 
 
     #----------------------------------------------------------------------
 
     @property
     def discovered(self):
-        domain = self.name
-        result = [
-            IP(address)
-            for address in self.addresses
-            if address in Config.audit_scope
-        ]
+        domain = self.hostname
+        result = []
         subdomain, domain, suffix = split_hostname(domain)
         if subdomain:
             prefix = ".".join( (domain, suffix) )

@@ -485,6 +485,23 @@ class PluginManager (object):
 
 
     #----------------------------------------------------------------------
+    def get_stage_name_from_value(self, value):
+        """
+        :param value: Stage value. See :ref:`STAGES`.
+        :type value: int
+
+        :returns: Stage name.
+        :rtype: str
+
+        :raise KeyError: Stage value not found.
+        """
+        for name, val in self.STAGES.iteritems():
+            if value == val:
+                return name
+        raise KeyError("Stage value not found: %r" % value)
+
+
+    #----------------------------------------------------------------------
     def find_plugins(self, orchestrator_config):
         """
         Find plugins in the given folder.

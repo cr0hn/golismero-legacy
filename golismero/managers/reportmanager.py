@@ -54,6 +54,9 @@ class ReportManager (object):
         :type audit: Audit
         """
 
+        # Keep a reference to the audit name.
+        self.__audit_name = audit.name
+
         # Keep a reference to the audit configuration.
         self.__config = audit.config
 
@@ -125,8 +128,11 @@ class ReportManager (object):
             return 0
 
         # For each output file, run its corresponding report plugin.
+        # Skip the magic plugin "report/screen".
         count = 0
         for output_file, plugin_name in self.__reporters.iteritems():
+            if plugin_name == "report/screen":
+                continue
             try:
                 notifier.start_report(self.__plugins[plugin_name], output_file)
             except Exception, e:
@@ -134,6 +140,41 @@ class ReportManager (object):
                 Logger.log_error_more_verbose(format_exc())
             count += 1
         return count
+
+
+    #----------------------------------------------------------------------
+    def generate_screen_report(self, notifier):
+        """
+        Generate the screen report for the audit, if enabled.
+
+        :param notifier: Plugin notifier.
+        :type notifier: AuditNotifier
+
+        :returns: Number of plugins executed.
+        :rtype: int
+        """
+
+        # Abort if reporting is disabled.
+        if not self.__reporters:
+            return 0
+
+        # Abort if the screen report plugin is not selected.
+        if "report/screen" not in self.__reporters.values():
+            return 0
+
+        # Get the dummy filename for the screen report plugin.
+        # In the future it might mean something.
+        for output_file, plugin_name in self.__reporters.iteritems():
+            if plugin_name == "report/screen":
+                break
+
+        # Run the screen report plugin.
+        try:
+            notifier.start_report(self.__plugins[plugin_name], self.__audit_name, output_file)
+        except Exception, e:
+            Logger.log_error("Failed to start screen report: %s" % str(e))
+            Logger.log_error_more_verbose(format_exc())
+        return 1
 
 
     #----------------------------------------------------------------------

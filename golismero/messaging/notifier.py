@@ -30,7 +30,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["AuditNotifier", "UINotifier"]
+__all__ = ["AuditNotifier", "OrchestratorNotifier"]
 
 from ..api.config import Config
 from ..api.data import Data
@@ -45,7 +45,7 @@ from warnings import warn
 
 
 #----------------------------------------------------------------------
-class Notifier (object):
+class AbstractNotifier (object):
     """
     Abstract class for message dispatchers.
     """
@@ -55,7 +55,7 @@ class Notifier (object):
     def __init__(self):
 
         # Call the superclass constructor.
-        super(Notifier, self).__init__()
+        super(AbstractNotifier, self).__init__()
 
         # Info message notification list for plugins
         # that receive all information types.
@@ -276,11 +276,7 @@ class Notifier (object):
 
 
 #------------------------------------------------------------------------------
-#
-# Notifier for Audit manager
-#
-#------------------------------------------------------------------------------
-class AuditNotifier(Notifier):
+class AuditNotifier(AbstractNotifier):
     """
     Audit message dispatcher. Sends messages to plugins.
     """
@@ -636,13 +632,10 @@ class AuditNotifier(Notifier):
 
 
 #------------------------------------------------------------------------------
-#
-# Notifier for User Interface manager
-#
-#------------------------------------------------------------------------------
-class UINotifier(Notifier):
+class OrchestratorNotifier(AbstractNotifier):
     """
-    Dispatcher of messages for UI plugins.
+    Dispatcher of messages for special plugins that run in the same process
+    as the Orchestrator, instead of running in a background process.
     """
 
 
@@ -652,7 +645,7 @@ class UINotifier(Notifier):
         :param orchestrator: Orchestrator instance.
         :type orchestrator: Orchestrator
         """
-        super(UINotifier, self).__init__()
+        super(OrchestratorNotifier, self).__init__()
         self.__orchestrator = orchestrator
 
 
@@ -685,6 +678,23 @@ class UINotifier(Notifier):
         :type message: Message
         """
         self.__run_plugin(plugin, message.audit_name, "recv_msg", message)
+
+
+    #----------------------------------------------------------------------
+    def start_report(self, plugin, audit_name, output_file):
+        """
+        Start an audit report.
+
+        :param plugin: Target plugin.
+        :type plugin: Plugin
+
+        :param audit_name: Audit name.
+        :type audit_name: str
+
+        :param output_file: Output file where the report will be written.
+        :type output_file: str
+        """
+        self.__run_plugin(plugin, audit_name, "generate_report", output_file)
 
 
     #----------------------------------------------------------------------
@@ -749,4 +759,4 @@ class UINotifier(Notifier):
         Release all resources held by this notifier.
         """
         self.__orchestrator = None
-        super(UINotifier, self).close()
+        super(OrchestratorNotifier, self).close()

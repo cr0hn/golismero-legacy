@@ -35,6 +35,7 @@ from golismero.api.config import Config
 from golismero.api.data import discard_data
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.email import Email
+from golismero.api.data.resource.ip import IP
 from golismero.api.logger import Logger
 from golismero.api.plugin import TestingPlugin
 
@@ -79,7 +80,7 @@ class HarvesterPlugin(TestingPlugin):
     def recv_info(self, info):
 
         # Get the search parameters.
-        word  = info.name
+        word  = info.hostname
         limit = 100
         try:
             limit = int(Config.plugin_config.get("limit", str(limit)), 0)
@@ -109,16 +110,21 @@ class HarvesterPlugin(TestingPlugin):
 
         # Email addresses.
         for address in all_emails:
-            if address[0] == "[":   # known bug in theHarvester
+            while address and not address[0].isalnum():   # known bug in theHarvester
                 address[1:]
-                if not address:
-                    continue
+            while address and not address[-1].isalnum():
+                address[:-1]
+            if not address:
+                continue
             try:
                 data = Email(address)
             except Exception, e:
                 warnings.warn("Cannot parse email address: %r" % address)
                 continue
-            if data.is_in_scope():
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore")
+                in_scope = data.is_in_scope()
+            if in_scope:
                 data.add_resource(info)
                 results.append(data)
                 all_hosts.add(data.hostname)
@@ -130,12 +136,17 @@ class HarvesterPlugin(TestingPlugin):
         visited = set()
         total = float(len(all_hosts))
         for step, name in enumerate(all_hosts):
-            if name[0] == ".":   # known bug in theHarvester
+            while name and not name[0].isalnum():   # known bug in theHarvester
                 name[1:]
-                if not name:
-                    continue
+            while name and not name[-1].isalnum():
+                name[:-1]
+            if not name:
+                continue
             visited.add(name)
-            if name not in Config.audit_scope:
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore")
+                in_scope = name in Config.audit_scope
+            if not in_scope:
                 Logger.log_more_verbose("Hostname out of scope: %s" % name)
                 continue
             try:
@@ -151,12 +162,25 @@ class HarvesterPlugin(TestingPlugin):
             for name in all_names:
                 if name and name not in visited:
                     visited.add(name)
-                    if name not in Config.audit_scope:
+                    with warnings.catch_warnings():
+                        warnings.filterwarnings("ignore")
+                        in_scope = name in Config.audit_scope
+                    if not in_scope:
                         Logger.log_more_verbose("Hostname out of scope: %s" % name)
                         continue
-                    data = Domain(name, *addresslist)
+                    data = Domain(name)
                     data.add_resource(info)
                     results.append(data)
+                    for ip in addresslist:
+                        with warnings.catch_warnings():
+                            warnings.filterwarnings("ignore")
+                            in_scope = ip in Config.audit_scope
+                        if not in_scope:
+                            Logger.log_more_verbose("IP address out of scope: %s" % ip)
+                            continue
+                        d = IP(ip)
+                        data.add_resource(d)
+                        results.append(d)
 
         text = "Found %d emails and %d hostnames for keyword %r"
         text = text % (len(all_emails), len(all_hosts), word)

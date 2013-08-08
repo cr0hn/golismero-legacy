@@ -34,7 +34,7 @@ __all__ = ["UIManager"]
 
 from ..messaging.codes import MessageType, MessageCode
 from ..messaging.message import Message
-from ..messaging.notifier import UINotifier
+from ..messaging.notifier import OrchestratorNotifier
 
 
 #------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ class UIManager (object):
         self.__orchestrator = orchestrator
 
         # Init and start notifier.
-        self.__notifier = UINotifier(orchestrator)
+        self.__notifier = OrchestratorNotifier(orchestrator)
 
         # Load the selected UI plugin.
         mode = orchestrator.config.ui_mode
@@ -78,6 +78,16 @@ class UIManager (object):
         :rtype: Orchestrator
         """
         return self.__orchestrator
+
+
+    #----------------------------------------------------------------------
+    @property
+    def notifier(self):
+        """
+        :returns: UI notifier instance.
+        :rtype: OrchestratorNotifier
+        """
+        return self.__notifier
 
 
     #----------------------------------------------------------------------
