@@ -50,6 +50,52 @@ from golismero.api.net.web_utils import ParsedURL
 from warnings import catch_warnings
 
 
+
+# The most rudimentary test cases. If these fail, there's no point in continuing.
+basic = (
+
+    # Vainilla URLs for each supported schema.
+    'http://example.com/',
+    'https://example.com/',
+    'ftp://asmith@ftp.example.org/',
+
+    # Full URL, query string can be parsed.
+    'http://username:password@example.com:1234/path?query=string#fragment_id',
+
+    # Full URL, query string cannot be parsed.
+    'http://username:password@example.com:1234/path?query_string#fragment_id',
+
+    # Sorted query string parameters (when parseable).
+    'http://example.com/path?a=1&b=2&c=3',
+
+    # Using / as a query string separator.
+    'http://example.com/very/long/path/query=string',
+    'http://example.com/shorter/path/query=string',
+    'http://example.com/path/query=string',
+    'http://example.com/query=string',
+
+    # IPv4 hosts.
+    'http://192.168.1.1/',
+    'http://192.168.1.1/index.html',
+
+    # IPv6 hosts.
+    # https://www.ietf.org/rfc/rfc2732.txt
+    'http://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:81/index.html',
+    'http://[1080:0:0:0:8:800:200C:417A]/index.html',
+    'http://[3FFE:2A00:100:7031::1]/',
+    'http://[1080::8:800:200C:417A]/foo',
+    'http://[::192.9.5.5]/ipng',
+    'http://[::FFFF:129.144.52.38]:81/index.html',
+    'http://[2010:836B:4179::836B:4179]/',
+
+)
+
+def test_basic_urls(self):
+    for url in canonical:
+        ##pprint(parse_url(url).url)
+        assert parse_url(url).url == url
+
+
 # Simple test cases.
 simple = (
 
@@ -229,6 +275,126 @@ def test_url_parser():
                 raise
 
 
+# Test cases for URL canonicalization.
+equivalent = (
+
+    # Case insensitive scheme and hostname, automatically add the trailing slash.
+    (
+        'http://example.com',
+        'http://example.com/',
+        'HTTP://EXAMPLE.COM',
+        'HTTP://EXAMPLE.COM/',
+    ),
+
+    # Default port number.
+    (
+        'http://example.com',
+        'http://example.com:80',
+    ),
+    (
+        'https://example.com',
+        'https://example.com:443',
+    ),
+    (
+        'ftp://example.com',
+        'ftp://example.com:21',
+    ),
+
+    # Sorting of query parameters, handling of missing values.
+    (
+        'http://example.com/path?query=string&param=value&orphan',
+        'http://example.com/path?query=string&param=value&orphan=',
+        'http://example.com/path?orphan&query=string&param=value',
+        'http://example.com/path?orphan=&query=string&param=value',
+    ),
+    (
+        'http://example.com/path?query=string&param=value&orphan#fragment_id',
+        'http://example.com/path?query=string&param=value&orphan=#fragment_id',
+        'http://example.com/path?orphan&query=string&param=value#fragment_id',
+        'http://example.com/path?orphan=&query=string&param=value#fragment_id',
+    ),
+
+    # Sanitization of pathological cases.
+    (
+        "http://user:name:password@example.com",    # broken
+        "http://user:name%3Apassword@example.com/", # sanitized
+    ),
+    (
+        "http://lala@pepe@example.com",    # broken
+        "http://lala@pepe%40example.com/", # sanitized
+    ),
+    (
+        "http://example.com/path%2Ffile", # broken
+        "http://example.com/path/file",   # sanitized
+    ),
+    (
+        "http://example%2Ecom/", # broken
+        "http://example.com/",   # sanitized
+    ),
+    (
+        "h%74%74p://example.com/", # broken
+        "http://example.com/",     # sanitized
+    ),
+    (
+        "http://example.com/file name with spaces", # broken
+        "http://example.com/file+name+with+spaces", # sanitized
+    ),
+
+)
+
+def test_equivalent_urls(self):
+    for url_list in equivalent:
+        normalized = set()
+        for url in url_list:
+            normalized.add(parse_url(url).url)
+        ##pprint(normalized)
+        assert len(normalized) == 1
+        assert normalized.pop() in equivalent
+
+
+# Test cases for relative URLs.
+
+# Relative URLs, base: http://example.com/path/
+relative = (
+    ('/robots.txt', 'http://example.com/robots.txt'),
+    ('index.php?query=string', 'http://example.com/path/index.php?query=string'),
+    ('#fragment', 'http://example.com/path/#fragment'),
+)
+
+def test_relative_urls(self):
+    for relative, absolute in relative:
+        ##print relative
+        ##print parse_url(relative, 'http://example.com/path/').url
+        ##print absolute
+        assert parse_url(relative, 'http://example.com/path/').url == absolute
+
+
+# Test cases for URL parsing errors.
+errors = (
+
+    # Unsupported scheme.
+    "bogus://example.com",
+    "data:11223344",
+    "javascript:alert('xss')",
+    "file://C:/Windows/System32/calc.exe",
+
+    # Broken scheme.
+    "http:/example.com",
+    "http:example.com",
+)
+
+def __parse_url(self, url):
+    return
+
+def test_url_errors(self):
+    for url in errors:
+        try:
+            parse_url(url).url
+            raise AssertionError(url)
+        except ValueError:
+            pass
+
+
 # Some manual testing.
 def test_url_parser_custom():
 
@@ -389,5 +555,9 @@ def test_url_parser_custom():
 
 # Run all tests from the command line.
 if __name__ == "__main__":
+    test_basic_urls()
+    test_equivalent_urls()
+    test_relative_urls()
+    test_url_errors()
     test_url_parser()
     test_url_parser_custom()

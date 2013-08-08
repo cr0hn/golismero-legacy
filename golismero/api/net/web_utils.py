@@ -604,14 +604,14 @@ class ParsedURL (object):
        Unicode is currently *NOT* supported.
     """
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # TODO: for the time being we're using the buggy quote and unquote
     # implementations from urllib, but we'll have to roll our own to
     # properly support Unicode (urllib does a mess of it!).
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Dictionary of default port numbers per each supported scheme.
     # The keys of this dictionary are also used to check if a given
     # scheme is supported by this class.
@@ -633,7 +633,15 @@ class ParsedURL (object):
     # https://code.google.com/p/fuzzdb/source/browse/trunk/attack-payloads/http-protocol/known-uri-types.fuzz
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    # List of schemes that require :// instead of just :
+
+    __two_dashes_required = (
+        'http', 'https', 'ftp', #'file',
+    )
+
+
+    #--------------------------------------------------------------------------
     # The constructor has code borrowed from the urllib3 project, then
     # adapted and expanded to fit the needs of GoLismero.
     #
@@ -672,6 +680,8 @@ class ParsedURL (object):
                 scheme, url = url.split('://', 1)
             else:
                 scheme, url = url.split(':', 1)
+                if scheme in self.__two_dashes_required:
+                    raise ValueError("Failed to parse: %s" % original_url)
 
             # we sanitize it here to prevent errors down below
             scheme = scheme.strip().lower()
@@ -756,12 +766,12 @@ class ParsedURL (object):
         self.fragment = fragment
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __str__(self):
         return self.url
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def copy(self):
         """
         :returns: A copy of this object.
@@ -770,21 +780,21 @@ class ParsedURL (object):
         return deepcopy(self)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def to_urlsplit(self):
         # Do not document the return type below!
         "Convert to a tuple that can be passed to urlparse.urlunstrip()."
         return (self.__scheme, self.netloc, self.__path, self.query, self.__fragment)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def to_urlparse(self):
         # Do not document the return type below!
         "Convert to a tuple that can be passed to urlparse.urlunparse()."
         return (self.__scheme, self.netloc, self.__path, None, self.query, self.__fragment)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def to_urllib3(self):
         # Do not document the return type below!
         "Convert to a named tuple as returned by urllib3.parse_url()."
@@ -792,7 +802,7 @@ class ParsedURL (object):
                            self.__path, self.query, self.__fragment)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def match_extension(self, extension,
                         directory_allowed = True,
                         double_allowed    = True,
@@ -902,7 +912,7 @@ class ParsedURL (object):
         return False
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_all_extensions(self, directory_allowed = True, double_allowed = True):
         """
         Tries to find any possible file extensions from the URL path.
@@ -970,7 +980,7 @@ class ParsedURL (object):
         return found
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def split_hostname(self):
         """
         Splits the hostname into the subdomain, domain and TLD parts.
@@ -993,7 +1003,7 @@ class ParsedURL (object):
         return split_hostname(self.hostname)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Read-only properties.
 
     @property
@@ -1020,7 +1030,7 @@ class ParsedURL (object):
         return path
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Read-write properties.
 
     @property
@@ -1177,7 +1187,7 @@ class ParsedURL (object):
             self.__query = self.query
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Aliases.
 
     @property
@@ -1375,7 +1385,7 @@ class HTMLElement (object):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, tag_name, attrs, content):
         """
         :param tag_name: HTML tag name.
@@ -1392,12 +1402,12 @@ class HTMLElement (object):
         self.__content = content
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __str__(self):
         return "%s:%s" % (self.__tag_name, str(self.__attrs))
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def tag_name(self):
         """
@@ -1407,7 +1417,7 @@ class HTMLElement (object):
         return self.__tag_name
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def attrs(self):
         """
@@ -1417,7 +1427,7 @@ class HTMLElement (object):
         return self.__attrs
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def content(self):
         """
@@ -1470,7 +1480,7 @@ class HTMLParser(object):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, data):
         """
         :param data: Raw HTML content.
@@ -1521,7 +1531,7 @@ class HTMLParser(object):
         self.__html_title = None
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __convert_to_HTMLElements(self, data):
         """
         Convert parser format to list of HTML Elements.
@@ -1537,7 +1547,7 @@ class HTMLParser(object):
         ]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def raw_data(self):
         """
@@ -1547,7 +1557,7 @@ class HTMLParser(object):
         return self.__raw_data
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def elements(self):
         """
@@ -1560,7 +1570,7 @@ class HTMLParser(object):
         return self.__all_elements
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def forms(self):
         """
@@ -1573,7 +1583,7 @@ class HTMLParser(object):
         return self.__html_forms
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def images(self):
         """
@@ -1586,7 +1596,7 @@ class HTMLParser(object):
         return self.__html_images
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def links(self):
         """
@@ -1599,7 +1609,7 @@ class HTMLParser(object):
         return self.__html_links
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def css_links(self):
         """
@@ -1612,7 +1622,7 @@ class HTMLParser(object):
         return self.__html_css
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def javascript_links(self):
         """
@@ -1625,7 +1635,7 @@ class HTMLParser(object):
         return self.__html_javascript
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def css_embedded(self):
         """
@@ -1638,7 +1648,7 @@ class HTMLParser(object):
         return self.__html_css_embedded
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def javascript_embedded(self):
         """
@@ -1651,7 +1661,7 @@ class HTMLParser(object):
         return self.__html_javascript_embedded
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def metas(self):
         """
@@ -1664,7 +1674,7 @@ class HTMLParser(object):
         return self.__html_metas
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def title(self):
         """
@@ -1677,7 +1687,7 @@ class HTMLParser(object):
         return self.__html_title
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def objects(self):
         """
