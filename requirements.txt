@@ -7,7 +7,6 @@ dnspython
 netaddr
 ntlk
 python_cjson
-repoze.lru
 requests
 requests_ntlm
 tldextract
