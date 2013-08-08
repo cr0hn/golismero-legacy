@@ -112,7 +112,7 @@ class ScreenReport(ReportPlugin):
     #--------------------------------------------------------------------------
     def __common_get_resources(self, data_type=None, data_subtype=None):
         """
-        Get a list of resources.
+        Get a list of datas.
 
         :return: List of resources.
         :rtype: list(Resource)
@@ -363,7 +363,7 @@ class ScreenReport(ReportPlugin):
 
 
         # This properties/methods are the common info for the vulnerability types.
-        PRIVATE_INFO = ['DEFAULTS', 'TYPE_INFORMATION', 'TYPE_RESOURCE',
+        PRIVATE_INFO = ['DEFAULTS', 'TYPE_INFORMATION', 'TYPE_RESOURCE', 'VULN_LEVELS',
                         'TYPE_UNKNOWN', 'TYPE_VULNERABILITY', 'add_information',
                         'add_link', 'add_resource', 'add_vulnerability', 'associated_informations',
                         'associated_resources', 'associated_vulnerabilities', 'cve', 'cwe',

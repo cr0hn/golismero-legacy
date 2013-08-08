@@ -694,6 +694,12 @@ class AuditConfig (Configuration):
 
         # Cookie
         "cookie": Configuration.string,
+
+        # Start time of the config
+        "start_time" : Configuration.integer,
+
+        # Start time of the config
+        "stop_time" : Configuration.integer
     }
 
 
