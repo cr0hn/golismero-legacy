@@ -133,15 +133,17 @@ from golismero.managers.processmanager import PluginContext
 # --enable-plugin
 class EnablePluginAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
+        parsed = [ (True, x.strip()) for x in values.split(",")]
         overrides = getattr(namespace, self.dest, [])
-        overrides.append( (True, values) )
+        overrides.extend(parsed)
         setattr(namespace, self.dest, overrides)
 
 # --disable-plugin
 class DisablePluginAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
+        parsed = [ (False, x.strip()) for x in values.split(",")]
         overrides = getattr(namespace, self.dest, [])
-        overrides.append( (False, values) )
+        overrides.extend(parsed)
         setattr(namespace, self.dest, overrides)
 
 # --no-output
