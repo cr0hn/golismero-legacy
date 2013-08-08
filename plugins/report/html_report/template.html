@@ -354,7 +354,19 @@
               <div class="row">
                 <div class="col-8">
                   <ul class="list-group">
+                      <li class="list-group-item" style="margin-bottom: 10px;"><b>Audited targets</b><span class="badge badge-important">{{targets|length}}</span>
+                      <div style="padding-top: 20px;">
+                        <ul class="list-group">
+                            {% for t in targets %}
+                                <li class="list-group-item">+ <a href="{{t}}" target="_blank" style="text-decoration: underline;">{{t}} &rarr;</a></li>
+                            {% endfor %}
+                        </ul>
+                      </div>
+
+                    </li>
                     <li class="list-group-item"><b>Start date</b><span class="pull-right">{{start_date}}</span>
+                    </li>
+                    <li class="list-group-item"><b>Start date</b><span class="pull-right">{{end_date}}</span>
                     </li>
                     <li class="list-group-item"><b>Execution time</b><span class="badge">{{execution_time}} s</span>
                     </li>
@@ -437,7 +449,7 @@
                                                       <a class="accordion-toggle" data-toggle="collapse" data-parent="#a_{{l_res.resource_type|slugify}}_{{l_row.index}}_1" href="#a_i_{{l_res.resource_type|slugify}}_{{l_row.index}}_1"><span>[+]</span>&nbsp;{{l_row.resource.main_info}}</a>
                                                     </div>
                                                     <div class="col-1">
-                                                      <a href="{{l_row.resource.main_info}}" class="btn btn-success btn-small ">Go &rarr;</a>
+                                                      <a href="{{l_row.resource.main_info}}" class="btn btn-success btn-small" target="_blank">Go &rarr;</a>
                                                     </div>
                                                   </div>
                                                 </div>
