@@ -56,7 +56,7 @@ class TestPlugin(TestingPlugin):
             raise TypeError("Expected FolderUrl, got %s instead" % type(info))
 
         # Intentionally cause a warning to be shown.
-        Logger.log("You should see a couple warnings soon...")
+        Logger.log("This is a log message.")
         return UrlDisclosure(info)
 
 

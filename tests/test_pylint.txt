@@ -1,3 +1,8 @@
+golismero/api/audit.py:57: Warning (W, get_audit_count): Access to a protected member _context of a client class
+golismero/api/audit.py:66: Warning (W, get_audit_names): Access to a protected member _context of a client class
+golismero/api/audit.py:81: Warning (W, get_audit_config): Access to a protected member _context of a client class
+golismero/api/audit.py:97: Warning (W, start_audit): Access to a protected member _context of a client class
+golismero/api/audit.py:124: Warning (W, stop_audit): Access to a protected member _context of a client class
 golismero/api/config.py:201: Warning (W): TODO: check the call stack to make sure it's called only
 golismero/api/config.py:203: Warning (W, _Config._context): Attribute '__context' defined outside __init__
 golismero/api/config.py:213: Warning (W, _Config._has_context): Statement seems to have no effect
@@ -87,6 +92,7 @@ golismero/api/net/dns.py:143: Error (E, _DNS.get_a): Undefined variable 'DnsRegi
 golismero/api/net/dns.py:182: Error (E, _DNS.get_aaaa): Undefined variable 'DnsRegisterAAAA'
 golismero/api/net/dns.py:35: Warning (W): Wildcard import data.information.dns
 golismero/api/net/dns.py:416: Warning (W, _DNS.zone_transfer): Used builtin function 'map'
+golismero/api/net/dns.py:44: Warning (W): Wildcard import dns.zone
 golismero/api/net/dns.py:44: Warning (W): Unused import BadZone from wildcard import
 golismero/api/net/dns.py:44: Warning (W): Unused import NoNS from wildcard import
 golismero/api/net/dns.py:44: Warning (W): Unused import NoSOA from wildcard import
@@ -139,30 +145,30 @@ golismero/api/net/dns.py:876: Error (E, _DNS.__dnsregister2golismeroregister): U
 golismero/api/net/dns.py:92: Warning (W, _DNS.check_tcp_dns): Catching too general exception Exception
 golismero/api/net/dns.py:930: Warning (W, _DNS._make_request): Catching too general exception Exception
 golismero/api/net/http.py:263: Warning (W, _HTTP.make_request): Catching too general exception Exception
-golismero/api/net/http.py:278: Warning (W): FIXME: the depth level is broken!!!
-golismero/api/net/http.py:317: Warning (W): FIXME the cache timestamps are broken!!!
+golismero/api/net/http.py:501: Warning (W, _HTTP.make_raw_request): Catching too general exception Exception
+golismero/api/net/http.py:506: Warning (W, _HTTP.make_raw_request): Catching too general exception Exception
 golismero/api/net/scraper.py:103: Warning (W, is_link): Catching too general exception Exception
 golismero/api/net/scraper.py:135: Warning (W): FIXME
 golismero/api/net/scraper.py:44: Warning (W): TODO:
-golismero/api/net/web_utils.py:1071: Warning (W, ParsedURL.host): Attribute '__host' defined outside __init__
-golismero/api/net/web_utils.py:1086: Warning (W, ParsedURL.port): Attribute '__port' defined outside __init__
-golismero/api/net/web_utils.py:1100: Warning (W, ParsedURL.path): Attribute '__path' defined outside __init__
-golismero/api/net/web_utils.py:1113: Warning (W, ParsedURL.fragment): Attribute '__fragment' defined outside __init__
-golismero/api/net/web_utils.py:1129: Warning (W): TODO: according to this: https://en.wikipedia.org/wiki/URL_normalization
-golismero/api/net/web_utils.py:1150: Warning (W, ParsedURL.query): Used builtin function 'map'
-golismero/api/net/web_utils.py:1156: Warning (W, ParsedURL.query): Catching too general exception Exception
-golismero/api/net/web_utils.py:1157: Warning (W): XXX DEBUG
-golismero/api/net/web_utils.py:1173: Warning (W, ParsedURL.query_params): Attribute '__query_params' defined outside __init__
-golismero/api/net/web_utils.py:1174: Warning (W, ParsedURL.query_params): Attribute '__query' defined outside __init__
-golismero/api/net/web_utils.py:1308: Warning (W): TODO: roll back changes if it fails
-golismero/api/net/web_utils.py:1337: Warning (W, ParsedURL.auth): Attribute '__username' defined outside __init__
-golismero/api/net/web_utils.py:1338: Warning (W, ParsedURL.auth): Attribute '__password' defined outside __init__
-golismero/api/net/web_utils.py:1673: Error (E, HTMLParser.title): Instance of 'ResultSet' has no 'name' member (but some types could not be inferred)
 golismero/api/net/web_utils.py:197: Warning (W): TODO: add support for FTP
 golismero/api/net/web_utils.py:225: Warning (W): TODO: parse the Content-Disposition header.
 golismero/api/net/web_utils.py:391: Error (E, check_auth): Instance of 'LookupDict' has no 'ok' member
 golismero/api/net/web_utils.py:605: Warning (W): TODO: for the time being we're using the buggy quote and unquote
-golismero/api/net/web_utils.py:875: Warning (W): TODO: maybe use **kwargs so we can support 'case_sensitive' (common mistake),
+golismero/api/net/web_utils.py:888: Warning (W): TODO: maybe use **kwargs so we can support 'case_sensitive' (common mistake),
+golismero/api/net/web_utils.py:1142: Warning (W): TODO: according to this: https://en.wikipedia.org/wiki/URL_normalization
+golismero/api/net/web_utils.py:1170: Warning (W): XXX DEBUG
+golismero/api/net/web_utils.py:1321: Warning (W): TODO: roll back changes if it fails
+golismero/api/net/web_utils.py:1163: Warning (W, ParsedURL.query): Used builtin function 'map'
+golismero/api/net/web_utils.py:1169: Warning (W, ParsedURL.query): Catching too general exception Exception
+golismero/api/net/web_utils.py:1186: Warning (W, ParsedURL.query_params): Attribute '__query_params' defined outside __init__
+golismero/api/net/web_utils.py:1187: Warning (W, ParsedURL.query_params): Attribute '__query' defined outside __init__
+golismero/api/net/web_utils.py:1084: Warning (W, ParsedURL.host): Attribute '__host' defined outside __init__
+golismero/api/net/web_utils.py:1113: Warning (W, ParsedURL.path): Attribute '__path' defined outside __init__
+golismero/api/net/web_utils.py:1099: Warning (W, ParsedURL.port): Attribute '__port' defined outside __init__
+golismero/api/net/web_utils.py:1351: Warning (W, ParsedURL.auth): Attribute '__password' defined outside __init__
+golismero/api/net/web_utils.py:1126: Warning (W, ParsedURL.fragment): Attribute '__fragment' defined outside __init__
+golismero/api/net/web_utils.py:1350: Warning (W, ParsedURL.auth): Attribute '__username' defined outside __init__
+golismero/api/net/web_utils.py:1686: Error (E, HTMLParser.title): Instance of 'ResultSet' has no 'name' member (but some types could not be inferred)
 golismero/api/parallel.py:173: Warning (W, setInterval.outer_wrap.wrap.inner_wrap): Used * or ** magic
 golismero/api/parallel.py:260: Warning (W, pmap): Used builtin function 'map'
 golismero/api/parallel.py:260: Warning (W, pmap): Used builtin function 'map'
@@ -178,11 +184,9 @@ golismero/api/plugin.py:164: Warning (W, PluginState.check): Access to a protect
 golismero/api/plugin.py:182: Warning (W, PluginState.set): Access to a protected member _context of a client class
 golismero/api/plugin.py:198: Warning (W, PluginState.remove): Access to a protected member _context of a client class
 golismero/api/plugin.py:232: Warning (W, PluginState.get_names): Access to a protected member _context of a client class
-golismero/api/plugin.py:330: Warning (W, Plugin._set_observer): Unused argument 'observer'
 golismero/api/plugin.py:354: Warning (W, Plugin.update_status): Access to a protected member _context of a client class
-golismero/api/plugin.py:505: Warning (W, UIPlugin._set_observer): Attribute '__observer_ref' defined outside __init__
-golismero/api/plugin.py:551: Warning (W, TestingPlugin): Method 'get_accepted_info' is abstract in class '_InformationPlugin' but is not overridden
-golismero/api/plugin.py:551: Warning (W, TestingPlugin): Method 'recv_info' is abstract in class '_InformationPlugin' but is not overridden
+golismero/api/plugin.py:526: Warning (W, TestingPlugin): Method 'get_accepted_info' is abstract in class '_InformationPlugin' but is not overridden
+golismero/api/plugin.py:526: Warning (W, TestingPlugin): Method 'recv_info' is abstract in class '_InformationPlugin' but is not overridden
 golismero/api/shared.py:175: Warning (W, SharedMap.get_many): Access to a protected member _context of a client class
 golismero/api/shared.py:226: Warning (W, SharedMap.check_all): Access to a protected member _context of a client class
 golismero/api/shared.py:248: Warning (W, SharedMap.check_any): Access to a protected member _context of a client class
@@ -235,51 +239,53 @@ golismero/common.py:797: Error (E, AuditConfig.check_params): Instance of 'Audit
 golismero/common.py:806: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'depth' member
 golismero/common.py:806: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'depth' member
 golismero/common.py:806: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'depth' member
-golismero/database/auditdb.py:727: Warning (W, AuditMemoryDB): Method '_atom' is abstract in class 'BaseDB' but is not overridden
-golismero/database/auditdb.py:727: Warning (W, AuditMemoryDB): Method 'dump' is abstract in class 'BaseDB' but is not overridden
-golismero/database/auditdb.py:727: Warning (W, AuditMemoryDB): Method '_transaction' is abstract in class 'BaseDB' but is not overridden
-golismero/database/auditdb.py:1077: Warning (W, AuditSQLiteDB.__init__): Redefining name 'sqlite3' from outer scope (line 52)
 golismero/database/auditdb.py:1075: Warning (W, AuditSQLiteDB.__init__): Using global for 'sqlite3' but no assignment is done
+golismero/database/auditdb.py:1077: Warning (W, AuditSQLiteDB.__init__): Redefining name 'sqlite3' from outer scope (line 52)
 golismero/database/auditdb.py:1140: Warning (W, AuditSQLiteDB._atom): Used * or ** magic
 golismero/database/auditdb.py:1158: Warning (W, AuditSQLiteDB._transaction): Used * or ** magic
+golismero/database/auditdb.py:1432: Warning (W): TODO: optimize by checking multiple identities in the same query,
+golismero/database/auditdb.py:1499: Warning (W): TODO: optimize by checking multiple identities in the same query,
 golismero/database/auditdb.py:2031: Warning (W, AuditSQLiteDB.close): Catching too general exception Exception
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'put_mapped_values' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_mapped_keys' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method '_atom' is abstract in class 'BaseDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method '_transaction' is abstract in class 'BaseDB' but is not overridden
 golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'add_data' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'pop_shared_values' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_pending_data' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'delete_mapped_values' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'swap_mapped_values' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_state_variable' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'add_shared_values' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'add_state_variable' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'close' is abstract in class 'BaseDB' but is not overridden
 golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'connection_url' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'has_any_mapped_key' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'delete_mapped_values' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'dump' is abstract in class 'BaseDB' but is not overridden
 golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_data' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'remove_data' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'has_state_variable' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_data_count' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_data_keys' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_data_types' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_many_data' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_mapped_keys' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_mapped_values' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_past_plugins' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_pending_data' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_state_variable' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_state_variable_names' is abstract in class 'BaseAuditDB' but is not overridden
 golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'has_all_mapped_keys' is abstract in class 'BaseAuditDB' but is not overridden
 golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'has_all_shared_values' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'has_each_mapped_key' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'remove_state_variable' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'add_state_variable' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'has_any_mapped_key' is abstract in class 'BaseAuditDB' but is not overridden
 golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'has_any_shared_value' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'pop_mapped_values' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_data_count' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_state_variable_names' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_data_types' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'has_each_shared_value' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'mark_stage_finished' is abstract in class 'BaseAuditDB' but is not overridden
 golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'has_data_key' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_many_data' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_past_plugins' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'add_shared_values' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_mapped_values' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'has_each_mapped_key' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'has_each_shared_value' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'has_state_variable' is abstract in class 'BaseAuditDB' but is not overridden
 golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'mark_plugin_finished' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'get_data_keys' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'mark_stage_finished' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'pop_mapped_values' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'pop_shared_values' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'put_mapped_values' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'remove_data' is abstract in class 'BaseAuditDB' but is not overridden
 golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'remove_shared_values' is abstract in class 'BaseAuditDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method '_atom' is abstract in class 'BaseDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'dump' is abstract in class 'BaseDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'close' is abstract in class 'BaseDB' but is not overridden
-golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method '_transaction' is abstract in class 'BaseDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'remove_state_variable' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2036: Warning (W, AuditDB): Method 'swap_mapped_values' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:727: Warning (W, AuditMemoryDB): Method '_atom' is abstract in class 'BaseDB' but is not overridden
+golismero/database/auditdb.py:727: Warning (W, AuditMemoryDB): Method '_transaction' is abstract in class 'BaseDB' but is not overridden
+golismero/database/auditdb.py:727: Warning (W, AuditMemoryDB): Method 'dump' is abstract in class 'BaseDB' but is not overridden
 golismero/database/cachedb.py:163: Warning (W, VolatileNetworkCache): Method '_atom' is abstract in class 'BaseDB' but is not overridden
 golismero/database/cachedb.py:163: Warning (W, VolatileNetworkCache): Method '_transaction' is abstract in class 'BaseDB' but is not overridden
 golismero/database/cachedb.py:185: Warning (W): FIXME: timestamp and lifespan not yet supported in volatile mode!
@@ -334,21 +340,19 @@ golismero/main/scope.py:147: Warning (W, AuditScope.__init__): Catching too gene
 golismero/main/scope.py:244: Warning (W, AuditScope.__contains__): Catching too general exception Exception
 golismero/main/scope.py:270: Warning (W, AuditScope.__contains__): Catching too general exception Exception
 golismero/main/scope.py:92: Warning (W): FIXME: this should be smarter and use port scanning!
-golismero/main/testing.py:141: Warning (W, PluginTester.__init_environment): Access to a protected member _Audit__audit_scope of a client class
-golismero/main/testing.py:141: Warning (W, PluginTester.__init_environment): Attribute '_Audit__audit_scope' defined outside __init__
-golismero/main/testing.py:145: Warning (W, PluginTester.__init_environment): Access to a protected member _Audit__plugin_manager of a client class
-golismero/main/testing.py:145: Warning (W, PluginTester.__init_environment): Attribute '_Audit__plugin_manager' defined outside __init__
-golismero/main/testing.py:153: Warning (W, PluginTester.__init_environment): Access to a protected member _Audit__database of a client class
-golismero/main/testing.py:153: Warning (W, PluginTester.__init_environment): Attribute '_Audit__database' defined outside __init__
-golismero/main/testing.py:156: Error (E, PluginTester.__init_environment): Instance of 'AuditManager' has no '_AuditManager__audits' member
-golismero/main/testing.py:156: Warning (W, PluginTester.__init_environment): Access to a protected member _AuditManager__audits of a client class
-golismero/main/testing.py:159: Warning (W, PluginTester.__init_environment): Access to a protected member _context of a client class
-golismero/main/testing.py:161: Error (E, PluginTester.__init_environment): Instance of 'Orchestrator' has no '_Orchestrator__queue' member
-golismero/main/testing.py:161: Warning (W, PluginTester.__init_environment): Access to a protected member _Orchestrator__queue of a client class
-golismero/main/testing.py:168: Warning (W, PluginTester.__init_environment): Access to a protected member _initialize of a client class
-golismero/main/testing.py:169: Warning (W, PluginTester.__init_environment): Access to a protected member _clear_local_cache of a client class
-golismero/main/testing.py:170: Warning (W, PluginTester.__init_environment): Access to a protected member _update_plugin_path of a client class
-golismero/main/testing.py:171: Warning (W, PluginTester.__init_environment): Access to a protected member _enabled of a client class
+golismero/main/testing.py:98: Warning (W, PluginTester.__exit__): Redefining built-in 'type'
+golismero/main/testing.py:141: Warning (W, PluginTester.init_environment): Attribute '_Audit__audit_scope' defined outside __init__
+golismero/main/testing.py:145: Warning (W, PluginTester.init_environment): Attribute '_Audit__plugin_manager' defined outside __init__
+golismero/main/testing.py:153: Warning (W, PluginTester.init_environment): Attribute '_Audit__database' defined outside __init__
+golismero/main/testing.py:156: Warning (W, PluginTester.init_environment): Access to a protected member _AuditManager__audits of a client class
+golismero/main/testing.py:156: Error (E, PluginTester.init_environment): Instance of 'AuditManager' has no '_AuditManager__audits' member
+golismero/main/testing.py:159: Warning (W, PluginTester.init_environment): Access to a protected member _context of a client class
+golismero/main/testing.py:161: Warning (W, PluginTester.init_environment): Access to a protected member _Orchestrator__queue of a client class
+golismero/main/testing.py:161: Error (E, PluginTester.init_environment): Instance of 'Orchestrator' has no '_Orchestrator__queue' member
+golismero/main/testing.py:168: Warning (W, PluginTester.init_environment): Access to a protected member _initialize of a client class
+golismero/main/testing.py:169: Warning (W, PluginTester.init_environment): Access to a protected member _clear_local_cache of a client class
+golismero/main/testing.py:170: Warning (W, PluginTester.init_environment): Access to a protected member _update_plugin_path of a client class
+golismero/main/testing.py:171: Warning (W, PluginTester.init_environment): Access to a protected member _enabled of a client class
 golismero/main/testing.py:203: Warning (W, PluginTester.run_plugin): Access to a protected member _PluginContext__plugin_info of a client class
 golismero/main/testing.py:203: Warning (W, PluginTester.run_plugin): Access to a protected member _context of a client class
 golismero/main/testing.py:208: Warning (W, PluginTester.run_plugin): Access to a protected member _initialize of a client class
@@ -360,22 +364,19 @@ golismero/main/testing.py:251: Warning (W, PluginTester.run_plugin): Attribute '
 golismero/main/testing.py:260: Warning (W, PluginTester.cleanup): Access to a protected member _update_plugin_path of a client class
 golismero/main/testing.py:261: Warning (W, PluginTester.cleanup): Access to a protected member _clear_local_cache of a client class
 golismero/main/testing.py:263: Warning (W, PluginTester.cleanup): Access to a protected member _finalize of a client class
-golismero/managers/auditmanager.py:115: Warning (W, AuditManager.new_audit): Catching too general exception Exception
-golismero/managers/auditmanager.py:217: Warning (W): TODO: pause and resume audits, start new audits
-golismero/managers/auditmanager.py:231: Warning (W, AuditManager.close): No exception type(s) specified
-golismero/managers/auditmanager.py:404: Warning (W, Audit.run): Access to a protected member _context of a client class
-golismero/managers/auditmanager.py:404: Warning (W, Audit.run): Access to a protected member _context of a client class
-golismero/managers/auditmanager.py:409: Warning (W, Audit.run): Access to a protected member _context of a client class
-golismero/managers/auditmanager.py:448: Error (E, Audit.run): Instance of 'AuditDB' has no 'filename' member
-golismero/managers/auditmanager.py:460: Warning (W): FIXME performance
-golismero/managers/auditmanager.py:461: Warning (W): FIXME what about links?
-golismero/managers/auditmanager.py:479: Warning (W, Audit.run): Access to a protected member _context of a client class
-golismero/managers/auditmanager.py:594: Warning (W): FIXME possible performance problem here!
-golismero/managers/auditmanager.py:638: Warning (W, Audit.dispatch_msg): Access to a protected member _context of a client class
-golismero/managers/auditmanager.py:638: Warning (W, Audit.dispatch_msg): Access to a protected member _context of a client class
-golismero/managers/auditmanager.py:654: Warning (W, Audit.dispatch_msg): Access to a protected member _context of a client class
-golismero/managers/auditmanager.py:750: Warning (W, Audit.__dispatch_msg): Access to a protected member _update_data of a client class
-golismero/managers/auditmanager.py:818: Warning (W, Audit.close): Attribute '__audit_scope' defined outside __init__
+golismero/managers/auditmanager.py:59: Warning (W, rpc_audit_get_count): Unused argument 'audit_name'
+golismero/managers/auditmanager.py:63: Warning (W, rpc_audit_get_names): Unused argument 'audit_name'
+golismero/managers/auditmanager.py:133: Warning (W, AuditManager.new_audit): Catching too general exception Exception
+golismero/managers/auditmanager.py:260: Warning (W, AuditManager.close): No exception type(s) specified
+golismero/managers/auditmanager.py:433: Warning (W, Audit.run): Access to a protected member _context of a client class
+golismero/managers/auditmanager.py:438: Warning (W, Audit.run): Access to a protected member _context of a client class
+golismero/managers/auditmanager.py:447: Warning (W, Audit.run): Access to a protected member _context of a client class
+golismero/managers/auditmanager.py:476: Error (E, Audit.run): Instance of 'AuditDB' has no 'filename' member
+golismero/managers/auditmanager.py:511: Warning (W, Audit.run): Access to a protected member _context of a client class
+golismero/managers/auditmanager.py:670: Warning (W, Audit.dispatch_msg): Access to a protected member _context of a client class
+golismero/managers/auditmanager.py:675: Warning (W, Audit.dispatch_msg): Access to a protected member _context of a client class
+golismero/managers/auditmanager.py:686: Warning (W, Audit.dispatch_msg): Access to a protected member _context of a client class
+golismero/managers/auditmanager.py:782: Warning (W, Audit.__dispatch_msg): Access to a protected member _update_data of a client class
 golismero/managers/importmanager.py:134: Warning (W, ImportManager.import_results): Access to a protected member _context of a client class
 golismero/managers/importmanager.py:134: Warning (W, ImportManager.import_results): Access to a protected member _context of a client class
 golismero/managers/importmanager.py:134: Warning (W, ImportManager.import_results): Access to a protected member _context of a client class
@@ -390,13 +391,13 @@ golismero/managers/pluginmanager.py:231: Warning (W, PluginInfo.__init__): Catch
 golismero/managers/pluginmanager.py:235: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:243: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:243: Warning (W, PluginInfo.__init__): Catching too general exception Exception
+golismero/managers/pluginmanager.py:260: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:306: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:310: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:314: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:318: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:326: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:326: Warning (W, PluginInfo.__init__): Catching too general exception Exception
-golismero/managers/pluginmanager.py:260: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:342: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:362: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_name of a client class
 golismero/managers/pluginmanager.py:362: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_name' defined outside __init__
@@ -473,15 +474,14 @@ golismero/managers/processmanager.py:944: Warning (W, _suicide): Unused argument
 golismero/managers/processmanager.py:98: Warning (W, do_nothing): Unused argument 'argd'
 golismero/managers/processmanager.py:98: Warning (W, do_nothing): Unused argument 'argv'
 golismero/managers/reportmanager.py:132: Warning (W, ReportManager.generate_reports): Catching too general exception Exception
-golismero/managers/rpcmanager.py:65: Warning (W, _add_implementor): Catching too general exception Exception
-golismero/managers/rpcmanager.py:69: Warning (W): TODO: use introspection to validate the function signature
 golismero/managers/rpcmanager.py:109: Warning (W, rpc_bulk): Used builtin function 'map'
 golismero/managers/rpcmanager.py:199: Warning (W, RPCManager.execute_rpc): Catching too general exception Exception
-golismero/managers/rpcmanager.py:232: Warning (W, RPCManager.execute_rpc_implementor): Catching too general exception Exception
 golismero/managers/rpcmanager.py:229: Warning (W, RPCManager.execute_rpc_implementor): Used * or ** magic
+golismero/managers/rpcmanager.py:232: Warning (W, RPCManager.execute_rpc_implementor): Catching too general exception Exception
 golismero/managers/rpcmanager.py:263: Warning (W, RPCManager.prepare_exception): Catching too general exception Exception
-golismero/managers/rpcmanager.py:267: Warning (W, RPCManager.prepare_exception): Catching too general exception Exception
-golismero/managers/uimanager.py:70: Warning (W, UIManager.__init__): Access to a protected member _set_observer of a client class
+golismero/managers/rpcmanager.py:263: Warning (W, RPCManager.prepare_exception): Catching too general exception Exception
+golismero/managers/rpcmanager.py:65: Warning (W, _add_implementor): Catching too general exception Exception
+golismero/managers/rpcmanager.py:69: Warning (W): TODO: use introspection to validate the function signature
 golismero/messaging/message.py:39: Warning (W): Unused import MSG_CODES from wildcard import
 golismero/messaging/message.py:39: Warning (W): Wildcard import codes
 golismero/messaging/notifier.py:241: Warning (W): XXX DEBUG
