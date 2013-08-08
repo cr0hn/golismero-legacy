@@ -694,16 +694,15 @@ class AuditConfig (Configuration):
 
         # Cookie
         "cookie": Configuration.string,
-
-        # Start time of the config
-        "start_time" : Configuration.integer,
-
-        # Start time of the config
-        "stop_time" : Configuration.integer
     }
 
 
     #----------------------------------------------------------------------
+
+    # Start and stop time for the audit.
+    # These values are filled on runtime.
+    start_time = None
+    stop_time  = None
 
     # Configuration files.
     config_file  = get_default_config_file()

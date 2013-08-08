@@ -289,10 +289,9 @@ class Audit (object):
         self.__orchestrator = orchestrator
 
         # Set the audit name.
-        self.__name = self.__audit_config.audit_name
+        self.__name = audit_config.audit_name
         if not self.__name:
-            self.__name = self.generate_audit_name()
-            self.__audit_config.audit_name = self.__name
+            audit_config.audit_name = self.__name = self.generate_audit_name()
 
         # Set the current stage to the first stage.
         self.__current_stage = orchestrator.pluginManager.min_stage
@@ -429,6 +428,9 @@ class Audit (object):
 
         # Reset the number of unacknowledged messages.
         self.__expecting_ack = 0
+
+        # Set the audit start time.
+        self.config.start_time = time()
 
         # Keep the original execution context.
         old_context = Config._context
@@ -747,13 +749,13 @@ class Audit (object):
                         self.__followed_links += 1
 
                         # Maximum number of links reached?
-                        if self.__audit_config.max_links > 0 and self.__followed_links >= self.__audit_config.max_links:
+                        if self.config.max_links > 0 and self.__followed_links >= self.config.max_links:
 
                             # Show a warning, but only once.
                             if self.__show_max_links_warning:
                                 self.__show_max_links_warning = False
                                 w = "Maximum number of links (%d) reached! Audit: %s"
-                                w = w % (self.__audit_config.max_links, self.name)
+                                w = w % (self.config.max_links, self.name)
                                 with catch_warnings(record=True) as wlist:
                                     warn(w, RuntimeWarning)
                                 self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
@@ -834,11 +836,13 @@ class Audit (object):
         # An ACK is expected after launching the report plugins.
         self.__expecting_ack += 1
         try:
-            # Before generate the report, set the audito stop time
-            self.__audit_config.stop_time = int(time())
 
             # Mark the report generation as started for this audit.
             self.__is_report_started = True
+
+            # Before generating the reports, set the audit stop time.
+            # This is needed so the report can print the start and stop times.
+            self.config.stop_time = time()
 
             # Tell the UI we've started generating the reports.
             self.send_msg(

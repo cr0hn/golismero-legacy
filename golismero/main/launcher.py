@@ -72,12 +72,9 @@ def run(options, *audits):
 
     # Launch GoLismero.
     try:
-        # Set start time
-        start_time = int(time())
-        map(lambda x: setattr(x, "start_time", start_time), audits)
 
         # Show the start message.
-        Console.display("GoLismero started at %s" % datetime.datetime.fromtimestamp(start_time))
+        Console.display("GoLismero started at %s" % datetime.datetime.now())
 
         # Detect auth in proxy, if specified.
         for auditParams in audits:
