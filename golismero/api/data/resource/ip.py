@@ -78,7 +78,7 @@ class IP(Resource):
 
     #----------------------------------------------------------------------
     def __repr__(self):
-        return "<IP address=%r>" % self.address
+        return "<IPv%s address=%r>" % (self.version, self.address)
 
 
     #----------------------------------------------------------------------
