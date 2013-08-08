@@ -163,13 +163,14 @@ class ReportManager (object):
             return 0
 
         # Get the filename for the screen report plugin.
-        for output_file, plugin_name in self.__reporters.iteritems():
-            if plugin_name == "report/screen":
-                break
-
         # Skip if the filename is real, instead of the dummy
         # filename used to indicate we want console output.
-        if output_file and output_file != "-":
+        found = False
+        for output_file, plugin_name in self.__reporters.iteritems():
+            if plugin_name == "report/screen" and (not output_file or output_file == "-"):
+                found = True
+                break
+        if not found:
             return 0
 
         # Run the screen report plugin.
