@@ -41,6 +41,7 @@ from golismero.api.text.matching_analyzer import get_diff_ratio
 # Resources
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.resource.domain import Domain
+from golismero.api.data.resource.url import BaseUrl
 
 # Informations
 from golismero.api.data.information import Information
@@ -78,7 +79,7 @@ class OSFingerprinting(TestingPlugin):
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Domain, IP]
+        return [IP, BaseUrl]
 
 
     #----------------------------------------------------------------------
@@ -115,8 +116,8 @@ class OSFingerprinting(TestingPlugin):
         if isinstance(info, IP):
             m_host = info.address
             FUNCTIONS = ['ttl']
-        else: # Domain
-            m_host = "http://%s" % info.hostname
+        elif isinstance(info, BaseUrl): # BaseUrl
+            m_host = "%s://%s:%s" % (info.parsed_url.scheme, info.parsed_url.host, info.parsed_url.port)
             FUNCTIONS = ['ttl']
 
             # Try to detect if remote system is a Windows
