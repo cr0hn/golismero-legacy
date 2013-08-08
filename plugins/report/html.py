@@ -248,7 +248,7 @@ class HTMLReport(ReportPlugin):
             'URL'           : 'url',
             'BASE_URL'      : 'url',
             'FOLDER_URL'    : 'url',
-            'DOMAIN'        : 'name',
+            'DOMAIN'        : 'hostname',
             'IP'            : 'address',
             'EMAIL'         : 'address'
         }
