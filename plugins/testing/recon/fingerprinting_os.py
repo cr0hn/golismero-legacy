@@ -116,12 +116,13 @@ class OSFingerprinting(TestingPlugin):
         if isinstance(info, IP):
             m_host = info.address
             FUNCTIONS = ['ttl']
-        elif isinstance(info, BaseUrl): # BaseUrl
-            m_host = "%s://%s:%s" % (info.parsed_url.scheme, info.parsed_url.host, info.parsed_url.port)
-            FUNCTIONS = ['ttl']
+        else: # BaseUrl
+            m_host         = info.hostname
+            FUNCTIONS      = ['ttl']
 
             # Try to detect if remote system is a Windows
-            is_windows = self.is_URL_in_windows(m_host)
+            m_windows_host = "%s://%s:%s" % (info.parsed_url.scheme, info.parsed_url.host, info.parsed_url.port)
+            is_windows     = self.is_URL_in_windows(m_windows_host)
 
         # Logging
         Logger.log_more_verbose("Starting OS fingerprinting plugin for site: %s" % m_host)
