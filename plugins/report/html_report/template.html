@@ -221,8 +221,11 @@
       .informational {
         background-color: #a8d9ff;
       }
+      .critical {
+        background-color: #8500a9;
+      }
       .no_vuln {
-        background-color: #dfffe0;
+        background-color: #001682;
       }
 
     </style>
@@ -291,10 +294,12 @@
          * Chart info
          */
         var data = [
+          ['Critical', {{summary_vulns.critical}}],
           ['Hight', {{summary_vulns.high}}],
           ['Middle', {{summary_vulns.middle}}],
           ['Low', {{summary_vulns.low}}],
-          ['Informational', {{summary_vulns.informational}}]
+          ['Informational', {{summary_vulns.informational}}],
+          ['No vulns', {{summary_vulns.no_vulns}}]
         ];
         var plot1 = jQuery.jqplot('chartSummary', [data],
           {
@@ -309,7 +314,7 @@
               }
             },
             legend: { show:true, location: 'e' },
-            seriesColors : ['#b00700', '#d7ac00', '#019127', '#a8d9ff'],
+            seriesColors : ['#8500a9','#b00700', '#d7ac00', '#019127', '#a8d9ff', '#bfffbc'],
             grid: {drawBorder:false, shadow: false}
           }
         );
@@ -349,6 +354,8 @@
               <div class="row">
                 <div class="col-8">
                   <ul class="list-group">
+                    <li class="list-group-item"><b>Start date</b><span class="pull-right">{{start_date}}</span>
+                    </li>
                     <li class="list-group-item"><b>Execution time</b><span class="badge">{{execution_time}} s</span>
                     </li>
                     <li class="list-group-item" style="margin-bottom: 10px;">Total vulnerabilities found <span class="badge badge-important">{{summary_vulns.total}}</span>
@@ -422,12 +429,12 @@
                                           <!-- Start column content -->
                                           <td>
                                             <!-- Start accordion -->
-                                            <div class="accordion" id="a_{{l_res.resource_type}}_{{l_row.index}}_1">
+                                            <div class="accordion" id="a_{{l_res.resource_type|slugify}}_{{l_row.index}}_1">
                                               <div class="accordion-group">
                                                 <div class="accordion-heading">
                                                   <div class="row no_sep">
                                                     <div class="col-11 vcenter">
-                                                      <a class="accordion-toggle" data-toggle="collapse" data-parent="#a_{{l_res.resource_type}}_{{l_row.index}}_1" href="#a_i_{{l_res.resource_type}}_{{l_row.index}}_1"><span>[+]</span>&nbsp;{{l_row.resource.main_info}}</a>
+                                                      <a class="accordion-toggle" data-toggle="collapse" data-parent="#a_{{l_res.resource_type|slugify}}_{{l_row.index}}_1" href="#a_i_{{l_res.resource_type|slugify}}_{{l_row.index}}_1"><span>[+]</span>&nbsp;{{l_row.resource.main_info}}</a>
                                                     </div>
                                                     <div class="col-1">
                                                       <a href="{{l_row.resource.main_info}}" class="btn btn-success btn-small ">Go &rarr;</a>
@@ -435,7 +442,7 @@
                                                   </div>
                                                 </div>
                                                 <!-- Accordion target -->
-                                                <div id="a_i_{{l_res.resource_type}}_{{l_row.index}}_1" class="accordion-body collapse">
+                                                <div id="a_i_{{l_res.resource_type|slugify}}_{{l_row.index}}_1" class="accordion-body collapse">
                                                   <div class="accordion-inner">
 
                                                     <!-- Info of resource -->
