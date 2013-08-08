@@ -66,8 +66,7 @@ class UIManager (object):
             raise ValueError("No plugin found for UI mode: %r" % mode)
         p = orchestrator.pluginManager.load_plugin_by_name(name)
 
-        # Configure plugin to be its own the target of messages and add to notifier.
-        p._set_observer(self)
+        # Add the plugin to the notifier.
         self.__notifier.add_plugin(name, p)
 
 

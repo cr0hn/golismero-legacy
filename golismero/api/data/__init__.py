@@ -1238,8 +1238,8 @@ class _LocalDataCache(object):
             # Remove clusters of data out of scope.
             # Data out of scope but referenced is kept.
             scope_map = [
-                (data.is_in_scope(), data.identity, data.links)
-                for data in graph.itervalues()
+                (d.is_in_scope(), d.identity, d.links)
+                for d in graph.itervalues()
             ]
             out_scope_map = {
                 identity: links

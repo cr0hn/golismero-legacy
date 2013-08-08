@@ -4,7 +4,9 @@ cd ..\golismero
 dir /b /s *.py > ..\_tmp.txt
 cd ..\plugins
 dir /b /s *.py >> ..\_tmp.txt
-cd ..
+cd ..\tests\plugin_tests
+dir /b /s *.py >> ..\_tmp.txt
+cd ..\..
 del /s *.c > nul 2> nul
 del /s *.pyc > nul 2> nul
 del /s *.pyo > nul 2> nul

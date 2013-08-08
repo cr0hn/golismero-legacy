@@ -46,7 +46,7 @@ except NameError:
 
 
 # Imports
-from golismero.api.net.web_utils import ParsedURL
+from golismero.api.net.web_utils import ParsedURL, parse_url
 from warnings import catch_warnings
 
 
@@ -90,8 +90,8 @@ basic = (
 
 )
 
-def test_basic_urls(self):
-    for url in canonical:
+def test_basic_urls():
+    for url in basic:
         ##pprint(parse_url(url).url)
         assert parse_url(url).url == url
 
@@ -290,14 +290,20 @@ equivalent = (
     (
         'http://example.com',
         'http://example.com:80',
+        'http://example.com/', # sanitized
+        'http://example.com:80/',
     ),
     (
         'https://example.com',
         'https://example.com:443',
+        'https://example.com/', # sanitized
+        'https://example.com:443/',
     ),
     (
         'ftp://example.com',
         'ftp://example.com:21',
+        'ftp://example.com/', # sanitized
+        'ftp://example.com:21/',
     ),
 
     # Sorting of query parameters, handling of missing values.
@@ -306,12 +312,14 @@ equivalent = (
         'http://example.com/path?query=string&param=value&orphan=',
         'http://example.com/path?orphan&query=string&param=value',
         'http://example.com/path?orphan=&query=string&param=value',
+        'http://example.com/path?orphan=&param=value&query=string', # sanitized
     ),
     (
         'http://example.com/path?query=string&param=value&orphan#fragment_id',
         'http://example.com/path?query=string&param=value&orphan=#fragment_id',
         'http://example.com/path?orphan&query=string&param=value#fragment_id',
         'http://example.com/path?orphan=&query=string&param=value#fragment_id',
+        'http://example.com/path?orphan=&param=value&query=string#fragment_id', # sanitized
     ),
 
     # Sanitization of pathological cases.
@@ -342,14 +350,17 @@ equivalent = (
 
 )
 
-def test_equivalent_urls(self):
+def test_equivalent_urls():
     for url_list in equivalent:
         normalized = set()
         for url in url_list:
             normalized.add(parse_url(url).url)
         ##pprint(normalized)
         assert len(normalized) == 1
-        assert normalized.pop() in equivalent
+        normal = normalized.pop()
+        ##print
+        ##print normal, url_list
+        assert normal in url_list
 
 
 # Test cases for relative URLs.
@@ -361,12 +372,12 @@ relative = (
     ('#fragment', 'http://example.com/path/#fragment'),
 )
 
-def test_relative_urls(self):
-    for relative, absolute in relative:
-        ##print relative
+def test_relative_urls():
+    for rel, ab in relative:
+        ##print rel
         ##print parse_url(relative, 'http://example.com/path/').url
-        ##print absolute
-        assert parse_url(relative, 'http://example.com/path/').url == absolute
+        ##print ab
+        assert parse_url(rel, 'http://example.com/path/').url == ab
 
 
 # Test cases for URL parsing errors.
@@ -383,10 +394,7 @@ errors = (
     "http:example.com",
 )
 
-def __parse_url(self, url):
-    return
-
-def test_url_errors(self):
+def test_url_errors():
     for url in errors:
         try:
             parse_url(url).url

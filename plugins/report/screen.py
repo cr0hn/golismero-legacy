@@ -196,10 +196,8 @@ class ScreenReport(ReportPlugin):
         self.common_display_general_summary()
 
         # ----------------------------------------
-        # Get the resource list
+        # Display the resources
         # ----------------------------------------
-        m_all_resources = set([x.resource_type for x in self.common_get_resources(data_type=Data.TYPE_RESOURCE)])
-
         self.concrete_display_resources()
 
 

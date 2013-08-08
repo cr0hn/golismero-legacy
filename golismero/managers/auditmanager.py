@@ -35,6 +35,7 @@ __all__ = ["AuditManager", "Audit"]
 from .importmanager import ImportManager
 from .processmanager import PluginContext
 from .reportmanager import ReportManager
+from .rpcmanager import implementor
 from ..api.data import Data
 from ..api.data.resource import Resource
 from ..api.config import Config
@@ -50,6 +51,22 @@ from ..messaging.notifier import AuditNotifier
 from os import getpid
 from warnings import catch_warnings, warn
 from time import time
+
+
+#----------------------------------------------------------------------
+# RPC implementors for the audit manager API.
+
+@implementor(MessageCode.MSG_RPC_AUDIT_COUNT)
+def rpc_audit_get_count(orchestrator, audit_name):
+    return orchestrator.auditManager.get_audit_count()
+
+@implementor(MessageCode.MSG_RPC_AUDIT_NAMES)
+def rpc_audit_get_names(orchestrator, audit_name):
+    return orchestrator.auditManager.get_audit_names()
+
+@implementor(MessageCode.MSG_RPC_AUDIT_CONFIG)
+def rpc_audit_get_config(orchestrator, audit_name):
+    return orchestrator.auditManager.get_audit(audit_name).config
 
 
 #--------------------------------------------------------------------------
@@ -120,14 +137,25 @@ class AuditManager (object):
 
 
     #----------------------------------------------------------------------
-    def has_audits(self):
+    def get_audit_count(self):
         """
-        Determine if there are audits currently runnning.
+        Get the number of currently running audits.
 
-        :returns: True if there are audits in progress, False otherwise.
-        :rtype: bool
+        :returns: Number of currently running audits.
+        :rtype: int
         """
-        return bool(self.__audits)
+        return len(self.__audits)
+
+
+    #----------------------------------------------------------------------
+    def get_audit_names(self):
+        """
+        Get the names of the currently running audits.
+
+        :returns: Audit names.
+        :rtype: set(str)
+        """
+        return {audit.name for audit in self.__audits}
 
 
     #----------------------------------------------------------------------
