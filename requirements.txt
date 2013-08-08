@@ -2,13 +2,12 @@ BeautifulSoup
 colorizer
 decorator
 django
-diff_match_patch
 dnspython
 netaddr
 ntlk
+python-daemon
 python_cjson
 requests
 requests_ntlm
 tldextract
 yaml
-decorator
