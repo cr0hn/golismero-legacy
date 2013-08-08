@@ -296,7 +296,7 @@ class ScreenReport(ReportPlugin):
                 l_b.write(" [%s] %s" % (self.__colorize('{:^5}'.format(i), "Blue"), l_resource_info))
 
                 # Displayer table
-                l_table = GolismeroTable(init_spaces=10)
+                l_table = GolismeroTable(init_spaces=9)
 
                 m_valid_params = set()
 
