@@ -102,9 +102,13 @@ class HTMLReport(ReportPlugin):
 
         # Start date
         c['start_date']        = datetime.datetime.fromtimestamp(Config.audit_config.start_time)
+        c['end_date']          = datetime.datetime.fromtimestamp(Config.audit_config.stop_time)
 
         # Execution time
-        c['execution_time']    = Config.audit_config.stop_time - Config.audit_config.start_time
+        c['execution_time']    = '{:.3f}'.format(Config.audit_config.stop_time - Config.audit_config.start_time)
+
+        # Targets
+        c['targets']           = Config.audit_config.targets
 
         # Fill the vulnerabilities summary
         self.fill_summary_vulns(c)
