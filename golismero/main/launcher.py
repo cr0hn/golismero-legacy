@@ -38,6 +38,7 @@ from ..api.net.web_utils import detect_auth_method, check_auth
 from ..common import OrchestratorConfig, AuditConfig, get_default_config_file
 
 import datetime
+from time import time
 import traceback
 
 
@@ -71,9 +72,12 @@ def run(options, *audits):
 
     # Launch GoLismero.
     try:
+        # Set start time
+        start_time = int(time())
+        map(lambda x: setattr(x, "start_time", start_time), audits)
 
         # Show the start message.
-        Console.display("GoLismero started at %s" % datetime.datetime.now())
+        Console.display("GoLismero started at %s" % datetime.datetime.fromtimestamp(start_time))
 
         # Detect auth in proxy, if specified.
         for auditParams in audits:
