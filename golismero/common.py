@@ -489,14 +489,14 @@ class Configuration (object):
         if json_decode is None:
             try:
                 # The fastest JSON parser available for Python.
-                import cjson.decode as json_decode
+                from cjson import decode as json_decode
             except ImportError:
                 try:
                     # Faster than the built-in module, usually found.
-                    import simplejson.loads as json_decode
+                    from simplejson import loads as json_decode
                 except ImportError:
                     # Built-in module since Python 2.6, very very slow!
-                    import json.loads as json_decode
+                    from json import loads as json_decode
 
         # Converts the JSON data into a dictionary.
         args = json_decode(json_raw_data)
