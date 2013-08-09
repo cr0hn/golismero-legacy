@@ -1,0 +1,14 @@
+[Core]
+Name = Web interface
+
+[Documentation]
+Description = GoLismero web user interface
+Author = GoLismero Project
+Version = 0.1
+Website = https://github.com/cr0hn/golismero/
+Copyright = Copyright (C) 2011-2013 GoLismero Project
+License = GNU Public License
+
+[Configuration]
+bind_address = 127.0.0.1
+bind_port = 8080
