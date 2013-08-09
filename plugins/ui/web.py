@@ -173,7 +173,7 @@ class WebUIPlugin(UIPlugin):
         bind_port    = int( Config.plugin_config.get("bind_port", "8080") )
 
         # Create the consumer thread object.
-        self.thread_stop = False
+        self.thread_continue = True
         self.thread = threading.Thread(target = self.consumer_thread)
         self.thread.daemon = True
 
@@ -197,7 +197,7 @@ class WebUIPlugin(UIPlugin):
         """
 
         # Tell the consumer thread to stop.
-        self.thread_stop = False
+        self.thread_continue = False
 
         # Shut down the communication pipe.
         # This should wake up the consumer thread.
@@ -239,10 +239,70 @@ class WebUIPlugin(UIPlugin):
         the Django application though a pipe, and sends the appropriate
         messages to the Orchestrator.
         """
-        #
-        # TODO
-        #
-        pass
+
+        try:
+
+            # Loop until they tell us to quit.
+            while self.thread_continue:
+
+                # Read the next packet from the pipe.
+                try:
+                    packet = self.parent_conn.recv()
+                except Exception:
+                    continue
+
+                # Success responses start with "ok",
+                # failure responses start with "fail".
+                response = ("ok",)
+
+                try:
+
+                    # The first field is always the command.
+                    # The rest are the arguments.
+                    command   = packet[0]
+                    arguments = packet[1:]
+
+                    # Parse the command to get the method name.
+                    # The command is the path to the webservice.
+                    while command.startswith("/"):
+                        command = command[1:]
+                    while command.endswith("/"):
+                        command = command[:-1]
+                    while "//" in command:
+                        command = command.replace("//", "/")
+                    command = "do_" + command.replace("/", "_")
+
+                    # Get the method that implements the command.
+                    # Fail if it doesn't exist.
+                    try:
+                        method = getattr(self, command)
+                    except AttributeError:
+                        raise NotImplementedError()
+
+                    # Run the command and get the response.
+                    retval = method( *arguments )
+                    if retval:
+                        response = response + tuple(retval)
+
+                # On error send an failure response.
+                except Exception, e:
+                    self.child_conn.send( ("fail", str(e)) )
+                    continue
+
+                # On success send the response.
+                self.child_conn.send(response)
+
+        # This catch prevents exceptions from being shown in stderr.
+        except:
+            raise # XXX DEBUG
+            pass
+
+
+    #--------------------------------------------------------------------------
+    #
+    # Notification methods
+    #
+    #--------------------------------------------------------------------------
 
 
     #--------------------------------------------------------------------------
@@ -353,3 +413,65 @@ class WebUIPlugin(UIPlugin):
         """
         packet = ("stage", audit_name, stage)
         self.child_conn.send(packet)
+
+
+    #--------------------------------------------------------------------------
+    #
+    # Command methods
+    #
+    #--------------------------------------------------------------------------
+
+
+    #--------------------------------------------------------------------------
+    def do_scan_create(self):
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def do_scan_delete(self):
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def do_scan_cancel(self):
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def do_scan_list(self):
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def do_scan_state(self):
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def do_scan_results(self):
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def do_scan_details(self):
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def do_plugin_list(self):
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def do_plugin_details(self):
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def do_admin_service_stop(self):
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def do_admin_config_details(self):
+        pass
