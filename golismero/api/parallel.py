@@ -586,7 +586,8 @@ class WorkerThread(Thread):
         elif res > 1:
             # If it returns a number greater than one, you're in trouble,
             # and you should call it again with exc=NULL to revert the effect.
-            ctypes.pythonapi.PyThreadState_SetAsyncExc(self.ident, None)
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(
+                ctypes.c_long(self.ident), None)
             raise SystemError("PyThreadState_SetAsyncExc() failed")
 
 
