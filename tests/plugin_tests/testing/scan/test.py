@@ -41,16 +41,6 @@ class TestPlugin(TestingPlugin):
 
 
     #----------------------------------------------------------------------
-    def display_help(self):
-        return "Test plugin."
-
-
-    #----------------------------------------------------------------------
-    def check_input_params(self, inputParams):
-        pass
-
-
-    #----------------------------------------------------------------------
     def recv_info(self, info):
         if not isinstance(info, FolderUrl):
             raise TypeError("Expected FolderUrl, got %s instead" % type(info))

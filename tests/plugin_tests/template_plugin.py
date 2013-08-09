@@ -84,22 +84,6 @@ class TemplatePlugin(TestingPlugin):
 
 
     #----------------------------------------------------------------------
-    def check_input_params(self, inputParams):
-        #
-        # Here you can optionally check the configuration, and raise an
-        # exception if you find an error that won't let this plugin work.
-        #
-        # Example:
-        #
-        # if not Config.plugin_config.has_key("My_Important_Setting"):
-        #     raise Exception("Missing configuration!")
-        # if not inputParams.cookie:
-        #     raise Exception("I want my cookie!")
-        #
-        pass
-
-
-    #----------------------------------------------------------------------
     def get_accepted_info(self):
         #
         # Here you must specify which data types
