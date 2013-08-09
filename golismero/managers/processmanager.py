@@ -486,6 +486,7 @@ class PluginContext (object):
         # calls using messages, because we'd deadlock
         # against ourselves, since the producer and
         # the consumer would be the same process.
+        # XXX FIXME check the TID as well
         if message_type == MessageType.MSG_TYPE_RPC and self.is_local():
             self._orchestrator.rpcManager.execute_rpc(
                         self.audit_name, message_code, *message_info)
@@ -512,6 +513,7 @@ class PluginContext (object):
 
         # Hack for urgent messages: if we're in the same process
         # as the Orchestrator, skip the queue and dispatch them now.
+        # XXX FIXME check the TID as well
         if (message.priority >= MessagePriority.MSG_PRIORITY_HIGH and
             self.is_local()
         ):

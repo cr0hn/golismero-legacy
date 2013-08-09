@@ -34,6 +34,8 @@ __all__ = ["Config"]
 
 from ..common import Singleton
 
+import threading
+
 
 #------------------------------------------------------------------------------
 class _Config (Singleton):
@@ -50,14 +52,17 @@ class _Config (Singleton):
         'my_plugin_name'
     """
 
-    # The constructor tries to prevent the user
-    # from instancing this class directly.
     def __init__(self):
+
+        # Prevent the user from instancing this class directly.
         try:
             Config
             raise NotImplementedError("Use Config instead!")
         except NameError:
             pass
+
+        # Initialize the thread local storage.
+        self.__thread_local = threading.local()
 
 
     @property
@@ -187,7 +192,7 @@ class _Config (Singleton):
         :rtype: PluginContext
         """
         try:
-            return self.__context
+            return self.__thread_local.context
         except AttributeError:
             raise SyntaxError("Plugin execution environment not initialized")
 
@@ -200,7 +205,7 @@ class _Config (Singleton):
         """
         # TODO: check the call stack to make sure it's called only
         #       from pre-approved places.
-        self.__context = context
+        self.__thread_local.context = context
 
 
     @property
@@ -210,7 +215,7 @@ class _Config (Singleton):
         :rtype: bool
         """
         try:
-            self.__context
+            self.__thread_local.context
             return True
         except AttributeError:
             return False

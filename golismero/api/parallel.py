@@ -497,12 +497,39 @@ class WorkerThread(Thread):
         self.__sem_available   = Semaphore(0)  # Semaphore for pending tasks.
         self.__lock            = RLock()       # Lock to prevent reentrance.
         self.__busy            = False         # Busy flag.
+        self.__context         = None          # Plugin execution context.
 
         # Call the superclass constructor *after* initializing our variables.
         super(WorkerThread, self).__init__()
 
         # Set the thread as daemonic.
         self.daemon = True
+
+
+    #--------------------------------------------------------------------------
+    def start(self):
+        """
+        Thread start function.
+
+        .. warning: This method is called automatically,
+                    do not call it yourself.
+        """
+
+        # Keep the plugin execution context.
+        # We'll need it later to initialize it in the new thread.
+        self.__context = Config._context
+
+        try:
+
+            # Call the superclass method.
+            super(WorkerThread, self).start()
+
+        except:
+
+            # Cleanup on error.
+            self.__context = None
+
+            raise
 
 
     #--------------------------------------------------------------------------
@@ -517,6 +544,10 @@ class WorkerThread(Thread):
         # Check the user isn't a complete moron who doesn't read the docs.
         if self.ident != get_ident():
             raise SyntaxError("Don't call WorkerThread.run() yourself!")
+
+        # Initialize the plugin execution context.
+        Config._context = self.__context
+        self.__context  = None
 
         # Loop until signaled to stop.
         while True:
