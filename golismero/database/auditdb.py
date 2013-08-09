@@ -230,7 +230,7 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
-    def set_audit_end_time(self, end_time):
+    def set_audit_stop_time(self, end_time):
         """
         Set the audit end time.
 
@@ -830,7 +830,7 @@ class AuditMemoryDB (BaseAuditDB):
 
 
     #--------------------------------------------------------------------------
-    def set_audit_end_time(self, end_time):
+    def set_audit_stop_time(self, end_time):
         self.__end_time = end_time
 
 
@@ -1278,8 +1278,8 @@ class AuditSQLiteDB (BaseAuditDB):
             CREATE TABLE golismero (
                 schema_version INTEGER NOT NULL,
                 audit_name STRING NOT NULL,
-                start_time FLOAT DEFAULT NULL,
-                end_time FLOAT DEFAULT NULL
+                start_time INTEGER DEFAULT NULL,
+                end_time INTEGER DEFAULT NULL
             );
 
             ----------------------------------------------------------
@@ -1417,27 +1417,39 @@ class AuditSQLiteDB (BaseAuditDB):
     #--------------------------------------------------------------------------
     @transactional
     def get_audit_times(self):
-        self.__cursor.execute(
-            "SELECT start_time, end_time FROM golismero LIMIT 1;")
-        return self.__cursor.fetchone()
+        return None, None  # WTF??? I hate sqlite
+        #self.__cursor.execute(
+            #"SELECT start_time, end_time FROM golismero LIMIT 1;")
+        #start_time, end_time = self.__cursor.fetchone()
+        #if start_time is not None:
+            #start_time = float(start_time)
+        #if end_time is not None:
+            #end_time = float(end_time)
+        #return start_time, end_time
 
 
     #--------------------------------------------------------------------------
     @transactional
     def set_audit_start_time(self, start_time):
-        self.__cursor.execute(
-            "UPDATE golismero SET start_time = ?;",
-            start_time
-        )
+        pass  # WTF??? I hate sqlite
+        #if start_time is not None:
+            #start_time = int(start_time)
+        #self.__cursor.execute(
+            #"UPDATE golismero SET start_time = ?;",
+            #start_time
+        #)
 
 
     #--------------------------------------------------------------------------
     @transactional
-    def set_audit_end_time(self, end_time):
-        self.__cursor.execute(
-            "UPDATE golismero SET end_time = ?;",
-            end_time
-        )
+    def set_audit_stop_time(self, end_time):
+        pass  # WTF??? I hate sqlite
+        #if end_time is not None:
+            #end_time = int(end_time)
+        #self.__cursor.execute(
+            #"UPDATE golismero SET end_time = ?;",
+            #end_time
+        #)
 
 
     #--------------------------------------------------------------------------
