@@ -34,7 +34,7 @@ __all__ = ["PluginTester"]
 
 from .launcher import _sanitize_config
 from .orchestrator import Orchestrator
-from .scope import AuditScope
+from .scope import AuditScope, DummyScope
 from ..api.data import LocalDataCache
 from ..api.config import Config
 from ..api.file import FileManager
@@ -137,7 +137,10 @@ class PluginTester(object):
         audit = Audit(self.audit_config, orchestrator)
 
         # Calculate the audit scope.
-        audit_scope = AuditScope(self.audit_config)
+        if self.audit_config.targets:
+            audit_scope = AuditScope(self.audit_config)
+        else:
+            audit_scope = DummyScope()
         audit._Audit__audit_scope = audit_scope
 
         # Create the audit plugin manager.

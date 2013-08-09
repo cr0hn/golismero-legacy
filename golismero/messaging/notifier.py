@@ -650,6 +650,16 @@ class OrchestratorNotifier(AbstractNotifier):
 
 
     #----------------------------------------------------------------------
+    @property
+    def orchestrator(self):
+        """
+        :returns: Orchestrator instance.
+        :rtype: Orchestrator
+        """
+        return self.__orchestrator
+
+
+    #----------------------------------------------------------------------
     def dispatch_info(self, plugin, audit_name, message_info):
         """
         Send information to the plugins.
@@ -717,23 +727,22 @@ class OrchestratorNotifier(AbstractNotifier):
         if not hasattr(plugin, method):
             return
 
-        # Prepare the plugin execution context.
+        # Check the audit still exists.
         if audit_name is not None:
             try:
-                audit = self.__orchestrator.auditManager.get_audit(audit_name)
+                audit = self.orchestrator.auditManager.get_audit(audit_name)
             except KeyError:
                 audit = None
-            if audit:
-                context = self.__orchestrator.build_plugin_context(
-                    audit_name, plugin,
-                    payload.identity if method == "recv_info" else None
-                )
-            else:
-                context = Config._context
-                warn("Received a message from a finished audit! %s" % payload,
+            if not audit:
+                warn("Received a message from a finished audit! %s" % audit_name,
                      RuntimeWarning)
-        else:
-            context = Config._context
+                return
+
+        # Prepare the plugin execution context.
+        context = self.orchestrator.build_plugin_context(
+            audit_name, plugin,
+            payload.identity if method == "recv_info" else None
+        )
 
         # Run the callback directly in our process.
         # XXX this allows UI plugins to have state, do we really want this?
@@ -747,7 +756,7 @@ class OrchestratorNotifier(AbstractNotifier):
 
         # Log exceptions thrown by the plugins.
         except Exception:
-            raise
+            raise   # XXX FIXME
             ##msg = "Plugin %s raised an exception:\n%s"
             ##msg = msg % (plugin.__class__.__name__, format_exc())
             ##Logger.log_error(msg)
