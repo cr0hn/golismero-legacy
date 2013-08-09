@@ -26,13 +26,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from golismero.api.audit import get_audit_count, get_audit_names, \
-     get_audit_info, start_audit, stop_audit
+from golismero.api.audit import start_audit, stop_audit, \
+     get_audit_names, get_audit_config
 from golismero.api.config import Config
 from golismero.api.logger import Logger
-from golismero.api.plugin import UIPlugin, get_plugin_info
-from golismero.messaging.codes import MessageType, MessageCode
+from golismero.api.plugin import UIPlugin, get_plugin_info, get_plugin_names
+from golismero.common import AuditConfig
+from golismero.messaging.message import Message
+from golismero.messaging.codes import MessageType, MessageCode, \
+     MessagePriority
 
+import collections
 import multiprocessing
 import time
 import threading
@@ -168,22 +172,46 @@ class WebUIPlugin(UIPlugin):
         launches the Django web application.
         """
 
-        # Get the configuration.
-        bind_address = Config.plugin_config.get("bind_address", "127.0.0.1")
-        bind_port    = int( Config.plugin_config.get("bind_port", "8080") )
+        # Initialize the audit and plugin state caches.
+        self.state_lock   = threading.RLock()
+        self.audit_state  = {}  # audit -> stage
+        self.plugin_state = collections.defaultdict(
+            collections.defaultdict(dict)
+        )  # audit -> (plugin, identity) -> progress
 
         # Create the consumer thread object.
         self.thread_continue = True
-        self.thread = threading.Thread(target = self.consumer_thread)
+        self.thread = threading.Thread(
+            target = self.consumer_thread,
+            kwargs = {"context" : Config._context}
+        )
         self.thread.daemon = True
 
         # Create the duplex pipe to talk to the Django application.
         self.parent_conn, self.child_conn = multiprocessing.Pipe(duplex=True)
 
+
+
+
+        raise NotImplementedError("Plugin under construction!") # XXX TODO
+
+
+
+
+        # Get the configuration.
         #
         # TODO
         #
-        raise NotImplementedError("Plugin under construction!")
+
+        # Launch the Django application.
+        #
+        # TODO
+        #
+
+        # Wait for the Django application to finish starting up.
+        #
+        # TODO
+        #
 
         # Start the consumer thread.
         self.thread.start()
@@ -198,6 +226,12 @@ class WebUIPlugin(UIPlugin):
 
         # Tell the consumer thread to stop.
         self.thread_continue = False
+
+        # Tell the Django application to stop.
+        try:
+            self.child_conn.send( ("stop",) )
+        except:
+            pass
 
         # Shut down the communication pipe.
         # This should wake up the consumer thread.
@@ -227,13 +261,17 @@ class WebUIPlugin(UIPlugin):
                 ctypes.pythonapi.PyThreadState_SetAsyncExc(
                     ctypes.c_long(self.thread.ident), None)
 
-        #
-        # TODO
-        #
+            # Wait again.
+            self.thread.join(2.0)
+
+        # Clear the state cache.
+        self.state_lock = threading.RLock()
+        self.audit_state.clear()
+        self.plugin_state.clear()
 
 
     #--------------------------------------------------------------------------
-    def consumer_thread(self):
+    def consumer_thread(self, context):
         """
         This method implements the consumer thread code: it reads data sent by
         the Django application though a pipe, and sends the appropriate
@@ -241,6 +279,9 @@ class WebUIPlugin(UIPlugin):
         """
 
         try:
+
+            # Initialize the plugin execution context.
+            Config._context = context
 
             # Loop until they tell us to quit.
             while self.thread_continue:
@@ -301,6 +342,9 @@ class WebUIPlugin(UIPlugin):
     #--------------------------------------------------------------------------
     #
     # Notification methods
+    # ====================
+    #
+    # They run in the context of the main thread, invoked from recv_msg().
     #
     #--------------------------------------------------------------------------
 
@@ -385,6 +429,11 @@ class WebUIPlugin(UIPlugin):
         :param progress: Progress percentage (0.0 through 100.0).
         :type progress: float
         """
+
+        # Save the plugin state.
+        self.plugin_state[audit_name][(plugin_name, identity)] = progress
+
+        # Send the plugin state.
         packet = ("progress", audit_name, plugin_name, identity, progress)
         self.child_conn.send(packet)
 
@@ -411,6 +460,11 @@ class WebUIPlugin(UIPlugin):
              - "cancel" - The audit has been canceled by the user.
         :type stage: str
         """
+
+        # Save the audit state.
+        self.audit_state[audit_name] = stage
+
+        # Send the audit state.
         packet = ("stage", audit_name, stage)
         self.child_conn.send(packet)
 
@@ -418,60 +472,144 @@ class WebUIPlugin(UIPlugin):
     #--------------------------------------------------------------------------
     #
     # Command methods
+    # ===============
+    #
+    # They run in background, invoked by consumer_thread().
     #
     #--------------------------------------------------------------------------
 
 
     #--------------------------------------------------------------------------
-    def do_scan_create(self):
-        pass
+    def do_scan_create(self, json_audit_config):
+        """
+        Implementation of: /scan/create
+
+        :param json_audit_config: Audit configuration in JSON format.
+        :type json_audit_config: str
+        """
+
+        # Load the audit configuration from JSON data.
+        audit_config = AuditConfig()
+        audit_config.from_json(json_audit_config)
+
+        # Create the new audit.
+        start_audit(audit_config)
 
 
     #--------------------------------------------------------------------------
-    def do_scan_delete(self):
-        pass
+    def do_scan_cancel(self, audit_name):
+        """
+        Implementation of: /scan/cancel
 
+        :param audit_name: Name of the audit to cancel.
+        :type audit_name: str
+        """
 
-    #--------------------------------------------------------------------------
-    def do_scan_cancel(self):
-        pass
+        # Stop the audit.
+        stop_audit(audit_name)
 
 
     #--------------------------------------------------------------------------
     def do_scan_list(self):
-        pass
+        """
+        Implementation of: /scan/list
+
+        :returns: List of audit names.
+        :rtype: list(str...)
+        """
+
+        # Return the names of the current audits.
+        return sorted( get_audit_names() )
 
 
     #--------------------------------------------------------------------------
-    def do_scan_state(self):
-        pass
+    def do_scan_state(self, audit_name):
+        """
+        Implementation of: /scan/state
+
+        :param audit_name: Name of the audit to query.
+        :type audit_name: str
+
+        :returns: Current audit stage, followed by the progress status of
+            every plugin (plugin name, data identity, progress percentage).
+        :rtype: tuple(int, tuple( tuple(str, str, float) ... ))
+        """
+
+        # Return the current stage and the status of every plugin.
+        return (
+            self.audit_state[audit_name],
+            tuple(
+                (plugin_name, identity, progress)
+                for ((plugin_name, identity), progress)
+                in self.plugin_state[audit_name].iteritems()
+            )
+        )
 
 
     #--------------------------------------------------------------------------
     def do_scan_results(self):
-        pass
+        """
+        Implementation of: /scan/results
+        """
+        #
+        # TODO
+        #
 
 
     #--------------------------------------------------------------------------
     def do_scan_details(self):
-        pass
+        """
+        Implementation of: /scan/details
+        """
+        #
+        # TODO
+        #
 
 
     #--------------------------------------------------------------------------
     def do_plugin_list(self):
-        pass
+        """
+        Implementation of: /plugin/list
+
+        :returns: List of plugin names.
+        :rtype: list(str)
+        """
+        return sorted( get_plugin_names() )
 
 
     #--------------------------------------------------------------------------
-    def do_plugin_details(self):
-        pass
+    def do_plugin_details(self, plugin_name):
+        """
+        Implementation of: /plugin/details
+
+        :param plugin_name: Name of the plugin to query.
+        :type plugin_name: str
+
+        :returns: Plugin information.
+        :rtype: PluginInfo
+        """
+        return get_plugin_info(plugin_name)    # XXX TODO encode as JSON
 
 
     #--------------------------------------------------------------------------
     def do_admin_service_stop(self):
-        pass
+        """
+        Implementation of: /admin/service/stop
+        """
+        Config._context.send_msg(
+            message_type = MessageType.MSG_TYPE_CONTROL,
+            message_code = MessageCode.MSG_CONTROL_STOP,
+            message_info = False,    # True for finished, False for user cancel
+                priority = MessagePriority.MSG_PRIORITY_LOW
+        )
 
 
     #--------------------------------------------------------------------------
     def do_admin_config_details(self):
-        pass
+        """
+        Implementation of: /admin/config/details
+
+        :returns: Orchestrator configuration.
+        :rtype: OrchestratorConfig
+        """
+        return Config._context._orchestrator.config # XXX TODO encode as JSON
