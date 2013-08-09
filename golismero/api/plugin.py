@@ -39,7 +39,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = [
     "UIPlugin", "ImportPlugin", "TestingPlugin", "ReportPlugin",
-    "get_plugin_info", "PluginState",
+    "get_plugin_info", "get_plugin_names", "PluginState",
 ]
 
 from .config import Config
@@ -48,6 +48,17 @@ from ..messaging.codes import MessageCode
 
 # Sentinel value.
 _sentinel = object()
+
+
+#------------------------------------------------------------------------------
+def get_plugin_names():
+    """
+    Get the plugin names.
+
+    :returns: Plugin names.
+    :rtype: set(str)
+    """
+    return Config._context.remote_call(MessageCode.MSG_RPC_PLUGIN_GET_NAMES)
 
 
 #------------------------------------------------------------------------------
