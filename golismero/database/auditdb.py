@@ -205,6 +205,43 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
+    def get_audit_times(self):
+        """
+        Get the audit start and end times.
+
+        :returns: Audit start time (None if it hasn't started yet)
+            and audit end time (None if it hasn't finished yet).
+            Times are returned as POSIX timestamps.
+        :rtype: tuple(float|None, float|None)
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def set_audit_start_time(self, start_time):
+        """
+        Set the audit start time.
+
+        :param start_time: Audit start time (None if it hasn't started yet).
+            Time is given as a POSIX timestamp.
+        :type start_time: float
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def set_audit_end_time(self, end_time):
+        """
+        Set the audit end time.
+
+        :param end_time: Audit end time (None if it hasn't finished yet).
+            Time is given as a POSIX timestamp.
+        :type end_time: float
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
     def add_data(self, data):
         """
         Add data to the database.
@@ -212,7 +249,8 @@ class BaseAuditDB (BaseDB):
         :param data: Data to add.
         :type data: Data
 
-        :returns: bool -- True if the data was new, False if it was updated.
+        :returns: True if the data was new, False if it was updated.
+        :rtype: bool
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -231,7 +269,8 @@ class BaseAuditDB (BaseDB):
         :param data_type: Optional data type. One of the Data.TYPE_* values.
         :type data_type: int
 
-        :returns: bool -- True if the object was removed, False if it didn't exist.
+        :returns: True if the object was removed, False if it didn't exist.
+        :rtype: bool
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -248,7 +287,8 @@ class BaseAuditDB (BaseDB):
         :param identity: Identity hash.
         :type identity: str
 
-        :returns: bool - True if the object is present, False otherwise.
+        :returns: True if the object is present, False otherwise.
+        :rtype: bool
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -267,7 +307,8 @@ class BaseAuditDB (BaseDB):
         :param data_type: Optional data type. One of the Data.TYPE_* values.
         :type data_type: int
 
-        :returns: Data | None
+        :returns: Data object.
+        :rtype: Data | None
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -286,7 +327,8 @@ class BaseAuditDB (BaseDB):
         :param data_type: Optional data type. One of the Data.TYPE_* values.
         :type data_type: int
 
-        :returns: list(Data) -- Data objects.
+        :returns: Data objects.
+        :rtype: list(Data)
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -303,7 +345,8 @@ class BaseAuditDB (BaseDB):
         :param data_subtype: Optional data subtype.
         :type data_subtype: int | str
 
-        :returns: set(str) -- Identity hashes.
+        :returns: Identity hashes.
+        :rtype: set(str)
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -317,7 +360,8 @@ class BaseAuditDB (BaseDB):
         :param identities: Identity hashes.
         :type identities: set(str)
 
-        :returns: set( (int, int | str) ) -- Set of data types and subtypes found.
+        :returns: Set of data types and subtypes found.
+        :rtype: set( (int, int | str) )
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -334,7 +378,8 @@ class BaseAuditDB (BaseDB):
         :param data_subtype: Optional data subtype.
         :type data_subtype: int | str
 
-        :returns: set(str) -- Identity hashes.
+        :returns: Identity hashes.
+        :rtype: set(str)
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -381,7 +426,8 @@ class BaseAuditDB (BaseDB):
         :param key: Variable name.
         :type key: str
 
-        :returns: bool - True if the variable is present, False otherwise.
+        :returns: True if the variable is present, False otherwise.
+        :rtype: bool
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -397,7 +443,8 @@ class BaseAuditDB (BaseDB):
         :param key: Variable name.
         :type key: str
 
-        :returns: anything -- Variable value.
+        :returns: Variable value.
+        :rtype: *
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -410,7 +457,8 @@ class BaseAuditDB (BaseDB):
         :param plugin_name: Plugin name.
         :type plugin_name: str
 
-        :returns: set(str) -- Variable names.
+        :returns: Variable names.
+        :rtype: set(str)
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -451,7 +499,8 @@ class BaseAuditDB (BaseDB):
         :param identity: Identity hash.
         :type identity: str
 
-        :returns: set(str) -- Set of plugin names.
+        :returns: Set of plugin names.
+        :rtype: set(str)
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -465,7 +514,8 @@ class BaseAuditDB (BaseDB):
         :param stage: Stage.
         :type stage: int
 
-        :returns: set(str) -- Set of identities.
+        :returns: Set of identities.
+        :rtype: set(str)
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -733,6 +783,8 @@ class AuditMemoryDB (BaseAuditDB):
     #--------------------------------------------------------------------------
     def __init__(self, audit_name):
         super(AuditMemoryDB, self).__init__(audit_name)
+        self.__start_time   = None
+        self.__end_time     = None
         self.__results      = dict()
         self.__state        = collections.defaultdict(dict)
         self.__history      = collections.defaultdict(set)
@@ -765,6 +817,21 @@ class AuditMemoryDB (BaseAuditDB):
     #--------------------------------------------------------------------------
     def decode(self, data):
         return data
+
+
+    #--------------------------------------------------------------------------
+    def get_audit_times(self):
+        return self.__start_time, self.__end_time
+
+
+    #--------------------------------------------------------------------------
+    def set_audit_start_time(self, start_time):
+        self.__start_time = start_time
+
+
+    #--------------------------------------------------------------------------
+    def set_audit_end_time(self, end_time):
+        self.__end_time = end_time
 
 
     #--------------------------------------------------------------------------
@@ -1210,7 +1277,9 @@ class AuditSQLiteDB (BaseAuditDB):
 
             CREATE TABLE golismero (
                 schema_version INTEGER NOT NULL,
-                audit_name STRING NOT NULL
+                audit_name STRING NOT NULL,
+                start_time FLOAT DEFAULT NULL,
+                end_time FLOAT DEFAULT NULL
             );
 
             ----------------------------------------------------------
@@ -1296,7 +1365,7 @@ class AuditSQLiteDB (BaseAuditDB):
 
             # Insert the file information.
             self.__cursor.execute(
-                "INSERT INTO golismero VALUES (?, ?);",
+                "INSERT INTO golismero VALUES (?, ?, NULL, NULL);",
                 (self.SCHEMA_VERSION, self.audit_name))
 
 
@@ -1343,6 +1412,32 @@ class AuditSQLiteDB (BaseAuditDB):
             raise NotImplementedError(
                 "Unknown data type %r!" % data_type)
         return table, dtype
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def get_audit_times(self):
+        self.__cursor.execute(
+            "SELECT start_time, end_time FROM golismero LIMIT 1;")
+        return self.__cursor.fetchone()
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def set_audit_start_time(self, start_time):
+        self.__cursor.execute(
+            "UPDATE golismero SET start_time = ?;",
+            start_time
+        )
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def set_audit_end_time(self, end_time):
+        self.__cursor.execute(
+            "UPDATE golismero SET end_time = ?;",
+            end_time
+        )
 
 
     #--------------------------------------------------------------------------

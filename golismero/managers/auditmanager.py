@@ -478,6 +478,14 @@ class Audit (object):
                 Logger.log_verbose(
                     "Audit database: %s" % self.database.filename)
 
+            # Get the original audit start time, if found.
+            # If not, save the new audit start time.
+            start_time = self.database.get_audit_times()[0]
+            if start_time is not None:
+                self.config.start_time = start_time
+            else:
+                self.database.set_audit_start_time(self.config.start_time)
+
             # Add the targets to the database, but only if they're new.
             # (Makes sense when resuming a stopped audit).
             target_data = self.scope.get_targets()
@@ -843,6 +851,9 @@ class Audit (object):
             # Before generating the reports, set the audit stop time.
             # This is needed so the report can print the start and stop times.
             self.config.stop_time = time()
+
+            # Save the audit stop time in the database.
+            self.database.set_audit_stop_time(self.config.stop_time)
 
             # Tell the UI we've started generating the reports.
             self.send_msg(
