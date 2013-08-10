@@ -28,6 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.audit import start_audit, stop_audit, \
      get_audit_names, get_audit_config
+from golismero.api.data import Data
+from golismero.api.data.db import Database
 from golismero.api.config import Config
 from golismero.api.logger import Logger
 from golismero.api.plugin import UIPlugin, get_plugin_info, get_plugin_names
@@ -547,23 +549,41 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_scan_results(self):
+    def do_scan_results(self, data_type = "all"):
         """
         Implementation of: /scan/results
+
+        :param data_type: Data type to request. Case insensitive.
+            Must be one of the following values:
+             - "all": All data types.
+             - "information": Information type.
+             - "resource": Resource type.
+             - "vulnerability": Vulnerability type.
+        :type data_type: str
+
+        :returns: Result IDs.
+        :rtype: list(str)
+
+        :raises KeyError: Data type unknown.
         """
-        #
-        # TODO
-        #
+        i_data_type = {
+                      "all": None,
+              "information": Data.TYPE_INFORMATION,
+                 "resource": Data.TYPE_RESOURCE,
+            "vulnerability": Data.TYPE_VULNERABILITY,
+        }[data_type.strip().lower()]
+        return sorted( Database.keys(i_data_type) )
 
 
     #--------------------------------------------------------------------------
-    def do_scan_details(self):
+    def do_scan_details(self, id_list):
         """
         Implementation of: /scan/details
+
+        :param id_list: List of result IDs.
+        :type id_list: list(str)
         """
-        #
-        # TODO
-        #
+        return Database.get_many(id_list)
 
 
     #--------------------------------------------------------------------------
