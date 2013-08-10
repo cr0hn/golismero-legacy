@@ -51,6 +51,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["pmap", "setInterval", "TaskGroup", "WorkerPool", "Counter"]
 
+from .config import Config
+
 from thread import get_ident
 from threading import RLock, Semaphore, Thread, Event, Timer
 

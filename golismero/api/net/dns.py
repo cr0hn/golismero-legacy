@@ -807,7 +807,7 @@ class _DNS(Singleton):
             m_return = DnsRegisterNSAP(answer.address)
 
         elif register_type == "NSEC":
-            m_return_append(DnsRegisterNSEC(answer.next.to_text()[:-1]))
+            m_return = DnsRegisterNSEC(answer.next.to_text()[:-1])
 
         elif register_type == "NSEC3":
             m_return = DnsRegisterNSEC3(answer.algorithm,
