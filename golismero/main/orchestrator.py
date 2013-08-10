@@ -50,6 +50,7 @@ from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 
 from os import getpid
+from thread import get_ident
 from traceback import format_exc, print_exc
 from signal import signal, SIGINT, SIG_DFL
 from multiprocessing import Manager
@@ -87,8 +88,9 @@ class Orchestrator (object):
 
         # Set the Orchestrator context.
         self.__context = PluginContext( orchestrator_pid = getpid(),
-                                         msg_queue = self.__queue,
-                                      audit_config = self.__config )
+                                        orchestrator_tid = get_ident(),
+                                               msg_queue = self.__queue,
+                                            audit_config = self.__config )
         Config._context = self.__context
 
         # Set the console configuration.
@@ -396,9 +398,14 @@ class Orchestrator (object):
         info = pluginManager.get_plugin_info_from_instance(plugin)[1]
 
         # Return the context instance.
-        return PluginContext(getpid(), self.__queue,
-                             ack_identity, info,
-                             audit_name, audit_config, audit_scope)
+        return PluginContext(orchestrator_pid = self.__context._orchestrator_pid,
+                             orchestrator_tid = self.__context._orchestrator_tid,
+                                    msg_queue = self.__queue,
+                                 ack_identity = ack_identity,
+                                  plugin_info = info,
+                                   audit_name = audit_name,
+                                 audit_config = audit_config,
+                                  audit_scope = audit_scope)
 
 
     #----------------------------------------------------------------------

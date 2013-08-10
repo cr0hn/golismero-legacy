@@ -111,6 +111,7 @@ import datetime
 
 from ConfigParser import RawConfigParser
 from os import getenv, getpid
+from thread import get_ident
 
 
 #----------------------------------------------------------------------
@@ -395,6 +396,7 @@ def main():
                 except Exception:
                     raise KeyError(P.plugin_name)
             Config._context = PluginContext( orchestrator_pid = getpid(),
+                                             orchestrator_tid = get_ident(),
                                                   plugin_info = m_plugin_info,
                                                     msg_queue = None )
             m_plugin_obj = manager.load_plugin_by_name(m_plugin_info.plugin_name)

@@ -48,7 +48,6 @@ from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 from ..messaging.notifier import AuditNotifier
 
-from os import getpid
 from warnings import catch_warnings, warn
 from time import time
 
@@ -438,19 +437,23 @@ class Audit (object):
         try:
 
             # Update the execution context for this audit.
-            Config._context = PluginContext(getpid(), old_context.msg_queue,
-                                            audit_name   = self.name,
-                                            audit_config = self.config)
+            Config._context = PluginContext(       msg_queue = old_context.msg_queue,
+                                                  audit_name = self.name,
+                                                audit_config = self.config,
+                                            orchestrator_pid = old_context._orchestrator_pid,
+                                            orchestrator_tid = old_context._orchestrator_tid)
 
             # Calculate the audit scope.
             # This is done here because some DNS queries may be made.
             self.__audit_scope = AuditScope(self.config)
 
             # Update the execution context again, with the scope.
-            Config._context = PluginContext(getpid(), old_context.msg_queue,
-                                            audit_name   = self.name,
-                                            audit_config = self.config,
-                                            audit_scope  = self.scope)
+            Config._context = PluginContext(       msg_queue = old_context.msg_queue,
+                                                  audit_name = self.name,
+                                                audit_config = self.config,
+                                                 audit_scope = self.scope,
+                                            orchestrator_pid = old_context._orchestrator_pid,
+                                            orchestrator_tid = old_context._orchestrator_tid)
 
             # Create the plugin manager for this audit.
             self.__plugin_manager = self.orchestrator.pluginManager.get_plugin_manager_for_audit(self)
@@ -712,10 +715,12 @@ class Audit (object):
         try:
 
             # Update the execution context for this audit.
-            Config._context = PluginContext(getpid(), old_context.msg_queue,
-                                            audit_name   = self.name,
-                                            audit_config = self.config,
-                                            audit_scope  = self.scope)
+            Config._context = PluginContext(       msg_queue = old_context.msg_queue,
+                                                  audit_name = self.name,
+                                                audit_config = self.config,
+                                                 audit_scope = self.scope,
+                                            orchestrator_pid = old_context._orchestrator_pid,
+                                            orchestrator_tid = old_context._orchestrator_tid)
 
             # Dispatch the message.
             return self.__dispatch_msg(message)
