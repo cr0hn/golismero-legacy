@@ -1,5 +1,6 @@
 [Core]
 Name = Web interface
+Module = web/web.py
 
 [Documentation]
 Description = GoLismero web user interface

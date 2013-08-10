@@ -30,7 +30,7 @@ from golismero.api.audit import start_audit, stop_audit, \
      get_audit_names, get_audit_config
 from golismero.api.data import Data
 from golismero.api.data.db import Database
-from golismero.api.config import Config
+from golismero.api.config import Config, get_orchestrator_config
 from golismero.api.logger import Logger
 from golismero.api.plugin import UIPlugin, get_plugin_info, get_plugin_names
 from golismero.common import AuditConfig
@@ -43,6 +43,14 @@ import multiprocessing
 import time
 import threading
 import warnings
+
+# Import the Django <-> GoLismero bridge.
+from imp import load_source
+from os.path import abspath, join, split
+django_bridge = load_source(
+    "django_bridge",
+    abspath(join(split(__file__)[0], "django_bridge.py")))
+)
 
 
 #------------------------------------------------------------------------------
@@ -189,31 +197,13 @@ class WebUIPlugin(UIPlugin):
         )
         self.thread.daemon = True
 
-        # Create the duplex pipe to talk to the Django application.
-        self.parent_conn, self.child_conn = multiprocessing.Pipe(duplex=True)
-
-
-
-
-        raise NotImplementedError("Plugin under construction!") # XXX TODO
-
-
-
-
         # Get the configuration.
-        #
-        # TODO
-        #
+        orchestrator_config = get_orchestrator_config().to_dictionary()
+        plugin_config       = Config.plugin_config
+        plugin_extra_config = Config.plugin_extra_config
 
-        # Launch the Django application.
-        #
-        # TODO
-        #
-
-        # Wait for the Django application to finish starting up.
-        #
-        # TODO
-        #
+        # Launch the Django web application.
+        self.bridge = django_bridge.launch_django()
 
         # Start the consumer thread.
         self.thread.start()
@@ -231,20 +221,13 @@ class WebUIPlugin(UIPlugin):
 
         # Tell the Django application to stop.
         try:
-            self.child_conn.send( ("stop",) )
+            self.bridge.send( ("stop",) )
         except:
             pass
 
         # Shut down the communication pipe.
         # This should wake up the consumer thread.
-        try:
-            self.parent_conn.close()
-        except:
-            pass
-        try:
-            self.child_conn.close()
-        except:
-            pass
+        self.bridge.close()
 
         # Wait for the consumer thread to stop.
         if self.thread.isAlive():
@@ -264,7 +247,10 @@ class WebUIPlugin(UIPlugin):
                     ctypes.c_long(self.thread.ident), None)
 
             # Wait again.
-            self.thread.join(2.0)
+            try:
+                self.thread.join(2.0)
+            except:
+                pass
 
         # Clear the state cache.
         self.state_lock = threading.RLock()
@@ -305,14 +291,23 @@ class WebUIPlugin(UIPlugin):
                     command   = packet[0]
                     arguments = packet[1:]
 
+                    # Special command "fail" means the Django app died.
+                    if command == "fail":
+
+                        # Stop GoLismero.
+                        self.do_admin_service_stop()
+
+                        # Kill the consumer thread.
+                        break
+
                     # Parse the command to get the method name.
                     # The command is the path to the webservice.
-                    while command.startswith("/"):
-                        command = command[1:]
-                    while command.endswith("/"):
-                        command = command[:-1]
                     while "//" in command:
                         command = command.replace("//", "/")
+                    if command.startswith("/"):
+                        command = command[1:]
+                    if command.endswith("/"):
+                        command = command[:-1]
                     command = "do_" + command.replace("/", "_")
 
                     # Get the method that implements the command.
@@ -325,15 +320,18 @@ class WebUIPlugin(UIPlugin):
                     # Run the command and get the response.
                     retval = method( *arguments )
                     if retval:
-                        response = response + tuple(retval)
+                        if type(retval) is tuple:
+                            response = response + retval
+                        else:
+                            response = response + (retval,)
 
                 # On error send an failure response.
                 except Exception, e:
-                    self.child_conn.send( ("fail", str(e)) )
+                    self.bridge.send( ("fail", str(e)) )
                     continue
 
                 # On success send the response.
-                self.child_conn.send(response)
+                self.bridge.send(response)
 
         # This catch prevents exceptions from being shown in stderr.
         except:
@@ -369,7 +367,7 @@ class WebUIPlugin(UIPlugin):
         :type level: int
         """
         packet = ("log", audit_name, plugin_name, text, level)
-        self.child_conn.send(packet)
+        self.bridge.send(packet)
 
 
     #--------------------------------------------------------------------------
@@ -390,7 +388,7 @@ class WebUIPlugin(UIPlugin):
         :type level: int
         """
         packet = ("error", audit_name, plugin_name, text, level)
-        self.child_conn.send(packet)
+        self.bridge.send(packet)
 
 
     #--------------------------------------------------------------------------
@@ -411,7 +409,7 @@ class WebUIPlugin(UIPlugin):
         :type level: int
         """
         packet = ("warn", audit_name, plugin_name, text, level)
-        self.child_conn.send(packet)
+        self.bridge.send(packet)
 
 
     #--------------------------------------------------------------------------
@@ -437,7 +435,7 @@ class WebUIPlugin(UIPlugin):
 
         # Send the plugin state.
         packet = ("progress", audit_name, plugin_name, identity, progress)
-        self.child_conn.send(packet)
+        self.bridge.send(packet)
 
 
     #--------------------------------------------------------------------------
@@ -468,7 +466,7 @@ class WebUIPlugin(UIPlugin):
 
         # Send the audit state.
         packet = ("stage", audit_name, stage)
-        self.child_conn.send(packet)
+        self.bridge.send(packet)
 
 
     #--------------------------------------------------------------------------
@@ -482,20 +480,20 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_scan_create(self, json_audit_config):
+    def do_scan_create(self, audit_config):
         """
         Implementation of: /scan/create
 
-        :param json_audit_config: Audit configuration in JSON format.
-        :type json_audit_config: str
+        :param audit_config: Audit configuration.
+        :type audit_config: dict(str -> *)
         """
 
-        # Load the audit configuration from JSON data.
-        audit_config = AuditConfig()
-        audit_config.from_json(json_audit_config)
+        # Load the audit configuration from the dictionary.
+        o_audit_config = AuditConfig()
+        o_audit_config.from_dictionary(audit_config)
 
         # Create the new audit.
-        start_audit(audit_config)
+        start_audit(o_audit_config)
 
 
     #--------------------------------------------------------------------------
@@ -516,12 +514,14 @@ class WebUIPlugin(UIPlugin):
         """
         Implementation of: /scan/list
 
-        :returns: List of audit names.
-        :rtype: list(str...)
+        :returns: Dictionary mapping audit names to their configurations.
+        :rtype: dict(str -> dict(str -> *))
         """
-
-        # Return the names of the current audits.
-        return sorted( get_audit_names() )
+        result = {}
+        for audit_name in get_audit_names():
+            audit_config = get_audit_config(audit_name)
+            result[audit_name] = audit_config.to_dictionary()
+        return result
 
 
     #--------------------------------------------------------------------------
@@ -630,6 +630,6 @@ class WebUIPlugin(UIPlugin):
         Implementation of: /admin/config/details
 
         :returns: Orchestrator configuration.
-        :rtype: OrchestratorConfig
+        :rtype: dict(str -> *)
         """
-        return Config._context._orchestrator.config # XXX TODO encode as JSON
+        return get_orchestrator_config().to_dictionary()
