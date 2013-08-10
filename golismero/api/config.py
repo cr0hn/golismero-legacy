@@ -30,11 +30,21 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["Config"]
+__all__ = ["Config", "get_orchestrator_config"]
 
 from ..common import Singleton
+from ..messaging.codes import MessageCode
 
 import threading
+
+
+#------------------------------------------------------------------------------
+def get_orchestrator_config():
+    """
+    :returns: Orchestrator configuration.
+    :rtype: OrchestratorConfig
+    """
+    return Config._context.remote_call(MessageCode.MSG_RPC_AUDIT_CONFIG, None)
 
 
 #------------------------------------------------------------------------------
