@@ -77,7 +77,7 @@ def get_plugin_info(plugin_name = None):
     :raises KeyError: The plugin was not found.
     """
     if not plugin_name:
-        plugin_name = Config.plugin_name
+        return Config.plugin_info
     return Config._context.remote_call(
         MessageCode.MSG_RPC_PLUGIN_GET_INFO, plugin_name)
 
