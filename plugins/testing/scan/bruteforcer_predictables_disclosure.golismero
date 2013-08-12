@@ -7,7 +7,7 @@ Class = PredictablesDisclosureBruteforcer
 Description = Tries to discover URLs using default of each kind of server. i.e: (Apache) www.site.com/error_log
 Author = GoLismero project team
 Version = 0.1
-Website = https://github.com/cr0hn/golismero/
+Website = https://github.com/golismero
 Copyright = Copyright (C) 2011-2013 GoLismero Project
 License = GNU Public License
 

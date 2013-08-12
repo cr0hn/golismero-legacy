@@ -12,7 +12,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -173,7 +173,7 @@ class _Config (Singleton):
         Description = Find suspicious words in URLs
         Author = Daniel Garcia Garcia (cr0hn)
         Version = 0.1
-        Website = https://github.com/cr0hn/golismero/
+        Website = https://github.com/golismero
         Copyright = Copyright (C) 2011-2013 GoLismero Project
         License = GNU Public License
         [Wordlist_middle]

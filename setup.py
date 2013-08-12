@@ -8,7 +8,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -188,7 +188,7 @@ metadata = {
     'maintainer_email'  : __email__,
     'license'           : __license__,
     'url'               : 'http://golismero-project.com/',
-    'download_url'      : 'https://github.com/cr0hn/golismero/zipball/master',
+    'download_url'      : 'https://github.com/golismero/golismero/zipball/master',
     'classifiers'       : [
                         'Development Status :: 3 - Alpha',
                         'Environment :: Console',

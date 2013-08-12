@@ -12,7 +12,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -341,7 +341,7 @@ class PluginInfo (object):
         try:
             self.__website     = parser.get("Documentation", "Website")
         except Exception:
-            self.__website     = "https://github.com/cr0hn/golismero/"
+            self.__website     = "https://github.com/golismero"
 
         # Load the plugin configuration as a Python dictionary.
         # This section is optional.
@@ -995,7 +995,7 @@ class AuditPluginManager (PluginManager):
         else:
             plugins = all_plugins.difference(disabled_plugins)  # use all but disabled plugins
 
-        # Process the plugin load overrides.
+        # Process the plugin load overrides. They only apply to testing plugins.
         # First, find out if there are only enables but no disables.
         # If so, insert a disable command for all testing plugins before the first enable.
         # For all commands, symbolic plugin names are replaced with sets of full IDs.

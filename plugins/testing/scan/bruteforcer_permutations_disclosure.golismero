@@ -7,6 +7,6 @@ Class = PermutationsDisclosureBruteforcer
 Description = Tries to discover URLs making some mutations: www.site.com/index.php -> www.site.com/index.php2
 Author = GoLismero project team
 Version = 0.1
-Website = https://github.com/cr0hn/golismero/
+Website = https://github.com/golismero
 Copyright = Copyright (C) 2011-2013 GoLismero Project
 License = GNU Public License

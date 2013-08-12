@@ -7,6 +7,6 @@ Class = DNSAnalizer
 Description = Try to find as much as possible information of DNS and hidden subdomains
 Author = GoLismero project team
 Version = 0.1
-Website = https://github.com/cr0hn/golismero/
+Website = https://github.com/golismero
 Copyright = Copyright (C) 2011-2013 GoLismero Project
 License = GNU Public License
