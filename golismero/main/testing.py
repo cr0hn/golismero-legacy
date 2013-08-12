@@ -34,7 +34,7 @@ __all__ = ["PluginTester"]
 
 from .launcher import _sanitize_config
 from .orchestrator import Orchestrator
-from .scope import AuditScope
+from .scope import AuditScope, DummyScope
 from ..api.data import LocalDataCache
 from ..api.config import Config
 from ..api.file import FileManager
@@ -47,6 +47,7 @@ from ..managers.processmanager import PluginContext
 from ..messaging.message import Message
 
 from os import getpid
+from thread import get_ident
 
 
 #------------------------------------------------------------------------------
@@ -137,7 +138,10 @@ class PluginTester(object):
         audit = Audit(self.audit_config, orchestrator)
 
         # Calculate the audit scope.
-        audit_scope = AuditScope(self.audit_config)
+        if self.audit_config.targets:
+            audit_scope = AuditScope(self.audit_config)
+        else:
+            audit_scope = DummyScope()
         audit._Audit__audit_scope = audit_scope
 
         # Create the audit plugin manager.
@@ -157,11 +161,12 @@ class PluginTester(object):
 
         # Setup a local plugin execution context.
         Config._context  = PluginContext(
-            getpid(),
-            orchestrator._Orchestrator__queue,
-            audit_name   = audit_name,
-            audit_config = self.audit_config,
-            audit_scope  = audit_scope,
+            orchestrator_pid = getpid(),
+            orchestrator_tid = get_ident(),
+                   msg_queue = orchestrator._Orchestrator__queue,
+                audit_name   = audit_name,
+                audit_config = self.audit_config,
+                audit_scope  = audit_scope,
         )
 
         # Initialize the environment.

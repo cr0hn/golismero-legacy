@@ -43,11 +43,6 @@ class DirectoryListingPlugin(TestingPlugin):
 
 
     #----------------------------------------------------------------------
-    def check_input_params(self, inputParams):
-        pass
-
-
-    #----------------------------------------------------------------------
     def get_accepted_info(self):
 
         return [FolderUrl, Url]

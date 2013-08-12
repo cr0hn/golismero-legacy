@@ -53,8 +53,9 @@ try:
 except ImportError:
     import pickle
 
-# Lazy import of the JSON decoder.
+# Lazy import of the JSON codec.
 json_decode = None
+json_encode = None
 
 # Import @decorator from the decorator module, if available.
 # Otherwise define a simple but crude replacement.
@@ -489,14 +490,14 @@ class Configuration (object):
         if json_decode is None:
             try:
                 # The fastest JSON parser available for Python.
-                import cjson.decode as json_decode
+                from cjson import decode as json_decode
             except ImportError:
                 try:
                     # Faster than the built-in module, usually found.
-                    import simplejson.loads as json_decode
+                    from simplejson import loads as json_decode
                 except ImportError:
                     # Built-in module since Python 2.6, very very slow!
-                    import json.loads as json_decode
+                    from json import loads as json_decode
 
         # Converts the JSON data into a dictionary.
         args = json_decode(json_raw_data)
@@ -530,6 +531,51 @@ class Configuration (object):
             else:
                 del options["profile"]
         self.from_dictionary(options)
+
+
+    #----------------------------------------------------------------------
+    def to_dictionary(self):
+        """
+        Copy the settings to a Python dictionary.
+
+        :returns: Dictionary that maps the setting names to their values.
+        :rtype: dict(str -> *)
+        """
+        result = {}
+        for name, definition in _settings_.iteritems():
+            default = None
+            if type(definition) in (tuple, list) and len(definition) > 1:
+                default = definition[1]
+            value = getattr(self, name, default)
+            result[name] = value
+        return result
+
+
+    #----------------------------------------------------------------------
+    def to_json(self):
+        """
+        Copy the settings to a JSON encoded dictionary.
+
+        :retruns: Settings as a JSON encoded dictionary.
+        :rtype: str
+        """
+
+        # Lazy import of the JSON encoder function.
+        global json_encode
+        if json_decode is None:
+            try:
+                # The fastest JSON parser available for Python.
+                from cjson import encode as json_encode
+            except ImportError:
+                try:
+                    # Faster than the built-in module, usually found.
+                    from simplejson import dumps as json_encode
+                except ImportError:
+                    # Built-in module since Python 2.6, very very slow!
+                    from json import dumps as json_encode
+
+        # Extract the settings to a dictionary and encode it with JSON.
+        return json_encode( self.to_dictionary() )
 
 
 #----------------------------------------------------------------------

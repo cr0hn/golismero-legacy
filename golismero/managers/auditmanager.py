@@ -48,7 +48,6 @@ from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 from ..messaging.notifier import AuditNotifier
 
-from os import getpid
 from warnings import catch_warnings, warn
 from time import time
 
@@ -66,7 +65,9 @@ def rpc_audit_get_names(orchestrator, audit_name):
 
 @implementor(MessageCode.MSG_RPC_AUDIT_CONFIG)
 def rpc_audit_get_config(orchestrator, audit_name):
-    return orchestrator.auditManager.get_audit(audit_name).config
+    if audit_name:
+        return orchestrator.auditManager.get_audit(audit_name).config
+    return orchestrator.config
 
 
 #--------------------------------------------------------------------------
@@ -438,19 +439,23 @@ class Audit (object):
         try:
 
             # Update the execution context for this audit.
-            Config._context = PluginContext(getpid(), old_context.msg_queue,
-                                            audit_name   = self.name,
-                                            audit_config = self.config)
+            Config._context = PluginContext(       msg_queue = old_context.msg_queue,
+                                                  audit_name = self.name,
+                                                audit_config = self.config,
+                                            orchestrator_pid = old_context._orchestrator_pid,
+                                            orchestrator_tid = old_context._orchestrator_tid)
 
             # Calculate the audit scope.
             # This is done here because some DNS queries may be made.
             self.__audit_scope = AuditScope(self.config)
 
             # Update the execution context again, with the scope.
-            Config._context = PluginContext(getpid(), old_context.msg_queue,
-                                            audit_name   = self.name,
-                                            audit_config = self.config,
-                                            audit_scope  = self.scope)
+            Config._context = PluginContext(       msg_queue = old_context.msg_queue,
+                                                  audit_name = self.name,
+                                                audit_config = self.config,
+                                                 audit_scope = self.scope,
+                                            orchestrator_pid = old_context._orchestrator_pid,
+                                            orchestrator_tid = old_context._orchestrator_tid)
 
             # Create the plugin manager for this audit.
             self.__plugin_manager = self.orchestrator.pluginManager.get_plugin_manager_for_audit(self)
@@ -477,6 +482,14 @@ class Audit (object):
             if hasattr(self.__database, "filename"):
                 Logger.log_verbose(
                     "Audit database: %s" % self.database.filename)
+
+            # Get the original audit start time, if found.
+            # If not, save the new audit start time.
+            start_time = self.database.get_audit_times()[0]
+            if start_time is not None:
+                self.config.start_time = start_time
+            else:
+                self.database.set_audit_start_time(self.config.start_time)
 
             # Add the targets to the database, but only if they're new.
             # (Makes sense when resuming a stopped audit).
@@ -704,10 +717,12 @@ class Audit (object):
         try:
 
             # Update the execution context for this audit.
-            Config._context = PluginContext(getpid(), old_context.msg_queue,
-                                            audit_name   = self.name,
-                                            audit_config = self.config,
-                                            audit_scope  = self.scope)
+            Config._context = PluginContext(       msg_queue = old_context.msg_queue,
+                                                  audit_name = self.name,
+                                                audit_config = self.config,
+                                                 audit_scope = self.scope,
+                                            orchestrator_pid = old_context._orchestrator_pid,
+                                            orchestrator_tid = old_context._orchestrator_tid)
 
             # Dispatch the message.
             return self.__dispatch_msg(message)
@@ -843,6 +858,9 @@ class Audit (object):
             # Before generating the reports, set the audit stop time.
             # This is needed so the report can print the start and stop times.
             self.config.stop_time = time()
+
+            # Save the audit stop time in the database.
+            self.database.set_audit_stop_time(self.config.stop_time)
 
             # Tell the UI we've started generating the reports.
             self.send_msg(

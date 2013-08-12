@@ -30,7 +30,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["AuditScope"]
+__all__ = ["AuditScope", "DummyScope"]
 
 from ..api.data.resource.domain import Domain
 from ..api.data.resource.ip import IP
@@ -280,3 +280,19 @@ class AuditScope (object):
             stacklevel=2
         )
         return False
+
+
+#------------------------------------------------------------------------------
+class DummyScope (object):
+    """
+    Dummy scope tells you everything is in scope, all the time.
+    """
+
+    def __init__(self):
+        pass
+
+    def get_targets(self):
+        return []
+
+    def __contains__(self, target):
+        return True

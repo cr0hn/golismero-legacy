@@ -39,7 +39,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = [
     "UIPlugin", "ImportPlugin", "TestingPlugin", "ReportPlugin",
-    "get_plugin_info", "PluginState",
+    "get_plugin_info", "get_plugin_names", "PluginState",
 ]
 
 from .config import Config
@@ -48,6 +48,17 @@ from ..messaging.codes import MessageCode
 
 # Sentinel value.
 _sentinel = object()
+
+
+#------------------------------------------------------------------------------
+def get_plugin_names():
+    """
+    Get the plugin names.
+
+    :returns: Plugin names.
+    :rtype: set(str)
+    """
+    return Config._context.remote_call(MessageCode.MSG_RPC_PLUGIN_GET_NAMES)
 
 
 #------------------------------------------------------------------------------
@@ -283,47 +294,6 @@ class Plugin (object):
         :rtype: PluginState
         """
         return PluginState()
-
-
-    #--------------------------------------------------------------------------
-    def check_input_params(self, inputParams):
-        """
-        Optional method to check input parameters passed by the user.
-
-        Parameters will be passed as an instance of 'AuditConfig'.
-
-        If any parameter is not correct o there is an error, an
-        exception must be raised.
-
-        :param inputParams: input parameters to check
-        :type inputParams: AuditConfig
-
-        :raises Exception: The plugin detected a configuration error.
-        """
-        pass
-
-
-    #--------------------------------------------------------------------------
-    def display_help(self):
-        """
-        Optional method to display the help message for this plugin.
-
-        If not overridden, it defaults to returning the Description
-        setting in the plugin descriptor file, or the class docstring
-        if the Description setting is missing.
-
-        :returns: The help message for this plugin.
-        :rtype: str
-        """
-        text = Config.plugin_info.description
-        if not text:
-            text = getattr(self, "__doc__", None)
-            if not text:
-                raise NotImplementedError(
-                    "Plugins that don't define a description in their"
-                    " config file nor their class documentation must"
-                    " implement the display_help() method")
-        return text
 
 
     #--------------------------------------------------------------------------

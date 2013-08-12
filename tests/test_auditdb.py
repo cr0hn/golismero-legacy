@@ -112,6 +112,17 @@ def test_auditdb_consistency():
 
 def helper_test_auditdb_consistency(db, key, data):
 
+    # Test the database start and end times.
+    assert db.get_audit_times() == (None, None)
+    db.set_audit_start_time(1)
+    assert db.get_audit_times() == (1, None)
+    db.set_audit_stop_time(2)
+    assert db.get_audit_times() == (1, 2)
+    db.set_audit_start_time(None)
+    assert db.get_audit_times() == (None, 2)
+    db.set_audit_stop_time(None)
+    assert db.get_audit_times() == (None, None)
+
     # Create some fake data and add it to the database.
     d1 = Url("http://www.example.com/" + key)
     d2 = Text(data)

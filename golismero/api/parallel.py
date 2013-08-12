@@ -51,6 +51,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["pmap", "setInterval", "TaskGroup", "WorkerPool", "Counter"]
 
+from .config import Config
+
 from thread import get_ident
 from threading import RLock, Semaphore, Thread, Event, Timer
 
@@ -497,12 +499,39 @@ class WorkerThread(Thread):
         self.__sem_available   = Semaphore(0)  # Semaphore for pending tasks.
         self.__lock            = RLock()       # Lock to prevent reentrance.
         self.__busy            = False         # Busy flag.
+        self.__context         = None          # Plugin execution context.
 
         # Call the superclass constructor *after* initializing our variables.
         super(WorkerThread, self).__init__()
 
         # Set the thread as daemonic.
         self.daemon = True
+
+
+    #--------------------------------------------------------------------------
+    def start(self):
+        """
+        Thread start function.
+
+        .. warning: This method is called automatically,
+                    do not call it yourself.
+        """
+
+        # Keep the plugin execution context.
+        # We'll need it later to initialize it in the new thread.
+        self.__context = Config._context
+
+        try:
+
+            # Call the superclass method.
+            super(WorkerThread, self).start()
+
+        except:
+
+            # Cleanup on error.
+            self.__context = None
+
+            raise
 
 
     #--------------------------------------------------------------------------
@@ -517,6 +546,10 @@ class WorkerThread(Thread):
         # Check the user isn't a complete moron who doesn't read the docs.
         if self.ident != get_ident():
             raise SyntaxError("Don't call WorkerThread.run() yourself!")
+
+        # Initialize the plugin execution context.
+        Config._context = self.__context
+        self.__context  = None
 
         # Loop until signaled to stop.
         while True:
@@ -586,7 +619,8 @@ class WorkerThread(Thread):
         elif res > 1:
             # If it returns a number greater than one, you're in trouble,
             # and you should call it again with exc=NULL to revert the effect.
-            ctypes.pythonapi.PyThreadState_SetAsyncExc(self.ident, None)
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(
+                ctypes.c_long(self.ident), None)
             raise SystemError("PyThreadState_SetAsyncExc() failed")
 
 

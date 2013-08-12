@@ -174,14 +174,11 @@ class ConsoleUIPlugin(UIPlugin):
                     if Console.level >= Console.MORE_VERBOSE:
                         formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
                     elif Console.level >= Console.VERBOSE:
-                        formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
+                        formatted = w.message
                     else:
                         formatted = None
                     if formatted:
-                        try:
-                            m_plugin_name = self.get_plugin_name(message)
-                        except Exception:
-                            m_plugin_name = "GoLismero"
+                        m_plugin_name = self.get_plugin_name(message)
                         text = "[!] Plugin '%s' warning: %s " % (m_plugin_name, str(formatted))
                         text = colorize(text, 'low')
                         Console.display_error(text)

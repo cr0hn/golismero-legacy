@@ -108,10 +108,10 @@ except NameError:
 
 import argparse
 import datetime
-import textwrap
 
 from ConfigParser import RawConfigParser
 from os import getenv, getpid
+from thread import get_ident
 
 
 #----------------------------------------------------------------------
@@ -396,11 +396,10 @@ def main():
                 except Exception:
                     raise KeyError(P.plugin_name)
             Config._context = PluginContext( orchestrator_pid = getpid(),
+                                             orchestrator_tid = get_ident(),
                                                   plugin_info = m_plugin_info,
                                                     msg_queue = None )
             m_plugin_obj = manager.load_plugin_by_name(m_plugin_info.plugin_name)
-            message = m_plugin_obj.display_help()
-            message = textwrap.dedent(message)
             print "Information for plugin: %s" % m_plugin_info.display_name
             print "----------------------"
             print "Location: %s" % m_plugin_info.descriptor_file
@@ -410,9 +409,6 @@ def main():
             if m_plugin_info.description != m_plugin_info.display_name:
                 print
                 print m_plugin_info.description
-            if message.strip().lower() != m_plugin_info.description.strip().lower():
-                print
-                print message
         except KeyError:
             print "[!] Plugin name not found"
             exit(1)
