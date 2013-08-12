@@ -68,13 +68,19 @@ class PluginTester(object):
 
 
     #--------------------------------------------------------------------------
-    def __init__(self, orchestrator_config = None, audit_config = None):
+    def __init__(self, orchestrator_config = None, audit_config = None,
+                 autoinit = True):
         """
         :param orchestrator_config: Optional orchestrator configuration.
         :type orchestrator_config: OrchestratorConfig
 
         :param audit_config: Optional audit configuration.
         :type audit_config: AuditConfig
+
+        :param autoinit: True to initialize the environment automatically,
+            False otherwise. If set to False you need to call the
+            init_environment() method manually.
+        :type autoinit: bool
         """
 
         # Sanitize the config.
@@ -88,9 +94,13 @@ class PluginTester(object):
         self.__orchestrator_config = orchestrator_config
         self.__audit_config = audit_config
 
-        # Don't initialize the environment yet.
+        # Here's where the Orchestrator and Audit instances are stored.
         self.__orchestrator = None
         self.__audit = None
+
+        # Initialize the environment if requested.
+        if autoinit:
+            self.init_environment()
 
 
     #--------------------------------------------------------------------------

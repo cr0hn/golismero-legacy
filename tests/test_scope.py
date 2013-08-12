@@ -58,7 +58,7 @@ def test_scope_example():
     audit_config = AuditConfig()
     audit_config.targets = ["www.example.com"]
     audit_config.include_subdomains = True
-    with PluginTester(audit_config = audit_config) as t:
+    with PluginTester(audit_config = audit_config, autoinit = False) as t:
         t.init_environment()
 
         assert None not in Config.audit_scope
@@ -99,7 +99,7 @@ def test_scope_localhost():
     audit_config = AuditConfig()
     audit_config.targets = ["localhost"]
     audit_config.include_subdomains = True
-    with PluginTester(audit_config = audit_config) as t:
+    with PluginTester(audit_config = audit_config, autoinit = False) as t:
         t.init_environment()
 
         assert None not in Config.audit_scope

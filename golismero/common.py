@@ -542,7 +542,7 @@ class Configuration (object):
         :rtype: dict(str -> *)
         """
         result = {}
-        for name, definition in _settings_.iteritems():
+        for name, definition in self._settings_.iteritems():
             default = None
             if type(definition) in (tuple, list) and len(definition) > 1:
                 default = definition[1]

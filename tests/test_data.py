@@ -182,7 +182,7 @@ def test_data_types_have_id():
 
 # This test makes sure the links work properly.
 def test_data_links():
-    with PluginTester() as t:
+    with PluginTester(autoinit=False) as t:
         t.targets = ["http://www.example.com/"]
         t.init_environment()
         helper_data_links()
