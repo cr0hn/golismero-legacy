@@ -151,6 +151,21 @@ class ResetListAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, [])
 
+# --file
+class LoadListFromFileAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        try:
+            with open(values, "rU") as f:
+                tokens = []
+                for line in f:
+                    line = line.strip()
+                    if not line or line[0] == "#":
+                        continue
+                    tokens.append(tokens)
+        except Exception, e:
+            parser.error("Error reading file: %s" % values)
+        setattr(namespace, self.dest, tokens)
+
 # --cookie-file
 class ReadValueFromFileAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -176,6 +191,7 @@ def cmdline_parser():
     parser.add_argument("targets", metavar="TARGET", nargs="*", help="one or more target web sites")
 
     gr_main = parser.add_argument_group("main options")
+    gr_main.add_argument("-f", "--file", metavar="FILE", action=LoadListFromFileAction, help="load a list of targets from a plain text file")
     gr_main.add_argument("--config", metavar="FILE", help="global configuration file")
     gr_main.add_argument("-p", "--profile", metavar="NAME", help="profile to use")
     gr_main.add_argument("--profile-list", action="store_true", default=False, help="list available profiles and quit")
@@ -204,10 +220,10 @@ def cmdline_parser():
     gr_net.add_argument("--subdomain-regex", metavar="REGEX", help="filter subdomains using a regular expression")
     gr_net.add_argument("-r", "--depth", help="maximum spidering depth (use \"infinite\" for no limit)")
     gr_net.add_argument("-l", "--max-links", type=int, default=None, help="maximum number of links to analyze (0 => infinite)")
-    gr_net.add_argument("-f","--follow-redirects", action="store_true", default=None, dest="follow_redirects", help="follow redirects")
-    gr_net.add_argument("-nf","--no-follow-redirects", action="store_false", default=None, dest="follow_redirects", help="do not follow redirects")
-    gr_net.add_argument("-ff","--follow-first", action="store_true", default=None, dest="follow_first_redirect", help="always follow a redirection on the target URL itself")
-    gr_net.add_argument("-nff","--no-follow-first", action="store_false", default=None, dest="follow_first_redirect", help="don't treat a redirection on a target URL as a special case")
+    gr_net.add_argument("--follow-redirects", action="store_true", default=None, dest="follow_redirects", help="follow redirects")
+    gr_net.add_argument("--no-follow-redirects", action="store_false", default=None, dest="follow_redirects", help="do not follow redirects")
+    gr_net.add_argument("--follow-first", action="store_true", default=None, dest="follow_first_redirect", help="always follow a redirection on the target URL itself")
+    gr_net.add_argument("--no-follow-first", action="store_false", default=None, dest="follow_first_redirect", help="don't treat a redirection on a target URL as a special case")
     gr_net.add_argument("-pu","--proxy-user", metavar="USER", help="HTTP proxy username")
     gr_net.add_argument("-pp","--proxy-pass", metavar="PASS", help="HTTP proxy password")
     gr_net.add_argument("-pa","--proxy-addr", metavar="ADDRESS:PORT", help="HTTP proxy address in format: address:port")
