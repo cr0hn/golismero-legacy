@@ -308,9 +308,6 @@ class HTMLReport(ReportPlugin):
                 # Summary vulns
                 l_concrete_res['vulns']    = self.__get_vulns_counter(r.associated_vulnerabilities)
 
-                m_resource_appender(l_concrete_res)
-
-                continue
 
                 #
                 # Display the resource
@@ -333,6 +330,8 @@ class HTMLReport(ReportPlugin):
                 #
                 # Display resource params
                 #
+                l_resource_prop          = []
+                l_resource_prop_append   = l_resource_prop.append
                 for l_p in m_valid_params:
                     l_print_value = getattr(r, l_p)
 
@@ -340,7 +339,9 @@ class HTMLReport(ReportPlugin):
 
                         # String data
                         if isinstance(l_print_value, basestring):
-                            l_table.add_row("%s: %s" % (l_p.capitalize(), getattr(r, l_p)))
+                            l_resource_prop_append({'name' : l_p.capitalize(), 'value' : getattr(r, l_p)})
+
+                        continue
 
                         # Dict data
                         if isinstance(l_print_value, dict) and len(l_print_value) > 0:
@@ -349,6 +350,11 @@ class HTMLReport(ReportPlugin):
                         # List data
                         if isinstance(l_print_value, list) and len(l_print_value) > 0:
                             l_table.add_row(l_print_value, cell_title= l_p.replace("_", " ").capitalize())
+
+                l_concrete_res['resource']['prop'] = l_resource_prop
+
+                m_resource_appender(l_concrete_res)
+                continue
 
                 #
                 # Display the vulns
