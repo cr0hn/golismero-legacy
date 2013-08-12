@@ -996,35 +996,28 @@ class AuditPluginManager (PluginManager):
             plugins = all_plugins.difference(disabled_plugins)  # use all but disabled plugins
 
         # Process the plugin load overrides.
-        # First, get the category and find out if there are only enables but no disables for a given category.
-        # Then for those, insert a disable command for the category before the first enable.
+        # First, find out if there are only enables but no disables.
+        # If so, insert a disable command for all testing plugins before the first enable.
         # For all commands, symbolic plugin names are replaced with sets of full IDs.
         if plugin_load_overrides:
+            only_enables = all(x[0] for x in plugin_load_overrides)
             overrides = []
-            have_enables = {}
-            have_disables = {}
+            if only_enables:
+                plugin_load_overrides.insert( 0, (False, "all") )
             for flag, token in plugin_load_overrides:
                 index = len(overrides)
-                have_dict = have_enables if flag else have_disables
                 token = token.strip().lower()
-                if token == "all":
-                    for category in self.CATEGORIES:
-                        if category not in have_dict:
-                            have_dict[category] = index
-                        values = self.pluginManager.get_plugin_names(category)
-                        if values:
-                            overrides.append( (flag, values) )
-                    continue
-                if token in self.CATEGORIES:
-                    category = token
-                    values   = self.pluginManager.get_plugin_names(token)
+                if token in ("all", "testing"):
+                    names = self.pluginManager.get_plugin_names("testing")
+                    overrides.append( (flag, names) )
                 elif token in self.STAGES:
-                    category = "testing"
-                    values   = self.pluginManager.get_plugin_names(token)
+                    names = self.pluginManager.get_plugin_names(token)
+                    overrides.append( (flag, names) )
                 elif token in all_plugins:
-                    values = (token,)
                     info = self.pluginManager.get_plugin_by_name(token)
-                    category = info.category
+                    if info.category != "testing":
+                        raise ValueError("Not a testing plugin: %s" % token)
+                    overrides.append( (flag, (token,)) )
                 else:
                     matching_plugins = self.pluginManager.search_plugins_by_name(token)
                     if not matching_plugins:
@@ -1035,20 +1028,9 @@ class AuditPluginManager (PluginManager):
                         msg %= (token, ", ".join(sorted(matching_plugins.iterkeys)))
                         raise ValueError(msg)
                     name, info = matching_plugins.items()[0]
-                    values = (name,)
-                    category = info.category
-                if category not in have_dict:
-                    have_dict[category] = index
-                if values:
-                    overrides.append( (flag, values) )
-            only_enables = set(have_enables.iterkeys())
-            only_enables.difference_update(have_disables.iterkeys())
-            if only_enables:
-                only_enables_idx = [ (have_enables[stage], stage) for stage in only_enables ]
-                only_enables_idx.sort()
-                for offset, (index, category) in enumerate(only_enables_idx):
-                    values = self.pluginManager.get_plugin_names(category)
-                    overrides.insert(index + offset, (False, values))
+                    if info.category != "testing":
+                        raise ValueError("Not a testing plugin: %s" % token)
+                    overrides.append( (flag, (name,)) )
 
             # Apply the processed plugin load overrides.
             for enable, names in overrides:
