@@ -67,6 +67,16 @@ golismero/api/data/information/http.py:985: Warning (W, HTTP_Response.__parse_ra
 golismero/api/data/information/http.py:985: Warning (W, HTTP_Response.__parse_raw_response): Catching too general exception Exception
 golismero/api/data/information/http.py:1027: Warning (W): FIXME: not sure how Requests handles content encoding,
 golismero/api/data/information/webserver_fingerprint.py:48: Warning (W): TODO: we may want to add a list of default servers and descriptions.
+golismero/api/data/vulnerability/__init__.py:149: Warning (W, Vulnerability.false_positive): Attribute '__false_positive' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:175: Warning (W, Vulnerability.plugin_id): Attribute '__plugin_id' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:212: Warning (W, Vulnerability.level): Attribute '__level' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:235: Warning (W, Vulnerability.impact): Attribute '__impact' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:258: Warning (W, Vulnerability.cve): Attribute '__cve' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:278: Warning (W, Vulnerability.cwe): Attribute '__cwe' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:301: Warning (W, Vulnerability.severity): Attribute '__severity' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:324: Warning (W, Vulnerability.risk): Attribute '__risk' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:344: Warning (W, Vulnerability.description): Attribute '__description' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:367: Warning (W, Vulnerability.references): Attribute '__references' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:395: Warning (W, UrlVulnerability.__init__): Catching too general exception Exception
 golismero/api/data/vulnerability/__init__.py:412: Error (E, UrlVulnerability): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/dns/zone_transfer.py:71: Error (E, DNSZoneTransfer): Method '__init__' has no '__doc__' member
