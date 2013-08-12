@@ -462,7 +462,30 @@
                                                       <div class="row">
                                                         <div class="col-12">
                                                           <div class="panel accordion-panel">
-                                                            asdfasf
+                                                            <div style="padding-top: 20px;">
+                                                              <table class="table table-list table-striped table-bordered table-hover">
+                                                                  <thead>
+                                                                    <tr>
+                                                                      <th width="25%">Property</th>
+                                                                      <th class="hcenter">Value</th>
+                                                                    </tr>
+                                                                  </thead>
+
+                                                                  <tbody>
+                                                                      {% for l_res_pro in l_row.resource.prop %}
+                                                                        <tr>
+                                                                          <td><span class="btn btn-primary btn-small">{{l_res_pro.name}}</span></td>
+                                                                          <td>{{l_res_pro.value}}</td>
+                                                                        </tr>
+                                                                      {% empty %}
+                                                                      <tr>
+                                                                          <td colspan="2">This resource has not properties</td>
+                                                                        </tr>
+                                                                      {% endfor %}
+
+                                                                  </tbody>
+                                                              </table>
+                                                            </div>
                                                           </div>
                                                         </div>
                                                       </div>
