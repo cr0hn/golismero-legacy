@@ -33,8 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["Domain"]
 
 from . import Resource
-from .ip import IP
-from .. import identity, merge
+from .. import identity
 from ...config import Config
 from ...net.web_utils import split_hostname
 

@@ -1005,7 +1005,6 @@ class AuditPluginManager (PluginManager):
             if only_enables:
                 plugin_load_overrides.insert( 0, (False, "all") )
             for flag, token in plugin_load_overrides:
-                index = len(overrides)
                 token = token.strip().lower()
                 if token in ("all", "testing"):
                     names = self.pluginManager.get_plugin_names("testing")

@@ -562,7 +562,7 @@ class Configuration (object):
 
         # Lazy import of the JSON encoder function.
         global json_encode
-        if json_decode is None:
+        if json_encode is None:
             try:
                 # The fastest JSON parser available for Python.
                 from cjson import encode as json_encode
@@ -834,7 +834,6 @@ class AuditConfig (Configuration):
     def check_params(self):
 
         # Validate the list of targets.
-        # TODO: maybe this should be done by the UI plugins instead?
         if not self.targets:
             raise ValueError("No targets selected for execution.")
 

@@ -38,7 +38,6 @@ from ..api.net.web_utils import detect_auth_method, check_auth
 from ..common import OrchestratorConfig, AuditConfig, get_default_config_file
 
 import datetime
-from time import time
 import traceback
 
 
