@@ -130,6 +130,9 @@ def _launch_django(input_conn, output_conn,
         try:
             try:
 
+                # Get the Django command to run.
+                command = [x.strip() for x in plugin_config["call_command"].split(" ")]
+
                 # Instance the bridge object to talk to GoLismero.
                 bridge = Bridge(input_conn, output_conn)
 
@@ -139,13 +142,12 @@ def _launch_django(input_conn, output_conn,
 
                 # Load the Django settings.
                 # XXX FIXME this code is bogus! @cr0hn: put your stuff here :)
-                from django.core.management import setup_environ, startapp
-                from golismero_webapp import settings
+                from django.core.management import call_command
+                from django.conf import settings
                 settings["GOLISMERO_BRIDGE"]              = bridge
                 settings["GOLISMERO_MAIN_CONFIG"]         = orchestrator_config
                 settings["GOLISMERO_PLUGIN_CONFIG"]       = plugin_config
                 settings["GOLISMERO_PLUGIN_EXTRA_CONFIG"] = plugin_extra_config
-                setup_environ(settings)
 
                 # Load the Django webapp data model.
                 # XXX FIXME this code is bogus! @cr0hn: put your stuff here :)
@@ -157,7 +159,7 @@ def _launch_django(input_conn, output_conn,
                 # the web application has shut down and we're quitting.
                 # You MUST instance GoLismeroStateMachine() by passing it
                 # the Bridge instance and (optionally) your event callback.
-                startapp("golismero_webapp")
+                call_command(*command)
 
             # On error tell GoLismero we failed to initialize.
             except Exception, e:
