@@ -1,18 +1,14 @@
 [Core]
-Name = Web interface
+Name   = Web interface
 Module = web/web.py
 
 [Documentation]
 Description = GoLismero web user interface
-Author = GoLismero Project
-Version = 0.1
-Website = https://github.com/golismero
-Copyright = Copyright (C) 2011-2013 GoLismero Project
-License = GNU Public License
-
-[Arguments]
-user=akdsa
-*pass=skkjfd
+Author      = GoLismero Project
+Version     = 0.1
+Website     = https://github.com/golismero
+Copyright   = Copyright (C) 2011-2013 GoLismero Project
+License     = GNU Public License
 
 [Configuration]
 #call_command = runserver 127.0.0.1:80

@@ -31,52 +31,11 @@ __all__ = []
 
 
 #----------------------------------------------------------------------
-# Metadata
-
-__author__ = "Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel) - cr0hn<@>cr0hn.com"
-__copyright__ = "Copyright 2011-2013 - GoLismero Project"
-__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel)", "Mario Vilas (@Mario_Vilas)"]
-__maintainer__ = "cr0hn"
-__email__ = "golismero.project<@>gmail.com"
-__version__ = "2.0.0a1"
-
-
-#----------------------------------------------------------------------
-# Show program banner
-def show_banner():
-    print
-    print "|--------------------------------------------------|"
-    print "| GoLismero - The Web Knife                        |"
-    print "| Contact: golismero.project<@>gmail.com           |"
-    print "|                                                  |"
-    print "| Daniel Garcia a.k.a cr0hn (@ggdaniel)            |"
-    print "| Mario Vilas (@mario_vilas)                       |"
-    print "|--------------------------------------------------|"
-    print
-
-
-#----------------------------------------------------------------------
-# Python version check.
-# We must do it now before trying to import any more modules.
-#
-# Note: this is mostly because of argparse, if you install it
-#       separately you can try removing this check and seeing
-#       what happens (we haven't tested it!).
-
-import sys
-from sys import version_info, exit
-if __name__ == "__main__":
-    if version_info < (2, 7) or version_info >= (3, 0):
-        show_banner()
-        print "[!] You must use Python version 2.7"
-        exit(1)
-
-
-#----------------------------------------------------------------------
 # Fix the module load path when running as a portable script and during installation.
 
 import os
 from os import path
+import sys
 try:
     _FIXED_PATH_
 except NameError:
@@ -104,6 +63,23 @@ except NameError:
 
 
 #----------------------------------------------------------------------
+# Python version check.
+# We must do it now before trying to import any more modules.
+#
+# Note: this is mostly because of argparse, if you install it
+#       separately you can try removing this check and seeing
+#       what happens (we haven't tested it!).
+
+from golismero import show_banner
+from sys import version_info, exit
+if __name__ == "__main__":
+    if version_info < (2, 7) or version_info >= (3, 0):
+        show_banner()
+        print "[!] You must use Python version 2.7"
+        exit(1)
+
+
+#----------------------------------------------------------------------
 # Imported modules
 
 import argparse
@@ -121,7 +97,7 @@ from golismero.api.config import Config
 from golismero.common import OrchestratorConfig, AuditConfig, \
                              get_profile, get_available_profiles
 from golismero.main import launcher
-from golismero.main.console import get_terminal_size
+from golismero.main.console import get_terminal_size, colorize, Console
 from golismero.main.orchestrator import Orchestrator
 from golismero.managers.pluginmanager import PluginManager
 from golismero.managers.processmanager import PluginContext
@@ -129,6 +105,11 @@ from golismero.managers.processmanager import PluginContext
 
 #----------------------------------------------------------------------
 # Custom argparse actions
+
+class CustomArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        message += "\n\nUse -h or --help to show the full help text."
+        return super(CustomArgumentParser, self).error(message)
 
 # --enable-plugin
 class EnablePluginAction(argparse.Action):
@@ -187,7 +168,7 @@ def cmdline_parser():
     except Exception:
         pass
 
-    parser = argparse.ArgumentParser(fromfile_prefix_chars="@")
+    parser = CustomArgumentParser(fromfile_prefix_chars="@")
     parser.add_argument("targets", metavar="TARGET", nargs="*", help="one or more target web sites")
 
     gr_main = parser.add_argument_group("main options")
@@ -279,16 +260,17 @@ def main():
         cmdParams.plugin_load_overrides = P.plugin_load_overrides
 
         # Load the target audit options.
-        auditParams = AuditConfig()
-        auditParams.profile = cmdParams.profile
-        auditParams.profile_file = cmdParams.profile_file
-        auditParams.config_file = cmdParams.config_file
-        if auditParams.config_file:
-            auditParams.from_config_file(auditParams.config_file)
-        if auditParams.profile_file:
-            auditParams.from_config_file(auditParams.profile_file)
-        auditParams.from_object(P)
-        auditParams.plugin_load_overrides = P.plugin_load_overrides
+        if P.targets:
+            auditParams = AuditConfig()
+            auditParams.profile = cmdParams.profile
+            auditParams.profile_file = cmdParams.profile_file
+            auditParams.config_file = cmdParams.config_file
+            if auditParams.config_file:
+                auditParams.from_config_file(auditParams.config_file)
+            if auditParams.profile_file:
+                auditParams.from_config_file(auditParams.profile_file)
+            auditParams.from_object(P)
+            auditParams.plugin_load_overrides = P.plugin_load_overrides
 
     # Show exceptions as command line parsing errors.
     except Exception, e:
@@ -317,6 +299,7 @@ def main():
     # List plugins and quit.
 
     if P.plugin_list:
+        Console.use_colors = cmdParams.colorize
 
         # Load the plugins list
         try:
@@ -327,33 +310,23 @@ def main():
             exit(1)
 
         # Show the list of plugins.
-        print "-------------"
-        print " Plugin list"
-        print "-------------"
-
-        # UI plugins...
-        ui_plugins = manager.get_plugins("ui")
-        if ui_plugins:
-            print
-            print "-= UI plugins =-"
-            for name in sorted(ui_plugins.keys()):
-                info = ui_plugins[name]
-                print "+ %s: %s" % (name[3:], info.description)
+        print colorize("-------------", "red")
+        print colorize(" Plugin list", "red")
+        print colorize("-------------", "red")
 
         # Import plugins...
         import_plugins = manager.get_plugins("import")
         if import_plugins:
             print
-            print "-= Import plugins =-"
+            print colorize("-= Import plugins =-", "yellow")
+            print
             for name in sorted(import_plugins.keys()):
                 info = import_plugins[name]
-                print "+ %s: %s" % (name[7:], info.description)
+                print "%s:\n    %s\n" % (colorize(name[7:], "cyan"), info.description)
 
         # Testing plugins...
         testing_plugins = manager.get_plugins("testing")
         if testing_plugins:
-            print
-            print "-= Testing plugins =-"
             names = sorted(testing_plugins.keys())
             names = [x[8:] for x in names]
             stages = [ (v,k) for (k,v) in manager.STAGES.iteritems() ]
@@ -364,19 +337,33 @@ def main():
                 slice = [x[p:] for x in names if x.startswith(s)]
                 if slice:
                     print
-                    print "%s stage:" % stage.title()
+                    print colorize("-= %s plugins =-" % stage.title(), "yellow")
+                    print
                     for name in slice:
                         info = testing_plugins["testing/%s/%s" % (stage, name)]
-                        print "+ %s: %s" % (name, info.description)
+                        desc = info.description.strip()
+                        desc = desc.replace("\n", "\n    ")
+                        print "%s:\n    %s\n" % (colorize(name, "cyan"), desc)
 
         # Report plugins...
         report_plugins = manager.get_plugins("report")
         if report_plugins:
             print
-            print "-= Report plugins =-"
+            print colorize("-= Report plugins =-", "yellow")
+            print
             for name in sorted(report_plugins.keys()):
                 info = report_plugins[name]
-                print "+ %s: %s" % (name[7:], info.description)
+                print "%s:\n    %s\n" % (colorize(name[7:], "cyan"), info.description)
+
+        # UI plugins...
+        ui_plugins = manager.get_plugins("ui")
+        if ui_plugins:
+            print
+            print colorize("-= UI plugins =-", "yellow")
+            print
+            for name in sorted(ui_plugins.keys()):
+                info = ui_plugins[name]
+                print "%s:\n    %s\n" % (colorize(name[3:], "cyan"), info.description)
 
         if os.sep != "\\":
             print
@@ -387,11 +374,12 @@ def main():
     # Display plugin info and quit.
 
     if P.plugin_name:
+        Console.use_colors = cmdParams.colorize
 
         # Load the plugins list.
         try:
             manager = PluginManager()
-            manager.find_plugins(plugins_folder)
+            manager.find_plugins(cmdParams)
         except Exception, e:
             print "[!] Error loading plugins list: %s" % str(e)
             exit(1)
@@ -416,15 +404,38 @@ def main():
                                                   plugin_info = m_plugin_info,
                                                     msg_queue = None )
             m_plugin_obj = manager.load_plugin_by_name(m_plugin_info.plugin_name)
-            print "Information for plugin: %s" % m_plugin_info.display_name
-            print "----------------------"
-            print "Location: %s" % m_plugin_info.descriptor_file
-            print "Source code: %s" % m_plugin_info.plugin_module
+            m_root = cmdParams.plugins_folder
+            m_root = path.abspath(m_root)
+            if not m_root.endswith(path.sep):
+                m_root += path.sep
+            m_location = m_plugin_info.descriptor_file[len(m_root):]
+            a, b = path.split(m_location)
+            b = colorize(b, "cyan")
+            m_location = path.join(a, b)
+            m_src = m_plugin_info.plugin_module[len(m_root):]
+            a, b = path.split(m_src)
+            b = colorize(b, "cyan")
+            m_src = path.join(a, b)
+            m_name = m_plugin_info.plugin_name
+            p = m_name.rfind("/") + 1
+            m_name = m_name[:p] + colorize(m_name[p:], "cyan")
+            m_desc = m_plugin_info.description.strip()
+            m_desc = m_desc.replace("\n", "\n    ")
+            print "Information for plugin: %s" % colorize(m_plugin_info.display_name, "yellow")
+            print "-" * len("Information for plugin: %s" % m_plugin_info.display_name)
+            print "%s          %s" % (colorize("ID:", "green"), m_name)
+            print "%s    %s" % (colorize("Location:", "green"), m_location)
+            print "%s %s" % (colorize("Source code:", "green"), m_src)
             if m_plugin_info.plugin_class:
-                print "Class name: %s" % m_plugin_info.plugin_class
+                print "%s  %s" % (colorize("Class name:", "green"), colorize(m_plugin_info.plugin_class, "cyan"))
             if m_plugin_info.description != m_plugin_info.display_name:
                 print
-                print m_plugin_info.description
+                print "%s\n    %s" % (colorize("Description:", "green"), m_desc)
+            if m_plugin_info.plugin_args:
+                print
+                print colorize("Arguments:", "green")
+                for name, default in sorted(m_plugin_info.plugin_args.items()):
+                    print "\t%s -> %r" % (colorize(name, "cyan"), default)
         except KeyError:
             print "[!] Plugin name not found"
             exit(1)
@@ -440,6 +451,7 @@ def main():
     #------------------------------------------------------------
     # List profiles and quit.
     if P.profile_list:
+        Console.use_colors = cmdParams.colorize
         profiles = sorted(get_available_profiles())
         if not profiles:
             print "No available profiles!"
@@ -469,17 +481,41 @@ def main():
 
     try:
         cmdParams.check_params()
-        auditParams.check_params()
+        if P.targets:
+            auditParams.check_params()
     except Exception, e:
-        parser.error(e.message)
+        parser.error(str(e))
 
-    if not auditParams.targets:
-        parser.error("no targets selected!")
+    # Hack: we're checking the settings with the UI plugin before
+    # reaching the launcher. The Launcher does it anyway, but
+    # this way we can catch the error before running, and show
+    # a help message using argparse.
+    try:
+        manager = PluginManager()
+        manager.find_plugins(cmdParams)
+        ui_plugin_name = "ui/" + cmdParams.ui_mode
+        ui_plugin = manager.load_plugin_by_name(ui_plugin_name)
+    except Exception, e:
+        print "[!] Error loading plugins: %s" % str(e)
+        exit(1)
+    try:
+        if P.targets:
+            ui_plugin.check_params(cmdParams, auditParams)
+        else:
+            ui_plugin.check_params(cmdParams)
+    except Exception, e:
+        msg = str(e)
+        if not msg:
+            msg = "configuration error!"
+        parser.error(msg)
 
 
     #------------------------------------------------------------
     # Launch GoLismero.
-    launcher.run(cmdParams, auditParams)
+    if P.targets:
+        launcher.run(cmdParams, auditParams)
+    else:
+        launcher.run(cmdParams)
     exit(0)
 
 

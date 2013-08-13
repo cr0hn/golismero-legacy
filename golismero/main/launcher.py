@@ -60,7 +60,10 @@ def run(options, *audits):
     :returns: Exit code.
     :rtype: int
 
-    :raises TypeError: Invalid configuration objects.
+    :raises AttributeError: A critical configuration option is missing.
+    :raises TypeError: A configuration option has a value of a wrong type.
+    :raises ValueError: A configuration option has an incorrect value.
+    :raises Exception: An error occurred while validating the settings.
     """
 
     # Validate and sanitize the arguments.
@@ -69,33 +72,44 @@ def run(options, *audits):
     # Set the console verbosity level.
     Console.level = options.verbose
 
-    # Launch GoLismero.
+    # Set the console color configuration.
+    Console.use_colors = options.colorize
+
+    # Show the start message.
     try:
-
-        # Show the start message.
         Console.display("GoLismero started at %s" % datetime.datetime.now())
+        try:
 
-        # Detect auth in proxy, if specified.
-        for auditParams in audits:
-            if auditParams.proxy_addr:
-                if auditParams.proxy_user:
-                    if not check_auth(auditParams.proxy_addr, auditParams.proxy_user, auditParams.proxy_pass):
-                        Console.display_error("[!] Authentication failed for proxy: '%s'." % auditParams.proxy_addr)
-                        return 1
-                else:
-                    auth, _ = detect_auth_method(auditParams.proxy_addr)
-                    if auth:
-                        Console.display_error("[!] Authentication required for proxy: '%s'. Use '--proxy-user' and '--proxy-pass' to set the username and password." % auditParams.proxy_addr)
-                        return 1
+            # Detect auth in proxy, if specified.
+            for auditParams in audits:
+                if auditParams.proxy_addr:
+                    if auditParams.proxy_user:
+                        if not check_auth(auditParams.proxy_addr, auditParams.proxy_user, auditParams.proxy_pass):
+                            Console.display_error("[!] Authentication failed for proxy: '%s'." % auditParams.proxy_addr)
+                            return 1
+                    else:
+                        auth, _ = detect_auth_method(auditParams.proxy_addr)
+                        if auth:
+                            Console.display_error("[!] Authentication required for proxy: '%s'. Use '--proxy-user' and '--proxy-pass' to set the username and password." % auditParams.proxy_addr)
+                            return 1
 
-        # Run the Orchestrator.
-        with Orchestrator(options) as orchestrator:
-            orchestrator.run(*audits)
+            # Instance the Orchestrator.
+            with Orchestrator(options) as orchestrator:
 
-    # On error, show a fatal error message.
-    except Exception, e:
-        Console.display_error("[!] Fatal error: %s\n%s" % (str(e), traceback.format_exc()))
-        return 1
+                # Validate the settings against the UI plugin.
+                try:
+                    orchestrator.uiManager.check_params(*audits)
+                except Exception, e:
+                    Console.display_error("[!] Configuration error: %s" % str(e))
+                    return 1
+
+                # Run the Orchestrator.
+                orchestrator.run(*audits)
+
+        # On error, show a fatal error message.
+        except Exception, e:
+            Console.display_error("[!] Fatal error: %s\n%s" % (str(e), traceback.format_exc()))
+            return 1
 
     # Show the exit message.
     except KeyboardInterrupt:
@@ -104,8 +118,9 @@ def run(options, *audits):
     except SystemExit, e:
         Console.display("GoLismero stopped at %s" % datetime.datetime.now())
         return e.code
-    Console.display("GoLismero finished at %s" % datetime.datetime.now())
-    return 0
+    finally:
+        Console.display("GoLismero finished at %s" % datetime.datetime.now())
+        return 0
 
 
 #----------------------------------------------------------------------

@@ -64,10 +64,10 @@ class UIManager (object):
             orchestrator.pluginManager.get_plugin_by_name(name)
         except KeyError:
             raise ValueError("No plugin found for UI mode: %r" % mode)
-        p = orchestrator.pluginManager.load_plugin_by_name(name)
+        self.__ui_plugin = orchestrator.pluginManager.load_plugin_by_name(name)
 
         # Add the plugin to the notifier.
-        self.__notifier.add_plugin(name, p)
+        self.__notifier.add_plugin(name, self.__ui_plugin)
 
 
     #----------------------------------------------------------------------
@@ -88,6 +88,35 @@ class UIManager (object):
         :rtype: OrchestratorNotifier
         """
         return self.__notifier
+
+
+    #----------------------------------------------------------------------
+    @property
+    def ui_plugin(self):
+        """
+        :returns: UI plugin instance.
+        :rtype: UIPlugin
+        """
+        return self.__ui_plugin
+
+
+    #----------------------------------------------------------------------
+    def check_params(self, *audits):
+        """
+        Call the UI plugin to verify the Orchestrator and initial Audit
+        settings before launching GoLismero.
+
+        :param audits: Audit settings.
+        :type audits: AuditConfig
+
+        :raises AttributeError: A critical configuration option is missing.
+        :raises ValueError: A configuration option has an incorrect value.
+        :raises TypeError: A configuration option has a value of a wrong type.
+        :raises Exception: An error occurred while validating the settings.
+        """
+        for audit_config in audits:
+            audit_config.check_params()
+        self.ui_plugin.check_params(self.orchestrator.config, *audits)
 
 
     #----------------------------------------------------------------------

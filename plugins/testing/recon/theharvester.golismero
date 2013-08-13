@@ -2,7 +2,7 @@
 Name = theHarvester plugin
 
 [Documentation]
-Description = Integration with theHarvester (https://code.google.com/p/theharvester/)
+Description = Integration with theHarvester (https://code.google.com/p/theharvester/).
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/golismero

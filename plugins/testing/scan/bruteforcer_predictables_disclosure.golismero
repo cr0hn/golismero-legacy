@@ -4,7 +4,8 @@ Module = bruteforcer_url_disclosure.py
 Class = PredictablesDisclosureBruteforcer
 
 [Documentation]
-Description = Tries to discover URLs using default of each kind of server. i.e: (Apache) www.site.com/error_log
+Description = Tries to discover hidden files at predictable locations.
+ For example: (Apache) www.site.com/error_log
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/golismero

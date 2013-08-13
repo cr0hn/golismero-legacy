@@ -4,7 +4,8 @@ Module = bruteforcer_url_disclosure.py
 class = FileExtensionsDisclosureBruteforcer
 
 [Documentation]
-Description = Description = Tries to discover URLs adding some extensions to the files: www.site.com/index.php -> www.site.com/index.php.old
+Description = Tries to discover hidden files by brute force:
+ www.site.com/index.php -> www.site.com/index.php.old
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/golismero

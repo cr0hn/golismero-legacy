@@ -2,7 +2,7 @@
 Name = Console UI
 
 [Documentation]
-Description = Console interface
+Description = Console user interface.
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/golismero

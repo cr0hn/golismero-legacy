@@ -139,6 +139,20 @@ class _Config (Singleton):
 
 
     @property
+    def plugin_args(self):
+        """
+        Plugin arguments.
+
+        Here you will find all settings under the [Arguments]
+        section in the plugin configuration file.
+
+        :returns:
+        :rtype: dict(str -> str)
+        """
+        return self.plugin_info.plugin_args
+
+
+    @property
     def plugin_config(self):
         """
         Plugin configuration.

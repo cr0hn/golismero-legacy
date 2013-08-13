@@ -93,6 +93,9 @@ class Orchestrator (object):
                                             audit_config = self.__config )
         Config._context = self.__context
 
+        # Withing the main process, keep a static reference to the Orchestrator.
+        PluginContext._orchestrator = self
+
         # Set the console configuration.
         Console.level = config.verbose
         Console.use_colors = config.colorize
@@ -110,9 +113,6 @@ class Orchestrator (object):
         except KeyError:
             raise ValueError("No plugin found for UI mode: %r" % self.__config.ui_mode)
         self.pluginManager.load_plugin_by_name(ui_plugin_name)
-
-        # Within the Orchestrator process, keep a static reference to it.
-        PluginContext._orchestrator = self
 
         # Network connection manager.
         self.__netManager = NetworkManager(self.__config)
@@ -284,7 +284,7 @@ class Orchestrator (object):
         :param params: Audit settings
         :type params: AuditConfig
         """
-        self.__auditManager.new_audit(params)
+        self.auditManager.new_audit(params)
 
 
     #----------------------------------------------------------------------
@@ -319,19 +319,17 @@ class Orchestrator (object):
             if (message.message_type == MessageType.MSG_TYPE_CONTROL and \
                 message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT
             ):
-                if self.__ui is not None:
-                    self.__ui.dispatch_msg(message)
-                self.__auditManager.dispatch_msg(message)
+                self.uiManager.dispatch_msg(message)
+                self.auditManager.dispatch_msg(message)
 
                 # The method now must return True because the message was sent.
                 return True
 
             # If it's a control or info message, dispatch it to the audits.
-            if self.__auditManager.dispatch_msg(message):
+            if self.auditManager.dispatch_msg(message):
 
                 # If it wasn't dropped, send it to the UI plugins.
-                if self.__ui is not None:
-                    self.__ui.dispatch_msg(message)
+                self.uiManager.dispatch_msg(message)
 
                 # The method now must return True because the message was sent.
                 return True
@@ -443,11 +441,11 @@ class Orchestrator (object):
 
         Optionally start new audits passed as positional arguments.
         """
+
         try:
 
             # Start the UI.
-            if self.__ui is not None:
-                self.__ui.start()
+            self.uiManager.start()
 
             # If we have initial audits, start them.
             for audit_config in audits:
@@ -477,8 +475,7 @@ class Orchestrator (object):
 
             # Stop the UI.
             try:
-                if self.__ui is not None:
-                    self.__ui.stop()
+                self.uiManager.stop()
             except Exception:
                 print_exc()
 

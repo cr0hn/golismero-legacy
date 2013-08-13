@@ -4,7 +4,8 @@ Module = bruteforcer_url_disclosure.py
 Class = PermutationsDisclosureBruteforcer
 
 [Documentation]
-Description = Tries to discover URLs making some mutations: www.site.com/index.php -> www.site.com/index.php2
+Description = Tries to discover hidden files by bruteforcing the extension:
+ www.site.com/index.php -> www.site.com/index.php2
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/golismero

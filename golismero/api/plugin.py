@@ -435,6 +435,31 @@ class UIPlugin (_InformationPlugin):
 
 
     #--------------------------------------------------------------------------
+    def check_params(self, options, *audits):
+        """
+        Callback method to verify the Orchestrator and initial Audit settings
+        before launching GoLismero.
+
+        .. warning: This method should only perform validation on the settings.
+            No API calls can be made, since it's run from the launcher itself
+            before GoLismero has finished starting up, so the plugin execution
+            context is not yet initialized.
+
+        :param options: Orchestrator settings.
+        :type options: OrchestratorConfig
+
+        :param audits: Audit settings.
+        :type audits: AuditConfig
+
+        :raises AttributeError: A critical configuration option is missing.
+        :raises ValueError: A configuration option has an incorrect value.
+        :raises TypeError: A configuration option has a value of a wrong type.
+        :raises Exception: An error occurred while validating the settings.
+        """
+        pass
+
+
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return None               # Most UI plugins will want all data objects.
 

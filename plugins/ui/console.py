@@ -59,6 +59,12 @@ class ConsoleUIPlugin(UIPlugin):
         self.already_seen_info = set()   # set(str)
 
 
+    #--------------------------------------------------------------------------
+    def check_params(self, options, *audits):
+        if not audits:
+            raise ValueError("No targets selected!")
+
+
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
@@ -183,6 +189,8 @@ class ConsoleUIPlugin(UIPlugin):
                         text = colorize(text, 'low')
                         Console.display_error(text)
 
+
+    #----------------------------------------------------------------------
     @staticmethod
     def get_plugin_name(message):
         if message.plugin_name:

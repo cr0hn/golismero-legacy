@@ -4,7 +4,7 @@ Module = dns_analyzer/dns_analyzer.py
 Class = DNSZoneTransfer
 
 [Documentation]
-Description = Try to make a zone transfer.
+Description = Tries to make a DNS zone transfer.
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/golismero

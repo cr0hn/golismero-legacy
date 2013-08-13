@@ -4,7 +4,7 @@ Module = dns_analyzer/dns_analyzer.py
 Class = DNSAnalizer
 
 [Documentation]
-Description = Try to find as much as possible information of DNS and hidden subdomains
+Description = Tries to find hidden subdomains by enumerating them using the DNS protocol.
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/golismero

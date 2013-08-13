@@ -3,7 +3,7 @@ Name = Default Error page finder
 Dependencies = testing/recon/spider
 
 [Documentation]
-Description = Identify default error pages for most common web servers
+Description = Identifies default error pages for most commonly used web servers.
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/golismero

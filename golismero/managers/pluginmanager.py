@@ -111,7 +111,7 @@ class PluginInfo (object):
     def dependencies(self):
         """
         :returns: Plugin dependencies.
-        :rtype: str
+        :rtype: tuple(str...)
         """
         return self.__dependencies
 
@@ -140,10 +140,18 @@ class PluginInfo (object):
         return self.__plugin_class
 
     @property
+    def plugin_args(self):
+        """
+        :returns: Plugin arguments.
+        :rtype: dict(str -> str)
+        """
+        return self.__plugin_args
+
+    @property
     def plugin_config(self):
         """
         :returns: Plugin configuration.
-        :rtype: str
+        :rtype: dict(str -> str)
         """
         return self.__plugin_config
 
@@ -151,7 +159,7 @@ class PluginInfo (object):
     def plugin_extra_config(self):
         """
         :returns: Plugin extra configuration.
-        :rtype: str
+        :rtype: dict(str -> dict(str -> str))
         """
         return self.__plugin_extra_config
 
@@ -238,27 +246,30 @@ class PluginInfo (object):
         parser.read(descriptor_file)
 
         # Read the "[Core]" section.
-        self.__display_name = parser.get("Core", "Name")
         try:
-            plugin_module   = parser.get("Core", "Module")
+            self.__display_name = parser.get("Core", "Name")
         except Exception:
-            plugin_module   = path.splitext(path.basename(descriptor_file))[0]
+            self.__display_name = plugin_name
         try:
-            plugin_class    = parser.get("Core", "Class")
+            plugin_module       = parser.get("Core", "Module")
         except Exception:
-            plugin_class    = None
+            plugin_module       = path.splitext(path.basename(descriptor_file))[0]
         try:
-            stage           = parser.get("Core", "Stage")
+            plugin_class        = parser.get("Core", "Class")
         except Exception:
-            stage           = None
+            plugin_class        = None
         try:
-            dependencies    = parser.get("Core", "Dependencies")
+            stage               = parser.get("Core", "Stage")
         except Exception:
-            dependencies    = None
+            stage               = None
         try:
-            recursive       = parser.get("Core", "Recursive")
+            dependencies        = parser.get("Core", "Dependencies")
         except Exception:
-            recursive       = "no"
+            dependencies        = None
+        try:
+            recursive           = parser.get("Core", "Recursive")
+        except Exception:
+            recursive           = "no"
 
         # Parse the stage name to get the number.
         if not stage:
@@ -278,13 +289,6 @@ class PluginInfo (object):
                 except Exception:
                     msg = "Error parsing %r: invalid execution stage: %r"
                     raise ValueError(msg % (descriptor_file, stage))
-
-        # Parse the recursive flag.
-        try:
-            self.__recursive = Configuration.boolean(recursive)
-        except Exception:
-            msg = "Error parsing %r: invalid recursive flag: %r"
-            raise ValueError(msg % (descriptor_file, recursive))
 
         # Sanitize the plugin module pathname.
         if not plugin_module.endswith(".py"):
@@ -317,6 +321,13 @@ class PluginInfo (object):
         else:
             self.__dependencies = tuple(sorted( {x.strip() for x in dependencies.split(",")} ))
 
+        # Parse the recursive flag.
+        try:
+            self.__recursive = Configuration.boolean(recursive)
+        except Exception:
+            msg = "Error parsing %r: invalid recursive flag: %r"
+            raise ValueError(msg % (descriptor_file, recursive))
+
         # Read the "[Description]" section.
         try:
             self.__description = parser.get("Documentation", "Description")
@@ -335,13 +346,20 @@ class PluginInfo (object):
         except Exception:
             self.__copyright   = "No copyright information"
         try:
-            self.__license   = parser.get("Documentation", "License")
+            self.__license     = parser.get("Documentation", "License")
         except Exception:
-            self.__license   = "No license information"
+            self.__license     = "No license information"
         try:
             self.__website     = parser.get("Documentation", "Website")
         except Exception:
             self.__website     = "https://github.com/golismero"
+
+        # Load the plugin arguments as a Python dictionary.
+        # This section is optional.
+        try:
+            self.__plugin_args = dict( parser.items("Arguments") )
+        except Exception:
+            self.__plugin_args = dict()
 
         # Load the plugin configuration as a Python dictionary.
         # This section is optional.
@@ -350,10 +368,6 @@ class PluginInfo (object):
         except Exception:
             self.__plugin_config = dict()
 
-        # Override the plugin configuration from the global config file(s).
-        self.__read_config_file(global_config.config_file)
-        self.__read_config_file(global_config.profile_file)
-
         # Load the plugin extra configuration sections as a dict of dicts.
         # All sections not parsed above will be included here.
         self.__plugin_extra_config = dict()
@@ -361,6 +375,10 @@ class PluginInfo (object):
             if section not in ("Core", "Documentation", "Configuration"):
                 options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
                 self.__plugin_extra_config[section] = options
+
+        # Override the plugin configuration from the global config file(s).
+        self.__read_config_file(global_config.config_file)
+        self.__read_config_file(global_config.profile_file)
 
 
     #----------------------------------------------------------------------
@@ -390,6 +408,7 @@ class PluginInfo (object):
         instance.__copyright           = self.__copyright
         instance.__license             = self.__license
         instance.__website             = self.__website
+        instance.__plugin_args         = self.__plugin_args.copy()
         instance.__plugin_config       = self.__plugin_config.copy()
         instance.__plugin_extra_config = {
             k: v.copy()
@@ -432,12 +451,60 @@ class PluginInfo (object):
         :param config_file: Configuration file.
         :type config_file: str
         """
-        if config_file:
-            config_parser = RawConfigParser()
-            config_parser.read(config_file)
-            if config_parser.has_section(self.__plugin_name):
-                self.__plugin_config.update(
-                    dict(config_parser.items(self.__plugin_name)))
+
+        # Dumb check.
+        if not config_file:
+            return
+
+        # Sections beginning with the plugin name are for this plugin.
+        section_prefix = self.__plugin_name
+
+        # Parse the config file.
+        config_parser = RawConfigParser()
+        config_parser.read(config_file)
+
+        # Go through each section.
+        for section in config_parser.sections():
+
+            # If the section name is exactly the plugin name,
+            # copy the settings to the plugin configuration.
+            if section == section_prefix:
+                target = self.__plugin_config
+
+            # The section name can also be the plugin name and
+            # the plugin config file section separated by a colon.
+            elif ":" in section:
+                a, b = section.split(":", 1)
+                a, b = a.strip(), b.strip()
+                if a == section_prefix:
+
+                    # Override the arguments.
+                    if b == "Arguments":
+                        target = self.__plugin_args
+
+                    # Same as just using the plugin name.
+                    elif b == "Configuration":
+                        target = self.__plugin_config
+
+                    # Special sections Core and Documentation can't
+                    # be overridden by config files.
+                    elif b in ("Core", "Documentation"):
+                        msg = "Ignored section [%s] of file %s"
+                        warnings.warn(msg % (section, config_file))
+                        continue
+
+                    # Override the plugin extra configuration.
+                    try:
+                        target = self.__plugin_extra_config[b]
+                    except KeyError:
+                        target = self.__plugin_extra_config[b] = dict()
+
+            # All other sections are ignored.
+            else:
+                continue
+
+            # Copy the settings.
+            target.update( config_parser.items(section) )
 
 
     #----------------------------------------------------------------------
@@ -445,6 +512,9 @@ class PluginInfo (object):
         """
         Protected method to update the class name if found during plugin load.
         (Assumes it's always valid, so no sanitization is performed).
+
+        .. warning: This method is called internally by GoLismero,
+                    do not call it yourself!
 
         :param plugin_class: Plugin class name.
         :type plugin_class: str

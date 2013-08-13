@@ -71,7 +71,7 @@ class NiktoPlugin(TestingPlugin):
                 return
 
         # Get the path to the configuration file.
-        config = Config.plugin_config.get("config", "nikto.conf")
+        config = Config.plugin_args["config"]
         config = join(cwd, config)
         config = abspath(config)
 
@@ -99,9 +99,9 @@ class NiktoPlugin(TestingPlugin):
                 "-nointeractive",
                 ##"-useproxy",
             ]
-            for option in ("maxtime", "Pause", "timeout", "Tuning"):
-                if option in Config.plugin_config:
-                    args.extend(["-" + option, Config.plugin_config[option]])
+            for option, value in Config.plugin_args.iteritems():
+                if value:
+                    args.extend(["-" + option, value])
 
             # On Windows, we must always call Perl explicitly.
             # On Unix, only if the script is not marked as executable.

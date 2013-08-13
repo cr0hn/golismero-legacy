@@ -4,7 +4,8 @@ Module = bruteforcer_url_disclosure.py
 Class = DirectoriesDisclosureBruteforcer
 
 [Documentation]
-Description = Tries to discover URLs changing the folde name: www.site.com/folder/ -> www.site.com/folder2; www.site.com/folder3 ...
+Description = Tries to discover hidden folders by brute force:
+ www.site.com/folder/ -> www.site.com/folder2 www.site.com/folder3 ...
 Author = GoLismero project team
 Version = 0.1
 Website = https://github.com/golismero

@@ -114,6 +114,9 @@ class AuditManager (object):
         if not isinstance(audit_config, AuditConfig):
             raise TypeError("Expected AuditConfig, got %r instead" % type(audit_config))
 
+        # Check the audit config.
+        self.orchestrator.uiManager.check_params(audit_config)
+
         # Create the audit.
         m_audit = Audit(audit_config, self.orchestrator)
 
