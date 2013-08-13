@@ -76,8 +76,8 @@ def run(options, *audits):
     Console.use_colors = options.colorize
 
     # Show the start message.
+    Console.display("GoLismero started at %s" % datetime.datetime.now())
     try:
-        Console.display("GoLismero started at %s" % datetime.datetime.now())
         try:
 
             # Detect auth in proxy, if specified.

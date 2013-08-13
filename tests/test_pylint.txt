@@ -5,7 +5,6 @@ golismero/api/audit.py:97: Warning (W, start_audit): Access to a protected membe
 golismero/api/audit.py:124: Warning (W, stop_audit): Access to a protected member _context of a client class
 golismero/api/config.py:47: Warning (W, get_orchestrator_config): Access to a protected member _context of a client class
 golismero/api/config.py:69: Warning (W, _Config.__init__): Statement seems to have no effect
-golismero/api/config.py:228: Warning (W, _Config._has_context): Statement seems to have no effect
 golismero/api/data/__init__.py:75: Warning (W): TODO: benchmark!!!
 golismero/api/data/__init__.py:81: Warning (W, identity.is_identity_property): Statement seems to have no effect
 golismero/api/data/__init__.py:81: Warning (W, identity.is_identity_property): Statement seems to have no effect
@@ -194,8 +193,6 @@ golismero/api/plugin.py:193: Warning (W, PluginState.set): Access to a protected
 golismero/api/plugin.py:209: Warning (W, PluginState.remove): Access to a protected member _context of a client class
 golismero/api/plugin.py:243: Warning (W, PluginState.get_names): Access to a protected member _context of a client class
 golismero/api/plugin.py:315: Warning (W, Plugin.update_status): Access to a protected member _context of a client class
-golismero/api/plugin.py:496: Warning (W, TestingPlugin): Method 'get_accepted_info' is abstract in class '_InformationPlugin' but is not overridden
-golismero/api/plugin.py:496: Warning (W, TestingPlugin): Method 'recv_info' is abstract in class '_InformationPlugin' but is not overridden
 golismero/api/shared.py:175: Warning (W, SharedMap.get_many): Access to a protected member _context of a client class
 golismero/api/shared.py:226: Warning (W, SharedMap.check_all): Access to a protected member _context of a client class
 golismero/api/shared.py:248: Warning (W, SharedMap.check_any): Access to a protected member _context of a client class
@@ -324,10 +321,11 @@ golismero/main/console.py:246: Warning (W, _get_terminal_size_linux): No excepti
 golismero/main/console.py:293: Warning (W, Console._display): Catching too general exception Exception
 golismero/main/console.py:349: Warning (W, Console._display_error): Catching too general exception Exception
 golismero/main/launcher.py:70: Error (E, run): Instance of 'OrchestratorConfig' has no 'verbose' member (but some types could not be inferred)
-golismero/main/launcher.py:159: Error (E, _sanitize_config): Instance of 'OrchestratorConfig' has no 'targets' member (but some types could not be inferred)
+golismero/main/launcher.py:76: Error (E, run): Instance of 'OrchestratorConfig' has no 'colorize' member (but some types could not be inferred)
+golismero/main/launcher.py:123: Warning (W, run): return statement in finally block may swallow exception
+golismero/main/launcher.py:174: Error (E, _sanitize_config): Instance of 'OrchestratorConfig' has no 'targets' member (but some types could not be inferred)
 golismero/main/orchestrator.py:85: Error (E, Orchestrator.__init__): Instance of 'SyncManager' has no 'Queue' member
 golismero/main/orchestrator.py:91: Warning (W, Orchestrator.__init__): Access to a protected member _context of a client class
-golismero/main/orchestrator.py:112: Warning (W, Orchestrator.__init__): Access to a protected member _orchestrator of a client class
 golismero/main/orchestrator.py:227: Warning (W, Orchestrator.__control_c_handler): Unused argument 'frame'
 golismero/main/orchestrator.py:227: Warning (W, Orchestrator.__control_c_handler): Unused argument 'signum'
 golismero/main/orchestrator.py:244: Warning (W, Orchestrator.__control_c_handler): Catching too general exception Exception
@@ -382,13 +380,13 @@ golismero/managers/auditmanager.py:132: Warning (W): XXX DEBUG
 golismero/managers/auditmanager.py:133: Warning (W, AuditManager.new_audit): Catching too general exception Exception
 golismero/managers/auditmanager.py:260: Warning (W, AuditManager.close): No exception type(s) specified
 golismero/managers/auditmanager.py:433: Warning (W, Audit.run): Access to a protected member _context of a client class
-golismero/managers/auditmanager.py:433: Warning (W, Audit.run): Access to a protected member _context of a client class
 golismero/managers/auditmanager.py:445: Warning (W, Audit.run): Access to a protected member _orchestrator_pid of a client class
 golismero/managers/auditmanager.py:446: Warning (W, Audit.run): Access to a protected member _orchestrator_tid of a client class
 golismero/managers/auditmanager.py:447: Warning (W, Audit.run): Access to a protected member _context of a client class
+golismero/managers/auditmanager.py:447: Warning (W, Audit.run): Access to a protected member _context of a client class
 golismero/managers/auditmanager.py:457: Warning (W, Audit.run): Access to a protected member _orchestrator_pid of a client class
 golismero/managers/auditmanager.py:458: Warning (W, Audit.run): Access to a protected member _orchestrator_tid of a client class
-golismero/managers/auditmanager.py:476: Error (E, Audit.run): Instance of 'AuditDB' has no 'filename' member
+golismero/managers/auditmanager.py:487: Error (E, Audit.run): Instance of 'AuditDB' has no 'filename' member
 golismero/managers/auditmanager.py:535: Warning (W, Audit.run): Access to a protected member _context of a client class
 golismero/managers/auditmanager.py:715: Warning (W, Audit.dispatch_msg): Access to a protected member _context of a client class
 golismero/managers/auditmanager.py:715: Warning (W, Audit.dispatch_msg): Access to a protected member _context of a client class
@@ -404,62 +402,66 @@ golismero/managers/importmanager.py:140: Warning (W, ImportManager.import_result
 golismero/managers/networkmanager.py:133: Warning (W, NetworkManager.request_slot): Statement seems to have no effect
 golismero/managers/networkmanager.py:179: Warning (W, NetworkManager.release_slot): Catching too general exception Exception
 golismero/managers/networkmanager.py:203: Warning (W, NetworkManager.release_all_slots): No exception type(s) specified
-golismero/managers/pluginmanager.py:235: Warning (W, PluginInfo.__init__): Catching too general exception Exception
-golismero/managers/pluginmanager.py:243: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:243: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:260: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:260: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:260: Warning (W, PluginInfo.__init__): Catching too general exception Exception
-golismero/managers/pluginmanager.py:314: Warning (W, PluginInfo.__init__): Catching too general exception Exception
-golismero/managers/pluginmanager.py:318: Warning (W, PluginInfo.__init__): Catching too general exception Exception
+golismero/managers/pluginmanager.py:260: Warning (W, PluginInfo.__init__): Catching too general exception Exception
+golismero/managers/pluginmanager.py:271: Warning (W, PluginInfo.__init__): Catching too general exception Exception
+golismero/managers/pluginmanager.py:271: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:326: Warning (W, PluginInfo.__init__): Catching too general exception Exception
-golismero/managers/pluginmanager.py:326: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:342: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:342: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:342: Warning (W, PluginInfo.__init__): Catching too general exception Exception
-golismero/managers/pluginmanager.py:379: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_name of a client class
-golismero/managers/pluginmanager.py:379: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_name' defined outside __init__
-golismero/managers/pluginmanager.py:380: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __descriptor_file of a client class
-golismero/managers/pluginmanager.py:380: Warning (W, PluginInfo.__deepcopy__): Attribute '__descriptor_file' defined outside __init__
-golismero/managers/pluginmanager.py:381: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __display_name of a client class
-golismero/managers/pluginmanager.py:381: Warning (W, PluginInfo.__deepcopy__): Attribute '__display_name' defined outside __init__
-golismero/managers/pluginmanager.py:382: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __stage of a client class
-golismero/managers/pluginmanager.py:382: Warning (W, PluginInfo.__deepcopy__): Attribute '__stage' defined outside __init__
-golismero/managers/pluginmanager.py:383: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __recursive of a client class
-golismero/managers/pluginmanager.py:383: Warning (W, PluginInfo.__deepcopy__): Attribute '__recursive' defined outside __init__
-golismero/managers/pluginmanager.py:384: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_module of a client class
-golismero/managers/pluginmanager.py:384: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_module' defined outside __init__
-golismero/managers/pluginmanager.py:385: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_class of a client class
-golismero/managers/pluginmanager.py:385: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_class' defined outside __init__
-golismero/managers/pluginmanager.py:386: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __dependencies of a client class
-golismero/managers/pluginmanager.py:386: Warning (W, PluginInfo.__deepcopy__): Attribute '__dependencies' defined outside __init__
-golismero/managers/pluginmanager.py:387: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __description of a client class
-golismero/managers/pluginmanager.py:387: Warning (W, PluginInfo.__deepcopy__): Attribute '__description' defined outside __init__
-golismero/managers/pluginmanager.py:388: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __version of a client class
-golismero/managers/pluginmanager.py:388: Warning (W, PluginInfo.__deepcopy__): Attribute '__version' defined outside __init__
-golismero/managers/pluginmanager.py:389: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __author of a client class
-golismero/managers/pluginmanager.py:389: Warning (W, PluginInfo.__deepcopy__): Attribute '__author' defined outside __init__
-golismero/managers/pluginmanager.py:390: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __copyright of a client class
-golismero/managers/pluginmanager.py:390: Warning (W, PluginInfo.__deepcopy__): Attribute '__copyright' defined outside __init__
-golismero/managers/pluginmanager.py:391: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __license of a client class
-golismero/managers/pluginmanager.py:391: Warning (W, PluginInfo.__deepcopy__): Attribute '__license' defined outside __init__
-golismero/managers/pluginmanager.py:392: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __website of a client class
-golismero/managers/pluginmanager.py:392: Warning (W, PluginInfo.__deepcopy__): Attribute '__website' defined outside __init__
-golismero/managers/pluginmanager.py:393: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_config of a client class
-golismero/managers/pluginmanager.py:393: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_config' defined outside __init__
-golismero/managers/pluginmanager.py:394: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_extra_config of a client class
-golismero/managers/pluginmanager.py:394: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_extra_config' defined outside __init__
-golismero/managers/pluginmanager.py:422: Error (E, PluginInfo.customize_for_audit): Instance of '_EmptyNewStyleClass' has no '__read_config_file' member
-golismero/managers/pluginmanager.py:422: Error (E, PluginInfo.customize_for_audit): Instance of '_EmptyNewStyleClass' has no '__read_config_file' member
-golismero/managers/pluginmanager.py:422: Warning (W, PluginInfo.customize_for_audit): Access to a protected member __read_config_file of a client class
-golismero/managers/pluginmanager.py:422: Warning (W, PluginInfo.customize_for_audit): Access to a protected member __read_config_file of a client class
-golismero/managers/pluginmanager.py:480: Warning (W, PluginManager): Used * or ** magic
-golismero/managers/pluginmanager.py:480: Warning (W, PluginManager): Used * or ** magic
-golismero/managers/pluginmanager.py:610: Warning (W, PluginManager.find_plugins): Catching too general exception Exception
-golismero/managers/pluginmanager.py:816: Warning (W, PluginManager.load_plugin_by_name): Access to a protected member _fix_classname of a client class
-golismero/managers/pluginmanager.py:844: Warning (W, PluginManager.get_plugin_info_from_instance): Catching too general exception Exception
-golismero/managers/pluginmanager.py:884: Warning (W, AuditPluginManager.__init__): Unused argument 'orchestratorConfig'
-golismero/managers/pluginmanager.py:1229: Warning (W, AuditPluginManager.load_plugin_by_name): Access to a protected member _fix_classname of a client class
+golismero/managers/pluginmanager.py:342: Warning (W, PluginInfo.__init__): Catching too general exception Exception
+golismero/managers/pluginmanager.py:354: Warning (W, PluginInfo.__init__): Catching too general exception Exception
+golismero/managers/pluginmanager.py:354: Warning (W, PluginInfo.__init__): Catching too general exception Exception
+golismero/managers/pluginmanager.py:361: Warning (W, PluginInfo.__init__): Catching too general exception Exception
+golismero/managers/pluginmanager.py:397: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_name of a client class
+golismero/managers/pluginmanager.py:397: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_name' defined outside __init__
+golismero/managers/pluginmanager.py:398: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __descriptor_file of a client class
+golismero/managers/pluginmanager.py:398: Warning (W, PluginInfo.__deepcopy__): Attribute '__descriptor_file' defined outside __init__
+golismero/managers/pluginmanager.py:399: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __display_name of a client class
+golismero/managers/pluginmanager.py:399: Warning (W, PluginInfo.__deepcopy__): Attribute '__display_name' defined outside __init__
+golismero/managers/pluginmanager.py:400: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __stage of a client class
+golismero/managers/pluginmanager.py:400: Warning (W, PluginInfo.__deepcopy__): Attribute '__stage' defined outside __init__
+golismero/managers/pluginmanager.py:401: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __recursive of a client class
+golismero/managers/pluginmanager.py:401: Warning (W, PluginInfo.__deepcopy__): Attribute '__recursive' defined outside __init__
+golismero/managers/pluginmanager.py:402: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_module of a client class
+golismero/managers/pluginmanager.py:402: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_module' defined outside __init__
+golismero/managers/pluginmanager.py:403: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_class of a client class
+golismero/managers/pluginmanager.py:403: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_class' defined outside __init__
+golismero/managers/pluginmanager.py:404: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __dependencies of a client class
+golismero/managers/pluginmanager.py:404: Warning (W, PluginInfo.__deepcopy__): Attribute '__dependencies' defined outside __init__
+golismero/managers/pluginmanager.py:405: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __description of a client class
+golismero/managers/pluginmanager.py:405: Warning (W, PluginInfo.__deepcopy__): Attribute '__description' defined outside __init__
+golismero/managers/pluginmanager.py:406: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __version of a client class
+golismero/managers/pluginmanager.py:406: Warning (W, PluginInfo.__deepcopy__): Attribute '__version' defined outside __init__
+golismero/managers/pluginmanager.py:407: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __author of a client class
+golismero/managers/pluginmanager.py:407: Warning (W, PluginInfo.__deepcopy__): Attribute '__author' defined outside __init__
+golismero/managers/pluginmanager.py:408: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __copyright of a client class
+golismero/managers/pluginmanager.py:408: Warning (W, PluginInfo.__deepcopy__): Attribute '__copyright' defined outside __init__
+golismero/managers/pluginmanager.py:409: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __license of a client class
+golismero/managers/pluginmanager.py:409: Warning (W, PluginInfo.__deepcopy__): Attribute '__license' defined outside __init__
+golismero/managers/pluginmanager.py:410: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __website of a client class
+golismero/managers/pluginmanager.py:410: Warning (W, PluginInfo.__deepcopy__): Attribute '__website' defined outside __init__
+golismero/managers/pluginmanager.py:411: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_args of a client class
+golismero/managers/pluginmanager.py:411: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_args' defined outside __init__
+golismero/managers/pluginmanager.py:412: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_config of a client class
+golismero/managers/pluginmanager.py:412: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_config' defined outside __init__
+golismero/managers/pluginmanager.py:413: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_extra_config of a client class
+golismero/managers/pluginmanager.py:413: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_extra_config' defined outside __init__
+golismero/managers/pluginmanager.py:441: Error (E, PluginInfo.customize_for_audit): Instance of '_EmptyNewStyleClass' has no '__read_config_file' member
+golismero/managers/pluginmanager.py:441: Error (E, PluginInfo.customize_for_audit): Instance of '_EmptyNewStyleClass' has no '__read_config_file' member
+golismero/managers/pluginmanager.py:441: Warning (W, PluginInfo.customize_for_audit): Access to a protected member __read_config_file of a client class
+golismero/managers/pluginmanager.py:441: Warning (W, PluginInfo.customize_for_audit): Access to a protected member __read_config_file of a client class
+golismero/managers/pluginmanager.py:550: Warning (W, PluginManager): Used * or ** magic
+golismero/managers/pluginmanager.py:550: Warning (W, PluginManager): Used * or ** magic
+golismero/managers/pluginmanager.py:680: Warning (W, PluginManager.find_plugins): Catching too general exception Exception
+golismero/managers/pluginmanager.py:886: Warning (W, PluginManager.load_plugin_by_name): Access to a protected member _fix_classname of a client class
+golismero/managers/pluginmanager.py:914: Warning (W, PluginManager.get_plugin_info_from_instance): Catching too general exception Exception
+golismero/managers/pluginmanager.py:954: Warning (W, AuditPluginManager.__init__): Unused argument 'orchestratorConfig'
+golismero/managers/pluginmanager.py:1299: Warning (W, AuditPluginManager.load_plugin_by_name): Access to a protected member _fix_classname of a client class
 golismero/managers/processmanager.py:73: Warning (W, Process.daemon): Arguments number differs from overridden method
 golismero/managers/processmanager.py:73: Warning (W, Process.daemon): Arguments number differs from overridden method
 golismero/managers/processmanager.py:82: Warning (W, Pool): Method '__reduce__' is abstract in class 'Pool' but is not overridden
