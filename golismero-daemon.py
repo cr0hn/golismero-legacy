@@ -82,10 +82,7 @@ except NameError:
 # Imported modules.
 
 import daemon
-import datetime
-import textwrap
-
-from os import getenv, path
+from os import path
 
 
 #----------------------------------------------------------------------
