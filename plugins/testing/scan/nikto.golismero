@@ -12,7 +12,6 @@ License     = GNU Public License
 
 [Arguments]
 config  = nikto.conf
-maxtime = 60
-Pause   = 1
+Pause   = 0
 timeout = 10
 Tuning  = x6
