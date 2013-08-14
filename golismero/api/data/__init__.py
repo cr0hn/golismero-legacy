@@ -34,7 +34,7 @@ __all__ = ["Data", "identity", "merge", "overwrite", "LocalDataCache"]
 
 from .db import Database
 from ..config import Config
-from ...common import pickle
+from ...common import pickle, Singleton
 
 from collections import defaultdict
 from functools import partial
@@ -920,7 +920,7 @@ class Data(object):
 
 
 #----------------------------------------------------------------------
-class _LocalDataCache(object):
+class _LocalDataCache(Singleton):
     """
     Temporary storage for newly created objects.
 

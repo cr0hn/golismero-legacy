@@ -110,10 +110,12 @@ class HarvesterPlugin(TestingPlugin):
 
         # Email addresses.
         for address in all_emails:
+            if "..." in address:                          # known bug in theHarvester
+                continue
             while address and not address[0].isalnum():   # known bug in theHarvester
-                address[1:]
+                address = address[1:]
             while address and not address[-1].isalnum():
-                address[:-1]
+                address = address[:-1]
             if not address:
                 continue
             try:
@@ -137,9 +139,9 @@ class HarvesterPlugin(TestingPlugin):
         total = float(len(all_hosts))
         for step, name in enumerate(all_hosts):
             while name and not name[0].isalnum():   # known bug in theHarvester
-                name[1:]
+                name = name[1:]
             while name and not name[-1].isalnum():
-                name[:-1]
+                name = name[:-1]
             if not name:
                 continue
             visited.add(name)

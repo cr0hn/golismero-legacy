@@ -293,10 +293,11 @@ class Orchestrator (object):
         Process messages from audits or from the message queue, and send them
         forward to the plugins through the Message Manager when appropriate.
 
-        :param message: incoming message
+        :param message: Incoming message.
         :type message: Message
 
-        :returns: bool - True if the message was sent, False if it was dropped
+        :returns: True if the message was sent, False if it was dropped.
+        :rtype: bool
         """
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %s instead" % type(message))

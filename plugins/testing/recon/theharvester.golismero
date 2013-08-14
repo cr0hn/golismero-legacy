@@ -1,5 +1,5 @@
 [Core]
-Name = theHarvester plugin
+Name = theHarvester
 
 [Documentation]
 Description = Integration with theHarvester (https://code.google.com/p/theharvester/).

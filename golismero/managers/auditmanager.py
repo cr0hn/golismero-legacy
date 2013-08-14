@@ -834,7 +834,14 @@ class Audit (object):
                 message._update_data(data_for_plugins)
 
                 # Send the message to the plugins, and track the expected ACKs.
-                self.__expecting_ack += self.__notifier.notify(message)
+                launched = self.__notifier.notify(message)
+                if launched:
+                    self.__expecting_ack += launched
+                else:
+                    self.__expecting_ack += 1
+                    self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                                  message_code = MessageCode.MSG_CONTROL_ACK,
+                                      priority = MessagePriority.MSG_PRIORITY_LOW)
 
                 # Tell the Orchestrator we sent the message.
                 return True
@@ -879,7 +886,14 @@ class Audit (object):
             )
 
             # Start the report generation.
-            self.__expecting_ack += self.__report_manager.generate_reports(self.__notifier)
+            launched = self.__report_manager.generate_reports(self.__notifier)
+            if launched:
+                self.__expecting_ack += launched
+            else:
+                self.__expecting_ack += 1
+                self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                              message_code = MessageCode.MSG_CONTROL_ACK,
+                                  priority = MessagePriority.MSG_PRIORITY_LOW)
 
         # Send the ACK after launching the report plugins.
         finally:

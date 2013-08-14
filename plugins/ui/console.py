@@ -94,17 +94,17 @@ class ConsoleUIPlugin(UIPlugin):
         # Process status messages
         if message.message_type == MessageType.MSG_TYPE_STATUS:
 
-            if message.message_type == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
+            if message.message_code == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
                 m_plugin_name = self.get_plugin_name(message.plugin_name)
                 m_plugin_name = colorize(m_plugin_name, "info")
-                m_text        = "[  0%] %s: Started." % m_plugin_name
+                m_text        = "[  0.00%%] %s: Started." % m_plugin_name
 
                 Console.display(m_text)
 
-            elif message.message_type == MessageCode.MSG_STATUS_PLUGIN_END:
+            elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_END:
                 m_plugin_name = self.get_plugin_name(message.plugin_name)
                 m_plugin_name = colorize(m_plugin_name, "info")
-                m_text        = "[100%] %s: Finished." % m_plugin_name
+                m_text        = "[100.00%%] %s: Finished." % m_plugin_name
 
                 Console.display(m_text)
 

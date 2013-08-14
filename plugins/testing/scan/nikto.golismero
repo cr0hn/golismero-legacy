@@ -1,5 +1,5 @@
 [Core]
-Name   = Nikto scanner
+Name   = Nikto
 Module = nikto/nikto_to_golismero_adaptor.py
 
 [Documentation]
