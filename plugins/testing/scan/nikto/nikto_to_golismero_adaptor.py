@@ -244,18 +244,10 @@ class NiktoPlugin(TestingPlugin):
             if output_filename.startswith("/cygdrive/"):
                 output_filename = cygwin_to_win_path(output_filename)
             with open(output_filename, "rU") as f:
-                total = float( sum(1 for _ in f) )
-            if not total:
-                Logger.log_verbose("Nikto produced no output for target: %s" % info.hostname)
-                return []
-            current = 0.0
-            with open(output_filename, "rU") as f:
                 csv_reader = reader(f)
                 csv_reader.next()  # ignore the first line
                 for row in csv_reader:
                     try:
-                        self.update_status(progress = current / total * 100.0)
-                        current += 1.0
 
                         # Each row (except for the first) has always
                         # the same 7 columns, but some may be empty.
@@ -293,7 +285,7 @@ class NiktoPlugin(TestingPlugin):
                         # Report the vulnerabilities.
                         vuln = UrlVulnerability(
                             url = url,
-                            level = "informational",
+                            level = "informational",  # TODO: use the OSVDB API
                             description = "%s: %s" % (vuln_tag, text),
                         )
                         results.append(vuln)
@@ -304,9 +296,6 @@ class NiktoPlugin(TestingPlugin):
                         Logger.log_error_verbose(str(e))
                         Logger.log_error_more_verbose(format_exc())
 
-            # We're done parsing the results.
-            self.update_status(progress = 100)
-
         # On error, log the exception.
         except Exception, e:
             Logger.log_error_verbose(str(e))
@@ -314,7 +303,7 @@ class NiktoPlugin(TestingPlugin):
 
         # Log how many results we found.
         msg = (
-            "Nikto found %d vulnerabilities for host %s" % (
+            "Nikto found %d vulnerabilities for host: %s" % (
                 vuln_count,
                 info.hostname,
             )
