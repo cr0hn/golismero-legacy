@@ -184,7 +184,10 @@ class HarvesterPlugin(TestingPlugin):
 
         text = "Found %d emails and %d hostnames for keyword %r"
         text = text % (len(all_emails), len(all_hosts), word)
-        Logger.log_more_verbose(text)
+        if len(all_emails) + len(all_hosts) > 0:
+            Logger.log(text)
+        else:
+            Logger.log_verbose(text)
 
         # Return the data.
         return results

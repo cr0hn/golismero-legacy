@@ -1021,12 +1021,12 @@ class AuditPluginManager (PluginManager):
             raise TypeError("Expected AuditConfig, got %s instead" % type(auditConfig))
 
         # Get the black and white lists and the plugin load overrides.
-        enabled_plugins       = auditConfig.enabled_plugins
-        disabled_plugins      = auditConfig.disabled_plugins
+        enable_plugins        = auditConfig.enable_plugins
+        disable_plugins       = auditConfig.disable_plugins
         plugin_load_overrides = auditConfig.plugin_load_overrides
 
         # Dumb check.
-        if not enabled_plugins and not disabled_plugins and not plugin_load_overrides:
+        if not enable_plugins and not disable_plugins and not plugin_load_overrides:
             raise ValueError("No plugins selected for audit!")
 
         # Get all the plugin names.
@@ -1036,16 +1036,16 @@ class AuditPluginManager (PluginManager):
 
         # Remove duplicates in black and white lists.
         blacklist_approach = False
-        if "all" in enabled_plugins:
-            enabled_plugins    = {"all"}
-        if "all" in disabled_plugins:
-            disabled_plugins   = {"all"}
+        if "all" in enable_plugins:
+            enable_plugins     = {"all"}
+        if "all" in disable_plugins:
+            disable_plugins    = {"all"}
             blacklist_approach = True
-        enabled_plugins  = set(enabled_plugins)
-        disabled_plugins = set(disabled_plugins)
+        enable_plugins  = set(enable_plugins)
+        disable_plugins = set(disable_plugins)
 
         # Check for consistency in black and white lists.
-        conflicting_entries = enabled_plugins.intersection(disabled_plugins)
+        conflicting_entries = enable_plugins.intersection(disable_plugins)
         if conflicting_entries:
             if len(conflicting_entries) > 1:
                 msg = "The same entries are present in both black and white lists: %s"
@@ -1056,14 +1056,14 @@ class AuditPluginManager (PluginManager):
             raise ValueError(msg)
 
         # Expand the black and white lists.
-        disabled_plugins = self.__expand_plugin_list(disabled_plugins, "blacklist")
-        enabled_plugins  = self.__expand_plugin_list(enabled_plugins,  "whitelist")
+        disable_plugins = self.__expand_plugin_list(disable_plugins, "blacklist")
+        enable_plugins  = self.__expand_plugin_list(enable_plugins,  "whitelist")
 
         # Apply the black and white lists.
         if blacklist_approach:
-            plugins = all_plugins.intersection(enabled_plugins) # use only enabled plugins
+            plugins = all_plugins.intersection(enable_plugins) # use only enabled plugins
         else:
-            plugins = all_plugins.difference(disabled_plugins)  # use all but disabled plugins
+            plugins = all_plugins.difference(disable_plugins)  # use all but disabled plugins
 
         # Process the plugin load overrides. They only apply to testing plugins.
         # First, find out if there are only enables but no disables.

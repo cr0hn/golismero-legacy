@@ -229,16 +229,16 @@ golismero/common.py:649: Error (E, OrchestratorConfig.check_params): Instance of
 golismero/common.py:649: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'max_connections' member
 golismero/common.py:653: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'max_process' member
 golismero/common.py:653: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'max_process' member
-golismero/common.py:657: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'enabled_plugins' member
-golismero/common.py:657: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'enabled_plugins' member
-golismero/common.py:659: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'disabled_plugins' member
+golismero/common.py:657: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'enable_plugins' member
+golismero/common.py:657: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'enable_plugins' member
+golismero/common.py:659: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'disable_plugins' member
 golismero/common.py:769: Warning (W, AuditConfig.targets): Attribute '_targets' defined outside __init__
 golismero/common.py:786: Warning (W, AuditConfig.reports): Attribute '_reports' defined outside __init__
 golismero/common.py:804: Warning (W, AuditConfig.audit_db): Attribute '_audit_db' defined outside __init__
 golismero/common.py:830: Warning (W, AuditConfig.cookie): Attribute '_cookie' defined outside __init__
-golismero/common.py:841: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'enabled_plugins' member
-golismero/common.py:841: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'enabled_plugins' member
-golismero/common.py:843: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'disabled_plugins' member
+golismero/common.py:841: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'enable_plugins' member
+golismero/common.py:841: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'enable_plugins' member
+golismero/common.py:843: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'disable_plugins' member
 golismero/common.py:847: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'subdomain_regex' member
 golismero/common.py:847: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'subdomain_regex' member
 golismero/common.py:856: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'depth' member

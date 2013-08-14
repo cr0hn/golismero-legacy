@@ -50,10 +50,7 @@ from netaddr import IPAddress
 # DNS analyzer
 #
 #--------------------------------------------------------------------------
-class DNSAnalizer(TestingPlugin):
-    """
-    Find subdomains
-    """
+class DNSAnalyzer(TestingPlugin):
 
 
     #----------------------------------------------------------------------
@@ -106,9 +103,6 @@ class DNSAnalizer(TestingPlugin):
 #
 #--------------------------------------------------------------------------
 class DNSZoneTransfer(TestingPlugin):
-    """
-    Try to make a zone transfer
-    """
 
 
     #----------------------------------------------------------------------
@@ -189,9 +183,6 @@ class DNSZoneTransfer(TestingPlugin):
 #
 #--------------------------------------------------------------------------
 class DNSBruteforcer(TestingPlugin):
-    """
-    Find subdomains by brute force.
-    """
 
 
     #----------------------------------------------------------------------

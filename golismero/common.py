@@ -611,10 +611,10 @@ class OrchestratorConfig (Configuration):
         #
 
         # Enabled plugins
-        "enabled_plugins": (Configuration.comma_separated_list, ["all"]),
+        "enable_plugins": (Configuration.comma_separated_list, ["all"]),
 
         # Disabled plugins
-        "disabled_plugins": (Configuration.comma_separated_list, []),
+        "disable_plugins": (Configuration.comma_separated_list, []),
 
         # Plugins folder
         "plugins_folder": Configuration.string,
@@ -654,9 +654,9 @@ class OrchestratorConfig (Configuration):
             raise ValueError("Number of processes cannot be a negative number, got %i." % self.max_process)
 
         # Validate the list of plugins.
-        if not self.enabled_plugins:
+        if not self.enable_plugins:
             raise ValueError("No plugins selected for execution.")
-        if set(self.enabled_plugins).intersection(self.disabled_plugins):
+        if set(self.enable_plugins).intersection(self.disable_plugins):
             raise ValueError("Conflicting plugins selection, aborting execution.")
 
 
@@ -707,10 +707,10 @@ class AuditConfig (Configuration):
         #
 
         # Enabled plugins
-        "enabled_plugins": (Configuration.comma_separated_list, ["all"]),
+        "enable_plugins": (Configuration.comma_separated_list, ["all"]),
 
         # Disabled plugins
-        "disabled_plugins": (Configuration.comma_separated_list, []),
+        "disable_plugins": (Configuration.comma_separated_list, []),
 
         #
         # Networks options
@@ -852,9 +852,9 @@ class AuditConfig (Configuration):
             raise ValueError("No targets selected for execution.")
 
         # Validate the list of plugins.
-        if not self.enabled_plugins:
+        if not self.enable_plugins:
             raise ValueError("No plugins selected for execution.")
-        if set(self.enabled_plugins).intersection(self.disabled_plugins):
+        if set(self.enable_plugins).intersection(self.disable_plugins):
             raise ValueError("Conflicting plugins selection, aborting execution.")
 
         # Validate the regular expresion.
