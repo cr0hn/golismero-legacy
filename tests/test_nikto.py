@@ -45,6 +45,7 @@ except NameError:
     _FIXED_PATH_ = True
 
 
+from golismero.api.config import Config
 from golismero.api.data.resource.url import BaseUrl
 from golismero.common import AuditConfig
 from golismero.main.testing import PluginTester
@@ -60,12 +61,16 @@ def test_nikto():
     with PluginTester(audit_config = audit_config) as t:
 
         print "Testing Nikto plugin parser..."
-        plugin, _ = t.get_plugin(plugin_name)
-        r = plugin.parse_nikto_results(BaseUrl("http://%s/" % target),
-                                       path.join(here, "test_nikto.csv"))
-        for d in r:
-            print
-            print repr(d)
+        plugin, plugin_info = t.get_plugin(plugin_name)
+        Config._context._PluginContext__plugin_info = plugin_info
+        try:
+            r = plugin.parse_nikto_results(BaseUrl("http://%s/" % target),
+                                           path.join(here, "test_nikto.csv"))
+            for d in r:
+                print
+                print repr(d)
+        finally:
+            Config._context._PluginContext__plugin_info = None
 
         #print "Testing Nikto plugin against example.com..."
         #r = t.run_plugin(plugin_name, BaseUrl("http://%s/" % target))

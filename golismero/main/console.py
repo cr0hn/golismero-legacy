@@ -36,29 +36,16 @@ from ..api.logger import Logger
 
 # do not use the "from sys import" form, or coloring won't work on Windows
 import sys
+import os.path
 
 from colorizer import colored
 
 
 #----------------------------------------------------------------------
 # Map of colors
+
+# Color names mapped to themselves
 m_colors = {
-
-    # String log levels to color names
-    'info'      : 'blue',
-    'low'       : 'cyan',
-    'middle'    : 'white',
-    'high'      : 'red',
-    'critical'  : 'yellow',
-
-    # Integer log levels to color names
-    0           : 'blue',
-    1           : 'cyan',
-    2           : 'white',
-    3           : 'red',
-    4           : 'yellow',
-
-    # Color names mapped to themselves
     'blue'      : 'blue',
     'green'     : 'green',
     'cyan'      : 'cyan',
@@ -68,6 +55,44 @@ m_colors = {
     'yellow'    : 'yellow',
     'white'     : 'white',
 }
+
+# Colors for the Windows console.
+if os.path.sep == "\\":
+    m_colors.update({
+
+        # String log levels to color names
+        'info'      : 'cyan',
+        'low'       : 'grey',
+        'middle'    : 'white',
+        'high'      : 'magenta',
+        'critical'  : 'yellow',
+
+        # Integer log levels to color names
+        0           : 'cyan',
+        1           : 'grey',
+        2           : 'white',
+        3           : 'magenta',
+        4           : 'yellow',
+    })
+
+# Colors for all other operating systems.
+else:
+    m_colors.update({
+
+        # String log levels to color names
+        'info'      : 'blue',
+        'low'       : 'cyan',
+        'middle'    : 'white',
+        'high'      : 'red',
+        'critical'  : 'yellow',
+
+        # Integer log levels to color names
+        0           : 'blue',
+        1           : 'cyan',
+        2           : 'white',
+        3           : 'red',
+        4           : 'yellow',
+    })
 
 
 #----------------------------------------------------------------------

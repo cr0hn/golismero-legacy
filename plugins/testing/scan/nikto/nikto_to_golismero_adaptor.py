@@ -237,6 +237,7 @@ class NiktoPlugin(TestingPlugin):
         # Parse the scan results.
         # On error log the exception and continue.
         results = []
+        vuln_count = 0
         hosts_seen = set()
         urls_seen = {}
         try:
@@ -249,11 +250,12 @@ class NiktoPlugin(TestingPlugin):
                 return []
             current = 0.0
             with open(output_filename, "rU") as f:
-                self.update_status(progress = current / total * 100.0)
                 csv_reader = reader(f)
                 csv_reader.next()  # ignore the first line
                 for row in csv_reader:
                     try:
+                        self.update_status(progress = current / total * 100.0)
+                        current += 1.0
 
                         # Each row (except for the first) has always
                         # the same 7 columns, but some may be empty.
@@ -263,11 +265,11 @@ class NiktoPlugin(TestingPlugin):
                         if host != info.hostname and host not in hosts_seen:
                             hosts_seen.add(host)
                             if host in Config.audit_scope:
-                                result.append( Domain(host) )
+                                results.append( Domain(host) )
                         if ip not in hosts_seen:
                             hosts_seen.add(ip)
                             if ip in Config.audit_scope:
-                                result.append( IP(ip) )
+                                results.append( IP(ip) )
 
                         # Skip rows not informing of vulnerabilities.
                         if not vuln_tag:
@@ -295,6 +297,7 @@ class NiktoPlugin(TestingPlugin):
                             description = "%s: %s" % (vuln_tag, text),
                         )
                         results.append(vuln)
+                        vuln_count += 1
 
                     # On error, log the exception and continue.
                     except Exception, e:
@@ -311,12 +314,12 @@ class NiktoPlugin(TestingPlugin):
 
         # Log how many results we found.
         msg = (
-            "Nikto found %d results for host %s" % (
-                len(results),
+            "Nikto found %d vulnerabilities for host %s" % (
+                vuln_count,
                 info.hostname,
             )
         )
-        if results:
+        if vuln_count:
             Logger.log(msg)
         else:
             Logger.log_verbose(msg)
