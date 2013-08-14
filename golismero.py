@@ -273,8 +273,11 @@ def main():
                 auditParams.imports = []
 
             # If reports are turned off, remove the list of reports.
+            # Otherwise, if no reports are specified, default to screen report.
             if P.disable_reporting:
                 auditParams.reports = []
+            elif not auditParams.reports:
+                auditParams.reports = ["-"]
 
     # Show exceptions as command line parsing errors.
     except Exception, e:

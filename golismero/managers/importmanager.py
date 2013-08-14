@@ -122,6 +122,9 @@ class ImportManager (object):
         if not self.__importers:
             return 0
 
+        # Show a log message.
+        Logger.log_verbose("Importing results from external tools...")
+
         # For each input file, run its corresponding import plugin.
         # Import plugins are run in the same process as the Orchestrator.
         count = 0

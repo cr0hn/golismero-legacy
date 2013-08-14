@@ -319,6 +319,7 @@ class Orchestrator (object):
             if (message.message_type == MessageType.MSG_TYPE_CONTROL and \
                 message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT
             ):
+                Logger.log_verbose("Audit finished: %s" % message.audit_name)
                 self.uiManager.dispatch_msg(message)
                 self.auditManager.dispatch_msg(message)
 

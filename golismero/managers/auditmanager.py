@@ -313,8 +313,6 @@ class Audit (object):
         # Create or open the database.
         force_print_name = not audit_config.audit_name
         self.__database = AuditDB(audit_config)
-        if hasattr(self.__database, "filename"):
-            Logger.log_verbose("Audit database: %s" % self.database.filename)
 
         # Set the audit name.
         self.__name = self.__database.audit_name
@@ -322,6 +320,8 @@ class Audit (object):
             Logger.log("Audit name: %s" % self.__name)
         else:
             Logger.log_verbose("Audit name: %s" % self.__name)
+        if hasattr(self.__database, "filename"):
+            Logger.log_verbose("Audit database: %s" % self.database.filename)
 
 
     #--------------------------------------------------------------------------
@@ -459,8 +459,6 @@ class Audit (object):
 
             # Load the testing plugins.
             m_audit_plugins = self.pluginManager.load_plugins("testing")
-            if not m_audit_plugins:
-                raise RuntimeError("Failed to find any testing plugins!")
 
             # Create the notifier.
             self.__notifier = AuditNotifier(self)
@@ -537,6 +535,8 @@ class Audit (object):
             Config._context = old_context
 
         # Move to the next stage.
+        if m_audit_plugins:
+            Logger.log_verbose("Launching tests...")
         self.update_stage()
 
 
@@ -625,14 +625,17 @@ class Audit (object):
         if self.__is_report_started:
 
             #
-            # Run the magic plugin "report/screen" here, after all other
+            # Run the magic plugin "report/text" here, after all other
             # report plugins have finished running. This is needed so
-            # the output from the screen reporter doesn't get mixed with
+            # the output from the screen report doesn't get mixed with
             # the log messages and errors from the other reporters.
             #
-            # The screen report plugin is run by the UI notifier instead
+            # The text report plugin is run by the UI notifier instead
             # of the normal plugin notifier, so it runs in-process and
             # waits until the plugin is finished before returning.
+            #
+            # Note that for output text files the text report plugin is
+            # run again normally.
             #
             self.__report_manager.generate_screen_report(self.orchestrator.uiManager.notifier)
 
@@ -863,6 +866,10 @@ class Audit (object):
 
             # Save the audit stop time in the database.
             self.database.set_audit_stop_time(self.config.stop_time)
+
+            # Show a log message.
+            if self.__report_manager.plugin_count > 0:
+                Logger.log_verbose("Generating reports...")
 
             # Tell the UI we've started generating the reports.
             self.send_msg(
