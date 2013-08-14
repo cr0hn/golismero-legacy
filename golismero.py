@@ -206,8 +206,8 @@ def cmdline_parser():
     gr_net.add_argument("-pa","--proxy-addr", metavar="ADDRESS:PORT", help="HTTP proxy address in format: address:port")
     gr_net.add_argument("--cookie", metavar="COOKIE", help="set cookie for requests")
     gr_net.add_argument("--cookie-file", metavar="FILE", action=ReadValueFromFileAction, dest="cookie", help="load a cookie from file")
-    gr_net.add_argument("--persistent-cache", action="store_true", default=None, dest="use_cache_db", help="use a persistent network cache [default in distributed modes]")
-    gr_net.add_argument("--volatile-cache", action="store_false", default=None, dest="use_cache_db", help="use a volatile network cache [default in standalone mode]")
+    gr_net.add_argument("--persistent-cache", action="store_true", dest="use_cache_db", default=True, help="use a persistent network cache [default]")
+    gr_net.add_argument("--volatile-cache", action="store_false", dest="use_cache_db", help="use a volatile network cache")
 
     gr_plugins = parser.add_argument_group("plugin options")
     gr_plugins.add_argument("-e", "--enable-plugin", metavar="NAME", action=EnablePluginAction, default=[], dest="plugin_load_overrides", help="enable a plugin")

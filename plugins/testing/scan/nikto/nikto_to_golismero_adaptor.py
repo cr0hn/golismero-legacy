@@ -142,8 +142,10 @@ class NiktoPlugin(TestingPlugin):
             if value:
                 args.extend(["-" + option, value])
 
-        # On Windows we can't open a temporary file twice
-        # (although it's actually Python who won't let us).
+        # On Windows we can't open a temporary file twice (although it's
+        # actually Python who won't let us). Note that there is no exploitable
+        # race condition here, because on Windows you can only create
+        # filesystem links from an Administrator account.
         if sep == "\\":
             output_file = NamedTemporaryFile(suffix = ".csv", delete = False)
             try:
@@ -156,6 +158,8 @@ class NiktoPlugin(TestingPlugin):
                 os.unlink(output_file.name)
 
         # On POSIX we can do things more elegantly.
+        # It also prevents a race condition vulnerability, although if you're
+        # running a Python script from root you kinda deserve to get pwned.
         else:
             with NamedTemporaryFile(suffix = ".csv") as output_file:
                 output = output_file.name

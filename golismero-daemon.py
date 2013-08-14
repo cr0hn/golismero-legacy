@@ -102,12 +102,12 @@ def main():
     # Get the config file name.
     config_file = get_default_config_file()
     if not config_file:
-        config_file = "/etc/golismero.conf"
-    if not path.isfile(config_file):
         raise RuntimeError("Could not find config file, aborting!")
 
     # Load the Orchestrator options.
     orchestrator_config = OrchestratorConfig()
+    orchestrator_config.ui_mode = "web"
+    orchestrator_config.colorize = False
     orchestrator_config.config_file = config_file
     orchestrator_config.from_config_file(orchestrator_config.config_file, allow_profile = True)
     if orchestrator_config.profile:

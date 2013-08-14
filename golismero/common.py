@@ -140,13 +140,16 @@ def get_default_config_file():
     :returns: Pathname of the default configuration file, or None if it doesn't exist.
     :rtype: str | None
     """
-    config_file = path.join(get_user_settings_folder(), "golismero.cfg")
+    config_file = path.join(get_user_settings_folder(), "golismero.conf")
     if not path.isfile(config_file):
         config_file = path.split(path.abspath(__file__))[0]
-        config_file = path.join(config_file, "..", "golismero.cfg")
+        config_file = path.join(config_file, "..", "golismero.conf")
         config_file = path.abspath(config_file)
         if not path.isfile(config_file):
-            config_file = None
+            if path.sep != "\\" and path.isfile("/etc/golismero.conf"):
+                config_file = "/etc/golismero.conf"
+            else:
+                config_file = None
     return config_file
 
 
@@ -627,10 +630,7 @@ class OrchestratorConfig (Configuration):
         "max_connections": (Configuration.integer, 20),
 
         # Use persistent cache?
-        # True: yes
-        # False: no
-        # None: default for current run mode
-        "use_cache_db": Configuration.trinary,
+        "use_cache_db": (Configuration.boolean, True),
     }
 
 
