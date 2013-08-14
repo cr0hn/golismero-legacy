@@ -46,22 +46,33 @@ except NameError:
 
 
 from golismero.api.data.resource.url import BaseUrl
+from golismero.common import AuditConfig
 from golismero.main.testing import PluginTester
 
 
 def test_nikto():
     plugin_name = "testing/scan/nikto"
+    target = "www.example.com"
     print "Testing plugin: %s" % plugin_name
     audit_config = AuditConfig()
-    audit_config.targets = ["www.example.com"]
+    audit_config.targets = [target]
     audit_config.include_subdomains = False
     with PluginTester(audit_config = audit_config) as t:
-        r = t.run_plugin(plugin_name, BaseUrl("http://www.example.com/"))
+
+        print "Testing Nikto plugin parser..."
+        plugin, _ = t.get_plugin(plugin_name)
+        r = plugin.parse_nikto_results(BaseUrl("http://%s/" % target),
+                                       path.join(here, "test_nikto.csv"))
         for d in r:
-            print "\t%r" % d
+            print
+            print repr(d)
+
+        #print "Testing Nikto plugin against example.com..."
+        #r = t.run_plugin(plugin_name, BaseUrl("http://%s/" % target))
+        #for d in r:
+            #print "\t%r" % d
 
 
 # Run all tests from the command line.
 if __name__ == "__main__":
-    test_scope_localhost()
-    test_scope_example()
+    test_nikto()

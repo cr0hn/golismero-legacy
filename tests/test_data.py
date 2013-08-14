@@ -191,9 +191,6 @@ def test_data_links():
 # The actual test, without the boilerplate.
 def helper_data_links():
 
-    # Make sure the local data cache is enabled at this point.
-    LocalDataCache._enabled = True
-
     # Create some dummy data.
     from golismero.api.data.resource.url import Url
     from golismero.api.data.information.text import Text

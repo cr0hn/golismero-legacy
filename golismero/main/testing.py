@@ -185,10 +185,32 @@ class PluginTester(object):
         FileManager._update_plugin_path()
         LocalDataCache._enabled = True  # force enable
         LocalDataCache.on_run()
+        LocalDataCache._enabled = True  # force enable
 
         # Save the Orchestrator and Audit instances.
         self.__orchestrator = orchestrator
         self.__audit = audit
+
+
+    #--------------------------------------------------------------------------
+    def get_plugin(self, plugin_name):
+        """
+        Get an instance of the requested plugin.
+
+        :param plugin_name: Name of the plugin to test.
+        :type plugin_name: str
+
+        :returns: Plugin instance and information.
+        :rtype: tuple(Plugin, PluginInfo)
+        """
+
+        # Make sure the environment is initialized.
+        self.init_environment()
+
+        # Load the plugin.
+        plugin_info = self.audit.pluginManager.get_plugin_by_name(plugin_name)
+        plugin = self.audit.pluginManager.load_plugin_by_name(plugin_name)
+        return plugin, plugin_info
 
 
     #--------------------------------------------------------------------------
@@ -209,12 +231,8 @@ class PluginTester(object):
         :rtype: *
         """
 
-        # Make sure the environment is initialized.
-        self.init_environment()
-
         # Load the plugin.
-        plugin_info = self.audit.pluginManager.get_plugin_by_name(plugin_name)
-        plugin = self.audit.pluginManager.load_plugin_by_name(plugin_name)
+        plugin, plugin_info = self.get_plugin(plugin_name)
         Config._context._PluginContext__plugin_info = plugin_info
 
         try:
