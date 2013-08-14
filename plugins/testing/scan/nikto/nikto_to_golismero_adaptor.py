@@ -214,6 +214,26 @@ class NiktoPlugin(TestingPlugin):
         elif output:
             Logger.log_more_verbose(output)
 
+        # Parse the results and return them.
+        return self.parse_nikto_results(info, output_filename)
+
+
+    #--------------------------------------------------------------------------
+    def parse_nikto_results(self, info, output_filename):
+        """
+        Run Nikto and convert the output to the GoLismero data model.
+
+        :param info: Base URL to scan.
+        :type info: BaseUrl
+
+        :param output_filename: Path to the output filename.
+            The format should always be CSV.
+        :type output_filename:
+
+        :returns: Results from the Nikto scan.
+        :rtype: list(Data)
+        """
+
         # Parse the scan results.
         # On error log the exception and continue.
         results = []
