@@ -40,7 +40,6 @@ from ..api.data import Data
 from ..api.data.resource import Resource
 from ..api.config import Config
 from ..api.logger import Logger
-from ..api.text.text_utils import generate_random_string
 from ..common import AuditConfig
 from ..database.auditdb import AuditDB
 from ..main.scope import AuditScope

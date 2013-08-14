@@ -40,6 +40,7 @@ from ..api.data.information import Information
 from ..api.data.resource import Resource
 from ..api.data.vulnerability import Vulnerability
 ##from ..api.shared import check_value   # FIXME do server-side checks too!
+from ..api.text.text_utils import generate_random_string
 from ..messaging.codes import MessageCode
 from ..managers.rpcmanager import implementor
 
