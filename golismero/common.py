@@ -213,7 +213,7 @@ def get_profile(name):
     profiles = get_profiles_folder()
 
     # Get the filename for the requested profile.
-    filename = path.abspath(path.join(profiles, name + ".cfg"))
+    filename = path.abspath(path.join(profiles, name + ".profile"))
 
     # Check if it's outside the profiles folder or it doesn't exist.
     if not profiles.endswith(path.sep):
@@ -237,7 +237,7 @@ def get_available_profiles():
     return {
         name[:-4]
         for name in os.listdir(profiles_folder)
-        if name.endswith(".cfg")
+        if name.endswith(".profile")
     }
 
 
