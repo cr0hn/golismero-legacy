@@ -151,10 +151,11 @@ class ConsoleUIPlugin(UIPlugin):
                         m_plugin_name = "GoLismero"
                     m_plugin_name = colorize(m_plugin_name, 'blue')
                     text = colorize(text, 'middle')
-                    text = "[*] %s: %s" % (m_plugin_name, text)
                     if is_error:
+                        text = "[!] %s: %s" % (m_plugin_name, text)
                         Console.display_error(text)
                     else:
+                        text = "[*] %s: %s" % (m_plugin_name, text)
                         Console.display(text)
 
             # Show plugin errors

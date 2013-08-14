@@ -78,49 +78,55 @@ def run(options, *audits):
     # Show the start message.
     Console.display("GoLismero started at %s" % datetime.datetime.now())
     try:
-        try:
 
-            # Detect auth in proxy, if specified.
-            for auditParams in audits:
-                if auditParams.proxy_addr:
-                    if auditParams.proxy_user:
-                        if not check_auth(auditParams.proxy_addr, auditParams.proxy_user, auditParams.proxy_pass):
-                            Console.display_error("[!] Authentication failed for proxy: '%s'." % auditParams.proxy_addr)
-                            return 1
-                    else:
-                        auth, _ = detect_auth_method(auditParams.proxy_addr)
-                        if auth:
-                            Console.display_error("[!] Authentication required for proxy: '%s'. Use '--proxy-user' and '--proxy-pass' to set the username and password." % auditParams.proxy_addr)
-                            return 1
+        # Launch GoLismero.
+        return_code = _run(options, *audits)
 
-            # Instance the Orchestrator.
-            with Orchestrator(options) as orchestrator:
-
-                # Validate the settings against the UI plugin.
-                try:
-                    orchestrator.uiManager.check_params(*audits)
-                except Exception, e:
-                    Console.display_error("[!] Configuration error: %s" % str(e))
-                    return 1
-
-                # Run the Orchestrator.
-                orchestrator.run(*audits)
-
-        # On error, show a fatal error message.
-        except Exception, e:
-            Console.display_error("[!] Fatal error: %s\n%s" % (str(e), traceback.format_exc()))
-            return 1
-
-    # Show the exit message.
+    # Show the cancel message if cancelled.
     except KeyboardInterrupt:
         Console.display("GoLismero cancelled by the user at %s" % datetime.datetime.now())
         return 1
     except SystemExit, e:
         Console.display("GoLismero stopped at %s" % datetime.datetime.now())
         return e.code
-    finally:
-        Console.display("GoLismero finished at %s" % datetime.datetime.now())
-        return 0
+
+    # Show the exit message.
+    Console.display("GoLismero finished at %s" % datetime.datetime.now())
+    return return_code
+
+def _run(options, *audits):
+    try:
+
+        # Detect auth in proxy, if specified.
+        for auditParams in audits:
+            if auditParams.proxy_addr:
+                if auditParams.proxy_user:
+                    if not check_auth(auditParams.proxy_addr, auditParams.proxy_user, auditParams.proxy_pass):
+                        Console.display_error("[!] Authentication failed for proxy: '%s'." % auditParams.proxy_addr)
+                        return 1
+                else:
+                    auth, _ = detect_auth_method(auditParams.proxy_addr)
+                    if auth:
+                        Console.display_error("[!] Authentication required for proxy: '%s'. Use '--proxy-user' and '--proxy-pass' to set the username and password." % auditParams.proxy_addr)
+                        return 1
+
+        # Instance the Orchestrator.
+        with Orchestrator(options) as orchestrator:
+
+            # Validate the settings against the UI plugin.
+            try:
+                orchestrator.uiManager.check_params(*audits)
+            except Exception, e:
+                Console.display_error("[!] Configuration error: %s" % str(e))
+                return 1
+
+            # Run the Orchestrator.
+            orchestrator.run(*audits)
+
+    # On error, show a fatal error message.
+    except Exception, e:
+        Console.display_error("[!] Fatal error: %s\n%s" % (str(e), traceback.format_exc()))
+        return 1
 
 
 #----------------------------------------------------------------------

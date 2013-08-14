@@ -127,11 +127,6 @@ class DisablePluginAction(argparse.Action):
         overrides.extend(parsed)
         setattr(namespace, self.dest, overrides)
 
-# --no-output
-class ResetListAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, [])
-
 # --file
 class LoadListFromFileAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -186,12 +181,13 @@ def cmdline_parser():
     gr_audit = parser.add_argument_group("audit options")
     gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
     gr_audit.add_argument("--audit-db", metavar="DATABASE", dest="audit_db", help="specify a database connection string")
+    gr_audit.add_argument("-nd", "--no-db", dest="audit_db", action="store_const", const="memory://", help="do not store the results in a database")
     gr_audit.add_argument("-i", "--input", dest="imports", metavar="FILENAME", action="append", help="read results from external tools right before the audit")
-    gr_audit.add_argument("-ni", "--no-input", dest="imports", action=ResetListAction, help="do not read results from external tools")
+    gr_audit.add_argument("-ni", "--no-input", dest="disable_importing", action="store_true", default=False, help="do not read results from external tools")
 
     gr_report = parser.add_argument_group("report options")
     gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", help="write the results of the audit to this file (use - for stdout)")
-    gr_report.add_argument("-no", "--no-output", dest="reports", action=ResetListAction, help="do not output the results")
+    gr_report.add_argument("-no", "--no-output", dest="disable_reporting", action="store_true", default=False, help="do not output the results")
     gr_report.add_argument("--only-vulns", action="store_true", default=None, dest="only_vulns", help="display only the vulnerabilities, instead of all the resources found")
 
     gr_net = parser.add_argument_group("network options")
@@ -271,6 +267,14 @@ def main():
                 auditParams.from_config_file(auditParams.profile_file)
             auditParams.from_object(P)
             auditParams.plugin_load_overrides = P.plugin_load_overrides
+
+            # If importing is turned off, remove the list of imports.
+            if P.disable_importing:
+                auditParams.imports = []
+
+            # If reports are turned off, remove the list of reports.
+            if P.disable_reporting:
+                auditParams.reports = []
 
     # Show exceptions as command line parsing errors.
     except Exception, e:

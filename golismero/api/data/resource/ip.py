@@ -42,7 +42,7 @@ from netaddr import IPAddress
 #------------------------------------------------------------------------------
 class IP(Resource):
     """
-    IPv4 address.
+    IP address.
     """
 
     resource_type = Resource.RESOURCE_IP

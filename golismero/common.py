@@ -684,7 +684,7 @@ class AuditConfig (Configuration):
         #
 
         # Output files
-        "reports": (Configuration.comma_separated_list, ["-"]),
+        "reports": (Configuration.comma_separated_list, []),
 
         # Only display resources with associated vulnerabilities
         "only_vulns": (Configuration.boolean, False),
@@ -772,6 +772,20 @@ class AuditConfig (Configuration):
                 (x if (x.startswith("http://") or x.startswith("https://"))
                    else "http://" + x)
                 for x in targets)
+
+
+    #----------------------------------------------------------------------
+
+    @property
+    def imports(self):
+        return self._imports
+
+    @imports.setter
+    def imports(self, imports):
+        # Always append, never overwrite.
+        self._imports = getattr(self, "_imports", [])
+        if imports:
+            self._imports.extend( (str(x) if x else None) for x in imports )
 
 
     #----------------------------------------------------------------------
