@@ -119,7 +119,6 @@ def main():
 
     # Get the plugins folder from the parameters.
     # If no plugins folder is given, use the default.
-    # TODO: allow more than one plugin location!
     plugins_folder = orchestrator_config.plugins_folder
     if not plugins_folder:
         plugins_folder = path.abspath(__file__)

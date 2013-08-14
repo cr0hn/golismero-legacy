@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
+from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.resource.url import BaseUrl, Url
@@ -34,7 +35,7 @@ from golismero.api.data.vulnerability import UrlVulnerability
 from golismero.api.external import run_external_tool, \
      win_to_cygwin_path, cygwin_to_win_path
 from golismero.api.logger import Logger
-from golismero.api.plugin import TestingPlugin
+from golismero.api.plugin import ImportPlugin, TestingPlugin
 
 import os
 import stat
@@ -218,12 +219,28 @@ class NiktoPlugin(TestingPlugin):
         elif output:
             Logger.log_more_verbose(output)
 
-        # Parse the results and return them.
-        return self.parse_nikto_results(info, output_filename)
+        # Parse the results.
+        results, vuln_count = self.parse_nikto_results(info, output_filename)
+
+        # Log how many results we found.
+        msg = (
+            "Nikto found %d vulnerabilities for host: %s" % (
+                vuln_count,
+                info.hostname,
+            )
+        )
+        if vuln_count:
+            Logger.log(msg)
+        else:
+            Logger.log_verbose(msg)
+
+        # Return the results.
+        return results
 
 
     #--------------------------------------------------------------------------
-    def parse_nikto_results(self, info, output_filename):
+    @staticmethod
+    def parse_nikto_results(info, output_filename):
         """
         Run Nikto and convert the output to the GoLismero data model.
 
@@ -234,8 +251,8 @@ class NiktoPlugin(TestingPlugin):
             The format should always be CSV.
         :type output_filename:
 
-        :returns: Results from the Nikto scan.
-        :rtype: list(Data)
+        :returns: Results from the Nikto scan, and the vulnerability count.
+        :rtype: list(Data), int
         """
 
         # Parse the scan results.
@@ -258,7 +275,7 @@ class NiktoPlugin(TestingPlugin):
                         host, ip, port, vuln_tag, method, path, text = row
 
                         # Report domain names and IP addresses.
-                        if host != info.hostname and host not in hosts_seen:
+                        if (info is None or host != info.hostname) and host not in hosts_seen:
                             hosts_seen.add(host)
                             if host in Config.audit_scope:
                                 results.append( Domain(host) )
@@ -272,7 +289,13 @@ class NiktoPlugin(TestingPlugin):
                             continue
 
                         # Calculate the vulnerable URL.
-                        target = urljoin(info.url, path)
+                        if info is not None:
+                            target = urljoin(info.url, path)
+                        else:
+                            if port == 443:
+                                target = urljoin("https://%s/" % host, path)
+                            else:
+                                target = urljoin("http://%s/" % host, path)
 
                         # Skip if out of scope.
                         if target not in Config.audit_scope:
@@ -280,7 +303,7 @@ class NiktoPlugin(TestingPlugin):
 
                         # Report the URLs.
                         if (target, method) not in urls_seen:
-                            url = Url(target, method, referer=info.url)
+                            url = Url(target, method)
                             urls_seen[ (target, method) ] = url
                             results.append(url)
                         else:
@@ -305,17 +328,35 @@ class NiktoPlugin(TestingPlugin):
             Logger.log_error_verbose(str(e))
             Logger.log_error_more_verbose(format_exc())
 
-        # Log how many results we found.
-        msg = (
-            "Nikto found %d vulnerabilities for host: %s" % (
-                vuln_count,
-                info.hostname,
-            )
-        )
-        if vuln_count:
-            Logger.log(msg)
-        else:
-            Logger.log_verbose(msg)
+        # Return the results and the vulnerability count.
+        return results, vuln_count
 
-        # Return the results.
-        return results
+
+#------------------------------------------------------------------------------
+class NiktoImportPlugin(ImportPlugin):
+
+
+    #--------------------------------------------------------------------------
+    def is_supported(self, input_file):
+        if input_file and input_file.lower().endswith(".csv"):
+            with open(input_file, "rU") as fd:
+                return "Nikto" in fd.readline()
+        return False
+
+
+    #--------------------------------------------------------------------------
+    def import_results(self, input_file):
+        try:
+            results, vuln_count = NiktoPlugin.parse_nikto_results(
+                None, input_file)
+        except Exception, e:
+            Logger.log_error(
+                "Could not load Nikto results from file: %s" % input_file)
+            Logger.log_error_verbose(str(e))
+            Logger.log_error_more_verbose(format_exc())
+        else:
+            Database.async_add_many(results)
+            Logger.log(
+                "Loaded %d vulnerabilities and %d resources from file: %s" %
+                (vuln_count, len(results) - vuln_count, input_file)
+            )

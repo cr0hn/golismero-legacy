@@ -1,6 +1,6 @@
 [Core]
 Name = Bruteforce permutations discovery
-Module = bruteforcer_url_disclosure.py
+Module = url_bruteforcer.py
 Class = PermutationsDisclosureBruteforcer
 
 [Documentation]

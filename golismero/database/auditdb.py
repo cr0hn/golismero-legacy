@@ -63,9 +63,17 @@ sqlite3 = None
 def rpc_data_db_add(orchestrator, audit_name, *argv, **argd):
     return orchestrator.auditManager.get_audit(audit_name).database.add_data(*argv, **argd)
 
+@implementor(MessageCode.MSG_RPC_DATA_ADD_MANY)
+def rpc_data_db_add_many(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.add_many_data(*argv, **argd)
+
 @implementor(MessageCode.MSG_RPC_DATA_REMOVE)
 def rpc_data_db_remove(orchestrator, audit_name, *argv, **argd):
     return orchestrator.auditManager.get_audit(audit_name).database.remove_data(*argv, **argd)
+
+@implementor(MessageCode.MSG_RPC_DATA_REMOVE_MANY)
+def rpc_data_db_remove_many(orchestrator, audit_name, *argv, **argd):
+    return orchestrator.auditManager.get_audit(audit_name).database.remove_many_data(*argv, **argd)
 
 @implementor(MessageCode.MSG_RPC_DATA_CHECK)
 def rpc_data_db_check(orchestrator, audit_name, *argv, **argd):
@@ -274,6 +282,17 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
+    def add_many_data(self, dataset):
+        """
+        Add multiple data objects to the database.
+
+        :param dataset: Data to add.
+        :type dataset: list(Data)
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
     def remove_data(self, identity, data_type = None):
         """
         Remove data given its identity hash.
@@ -289,6 +308,23 @@ class BaseAuditDB (BaseDB):
 
         :returns: True if the object was removed, False if it didn't exist.
         :rtype: bool
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def remove_many_data(self, identities, data_type = None):
+        """
+        Remove multiple data objects given their identity hashes.
+
+        Optionally restrict the result by data type. Depending on the
+        underlying database, this may result in a performance gain.
+
+        :param identities: Identity hashes.
+        :type identities: str
+
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
+        :type data_type: int
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -884,6 +920,12 @@ class AuditMemoryDB (BaseAuditDB):
 
 
     #--------------------------------------------------------------------------
+    def add_many_data(self, dataset):
+        for data in dataset:
+            self.add_data(data)
+
+
+    #--------------------------------------------------------------------------
     def remove_data(self, identity, data_type = None):
         try:
             if data_type is None or self.__results[identity].data_type == data_type:
@@ -892,6 +934,12 @@ class AuditMemoryDB (BaseAuditDB):
         except KeyError:
             pass
         return False
+
+
+    #--------------------------------------------------------------------------
+    def remove_many_data(self, identities, data_type = None):
+        for identity in identities:
+            self.remove_data(identity, data_type)
 
 
     #--------------------------------------------------------------------------
@@ -1548,6 +1596,9 @@ class AuditSQLiteDB (BaseAuditDB):
     #--------------------------------------------------------------------------
     @transactional
     def add_data(self, data):
+        return self.__add_data(data)
+
+    def __add_data(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
         table, dtype = self.__get_data_table_and_type(data)
@@ -1565,6 +1616,13 @@ class AuditSQLiteDB (BaseAuditDB):
                 "INSERT INTO stages (identity) VALUES (?);",
                 (identity,))
         return is_new
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def add_many_data(self, dataset):
+        for data in dataset:
+            self.__add_data(data)
 
 
     #--------------------------------------------------------------------------
@@ -1597,6 +1655,37 @@ class AuditSQLiteDB (BaseAuditDB):
                 )
                 return True
         return False
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def remove_many_data(self, identities, data_type = None):
+        if data_type is None:
+            tables = ("information", "resource", "vulnerability")
+        elif data_type == Data.TYPE_INFORMATION:
+            tables = ("information",)
+        elif data_type == Data.TYPE_RESOURCE:
+            tables = ("resource",)
+        elif data_type == Data.TYPE_VULNERABILITY:
+            tables = ("vulnerability",)
+        else:
+            raise NotImplementedError(
+                "Unknown data type %r!" % data_type)
+        for table in tables:
+            for identity in identities:
+                self.__cursor.execute(
+                    "DELETE FROM %s WHERE identity = ?;" % table,
+                    (identity,)
+                )
+                if self.__cursor.rowcount:
+                    self.__cursor.execute(
+                        "DELETE FROM history WHERE identity = ?;",
+                        (identity,)
+                    )
+                    self.__cursor.execute(
+                        "DELETE FROM stages WHERE identity = ?;",
+                        (identity,)
+                    )
 
 
     #--------------------------------------------------------------------------

@@ -230,6 +230,9 @@ class PluginInfo (object):
 
         :param descriptor_file: Descriptor file (with ".golismero" extension).
         :type descriptor_file: str
+
+        :param global_config: Orchestrator settings.
+        :type global_config: OrchestratorConfig
         """
 
         # Store the plugin name.
@@ -300,9 +303,12 @@ class PluginInfo (object):
             raise ValueError(msg % descriptor_file)
         plugin_folder = path.split(descriptor_file)[0]
         plugin_module = path.abspath(path.join(plugin_folder, plugin_module))
-        if not plugin_module.startswith(plugin_folder):
-            msg = "Error parsing %r: plugin module is located outside its plugin folder"
-            raise ValueError(msg % descriptor_file)
+        plugins_root  = path.abspath(global_config.plugins_folder)
+        if not plugins_root.endswith(path.sep):
+            plugins_root += path.sep
+        if not plugin_module.startswith(plugins_root):
+            msg = "Error parsing %r: plugin module (%s) is located outside the plugins folder (%s)"
+            raise ValueError(msg % (descriptor_file, plugin_module, plugins_root))
 
         # Sanitize the plugin classname.
         if plugin_class is not None:

@@ -240,13 +240,15 @@ class MessageCode(MessageConstants):
 
     # Data API
     MSG_RPC_DATA_ADD               = 10
-    MSG_RPC_DATA_REMOVE            = 11
-    MSG_RPC_DATA_CHECK             = 12
-    MSG_RPC_DATA_GET               = 13
-    MSG_RPC_DATA_GET_MANY          = 14
-    MSG_RPC_DATA_KEYS              = 15
-    MSG_RPC_DATA_COUNT             = 16
-    MSG_RPC_DATA_PLUGINS           = 17
+    MSG_RPC_DATA_ADD_MANY          = 11
+    MSG_RPC_DATA_REMOVE            = 12
+    MSG_RPC_DATA_REMOVE_MANY       = 13
+    MSG_RPC_DATA_CHECK             = 14
+    MSG_RPC_DATA_GET               = 15
+    MSG_RPC_DATA_GET_MANY          = 16
+    MSG_RPC_DATA_KEYS              = 17
+    MSG_RPC_DATA_COUNT             = 18
+    MSG_RPC_DATA_PLUGINS           = 19
 
     # Plugin API
     MSG_RPC_PLUGIN_GET_NAMES       = 20

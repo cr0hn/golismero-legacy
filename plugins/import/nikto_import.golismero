@@ -1,18 +1,12 @@
 [Core]
 Name   = Nikto
-Module = nikto/nikto_to_golismero_adaptor.py
-Class  = NiktoPlugin
+Module = ../testing/scan/nikto/nikto_to_golismero_adaptor.py
+Class  = NiktoImportPlugin
 
 [Documentation]
-Description = Run the Nikto scanner and import the results
+Description = Import the results of a Nikto scan.
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero
 Copyright   = Copyright (C) 2011-2013 GoLismero Project
 License     = GNU Public License
-
-[Arguments]
-config  = nikto.conf
-Pause   = 0
-timeout = 10
-Tuning  = x6

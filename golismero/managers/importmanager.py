@@ -132,7 +132,7 @@ class ImportManager (object):
             try:
                 plugin_instance = self.__plugins[plugin_name]
                 context = self.orchestrator.build_plugin_context(
-                    self.config.name, plugin_instance, None
+                    self.config.audit_name, plugin_instance, None
                 )
                 old_context = Config._context
                 try:

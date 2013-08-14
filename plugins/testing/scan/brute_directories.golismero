@@ -1,6 +1,6 @@
 [Core]
 Name = Bruteforce directories discovery
-Module = bruteforcer_url_disclosure.py
+Module = url_bruteforcer.py
 Class = DirectoriesDisclosureBruteforcer
 
 [Documentation]

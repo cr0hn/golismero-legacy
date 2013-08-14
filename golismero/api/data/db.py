@@ -75,6 +75,19 @@ class Database(Singleton):
 
     #----------------------------------------------------------------------
     @staticmethod
+    def async_add_many(dataset):
+        """
+        Asynchronously add multiple data objects to the database.
+
+        :param dataset: Data to add.
+        :type dataset: list(Data)
+        """
+        Config._context.async_remote_call(
+            MessageCode.MSG_RPC_DATA_ADD_MANY, dataset)
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
     def remove(identity, data_type = None):
         """
         Remove an object given its identity hash.
@@ -109,12 +122,28 @@ class Database(Singleton):
 
         :param data_type: Optional data type. One of the Data.TYPE_* values.
         :type data_type: int
-
-        :returns: True if the object was removed, False if it didn't exist.
-        :rtype: bool
         """
         Config._context.async_remote_call(
             MessageCode.MSG_RPC_DATA_REMOVE, identity, data_type)
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def async_remove_many(identities, data_type = None):
+        """
+        Asynchronously remove multiple objects given their identity hashes.
+
+        Optionally restrict the result by data type. Depending on the
+        underlying database, this may result in a performance gain.
+
+        :param identities: Identity hashes.
+        :type identities: str
+
+        :param data_type: Optional data type. One of the Data.TYPE_* values.
+        :type data_type: int
+        """
+        Config._context.async_remote_call(
+            MessageCode.MSG_RPC_DATA_REMOVE_MANY, identities, data_type)
 
 
     #----------------------------------------------------------------------

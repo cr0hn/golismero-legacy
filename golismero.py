@@ -286,7 +286,6 @@ def main():
 
     # Get the plugins folder from the parameters.
     # If no plugins folder is given, use the default.
-    # TODO: allow more than one plugin location!
     plugins_folder = cmdParams.plugins_folder
     if not plugins_folder:
         plugins_folder = path.abspath(__file__)
@@ -318,7 +317,7 @@ def main():
 
         # Show the list of plugins.
         print colorize("-------------", "red")
-        print colorize(" Plugin list", "red")
+        print colorize(" Plugin list",  "red")
         print colorize("-------------", "red")
 
         # Import plugins...
@@ -326,10 +325,9 @@ def main():
         if import_plugins:
             print
             print colorize("-= Import plugins =-", "yellow")
-            print
             for name in sorted(import_plugins.keys()):
                 info = import_plugins[name]
-                print "%s:\n    %s\n" % (colorize(name[7:], "cyan"), info.description)
+                print "\n%s:\n    %s" % (colorize(name[7:], "cyan"), info.description)
 
         # Testing plugins...
         testing_plugins = manager.get_plugins("testing")
@@ -345,35 +343,34 @@ def main():
                 if slice:
                     print
                     print colorize("-= %s plugins =-" % stage.title(), "yellow")
-                    print
                     for name in slice:
                         info = testing_plugins["testing/%s/%s" % (stage, name)]
                         desc = info.description.strip()
                         desc = desc.replace("\n", "\n    ")
-                        print "%s:\n    %s\n" % (colorize(name, "cyan"), desc)
+                        print "\n%s:\n    %s" % (colorize(name, "cyan"), desc)
 
         # Report plugins...
         report_plugins = manager.get_plugins("report")
         if report_plugins:
             print
             print colorize("-= Report plugins =-", "yellow")
-            print
             for name in sorted(report_plugins.keys()):
                 info = report_plugins[name]
-                print "%s:\n    %s\n" % (colorize(name[7:], "cyan"), info.description)
+                desc = info.description.strip()
+                desc = desc.replace("\n", "\n    ")
+                print "\n%s:\n    %s" % (colorize(name[7:], "cyan"), desc)
 
         # UI plugins...
         ui_plugins = manager.get_plugins("ui")
         if ui_plugins:
             print
             print colorize("-= UI plugins =-", "yellow")
-            print
             for name in sorted(ui_plugins.keys()):
                 info = ui_plugins[name]
-                print "%s:\n    %s\n" % (colorize(name[3:], "cyan"), info.description)
+                desc = info.description.strip()
+                desc = desc.replace("\n", "\n    ")
+                print "\n%s:\n    %s" % (colorize(name[3:], "cyan"), desc)
 
-        if os.sep != "\\":
-            print
         exit(0)
 
 

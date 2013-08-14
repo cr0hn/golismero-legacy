@@ -1,6 +1,6 @@
 [Core]
 Name = Bruteforce predictables discovery
-Module = bruteforcer_url_disclosure.py
+Module = url_bruteforcer.py
 Class = PredictablesDisclosureBruteforcer
 
 [Documentation]
