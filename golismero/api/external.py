@@ -39,7 +39,7 @@ import subprocess
 
 
 #------------------------------------------------------------------------------
-def run_external_tool(command, args = None):
+def run_external_tool(command, args = None, env = None):
     """
     Run an external tool and fetch the output.
 
@@ -57,6 +57,9 @@ def run_external_tool(command, args = None):
     :param args: Arguments to be passed to the command.
     :type args: list(str)
 
+    :param env: Environment variables to be passed to the command.
+    :type env: dict(str -> str)
+
     :returns: Output from the tool and the exit status code.
     :rtype: tuple(str, int)
     """
@@ -69,10 +72,13 @@ def run_external_tool(command, args = None):
     # when it comes to parsing their own command line, so caveat emptor.
     #
     if not args:
-        args   = []
+        args = []
+    else:
+        args = list(args)
+    args.insert(0, command)
     try:
         code   = 0
-        output = subprocess.check_output(args, executable = command)
+        output = subprocess.check_output(args, executable = command, env = env)
     except subprocess.CalledProcessError, e:
         code   = e.returncode
         output = e.output
