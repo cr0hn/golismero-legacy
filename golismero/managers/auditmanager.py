@@ -292,11 +292,6 @@ class Audit (object):
         # Keep a reference to the Orchestrator.
         self.__orchestrator = orchestrator
 
-        # Set the audit name.
-        self.__name = audit_config.audit_name
-        if not self.__name:
-            audit_config.audit_name = self.__name = self.generate_audit_name()
-
         # Set the current stage to the first stage.
         self.__current_stage = orchestrator.pluginManager.min_stage
 
@@ -315,7 +310,19 @@ class Audit (object):
         self.__plugin_manager = None
         self.__import_manager = None
         self.__report_manager = None
-        self.__database = None
+
+        # Create or open the database.
+        force_print_name = not audit_config.audit_name
+        self.__database = AuditDB(audit_config)
+        if hasattr(self.__database, "filename"):
+            Logger.log_verbose("Audit database: %s" % self.database.filename)
+
+        # Set the audit name.
+        self.__name = self.__database.audit_name
+        if force_print_name:
+            Logger.log("Audit name: %s" % self.__name)
+        else:
+            Logger.log_verbose("Audit name: %s" % self.__name)
 
 
     #--------------------------------------------------------------------------
@@ -413,18 +420,6 @@ class Audit (object):
 
 
     #--------------------------------------------------------------------------
-    @staticmethod
-    def generate_audit_name():
-        """
-        Generate a default name for a new audit.
-
-        :returns: Generated name.
-        :rtype: str
-        """
-        return "golismero-" + generate_random_string(length=8)
-
-
-    #--------------------------------------------------------------------------
     def run(self):
         """
         Start execution of an audit.
@@ -480,12 +475,6 @@ class Audit (object):
             # Create the report manager.
             self.__report_manager = ReportManager(self.orchestrator, self)
 
-            # Create the database.
-            self.__database = AuditDB(self.name, self.config.audit_db)
-            if hasattr(self.__database, "filename"):
-                Logger.log_verbose(
-                    "Audit database: %s" % self.database.filename)
-
             # Get the original audit start time, if found.
             # If not, save the new audit start time.
             start_time = self.database.get_audit_times()[0]
@@ -494,12 +483,23 @@ class Audit (object):
             else:
                 self.database.set_audit_start_time(self.config.start_time)
 
+            # Log the number of objects previously in the database.
+            count = self.database.get_data_count()
+            if count:
+                Logger.log_verbose("Found %d objects in database" % count)
+
             # Add the targets to the database, but only if they're new.
             # (Makes sense when resuming a stopped audit).
             target_data = self.scope.get_targets()
             for data in target_data:
                 if not self.database.has_data_key(data.identity, data.data_type):
                     self.database.add_data(data)
+
+            # Mark all data as having completed no stages.
+            # This is needed because the plugin list may have changed.
+            # Note that if a plugin already processed the data, this WON'T
+            # cause the same data to be processed again by the same plugin.
+            self.database.clear_all_stage_marks()
 
             # Tell the UI we're about to run the import plugins.
             self.send_msg(
@@ -663,7 +663,7 @@ class Audit (object):
 
                     # Get the pending data.
                     # XXX FIXME possible performance problem here!
-                    # Maybe we should fetch the types only, not the whole thing yet
+                    # Maybe we should fetch the types only...
                     datalist = database.get_many_data(pending)
 
                     # If we don't have any suitable plugins...

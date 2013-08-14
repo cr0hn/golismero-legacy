@@ -43,8 +43,11 @@ from ..api.data.vulnerability import Vulnerability
 from ..messaging.codes import MessageCode
 from ..managers.rpcmanager import implementor
 
+from os import path
+
 import collections
 import md5
+import posixpath
 import urlparse  # cannot use ParsedURL here!
 import warnings
 
@@ -176,12 +179,14 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
-    def __init__(self, audit_name):
+    def __init__(self, audit_config):
         """
-        :param audit_name: Audit name.
-        :type audit_name: str
+        :param audit_config: Audit configuration.
+        :type audit_config: AuditConfig
         """
-        self.__audit_name = audit_name
+        if not audit_config.audit_name:
+            audit_config.audit_name = self.generate_audit_name()
+        self.__audit_name = audit_config.audit_name
 
 
     #--------------------------------------------------------------------------
@@ -202,6 +207,18 @@ class BaseAuditDB (BaseDB):
         :rtype: str
         """
         raise NotImplementedError()
+
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def generate_audit_name():
+        """
+        Generate a default name for a new audit.
+
+        :returns: Generated name.
+        :rtype: str
+        """
+        return "golismero-" + generate_random_string(length=8)
 
 
     #--------------------------------------------------------------------------
@@ -487,6 +504,25 @@ class BaseAuditDB (BaseDB):
 
         :param stage: Stage.
         :type stage: int
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def clear_stage_mark(self, identity):
+        """
+        Clear the completed stages mark for the given data.
+
+        :param identity: Identity hash.
+        :type identity: str
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def clear_all_stage_marks(self):
+        """
+        Clear the completed stages mark for all the data.
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -781,8 +817,8 @@ class AuditMemoryDB (BaseAuditDB):
 
 
     #--------------------------------------------------------------------------
-    def __init__(self, audit_name):
-        super(AuditMemoryDB, self).__init__(audit_name)
+    def __init__(self, audit_config):
+        super(AuditMemoryDB, self).__init__(audit_config)
         self.__start_time   = None
         self.__end_time     = None
         self.__results      = dict()
@@ -1002,6 +1038,19 @@ class AuditMemoryDB (BaseAuditDB):
 
 
     #--------------------------------------------------------------------------
+    def clear_stage_mark(self, identity):
+        try:
+            del self.__stages[identity]
+        except KeyError:
+            pass
+
+
+    #--------------------------------------------------------------------------
+    def clear_all_stage_marks(self):
+        self.__stages.clear()
+
+
+    #--------------------------------------------------------------------------
     def get_past_plugins(self, identity):
         return self.__history[identity]
 
@@ -1130,28 +1179,72 @@ class AuditSQLiteDB (BaseAuditDB):
 
 
     #--------------------------------------------------------------------------
-    def __init__(self, audit_name, filename = None):
-        """
-        :param audit_name: Audit name.
-        :type audit_name: str
+    def __init__(self, audit_config):
 
-        :param filename: Optional SQLite database file name.
-        :type filename: str
-        """
-        super(AuditSQLiteDB, self).__init__(audit_name)
+        # Initialize the busy flag and the database cursor.
+        self.__busy   = False
+        self.__cursor = None
+
+        # Load the SQLite module.
         global sqlite3
         if sqlite3 is None:
             import sqlite3
-        if not filename:
-            filename = "".join(
-                (c if c in "-_~" or c.isalnum() else "_")
-                for c in audit_name
-            )
-            filename = filename + ".db"
-        self.__filename = filename
-        self.__db = sqlite3.connect(filename)
-        self.__cursor = None
-        self.__busy = False
+
+        # Get the filename from the connection string.
+        parsed = urlparse.urlparse(audit_config.audit_db)
+        filename = posixpath.join(parsed.netloc, parsed.path)
+        if path.sep != posixpath.sep:
+            filename.replace(posixpath.sep, path.sep)
+        if filename.endswith(posixpath.sep):
+            filename = filename[:-1]
+
+        # If we have an old database...
+        have_file = filename and path.exists(filename)
+        if have_file:
+
+            # Open the database.
+            self.__filename = filename
+            self.__db = sqlite3.connect(filename)
+
+            # Get the audit name from the database.
+            audit_name = self.__get_audit_name_from_database()
+
+            # If the database contains an audit name...
+            if audit_name:
+
+                # If the user didn't set one, use this audit name.
+                if not audit_config.audit_name:
+                    audit_config.audit_name = audit_name
+
+                # If the user did set one but they don't match, fail.
+                elif audit_config.audit_name != audit_name:
+                    raise IOError(
+                        "Database belongs to another audit:\n\t%r vs. %r" %
+                        (self.audit_name, audit_config.audit_name)
+                    )
+
+        # Call the superclass constructor.
+        # This generates an audit name if we don't have any,
+        # and updates the audit name in the config object.
+        super(AuditSQLiteDB, self).__init__(audit_config)
+
+        # If we don't have an old database...
+        if not have_file:
+
+            # If we don't have a filename, make one from the audit name.
+            if not filename:
+                filename = "".join(
+                    (c if c in "-_~" or c.isalnum() else "_")
+                    for c in self.audit_name
+                )
+                filename = filename + ".db"
+
+            # Create the database file.
+            self.__filename = filename
+            self.__db = sqlite3.connect(filename)
+
+        # Create or validate the database schema.
+        # This raises an exception on error.
         self.__create()
 
 
@@ -1367,6 +1460,16 @@ class AuditSQLiteDB (BaseAuditDB):
             self.__cursor.execute(
                 "INSERT INTO golismero VALUES (?, ?, NULL, NULL);",
                 (self.SCHEMA_VERSION, self.audit_name))
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def __get_audit_name_from_database(self):
+        try:
+            self.__cursor.execute("SELECT audit_name FROM golismero LIMIT 1;")
+            return self.__cursor.fetchone()[0]
+        except Exception:
+            pass
 
 
     #--------------------------------------------------------------------------
@@ -1840,6 +1943,21 @@ class AuditSQLiteDB (BaseAuditDB):
 
     #--------------------------------------------------------------------------
     @transactional
+    def clear_stage_mark(self, identity):
+        if type(identity) is not str:
+            raise TypeError("Expected string, got %s" % type(identity))
+        self.__cursor.execute(
+            "UPDATE stages SET stage = 0 WHERE identity = ?;", (identity,))
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def clear_all_stage_marks(self):
+        self.__cursor.execute("UPDATE stages SET stage = 0;")
+
+
+    #--------------------------------------------------------------------------
+    @transactional
     def get_past_plugins(self, identity):
         if type(identity) is not str:
             raise TypeError("Expected string, got %s" % type(identity))
@@ -2138,31 +2256,18 @@ class AuditDB (BaseAuditDB):
 
 
     #--------------------------------------------------------------------------
-    def __new__(cls, audit_name, audit_db):
+    def __new__(cls, audit_config):
         """
-        :param audit_name: Audit name.
-        :type audit_name: str
-
-        :param audit_db: Database connection string in URL format.
-        :type audit_db: str
+        :param audit_config: Audit configuration.
+        :type audit_config: AuditConfig
         """
-        parsed = urlparse.urlparse(audit_db)  # cannot use our own parser here!
+        parsed = urlparse.urlparse(audit_config.audit_db)
         scheme = parsed.scheme.lower()
 
         if scheme == "memory":
-            return AuditMemoryDB(audit_name)
+            return AuditMemoryDB(audit_config)
 
         if scheme == "sqlite":
-
-            from os import path
-            import posixpath
-
-            filename = posixpath.join(parsed.netloc, parsed.path)
-            if path.sep != posixpath.sep:
-                filename.replace(posixpath.sep, path.sep)
-            if filename.endswith(posixpath.sep):
-                filename = filename[:-1]
-
-            return AuditSQLiteDB(audit_name, filename)
+            return AuditSQLiteDB(audit_config)
 
         raise ValueError("Unsupported database type: %r" % scheme)
