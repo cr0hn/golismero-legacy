@@ -46,36 +46,43 @@ except NameError:
 
 
 from golismero.api.parallel import setInterval
-from threading import Semaphore
-from time import gmtime, strftime
+from threading import Event
+from time import gmtime, strftime, time
 
 #----------------------------------------------------------------------
 num     = 10
 handler = None
-sem     = None
+sem     = Event()
+times   = []
+
+def test_interval():
+    global handler
+
+    print "Testing setInterval..."
+    sem.clear()
+    handler = helper_test_interval()
+    sem.wait()
+
+    assert all(
+        int( times[index + 1] - times[index] ) == 2
+        for index in xrange(len(times) - 1)
+    )
 
 @setInterval(2)
-def test_interval():
-    """"""
+def helper_test_interval():
     global num
 
     if num < 1:
-        print "Finish!"
+        print "--> Finish!"
         handler.set()
-        sem.release()
+        sem.set()
     else:
         #print "[%s] Iteration %s" % (strftime("%Y-%m-%d %H:%M:%S", gmtime()), str(num))
-        print "%s" % (strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+        print "--> %d: %s" % (num - 1, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
         num -= 1
+        times.append(time())
 
 
 
 if __name__ == "__main__":
-
-    print "Start the setInterval"
-    sem = Semaphore(0)
-
-    handler = test_interval()
-
-    # Wait
-    sem.acquire()
+    test_interval()

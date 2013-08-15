@@ -51,8 +51,9 @@ from golismero.api.data.information.text import Text
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.text.text_utils import generate_random_string
-from golismero.database.auditdb import AuditDB, BaseAuditDB
-from golismero.common import AuditConfig
+from golismero.database.auditdb import AuditDB, BaseAuditDB, AuditSQLiteDB
+from golismero.common import AuditConfig, OrchestratorConfig
+from golismero.main.testing import PluginTester
 import time
 import os
 import inspect
@@ -71,7 +72,7 @@ def test_auditdb_interfaces():
             missing = {
                 name for name in dir(cls) if (
                     name[0] != "_" and
-                    name not in ("audit_name", "compact", "dump", "decode", "encode") and
+                    name not in ("audit_name", "compact", "dump", "decode", "encode", "generate_audit_name") and
                     name not in cls.__dict__
                 )
             }
@@ -88,40 +89,26 @@ def test_auditdb_consistency():
         os.unlink("fake_audit.db")
     except Exception:
         pass
-    audit = AuditConfig()
-    audit.from_dictionary({
-        "audit_name": "fake_audit",
-        "audit_db": "memory://",
-    })
-    mem  = AuditDB(audit)
-    audit = AuditConfig()
-    audit.from_dictionary({
-        "audit_name": "fake_audit",
-        "audit_db": "sqlite://fake_audit.db",
-    })
-    disk = AuditDB(audit)
-    try:
+    print "Testing consistency of in-memory database..."
+    helper_test_auditdb_consistency_setup("fake_mem_audit", "memory://")
+    print "Testing consistency of disk database..."
+    helper_test_auditdb_consistency_setup("fake_disk_audit", "sqlite://fake_audit.db")
 
-        print "Testing consistency of in-memory and disk databases..."
+def helper_test_auditdb_consistency_setup(audit_name, audit_db):
+    main_config = OrchestratorConfig()
+    main_config.ui_mode = "disabled"
+    audit_config = AuditConfig()
+    audit_config.targets = ["www.example.com"]
+    audit_config.audit_name = audit_name
+    audit_config.audit_db = audit_db
+    with PluginTester(main_config, audit_config) as t:
         for x in xrange(100):
             key  = generate_random_string(10)
             data = generate_random_string(100)
-            helper_test_auditdb_consistency(mem, key, data)
-            helper_test_auditdb_consistency(disk, key, data)
-
-    finally:
-        try:
-            print "Cleaning up..."
-            mem.close()
-            del mem
-        finally:
-            try:
-                disk.close()
-                del disk
-            finally:
-                os.unlink("fake_audit.db")
+            helper_test_auditdb_consistency(t.audit.database, key, data)
 
 def helper_test_auditdb_consistency(db, key, data):
+    assert isinstance(db, BaseAuditDB)
 
     # Test the database start and end times.
     assert db.get_audit_times() == (None, None)
@@ -269,13 +256,16 @@ def test_auditdb_stress():
     helper_auditdb_stress(1000)
 
 def helper_auditdb_stress(n):
-    audit = AuditConfig()
-    audit.from_dictionary({
-        "audit_name": "fake_audit",
-        "audit_db": "sqlite://fake_audit.db",
-    })
-    disk = AuditDB(audit)
-    try:
+    main_config = OrchestratorConfig()
+    main_config.ui_mode = "disabled"
+    audit_config = AuditConfig()
+    audit_config.targets = ["www.example.com"]
+    audit_config.audit_name = "fake_audit"
+    audit_config.audit_db = "sqlite://fake_audit.db"
+    with PluginTester(main_config, audit_config) as t:
+        disk = t.audit.database
+        assert type(disk) is AuditSQLiteDB
+
         print "  Testing %d elements..." % (n * 3)
         t1 = time.time()
 
@@ -333,23 +323,17 @@ def helper_auditdb_stress(n):
         print "  Delete time: %d seconds (%f seconds per element)" % (t4 - t3, (t4 - t3) / (n * 3.0))
         print "  Total time:  %d seconds (%f seconds per element)" % (t4 - t1, (t4 - t1) / (n * 3.0))
 
-    finally:
-        print "Cleaning up..."
-        try:
-            disk.close()
-            del disk
-        finally:
-            os.unlink("fake_audit.db")
-
 
 def test_auditdb_dump():
-    audit = AuditConfig()
-    audit.from_dictionary({
-        "audit_name": "fake_audit",
-        "audit_db": "sqlite://fake_audit.db",
-    })
-    disk = AuditDB(audit)
-    try:
+    main_config = OrchestratorConfig()
+    main_config.ui_mode = "disabled"
+    audit_config = AuditConfig()
+    audit_config.targets = ["www.example.com"]
+    audit_config.audit_name = "fake_audit"
+    audit_config.audit_db = "sqlite://fake_audit.db"
+    with PluginTester(main_config, audit_config) as t:
+        disk = t.audit.database
+        assert type(disk) is AuditSQLiteDB
 
         print "Testing the audit database dump..."
         print "  -> Writing..."
@@ -363,14 +347,6 @@ def test_auditdb_dump():
             disk.add_data(d3)
         print "  -> Dumping..."
         disk.dump("auditdb.sql")
-
-    finally:
-        print "Cleaning up..."
-        try:
-            disk.close()
-            del disk
-        finally:
-            os.unlink("fake_audit.db")
 
 
 # Run all tests from the command line.

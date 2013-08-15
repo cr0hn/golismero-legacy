@@ -46,7 +46,7 @@ from ..managers.auditmanager import Audit
 from ..managers.processmanager import PluginContext
 from ..messaging.message import Message
 
-from os import getpid
+from os import getpid, unlink
 from thread import get_ident
 
 
@@ -292,8 +292,19 @@ class PluginTester(object):
         LocalDataCache.on_run()
         HTTP._finalize()
 
+        try:
+            filename = self.audit.database.filename
+        except AttributeError:
+            filename = None
+
         if self.orchestrator is not None:
             self.orchestrator.close()
 
         self.__audit = None
         self.__orchestrator = None
+
+        if filename:
+            try:
+                unlink(filename)
+            except IOError:
+                pass

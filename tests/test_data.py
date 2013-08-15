@@ -183,7 +183,8 @@ def test_data_types_have_id():
 # This test makes sure the links work properly.
 def test_data_links():
     with PluginTester(autoinit=False) as t:
-        t.targets = ["http://www.example.com/"]
+        t.audit_config.targets = ["http://www.example.com/"]
+        t.orchestrator_config.ui_mode = "disabled"
         t.init_environment()
         helper_data_links()
 
