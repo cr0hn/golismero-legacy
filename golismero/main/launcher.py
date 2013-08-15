@@ -125,7 +125,8 @@ def _run(options, *audits):
 
     # On error, show a fatal error message.
     except Exception, e:
-        Console.display_error("[!] Fatal error: %s\n%s" % (str(e), traceback.format_exc()))
+        Console.display_error("[!] Fatal error! %s" % str(e))
+        Console.display_error_more_verbose(traceback.format_exc())
         return 1
 
 
