@@ -41,7 +41,7 @@ cwd = os.path.abspath(os.path.split(__file__)[0])
 cwd = os.path.join(cwd, ".")
 sys.path.insert(0, cwd)
 
-from openvas_data import *  # noqa
+from .data import *  # noqa
 
 import socket
 import ssl

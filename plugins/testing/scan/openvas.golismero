@@ -10,9 +10,9 @@ Copyright   = Copyright (C) 2011-2013 GoLismero Project
 License     = GNU Public License
 
 [Arguments]
-profile  = Full and fast
-user     = admin
-password = admin
-host     = 127.0.0.1
-port     = 9390
-timeout  = 30
+profile   = Full and fast
+user      = admin
+*password = admin
+host      = 127.0.0.1
+port      = 9390
+timeout   = 30

@@ -63,11 +63,12 @@ class NiktoPlugin(TestingPlugin):
         self.update_status(progress = None)
 
         # Get the path to the Nikto scanner.
-        cwd = split(__file__)[0]
-        cwd = abspath(cwd)
+        nikto_dir = split(__file__)[0]
+        nikto_dir = join(nikto_dir, "nikto")
+        nikto_dir = abspath(nikto_dir)
 
         # Get the path to the Nikto script.
-        nikto_script = join(cwd, "nikto.pl")
+        nikto_script = join(nikto_dir, "nikto.pl")
 
         # If it doesn't exist, try the system default.
         if not exists(nikto_script):
@@ -80,7 +81,7 @@ class NiktoPlugin(TestingPlugin):
 
         # Get the path to the configuration file.
         config = Config.plugin_args["config"]
-        config = join(cwd, config)
+        config = join(nikto_dir, config)
         config = abspath(config)
 
         # If it doesn't exist, try the system default.
