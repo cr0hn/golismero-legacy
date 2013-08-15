@@ -85,7 +85,7 @@ import random
 import urlparse
 
 
-#--------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 _user_settings_folder = None
 def get_user_settings_folder():
     """
@@ -134,7 +134,7 @@ def get_user_settings_folder():
     return folder
 
 
-#--------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def get_default_config_file():
     """
     :returns: Pathname of the default configuration file, or None if it doesn't exist.
@@ -153,7 +153,7 @@ def get_default_config_file():
     return config_file
 
 
-#--------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 _wordlists_folder = None
 def get_wordlists_folder():
     """
@@ -172,7 +172,7 @@ def get_wordlists_folder():
     return _wordlists_folder
 
 
-#--------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 _profiles_folder = None
 def get_profiles_folder():
     """
@@ -191,7 +191,7 @@ def get_profiles_folder():
     return _profiles_folder
 
 
-#--------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def get_profile(name):
     """
     Get the profile configuration file for the requested profile name.
@@ -225,7 +225,7 @@ def get_profile(name):
     return filename
 
 
-#--------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def get_available_profiles():
     """
     :returns: Available profiles.
@@ -241,7 +241,7 @@ def get_available_profiles():
     }
 
 
-#--------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class Singleton (object):
     """
     Implementation of the Singleton pattern.
@@ -270,13 +270,13 @@ class Singleton (object):
         return cls._instance
 
 
-#--------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class Configuration (object):
     """
     Generic configuration class.
     """
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # The logic in configuration classes is always:
     # - Checking options without fixing them is done in check_params().
     # - Sanitizing (fixing) options is done in parsers or in property setters.
@@ -284,7 +284,7 @@ class Configuration (object):
     #   current options rather than overwriting them completely.
     #   This allows options to be read from multiple sources.
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Here's where subclasses define the options.
     #
     # It's a dictionary of tuples of the following format:
@@ -308,7 +308,7 @@ class Configuration (object):
     _settings_ = {}
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Some helper parsers.
 
     @staticmethod
@@ -391,7 +391,7 @@ class Configuration (object):
             raise ValueError("Unknown value: %r" % x)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self):
         history = set()
         for name, definition in self._settings_.iteritems():
@@ -403,7 +403,7 @@ class Configuration (object):
             self.__init_option(name, *definition)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init_option(self, name, parser = None, default = None):
         if name.endswith("_") or not name.replace("_", "").isalnum():
             msg = "Option name %r is not a valid Python identifier"
@@ -423,7 +423,7 @@ class Configuration (object):
         setattr(self, name, default)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __setattr__(self, name, value):
         if not name.startswith("_"):
             definition = self._settings_.get(name, (None, None))
@@ -435,7 +435,7 @@ class Configuration (object):
         object.__setattr__(self, name, value)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def check_params(self):
         """
         Check if parameters are valid. Raises an exception otherwise.
@@ -447,7 +447,7 @@ class Configuration (object):
         return
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def from_dictionary(self, args):
         """
         Get the settings from a Python dictionary.
@@ -460,7 +460,7 @@ class Configuration (object):
                 setattr(self, name, value)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def from_object(self, args):
         """
         Get the settings from the attributes of a Python object.
@@ -479,7 +479,7 @@ class Configuration (object):
         self.from_dictionary(args)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def from_json(self, json_raw_data):
         """
         Get the settings from a JSON encoded dictionary.
@@ -511,7 +511,7 @@ class Configuration (object):
         self.from_dictionary(args)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def from_config_file(self, config_file, allow_profile = False):
         """
         Get the settings from a configuration file.
@@ -536,7 +536,7 @@ class Configuration (object):
         self.from_dictionary(options)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def to_dictionary(self):
         """
         Copy the settings to a Python dictionary.
@@ -554,7 +554,7 @@ class Configuration (object):
         return result
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def to_json(self):
         """
         Copy the settings to a JSON encoded dictionary.
@@ -581,15 +581,15 @@ class Configuration (object):
         return json_encode( self.to_dictionary() )
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class OrchestratorConfig (Configuration):
     """
     Orchestator configuration object.
     """
 
 
-    #----------------------------------------------------------------------
-    # The options definitions:
+    #--------------------------------------------------------------------------
+    # The options definitions, they will be read from the config file:
     #
     _settings_ = {
 
@@ -634,15 +634,19 @@ class OrchestratorConfig (Configuration):
     }
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    # Options that are only set in runtime, not loaded from the config file.
 
     # Configuration files.
     config_file  = get_default_config_file()
     profile      = None
     profile_file = None
 
+    # Plugin arguments.
+    plugin_args  = dict()   # plugin_name -> key -> value
 
-    #----------------------------------------------------------------------
+
+    #--------------------------------------------------------------------------
     def check_params(self):
 
         # Validate the network connections limit.
@@ -660,15 +664,15 @@ class OrchestratorConfig (Configuration):
             raise ValueError("Conflicting plugins selection, aborting execution.")
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class AuditConfig (Configuration):
     """
     Audit configuration object.
     """
 
 
-    #----------------------------------------------------------------------
-    # The options definitions:
+    #--------------------------------------------------------------------------
+    # The options definitions, they will be read from the config file:
     #
     _settings_ = {
 
@@ -743,20 +747,24 @@ class AuditConfig (Configuration):
     }
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    # Options that are only set in runtime, not loaded from the config file.
 
     # Start and stop time for the audit.
     # These values are filled on runtime.
-    start_time = None
-    stop_time  = None
+    start_time   = None
+    stop_time    = None
 
     # Configuration files.
     config_file  = get_default_config_file()
     profile      = None
     profile_file = None
 
+    # Plugin arguments.
+    plugin_args  = dict()   # plugin_name -> key -> value
 
-    #----------------------------------------------------------------------
+
+    #--------------------------------------------------------------------------
 
     @property
     def targets(self):
@@ -774,7 +782,7 @@ class AuditConfig (Configuration):
                 for x in targets)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     @property
     def imports(self):
@@ -788,7 +796,7 @@ class AuditConfig (Configuration):
             self._imports.extend( (str(x) if x else None) for x in imports )
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     @property
     def reports(self):
@@ -802,7 +810,7 @@ class AuditConfig (Configuration):
             self._reports.extend( (str(x) if x else None) for x in reports )
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     @property
     def audit_db(self):
@@ -818,7 +826,7 @@ class AuditConfig (Configuration):
         self._audit_db = audit_db
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     @property
     def cookie(self):
@@ -844,7 +852,7 @@ class AuditConfig (Configuration):
         self._cookie = cookie
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def check_params(self):
 
         # Validate the list of targets.

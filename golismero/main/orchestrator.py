@@ -106,6 +106,10 @@ class Orchestrator (object):
         if not success:
             raise RuntimeError("Failed to find any plugins!")
 
+        # Set the user-defined arguments for the plugins.
+        for plugin_name, plugin_args in self.__config.plugin_args.iteritems():
+            self.pluginManager.set_plugin_args(plugin_name, plugin_args)
+
         # Load the UI plugin.
         ui_plugin_name = "ui/%s" % self.__config.ui_mode
         try:

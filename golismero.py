@@ -30,8 +30,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = []
 
 
-#----------------------------------------------------------------------
-# Fix the module load path when running as a portable script and during installation.
+#------------------------------------------------------------------------------
+# Fix the module load path when running as a portable script and after installation.
 
 import os
 from os import path
@@ -62,7 +62,7 @@ except NameError:
     _FIXED_PATH_ = True
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Python version check.
 # We must do it now before trying to import any more modules.
 #
@@ -79,18 +79,19 @@ if __name__ == "__main__":
         exit(1)
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Imported modules
 
 import argparse
 import datetime
 
+from collections import defaultdict
 from ConfigParser import RawConfigParser
 from os import getenv, getpid
 from thread import get_ident
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # GoLismero modules
 
 from golismero.api.config import Config
@@ -103,7 +104,7 @@ from golismero.managers.pluginmanager import PluginManager
 from golismero.managers.processmanager import PluginContext
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Custom argparse actions
 
 class CustomArgumentParser(argparse.ArgumentParser):
@@ -152,7 +153,25 @@ class ReadValueFromFileAction(argparse.Action):
             parser.error("Can't read file %r. Error: %s" % (values, e.message))
         setattr(namespace, self.dest, data)
 
-#----------------------------------------------------------------------
+# --plugin-arg
+class SetPluginArgumentAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        d = getattr(namespace, self.dest, None)
+        if d is None:
+            d = defaultdict(dict)
+            setattr(namespace, self.dest, d)
+        try:
+            plugin_name, token = values.split(":", 1)
+            plugin_name = plugin_name.strip()
+            key, value  = token.split("=", 1)
+            key   = key.strip()
+            value = value.strip()
+            d[plugin_name][key] = value
+        except Exception:
+            parser.error("invalid plugin argument: %s" % values)
+
+
+#------------------------------------------------------------------------------
 # Command line parser using argparse
 
 def cmdline_parser():
@@ -210,6 +229,7 @@ def cmdline_parser():
     gr_net.add_argument("--volatile-cache", action="store_false", dest="use_cache_db", help="use a volatile network cache")
 
     gr_plugins = parser.add_argument_group("plugin options")
+    gr_plugins.add_argument("-a", "--plugin-arg", metavar="PLUGIN:KEY=VALUE", action=SetPluginArgumentAction, dest="plugin_args", help="pass an argument to a plugin")
     gr_plugins.add_argument("-e", "--enable-plugin", metavar="NAME", action=EnablePluginAction, default=[], dest="plugin_load_overrides", help="enable a plugin")
     gr_plugins.add_argument("-d", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="plugin_load_overrides", help="disable a plugin")
     gr_plugins.add_argument("--max-process", metavar="N", type=int, default=None, help="maximum number of plugins to run concurrently")
@@ -220,7 +240,7 @@ def cmdline_parser():
     return parser
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Start of program
 
 def main():
@@ -253,6 +273,7 @@ def main():
         if cmdParams.profile_file:
             cmdParams.from_config_file(cmdParams.profile_file)
         cmdParams.from_object(P)
+        cmdParams.plugin_args = P.plugin_args
         cmdParams.plugin_load_overrides = P.plugin_load_overrides
 
         # Load the target audit options.
@@ -266,6 +287,7 @@ def main():
             if auditParams.profile_file:
                 auditParams.from_config_file(auditParams.profile_file)
             auditParams.from_object(P)
+            auditParams.plugin_args = P.plugin_args
             auditParams.plugin_load_overrides = P.plugin_load_overrides
 
             # If importing is turned off, remove the list of imports.
@@ -301,7 +323,7 @@ def main():
         cmdParams.plugins_folder = plugins_folder
 
 
-    #------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # List plugins and quit.
 
     if P.plugin_list:
@@ -374,7 +396,7 @@ def main():
         exit(0)
 
 
-    #------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Display plugin info and quit.
 
     if P.plugin_name:
@@ -452,7 +474,7 @@ def main():
         exit(0)
 
 
-    #------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # List profiles and quit.
     if P.profile_list:
         Console.use_colors = cmdParams.colorize
@@ -480,7 +502,7 @@ def main():
         exit(0)
 
 
-    #------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Check if all options are correct.
 
     try:
@@ -494,12 +516,26 @@ def main():
     # reaching the launcher. The Launcher does it anyway, but
     # this way we can catch the error before running, and show
     # a help message using argparse.
+    #
+    # Since we're at it, also check the plugin arguments make sense.
+    # The launcher simply ignores that kind of error.
     try:
         manager = PluginManager()
         manager.find_plugins(cmdParams)
+        for plugin_name, plugin_args in cmdParams.plugin_args.iteritems():
+            status = manager.set_plugin_args(plugin_name, plugin_args)
+            if status != 0:
+                if status == 1:
+                    msg = "Unknown plugin: %s"
+                elif status == 2:
+                    msg = "Invalid arguments for plugin: %s"
+                else:
+                    msg = "Error setting arguments for plugin: %s"
+                parser.error(msg % plugin_name)
         ui_plugin_name = "ui/" + cmdParams.ui_mode
         ui_plugin = manager.load_plugin_by_name(ui_plugin_name)
     except Exception, e:
+        ##raise  # XXX DEBUG
         print "[!] Error loading plugins: %s" % str(e)
         exit(1)
     try:
@@ -514,7 +550,7 @@ def main():
         parser.error(msg)
 
 
-    #------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Launch GoLismero.
     if P.targets:
         launcher.run(cmdParams, auditParams)
@@ -523,6 +559,6 @@ def main():
     exit(0)
 
 
-#------------------------------------------------------------
+#------------------------------------------------------------------------------
 if __name__ == '__main__':
     main()
