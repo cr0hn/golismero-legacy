@@ -166,7 +166,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
                      severity_vectors['predictables'],
                      get_http_method(m_url),
                      m_store_info,
-                     self.update_status_step,
+                     self.update_status,
                      len(m_urls))
 
         # Process the URLs
@@ -224,7 +224,7 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
                      severity_vectors['suffixes'],
                      get_http_method(m_url),
                      m_store_info,
-                     self.update_status_step,
+                     self.update_status,
                      len(m_urls))
 
         # Process the URLs
@@ -282,7 +282,7 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
                      severity_vectors['prefixes'],
                      get_http_method(m_url),
                      m_store_info,
-                     self.update_status_step,
+                     self.update_status,
                      len(m_urls))
 
         # Process the URLs
@@ -341,7 +341,7 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
                      severity_vectors['file_extensions'],
                      get_http_method(m_url),
                      m_store_info,
-                     self.update_status_step,
+                     self.update_status,
                      len(m_urls))
 
         # Process the URLs
@@ -399,7 +399,7 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
                      severity_vectors['permutations'],
                      get_http_method(m_url),
                      m_store_info,
-                     self.update_status_step,
+                     self.update_status,
                      len(m_urls))
 
         # Process the URLs
@@ -456,7 +456,7 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
                      severity_vectors['directories'],
                      get_http_method(m_url),
                      m_store_info,
-                     self.update_status_step,
+                     self.update_status,
                      len(m_urls))
 
         # Process the URLs
@@ -481,8 +481,8 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
     :param matcher: instance of MatchingAnalyzer object.
     :type matcher: `MatchingAnalyzer`
 
-    :param updater_func: update_status_step function to send updates
-    :type updater_func: update_status_step
+    :param updater_func: update_status function to send updates
+    :type updater_func: update_status
 
     :param total_urls: total number of URL to globally process.
     :type total_urls: int
@@ -493,7 +493,7 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
 
     i, url = url
 
-    updater_func(step=i, total=total_urls)
+    updater_func((float(i) * 100.0) / float(total_urls))
     Logger.log_more_verbose("Trying to discover URL %s" % url)
 
     # Get URL
