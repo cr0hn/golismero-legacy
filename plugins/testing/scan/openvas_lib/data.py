@@ -1051,8 +1051,7 @@ class OpenVASResult(object):
     @property
     def notes(self):
         """
-        :return:
-        :rtype:
+        :rtype: list(OpenVASNotes)
         """
         return self.__notes
 
@@ -1061,10 +1060,12 @@ class OpenVASResult(object):
     @notes.setter
     def notes(self, val):
         """
-        :type val: OpenVASNotes
+        :type val: list(OpenVASNotes)
         """
-        if not isinstance(val, OpenVASNotes):
-            raise TypeError("Expected OpenVASNotes, got %s instead" % type(val))
+        val = list(val)
+        for v in val:
+            if not isinstance(v, OpenVASNotes):
+                raise TypeError("Expected OpenVASNotes, got %s instead" % type(v))
 
         self.__notes = val
 

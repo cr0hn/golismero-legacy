@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
+from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.vulnerability import Vulnerability
 from golismero.api.logger import Logger
@@ -129,7 +130,80 @@ class OpenVASPlugin(TestingPlugin):
         :returns: Scan results converted to the GoLismero data model.
         :rtype: list(Data)
         """
-        #
-        # XXX TODO
-        #
-        return []
+
+        # This is where we'll store the results.
+        results = []
+
+        # Remember the hosts we've seen so we don't create them twice.
+        hosts_seen = {}
+
+        # For each OpenVAS result...
+        for opv in openvas_results:
+            try:
+
+                # Get the host.
+                host = opv.host
+
+                # Get or create the vulnerable resource.
+                target = ip
+                if host in hosts_seen:
+                    target = hosts_seen[host]
+                elif ip and ip.address != host:
+                    try:
+                        target = IP(host)
+                    except ValueError:
+                        target = Domain(host)
+                    results.append(target)
+
+                # Get the threat level.
+                try:
+                    level = opv.threat.lower()
+                except Exception:
+                    level = "informational"
+
+                # Get the metadata.
+                nvt = opv.nvt
+                ##references = nvt.xrefs
+                ##cvss = nvt.cvss
+                ##cve = nvt.cve
+                ##vulnerability_type = nvt.category
+
+                # Get the vulnerability description.
+                description = opv.description
+                if not description:
+                    description = nvt.description
+                    if not description:
+                        description = nvt.summary
+                        if not description:
+                            description = "A vulnerability has been found."
+                description += "\n" + "\n".join(
+                    " - " + note.text
+                    for note in opv.notes
+                )
+
+                # Create the vulnerability instance.
+                vuln = Vulnerability(
+                    level       = level,
+                    description = description,
+                    ##cvss        = cvss,
+                    ##cve         = cve,
+                    ##references  = references.split("\n"),
+                )
+                ##vuln.vulnerability_type = vulnerability_type
+
+                # Link the vulnerability to the resource.
+                if target is not None:
+                    target.add_vulnerability(vuln)
+
+            # Skip on error.
+            except Exception, e:
+                t = format_exc()
+                Logger.log_error_verbose("Error parsing OpenVAS results: %s" % str(e))
+                Logger.log_error_more_verbose(t)
+                continue
+
+            # Add the vulnerability.
+            results.append(vuln)
+
+        # Return the converted results.
+        return results
