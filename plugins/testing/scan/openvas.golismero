@@ -1,9 +1,8 @@
 [Core]
-Name   = Openvas scanner
-Module = openvas/openvas_plugin.py
+Name = OpenVAS
 
 [Documentation]
-Description = Run the OpenVas scanner and import the results
+Description = Run the OpenVAS scanner and import the results
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

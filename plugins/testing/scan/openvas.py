@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-Run the OpenVas scanner.
-"""
-
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -32,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.config import Config
 from golismero.api.data.resource.ip import IP
+from golismero.api.data.vulnerability import Vulnerability
 from golismero.api.plugin import TestingPlugin
 
 from threading import Event
@@ -40,18 +37,12 @@ from functools import partial
 # Import the OpenVAS libraries from the plugin data folder.
 # FIXME the library should go to thirdparty_libs once it's published!
 import os, sys
-cwd = os.path.abspath(os.path.split(__file__)[0])
-cwd = os.path.join(cwd, ".")
-sys.path.insert(0, cwd)
-
+sys.path.insert(0, os.path.abspath(os.path.split(__file__)[0]))
 from openvas_lib import VulnscanManager
 
 
 #------------------------------------------------------------------------------
-class OpenVas(TestingPlugin):
-    """
-    Run the OpenVas scanner.
-    """
+class OpenVASPlugin(TestingPlugin):
 
 
     #----------------------------------------------------------------------
@@ -66,12 +57,12 @@ class OpenVas(TestingPlugin):
         m_event = Event()
 
         # Get the config.
-        m_user      = Config.plugin_config.get("user", "admin")
-        m_password  = Config.plugin_config.get("password", "admin")
-        m_host      = Config.plugin_config.get("host", "127.0.0.1")
-        m_port      = Config.plugin_config.get("port", "9390")
-        m_timeout   = Config.plugin_config.get("timeout", "30")
-        m_profile   = Config.plugin_config.get("profile", "Full and fast")
+        m_user      = Config.plugin_args["user"]
+        m_password  = Config.plugin_args["password"]
+        m_host      = Config.plugin_args["host"]
+        m_port      = Config.plugin_args["port"]
+        m_timeout   = Config.plugin_args["timeout"]
+        m_profile   = Config.plugin_args["profile"]
 
         # Sanitize the port and timeout.
         try:
@@ -87,13 +78,7 @@ class OpenVas(TestingPlugin):
                 m_timeout = None
 
         # Get the target address.
-        m_target    = info.address
-
-        #---------------- XXX DEBUG -----------------
-        m_host      = "192.168.0.208"
-        m_target    = "8.8.0.0/24" #"192.168.0.194"
-        m_profile   = "empty"
-        #---------------- XXX DEBUG -----------------
+        m_target  = info.address
 
         # Connect to the scanner.
         m_scanner = VulnscanManager(m_host, m_user, m_password, m_port, m_timeout)
@@ -106,10 +91,10 @@ class OpenVas(TestingPlugin):
             callback_progress = self.update_status
         )
 
-        try:
+        # Wait for completion.
+        m_event.wait()
 
-            # Wait for completion.
-            m_event.wait()
+        try:
 
             # Get the scan results.
             m_openvas_results = m_scanner.get_results(m_scan_id)
