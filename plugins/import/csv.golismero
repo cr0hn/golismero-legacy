@@ -1,6 +1,6 @@
 [Core]
 Name   = Nikto
-Module = ../testing/scan/nikto/nikto_to_golismero_adaptor.py
+Module = ../testing/scan/nikto.py
 Class  = NiktoImportPlugin
 
 [Documentation]

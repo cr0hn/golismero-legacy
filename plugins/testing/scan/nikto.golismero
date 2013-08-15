@@ -1,6 +1,6 @@
 [Core]
 Name   = Nikto
-Module = nikto/nikto_to_golismero_adaptor.py
+Module = nikto.py
 Class  = NiktoPlugin
 
 [Documentation]
