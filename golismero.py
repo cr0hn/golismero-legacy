@@ -243,6 +243,12 @@ def cmdline_parser():
 
 
 #------------------------------------------------------------------------------
+def prompt_password(msg):
+    # TODO: disable the keyboard echo
+    return raw_input(msg)
+
+
+#------------------------------------------------------------------------------
 # Start of program
 
 def main():
@@ -461,7 +467,9 @@ def main():
                 print
                 print colorize("Arguments:", "green")
                 for name, default in sorted(m_plugin_info.plugin_args.items()):
-                    print "\t%s -> %r" % (colorize(name, "cyan"), default)
+                    if name in m_plugin_info.plugin_passwd_args:
+                        default = "****************"
+                    print "\t%s -> %s" % (colorize(name, "cyan"), default)
         except KeyError:
             print "[!] Plugin name not found"
             exit(1)
@@ -524,9 +532,26 @@ def main():
 
         # Sanitize the plugin arguments.
         try:
-            plugin_args = manager.parse_plugin_args(P.plugin_args)
+            if P.plugin_args:
+                plugin_args = manager.parse_plugin_args(P.plugin_args)
+            else:
+                plugin_args = {}
         except KeyError, e:
             parser.error(str(e))
+
+        # Prompt for passwords.
+        for plugin_name in plugin_args.keys():
+            plugin_info = manager.get_plugin_by_name(plugin_name)
+            target_args = plugin_args[plugin_name]
+            for key, value in target_args.items():
+                if not value and key in plugin_info.plugin_passwd_args:
+                    if len(plugin_info.plugin_passwd_args) > 1:
+                        msg = "Enter password for %s (%s): "
+                        msg %= (plugin_info.display_name, key)
+                    else:
+                        msg = "Enter password for %s: "
+                        msg %= plugin_info.display_name
+                    target_args[key] = prompt_password(msg)
 
         # Save the plugin arguments for the Orchestrator and the Audit.
         cmdParams.plugin_args   = plugin_args

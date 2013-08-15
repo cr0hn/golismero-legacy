@@ -977,14 +977,18 @@ class PluginManager (object):
 
         :raises KeyError: Plugin or argument not found.
         """
-        parsed = defaultdict(dict)
+        parsed = {}
         for plugin_name, key, value in plugin_args:
             plugin_info = self.guess_plugin_by_name(plugin_name)
             key = key.lower()
             if key not in plugin_info.plugin_args:
                 raise KeyError(
                     "Argument not found: %s:%s" % (plugin_name, key))
-            parsed[plugin_info.plugin_name][key] = value
+            try:
+                target = parsed[plugin_info.plugin_name]
+            except KeyError:
+                parsed[plugin_info.plugin_name] = target = {}
+            target[key] = value
         return parsed
 
 
