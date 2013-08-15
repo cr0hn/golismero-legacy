@@ -12,7 +12,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -122,6 +122,9 @@ class ImportManager (object):
         if not self.__importers:
             return 0
 
+        # Show a log message.
+        Logger.log_verbose("Importing results from external tools...")
+
         # For each input file, run its corresponding import plugin.
         # Import plugins are run in the same process as the Orchestrator.
         count = 0
@@ -129,7 +132,7 @@ class ImportManager (object):
             try:
                 plugin_instance = self.__plugins[plugin_name]
                 context = self.orchestrator.build_plugin_context(
-                    self.config.name, plugin_instance, None
+                    self.config.audit_name, plugin_instance, None
                 )
                 old_context = Config._context
                 try:

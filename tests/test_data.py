@@ -8,7 +8,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -182,7 +182,7 @@ def test_data_types_have_id():
 
 # This test makes sure the links work properly.
 def test_data_links():
-    with PluginTester() as t:
+    with PluginTester(autoinit=False) as t:
         t.targets = ["http://www.example.com/"]
         t.init_environment()
         helper_data_links()
@@ -190,9 +190,6 @@ def test_data_links():
 
 # The actual test, without the boilerplate.
 def helper_data_links():
-
-    # Make sure the local data cache is enabled at this point.
-    LocalDataCache._enabled = True
 
     # Create some dummy data.
     from golismero.api.data.resource.url import Url

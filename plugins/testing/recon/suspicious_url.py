@@ -8,7 +8,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -55,8 +55,8 @@ class SuspiciousURLPlugin(TestingPlugin):
         # Find suspicious URLs by matching against known substrings.
 
         # Load wordlists
-        m_wordlist_middle     = WordListLoader.get_wordlist(Config.plugin_extra_config['Wordlist_middle']['wordlist'])
-        m_wordlist_extensions = WordListLoader.get_wordlist(Config.plugin_extra_config['Wordlist_extensions']['wordlist'])
+        m_wordlist_middle     = WordListLoader.get_wordlist(Config.plugin_config['middle'])
+        m_wordlist_extensions = WordListLoader.get_wordlist(Config.plugin_config['extensions'])
 
         # Add matching keywords at any positions of URL.
         m_results.extend([SuspiciousURL(info, x)

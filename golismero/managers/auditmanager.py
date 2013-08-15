@@ -12,7 +12,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -40,7 +40,6 @@ from ..api.data import Data
 from ..api.data.resource import Resource
 from ..api.config import Config
 from ..api.logger import Logger
-from ..api.text.text_utils import generate_random_string
 from ..common import AuditConfig
 from ..database.auditdb import AuditDB
 from ..main.scope import AuditScope
@@ -114,6 +113,9 @@ class AuditManager (object):
         if not isinstance(audit_config, AuditConfig):
             raise TypeError("Expected AuditConfig, got %r instead" % type(audit_config))
 
+        # Check the audit config.
+        self.orchestrator.uiManager.check_params(audit_config)
+
         # Create the audit.
         m_audit = Audit(audit_config, self.orchestrator)
 
@@ -129,7 +131,7 @@ class AuditManager (object):
 
         # On error, abort.
         except Exception, e:
-            raise  # XXX DEBUG
+            ##raise  # XXX DEBUG
             try:
                 self.remove_audit(m_audit.name)
             except Exception:
@@ -289,11 +291,6 @@ class Audit (object):
         # Keep a reference to the Orchestrator.
         self.__orchestrator = orchestrator
 
-        # Set the audit name.
-        self.__name = audit_config.audit_name
-        if not self.__name:
-            audit_config.audit_name = self.__name = self.generate_audit_name()
-
         # Set the current stage to the first stage.
         self.__current_stage = orchestrator.pluginManager.min_stage
 
@@ -312,7 +309,19 @@ class Audit (object):
         self.__plugin_manager = None
         self.__import_manager = None
         self.__report_manager = None
-        self.__database = None
+
+        # Create or open the database.
+        force_print_name = not audit_config.audit_name
+        self.__database = AuditDB(audit_config)
+
+        # Set the audit name.
+        self.__name = self.__database.audit_name
+        if force_print_name:
+            Logger.log("Audit name: %s" % self.__name)
+        else:
+            Logger.log_verbose("Audit name: %s" % self.__name)
+        if hasattr(self.__database, "filename"):
+            Logger.log_verbose("Audit database: %s" % self.database.filename)
 
 
     #--------------------------------------------------------------------------
@@ -410,18 +419,6 @@ class Audit (object):
 
 
     #--------------------------------------------------------------------------
-    @staticmethod
-    def generate_audit_name():
-        """
-        Generate a default name for a new audit.
-
-        :returns: Generated name.
-        :rtype: str
-        """
-        return "golismero-" + generate_random_string(length=8)
-
-
-    #--------------------------------------------------------------------------
     def run(self):
         """
         Start execution of an audit.
@@ -462,8 +459,6 @@ class Audit (object):
 
             # Load the testing plugins.
             m_audit_plugins = self.pluginManager.load_plugins("testing")
-            if not m_audit_plugins:
-                raise RuntimeError("Failed to find any testing plugins!")
 
             # Create the notifier.
             self.__notifier = AuditNotifier(self)
@@ -477,12 +472,6 @@ class Audit (object):
             # Create the report manager.
             self.__report_manager = ReportManager(self.orchestrator, self)
 
-            # Create the database.
-            self.__database = AuditDB(self.name, self.config.audit_db)
-            if hasattr(self.__database, "filename"):
-                Logger.log_verbose(
-                    "Audit database: %s" % self.database.filename)
-
             # Get the original audit start time, if found.
             # If not, save the new audit start time.
             start_time = self.database.get_audit_times()[0]
@@ -491,12 +480,23 @@ class Audit (object):
             else:
                 self.database.set_audit_start_time(self.config.start_time)
 
+            # Log the number of objects previously in the database.
+            count = self.database.get_data_count()
+            if count:
+                Logger.log_verbose("Found %d objects in database" % count)
+
             # Add the targets to the database, but only if they're new.
             # (Makes sense when resuming a stopped audit).
             target_data = self.scope.get_targets()
             for data in target_data:
                 if not self.database.has_data_key(data.identity, data.data_type):
                     self.database.add_data(data)
+
+            # Mark all data as having completed no stages.
+            # This is needed because the plugin list may have changed.
+            # Note that if a plugin already processed the data, this WON'T
+            # cause the same data to be processed again by the same plugin.
+            self.database.clear_all_stage_marks()
 
             # Tell the UI we're about to run the import plugins.
             self.send_msg(
@@ -535,6 +535,8 @@ class Audit (object):
             Config._context = old_context
 
         # Move to the next stage.
+        if m_audit_plugins:
+            Logger.log_verbose("Launching tests...")
         self.update_stage()
 
 
@@ -623,14 +625,17 @@ class Audit (object):
         if self.__is_report_started:
 
             #
-            # Run the magic plugin "report/screen" here, after all other
+            # Run the magic plugin "report/text" here, after all other
             # report plugins have finished running. This is needed so
-            # the output from the screen reporter doesn't get mixed with
+            # the output from the screen report doesn't get mixed with
             # the log messages and errors from the other reporters.
             #
-            # The screen report plugin is run by the UI notifier instead
+            # The text report plugin is run by the UI notifier instead
             # of the normal plugin notifier, so it runs in-process and
             # waits until the plugin is finished before returning.
+            #
+            # Note that for output text files the text report plugin is
+            # run again normally.
             #
             self.__report_manager.generate_screen_report(self.orchestrator.uiManager.notifier)
 
@@ -660,7 +665,7 @@ class Audit (object):
 
                     # Get the pending data.
                     # XXX FIXME possible performance problem here!
-                    # Maybe we should fetch the types only, not the whole thing yet
+                    # Maybe we should fetch the types only...
                     datalist = database.get_many_data(pending)
 
                     # If we don't have any suitable plugins...
@@ -829,7 +834,14 @@ class Audit (object):
                 message._update_data(data_for_plugins)
 
                 # Send the message to the plugins, and track the expected ACKs.
-                self.__expecting_ack += self.__notifier.notify(message)
+                launched = self.__notifier.notify(message)
+                if launched:
+                    self.__expecting_ack += launched
+                else:
+                    self.__expecting_ack += 1
+                    self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                                  message_code = MessageCode.MSG_CONTROL_ACK,
+                                      priority = MessagePriority.MSG_PRIORITY_LOW)
 
                 # Tell the Orchestrator we sent the message.
                 return True
@@ -862,6 +874,10 @@ class Audit (object):
             # Save the audit stop time in the database.
             self.database.set_audit_stop_time(self.config.stop_time)
 
+            # Show a log message.
+            if self.__report_manager.plugin_count > 0:
+                Logger.log_verbose("Generating reports...")
+
             # Tell the UI we've started generating the reports.
             self.send_msg(
                 message_type = MessageType.MSG_TYPE_STATUS,
@@ -870,7 +886,14 @@ class Audit (object):
             )
 
             # Start the report generation.
-            self.__expecting_ack += self.__report_manager.generate_reports(self.__notifier)
+            launched = self.__report_manager.generate_reports(self.__notifier)
+            if launched:
+                self.__expecting_ack += launched
+            else:
+                self.__expecting_ack += 1
+                self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                              message_code = MessageCode.MSG_CONTROL_ACK,
+                                  priority = MessagePriority.MSG_PRIORITY_LOW)
 
         # Send the ACK after launching the report plugins.
         finally:

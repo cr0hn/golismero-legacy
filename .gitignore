@@ -37,3 +37,7 @@ golismero_2/TODO.txt
 
 # Log files
 *.log
+
+# Temp files
+_tmp.txt
+tests/_tmp.txt

@@ -12,7 +12,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -140,13 +140,16 @@ def get_default_config_file():
     :returns: Pathname of the default configuration file, or None if it doesn't exist.
     :rtype: str | None
     """
-    config_file = path.join(get_user_settings_folder(), "golismero.cfg")
+    config_file = path.join(get_user_settings_folder(), "golismero.conf")
     if not path.isfile(config_file):
         config_file = path.split(path.abspath(__file__))[0]
-        config_file = path.join(config_file, "..", "golismero.cfg")
+        config_file = path.join(config_file, "..", "golismero.conf")
         config_file = path.abspath(config_file)
         if not path.isfile(config_file):
-            config_file = None
+            if path.sep != "\\" and path.isfile("/etc/golismero.conf"):
+                config_file = "/etc/golismero.conf"
+            else:
+                config_file = None
     return config_file
 
 
@@ -210,7 +213,7 @@ def get_profile(name):
     profiles = get_profiles_folder()
 
     # Get the filename for the requested profile.
-    filename = path.abspath(path.join(profiles, name + ".cfg"))
+    filename = path.abspath(path.join(profiles, name + ".profile"))
 
     # Check if it's outside the profiles folder or it doesn't exist.
     if not profiles.endswith(path.sep):
@@ -234,7 +237,7 @@ def get_available_profiles():
     return {
         name[:-4]
         for name in os.listdir(profiles_folder)
-        if name.endswith(".cfg")
+        if name.endswith(".profile")
     }
 
 
@@ -542,7 +545,7 @@ class Configuration (object):
         :rtype: dict(str -> *)
         """
         result = {}
-        for name, definition in _settings_.iteritems():
+        for name, definition in self._settings_.iteritems():
             default = None
             if type(definition) in (tuple, list) and len(definition) > 1:
                 default = definition[1]
@@ -562,7 +565,7 @@ class Configuration (object):
 
         # Lazy import of the JSON encoder function.
         global json_encode
-        if json_decode is None:
+        if json_encode is None:
             try:
                 # The fastest JSON parser available for Python.
                 from cjson import encode as json_encode
@@ -608,10 +611,10 @@ class OrchestratorConfig (Configuration):
         #
 
         # Enabled plugins
-        "enabled_plugins": (Configuration.comma_separated_list, ["all"]),
+        "enable_plugins": (Configuration.comma_separated_list, ["all"]),
 
         # Disabled plugins
-        "disabled_plugins": (Configuration.comma_separated_list, []),
+        "disable_plugins": (Configuration.comma_separated_list, []),
 
         # Plugins folder
         "plugins_folder": Configuration.string,
@@ -627,10 +630,7 @@ class OrchestratorConfig (Configuration):
         "max_connections": (Configuration.integer, 20),
 
         # Use persistent cache?
-        # True: yes
-        # False: no
-        # None: default for current run mode
-        "use_cache_db": Configuration.trinary,
+        "use_cache_db": (Configuration.boolean, True),
     }
 
 
@@ -654,9 +654,9 @@ class OrchestratorConfig (Configuration):
             raise ValueError("Number of processes cannot be a negative number, got %i." % self.max_process)
 
         # Validate the list of plugins.
-        if not self.enabled_plugins:
+        if not self.enable_plugins:
             raise ValueError("No plugins selected for execution.")
-        if set(self.enabled_plugins).intersection(self.disabled_plugins):
+        if set(self.enable_plugins).intersection(self.disable_plugins):
             raise ValueError("Conflicting plugins selection, aborting execution.")
 
 
@@ -684,7 +684,7 @@ class AuditConfig (Configuration):
         #
 
         # Output files
-        "reports": (Configuration.comma_separated_list, ["-"]),
+        "reports": (Configuration.comma_separated_list, []),
 
         # Only display resources with associated vulnerabilities
         "only_vulns": (Configuration.boolean, False),
@@ -707,10 +707,10 @@ class AuditConfig (Configuration):
         #
 
         # Enabled plugins
-        "enabled_plugins": (Configuration.comma_separated_list, ["all"]),
+        "enable_plugins": (Configuration.comma_separated_list, ["all"]),
 
         # Disabled plugins
-        "disabled_plugins": (Configuration.comma_separated_list, []),
+        "disable_plugins": (Configuration.comma_separated_list, []),
 
         #
         # Networks options
@@ -777,6 +777,20 @@ class AuditConfig (Configuration):
     #----------------------------------------------------------------------
 
     @property
+    def imports(self):
+        return self._imports
+
+    @imports.setter
+    def imports(self, imports):
+        # Always append, never overwrite.
+        self._imports = getattr(self, "_imports", [])
+        if imports:
+            self._imports.extend( (str(x) if x else None) for x in imports )
+
+
+    #----------------------------------------------------------------------
+
+    @property
     def reports(self):
         return self._reports
 
@@ -834,14 +848,13 @@ class AuditConfig (Configuration):
     def check_params(self):
 
         # Validate the list of targets.
-        # TODO: maybe this should be done by the UI plugins instead?
         if not self.targets:
             raise ValueError("No targets selected for execution.")
 
         # Validate the list of plugins.
-        if not self.enabled_plugins:
+        if not self.enable_plugins:
             raise ValueError("No plugins selected for execution.")
-        if set(self.enabled_plugins).intersection(self.disabled_plugins):
+        if set(self.enable_plugins).intersection(self.disable_plugins):
             raise ValueError("Conflicting plugins selection, aborting execution.")
 
         # Validate the regular expresion.

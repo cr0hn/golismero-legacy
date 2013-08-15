@@ -8,7 +8,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -59,7 +59,6 @@ def test_scope_example():
     audit_config.targets = ["www.example.com"]
     audit_config.include_subdomains = True
     with PluginTester(audit_config = audit_config) as t:
-        t.init_environment()
 
         assert None not in Config.audit_scope
         assert "" not in Config.audit_scope
@@ -100,7 +99,6 @@ def test_scope_localhost():
     audit_config.targets = ["localhost"]
     audit_config.include_subdomains = True
     with PluginTester(audit_config = audit_config) as t:
-        t.init_environment()
 
         assert None not in Config.audit_scope
         assert "" not in Config.audit_scope

@@ -6,5 +6,5 @@ depth = 0
 max_links = 0
 follow_redirects = no
 follow_first_redirect = yes
-disable_plugins = all
-enable_plugins = recon, scan, cleanup, report
+enable_plugins = all
+disable_plugins = scan, attack, intrude

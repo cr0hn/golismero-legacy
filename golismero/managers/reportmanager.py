@@ -12,7 +12,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -128,10 +128,10 @@ class ReportManager (object):
             return 0
 
         # For each output file, run its corresponding report plugin.
-        # Skip the magic plugin "report/screen".
+        # Skip the magic plugin for screen reports.
         count = 0
         for output_file, plugin_name in self.__reporters.iteritems():
-            if plugin_name == "report/screen" and (not output_file or output_file == "-"):
+            if plugin_name == "report/text" and (not output_file or output_file == "-"):
                 continue
             try:
                 notifier.start_report(self.__plugins[plugin_name], output_file)
@@ -158,8 +158,8 @@ class ReportManager (object):
         if not self.__reporters:
             return 0
 
-        # Abort if the screen report plugin is not selected.
-        if "report/screen" not in self.__reporters.values():
+        # Abort if the text report plugin is not selected.
+        if "report/text" not in self.__reporters.values():
             return 0
 
         # Get the filename for the screen report plugin.
@@ -167,13 +167,13 @@ class ReportManager (object):
         # filename used to indicate we want console output.
         found = False
         for output_file, plugin_name in self.__reporters.iteritems():
-            if plugin_name == "report/screen" and (not output_file or output_file == "-"):
+            if plugin_name == "report/text" and (not output_file or output_file == "-"):
                 found = True
                 break
         if not found:
             return 0
 
-        # Run the screen report plugin.
+        # Run the text report plugin.
         try:
             notifier.start_report(self.__plugins[plugin_name], self.__audit_name, output_file)
         except Exception, e:

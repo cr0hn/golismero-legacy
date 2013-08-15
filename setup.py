@@ -8,7 +8,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -50,7 +50,8 @@ else:
 # This will also check the Python version.
 sys.path.insert(0, os.path.abspath(here))
 golismero_launcher = imp.load_source('golismero_launcher', 'golismero.py')
-from golismero_launcher import show_banner, __author__, __copyright__, __credits__, __maintainer__, __email__, __version__
+from golismero_launcher import show_banner
+from golismero import *
 
 # Show the banner.
 if __name__ == '__main__':
@@ -78,14 +79,13 @@ if __name__ == '__main__':
             return StrictVersion.parse(self, vstring)
     version.StrictVersion = NotSoStrictVersion
 
-# Text describing the module (reStructured text).
+# Text describing the module.
 try:
-    readme = os.path.join(here, 'README')
+    readme = os.path.join(here, 'README.md')
     long_description = open(readme, 'r').read()
 except Exception:
-    #warn("README file not found or unreadable!")
-    readme = __license__
-    long_description = """GoLismero - The Web Knife"""
+    warn("README.md file not found or unreadable!")
+    long_description = get_banner()
 
 # Get the package name and relative location from its directory.
 def get_package_name_and_location(root, location, basedir, base_package):
@@ -158,13 +158,28 @@ package_dir = {'golismero': 'golismero', 'golismero.plugins': 'plugins'}
 packages, package_data = scan_subpackages(package_dir)
 
 # Loader scripts.
-scripts = ['golismero.py']
+scripts = ['golismero.py', 'golismero-daemon.py']
 if os.path.sep == '\\':
     scripts.append('golismero.bat')
+##else:
+##    scripts.append('golismero.sh')
 
 # Requirements.
+requires = []
+if os.path.sep != '\\':
+    requires.append('daemon')
 with open(os.path.join(here, 'requirements.txt'), 'rU') as f:
-    requires = [x for x in (x.strip() for x in f) if x and not x[0] == '#']
+    for x in f:
+        x = x.strip()
+        if x and not x[0] == '#':
+            if '=' in x or '<' in x or '>' in x:
+                p = min(
+                    x.find(c)
+                    for c in '!=<>'
+                    if c in x
+                )
+                x = "%s (%s)" % (x[:p].strip(), x[p:].strip())
+            requires.append(x)
 
 # Set the parameters for the setup script.
 metadata = {
@@ -188,7 +203,7 @@ metadata = {
     'maintainer_email'  : __email__,
     'license'           : __license__,
     'url'               : 'http://golismero-project.com/',
-    'download_url'      : 'https://github.com/cr0hn/golismero/zipball/master',
+    'download_url'      : 'https://github.com/golismero/golismero/zipball/master',
     'classifiers'       : [
                         'Development Status :: 3 - Alpha',
                         'Environment :: Console',

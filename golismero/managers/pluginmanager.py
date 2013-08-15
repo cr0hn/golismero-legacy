@@ -12,7 +12,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -111,7 +111,7 @@ class PluginInfo (object):
     def dependencies(self):
         """
         :returns: Plugin dependencies.
-        :rtype: str
+        :rtype: tuple(str...)
         """
         return self.__dependencies
 
@@ -140,10 +140,18 @@ class PluginInfo (object):
         return self.__plugin_class
 
     @property
+    def plugin_args(self):
+        """
+        :returns: Plugin arguments.
+        :rtype: dict(str -> str)
+        """
+        return self.__plugin_args
+
+    @property
     def plugin_config(self):
         """
         :returns: Plugin configuration.
-        :rtype: str
+        :rtype: dict(str -> str)
         """
         return self.__plugin_config
 
@@ -151,7 +159,7 @@ class PluginInfo (object):
     def plugin_extra_config(self):
         """
         :returns: Plugin extra configuration.
-        :rtype: str
+        :rtype: dict(str -> dict(str -> str))
         """
         return self.__plugin_extra_config
 
@@ -222,6 +230,9 @@ class PluginInfo (object):
 
         :param descriptor_file: Descriptor file (with ".golismero" extension).
         :type descriptor_file: str
+
+        :param global_config: Orchestrator settings.
+        :type global_config: OrchestratorConfig
         """
 
         # Store the plugin name.
@@ -238,27 +249,30 @@ class PluginInfo (object):
         parser.read(descriptor_file)
 
         # Read the "[Core]" section.
-        self.__display_name = parser.get("Core", "Name")
         try:
-            plugin_module   = parser.get("Core", "Module")
+            self.__display_name = parser.get("Core", "Name")
         except Exception:
-            plugin_module   = path.splitext(path.basename(descriptor_file))[0]
+            self.__display_name = plugin_name
         try:
-            plugin_class    = parser.get("Core", "Class")
+            plugin_module       = parser.get("Core", "Module")
         except Exception:
-            plugin_class    = None
+            plugin_module       = path.splitext(path.basename(descriptor_file))[0]
         try:
-            stage           = parser.get("Core", "Stage")
+            plugin_class        = parser.get("Core", "Class")
         except Exception:
-            stage           = None
+            plugin_class        = None
         try:
-            dependencies    = parser.get("Core", "Dependencies")
+            stage               = parser.get("Core", "Stage")
         except Exception:
-            dependencies    = None
+            stage               = None
         try:
-            recursive       = parser.get("Core", "Recursive")
+            dependencies        = parser.get("Core", "Dependencies")
         except Exception:
-            recursive       = "no"
+            dependencies        = None
+        try:
+            recursive           = parser.get("Core", "Recursive")
+        except Exception:
+            recursive           = "no"
 
         # Parse the stage name to get the number.
         if not stage:
@@ -279,13 +293,6 @@ class PluginInfo (object):
                     msg = "Error parsing %r: invalid execution stage: %r"
                     raise ValueError(msg % (descriptor_file, stage))
 
-        # Parse the recursive flag.
-        try:
-            self.__recursive = Configuration.boolean(recursive)
-        except Exception:
-            msg = "Error parsing %r: invalid recursive flag: %r"
-            raise ValueError(msg % (descriptor_file, recursive))
-
         # Sanitize the plugin module pathname.
         if not plugin_module.endswith(".py"):
             plugin_module += ".py"
@@ -296,9 +303,12 @@ class PluginInfo (object):
             raise ValueError(msg % descriptor_file)
         plugin_folder = path.split(descriptor_file)[0]
         plugin_module = path.abspath(path.join(plugin_folder, plugin_module))
-        if not plugin_module.startswith(plugin_folder):
-            msg = "Error parsing %r: plugin module is located outside its plugin folder"
-            raise ValueError(msg % descriptor_file)
+        plugins_root  = path.abspath(global_config.plugins_folder)
+        if not plugins_root.endswith(path.sep):
+            plugins_root += path.sep
+        if not plugin_module.startswith(plugins_root):
+            msg = "Error parsing %r: plugin module (%s) is located outside the plugins folder (%s)"
+            raise ValueError(msg % (descriptor_file, plugin_module, plugins_root))
 
         # Sanitize the plugin classname.
         if plugin_class is not None:
@@ -316,6 +326,13 @@ class PluginInfo (object):
             self.__dependencies = ()
         else:
             self.__dependencies = tuple(sorted( {x.strip() for x in dependencies.split(",")} ))
+
+        # Parse the recursive flag.
+        try:
+            self.__recursive = Configuration.boolean(recursive)
+        except Exception:
+            msg = "Error parsing %r: invalid recursive flag: %r"
+            raise ValueError(msg % (descriptor_file, recursive))
 
         # Read the "[Description]" section.
         try:
@@ -335,13 +352,20 @@ class PluginInfo (object):
         except Exception:
             self.__copyright   = "No copyright information"
         try:
-            self.__license   = parser.get("Documentation", "License")
+            self.__license     = parser.get("Documentation", "License")
         except Exception:
-            self.__license   = "No license information"
+            self.__license     = "No license information"
         try:
             self.__website     = parser.get("Documentation", "Website")
         except Exception:
-            self.__website     = "https://github.com/cr0hn/golismero/"
+            self.__website     = "https://github.com/golismero"
+
+        # Load the plugin arguments as a Python dictionary.
+        # This section is optional.
+        try:
+            self.__plugin_args = dict( parser.items("Arguments") )
+        except Exception:
+            self.__plugin_args = dict()
 
         # Load the plugin configuration as a Python dictionary.
         # This section is optional.
@@ -350,10 +374,6 @@ class PluginInfo (object):
         except Exception:
             self.__plugin_config = dict()
 
-        # Override the plugin configuration from the global config file(s).
-        self.__read_config_file(global_config.config_file)
-        self.__read_config_file(global_config.profile_file)
-
         # Load the plugin extra configuration sections as a dict of dicts.
         # All sections not parsed above will be included here.
         self.__plugin_extra_config = dict()
@@ -361,6 +381,10 @@ class PluginInfo (object):
             if section not in ("Core", "Documentation", "Configuration"):
                 options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
                 self.__plugin_extra_config[section] = options
+
+        # Override the plugin configuration from the global config file(s).
+        self.__read_config_file(global_config.config_file)
+        self.__read_config_file(global_config.profile_file)
 
 
     #----------------------------------------------------------------------
@@ -390,6 +414,7 @@ class PluginInfo (object):
         instance.__copyright           = self.__copyright
         instance.__license             = self.__license
         instance.__website             = self.__website
+        instance.__plugin_args         = self.__plugin_args.copy()
         instance.__plugin_config       = self.__plugin_config.copy()
         instance.__plugin_extra_config = {
             k: v.copy()
@@ -432,12 +457,60 @@ class PluginInfo (object):
         :param config_file: Configuration file.
         :type config_file: str
         """
-        if config_file:
-            config_parser = RawConfigParser()
-            config_parser.read(config_file)
-            if config_parser.has_section(self.__plugin_name):
-                self.__plugin_config.update(
-                    dict(config_parser.items(self.__plugin_name)))
+
+        # Dumb check.
+        if not config_file:
+            return
+
+        # Sections beginning with the plugin name are for this plugin.
+        section_prefix = self.__plugin_name
+
+        # Parse the config file.
+        config_parser = RawConfigParser()
+        config_parser.read(config_file)
+
+        # Go through each section.
+        for section in config_parser.sections():
+
+            # If the section name is exactly the plugin name,
+            # copy the settings to the plugin configuration.
+            if section == section_prefix:
+                target = self.__plugin_config
+
+            # The section name can also be the plugin name and
+            # the plugin config file section separated by a colon.
+            elif ":" in section:
+                a, b = section.split(":", 1)
+                a, b = a.strip(), b.strip()
+                if a == section_prefix:
+
+                    # Override the arguments.
+                    if b == "Arguments":
+                        target = self.__plugin_args
+
+                    # Same as just using the plugin name.
+                    elif b == "Configuration":
+                        target = self.__plugin_config
+
+                    # Special sections Core and Documentation can't
+                    # be overridden by config files.
+                    elif b in ("Core", "Documentation"):
+                        msg = "Ignored section [%s] of file %s"
+                        warnings.warn(msg % (section, config_file))
+                        continue
+
+                    # Override the plugin extra configuration.
+                    try:
+                        target = self.__plugin_extra_config[b]
+                    except KeyError:
+                        target = self.__plugin_extra_config[b] = dict()
+
+            # All other sections are ignored.
+            else:
+                continue
+
+            # Copy the settings.
+            target.update( config_parser.items(section) )
 
 
     #----------------------------------------------------------------------
@@ -445,6 +518,9 @@ class PluginInfo (object):
         """
         Protected method to update the class name if found during plugin load.
         (Assumes it's always valid, so no sanitization is performed).
+
+        .. warning: This method is called internally by GoLismero,
+                    do not call it yourself!
 
         :param plugin_class: Plugin class name.
         :type plugin_class: str
@@ -951,12 +1027,12 @@ class AuditPluginManager (PluginManager):
             raise TypeError("Expected AuditConfig, got %s instead" % type(auditConfig))
 
         # Get the black and white lists and the plugin load overrides.
-        enabled_plugins       = auditConfig.enabled_plugins
-        disabled_plugins      = auditConfig.disabled_plugins
+        enable_plugins        = auditConfig.enable_plugins
+        disable_plugins       = auditConfig.disable_plugins
         plugin_load_overrides = auditConfig.plugin_load_overrides
 
         # Dumb check.
-        if not enabled_plugins and not disabled_plugins and not plugin_load_overrides:
+        if not enable_plugins and not disable_plugins and not plugin_load_overrides:
             raise ValueError("No plugins selected for audit!")
 
         # Get all the plugin names.
@@ -966,16 +1042,16 @@ class AuditPluginManager (PluginManager):
 
         # Remove duplicates in black and white lists.
         blacklist_approach = False
-        if "all" in enabled_plugins:
-            enabled_plugins    = {"all"}
-        if "all" in disabled_plugins:
-            disabled_plugins   = {"all"}
+        if "all" in enable_plugins:
+            enable_plugins     = {"all"}
+        if "all" in disable_plugins:
+            disable_plugins    = {"all"}
             blacklist_approach = True
-        enabled_plugins  = set(enabled_plugins)
-        disabled_plugins = set(disabled_plugins)
+        enable_plugins  = set(enable_plugins)
+        disable_plugins = set(disable_plugins)
 
         # Check for consistency in black and white lists.
-        conflicting_entries = enabled_plugins.intersection(disabled_plugins)
+        conflicting_entries = enable_plugins.intersection(disable_plugins)
         if conflicting_entries:
             if len(conflicting_entries) > 1:
                 msg = "The same entries are present in both black and white lists: %s"
@@ -986,45 +1062,37 @@ class AuditPluginManager (PluginManager):
             raise ValueError(msg)
 
         # Expand the black and white lists.
-        disabled_plugins = self.__expand_plugin_list(disabled_plugins, "blacklist")
-        enabled_plugins  = self.__expand_plugin_list(enabled_plugins,  "whitelist")
+        disable_plugins = self.__expand_plugin_list(disable_plugins, "blacklist")
+        enable_plugins  = self.__expand_plugin_list(enable_plugins,  "whitelist")
 
         # Apply the black and white lists.
         if blacklist_approach:
-            plugins = all_plugins.intersection(enabled_plugins) # use only enabled plugins
+            plugins = all_plugins.intersection(enable_plugins) # use only enabled plugins
         else:
-            plugins = all_plugins.difference(disabled_plugins)  # use all but disabled plugins
+            plugins = all_plugins.difference(disable_plugins)  # use all but disabled plugins
 
-        # Process the plugin load overrides.
-        # First, get the category and find out if there are only enables but no disables for a given category.
-        # Then for those, insert a disable command for the category before the first enable.
+        # Process the plugin load overrides. They only apply to testing plugins.
+        # First, find out if there are only enables but no disables.
+        # If so, insert a disable command for all testing plugins before the first enable.
         # For all commands, symbolic plugin names are replaced with sets of full IDs.
         if plugin_load_overrides:
+            only_enables = all(x[0] for x in plugin_load_overrides)
             overrides = []
-            have_enables = {}
-            have_disables = {}
+            if only_enables:
+                plugin_load_overrides.insert( 0, (False, "all") )
             for flag, token in plugin_load_overrides:
-                index = len(overrides)
-                have_dict = have_enables if flag else have_disables
                 token = token.strip().lower()
-                if token == "all":
-                    for category in self.CATEGORIES:
-                        if category not in have_dict:
-                            have_dict[category] = index
-                        values = self.pluginManager.get_plugin_names(category)
-                        if values:
-                            overrides.append( (flag, values) )
-                    continue
-                if token in self.CATEGORIES:
-                    category = token
-                    values   = self.pluginManager.get_plugin_names(token)
+                if token in ("all", "testing"):
+                    names = self.pluginManager.get_plugin_names("testing")
+                    overrides.append( (flag, names) )
                 elif token in self.STAGES:
-                    category = "testing"
-                    values   = self.pluginManager.get_plugin_names(token)
+                    names = self.pluginManager.get_plugin_names(token)
+                    overrides.append( (flag, names) )
                 elif token in all_plugins:
-                    values = (token,)
                     info = self.pluginManager.get_plugin_by_name(token)
-                    category = info.category
+                    if info.category != "testing":
+                        raise ValueError("Not a testing plugin: %s" % token)
+                    overrides.append( (flag, (token,)) )
                 else:
                     matching_plugins = self.pluginManager.search_plugins_by_name(token)
                     if not matching_plugins:
@@ -1035,20 +1103,9 @@ class AuditPluginManager (PluginManager):
                         msg %= (token, ", ".join(sorted(matching_plugins.iterkeys)))
                         raise ValueError(msg)
                     name, info = matching_plugins.items()[0]
-                    values = (name,)
-                    category = info.category
-                if category not in have_dict:
-                    have_dict[category] = index
-                if values:
-                    overrides.append( (flag, values) )
-            only_enables = set(have_enables.iterkeys())
-            only_enables.difference_update(have_disables.iterkeys())
-            if only_enables:
-                only_enables_idx = [ (have_enables[stage], stage) for stage in only_enables ]
-                only_enables_idx.sort()
-                for offset, (index, category) in enumerate(only_enables_idx):
-                    values = self.pluginManager.get_plugin_names(category)
-                    overrides.insert(index + offset, (False, values))
+                    if info.category != "testing":
+                        raise ValueError("Not a testing plugin: %s" % token)
+                    overrides.append( (flag, (name,)) )
 
             # Apply the processed plugin load overrides.
             for enable, names in overrides:

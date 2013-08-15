@@ -12,7 +12,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -38,7 +38,6 @@ from ..api.net.web_utils import detect_auth_method, check_auth
 from ..common import OrchestratorConfig, AuditConfig, get_default_config_file
 
 import datetime
-from time import time
 import traceback
 
 
@@ -61,7 +60,10 @@ def run(options, *audits):
     :returns: Exit code.
     :rtype: int
 
-    :raises TypeError: Invalid configuration objects.
+    :raises AttributeError: A critical configuration option is missing.
+    :raises TypeError: A configuration option has a value of a wrong type.
+    :raises ValueError: A configuration option has an incorrect value.
+    :raises Exception: An error occurred while validating the settings.
     """
 
     # Validate and sanitize the arguments.
@@ -70,11 +72,30 @@ def run(options, *audits):
     # Set the console verbosity level.
     Console.level = options.verbose
 
-    # Launch GoLismero.
+    # Set the console color configuration.
+    Console.use_colors = options.colorize
+
+    # Show the start message.
+    Console.display("GoLismero started at %s" % datetime.datetime.now())
     try:
 
-        # Show the start message.
-        Console.display("GoLismero started at %s" % datetime.datetime.now())
+        # Launch GoLismero.
+        return_code = _run(options, *audits)
+
+    # Show the cancel message if cancelled.
+    except KeyboardInterrupt:
+        Console.display("GoLismero cancelled by the user at %s" % datetime.datetime.now())
+        return 1
+    except SystemExit, e:
+        Console.display("GoLismero stopped at %s" % datetime.datetime.now())
+        return e.code
+
+    # Show the exit message.
+    Console.display("GoLismero finished at %s" % datetime.datetime.now())
+    return return_code
+
+def _run(options, *audits):
+    try:
 
         # Detect auth in proxy, if specified.
         for auditParams in audits:
@@ -89,24 +110,23 @@ def run(options, *audits):
                         Console.display_error("[!] Authentication required for proxy: '%s'. Use '--proxy-user' and '--proxy-pass' to set the username and password." % auditParams.proxy_addr)
                         return 1
 
-        # Run the Orchestrator.
+        # Instance the Orchestrator.
         with Orchestrator(options) as orchestrator:
+
+            # Validate the settings against the UI plugin.
+            try:
+                orchestrator.uiManager.check_params(*audits)
+            except Exception, e:
+                Console.display_error("[!] Configuration error: %s" % str(e))
+                return 1
+
+            # Run the Orchestrator.
             orchestrator.run(*audits)
 
     # On error, show a fatal error message.
     except Exception, e:
         Console.display_error("[!] Fatal error: %s\n%s" % (str(e), traceback.format_exc()))
         return 1
-
-    # Show the exit message.
-    except KeyboardInterrupt:
-        Console.display("GoLismero cancelled by the user at %s" % datetime.datetime.now())
-        return 1
-    except SystemExit, e:
-        Console.display("GoLismero stopped at %s" % datetime.datetime.now())
-        return e.code
-    Console.display("GoLismero finished at %s" % datetime.datetime.now())
-    return 0
 
 
 #----------------------------------------------------------------------

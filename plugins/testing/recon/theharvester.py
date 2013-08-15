@@ -12,7 +12,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -110,10 +110,12 @@ class HarvesterPlugin(TestingPlugin):
 
         # Email addresses.
         for address in all_emails:
+            if "..." in address:                          # known bug in theHarvester
+                continue
             while address and not address[0].isalnum():   # known bug in theHarvester
-                address[1:]
+                address = address[1:]
             while address and not address[-1].isalnum():
-                address[:-1]
+                address = address[:-1]
             if not address:
                 continue
             try:
@@ -137,9 +139,9 @@ class HarvesterPlugin(TestingPlugin):
         total = float(len(all_hosts))
         for step, name in enumerate(all_hosts):
             while name and not name[0].isalnum():   # known bug in theHarvester
-                name[1:]
+                name = name[1:]
             while name and not name[-1].isalnum():
-                name[:-1]
+                name = name[:-1]
             if not name:
                 continue
             visited.add(name)
@@ -184,7 +186,10 @@ class HarvesterPlugin(TestingPlugin):
 
         text = "Found %d emails and %d hostnames for keyword %r"
         text = text % (len(all_emails), len(all_hosts), word)
-        Logger.log_more_verbose(text)
+        if len(all_emails) + len(all_hosts) > 0:
+            Logger.log(text)
+        else:
+            Logger.log_verbose(text)
 
         # Return the data.
         return results

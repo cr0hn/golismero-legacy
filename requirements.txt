@@ -1,13 +1,11 @@
-BeautifulSoup
+BeautifulSoup < 4.0.0
 colorizer
 decorator
 django
 dnspython
 netaddr
-ntlk
-python-daemon
+nltk
 python_cjson
 requests
 requests_ntlm
 tldextract
-yaml

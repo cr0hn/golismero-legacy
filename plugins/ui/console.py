@@ -8,7 +8,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -44,7 +44,7 @@ import warnings
 # More verbose: Verbose + errors with tracebacks, unimportant actions of plugins
 #
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class ConsoleUIPlugin(UIPlugin):
     """
     This is the console UI plugin. It provides a simple interface
@@ -54,12 +54,18 @@ class ConsoleUIPlugin(UIPlugin):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self):
         self.already_seen_info = set()   # set(str)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    def check_params(self, options, *audits):
+        if not audits:
+            raise ValueError("No targets selected!")
+
+
+    #--------------------------------------------------------------------------
     def recv_info(self, info):
 
         # Don't print anything if console output is disabled.
@@ -73,31 +79,32 @@ class ConsoleUIPlugin(UIPlugin):
 
         # Print newly discovered vulnerabilities.
         if info.data_type == Data.TYPE_VULNERABILITY:
-            text = "%s Vulnerability '%s' dicovered. Risk level: %s." % (
+            text = "%s Vulnerability '%s' dicovered by plugin '%s'. Risk level: %s" % (
                 colorize("<!>", info.risk),
                 colorize(info.vulnerability_type, info.risk),
+                colorize(self.get_plugin_name(info.plugin_id), info.risk),
                 colorize(str(info.risk), info.risk)
             )
             Console.display(text)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def recv_msg(self, message):
 
         # Process status messages
         if message.message_type == MessageType.MSG_TYPE_STATUS:
 
-            if message.message_type == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
-                m_plugin_name = self.get_plugin_name(message)
-                m_plugin_name = colorize(m_plugin_name, "blue")
-                m_text        = "[  0%] %s: Started." % m_plugin_name
+            if message.message_code == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
+                m_plugin_name = self.get_plugin_name(message.plugin_name)
+                m_plugin_name = colorize(m_plugin_name, "info")
+                m_text        = "[  0.00%%] %s: Started." % m_plugin_name
 
                 Console.display(m_text)
 
-            elif message.message_type == MessageCode.MSG_STATUS_PLUGIN_END:
-                m_plugin_name = self.get_plugin_name(message)
-                m_plugin_name = colorize(m_plugin_name, "blue")
-                m_text        = "[100%] %s: Finished." % m_plugin_name
+            elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_END:
+                m_plugin_name = self.get_plugin_name(message.plugin_name)
+                m_plugin_name = colorize(m_plugin_name, "info")
+                m_text        = "[100.00%%] %s: Finished." % m_plugin_name
 
                 Console.display(m_text)
 
@@ -106,15 +113,15 @@ class ConsoleUIPlugin(UIPlugin):
                 if Console.level >= Console.VERBOSE:
                     m_id, m_progress = message.message_info
 
-                    m_plugin_name = self.get_plugin_name(message)
-                    m_plugin_name = colorize(m_plugin_name, "blue")
+                    m_plugin_name = self.get_plugin_name(message.plugin_name)
+                    m_plugin_name = colorize(m_plugin_name, "info")
 
                     if m_progress is not None:
                         m_progress_h   = int(m_progress)
                         m_progress_l   = int((m_progress - float(m_progress_h)) * 100)
-                        m_progress_txt = colorize("[%3s.%.2i%%]" % (m_progress_h, m_progress_l), "white")
+                        m_progress_txt = colorize("[%3s.%.2i%%]" % (m_progress_h, m_progress_l), "middle")
                     else:
-                        m_progress_txt = colorize("[*]", "white")
+                        m_progress_txt = colorize("[*]", "middle")
 
                     m_text = "%s %s: Working..." % (m_progress_txt, m_plugin_name)
 
@@ -140,15 +147,16 @@ class ConsoleUIPlugin(UIPlugin):
                 (text, level, is_error) = message.message_info
                 if Console.level >= level:
                     try:
-                        m_plugin_name = self.get_plugin_name(message)
+                        m_plugin_name = self.get_plugin_name(message.plugin_name)
                     except Exception:
                         m_plugin_name = "GoLismero"
-                    m_plugin_name = colorize(m_plugin_name, 'blue')
+                    m_plugin_name = colorize(m_plugin_name, 'info')
                     text = colorize(text, 'middle')
-                    text = "[*] %s: %s" % (m_plugin_name, text)
                     if is_error:
+                        text = "[!] %s: %s" % (m_plugin_name, text)
                         Console.display_error(text)
                     else:
+                        text = "[*] %s: %s" % (m_plugin_name, text)
                         Console.display(text)
 
             # Show plugin errors
@@ -157,7 +165,7 @@ class ConsoleUIPlugin(UIPlugin):
             if message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 (description, traceback) = message.message_info
                 try:
-                    m_plugin_name = self.get_plugin_name(message)
+                    m_plugin_name = self.get_plugin_name(message.plugin_name)
                 except Exception:
                     m_plugin_name = "GoLismero"
                 text        = "[!] Plugin '%s' error: %s " % (m_plugin_name, str(description))
@@ -178,13 +186,15 @@ class ConsoleUIPlugin(UIPlugin):
                     else:
                         formatted = None
                     if formatted:
-                        m_plugin_name = self.get_plugin_name(message)
+                        m_plugin_name = self.get_plugin_name(message.plugin_name)
                         text = "[!] Plugin '%s' warning: %s " % (m_plugin_name, str(formatted))
                         text = colorize(text, 'low')
                         Console.display_error(text)
 
+
+    #--------------------------------------------------------------------------
     @staticmethod
-    def get_plugin_name(message):
-        if message.plugin_name:
-            return get_plugin_info(message.plugin_name).display_name
+    def get_plugin_name(plugin_name):
+        if plugin_name:
+            return get_plugin_info(plugin_name).display_name
         return "GoLismero"

@@ -8,7 +8,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -92,7 +92,7 @@ def test_pylint():
                             fn = int( false[ fp + 1 : fq ] )
                             if f == ff and d == fd and (fn - 10) <= n <= (fn + 10):
                                 found = True
-                                false_pos.append(false + "\n")
+                                false_pos.append( (ff, fn, fd) )
                                 break
                         if found:
                             continue
@@ -105,8 +105,10 @@ def test_pylint():
         # Update the false positives.
         if false_pos:
             false_pos.sort()
-            with open(path.join(here, "test_pylint.txt"), "w") as fd:
-                fd.writelines(false_pos)
+            with open(path.join(here, "test_pylint.txt"), "w") as out:
+                for (ff, fn, fd) in false_pos:
+                    false = "%s:%d%s\n" % (ff, fn, fd)
+                    out.write(false)
 
     finally:
 

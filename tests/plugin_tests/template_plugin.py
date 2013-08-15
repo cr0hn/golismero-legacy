@@ -7,7 +7,7 @@ GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 Authors:
   [AUTHOR OF PLUGIN]
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or

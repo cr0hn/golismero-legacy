@@ -1,10 +1,10 @@
 [Core]
-Name = On Screen Report
+Name = NO UI
 
 [Documentation]
-Description = Plugin to display reports on screen.
+Description = Empty user interface.
 Author = GoLismero project team
 Version = 0.1
-Website = https://github.com/cr0hn/golismero/
+Website = https://github.com/golismero
 Copyright = Copyright (C) 2011-2013 GoLismero Project
 License = GNU Public License

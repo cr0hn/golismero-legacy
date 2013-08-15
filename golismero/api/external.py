@@ -12,7 +12,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -30,15 +30,16 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["run_external_tool"]
+__all__ = ["run_external_tool", "win_to_cygwin_path", "cygwin_to_win_path"]
 
+import ntpath
 import subprocess
 
 # TODO: Use pexpect to run tools interactively.
 
 
-#----------------------------------------------------------------------
-def run_external_tool(command, args = None):
+#------------------------------------------------------------------------------
+def run_external_tool(command, args = None, env = None):
     """
     Run an external tool and fetch the output.
 
@@ -56,6 +57,9 @@ def run_external_tool(command, args = None):
     :param args: Arguments to be passed to the command.
     :type args: list(str)
 
+    :param env: Environment variables to be passed to the command.
+    :type env: dict(str -> str)
+
     :returns: Output from the tool and the exit status code.
     :rtype: tuple(str, int)
     """
@@ -68,11 +72,72 @@ def run_external_tool(command, args = None):
     # when it comes to parsing their own command line, so caveat emptor.
     #
     if not args:
-        args   = []
+        args = []
+    else:
+        args = list(args)
+    args.insert(0, command)
     try:
         code   = 0
-        output = subprocess.check_output(args, executable = command)
+        output = subprocess.check_output(args, executable = command, env = env)
     except subprocess.CalledProcessError, e:
         code   = e.returncode
         output = e.output
     return output, code
+
+
+#------------------------------------------------------------------------------
+def win_to_cygwin_path(path):
+    """
+    Converts a Windows path to a Cygwin path.
+
+    :param path: Windows path to convert.
+        Must be an absolute path.
+    :type path: str
+
+    :returns: Cygwin path.
+    :rtype: str
+
+    :raises ValueError: Cannot convert the path.
+    """
+    drive, path = ntpath.splitdrive(path)
+    if not drive:
+        raise ValueError("Not an absolute path!")
+    t = { "\\": "/", "/": "\\/" }
+    path = "".join( t.get(c, c) for c in path )
+    return "/cygdrive/%s%s" % (drive[0].lower(), path)
+
+
+#------------------------------------------------------------------------------
+def cygwin_to_win_path(path):
+    """
+    Converts a Cygwin path to a Windows path.
+    Only paths starting with "/cygdrive/" can be converted.
+
+    :param path: Cygwin path to convert.
+        Must be an absolute path.
+    :type path: str
+
+    :returns: Windows path.
+    :rtype: str
+
+    :raises ValueError: Cannot convert the path.
+    """
+    if not path.startswith("/cygdrive/"):
+        raise ValueError(
+            "Only paths starting with \"/cygdrive/\" can be converted.")
+    drive = path[10].upper()
+    path = path[11:]
+    i = 0
+    r = []
+    while i < len(path):
+        c = path[i]
+        if c == "\\":
+            r.append( path[i+1:i+2] )
+            i += 2
+            continue
+        if c == "/":
+            c = "\\"
+        r.append(c)
+        i += 1
+    path = "".join(r)
+    return "%s:%s" % (drive, path)

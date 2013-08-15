@@ -9,7 +9,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -31,52 +31,11 @@ __all__ = []
 
 
 #----------------------------------------------------------------------
-# Metadata
-
-__author__ = "Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel) - cr0hn<@>cr0hn.com"
-__copyright__ = "Copyright 2011-2013 - GoLismero Project"
-__credits__ = ["Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel)", "Mario Vilas (@Mario_Vilas)"]
-__maintainer__ = "cr0hn"
-__email__ = "golismero.project<@>gmail.com"
-__version__ = "2.0.0a1"
-
-
-#----------------------------------------------------------------------
-# Show program banner
-def show_banner():
-    print
-    print "|--------------------------------------------------|"
-    print "| GoLismero - The Web Knife                        |"
-    print "| Contact: golismero.project<@>gmail.com           |"
-    print "|                                                  |"
-    print "| Daniel Garcia a.k.a cr0hn (@ggdaniel)            |"
-    print "| Mario Vilas (@mario_vilas)                       |"
-    print "|--------------------------------------------------|"
-    print
-
-
-#----------------------------------------------------------------------
-# Python version check.
-# We must do it now before trying to import any more modules.
-#
-# Note: this is mostly because of argparse, if you install it
-#       separately you can try removing this check and seeing
-#       what happens (we haven't tested it!).
-
-import sys
-from sys import version_info, exit
-if __name__ == "__main__":
-    if version_info < (2, 7) or version_info >= (3, 0):
-        show_banner()
-        print "[!] You must use Python version 2.7"
-        exit(1)
-
-
-#----------------------------------------------------------------------
 # Fix the module load path when running as a portable script and during installation.
 
 import os
 from os import path
+import sys
 try:
     _FIXED_PATH_
 except NameError:
@@ -104,6 +63,23 @@ except NameError:
 
 
 #----------------------------------------------------------------------
+# Python version check.
+# We must do it now before trying to import any more modules.
+#
+# Note: this is mostly because of argparse, if you install it
+#       separately you can try removing this check and seeing
+#       what happens (we haven't tested it!).
+
+from golismero import show_banner
+from sys import version_info, exit
+if __name__ == "__main__":
+    if version_info < (2, 7) or version_info >= (3, 0):
+        show_banner()
+        print "[!] You must use Python version 2.7"
+        exit(1)
+
+
+#----------------------------------------------------------------------
 # Imported modules
 
 import argparse
@@ -121,7 +97,7 @@ from golismero.api.config import Config
 from golismero.common import OrchestratorConfig, AuditConfig, \
                              get_profile, get_available_profiles
 from golismero.main import launcher
-from golismero.main.console import get_terminal_size
+from golismero.main.console import get_terminal_size, colorize, Console
 from golismero.main.orchestrator import Orchestrator
 from golismero.managers.pluginmanager import PluginManager
 from golismero.managers.processmanager import PluginContext
@@ -129,6 +105,11 @@ from golismero.managers.processmanager import PluginContext
 
 #----------------------------------------------------------------------
 # Custom argparse actions
+
+class CustomArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        message += "\n\nUse -h or --help to show the full help text."
+        return super(CustomArgumentParser, self).error(message)
 
 # --enable-plugin
 class EnablePluginAction(argparse.Action):
@@ -146,10 +127,20 @@ class DisablePluginAction(argparse.Action):
         overrides.extend(parsed)
         setattr(namespace, self.dest, overrides)
 
-# --no-output
-class ResetListAction(argparse.Action):
+# --file
+class LoadListFromFileAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, [])
+        try:
+            with open(values, "rU") as f:
+                tokens = []
+                for line in f:
+                    line = line.strip()
+                    if not line or line[0] == "#":
+                        continue
+                    tokens.append(tokens)
+        except Exception, e:
+            parser.error("Error reading file: %s" % values)
+        setattr(namespace, self.dest, tokens)
 
 # --cookie-file
 class ReadValueFromFileAction(argparse.Action):
@@ -172,10 +163,11 @@ def cmdline_parser():
     except Exception:
         pass
 
-    parser = argparse.ArgumentParser(fromfile_prefix_chars="@")
+    parser = CustomArgumentParser(fromfile_prefix_chars="@")
     parser.add_argument("targets", metavar="TARGET", nargs="*", help="one or more target web sites")
 
     gr_main = parser.add_argument_group("main options")
+    gr_main.add_argument("-f", "--file", metavar="FILE", action=LoadListFromFileAction, help="load a list of targets from a plain text file")
     gr_main.add_argument("--config", metavar="FILE", help="global configuration file")
     gr_main.add_argument("-p", "--profile", metavar="NAME", help="profile to use")
     gr_main.add_argument("--profile-list", action="store_true", default=False, help="list available profiles and quit")
@@ -189,12 +181,13 @@ def cmdline_parser():
     gr_audit = parser.add_argument_group("audit options")
     gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
     gr_audit.add_argument("--audit-db", metavar="DATABASE", dest="audit_db", help="specify a database connection string")
+    gr_audit.add_argument("-nd", "--no-db", dest="audit_db", action="store_const", const="memory://", help="do not store the results in a database")
     gr_audit.add_argument("-i", "--input", dest="imports", metavar="FILENAME", action="append", help="read results from external tools right before the audit")
-    gr_audit.add_argument("-ni", "--no-input", dest="imports", action=ResetListAction, help="do not read results from external tools")
+    gr_audit.add_argument("-ni", "--no-input", dest="disable_importing", action="store_true", default=False, help="do not read results from external tools")
 
     gr_report = parser.add_argument_group("report options")
     gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", help="write the results of the audit to this file (use - for stdout)")
-    gr_report.add_argument("-no", "--no-output", dest="reports", action=ResetListAction, help="do not output the results")
+    gr_report.add_argument("-no", "--no-output", dest="disable_reporting", action="store_true", default=False, help="do not output the results")
     gr_report.add_argument("--only-vulns", action="store_true", default=None, dest="only_vulns", help="display only the vulnerabilities, instead of all the resources found")
 
     gr_net = parser.add_argument_group("network options")
@@ -204,17 +197,17 @@ def cmdline_parser():
     gr_net.add_argument("--subdomain-regex", metavar="REGEX", help="filter subdomains using a regular expression")
     gr_net.add_argument("-r", "--depth", help="maximum spidering depth (use \"infinite\" for no limit)")
     gr_net.add_argument("-l", "--max-links", type=int, default=None, help="maximum number of links to analyze (0 => infinite)")
-    gr_net.add_argument("-f","--follow-redirects", action="store_true", default=None, dest="follow_redirects", help="follow redirects")
-    gr_net.add_argument("-nf","--no-follow-redirects", action="store_false", default=None, dest="follow_redirects", help="do not follow redirects")
-    gr_net.add_argument("-ff","--follow-first", action="store_true", default=None, dest="follow_first_redirect", help="always follow a redirection on the target URL itself")
-    gr_net.add_argument("-nff","--no-follow-first", action="store_false", default=None, dest="follow_first_redirect", help="don't treat a redirection on a target URL as a special case")
+    gr_net.add_argument("--follow-redirects", action="store_true", default=None, dest="follow_redirects", help="follow redirects")
+    gr_net.add_argument("--no-follow-redirects", action="store_false", default=None, dest="follow_redirects", help="do not follow redirects")
+    gr_net.add_argument("--follow-first", action="store_true", default=None, dest="follow_first_redirect", help="always follow a redirection on the target URL itself")
+    gr_net.add_argument("--no-follow-first", action="store_false", default=None, dest="follow_first_redirect", help="don't treat a redirection on a target URL as a special case")
     gr_net.add_argument("-pu","--proxy-user", metavar="USER", help="HTTP proxy username")
     gr_net.add_argument("-pp","--proxy-pass", metavar="PASS", help="HTTP proxy password")
     gr_net.add_argument("-pa","--proxy-addr", metavar="ADDRESS:PORT", help="HTTP proxy address in format: address:port")
     gr_net.add_argument("--cookie", metavar="COOKIE", help="set cookie for requests")
     gr_net.add_argument("--cookie-file", metavar="FILE", action=ReadValueFromFileAction, dest="cookie", help="load a cookie from file")
-    gr_net.add_argument("--persistent-cache", action="store_true", default=None, dest="use_cache_db", help="use a persistent network cache [default in distributed modes]")
-    gr_net.add_argument("--volatile-cache", action="store_false", default=None, dest="use_cache_db", help="use a volatile network cache [default in standalone mode]")
+    gr_net.add_argument("--persistent-cache", action="store_true", dest="use_cache_db", default=True, help="use a persistent network cache [default]")
+    gr_net.add_argument("--volatile-cache", action="store_false", dest="use_cache_db", help="use a volatile network cache")
 
     gr_plugins = parser.add_argument_group("plugin options")
     gr_plugins.add_argument("-e", "--enable-plugin", metavar="NAME", action=EnablePluginAction, default=[], dest="plugin_load_overrides", help="enable a plugin")
@@ -263,16 +256,28 @@ def main():
         cmdParams.plugin_load_overrides = P.plugin_load_overrides
 
         # Load the target audit options.
-        auditParams = AuditConfig()
-        auditParams.profile = cmdParams.profile
-        auditParams.profile_file = cmdParams.profile_file
-        auditParams.config_file = cmdParams.config_file
-        if auditParams.config_file:
-            auditParams.from_config_file(auditParams.config_file)
-        if auditParams.profile_file:
-            auditParams.from_config_file(auditParams.profile_file)
-        auditParams.from_object(P)
-        auditParams.plugin_load_overrides = P.plugin_load_overrides
+        if P.targets:
+            auditParams = AuditConfig()
+            auditParams.profile = cmdParams.profile
+            auditParams.profile_file = cmdParams.profile_file
+            auditParams.config_file = cmdParams.config_file
+            if auditParams.config_file:
+                auditParams.from_config_file(auditParams.config_file)
+            if auditParams.profile_file:
+                auditParams.from_config_file(auditParams.profile_file)
+            auditParams.from_object(P)
+            auditParams.plugin_load_overrides = P.plugin_load_overrides
+
+            # If importing is turned off, remove the list of imports.
+            if P.disable_importing:
+                auditParams.imports = []
+
+            # If reports are turned off, remove the list of reports.
+            # Otherwise, if no reports are specified, default to screen report.
+            if P.disable_reporting:
+                auditParams.reports = []
+            elif not auditParams.reports:
+                auditParams.reports = ["-"]
 
     # Show exceptions as command line parsing errors.
     except Exception, e:
@@ -281,7 +286,6 @@ def main():
 
     # Get the plugins folder from the parameters.
     # If no plugins folder is given, use the default.
-    # TODO: allow more than one plugin location!
     plugins_folder = cmdParams.plugins_folder
     if not plugins_folder:
         plugins_folder = path.abspath(__file__)
@@ -301,6 +305,7 @@ def main():
     # List plugins and quit.
 
     if P.plugin_list:
+        Console.use_colors = cmdParams.colorize
 
         # Load the plugins list
         try:
@@ -311,33 +316,22 @@ def main():
             exit(1)
 
         # Show the list of plugins.
-        print "-------------"
-        print " Plugin list"
-        print "-------------"
-
-        # UI plugins...
-        ui_plugins = manager.get_plugins("ui")
-        if ui_plugins:
-            print
-            print "-= UI plugins =-"
-            for name in sorted(ui_plugins.keys()):
-                info = ui_plugins[name]
-                print "+ %s: %s" % (name[3:], info.description)
+        print colorize("-------------", "red")
+        print colorize(" Plugin list",  "red")
+        print colorize("-------------", "red")
 
         # Import plugins...
         import_plugins = manager.get_plugins("import")
         if import_plugins:
             print
-            print "-= Import plugins =-"
+            print colorize("-= Import plugins =-", "yellow")
             for name in sorted(import_plugins.keys()):
                 info = import_plugins[name]
-                print "+ %s: %s" % (name[7:], info.description)
+                print "\n%s:\n    %s" % (colorize(name[7:], "cyan"), info.description)
 
         # Testing plugins...
         testing_plugins = manager.get_plugins("testing")
         if testing_plugins:
-            print
-            print "-= Testing plugins =-"
             names = sorted(testing_plugins.keys())
             names = [x[8:] for x in names]
             stages = [ (v,k) for (k,v) in manager.STAGES.iteritems() ]
@@ -348,22 +342,35 @@ def main():
                 slice = [x[p:] for x in names if x.startswith(s)]
                 if slice:
                     print
-                    print "%s stage:" % stage.title()
+                    print colorize("-= %s plugins =-" % stage.title(), "yellow")
                     for name in slice:
                         info = testing_plugins["testing/%s/%s" % (stage, name)]
-                        print "+ %s: %s" % (name, info.description)
+                        desc = info.description.strip()
+                        desc = desc.replace("\n", "\n    ")
+                        print "\n%s:\n    %s" % (colorize(name, "cyan"), desc)
 
         # Report plugins...
         report_plugins = manager.get_plugins("report")
         if report_plugins:
             print
-            print "-= Report plugins =-"
+            print colorize("-= Report plugins =-", "yellow")
             for name in sorted(report_plugins.keys()):
                 info = report_plugins[name]
-                print "+ %s: %s" % (name[7:], info.description)
+                desc = info.description.strip()
+                desc = desc.replace("\n", "\n    ")
+                print "\n%s:\n    %s" % (colorize(name[7:], "cyan"), desc)
 
-        if os.sep != "\\":
+        # UI plugins...
+        ui_plugins = manager.get_plugins("ui")
+        if ui_plugins:
             print
+            print colorize("-= UI plugins =-", "yellow")
+            for name in sorted(ui_plugins.keys()):
+                info = ui_plugins[name]
+                desc = info.description.strip()
+                desc = desc.replace("\n", "\n    ")
+                print "\n%s:\n    %s" % (colorize(name[3:], "cyan"), desc)
+
         exit(0)
 
 
@@ -371,11 +378,12 @@ def main():
     # Display plugin info and quit.
 
     if P.plugin_name:
+        Console.use_colors = cmdParams.colorize
 
         # Load the plugins list.
         try:
             manager = PluginManager()
-            manager.find_plugins(plugins_folder)
+            manager.find_plugins(cmdParams)
         except Exception, e:
             print "[!] Error loading plugins list: %s" % str(e)
             exit(1)
@@ -400,15 +408,38 @@ def main():
                                                   plugin_info = m_plugin_info,
                                                     msg_queue = None )
             m_plugin_obj = manager.load_plugin_by_name(m_plugin_info.plugin_name)
-            print "Information for plugin: %s" % m_plugin_info.display_name
-            print "----------------------"
-            print "Location: %s" % m_plugin_info.descriptor_file
-            print "Source code: %s" % m_plugin_info.plugin_module
+            m_root = cmdParams.plugins_folder
+            m_root = path.abspath(m_root)
+            if not m_root.endswith(path.sep):
+                m_root += path.sep
+            m_location = m_plugin_info.descriptor_file[len(m_root):]
+            a, b = path.split(m_location)
+            b = colorize(b, "cyan")
+            m_location = path.join(a, b)
+            m_src = m_plugin_info.plugin_module[len(m_root):]
+            a, b = path.split(m_src)
+            b = colorize(b, "cyan")
+            m_src = path.join(a, b)
+            m_name = m_plugin_info.plugin_name
+            p = m_name.rfind("/") + 1
+            m_name = m_name[:p] + colorize(m_name[p:], "cyan")
+            m_desc = m_plugin_info.description.strip()
+            m_desc = m_desc.replace("\n", "\n    ")
+            print "Information for plugin: %s" % colorize(m_plugin_info.display_name, "yellow")
+            print "-" * len("Information for plugin: %s" % m_plugin_info.display_name)
+            print "%s          %s" % (colorize("ID:", "green"), m_name)
+            print "%s    %s" % (colorize("Location:", "green"), m_location)
+            print "%s %s" % (colorize("Source code:", "green"), m_src)
             if m_plugin_info.plugin_class:
-                print "Class name: %s" % m_plugin_info.plugin_class
+                print "%s  %s" % (colorize("Class name:", "green"), colorize(m_plugin_info.plugin_class, "cyan"))
             if m_plugin_info.description != m_plugin_info.display_name:
                 print
-                print m_plugin_info.description
+                print "%s\n    %s" % (colorize("Description:", "green"), m_desc)
+            if m_plugin_info.plugin_args:
+                print
+                print colorize("Arguments:", "green")
+                for name, default in sorted(m_plugin_info.plugin_args.items()):
+                    print "\t%s -> %r" % (colorize(name, "cyan"), default)
         except KeyError:
             print "[!] Plugin name not found"
             exit(1)
@@ -424,6 +455,7 @@ def main():
     #------------------------------------------------------------
     # List profiles and quit.
     if P.profile_list:
+        Console.use_colors = cmdParams.colorize
         profiles = sorted(get_available_profiles())
         if not profiles:
             print "No available profiles!"
@@ -453,17 +485,41 @@ def main():
 
     try:
         cmdParams.check_params()
-        auditParams.check_params()
+        if P.targets:
+            auditParams.check_params()
     except Exception, e:
-        parser.error(e.message)
+        parser.error(str(e))
 
-    if not auditParams.targets:
-        parser.error("no targets selected!")
+    # Hack: we're checking the settings with the UI plugin before
+    # reaching the launcher. The Launcher does it anyway, but
+    # this way we can catch the error before running, and show
+    # a help message using argparse.
+    try:
+        manager = PluginManager()
+        manager.find_plugins(cmdParams)
+        ui_plugin_name = "ui/" + cmdParams.ui_mode
+        ui_plugin = manager.load_plugin_by_name(ui_plugin_name)
+    except Exception, e:
+        print "[!] Error loading plugins: %s" % str(e)
+        exit(1)
+    try:
+        if P.targets:
+            ui_plugin.check_params(cmdParams, auditParams)
+        else:
+            ui_plugin.check_params(cmdParams)
+    except Exception, e:
+        msg = str(e)
+        if not msg:
+            msg = "configuration error!"
+        parser.error(msg)
 
 
     #------------------------------------------------------------
     # Launch GoLismero.
-    launcher.run(cmdParams, auditParams)
+    if P.targets:
+        launcher.run(cmdParams, auditParams)
+    else:
+        launcher.run(cmdParams)
     exit(0)
 
 

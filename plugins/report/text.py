@@ -8,7 +8,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -27,23 +27,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import sys
+
 from cStringIO import StringIO
 
-from golismero.api.plugin import ReportPlugin
-from golismero.api.data.db import Database
 from golismero.api.config import Config
+from golismero.api.data.db import Database
+from golismero.api.logger import Logger
+from golismero.api.plugin import ReportPlugin
 
 # Data types
 from golismero.api.data import Data
-from golismero.api.data.resource import Resource
 from golismero.api.data.information import Information
+from golismero.api.data.resource import Resource
 
 # XXX HACK
 from golismero.main.console import Console, colorize
 
 
 #------------------------------------------------------------------------------
-class ScreenReport(ReportPlugin):
+class TextReport(ReportPlugin):
     """
     Plugin to display reports on screen or to a plain text file.
     """
@@ -61,6 +63,7 @@ class ScreenReport(ReportPlugin):
     #--------------------------------------------------------------------------
     def generate_report(self, output_file):
         if output_file and output_file.lower().endswith(".txt"):
+            Logger.log_verbose("Writing text report to file: %s" % output_file)
             self.__color = False
             with open(output_file, mode='w') as self.__fd:
                 self.__write_report()

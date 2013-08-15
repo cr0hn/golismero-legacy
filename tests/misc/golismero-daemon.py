@@ -12,7 +12,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -82,10 +82,7 @@ except NameError:
 # Imported modules.
 
 import daemon
-import datetime
-import textwrap
-
-from os import getenv, path
+from os import path
 
 
 #----------------------------------------------------------------------
@@ -105,12 +102,12 @@ def main():
     # Get the config file name.
     config_file = get_default_config_file()
     if not config_file:
-        config_file = "/etc/golismero.conf"
-    if not path.isfile(config_file):
         raise RuntimeError("Could not find config file, aborting!")
 
     # Load the Orchestrator options.
     orchestrator_config = OrchestratorConfig()
+    orchestrator_config.ui_mode = "web"
+    orchestrator_config.colorize = False
     orchestrator_config.config_file = config_file
     orchestrator_config.from_config_file(orchestrator_config.config_file, allow_profile = True)
     if orchestrator_config.profile:
@@ -122,7 +119,6 @@ def main():
 
     # Get the plugins folder from the parameters.
     # If no plugins folder is given, use the default.
-    # TODO: allow more than one plugin location!
     plugins_folder = orchestrator_config.plugins_folder
     if not plugins_folder:
         plugins_folder = path.abspath(__file__)

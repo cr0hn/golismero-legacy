@@ -12,7 +12,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -68,13 +68,19 @@ class PluginTester(object):
 
 
     #--------------------------------------------------------------------------
-    def __init__(self, orchestrator_config = None, audit_config = None):
+    def __init__(self, orchestrator_config = None, audit_config = None,
+                 autoinit = True):
         """
         :param orchestrator_config: Optional orchestrator configuration.
         :type orchestrator_config: OrchestratorConfig
 
         :param audit_config: Optional audit configuration.
         :type audit_config: AuditConfig
+
+        :param autoinit: True to initialize the environment automatically,
+            False otherwise. If set to False you need to call the
+            init_environment() method manually.
+        :type autoinit: bool
         """
 
         # Sanitize the config.
@@ -88,9 +94,13 @@ class PluginTester(object):
         self.__orchestrator_config = orchestrator_config
         self.__audit_config = audit_config
 
-        # Don't initialize the environment yet.
+        # Here's where the Orchestrator and Audit instances are stored.
         self.__orchestrator = None
         self.__audit = None
+
+        # Initialize the environment if requested.
+        if autoinit:
+            self.init_environment()
 
 
     #--------------------------------------------------------------------------
@@ -175,10 +185,32 @@ class PluginTester(object):
         FileManager._update_plugin_path()
         LocalDataCache._enabled = True  # force enable
         LocalDataCache.on_run()
+        LocalDataCache._enabled = True  # force enable
 
         # Save the Orchestrator and Audit instances.
         self.__orchestrator = orchestrator
         self.__audit = audit
+
+
+    #--------------------------------------------------------------------------
+    def get_plugin(self, plugin_name):
+        """
+        Get an instance of the requested plugin.
+
+        :param plugin_name: Name of the plugin to test.
+        :type plugin_name: str
+
+        :returns: Plugin instance and information.
+        :rtype: tuple(Plugin, PluginInfo)
+        """
+
+        # Make sure the environment is initialized.
+        self.init_environment()
+
+        # Load the plugin.
+        plugin_info = self.audit.pluginManager.get_plugin_by_name(plugin_name)
+        plugin = self.audit.pluginManager.load_plugin_by_name(plugin_name)
+        return plugin, plugin_info
 
 
     #--------------------------------------------------------------------------
@@ -199,12 +231,8 @@ class PluginTester(object):
         :rtype: *
         """
 
-        # Make sure the environment is initialized.
-        self.init_environment()
-
         # Load the plugin.
-        plugin_info = self.audit.pluginManager.get_plugin_by_name(plugin_name)
-        plugin = self.audit.pluginManager.load_plugin_by_name(plugin_name)
+        plugin, plugin_info = self.get_plugin(plugin_name)
         Config._context._PluginContext__plugin_info = plugin_info
 
         try:

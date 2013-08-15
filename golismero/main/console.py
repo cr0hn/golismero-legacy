@@ -12,7 +12,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -37,28 +37,17 @@ from ..api.logger import Logger
 # do not use the "from sys import" form, or coloring won't work on Windows
 import sys
 
+import atexit
+import os.path
+
 from colorizer import colored
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Map of colors
+
+# Color names mapped to themselves
 m_colors = {
-
-    # String log levels to color names
-    'info'      : 'blue',
-    'low'       : 'cyan',
-    'middle'    : 'white',
-    'high'      : 'red',
-    'critical'  : 'yellow',
-
-    # Integer log levels to color names
-    0           : 'blue',
-    1           : 'cyan',
-    2           : 'white',
-    3           : 'red',
-    4           : 'yellow',
-
-    # Color names mapped to themselves
     'blue'      : 'blue',
     'green'     : 'green',
     'cyan'      : 'cyan',
@@ -69,8 +58,46 @@ m_colors = {
     'white'     : 'white',
 }
 
+# Colors for the Windows console.
+if os.path.sep == "\\":
+    m_colors.update({
 
-#----------------------------------------------------------------------
+        # String log levels to color names
+        'info'      : 'cyan',
+        'low'       : 'grey',
+        'middle'    : 'white',
+        'high'      : 'magenta',
+        'critical'  : 'yellow',
+
+        # Integer log levels to color names
+        0           : 'cyan',
+        1           : 'grey',
+        2           : 'white',
+        3           : 'magenta',
+        4           : 'yellow',
+    })
+
+# Colors for all other operating systems.
+else:
+    m_colors.update({
+
+        # String log levels to color names
+        'info'      : 'blue',
+        'low'       : 'cyan',
+        'middle'    : 'white',
+        'high'      : 'red',
+        'critical'  : 'yellow',
+
+        # Integer log levels to color names
+        0           : 'blue',
+        1           : 'cyan',
+        2           : 'white',
+        3           : 'red',
+        4           : 'yellow',
+    })
+
+
+#------------------------------------------------------------------------------
 def colorize_substring(text, substring, level_or_color):
     """
     Colorize a substring in a text depending of the type of alert:
@@ -143,7 +170,7 @@ def colorize_substring(text, substring, level_or_color):
     return text
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def colorize(text, level_or_color):
     """
     Colorize a text depends of type of alert:
@@ -171,7 +198,7 @@ def colorize(text, level_or_color):
         return text
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # excerpt borrowed from: http://stackoverflow.com/a/6550596/426293
 
 def get_terminal_size():
@@ -255,14 +282,14 @@ def _get_terminal_size_linux():
     return int(cr[1]), int(cr[0])
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class Console (object):
     """
     Console I/O wrapper.
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Verbose levels
 
     DISABLED     = Logger.DISABLED
@@ -277,7 +304,7 @@ class Console (object):
     use_colors = True
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @classmethod
     def _display(cls, message):
         """
@@ -294,7 +321,7 @@ class Console (object):
             print "[!] Error while writing to output onsole: %s" % str(e)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @classmethod
     def display(cls, message):
         """
@@ -307,7 +334,7 @@ class Console (object):
             cls._display(message)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @classmethod
     def display_verbose(cls, message):
         """
@@ -320,7 +347,7 @@ class Console (object):
             cls._display(message)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @classmethod
     def display_more_verbose(cls, message):
         """
@@ -333,7 +360,7 @@ class Console (object):
             cls._display(message)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @classmethod
     def _display_error(cls, message):
         """
@@ -350,7 +377,7 @@ class Console (object):
             print "[!] Error while writing to error console: %s" % str(e)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @classmethod
     def display_error(cls, message):
         """
@@ -363,7 +390,7 @@ class Console (object):
             cls._display_error(message)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @classmethod
     def display_error_verbose(cls, message):
         """
@@ -376,7 +403,7 @@ class Console (object):
             cls._display_error(message)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @classmethod
     def display_error_more_verbose(cls, message):
         """
@@ -387,3 +414,19 @@ class Console (object):
         """
         if cls.level >= cls.MORE_VERBOSE:
             cls._display_error(message)
+
+
+    #--------------------------------------------------------------------------
+    @classmethod
+    def _atexit_restore_console(cls):
+        """
+        This method is called automatically by an exit hook to restore the
+        console colors before quitting.
+        """
+        if cls.use_colors:
+            print colored("")
+
+
+#------------------------------------------------------------------------------
+# Register the atexit hook to restore the console.
+atexit.register(Console._atexit_restore_console)

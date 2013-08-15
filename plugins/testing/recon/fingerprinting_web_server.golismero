@@ -2,10 +2,10 @@
 Name = Web Server fingerprinting plugin
 
 [Documentation]
-Description = Fingerprinter for web server
+Description = Fingerprinter of web servers.
 Author = GoLismero project team
 Version = 0.1
-Website = https://github.com/cr0hn/golismero/
+Website = https://github.com/golismero
 Copyright = Copyright (C) 2011-2013 GoLismero Project
 License = GNU Public License
 
@@ -219,6 +219,3 @@ vary-capitalize         = fingerprint/httprecon/wrong_version/vary-capitalize.fd
 vary-delimiter          = fingerprint/httprecon/wrong_version/vary-delimiter.fdb
 vary-order              = fingerprint/httprecon/wrong_version/vary-order.fdb
 x-powered-by            = fingerprint/httprecon/wrong_version/x-powered-by.fdb
-
-[Wordlist_ttl]
-ttl                     = fingerprint/ttls.txt

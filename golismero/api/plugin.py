@@ -19,7 +19,7 @@ Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/cr0hn/golismero/
+Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
 
 This program is free software; you can redistribute it and/or
@@ -76,8 +76,8 @@ def get_plugin_info(plugin_name = None):
 
     :raises KeyError: The plugin was not found.
     """
-    if not plugin_name:
-        plugin_name = Config.plugin_name
+    if not plugin_name or (Config.plugin_info and plugin_name == Config.plugin_name):
+        return Config.plugin_info
     return Config._context.remote_call(
         MessageCode.MSG_RPC_PLUGIN_GET_INFO, plugin_name)
 
@@ -432,6 +432,31 @@ class UIPlugin (_InformationPlugin):
     """
 
     PLUGIN_TYPE = Plugin.PLUGIN_TYPE_UI
+
+
+    #--------------------------------------------------------------------------
+    def check_params(self, options, *audits):
+        """
+        Callback method to verify the Orchestrator and initial Audit settings
+        before launching GoLismero.
+
+        .. warning: This method should only perform validation on the settings.
+            No API calls can be made, since it's run from the launcher itself
+            before GoLismero has finished starting up, so the plugin execution
+            context is not yet initialized.
+
+        :param options: Orchestrator settings.
+        :type options: OrchestratorConfig
+
+        :param audits: Audit settings.
+        :type audits: AuditConfig
+
+        :raises AttributeError: A critical configuration option is missing.
+        :raises ValueError: A configuration option has an incorrect value.
+        :raises TypeError: A configuration option has a value of a wrong type.
+        :raises Exception: An error occurred while validating the settings.
+        """
+        pass
 
 
     #--------------------------------------------------------------------------
