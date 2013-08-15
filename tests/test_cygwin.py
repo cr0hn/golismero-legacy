@@ -61,7 +61,7 @@ win_cygwin_path_cases = (
 
 # Tests the conversion of Windows paths to Cygwin paths.
 def test_cygwin_paths():
-    print "Testing the conversion of Windows paths to Cygwin paths"
+    print "Testing the conversion of Windows paths to Cygwin paths..."
     for win_path, cygwin_path in win_cygwin_path_cases:
         assert win_to_cygwin_path(win_path) == cygwin_path
         assert cygwin_to_win_path(cygwin_path) == win_path

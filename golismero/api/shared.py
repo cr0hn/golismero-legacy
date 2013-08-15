@@ -3,6 +3,89 @@
 
 """
 Shared data containers for plugins.
+
+.. note: Important note: while these data containers may somewhat look like
+         Python's dictionaries and sets, they are not the same thing. Most
+         importantly, the dict() and set() types use equality comparisons to
+         determine if two keys or two values are the same, so:
+
+         >>> set([False, 0, 0L, 0.0, complex(0, 0), "", u""])
+         set([False, ''])
+
+         This happens because many of those objects, when compared to each
+         other, are evaluated as equal.
+
+         Howerver, in our data containers all of them are considered different!
+
+         >>> h = SharedHeap()
+         >>> h.add(False)
+         >>> h.add(0)
+         >>> h.add(0L)
+         >>> h.add(0.0)
+         >>> h.add(complex(0, 0))
+         >>> h.add("")
+         >>> h.add(u"")
+         >>> sorted(h.pop_many(7), key=str)
+         ['', u'', 0, 0L, 0.0, 0j, False]
+
+         Same thing happens with the dictionaries:
+
+         >>> { True: 0, 1: 1, 1.0: 2, complex(1,0): 3, "test": 4, u"test": 5 }
+         {'test': 5, True: 3}
+
+         In our shared maps, again, all of them are different:
+
+         >>> m = SharedMap()
+         >>> m[True] = 0
+         >>> m[1] = 1
+         >>> m[1.0] = 2
+         >>> m[complex(1,0)] = 3
+         >>> m["test"] = 4
+         >>> m[u"test"] = 5
+         >>> sorted(m.keys(), key=str)
+         [(1+0j), 1, 1.0, True, 'test', u'test']
+
+         Also, the built-in dict() and set() type support different data types
+         than our containers. Most importantly, our containers can be nested
+         however you like:
+
+         >>> h = SharedHeap()
+         >>> m = SharedMap()
+         >>> m[s] = m
+         >>> m[m] = s
+         >>> s.add(m)
+         >>> s.add(s)
+         >>> m["string"] = object()
+         >>> m[object()] = "string"
+         Traceback (most recent call last):
+           File "<stdin>", line 1, in <module>
+         TypeError: Type 'object' cannot be used in shared data containers
+         >>> s.add("string")
+         >>> s.add(object())
+         Traceback (most recent call last):
+           File "<stdin>", line 1, in <module>
+         TypeError: Type 'object' cannot be used in shared data containers
+
+         On the other hand, dict() and set() cannot be nested arbitrarily:
+
+         >>> a = {}
+         >>> b = set()
+         >>> a[b] = b
+         Traceback (most recent call last):
+           File "<stdin>", line 1, in <module>
+         TypeError: unhashable type: 'set'
+         >>> a[a] = a
+         Traceback (most recent call last):
+           File "<stdin>", line 1, in <module>
+         TypeError: unhashable type: 'dict'
+         >>> b.add(a)
+         Traceback (most recent call last):
+           File "<stdin>", line 1, in <module>
+         TypeError: unhashable type: 'dict'
+         >>> b.add(b)
+         Traceback (most recent call last):
+           File "<stdin>", line 1, in <module>
+         TypeError: unhashable type: 'set'
 """
 
 __license__ = """
@@ -33,29 +116,26 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["SharedMap", "SharedHeap"]
 
 from .config import Config
+from ..common import pickle
 from ..messaging.codes import MessageCode
 
 from uuid import uuid4
+
 
 # Sentinel value.
 _sentinel = object()
 
 
 #------------------------------------------------------------------------------
-def check_value(obj, is_key = True):
+def check_value(obj):
     """
     Check if the given object can be used in a shared data container.
 
-    Immutable built-in types and shared container IDs can be used as keys and
-    values. Shared data containers can only be used as values. Any other data
-    type is forbidden.
+    Immutable, hashable built-in types can be used as keys and values.
+    Shared data containers can also be used. Any other data type is forbidden.
 
     :param obj: Object to test.
     :type obj: *
-
-    :param is_key: True if the object being tested is a key,
-        False if it's a value.
-    :type is_key: bool
 
     :raises TypeError: An invalid data type was found.
     """
@@ -87,14 +167,59 @@ def check_value(obj, is_key = True):
             continue
 
         # Reject invalid types.
-        if (all(obj is not x for x in valid_objects) and
-            all(typ is not x for x in valid_scalars) and
-            (is_key or all(typ is not x for x in shared_containers))
-        ): raise TypeError(
-            "Type %r cannot be used in shared data containers" % typ)
+        if (all(obj is not x for x in valid_objects)     and
+            all(typ is not x for x in valid_scalars)     and
+            all(typ is not x for x in shared_containers)
+        ):
+            t = repr(typ)
+            if t.startswith("<type '") and t.endswith("'>"):
+                t = "'%s'" % t[7:-2]
+            raise TypeError(
+            "Type %s cannot be used in shared data containers" % t)
 
-    # Passed all the checks, we're good to go!
-    return True
+
+#------------------------------------------------------------------------------
+def encode_key(obj):
+    """
+    Encode the given object to be used as a key in a shared data container.
+
+    Immutable, hashable built-in types can be used as keys and values.
+    Shared data containers can also be used. Any other data type is forbidden.
+
+    :param obj: Object to encode.
+    :type obj: *
+
+    :returns: Encoded object stream.
+    :rtype: str
+
+    :raises TypeError: An invalid data type was found.
+    """
+
+    # Check the data type.
+    check_value(obj)
+
+    # Pickle the object using the compatibility protocol,
+    # because it ensures the same output for the same input.
+    return pickle.dumps(obj, protocol = 0)
+
+
+#------------------------------------------------------------------------------
+def decode_key(data):
+    """
+    Decode the given object to be used in a shared data container.
+
+    Immutable, hashable built-in types can be used as keys and values.
+    Shared data containers can also be used. Any other data type is forbidden.
+
+    :param data: Encoded object stream.
+    :type data: str
+
+    :returns: Decoded object.
+    :rtype: *
+    """
+
+    # Unpickle the object.
+    return pickle.loads(data)
 
 
 #------------------------------------------------------------------------------
@@ -168,9 +293,7 @@ class SharedMap (AbstractSharedContainer):
 
         :raises KeyError: Not all keys were mapped.
         """
-        keys = tuple(keys)
-        for key in keys:
-            check_value(key, is_key=True)
+        keys = [encode_key(k) for k in keys]
         return Config._context.remote_call(
             MessageCode.MSG_RPC_SHARED_MAP_GET, self.shared_id, keys)
 
@@ -219,9 +342,7 @@ class SharedMap (AbstractSharedContainer):
         :returns: True if all keys were defined, False otherwise.
         :rtype: bool
         """
-        keys = tuple(keys)
-        for key in keys:
-            check_value(key, is_key=True)
+        keys = [encode_key(k) for k in keys]
         return Config._context.remote_call(
             MessageCode.MSG_RPC_SHARED_MAP_CHECK_ALL, self.shared_id, keys)
 
@@ -241,9 +362,7 @@ class SharedMap (AbstractSharedContainer):
         :returns: True if any of the keys was defined, False otherwise.
         :rtype: bool
         """
-        keys = tuple(keys)
-        for key in keys:
-            check_value(key, is_key=True)
+        keys = [encode_key(k) for k in keys]
         return Config._context.remote_call(
             MessageCode.MSG_RPC_SHARED_MAP_CHECK_ANY, self.shared_id, keys)
 
@@ -264,9 +383,7 @@ class SharedMap (AbstractSharedContainer):
             True for each defined key, False for each undefined key.
         :rtype: tuple( bool, ... )
         """
-        keys = tuple(keys)
-        for key in keys:
-            check_value(key, is_key=True)
+        keys = [encode_key(k) for k in keys]
         return Config._context.remote_call(
             MessageCode.MSG_RPC_SHARED_MAP_CHECK_EACH, self.shared_id, keys)
 
@@ -310,9 +427,7 @@ class SharedMap (AbstractSharedContainer):
 
         :raises KeyError: Not all keys were mapped.
         """
-        keys = tuple(keys)
-        for key in keys:
-            check_value(key, is_key=True)
+        keys = [encode_key(k) for k in keys]
         return Config._context.remote_call(
             MessageCode.MSG_RPC_SHARED_MAP_POP, self.shared_id, keys)
 
@@ -364,10 +479,9 @@ class SharedMap (AbstractSharedContainer):
             None for each missing key.
         :rtype: tuple( immutable | None, ... )
         """
-        items = tuple( (key, value) for (key, value) in items )
-        for key, value in items:
-            check_value(key,   is_key=True)
-            check_value(value, is_key=False)
+        items = [ (encode_key(k), v) for (k, v) in items ]
+        for (k, v) in items:
+            check_value(v)
         return Config._context.remote_call(
             MessageCode.MSG_RPC_SHARED_MAP_SWAP, self.shared_id, items)
 
@@ -381,10 +495,9 @@ class SharedMap (AbstractSharedContainer):
         :param items: Keys and values to map, in (key, value) tuples.
         :type items: tuple( tuple(immutable, immutable), ... )
         """
-        items = tuple( (key, value) for (key, value) in items )
-        for key, value in items:
-            check_value(key,   is_key=True)
-            check_value(value, is_key=False)
+        items = [ (encode_key(k), v) for (k, v) in items ]
+        for (k, v) in items:
+            check_value(v)
         Config._context.async_remote_call(
             MessageCode.MSG_RPC_SHARED_MAP_PUT, self.shared_id, items)
 
@@ -412,9 +525,7 @@ class SharedMap (AbstractSharedContainer):
         :param keys: Keys to delete.
         :type keys: tuple( immutable, ... )
         """
-        keys = tuple(keys)
-        for key in keys:
-            check_value(key, is_key=True)
+        keys = [encode_key(k) for k in keys]
         Config._context.async_remote_call(
             MessageCode.MSG_RPC_SHARED_MAP_DELETE, self.shared_id, keys)
 
@@ -429,15 +540,16 @@ class SharedMap (AbstractSharedContainer):
             of the plugin may remove or add new keys right after you call
             this method.
 
-        :returns: Keys defined in this shared map.
-        :rtype: set(immutable)
+        :returns: Keys defined in this shared map, in any order.
+        :rtype: tuple( immutable, ... )
         """
-        Config._context.async_remote_call(
+        keys = Config._context.remote_call(
             MessageCode.MSG_RPC_SHARED_MAP_KEYS, self.shared_id)
+        return tuple(decode_key(k) for k in keys)
 
 
     #--------------------------------------------------------------------------
-    # Aliases
+    # Aliases.
 
     __getitem__  = get
     __setitem__  = async_put
@@ -486,9 +598,7 @@ class SharedHeap (AbstractSharedContainer):
         :returns: True if all of the values were found, False otherwise.
         :rtype: bool
         """
-        values = tuple(values)
-        for value in values:
-            check_value(value)
+        values = [encode_key(v) for v in values]
         return Config._context.remote_call(
             MessageCode.MSG_RPC_SHARED_HEAP_CHECK_ALL, self.shared_id, values)
 
@@ -508,9 +618,7 @@ class SharedHeap (AbstractSharedContainer):
         :returns: True if any of the values was found, False otherwise.
         :rtype: bool
         """
-        values = tuple(values)
-        for value in values:
-            check_value(value)
+        values = [encode_key(v) for v in values]
         return Config._context.remote_call(
             MessageCode.MSG_RPC_SHARED_HEAP_CHECK_ANY, self.shared_id, values)
 
@@ -531,9 +639,7 @@ class SharedHeap (AbstractSharedContainer):
             True for each value found, False for each not found.
         :rtype: tuple( bool, ... )
         """
-        values = tuple(values)
-        for value in values:
-            check_value(value)
+        values = [encode_key(v) for v in values]
         return Config._context.remote_call(
             MessageCode.MSG_RPC_SHARED_HEAP_CHECK_EACH, self.shared_id, values)
 
@@ -570,8 +676,9 @@ class SharedHeap (AbstractSharedContainer):
         maximum = long(maximum)
         if maximum < 1:
             return ()
-        return Config._context.remote_call(
+        values = Config._context.remote_call(
             MessageCode.MSG_RPC_SHARED_HEAP_POP, self.shared_id, maximum)
+        return tuple(decode_key(v) for v in values)
 
 
     #--------------------------------------------------------------------------
@@ -593,9 +700,7 @@ class SharedHeap (AbstractSharedContainer):
         :param values: Values to add.
         :type values: tuple( immutable, ... )
         """
-        values = tuple(values)
-        for value in values:
-            check_value(value)
+        values = [encode_key(v) for v in values]
         Config._context.async_remote_call(
             MessageCode.MSG_RPC_SHARED_HEAP_ADD, self.shared_id, values)
 
@@ -623,28 +728,28 @@ class SharedHeap (AbstractSharedContainer):
         :param values: Values to remove.
         :type values: tuple( immutable, ... )
         """
-        values = tuple(values)
-        for value in values:
-            check_value(value)
+        values = [encode_key(v) for v in values]
         Config._context.async_remote_call(
             MessageCode.MSG_RPC_SHARED_HEAP_REMOVE, self.shared_id, values)
 
 
     #--------------------------------------------------------------------------
-    # Aliases
+    # Aliases.
 
-    __contains__ = check
+    __contains__      = check
+    update            = add_many
+    difference_update = remove_many
 
 
 #------------------------------------------------------------------------------
 
-# Unique built-in objects.
-_valid_objects = (None, NotImplemented, Ellipsis)
+# Unique built-in immutable hashable objects.
+_valid_objects = (None, Ellipsis)
 
-# Built-in immutable scalar types.
-_valid_scalars = (bool, int, long, float, str, unicode, complex, slice)
+# Built-in immutable hashable scalar types.
+_valid_scalars = (bool, int, long, float, str, unicode, complex)
 
-# Built-in immutable container types.
+# Built-in immutable hashable container types.
 _valid_containers = (tuple, frozenset)
 
 # Shared container types. (Internally they're immutable proxy objects).

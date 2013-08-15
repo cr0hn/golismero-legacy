@@ -88,7 +88,7 @@ class NiktoPlugin(TestingPlugin):
             config = "/etc/nikto.conf"
 
             # If it still doesn't exist, abort.
-            if not exists(command):
+            if not exists(config):
                 Logger.log_error("Nikto config file not found! File: %s" % config)
                 return
 

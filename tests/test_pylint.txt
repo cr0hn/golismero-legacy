@@ -69,6 +69,7 @@ golismero/api/data/information/http.py:985: Warning (W, HTTP_Response.__parse_ra
 golismero/api/data/information/http.py:985: Warning (W, HTTP_Response.__parse_raw_response): Catching too general exception Exception
 golismero/api/data/information/http.py:1027: Warning (W): FIXME: not sure how Requests handles content encoding,
 golismero/api/data/information/webserver_fingerprint.py:48: Warning (W): TODO: we may want to add a list of default servers and descriptions.
+golismero/api/data/vulnerability/__init__.py:144: Error (E, Vulnerability.false_positive): An attribute affected in golismero.api.data.vulnerability line 126 hide this method
 golismero/api/data/vulnerability/__init__.py:149: Warning (W, Vulnerability.false_positive): Attribute '__false_positive' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:175: Warning (W, Vulnerability.plugin_id): Attribute '__plugin_id' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:212: Warning (W, Vulnerability.level): Attribute '__level' defined outside __init__
@@ -198,21 +199,21 @@ golismero/api/plugin.py:243: Warning (W, PluginState.get_names): Access to a pro
 golismero/api/plugin.py:315: Warning (W, Plugin.update_status): Access to a protected member _context of a client class
 golismero/api/plugin.py:521: Warning (W, TestingPlugin): Method 'get_accepted_info' is abstract in class '_InformationPlugin' but is not overridden
 golismero/api/plugin.py:521: Warning (W, TestingPlugin): Method 'recv_info' is abstract in class '_InformationPlugin' but is not overridden
-golismero/api/shared.py:175: Warning (W, SharedMap.get_many): Access to a protected member _context of a client class
-golismero/api/shared.py:226: Warning (W, SharedMap.check_all): Access to a protected member _context of a client class
-golismero/api/shared.py:248: Warning (W, SharedMap.check_any): Access to a protected member _context of a client class
-golismero/api/shared.py:271: Warning (W, SharedMap.check_each): Access to a protected member _context of a client class
-golismero/api/shared.py:317: Warning (W, SharedMap.pop_many): Access to a protected member _context of a client class
-golismero/api/shared.py:372: Warning (W, SharedMap.put_many): Access to a protected member _context of a client class
-golismero/api/shared.py:389: Warning (W, SharedMap.async_put_many): Access to a protected member _context of a client class
-golismero/api/shared.py:419: Warning (W, SharedMap.delete_many): Access to a protected member _context of a client class
-golismero/api/shared.py:436: Warning (W, SharedMap.keys): Access to a protected member _context of a client class
-golismero/api/shared.py:493: Warning (W, SharedHeap.check_all): Access to a protected member _context of a client class
-golismero/api/shared.py:515: Warning (W, SharedHeap.check_any): Access to a protected member _context of a client class
-golismero/api/shared.py:538: Warning (W, SharedHeap.check_each): Access to a protected member _context of a client class
-golismero/api/shared.py:574: Warning (W, SharedHeap.pop_many): Access to a protected member _context of a client class
-golismero/api/shared.py:600: Warning (W, SharedHeap.add_many): Access to a protected member _context of a client class
-golismero/api/shared.py:630: Warning (W, SharedHeap.remove_many): Access to a protected member _context of a client class
+golismero/api/shared.py:297: Warning (W, SharedMap.get_many): Access to a protected member _context of a client class
+golismero/api/shared.py:346: Warning (W, SharedMap.check_all): Access to a protected member _context of a client class
+golismero/api/shared.py:366: Warning (W, SharedMap.check_any): Access to a protected member _context of a client class
+golismero/api/shared.py:387: Warning (W, SharedMap.check_each): Access to a protected member _context of a client class
+golismero/api/shared.py:431: Warning (W, SharedMap.pop_many): Access to a protected member _context of a client class
+golismero/api/shared.py:485: Warning (W, SharedMap.put_many): Access to a protected member _context of a client class
+golismero/api/shared.py:501: Warning (W, SharedMap.async_put_many): Access to a protected member _context of a client class
+golismero/api/shared.py:529: Warning (W, SharedMap.delete_many): Access to a protected member _context of a client class
+golismero/api/shared.py:546: Warning (W, SharedMap.keys): Access to a protected member _context of a client class
+golismero/api/shared.py:602: Warning (W, SharedHeap.check_all): Access to a protected member _context of a client class
+golismero/api/shared.py:622: Warning (W, SharedHeap.check_any): Access to a protected member _context of a client class
+golismero/api/shared.py:643: Warning (W, SharedHeap.check_each): Access to a protected member _context of a client class
+golismero/api/shared.py:679: Warning (W, SharedHeap.pop_many): Access to a protected member _context of a client class
+golismero/api/shared.py:704: Warning (W, SharedHeap.add_many): Access to a protected member _context of a client class
+golismero/api/shared.py:732: Warning (W, SharedHeap.remove_many): Access to a protected member _context of a client class
 golismero/api/text/text_utils.py:41: Warning (W): Uses of a deprecated module 'string'
 golismero/api/text/wordlist.py:294: Warning (W, AdvancedListWordlist): Method 'search_mutations' is abstract in class 'AbstractWordlist' but is not overridden
 golismero/api/text/wordlist.py:407: Warning (W, AdvancedListWordlist.clone): Access to a protected member __wordlist of a client class

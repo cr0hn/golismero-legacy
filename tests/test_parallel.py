@@ -57,7 +57,7 @@ from time import sleep, time
 
 # Tests the parallel execution with random data.
 def test_pmap():
-    print "Testing parallel execution with random data"
+    print "Testing parallel execution with random data..."
     with PluginTester(autoinit=False) as t:
         t.orchestrator_config.use_colors = False
         t.orchestrator_config.ui_mode = "disabled"
@@ -76,7 +76,7 @@ def test_pmap():
 
 # Tests the parallel execution with random data and multiple parameters.
 def test_pmap_multi():
-    print "Testing parallel execution with random data and multiple parameters"
+    print "Testing parallel execution with random data and multiple parameters..."
     with PluginTester(autoinit=False) as t:
         t.orchestrator_config.use_colors = False
         t.orchestrator_config.ui_mode = "disabled"
@@ -98,7 +98,7 @@ def test_pmap_multi():
 
 # Tests the parallel execution with errors.
 def test_pmap_errors():
-    print "Testing parallel execution with errors"
+    print "Testing parallel execution with errors..."
     with PluginTester(autoinit=False) as t:
         t.orchestrator_config.use_colors = False
         t.orchestrator_config.ui_mode = "disabled"
@@ -121,7 +121,7 @@ def test_pmap_errors():
 
 # Tests the parallel execution with delays.
 def test_pmap_delays():
-    print "Testing parallel execution with delays"
+    print "Testing parallel execution with delays..."
     with PluginTester(autoinit=False) as t:
         t.orchestrator_config.use_colors = False
         t.orchestrator_config.ui_mode = "disabled"
@@ -142,7 +142,7 @@ def test_pmap_delays():
 
 # Tests the parallel execution with large inputs.
 def test_pmap_large_input():
-    print "Testing parallel execution with large inputs"
+    print "Testing parallel execution with large inputs..."
     with PluginTester(autoinit=False) as t:
         t.orchestrator_config.use_colors = False
         t.orchestrator_config.ui_mode = "disabled"

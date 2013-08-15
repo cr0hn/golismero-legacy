@@ -109,7 +109,7 @@ def helper_load_data_types():
     # Look for Python files in golismero/api/data.
     api_data = path.join(golismero, "golismero", "api", "data")
     api_data = path.abspath(api_data)
-    print "Looking for modules in %s" % api_data
+    print "Looking for modules in: %s" % api_data
     assert path.isdir(api_data)
     for root, folders, files in os.walk(api_data):
         for name in files:
@@ -125,7 +125,7 @@ def helper_load_data_types():
                 name = name[1:]
             name = name.replace(path.sep, ".")
             name = "golismero.api.data." + name
-            print "Loading %s" % name
+            print "--> Loading %s" % name
 
             # Load the module and extract all its data types.
             module = __import__(name, globals(), locals(), ['*'])
@@ -139,7 +139,7 @@ def helper_load_data_types():
                     continue
                 clazz = getattr(module, name)
                 if isinstance(clazz, type) and issubclass(clazz, Data) and clazz not in data_types:
-                    print "Found %s" % name
+                    print "------> Found %s" % name
                     data_types.append(clazz)
 
     return data_types
@@ -148,11 +148,11 @@ def helper_load_data_types():
 # This test will make sure all data types have a correct type ID.
 def test_data_types_have_id():
     print
-    print "Testing correctness of data type IDs"
+    print "Testing correctness of data type IDs..."
     data_types = helper_load_data_types()
     assert len(data_types) > 0
     for clazz in data_types:
-        print "Checking %s" % clazz.__name__
+        print "--> Checking %s" % clazz.__name__
         assert type(clazz.data_type) == int
         if issubclass(clazz, Information):
             assert clazz.data_type == Data.TYPE_INFORMATION
@@ -202,19 +202,19 @@ def helper_data_links():
     d1.add_information(d2)
 
     # Test validate_link_minimums().
-    print "Testing Data.validate_link_minimums()"
+    print "Testing Data.validate_link_minimums()..."
     d1.validate_link_minimums()
     d2.validate_link_minimums()
     d3.validate_link_minimums()
 
     # Test the links property.
-    print "Testing Data.links"
+    print "Testing Data.links..."
     assert d1.links == {d2.identity, d3.identity}
     assert d2.links == {d1.identity}
     assert d3.links == {d1.identity}
 
     # Test the get_links method.
-    print "Testing Data.get_links()"
+    print "Testing Data.get_links()..."
     assert d1.get_links(d1.data_type) == set()
     assert d1.get_links(d1.data_type, d1.resource_type) == set()
     assert d1.get_links(d2.data_type) == {d2.identity}
@@ -236,14 +236,14 @@ def helper_data_links():
 
     # Test the linked_data property.
     # There should be no accesses to the database since all data is local.
-    print "Testing Data.linked_data"
+    print "Testing Data.linked_data..."
     assert {x.identity for x in d1.linked_data} == {d2.identity, d3.identity}
     assert {x.identity for x in d2.linked_data} == {d1.identity}
     assert {x.identity for x in d3.linked_data} == {d1.identity}
 
     # Test the get_linked_data() method.
     # There should be no accesses to the database since all data is local.
-    print "Testing Data.get_linked_data()"
+    print "Testing Data.get_linked_data()..."
     assert {x.identity for x in d1.get_linked_data(d1.data_type)} == set()
     assert {x.identity for x in d1.get_linked_data(d1.data_type, d1.resource_type)} == set()
     assert {x.identity for x in d1.get_linked_data(d2.data_type)} == {d2.identity}
@@ -265,7 +265,7 @@ def helper_data_links():
 
     # Test the associated_* properties.
     # There should be no accesses to the database since all data is local.
-    print "Testing Data.associated_*"
+    print "Testing Data.associated_*..."
     assert {x.identity for x in d1.associated_resources} == set()
     assert {x.identity for x in d1.associated_informations} == {d2.identity}
     assert {x.identity for x in d1.associated_vulnerabilities} == {d3.identity}
@@ -278,7 +278,7 @@ def helper_data_links():
 
     # Test the get_associated_*_by_category() methods.
     # There should be no accesses to the database since all data is local.
-    print "Testing Data.get_associated_*_by_category()"
+    print "Testing Data.get_associated_*_by_category()..."
     assert {x.identity for x in d1.get_associated_resources_by_category(d1.resource_type)} == set()
     assert {x.identity for x in d1.get_associated_informations_by_category(d2.information_type)} == {d2.identity}
     assert {x.identity for x in d1.get_associated_vulnerabilities_by_category(d3.vulnerability_type)} == {d3.identity}
@@ -290,7 +290,7 @@ def helper_data_links():
     assert {x.identity for x in d3.get_associated_informations_by_category(d2.information_type)} == set()
 
     # Test TempDataStorage.on_finish().
-    print "Testing LocalDataCache.on_finish() on ideal conditions"
+    print "Testing LocalDataCache.on_finish() on ideal conditions..."
     result_before = [d1, d2, d3]
     result_after  = LocalDataCache.on_finish(result_before)
     assert set(result_before) == set(result_after)

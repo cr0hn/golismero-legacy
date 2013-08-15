@@ -1140,15 +1140,10 @@ class AuditMemoryDB (BaseAuditDB):
     #--------------------------------------------------------------------------
     def pop_mapped_values(self, shared_id, keys):
         d = self.__shared_maps[shared_id]
-        try:
-            values = []
-            for key in keys:
-                values.append( d.pop(key) )
-        except KeyError:
-            for index, key in enumerate(keys):
-                d[key] = values[index]
-            raise
-        return tuple(values)
+        values = tuple(d[key] for key in keys)
+        for key in keys:
+            del d[key]
+        return values
 
 
     #--------------------------------------------------------------------------
@@ -1168,7 +1163,12 @@ class AuditMemoryDB (BaseAuditDB):
 
     #--------------------------------------------------------------------------
     def delete_mapped_values(self, shared_id, keys):
-        self.pop_mapped_values(shared_id, keys)
+        d = self.__shared_maps[shared_id]
+        for key in keys:
+            try:
+                del d[key]
+            except KeyError:
+                pass
 
 
     #--------------------------------------------------------------------------
