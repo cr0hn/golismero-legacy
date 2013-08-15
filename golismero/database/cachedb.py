@@ -364,14 +364,24 @@ class PersistentNetworkCache(BaseNetworkCache):
 
 
     #----------------------------------------------------------------------
-    @transactional
     def compact(self):
-        self.__cursor.executescript("""
+        try:
+            self.__clear_old_entries()
+            self.__vacuum()
+        except sqlite3.Error:
+            pass
+
+    @transactional
+    def __clear_old_entries(self):
+        self.__cursor.execute("""
             DELETE FROM cache
                 WHERE timestamp != 0 AND lifespan != 0 AND
                       timestamp + lifespan <= CURRENT_TIMESTAMP;
-            VACUUM;
         """)
+
+    @transactional
+    def __vacuum(self):
+        self.__cursor.execute("VACUUM;")
 
 
     #----------------------------------------------------------------------

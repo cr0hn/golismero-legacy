@@ -71,15 +71,9 @@ def test():
     audit.from_dictionary({
         "targets": ["http://www.example.com/folder/subfolder/index.html",],
         "reports": ["-",],
-        "audit_name": "test_audit",
-        "audit_db": "sqlite://test_audit.db",
+        "audit_db": "sqlite://",
     })
     ##audit.plugin_load_overrides = [(True, "recon/test")]  # XXX DEBUG shorter run
-
-    try:
-        os.unlink("%s.db" % audit.audit_name)
-    except Exception:
-        pass
 
     try:
         print "Launching GoLismero..."
@@ -107,8 +101,13 @@ def test():
 
 
 # Validate the audit database.
-def validate(audit = "test_audit"):
-    disk = AuditDB(audit, "sqlite://%s.db" % audit)
+def validate(audit):
+    audit = AuditConfig()
+    audit.from_dictionary({
+        "audit_name": audit,
+        "audit_db": "sqlite://%s.db" % audit,
+    })
+    disk = AuditDB(audit)
     try:
 
         # Make sure all objects completed all stages.

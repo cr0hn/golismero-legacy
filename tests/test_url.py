@@ -91,6 +91,7 @@ basic = (
 )
 
 def test_basic_urls():
+    print "Testing basic URL parsing..."
     for url in basic:
         ##pprint(parse_url(url).url)
         assert parse_url(url).url == url
@@ -259,6 +260,7 @@ simple = (
 
 # Test of the URL parser.
 def test_url_parser():
+    print "Testing URL parsing for all properties..."
     for case in simple:
         url = case['url']
         d = ParsedURL(url)
@@ -351,6 +353,7 @@ equivalent = (
 )
 
 def test_equivalent_urls():
+    print "Testing URL sanitization..."
     for url_list in equivalent:
         normalized = set()
         for url in url_list:
@@ -373,6 +376,7 @@ relative = (
 )
 
 def test_relative_urls():
+    print "Testing relative URL parsing..."
     for rel, ab in relative:
         ##print rel
         ##print parse_url(relative, 'http://example.com/path/').url
@@ -395,6 +399,7 @@ errors = (
 )
 
 def test_url_errors():
+    print "Testing URL parsing errors..."
     for url in errors:
         try:
             parse_url(url).url
@@ -405,6 +410,7 @@ def test_url_errors():
 
 # Some manual testing.
 def test_url_parser_custom():
+    print "Testing URL modification and reparsing..."
 
     # Relative URLs.
     assert ParsedURL("/index.html", base_url="http://www.example.com").url == "http://www.example.com/index.html"

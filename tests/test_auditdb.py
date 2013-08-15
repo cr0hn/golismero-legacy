@@ -51,7 +51,9 @@ from golismero.api.data.information.text import Text
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.text.text_utils import generate_random_string
-from golismero.database.auditdb import AuditDB, BaseAuditDB
+from golismero.database.auditdb import AuditDB, BaseAuditDB, AuditSQLiteDB
+from golismero.common import AuditConfig, OrchestratorConfig
+from golismero.main.testing import PluginTester
 import time
 import os
 import inspect
@@ -70,7 +72,7 @@ def test_auditdb_interfaces():
             missing = {
                 name for name in dir(cls) if (
                     name[0] != "_" and
-                    name not in ("audit_name", "compact", "dump", "decode", "encode") and
+                    name not in ("audit_name", "compact", "dump", "decode", "encode", "generate_audit_name") and
                     name not in cls.__dict__
                 )
             }
@@ -83,34 +85,304 @@ def test_auditdb_interfaces():
 
 # Tests the audit DB for consistency.
 def test_auditdb_consistency():
-    try:
-        os.unlink("fake_audit.db")
-    except Exception:
-        pass
-    mem  = AuditDB("fake_audit", "memory://")
-    disk = AuditDB("fake_audit", "sqlite://fake_audit.db")
-    try:
+    print "Testing consistency of in-memory database..."
+    helper_test_auditdb_consistency_setup("fake_mem_audit", "memory://")
+    print "Testing consistency of disk database..."
+    helper_test_auditdb_consistency_setup(None, "sqlite://")
 
-        print "Testing consistency of in-memory and disk databases..."
+def helper_test_auditdb_consistency_setup(audit_name, audit_db):
+    main_config = OrchestratorConfig()
+    main_config.ui_mode = "disabled"
+    audit_config = AuditConfig()
+    audit_config.targets = ["www.example.com"]
+    audit_config.audit_name = audit_name
+    audit_config.audit_db = audit_db
+    with PluginTester(main_config, audit_config) as t:
+        print "--> Testing general consistency..."
+        helper_test_auditdb_general_consistency(t.audit.database)
+        print "--> Testing data consistency..."
         for x in xrange(100):
             key  = generate_random_string(10)
             data = generate_random_string(100)
-            helper_test_auditdb_consistency(mem, key, data)
-            helper_test_auditdb_consistency(disk, key, data)
+            helper_test_auditdb_data_consistency(t.audit.database, key, data)
 
-    finally:
-        try:
-            print "Cleaning up..."
-            mem.close()
-            del mem
-        finally:
-            try:
-                disk.close()
-                del disk
-            finally:
-                os.unlink("fake_audit.db")
+def helper_test_auditdb_general_consistency(db):
 
-def helper_test_auditdb_consistency(db, key, data):
+    # Test state variables.
+    db.add_state_variable("fake_plugin", "a_string", "string")
+    db.add_state_variable("fake_plugin", "an_integer", 100)
+    db.add_state_variable("fake_plugin", "a_float", 1.0)
+    db.add_state_variable("fake_plugin", "an_object", object())
+    db.add_state_variable("fake_plugin", "a_list", ["string", 100, 1.0])
+    db.add_state_variable("fake_plugin", "a_set", {"string", 100, 1.0})
+    db.add_state_variable("fake_plugin", "a_tuple", ("string", 100, 1.0))
+    db.add_state_variable("fake_plugin", "a_dictionary", {"string": 100, 1.0: None})
+    assert db.get_state_variable_names("fake_plugin") == {"a_string", "an_integer", "a_float", "an_object", "a_list", "a_set", "a_tuple", "a_dictionary"}
+    assert db.has_state_variable("fake_plugin", "a_string")
+    assert db.has_state_variable("fake_plugin", "an_integer")
+    assert db.has_state_variable("fake_plugin", "a_float")
+    assert db.has_state_variable("fake_plugin", "an_object")
+    assert db.has_state_variable("fake_plugin", "a_list")
+    assert db.has_state_variable("fake_plugin", "a_set")
+    assert db.has_state_variable("fake_plugin", "a_tuple")
+    assert db.has_state_variable("fake_plugin", "a_dictionary")
+    assert not db.has_state_variable("fake_plugin", "does_not_exist")
+    assert db.get_state_variable("fake_plugin", "a_string") == "string"
+    assert db.get_state_variable("fake_plugin", "an_integer") == 100
+    assert db.get_state_variable("fake_plugin", "a_float") == 1.0
+    assert type(db.get_state_variable("fake_plugin", "an_object")) == object
+    assert db.get_state_variable("fake_plugin", "a_list") == ["string", 100, 1.0]
+    assert db.get_state_variable("fake_plugin", "a_set") == {"string", 100, 1.0}
+    assert db.get_state_variable("fake_plugin", "a_tuple") == ("string", 100, 1.0)
+    assert db.get_state_variable("fake_plugin", "a_dictionary") == {"string": 100, 1.0: None}
+    db.remove_state_variable("fake_plugin", "a_string")
+    db.remove_state_variable("fake_plugin", "an_integer")
+    db.remove_state_variable("fake_plugin", "a_float")
+    db.remove_state_variable("fake_plugin", "an_object")
+    db.remove_state_variable("fake_plugin", "a_list")
+    db.remove_state_variable("fake_plugin", "a_set")
+    db.remove_state_variable("fake_plugin", "a_tuple")
+    db.remove_state_variable("fake_plugin", "a_dictionary")
+    assert not db.has_state_variable("fake_plugin", "a_string")
+    assert not db.has_state_variable("fake_plugin", "an_integer")
+    assert not db.has_state_variable("fake_plugin", "a_float")
+    assert not db.has_state_variable("fake_plugin", "an_object")
+    assert not db.has_state_variable("fake_plugin", "a_list")
+    assert not db.has_state_variable("fake_plugin", "a_set")
+    assert not db.has_state_variable("fake_plugin", "a_tuple")
+    assert not db.has_state_variable("fake_plugin", "a_dictionary")
+    assert db.get_state_variable_names("fake_plugin") == set()
+
+    # Test the shared sets.
+    try:
+        db.remove_shared_values("FAKE", ("FAKE",))
+    except KeyError:
+        pass
+    db.add_shared_values("fake_set_id", (
+        "string",
+        u"unicode",
+        100,
+        200L,
+        5.0,
+        True,
+        False,
+        complex(1, 1),
+        None,
+        frozenset({"string", 100, 1.0}),
+        (None, True, False),
+    ))
+    assert db.has_all_shared_values("fake_set_id", (
+        "string",
+        u"unicode",
+        100,
+        200L,
+        5.0,
+        True,
+        False,
+        complex(1, 1),
+        None,
+        frozenset({"string", 100, 1.0}),
+        (None, True, False),
+    ))
+    assert db.has_any_shared_value("fake_set_id", (
+        "string",
+        "FAKE",
+    ))
+    assert all(db.has_each_shared_value("fake_set_id", (
+        "string",
+        u"unicode",
+        100,
+        200L,
+        5.0,
+        True,
+        False,
+        complex(1, 1),
+        None,
+        frozenset({"string", 100, 1.0}),
+        (None, True, False),
+    )))
+    total = db.pop_shared_values("fake_set_id", 11)
+    assert len(total) == 11
+    assert set(total) == set((
+        "string",
+        u"unicode",
+        100,
+        200L,
+        5.0,
+        True,
+        False,
+        complex(1, 1),
+        None,
+        frozenset({"string", 100, 1.0}),
+        (None, True, False),
+    ))
+    assert not db.has_any_shared_value("fake_set_id", total)
+    db.add_shared_values("fake_set_id", total)
+    assert db.has_all_shared_values("fake_set_id", total)
+    popped = db.pop_shared_values("fake_set_id", 5)
+    assert len(popped) == 5
+    assert set(popped) == set(popped).intersection(total)
+    db.add_shared_values("fake_set_id", popped)
+    db.add_shared_values("fake_set_id", popped)
+    db.remove_shared_values("fake_set_id", popped)
+    assert not db.has_any_shared_value("fake_set_id", popped)
+    db.remove_shared_values("fake_set_id", popped)
+    popped_2 = db.pop_shared_values("fake_set_id", 1000000000)
+    assert len(popped) + len(popped_2) == len(total)
+    assert not set(popped).intersection(popped_2)
+    assert set(popped + popped_2) == set(total)
+    assert not db.pop_shared_values("fake_set_id", 1)
+
+    # Test the shared maps.
+    try:
+        db.delete_mapped_values("FAKE", ("FAKE",))
+    except KeyError:
+        pass
+    db.put_mapped_values("fake_map_id", (
+        ("a_string", "string"),
+        ("a_unicode_string", u"unicode"),
+        ("an_integer", 100),
+        ("a_long", 200L),
+        ("a_float", 5.0),
+        ("a_bool", True),
+        ("another_bool", False),
+        ("a_complex", complex(1, 1)),
+        ("none", None),
+        ("a_frozenset", frozenset({"string", 100, 1.0})),
+        ("a_tuple", (None, True, False)),
+    ))
+    assert db.get_mapped_keys("fake_map_id") == set((
+        "a_string",
+        "a_unicode_string",
+        "an_integer",
+        "a_long",
+        "a_float",
+        "a_bool",
+        "another_bool",
+        "a_complex",
+        "none",
+        "a_frozenset",
+        "a_tuple",
+    ))
+    assert db.get_mapped_values("fake_map_id", (
+        "a_string",
+        "a_unicode_string",
+        "an_integer",
+        "a_long",
+        "a_float",
+        "a_bool",
+        "another_bool",
+        "a_complex",
+        "none",
+        "a_frozenset",
+        "a_tuple",
+    )) == (
+        "string",
+        u"unicode",
+        100,
+        200L,
+        5.0,
+        True,
+        False,
+        complex(1, 1),
+        None,
+        frozenset({"string", 100, 1.0}),
+        (None, True, False),
+    )
+    assert db.has_all_mapped_keys("fake_map_id", (
+        "a_string",
+        "a_unicode_string",
+        "an_integer",
+        "a_long",
+        "a_float",
+        "a_bool",
+        "another_bool",
+        "a_complex",
+        "none",
+        "a_frozenset",
+        "a_tuple",
+    ))
+    assert not db.has_all_mapped_keys("fake_map_id", (
+        "a_string",
+        "FAKE",
+    ))
+    assert db.has_any_mapped_key("fake_map_id", (
+        "a_string",
+        "FAKE",
+    ))
+    assert all(db.has_each_mapped_key("fake_map_id", (
+        "a_string",
+        "a_unicode_string",
+        "an_integer",
+        "a_long",
+        "a_float",
+        "a_bool",
+        "another_bool",
+        "a_complex",
+        "none",
+        "a_frozenset",
+        "a_tuple",
+    )))
+    assert db.swap_mapped_values("fake_map_id",
+        (("a_string", u"unicode"), ("a_unicode_string", "string"))) == \
+        (("string", u"unicode"))
+    assert db.pop_mapped_values("fake_map_id", ("a_string", "a_unicode_string")) == \
+           (u"unicode", "string")
+    assert not db.has_any_mapped_key("fake_map_id", ("a_string", "a_unicode_string"))
+    assert db.get_mapped_keys("fake_map_id") == set((
+        "an_integer",
+        "a_long",
+        "a_float",
+        "a_bool",
+        "another_bool",
+        "a_complex",
+        "none",
+        "a_frozenset",
+        "a_tuple",
+    ))
+    try:
+        print db.get_mapped_values("fake_map_id", ("a_string", "a_unicode_string", "a_float"))
+        assert False
+    except KeyError:
+        pass
+    db.delete_mapped_values("fake_map_id", ("a_string", "a_unicode_string", "a_float"))
+    try:
+        print db.get_mapped_values("fake_map_id", ("a_float",))
+        assert False
+    except KeyError:
+        pass
+    try:
+        print db.pop_mapped_values("fake_map_id", ("a_long", "a_float"))
+        assert False
+    except KeyError:
+        pass
+    assert db.pop_mapped_values("fake_map_id", ("a_long",)) == (200L,)
+    try:
+        print db.pop_mapped_values("fake_map_id", ("a_long",))
+        assert False
+    except KeyError:
+        pass
+    db.put_mapped_values("fake_map_id", (
+        ("an_integer", 500),
+    ))
+    assert db.pop_mapped_values("fake_map_id", ("an_integer",)) == (500,)
+    try:
+        print db.pop_mapped_values("fake_map_id", ("an_integer",))
+        assert False
+    except KeyError:
+        pass
+
+    # Make sure shared maps and sets can't be confused.
+    assert not db.has_any_shared_value("fake_map_id", ("another_bool",))
+    try:
+        print db.get_mapped_values("fake_set_id", ("string",))
+        assert False
+    except KeyError:
+        pass
+
+
+def helper_test_auditdb_data_consistency(db, key, data):
+    assert isinstance(db, BaseAuditDB)
 
     # Test the database start and end times.
     assert db.get_audit_times() == (None, None)
@@ -197,58 +469,9 @@ def helper_test_auditdb_consistency(db, key, data):
     assert db.get_data(d2.identity) == None
     assert db.get_data(d3.identity) == None
 
-    # Test state variables.
-    db.add_state_variable("fake_plugin", "a_string", "string")
-    db.add_state_variable("fake_plugin", "an_integer", 100)
-    db.add_state_variable("fake_plugin", "a_float", 1.0)
-    db.add_state_variable("fake_plugin", "an_object", object())
-    db.add_state_variable("fake_plugin", "a_list", ["string", 100, 1.0])
-    db.add_state_variable("fake_plugin", "a_set", {"string", 100, 1.0})
-    db.add_state_variable("fake_plugin", "a_tuple", ("string", 100, 1.0))
-    db.add_state_variable("fake_plugin", "a_dictionary", {"string": 100, 1.0: None})
-    assert db.get_state_variable_names("fake_plugin") == {"a_string", "an_integer", "a_float", "an_object", "a_list", "a_set", "a_tuple", "a_dictionary"}
-    assert db.has_state_variable("fake_plugin", "a_string")
-    assert db.has_state_variable("fake_plugin", "an_integer")
-    assert db.has_state_variable("fake_plugin", "a_float")
-    assert db.has_state_variable("fake_plugin", "an_object")
-    assert db.has_state_variable("fake_plugin", "a_list")
-    assert db.has_state_variable("fake_plugin", "a_set")
-    assert db.has_state_variable("fake_plugin", "a_tuple")
-    assert db.has_state_variable("fake_plugin", "a_dictionary")
-    assert not db.has_state_variable("fake_plugin", "does_not_exist")
-    assert db.get_state_variable("fake_plugin", "a_string") == "string"
-    assert db.get_state_variable("fake_plugin", "an_integer") == 100
-    assert db.get_state_variable("fake_plugin", "a_float") == 1.0
-    assert type(db.get_state_variable("fake_plugin", "an_object")) == object
-    assert db.get_state_variable("fake_plugin", "a_list") == ["string", 100, 1.0]
-    assert db.get_state_variable("fake_plugin", "a_set") == {"string", 100, 1.0}
-    assert db.get_state_variable("fake_plugin", "a_tuple") == ("string", 100, 1.0)
-    assert db.get_state_variable("fake_plugin", "a_dictionary") == {"string": 100, 1.0: None}
-    db.remove_state_variable("fake_plugin", "a_string")
-    db.remove_state_variable("fake_plugin", "an_integer")
-    db.remove_state_variable("fake_plugin", "a_float")
-    db.remove_state_variable("fake_plugin", "an_object")
-    db.remove_state_variable("fake_plugin", "a_list")
-    db.remove_state_variable("fake_plugin", "a_set")
-    db.remove_state_variable("fake_plugin", "a_tuple")
-    db.remove_state_variable("fake_plugin", "a_dictionary")
-    assert not db.has_state_variable("fake_plugin", "a_string")
-    assert not db.has_state_variable("fake_plugin", "an_integer")
-    assert not db.has_state_variable("fake_plugin", "a_float")
-    assert not db.has_state_variable("fake_plugin", "an_object")
-    assert not db.has_state_variable("fake_plugin", "a_list")
-    assert not db.has_state_variable("fake_plugin", "a_set")
-    assert not db.has_state_variable("fake_plugin", "a_tuple")
-    assert not db.has_state_variable("fake_plugin", "a_dictionary")
-    assert db.get_state_variable_names("fake_plugin") == set()
-
 
 # Benchmark for the disk database.
 def test_auditdb_stress():
-    try:
-        os.unlink("fake_audit.db")
-    except Exception:
-        pass
 
     print "Stress testing the disk database..."
     helper_auditdb_stress(10)
@@ -258,8 +481,15 @@ def test_auditdb_stress():
     helper_auditdb_stress(1000)
 
 def helper_auditdb_stress(n):
-    disk = AuditDB("fake_audit", "sqlite://fake_audit.db")
-    try:
+    main_config = OrchestratorConfig()
+    main_config.ui_mode = "disabled"
+    audit_config = AuditConfig()
+    audit_config.targets = ["www.example.com"]
+    audit_config.audit_db = "sqlite://"
+    with PluginTester(main_config, audit_config) as t:
+        disk = t.audit.database
+        assert type(disk) is AuditSQLiteDB
+
         print "  Testing %d elements..." % (n * 3)
         t1 = time.time()
 
@@ -317,18 +547,19 @@ def helper_auditdb_stress(n):
         print "  Delete time: %d seconds (%f seconds per element)" % (t4 - t3, (t4 - t3) / (n * 3.0))
         print "  Total time:  %d seconds (%f seconds per element)" % (t4 - t1, (t4 - t1) / (n * 3.0))
 
-    finally:
-        print "Cleaning up..."
-        try:
-            disk.close()
-            del disk
-        finally:
-            os.unlink("fake_audit.db")
-
 
 def test_auditdb_dump():
-    disk = AuditDB("fake_audit", "sqlite://fake_audit.db")
-    try:
+    main_config = OrchestratorConfig()
+    main_config.ui_mode = "disabled"
+    audit_config = AuditConfig()
+    audit_config.targets = ["www.example.com"]
+    audit_config.audit_db = "sqlite://test_auditdb.db"
+    with PluginTester(main_config, audit_config) as t:
+        disk = t.audit.database
+        assert t.audit.name == "test_auditdb"
+        assert type(disk) is AuditSQLiteDB
+        assert disk.filename == "test_auditdb.db"
+        assert disk.connection_url == "sqlite://test_auditdb.db"
 
         print "Testing the audit database dump..."
         print "  -> Writing..."
@@ -340,16 +571,49 @@ def test_auditdb_dump():
             disk.add_data(d1)
             disk.add_data(d2)
             disk.add_data(d3)
-        print "  -> Dumping..."
-        disk.dump("auditdb.sql")
+            disk.mark_plugin_finished(d1.identity, "some_plugin")
+            disk.mark_plugin_finished(d2.identity, "some_plugin")
+            disk.mark_plugin_finished(d3.identity, "some_plugin")
+            disk.mark_stage_finished(d1.identity, 1)
+            disk.mark_stage_finished(d2.identity, 2)
+            disk.mark_stage_finished(d3.identity, 3)
+        disk.add_state_variable("fake_plugin", "a_string", "string")
+        disk.add_state_variable("fake_plugin", "an_integer", 100)
+        disk.add_state_variable("fake_plugin", "a_float", 1.0)
+        disk.add_state_variable("fake_plugin", "an_object", object())
+        disk.add_state_variable("fake_plugin", "a_list", ["string", 100, 1.0])
+        disk.add_state_variable("fake_plugin", "a_set", {"string", 100, 1.0})
+        disk.add_state_variable("fake_plugin", "a_tuple", ("string", 100, 1.0))
+        disk.add_state_variable("fake_plugin", "a_dictionary", {"string": 100, 1.0: None})
+        disk.add_shared_values("fake_set_id", (
+            "string",
+            u"unicode",
+            100,
+            200L,
+            5.0,
+            True,
+            False,
+            complex(1, 1),
+            None,
+            frozenset({"string", 100, 1.0}),
+            (None, True, False),
+        ))
+        disk.put_mapped_values("fake_map_id", (
+            ("a_string", "string"),
+            ("a_unicode_string", u"unicode"),
+            ("an_integer", 100),
+            ("a_long", 200L),
+            ("a_float", 5.0),
+            ("a_bool", True),
+            ("another_bool", False),
+            ("a_complex", complex(1, 1)),
+            ("none", None),
+            ("a_frozenset", frozenset({"string", 100, 1.0})),
+            ("a_tuple", (None, True, False)),
+        ))
 
-    finally:
-        print "Cleaning up..."
-        try:
-            disk.close()
-            del disk
-        finally:
-            os.unlink("fake_audit.db")
+        print "  -> Dumping..."
+        disk.dump("test_auditdb.sql")
 
 
 # Run all tests from the command line.

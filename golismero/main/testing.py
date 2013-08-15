@@ -46,7 +46,7 @@ from ..managers.auditmanager import Audit
 from ..managers.processmanager import PluginContext
 from ..messaging.message import Message
 
-from os import getpid
+from os import getpid, unlink
 from thread import get_ident
 
 
@@ -135,17 +135,14 @@ class PluginTester(object):
         if self.audit is not None:
             return
 
-        # Get the audit name, or generate one if missing.
-        audit_name = self.audit_config.audit_name
-        if not audit_name:
-            audit_name = Audit.generate_audit_name()
-            self.audit_config.audit_name = audit_name
-
         # Instance the Orchestrator.
         orchestrator = Orchestrator(self.orchestrator_config)
 
         # Instance an Audit.
         audit = Audit(self.audit_config, orchestrator)
+
+        # Create the audit database.
+        audit._Audit__database = AuditDB(self.audit_config)
 
         # Calculate the audit scope.
         if self.audit_config.targets:
@@ -163,8 +160,8 @@ class PluginTester(object):
         if not plugins:
             raise RuntimeError("Failed to find any plugins!")
 
-        # Create the audit database.
-        audit._Audit__database = AuditDB(audit_name, self.audit_config.audit_db)
+        # Get the audit name.
+        audit_name = self.audit_config.audit_name
 
         # Register the Audit with the AuditManager.
         orchestrator.auditManager._AuditManager__audits[audit_name] = audit
@@ -295,8 +292,19 @@ class PluginTester(object):
         LocalDataCache.on_run()
         HTTP._finalize()
 
+        try:
+            filename = self.audit.database.filename
+        except AttributeError:
+            filename = None
+
         if self.orchestrator is not None:
             self.orchestrator.close()
 
         self.__audit = None
         self.__orchestrator = None
+
+        if filename:
+            try:
+                unlink(filename)
+            except IOError:
+                pass

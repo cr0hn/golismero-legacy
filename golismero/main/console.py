@@ -424,7 +424,7 @@ class Console (object):
         console colors before quitting.
         """
         if cls.use_colors:
-            print colored("")
+            print colored(""),
 
 
 #------------------------------------------------------------------------------

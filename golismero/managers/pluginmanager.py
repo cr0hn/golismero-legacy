@@ -148,6 +148,14 @@ class PluginInfo (object):
         return self.__plugin_args
 
     @property
+    def plugin_passwd_args(self):
+        """
+        :returns: Plugin password argument names.
+        :rtype: set(str)
+        """
+        return self.__plugin_passwd_args
+
+    @property
     def plugin_config(self):
         """
         :returns: Plugin configuration.
@@ -362,10 +370,17 @@ class PluginInfo (object):
 
         # Load the plugin arguments as a Python dictionary.
         # This section is optional.
+        self.__plugin_passwd_args = set()
+        self.__plugin_args        = {}
         try:
-            self.__plugin_args = dict( parser.items("Arguments") )
+            args = parser.items("Arguments")
         except Exception:
-            self.__plugin_args = dict()
+            args = ()
+        for key, value in args:
+            if key.startswith("*"):
+                key = key[1:].strip()
+                self.__plugin_passwd_args.add(key)
+            self.__plugin_args[key] = value
 
         # Load the plugin configuration as a Python dictionary.
         # This section is optional.
@@ -772,6 +787,29 @@ class PluginManager (object):
 
 
     #----------------------------------------------------------------------
+    def guess_plugin_by_name(self, plugin_name):
+        """
+        Get info on the requested plugin.
+
+        :param plugin_name: Plugin name.
+        :type plugin_name: str
+
+        :returns: Plugin information.
+        :rtype: PluginInfo
+
+        :raises KeyError: The requested plugin doesn't exist,
+            or more than one plugin matches the request.
+        """
+        try:
+            return self.get_plugin_by_name(plugin_name)
+        except KeyError:
+            found = self.search_plugins_by_name(plugin_name)
+            if len(found) != 1:
+                raise
+            return found.popitem()[1]
+
+
+    #----------------------------------------------------------------------
     def search_plugins_by_name(self, search_string):
         """
         Try to match the search string against plugin names.
@@ -923,6 +961,68 @@ class PluginManager (object):
 
 
     #----------------------------------------------------------------------
+    def parse_plugin_args(self, plugin_args):
+        """
+        Parse a list of tuples with plugin arguments as a dictionary of
+        dictionaries, with plugin names sanitized.
+
+        Once sanitized, you can all :ref:`set_plugin_args`() to set them.
+
+        :param plugin_args: Arguments as specified in the command line.
+        :type plugin_args: list(tuple(str, str, str))
+
+        :returns: Sanitized plugin arguments. Dictionary mapping plugin
+            names to dictionaries mapping argument names and values.
+        :rtype: dict(str -> dict(str -> str))
+
+        :raises KeyError: Plugin or argument not found.
+        """
+        parsed = {}
+        for plugin_name, key, value in plugin_args:
+            plugin_info = self.guess_plugin_by_name(plugin_name)
+            key = key.lower()
+            if key not in plugin_info.plugin_args:
+                raise KeyError(
+                    "Argument not found: %s:%s" % (plugin_name, key))
+            try:
+                target = parsed[plugin_info.plugin_name]
+            except KeyError:
+                parsed[plugin_info.plugin_name] = target = {}
+            target[key] = value
+        return parsed
+
+
+    #----------------------------------------------------------------------
+    def set_plugin_args(self, plugin_name, plugin_args):
+        """
+        Set the user-defined values for the given plugin arguments.
+
+        :param plugin_name: Plugin name.
+        :type plugin_name: str
+
+        :param plugin_args: Plugin arguments and their user-defined values.
+        :type plugin_args: dict(str -> str)
+
+        :returns: One of the following values:
+             - 0: All values set successfully.
+             - 1: The plugin was not loaded or does not exist.
+             - 2: Some values were not defined for this plugin.
+        """
+        try:
+            plugin_info = self.get_plugin_by_name(plugin_name)
+        except KeyError:
+            return 1
+        target_args = plugin_info.plugin_args
+        status = 0
+        for key, value in plugin_args.iteritems():
+            if key in target_args:
+                target_args[key] = value
+            else:
+                status = 2
+        return status
+
+
+    #----------------------------------------------------------------------
     def get_plugin_manager_for_audit(self, audit):
         """
         Instance an audit-specific plugin manager.
@@ -971,6 +1071,8 @@ class AuditPluginManager (PluginManager):
 
         # Apply the plugin black and white lists, and all the overrides.
         self._PluginManager__plugins = self.__apply_config(auditConfig)
+        for plugin_name, plugin_args in auditConfig.plugin_args.iteritems():
+            self.set_plugin_args(plugin_name, plugin_args)
 
         # Calculate the dependencies.
         self.__calculate_dependencies()

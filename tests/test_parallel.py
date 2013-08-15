@@ -57,8 +57,12 @@ from time import sleep, time
 
 # Tests the parallel execution with random data.
 def test_pmap():
-    with PluginTester():
-        print "Testing parallel execution with random data"
+    print "Testing parallel execution with random data..."
+    with PluginTester(autoinit=False) as t:
+        t.orchestrator_config.use_colors = False
+        t.orchestrator_config.ui_mode = "disabled"
+        t.audit_config.audit_db = "memory://"
+        t.init_environment()
         t_list = thread_list()
         func = lambda x: x
         for i in xrange(20):
@@ -72,8 +76,12 @@ def test_pmap():
 
 # Tests the parallel execution with random data and multiple parameters.
 def test_pmap_multi():
-    with PluginTester():
-        print "Testing parallel execution with random data and multiple parameters"
+    print "Testing parallel execution with random data and multiple parameters..."
+    with PluginTester(autoinit=False) as t:
+        t.orchestrator_config.use_colors = False
+        t.orchestrator_config.ui_mode = "disabled"
+        t.audit_config.audit_db = "memory://"
+        t.init_environment()
         t_list = thread_list()
         def func(*args):
             return sum( x for x in args if x is not None )
@@ -90,8 +98,12 @@ def test_pmap_multi():
 
 # Tests the parallel execution with errors.
 def test_pmap_errors():
-    with PluginTester():
-        print "Testing parallel execution with errors"
+    print "Testing parallel execution with errors..."
+    with PluginTester(autoinit=False) as t:
+        t.orchestrator_config.use_colors = False
+        t.orchestrator_config.ui_mode = "disabled"
+        t.audit_config.audit_db = "memory://"
+        t.init_environment()
         t_list = thread_list()
         def func(x):
             if x & 1:
@@ -109,8 +121,12 @@ def test_pmap_errors():
 
 # Tests the parallel execution with delays.
 def test_pmap_delays():
-    with PluginTester():
-        print "Testing parallel execution with delays"
+    print "Testing parallel execution with delays..."
+    with PluginTester(autoinit=False) as t:
+        t.orchestrator_config.use_colors = False
+        t.orchestrator_config.ui_mode = "disabled"
+        t.audit_config.audit_db = "memory://"
+        t.init_environment()
         t_list = thread_list()
         def func(x):
             ##print "(%d)" % get_ident()
@@ -126,8 +142,12 @@ def test_pmap_delays():
 
 # Tests the parallel execution with large inputs.
 def test_pmap_large_input():
-    with PluginTester():
-        print "Testing parallel execution with large inputs"
+    print "Testing parallel execution with large inputs..."
+    with PluginTester(autoinit=False) as t:
+        t.orchestrator_config.use_colors = False
+        t.orchestrator_config.ui_mode = "disabled"
+        t.audit_config.audit_db = "memory://"
+        t.init_environment()
         pmap(lambda x: x, range(1000))
 
 

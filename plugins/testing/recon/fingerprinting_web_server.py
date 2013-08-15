@@ -226,7 +226,7 @@ class ServerFingerprinting(TestingPlugin):
         #
         # Analyze HTTP protocol
         #
-        m_server_name, m_server_version, m_canonical_name, m_webserver_complete_desc, m_related_webservers, m_others = http_analyzers(m_main_url, self.update_status_step, 100)
+        m_server_name, m_server_version, m_canonical_name, m_webserver_complete_desc, m_related_webservers, m_others = http_analyzers(m_main_url, self.update_status, 100)
 
         Logger.log_more_verbose("Fingerprint - Server: %s | Version: %s" % (m_server_name, m_server_version))
 
@@ -245,7 +245,7 @@ class ServerFingerprinting(TestingPlugin):
 #
 #----------------------------------------------------------------------
 
-def http_analyzers(main_url, update_status_func, part_status=100, number_of_entries=4):
+def http_analyzers(main_url, update_status_func, number_of_entries=4):
     """
     Analyze HTTP headers for detect the web server. Return a list with most possible web servers.
 
@@ -254,9 +254,6 @@ def http_analyzers(main_url, update_status_func, part_status=100, number_of_entr
 
     :param update_status_func: function used to update the status of the process
     :type update_status_func: function
-
-    :param part_status: the part of the global status that represent this function.
-    :type part_status: int
 
     :param number_of_entries: number of resutls tu return for most probable web servers detected.
     :type number_of_entries: int
@@ -364,7 +361,7 @@ def http_analyzers(main_url, update_status_func, part_status=100, number_of_entr
 
 
         # Update the status
-        update_status_func(step=i, total=m_data_len, partial=part_status)
+        update_status_func((float(i) * 100.0) / float(m_data_len))
         Logger.log_more_verbose("Making '%s' test." % (l_wordlist))
         i += 1
 

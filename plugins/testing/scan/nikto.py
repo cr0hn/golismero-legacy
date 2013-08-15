@@ -63,11 +63,12 @@ class NiktoPlugin(TestingPlugin):
         self.update_status(progress = None)
 
         # Get the path to the Nikto scanner.
-        cwd = split(__file__)[0]
-        cwd = abspath(cwd)
+        nikto_dir = split(__file__)[0]
+        nikto_dir = join(nikto_dir, "nikto")
+        nikto_dir = abspath(nikto_dir)
 
         # Get the path to the Nikto script.
-        nikto_script = join(cwd, "nikto.pl")
+        nikto_script = join(nikto_dir, "nikto.pl")
 
         # If it doesn't exist, try the system default.
         if not exists(nikto_script):
@@ -80,7 +81,7 @@ class NiktoPlugin(TestingPlugin):
 
         # Get the path to the configuration file.
         config = Config.plugin_args["config"]
-        config = join(cwd, config)
+        config = join(nikto_dir, config)
         config = abspath(config)
 
         # If it doesn't exist, try the system default.
@@ -88,7 +89,7 @@ class NiktoPlugin(TestingPlugin):
             config = "/etc/nikto.conf"
 
             # If it still doesn't exist, abort.
-            if not exists(command):
+            if not exists(config):
                 Logger.log_error("Nikto config file not found! File: %s" % config)
                 return
 
@@ -266,13 +267,14 @@ class NiktoPlugin(TestingPlugin):
                 output_filename = cygwin_to_win_path(output_filename)
             with open(output_filename, "rU") as f:
                 csv_reader = reader(f)
-                csv_reader.next()  # ignore the first line
                 for row in csv_reader:
                     try:
 
                         # Each row (except for the first) has always
                         # the same 7 columns, but some may be empty.
-                        host, ip, port, vuln_tag, method, path, text = row
+                        if len(row) < 7:
+                            continue
+                        host, ip, port, vuln_tag, method, path, text = row[:7]
 
                         # Report domain names and IP addresses.
                         if (info is None or host != info.hostname) and host not in hosts_seen:

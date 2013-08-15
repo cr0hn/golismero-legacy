@@ -71,7 +71,7 @@ def test_cachedb_consistency():
 
         print "Testing disk cache compacting and dumping..."
         disk.compact()
-        disk.dump("cachedb.sql")
+        disk.dump("test_cachedb.sql")
 
         print "Cleaning up the memory cache..."
         mem.clean(audit)

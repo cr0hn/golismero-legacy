@@ -45,12 +45,14 @@ if not here:
     here = os.path.curdir
 else:
     os.chdir(here)
+here = os.path.abspath(here)
 
-# Fetch the banner printer and the rest of the metadata from golismero.py.
-# This will also check the Python version.
-sys.path.insert(0, os.path.abspath(here))
-golismero_launcher = imp.load_source('golismero_launcher', 'golismero.py')
-from golismero_launcher import show_banner
+# Fix the module path.
+thirdparty_libs = os.path.join(here, "thirdparty_libs")
+sys.path.insert(0, thirdparty_libs)
+sys.path.insert(0, here)
+
+# Fetch the banner printer and the metadata form golismero itself.
 from golismero import *
 
 # Show the banner.

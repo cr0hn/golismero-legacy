@@ -47,7 +47,7 @@ except NameError:
 
 from golismero.api.config import Config
 from golismero.api.net.dns import DNS
-from golismero.common import AuditConfig
+from golismero.common import AuditConfig, OrchestratorConfig
 from golismero.main.testing import PluginTester
 
 from socket import gethostbyname, gethostbyname_ex
@@ -55,10 +55,13 @@ from socket import gethostbyname, gethostbyname_ex
 
 def test_scope_example():
     print "Testing scope with: www.example.com"
+    main_config = OrchestratorConfig()
+    main_config.ui_mode = "disabled"
+    main_config.use_colors = False
     audit_config = AuditConfig()
     audit_config.targets = ["www.example.com"]
     audit_config.include_subdomains = True
-    with PluginTester(audit_config = audit_config) as t:
+    with PluginTester(main_config, audit_config) as t:
 
         assert None not in Config.audit_scope
         assert "" not in Config.audit_scope
@@ -95,10 +98,13 @@ def test_scope_example():
 
 def test_scope_localhost():
     print "Testing scope with: localhost"
+    main_config = OrchestratorConfig()
+    main_config.ui_mode = "disabled"
+    main_config.use_colors = False
     audit_config = AuditConfig()
     audit_config.targets = ["localhost"]
     audit_config.include_subdomains = True
-    with PluginTester(audit_config = audit_config) as t:
+    with PluginTester(main_config, audit_config) as t:
 
         assert None not in Config.audit_scope
         assert "" not in Config.audit_scope
