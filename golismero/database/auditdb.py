@@ -1242,35 +1242,49 @@ class AuditSQLiteDB (BaseAuditDB):
         # Get the filename from the connection string.
         parsed = urlparse.urlparse(audit_config.audit_db)
         filename = posixpath.join(parsed.netloc, parsed.path)
+        if filename.endswith(posixpath.sep):
+            filename = filename[:-len(posixpath.sep)]
         if path.sep != posixpath.sep:
             filename.replace(posixpath.sep, path.sep)
-        if filename.endswith(posixpath.sep):
-            filename = filename[:-1]
+        if "%" in filename:
+            filename = urlparse.unquote(filename)
 
-        # If we have an old database...
+        # See if we have a filename, and an old database file.
         have_file = filename and path.exists(filename)
-        if have_file:
 
-            # Open the database.
-            self.__filename = filename
-            self.__db = sqlite3.connect(filename)
+        # If we have a filename...
+        if filename:
 
-            # Get the audit name from the database.
-            audit_name = self.__get_audit_name_from_database()
+            # If we have an old database...
+            if have_file:
 
-            # If the database contains an audit name...
-            if audit_name:
+                # Open the database.
+                self.__filename = filename
+                self.__db = sqlite3.connect(filename)
 
-                # If the user didn't set one, use this audit name.
-                if not audit_config.audit_name:
-                    audit_config.audit_name = audit_name
+                # Get the audit name from the database.
+                audit_name = self.__get_audit_name_from_database()
 
-                # If the user did set one but they don't match, fail.
-                elif audit_config.audit_name != audit_name:
-                    raise IOError(
-                        "Database belongs to another audit:\n\t%r vs. %r" %
-                        (self.audit_name, audit_config.audit_name)
-                    )
+                # If the database contains an audit name...
+                if audit_name:
+
+                    # If the user didn't set one, use this audit name.
+                    if not audit_config.audit_name:
+                        audit_config.audit_name = audit_name
+
+                    # If the user did set one but they don't match, fail.
+                    elif audit_config.audit_name != audit_name:
+                        raise IOError(
+                            "Database belongs to another audit:\n\t%r vs. %r" %
+                            (self.audit_name, audit_config.audit_name)
+                        )
+
+            # Just the filename, no file.
+            # If the user didn't set an audit name...
+            elif not audit_config.audit_name:
+
+                # Guess the audit name from the file name.
+                audit_config.audit_name = path.splitext(path.basename(filename))[0]
 
         # Call the superclass constructor.
         # This generates an audit name if we don't have any,
