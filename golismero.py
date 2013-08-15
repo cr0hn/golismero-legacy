@@ -549,8 +549,9 @@ def main():
                     target_args[key] = getpass(msg)
 
         # Save the plugin arguments for the Orchestrator and the Audit.
-        cmdParams.plugin_args   = plugin_args
-        auditParams.plugin_args = plugin_args
+        cmdParams.plugin_args = plugin_args
+        if P.targets:
+            auditParams.plugin_args = plugin_args
 
         # Set the plugin arguments before loading the UI plugin.
         for plugin_name, plugin_args in cmdParams.plugin_args.iteritems():
