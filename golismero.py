@@ -87,6 +87,7 @@ import datetime
 
 from collections import defaultdict
 from ConfigParser import RawConfigParser
+from getpass import getpass
 from os import getenv, getpid
 from thread import get_ident
 
@@ -240,12 +241,6 @@ def cmdline_parser():
     gr_plugins.add_argument("--plugin-info", metavar="NAME", dest="plugin_name", help="show plugin info and quit")
 
     return parser
-
-
-#------------------------------------------------------------------------------
-def prompt_password(msg):
-    # TODO: disable the keyboard echo
-    return raw_input(msg)
 
 
 #------------------------------------------------------------------------------
@@ -551,7 +546,7 @@ def main():
                     else:
                         msg = "Enter password for %s: "
                         msg %= plugin_info.display_name
-                    target_args[key] = prompt_password(msg)
+                    target_args[key] = getpass(msg)
 
         # Save the plugin arguments for the Orchestrator and the Audit.
         cmdParams.plugin_args   = plugin_args
