@@ -29,16 +29,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.config import Config
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.vulnerability import Vulnerability
+from golismero.api.logger import Logger
 from golismero.api.plugin import TestingPlugin
 
 from threading import Event
+from traceback import format_exc
 from functools import partial
 
 # Import the OpenVAS libraries from the plugin data folder.
 # FIXME the library should go to thirdparty_libs once it's published!
 import os, sys
 sys.path.insert(0, os.path.abspath(os.path.split(__file__)[0]))
-from openvas_lib import VulnscanManager
+from openvas_lib import VulnscanManager, VulnscanException
 
 
 #------------------------------------------------------------------------------
@@ -77,15 +79,19 @@ class OpenVASPlugin(TestingPlugin):
             except Exception:
                 m_timeout = None
 
-        # Get the target address.
-        m_target  = info.address
-
         # Connect to the scanner.
-        m_scanner = VulnscanManager(m_host, m_user, m_password, m_port, m_timeout)
+        try:
+            m_scanner = VulnscanManager(m_host, m_user, m_password, m_port, m_timeout)
+        except VulnscanException, e:
+            t = format_exc()
+            Logger.log_error("Error connecting to OpenVAS, aborting scan!")
+            #Logger.log_error_verbose(str(e))
+            Logger.log_error_more_verbose(t)
+            return
 
         # Launch the scanner.
         m_scan_id = m_scanner.launch_scan(
-            m_target,
+            target = info.address,
             profile = m_profile,
             callback_end = partial(lambda x: x.set(), m_event),
             callback_progress = self.update_status
@@ -100,11 +106,30 @@ class OpenVASPlugin(TestingPlugin):
             m_openvas_results = m_scanner.get_results(m_scan_id)
 
             # Convert the scan results to the GoLismero data model.
-            #
-            # XXX TODO
-            #
+            return self.parse_results(info, m_openvas_results)
 
         finally:
 
             # Clean up.
             m_scanner.delete_scan(m_scan_id)
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def parse_results(ip, openvas_results):
+        """
+        Convert the OpenVAS scan results to the GoLismero data model.
+
+        :param ip: (Optional) IP address to link the vulnerabilities to.
+        :type ip: IP | None
+
+        :param openvas_results: OpenVAS scan results.
+        :type openvas_results: list(OpenVASResult)
+
+        :returns: Scan results converted to the GoLismero data model.
+        :rtype: list(Data)
+        """
+        #
+        # XXX TODO
+        #
+        return []

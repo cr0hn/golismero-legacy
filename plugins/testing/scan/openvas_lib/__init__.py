@@ -117,7 +117,6 @@ def generate_random_string(length = 30):
 #------------------------------------------------------------------------------
 class VulnscanException(Exception):
     "Base class for OpenVAS exceptions."
-    pass
 
 
 #------------------------------------------------------------------------------
@@ -125,21 +124,9 @@ class VulnscanAuthFail(VulnscanException):
     "Authentication failure."
 
 
-    #--------------------------------------------------------------------------
-    def __init__(self, message):
-        self.message = message
-        super(VulnscanAuthFail, self).__init__()
-
-
 #------------------------------------------------------------------------------
 class VulnscanServerError(VulnscanException):
     "Error message from the OpenVAS server."
-
-
-    #--------------------------------------------------------------------------
-    def __init__(self, message):
-        self.message = message
-        super(VulnscanServerError, self).__init__()
 
 
 #------------------------------------------------------------------------------
@@ -147,21 +134,9 @@ class VulnscanClientError(VulnscanException):
     "Error message from the OpenVAS client."
 
 
-    #--------------------------------------------------------------------------
-    def __init__(self, message):
-        self.message = message
-        super(VulnscanClientError, self).__init__()
-
-
 #------------------------------------------------------------------------------
 class VulnscanProfileError(VulnscanException):
     "Profile error."
-
-
-    #--------------------------------------------------------------------------
-    def __init__(self, message):
-        self.message = message
-        super(VulnscanClientError, self).__init__()
 
 
 #------------------------------------------------------------------------------
@@ -169,21 +144,9 @@ class VulnscanTargetError(VulnscanException):
     "Target related errors."
 
 
-    #--------------------------------------------------------------------------
-    def __init__(self, message):
-        self.message = message
-        super(VulnscanClientError, self).__init__()
-
-
 #------------------------------------------------------------------------------
 class VulnscanScanError(VulnscanException):
     "Task related errors."
-
-
-    #--------------------------------------------------------------------------
-    def __init__(self, message):
-        self.message = message
-        super(VulnscanClientError, self).__init__()
 
 
 #------------------------------------------------------------------------------
@@ -253,7 +216,7 @@ class VulnscanManager(object):
         try:
             self.__manager = OMPv4(host, user, password, port, timeout=m_time_out)
         except ServerError, e:
-            raise VulnscanServerError("Error while connecting to the server: %s" % str(e))
+            raise VulnscanServerError("Error while connecting to the server: %s" % e.message)
         except AuthFailedError:
             raise VulnscanAuthFail("Error while trying to authenticate into the server.")
 
@@ -334,9 +297,9 @@ class VulnscanManager(object):
 
         # Create the target
         try:
-            m_target_id = self.__manager.create_target(m_target_name, target, "Temportal target from golismero OpenVAS plugin")
+            m_target_id = self.__manager.create_target(m_target_name, target, "Temporal target from golismero OpenVAS plugin")
         except ServerError, e:
-            raise VulnscanTargetError("The target already exits on the server. Error: %s" % str(e))
+            raise VulnscanTargetError("The target already exits on the server. Error: %s" % e.message)
 
         # Get the profile ID by their name
         m_profile_id      = None
@@ -344,7 +307,7 @@ class VulnscanManager(object):
             tmp           = self.__manager.get_configs_ids(profile)
             m_profile_id  = tmp[profile]
         except ServerError, e:
-            raise VulnscanProfileError("The profile select not exits int the server. Error: %s" % str(e))
+            raise VulnscanProfileError("The profile select not exits int the server. Error: %s" % e.message)
         except KeyError:
             raise VulnscanProfileError("The profile select not exits int the server")
 
@@ -353,13 +316,13 @@ class VulnscanManager(object):
         try:
             m_task_id = self.__manager.create_task(m_job_name, m_target_id, config=m_profile_id, comment="scan from golismero OpenVAS plugin")
         except ServerError, e:
-            raise VulnscanScanError("The target selected not exits in the server. Error: %s" % str(e))
+            raise VulnscanScanError("The target selected doesnn't exist in the server. Error: %s" % e.message)
 
         # Start the scan
         try:
             self.__manager.start_task(m_task_id)
         except ServerError, e:
-            raise VulnscanScanError("Unknown error while try to start the task '%s'. Error: %s" % (m_task_id, str(e)))
+            raise VulnscanScanError("Unknown error while try to start the task '%s'. Error: %s" % (m_task_id, e.message))
 
         # Callback is set?
         if call_back_end or call_back_progress:
@@ -412,7 +375,7 @@ class VulnscanManager(object):
         try:
             m_response = self.__manager.make_xml_request('<get_results task_id="%s"/>' % scan_id, xml_result=True)
         except ServerError, e:
-            raise VulnscanServerError("Can't get the results for the task %s. Error: %s" % (scan_id, str(e)))
+            raise VulnscanServerError("Can't get the results for the task %s. Error: %s" % (scan_id, e.message))
 
         return self._transform(m_response)
 
@@ -581,7 +544,7 @@ class VulnscanManager(object):
 # Some code and ideas of the next code has been taken from the official
 # OpenVAS library:
 #
-# https://pypi.python.org/pypi/openvas.omplib
+# https://pypi.python.org/pypi/OpenVAS.omplib
 #
 #
 #
@@ -632,7 +595,7 @@ class OMPv4(object):
     ..note:
         This class is based in code from the original OpenVAS plugin:
 
-        https://pypi.python.org/pypi/openvas.omplib
+        https://pypi.python.org/pypi/OpenVAS.omplib
 
     ..warning:
         This code is only compatible with OMP 4.0.
@@ -646,16 +609,16 @@ class OMPv4(object):
         """
         Open a connection to the manager and authenticate the user.
 
-        :param host: string with host where OpenVas manager are running.
+        :param host: string with host where OpenVAS manager are running.
         :type host: str
 
-        :param username: user name in the OpenVas manager.
+        :param username: user name in the OpenVAS manager.
         :type username: str
 
         :param password: user password.
         :type password: str
 
-        :param port: port of the OpenVas Manager
+        :param port: port of the OpenVAS Manager
         :type port: int
 
         :param timeout: timeout for connection, in seconds.
@@ -686,7 +649,7 @@ class OMPv4(object):
         try:
             sock.connect((host, int(port)))
         except socket.error, e:
-            raise ServerError("Error while connection to the server. Error: %s" % str(e))
+            raise ServerError(str(e))
 
         # Create and configure object
         cls         = OMPv4()
