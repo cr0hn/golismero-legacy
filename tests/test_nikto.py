@@ -54,6 +54,8 @@ from golismero.main.testing import PluginTester
 def test_nikto():
     plugin_name = "testing/scan/nikto"
     target = "www.example.com"
+    ##csv_file = "test_nikto.csv"
+    csv_file = "terra.csv"
     print "Testing plugin: %s" % plugin_name
     audit_config = AuditConfig()
     audit_config.targets = [target]
@@ -65,7 +67,7 @@ def test_nikto():
         Config._context._PluginContext__plugin_info = plugin_info
         try:
             r = plugin.parse_nikto_results(BaseUrl("http://%s/" % target),
-                                           path.join(here, "test_nikto.csv"))
+                                           path.join(here, csv_file))
             for d in r:
                 print
                 print repr(d)

@@ -108,7 +108,12 @@ def test():
 
 # Validate the audit database.
 def validate(audit = "test_audit"):
-    disk = AuditDB(audit, "sqlite://%s.db" % audit)
+    audit = AuditConfig()
+    audit.from_dictionary({
+        "audit_name": audit,
+        "audit_db": "sqlite://%s.db" % audit,
+    })
+    disk = AuditDB(audit)
     try:
 
         # Make sure all objects completed all stages.

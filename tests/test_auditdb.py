@@ -52,6 +52,7 @@ from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.text.text_utils import generate_random_string
 from golismero.database.auditdb import AuditDB, BaseAuditDB
+from golismero.common import AuditConfig
 import time
 import os
 import inspect
@@ -87,8 +88,18 @@ def test_auditdb_consistency():
         os.unlink("fake_audit.db")
     except Exception:
         pass
-    mem  = AuditDB("fake_audit", "memory://")
-    disk = AuditDB("fake_audit", "sqlite://fake_audit.db")
+    audit = AuditConfig()
+    audit.from_dictionary({
+        "audit_name": "fake_audit",
+        "audit_db": "memory://",
+    })
+    mem  = AuditDB(audit)
+    audit = AuditConfig()
+    audit.from_dictionary({
+        "audit_name": "fake_audit",
+        "audit_db": "sqlite://fake_audit.db",
+    })
+    disk = AuditDB(audit)
     try:
 
         print "Testing consistency of in-memory and disk databases..."
@@ -258,7 +269,12 @@ def test_auditdb_stress():
     helper_auditdb_stress(1000)
 
 def helper_auditdb_stress(n):
-    disk = AuditDB("fake_audit", "sqlite://fake_audit.db")
+    audit = AuditConfig()
+    audit.from_dictionary({
+        "audit_name": "fake_audit",
+        "audit_db": "sqlite://fake_audit.db",
+    })
+    disk = AuditDB(audit)
     try:
         print "  Testing %d elements..." % (n * 3)
         t1 = time.time()
@@ -327,7 +343,12 @@ def helper_auditdb_stress(n):
 
 
 def test_auditdb_dump():
-    disk = AuditDB("fake_audit", "sqlite://fake_audit.db")
+    audit = AuditConfig()
+    audit.from_dictionary({
+        "audit_name": "fake_audit",
+        "audit_db": "sqlite://fake_audit.db",
+    })
+    disk = AuditDB(audit)
     try:
 
         print "Testing the audit database dump..."
