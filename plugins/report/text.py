@@ -128,7 +128,7 @@ class TextReport(ReportPlugin):
             m_resource   = Database.get_many( Database.keys(data_type=data_type, data_subtype=data_subtype))
         else:
             # slow but lean method
-            m_resource   = Database.iterate(data_type=data_type, data_subtype=data_subtype)
+            m_resource   = list(Database.iterate(data_type=data_type, data_subtype=data_subtype))
 
         return m_resource
 
