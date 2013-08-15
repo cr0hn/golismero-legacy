@@ -266,13 +266,14 @@ class NiktoPlugin(TestingPlugin):
                 output_filename = cygwin_to_win_path(output_filename)
             with open(output_filename, "rU") as f:
                 csv_reader = reader(f)
-                csv_reader.next()  # ignore the first line
                 for row in csv_reader:
                     try:
 
                         # Each row (except for the first) has always
                         # the same 7 columns, but some may be empty.
-                        host, ip, port, vuln_tag, method, path, text = row
+                        if len(row) < 7:
+                            continue
+                        host, ip, port, vuln_tag, method, path, text = row[:7]
 
                         # Report domain names and IP addresses.
                         if (info is None or host != info.hostname) and host not in hosts_seen:
