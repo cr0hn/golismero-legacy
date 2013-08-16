@@ -144,6 +144,9 @@ class NiktoPlugin(TestingPlugin):
             if value:
                 args.extend(["-" + option, value])
 
+        # Get the current folder, so we can restore it later.
+        cwd = os.getcwd()
+
         # On Windows we can't open a temporary file twice (although it's
         # actually Python who won't let us). Note that there is no exploitable
         # race condition here, because on Windows you can only create
@@ -155,7 +158,11 @@ class NiktoPlugin(TestingPlugin):
                 if use_cygwin:
                     output = win_to_cygwin_path(output)
                 output_file.close()
-                return self.run_nikto(info, output, command, args)
+                try:
+                    os.chdir(nikto_dir)
+                    return self.run_nikto(info, output, command, args)
+                finally:
+                    os.chdir(cwd)
             finally:
                 os.unlink(output_file.name)
 
@@ -165,7 +172,11 @@ class NiktoPlugin(TestingPlugin):
         else:
             with NamedTemporaryFile(suffix = ".csv") as output_file:
                 output = output_file.name
-                return self.run_nikto(info, output, command, args)
+                try:
+                    os.chdir(nikto_dir)
+                    return self.run_nikto(info, output, command, args)
+                finally:
+                    os.chdir(cwd)
 
 
     #--------------------------------------------------------------------------
