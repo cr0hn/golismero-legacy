@@ -81,17 +81,18 @@ class NiktoPlugin(TestingPlugin):
 
         # Get the path to the configuration file.
         config = Config.plugin_args["config"]
-        config = join(nikto_dir, config)
-        config = abspath(config)
+        if config:
+            config = join(nikto_dir, config)
+            config = abspath(config)
 
-        # If it doesn't exist, try the system default.
-        if not exists(config):
-            config = "/etc/nikto.conf"
-
-            # If it still doesn't exist, abort.
+            # If it doesn't exist, try the system default.
             if not exists(config):
-                Logger.log_error("Nikto config file not found! File: %s" % config)
-                return
+                config = "/etc/nikto.conf"
+
+                # If it still doesn't exist, abort.
+                if not exists(config):
+                    Logger.log_error("Nikto config file not found! File: %s" % config)
+                    return
 
         # On Windows, we must always call Perl explicitly.
         # On POSIX, only if the script is not marked as executable.
@@ -128,7 +129,6 @@ class NiktoPlugin(TestingPlugin):
         # Build the command line arguments.
         # The -output argument will be filled by run_nikto.
         args = [
-            "-config", config,
             "-host", info.hostname,
             "-ssl" if info.is_https else "-nossl",
             "-port", str(info.parsed_url.port),
@@ -137,6 +137,9 @@ class NiktoPlugin(TestingPlugin):
             "-nointeractive",
             ##"-useproxy",
         ]
+        if config:
+            args.insert(0, config)
+            args.insert(0, "-config")
         if command != nikto_script:
             args.insert(0, nikto_script)
         for option in ("Pause", "timeout", "Tuning"):
