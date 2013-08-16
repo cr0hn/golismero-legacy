@@ -90,7 +90,13 @@ def main(output_file):
                     # Resource info
                     'resource' : {
                         'URI'       : "http",
-                        'main_info' : "http://www.mytest.site.com"
+                        'main_info' : "http://www.mytest.site.com",
+                        'prop' : [
+                            {
+                                'name'  : '',
+                                'value' : ''
+                             }
+                        ]
                     },
 
                     # Vulns

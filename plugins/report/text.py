@@ -128,7 +128,7 @@ class TextReport(ReportPlugin):
             m_resource   = Database.get_many( Database.keys(data_type=data_type, data_subtype=data_subtype))
         else:
             # slow but lean method
-            m_resource   = Database.iterate(data_type=data_type, data_subtype=data_subtype)
+            m_resource   = list(Database.iterate(data_type=data_type, data_subtype=data_subtype))
 
         return m_resource
 
@@ -149,7 +149,7 @@ class TextReport(ReportPlugin):
         print >>self.__fd, "\n-- %s -- "% self.__colorize("Target summary", "yellow")
         print >>self.__fd, "   +",
 
-        m_table  = GolismeroTable(init_spaces=3)
+        m_table  = GolismeroTable(init_spaces=3, color=self.__color)
 
         m_tmp_data = self.__common_get_resources(data_type=Data.TYPE_INFORMATION, data_subtype=Information.INFORMATION_WEB_SERVER_FINGERPRINT)
 
@@ -193,7 +193,7 @@ class TextReport(ReportPlugin):
 
         m_v = self.__vuln_genereral_displayer(self.__common_get_resources(data_type=Data.TYPE_VULNERABILITY))
 
-        m_table = GolismeroTable(title="Vulnerabilities", init_spaces=0)
+        m_table = GolismeroTable(title="Vulnerabilities", init_spaces=0, color=self.__color)
         if m_v:
             m_table.add_row(m_v)
 
@@ -299,7 +299,7 @@ class TextReport(ReportPlugin):
                 l_b.write(" [%s] %s" % (self.__colorize('{:^5}'.format(i), "Blue"), l_resource_info))
 
                 # Displayer table
-                l_table = GolismeroTable(init_spaces=9)
+                l_table = GolismeroTable(init_spaces=9, color=self.__color)
 
                 m_valid_params = set()
 
@@ -421,7 +421,7 @@ class GolismeroTable:
 
 
     #--------------------------------------------------------------------------
-    def __init__(self, title="", init_spaces_title=0, init_spaces=8, title_color = "red"):
+    def __init__(self, title="", init_spaces_title=0, init_spaces=8, title_color = "red", color=True):
         """
         :param init_spaces: inital spaces
         :type init_spaces: int
@@ -429,6 +429,7 @@ class GolismeroTable:
         :param title: title of table
         :type title: str
         """
+        self.__color             = color
         self.__text              = StringIO()
         self.__title             = StringIO()
         self.__title_length      = len(title) + 5 # The 5 is for the initial and ends characters
@@ -439,6 +440,12 @@ class GolismeroTable:
             self.__title.write("+%s+\n" % ("-" * (len(title) + 3)))
             self.__title.write("| %s  |\n" % (self.__colorize(title, title_color)))
             self.__title.write("+%s+\n" % ("-" * (len(title) + 3)))
+
+    #--------------------------------------------------------------------------
+    def __colorize(self, txt, level_or_color):
+        if self.__color:
+            return colorize(txt, level_or_color)
+        return txt
 
 
     #--------------------------------------------------------------------------

@@ -261,7 +261,21 @@ class DNSBruteforcer(TestingPlugin):
             self.state.set(m_domain, True)
 
             Logger.log_verbose("DNS analyzer plugin found %d subdomains" % len(m_return))
-            Logger.log_more_verbose("\t" + "\n\t".join(m_return))
+
+
+            # Write the info as more user friendly
+            if Logger.MORE_VERBOSE:
+                m_tmp        = []
+                m_tmp_append = m_tmp.append
+                for x in m_return:
+                    if getattr(x, "address", False):
+                        m_tmp_append("%s (%s)" % (getattr(x, "address"), str(x)))
+                    elif getattr(x, "target", False):
+                        m_tmp_append("%s (%s)" % (getattr(x, "target"), str(x)))
+                    else:
+                        m_tmp_append(str(x))
+
+                Logger.log_more_verbose("Subdomains found: \n\t+ %s" % "\n\t+ ".join(m_tmp))
 
         return m_return
 

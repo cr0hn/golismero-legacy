@@ -59,6 +59,68 @@ class _DNS(Singleton):
 
     REQUEST_TIMEOUT = 2.0 # In seconds
 
+    # Public list of free DNS servers.
+    #
+    # This list was taken from:
+    #
+    # http://pcsupport.about.com/od/tipstricks/a/free-public-dns-servers.htm
+    #
+    PUBLIC_NAMESERVERS = [
+        # Level 3 (http://www.level3.com/)
+        "209.244.0.3",
+        "209.244.0.4",
+
+        # Google
+        "8.8.8.8",
+        "8.8.4.4",
+
+        # Security (http://www.securly.com/)
+        "184.169.143.224",
+        "184.169.161.155",
+
+        # Comodo Secure DNS (http://www.comodo.com/secure-dns/)
+        "8.26.56.26",
+        "8.20.247.20",
+
+        # OpenDNS Home (http://www.opendns.com/)
+        "208.67.222.222",
+        "208.67.220.220",
+
+        # DNS Advantage (http://www.neustar.biz/enterprise/dns-services/free-recursive-dns)
+        "156.154.70.1",
+        "156.154.71.1",
+
+        # Norton ConnectSafe (https://dns.norton.com/dnsweb/faq.do)
+        "198.153.192.40",
+        "198.153.194.40",
+
+        # SafeDNS (https://www.safedns.com/features/)
+        "195.46.39.39",
+        "195.46.39.40",
+
+        # OpenNIC (http://www.opennicproject.org/)
+        "74.207.247.4",
+        "64.0.55.201",
+
+        # Public -Root (http://public-root.com/root-server-check/index.htm)
+        "199.5.157.131",
+        "208.71.35.137",
+
+        # SmartViper (http://www.markosweb.com/free-dns/)
+        "208.76.50.50",
+        "208.76.51.51",
+
+        # Dyn (http://dyn.com/support/internet-guide-setup/)
+        "216.146.35.35",
+        "216.146.36.36",
+
+        # Hurricane Electric (http://he.net/)
+        "74.82.42.42",
+
+        # puntCAT (http://www.servidordenoms.cat/)
+        "109.69.8.51",
+    ]
+
 
     #----------------------------------------------------------------------
     def check_tcp_dns(self, address, dns_port=53):
@@ -897,7 +959,7 @@ class _DNS(Singleton):
         :param auto_resolve: configure this function to transform de dnslib register to the golismero register.
         :type auto_resolve: bool
 
-        :return: a list with the DnsRegisters
+        :return: a list with the DnsRegisters. Returned list can be empty, if a error has occurred.
         :type: list(DnsRegister)
         """
         if not isinstance(register_type, basestring):
@@ -919,6 +981,10 @@ class _DNS(Singleton):
             m_query_obj.nameservers = nameservers
         else:
             m_query_obj             = dns.resolver.Resolver(configure=True)
+
+            # Append the free public DNS servers for avoid errors when the DNS servers
+            # configured in /etc/resolv.conf fails.
+            m_query_obj.nameservers.extend(self.PUBLIC_NAMESERVERS)
 
         # Set timeouts
         m_query_obj.timeout         = self.REQUEST_TIMEOUT
