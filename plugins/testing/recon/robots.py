@@ -145,7 +145,6 @@ class Robots(TestingPlugin):
             # Update status
             progress = (float(m_step * 60) / m_total) + 40.0
             self.update_status(progress=progress)
-            Logger.log_verbose("Checking URL %d/%d" % (m_step, m_lines_count))
 
             # Remove comments
             m_octothorpe = m_line.find('#')
@@ -209,17 +208,18 @@ class Robots(TestingPlugin):
         # No tricky error page, assume the status codes work
         else:
             for l_url in set(m_discovered_urls):
-                l_url = fix_url(l_url, m_url)
-                if l_url in Config.audit_scope:
-                    try:
-                        l_p = HTTP.get_url(l_url, callback=self.check_response)
-                    except NetworkException:
-                        continue
-                    if l_p:
-                        m_result = Url(l_url, referer=m_url)
-                        m_result.add_information(l_p)
-                        m_return.append(m_result)
-                        m_return.append(l_p)
+                l_url = fix_url(l_url, m_url)   # XXX FIXME
+                try:
+                    l_p = HTTP.get_url(l_url, callback=self.check_response)
+                except NetworkOutOfScope:
+                    continue
+                except NetworkException:
+                    continue
+                if l_p:
+                    m_result = Url(l_url, referer=m_url)
+                    m_result.add_information(l_p)
+                    m_return.append(m_result)
+                    m_return.append(l_p)
 
         if m_return:
             Logger.log_more_verbose("Robots - discovered %s URLs" % len(m_return))
