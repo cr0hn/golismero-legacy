@@ -191,7 +191,7 @@ class Robots(TestingPlugin):
             for l_url in set(m_discovered_urls):
                 l_url = fix_url(l_url, m_url)
                 if l_url in Config.audit_scope:
-                    l_p = HTTP.get_url(l_url, callback=self.check_response)
+                    l_p = HTTP.get_url(l_url, callback=self.check_response)  # FIXME handle exceptions!
                     if l_p:
                         match[l_url] = l_p
                         m_analyzer.append(l_p.data, url=l_url)

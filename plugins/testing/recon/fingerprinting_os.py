@@ -242,10 +242,10 @@ class OSFingerprinting(TestingPlugin):
         # as upper URL.
 
         # Original
-        m_response_orig  = HTTP.get_url(m_first_link, callback=self.check_response)
+        m_response_orig  = HTTP.get_url(m_first_link, callback=self.check_response)  # FIXME handle exceptions!
         discard_data(m_response_orig)
         # Uppercase
-        m_response_upper = HTTP.get_url(m_first_link.upper(), callback=self.check_response)
+        m_response_upper = HTTP.get_url(m_first_link.upper(), callback=self.check_response)  # FIXME handle exceptions!
         discard_data(m_response_upper)
         # Compare them
         m_orig_data      = m_response_orig.raw_response  if m_response_orig  else ""

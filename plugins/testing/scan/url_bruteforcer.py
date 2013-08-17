@@ -573,10 +573,10 @@ def get_http_method(url):
     If both are seem more than 90%, the response are the same and HEAD method are not allowed.
     """
 
-    m_head_response = HTTP.get_url(url, method="HEAD")
+    m_head_response = HTTP.get_url(url, method="HEAD")  # FIXME handle exceptions!
     discard_data(m_head_response)
 
-    m_get_response  = HTTP.get_url(url)
+    m_get_response  = HTTP.get_url(url)  # FIXME handle exceptions!
     discard_data(m_get_response)
 
     # Check if HEAD reponse is different that GET response, to ensure that results are valids
@@ -635,7 +635,7 @@ def get_error_page(url):
     m_error_url      = "%s%s" % (url, generate_random_string())
 
     # Get the request
-    m_error_response = HTTP.get_url(m_error_url)
+    m_error_response = HTTP.get_url(m_error_url)  # FIXME handle exceptions!
     discard_data(m_error_response)
     m_error_response = m_error_response.data
 
