@@ -119,11 +119,12 @@ class ConsoleUIPlugin(UIPlugin):
                     if m_progress is not None:
                         m_progress_h   = int(m_progress)
                         m_progress_l   = int((m_progress - float(m_progress_h)) * 100)
-                        m_progress_txt = colorize("[%3s.%.2i%%]" % (m_progress_h, m_progress_l), "middle")
+                        m_progress_txt = colorize("%3s.%.2i%%" % (m_progress_h, m_progress_l), "middle")
+                        m_progress_txt = m_progress_txt + " percent done..."
                     else:
-                        m_progress_txt = colorize("[*]", "middle")
+                        m_progress_txt = "Working..."
 
-                    m_text = "%s %s: Working..." % (m_progress_txt, m_plugin_name)
+                    m_text = "[*] %s:%s" % (m_plugin_name, m_progress_txt)
 
                     Console.display(m_text)
 
