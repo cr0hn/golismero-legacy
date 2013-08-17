@@ -32,7 +32,7 @@ from golismero.api.data.resource.url import Url
 from golismero.api.logger import Logger
 from golismero.api.net import NetworkException
 from golismero.api.net.scraper import extract_from_html, extract_from_text
-from golismero.api.net.web_utils import download
+from golismero.api.net.web_utils import download, parse_url
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist import WordListLoader
 
@@ -59,9 +59,10 @@ class Spider(TestingPlugin):
 
         # Check depth
         if Config.audit_config.depth is not None and m_depth > Config.audit_config.depth:
+            Logger.log_more_verbose("Spider depth level exceeded for URL: %s" % m_url)
             return m_return
 
-        Logger.log_verbose("Spidering URL: '%s'" % m_url)
+        Logger.log_verbose("Spidering URL: %r" % m_url)
 
         # Check if need follow first redirect
         p = None
@@ -69,13 +70,11 @@ class Spider(TestingPlugin):
             allow_redirects = Config.audit_config.follow_redirects or \
                              (m_depth == 0 and Config.audit_config.follow_first_redirect)
             p = download(m_url, self.check_download, allow_redirects=allow_redirects)
+            if not p:
+                return m_return
 
         except NetworkException,e:
-            Logger.log_more_verbose("Spider - error while processing: '%s': %s" % (m_url, str(e)))
-
-        # If error p == None => return
-        if not p:
-            return m_return
+            Logger.log_more_verbose("Error while processing %r: %s" % (m_url, str(e)))
 
         # Send back the data
         m_return.append(p)
@@ -87,15 +86,37 @@ class Spider(TestingPlugin):
             m_links = extract_from_html(p.raw_data, m_url)
         else:
             m_links = extract_from_text(p.raw_data, m_url)
+        try:
+            m_links.remove(m_url)
+        except Exception:
+            pass
 
         # Do not follow URLs that contain certain keywords
         m_forbidden = WordListLoader.get_wordlist(Config.plugin_config["wordlist_no_spider"])
+        m_urls_allowed = [
+            url for url in m_links if not any(x in url for x in m_forbidden)
+        ]
+        m_urls_not_allowed = m_links.difference(m_urls_allowed)
+        if m_urls_not_allowed:
+            Logger.log_more_verbose("Skipped forbidden URLs:\n    %s" % "\n    ".join(sorted(m_urls_not_allowed)))
 
-        # Convert to Url data type and filter out out of scope and forbidden URLs
-        m_return.extend(
-            Url(url = u, depth = m_depth + 1, referer = m_url)
-            for u in m_links
-            if u in Config.audit_scope and not any(x in u for x in m_forbidden) )
+        # Do not follow URLs out of scope
+        m_out_of_scope_count = len(m_urls_allowed)
+        m_urls_allowed = [ url for url in m_urls_allowed if url in Config.audit_scope ]
+        m_out_of_scope_count -= len(m_urls_allowed)
+        if m_out_of_scope_count:
+            Logger.log_more_verbose("Skipped %d links out of scope." % m_out_of_scope_count)
+
+        if m_urls_allowed:
+            Logger.log_verbose("Found %d links in URL: %s" % (len(m_urls_allowed), m_url))
+        else:
+            Logger.log_verbose("No links found in URL: %s" % m_url)
+
+        # Convert to Url data type
+        for u in m_urls_allowed:
+            m_resource = Url(url = u, depth = m_depth + 1, referer = m_url)
+            m_resource.add_resource(info)
+            m_return.append(m_resource)
 
         # Send the results
         return m_return
@@ -104,12 +125,39 @@ class Spider(TestingPlugin):
     #----------------------------------------------------------------------
     def check_download(self, url, name, content_length, content_type):
 
-        # Returns True to continue or False to cancel.
-        return (
+        # Check the file type is text.
+        if not content_type or not content_type.strip().lower().startswith("text/"):
+            Logger.log_more_verbose("Skipping URL, binary content: %s" % url)
+            return False
 
-            # Check the file type is text.
-            content_type and content_type.strip().lower().startswith("text/") and
+        # Is the content length present?
+        if content_length is not None:
+
+            # Check the file doesn't have 0 bytes.
+            if content_length <= 0:
+                Logger.log_more_verbose("Skipping URL, empty content: %s" % url)
+                return False
 
             # Check the file is not too big.
-            content_length and content_length < 100000
-        )
+            if content_length > 100000:
+                Logger.log_more_verbose("Skipping URL, content too large (%d bytes): %s" % (content_length, url))
+                return False
+
+            # Approved!
+            return True
+
+        # Content length absent but likely points to a directory index.
+        if not parse_url(url).filename:
+
+            # Approved!
+            return True
+
+        # Content length absent but likely points to a webpage.
+        if "download" in url or name[name.rfind(".")+1:].lower() not in (
+            "htm", "html", "php", "asp", "aspx", "jsp",
+        ):
+            Logger.log_more_verbose("Skipping URL, content is likely not text: %s" % url)
+            return False
+
+        # Approved!
+        return True
