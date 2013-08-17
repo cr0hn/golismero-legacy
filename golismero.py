@@ -98,6 +98,7 @@ from thread import get_ident
 from golismero.api.config import Config
 from golismero.common import OrchestratorConfig, AuditConfig, \
                              get_profile, get_available_profiles
+from golismero.database.auditdb import AuditDB
 from golismero.main import launcher
 from golismero.main.console import get_terminal_size, colorize, Console
 from golismero.main.orchestrator import Orchestrator
@@ -279,28 +280,46 @@ def main():
         cmdParams.plugin_load_overrides = P.plugin_load_overrides
 
         # Load the target audit options.
-        if P.targets:
-            auditParams = AuditConfig()
-            auditParams.profile = cmdParams.profile
-            auditParams.profile_file = cmdParams.profile_file
-            auditParams.config_file = cmdParams.config_file
-            if auditParams.config_file:
-                auditParams.from_config_file(auditParams.config_file)
-            if auditParams.profile_file:
-                auditParams.from_config_file(auditParams.profile_file)
-            auditParams.from_object(P)
-            auditParams.plugin_load_overrides = P.plugin_load_overrides
+        auditParams = AuditConfig()
+        auditParams.profile = cmdParams.profile
+        auditParams.profile_file = cmdParams.profile_file
+        auditParams.config_file = cmdParams.config_file
+        if auditParams.config_file:
+            auditParams.from_config_file(auditParams.config_file)
+        if auditParams.profile_file:
+            auditParams.from_config_file(auditParams.profile_file)
+        auditParams.from_object(P)
+        auditParams.plugin_load_overrides = P.plugin_load_overrides
 
-            # If importing is turned off, remove the list of imports.
-            if P.disable_importing:
-                auditParams.imports = []
+        # If importing is turned off, remove the list of imports.
+        if P.disable_importing:
+            auditParams.imports = []
 
-            # If reports are turned off, remove the list of reports.
-            # Otherwise, if no reports are specified, default to screen report.
-            if P.disable_reporting:
-                auditParams.reports = []
-            elif not auditParams.reports:
-                auditParams.reports = ["-"]
+        # If reports are turned off, remove the list of reports.
+        # Otherwise, if no reports are specified, default to screen report.
+        if P.disable_reporting:
+            auditParams.reports = []
+        elif not auditParams.reports:
+            auditParams.reports = ["-"]
+
+        # If there are no targets but there's a database,
+        # get the targets (scope) from the database.
+        if not auditParams.targets and auditParams.audit_db:
+            try:
+                cfg = AuditDB.get_config_from_closed_database(
+                    auditParams.audit_db, auditParams.audit_name)
+                if cfg:
+                    auditParams.targets = cfg.targets
+                    auditParams.include_subdomains = cfg.include_subdomains
+                    if cmdParams.verbose > 1:
+                        if auditParams.targets:
+                            print "Found the following targets in the database:"
+                            for t in auditParams.targets:
+                                print "--> " + t
+                            print
+            except Exception:
+                pass
+                ##raise    # XXX DEBUG
 
     # Show exceptions as command line parsing errors.
     except Exception, e:
@@ -510,7 +529,7 @@ def main():
 
     try:
         cmdParams.check_params()
-        if P.targets:
+        if auditParams.targets:
             auditParams.check_params()
     except Exception, e:
         parser.error(str(e))
@@ -550,7 +569,7 @@ def main():
 
         # Save the plugin arguments for the Orchestrator and the Audit.
         cmdParams.plugin_args = plugin_args
-        if P.targets:
+        if auditParams.targets:
             auditParams.plugin_args = plugin_args
 
         # Set the plugin arguments before loading the UI plugin.
@@ -576,7 +595,7 @@ def main():
 
     # Check the settings with the UI plugin.
     try:
-        if P.targets:
+        if auditParams.targets:
             ui_plugin.check_params(cmdParams, auditParams)
         else:
             ui_plugin.check_params(cmdParams)
@@ -589,7 +608,7 @@ def main():
 
     #--------------------------------------------------------------------------
     # Launch GoLismero.
-    if P.targets:
+    if auditParams.targets:
         launcher.run(cmdParams, auditParams)
     else:
         launcher.run(cmdParams)

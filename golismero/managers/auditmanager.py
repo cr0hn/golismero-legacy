@@ -301,7 +301,7 @@ class Audit (object):
         self.__is_report_started = False
 
         # Initialize the "ran new tests" flag.
-        self.__ran_new_tests = True
+        self.__must_update_stop_time = True
 
         # Maximum number of links to follow.
         self.__followed_links = 0
@@ -494,9 +494,14 @@ class Audit (object):
             # Add the targets to the database, but only if they're new.
             # (Makes sense when resuming a stopped audit).
             target_data = self.scope.get_targets()
+            targets_added_count = 0
             for data in target_data:
                 if not self.database.has_data_key(data.identity, data.data_type):
                     self.database.add_data(data)
+                    targets_added_count += 1
+            if targets_added_count:
+                Logger.log_verbose(
+                    "Added %d new targets to the database." % targets_added_count)
 
             # Mark all data as having completed no stages.
             # This is needed because the plugin list may have changed.
@@ -515,7 +520,7 @@ class Audit (object):
             # Import external results.
             # This is done after storing the targets, so the importers
             # can overwrite the targets with new information if available.
-            self.importManager.import_results()
+            imported_count = self.importManager.import_results()
 
             # Discover new data from the data already in the database.
             # Only add newly discovered data, to avoid overwriting anything.
@@ -540,13 +545,19 @@ class Audit (object):
             # Restore the original execution context.
             Config._context = old_context
 
-        # Move to the next stage.
+        # The audit stop time must be updated if:
+        # 1) There are testing plugins enabled, or
+        # 2) There was new data added to the database.
+        self.__must_update_stop_time = \
+            m_audit_plugins or imported_count or targets_added_count
+
+        # If there are testing plugins enabled, move to stage 1.
         if m_audit_plugins:
-            self.__ran_new_tests = True
             Logger.log_verbose("Launching tests...")
             self.update_stage()
+
+        # If not, go straight to the report stage.
         else:
-            self.__ran_new_tests = False
             self.__current_stage = self.__plugin_manager.max_stage + 1
             self.generate_reports()
 
@@ -880,7 +891,7 @@ class Audit (object):
 
             # Before generating the reports, set the audit stop time.
             # This is needed so the report can print the start and stop times.
-            if self.__ran_new_tests:
+            if self.__must_update_stop_time:
                 self.config.stop_time = time()
 
                 # Save the audit stop time in the database.

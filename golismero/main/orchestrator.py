@@ -324,9 +324,9 @@ class Orchestrator (object):
             if (message.message_type == MessageType.MSG_TYPE_CONTROL and \
                 message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT
             ):
-                Logger.log_verbose("Audit finished: %s" % message.audit_name)
                 self.uiManager.dispatch_msg(message)
                 self.auditManager.dispatch_msg(message)
+                Logger.log_verbose("Audit finished: %s" % message.audit_name)
 
                 # The method now must return True because the message was sent.
                 return True

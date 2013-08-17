@@ -113,7 +113,8 @@ class BaseDB (object):
 
 
     #----------------------------------------------------------------------
-    def encode(self, data):
+    @staticmethod
+    def encode(data):
         """
         Encode data for storage.
 
@@ -127,7 +128,8 @@ class BaseDB (object):
 
 
     #----------------------------------------------------------------------
-    def decode(self, data):
+    @staticmethod
+    def decode(data):
         """
         Decode data from storage.
 
