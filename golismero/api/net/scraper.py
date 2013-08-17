@@ -33,22 +33,40 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["is_link", "extract_from_text", "extract_from_html"]
+__all__ = [
+
+    # Generic entry point.
+    "extract",
+
+    # Specific parsers for each data format.
+    "extract_from_text",
+    "extract_from_html",
+
+    # Helper functions.
+    "is_link",
+]
+
+from .web_utils import parse_url
 
 from BeautifulSoup import BeautifulSoup
-from urlparse import urldefrag, urljoin, urlparse
 
 import re
 
-#
-# TODO:
-#
-# + Use ParsedURL instead of urlparse. It's not as simple
-#   as it sounds, because we also need to add the urljoin
-#   functionality (urldefrag is already there).
-# + A generic "extract" function that uses the appropriate helper
-#   function to extract URLs, based on the content-type header.
-#
+
+#----------------------------------------------------------------------
+# Emulate the standard URL parser with our own.
+
+def urlparse(url):
+    return parse_url(url)
+
+def urldefrag(url):
+    p = parse_url(url)
+    f = p.fragment
+    p.fragment = ""
+    return p.url, f
+
+def urljoin(base_url, url):
+    return parse_url(url, base_url).url
 
 
 #----------------------------------------------------------------------
@@ -79,21 +97,12 @@ def is_link(url, base_url):
     """
     try:
 
-        # Make sure the URL is absolute.
-        url = urljoin(base_url, url)
-
-        # Scripting and data URLs are not links.
-        scheme = urlparse(url)[0]
-        if not scheme:
-            scheme = ""
-        scheme = scheme.lower()
-        if scheme.endswith("://"):
-            scheme = scheme[:-3]
-        if scheme in ("javascript", "vbscript", "data"):
-            return False
+        # Parse the URL. If it can't be parsed, it's not a link.
+        parsed = parse_url(url, base_url)
 
         # URLs that point to the same page in a different fragment are not links.
-        if urldefrag(url)[0] == base_url:
+        parsed.fragment = ""
+        if parsed.url == base_url:
             return False
 
         # All other URLs are links.
@@ -108,6 +117,10 @@ def is_link(url, base_url):
 def extract_from_text(text, base_url, only_links = True):
     """
     Extract URLs from text.
+
+    Implementation notes:
+
+    - Unicode URLs are currently not supported.
 
     :param text: Text.
     :type text: str
@@ -147,7 +160,10 @@ def extract_from_text(text, base_url, only_links = True):
             url = url[0]
 
             # Canonicalize the URL.
-            url = urljoin(base_url, url.strip())
+            try:
+                url = urljoin(base_url, url.strip())
+            except Exception:
+                continue
 
             # Discard URLs that are not links to other pages or resources.
             if not only_links or is_link(url, base_url = base_url):
@@ -232,17 +248,34 @@ def extract_from_html(raw_html, base_url, only_links = True):
                     url = content[ p + 1 : ]
         elif name == "base":
             url = tag.get("href", None)
-            if url is not None:  # update the base url
-                base_url = urljoin(base_url, url.strip(), allow_fragments = False)
+            if url is not None:
+
+                # Unicode URLs are not supported.
+                try:
+                    url = str(url)
+                except Exception:
+                    continue
+
+                # Update the base URL.
+                try:
+                    base_url = urljoin(base_url, url.strip(), allow_fragments = False)
+                except Exception:
+                    continue
 
         # If we found an URL in this tag...
         if url is not None:
 
             # Unicode URLs are not supported.
-            url = str(url)
+            try:
+                url = str(url)
+            except Exception:
+                continue
 
             # Canonicalize the URL.
-            url = urljoin(base_url, url.strip())
+            try:
+                url = urljoin(base_url, url.strip())
+            except Exception:
+                continue
 
             # Discard URLs that are not links to other pages or resources.
             if not only_links or is_link(url, base_url = base_url):
@@ -252,3 +285,55 @@ def extract_from_html(raw_html, base_url, only_links = True):
 
     # Return the set of collected URLs.
     return result
+
+
+#----------------------------------------------------------------------
+def extract(raw_data, content_type, base_url, only_links = True):
+    """
+    Extract URLs from raw data.
+
+    Implementation notes:
+
+    - Unicode URLs are currently not supported.
+
+    - The current implementation is fault tolerant, meaning it will try
+      to extract URLs even if the HTML is malformed and browsers wouldn't
+      normally see those links. This may therefore result in some false
+      positives.
+
+    - HTML5 tags are supported, including tags not currently supported by
+      any major browser.
+
+    :param raw_data: Raw data.
+    :type raw_data: str
+
+    :param content_type: MIME content type.
+    :type content_type: str
+
+    :param base_url: Base URL for the current document.
+    :type base_url: str
+
+    :param only_links: If True, only extract links to other resources. If False, extract all URLs.
+    :type only_links: bool
+
+    :returns: Extracted URLs.
+    :rtype: set(str)
+    """
+
+    # Sanitize the content type.
+    content_type = content_type.strip().lower()
+    if ";" in content_type:
+        content_type = content_type[ content_type.find(";") : ].strip()
+
+    # HTML parser.
+    if content_type == "text/html":
+        urls = extract_from_html(raw_data, base_url, only_links)
+        urls.update( extract_from_text(raw_data, base_url, only_links) )
+        return urls
+
+    # Generic plain text parser.
+    if content_type.startswith("text/"):
+        return extract_from_text(raw_data, base_url, only_links)
+
+    # Unsupported content type.
+    return set()
