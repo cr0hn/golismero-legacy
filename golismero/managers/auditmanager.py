@@ -300,6 +300,9 @@ class Audit (object):
         # Initialize the "report started" flag.
         self.__is_report_started = False
 
+        # Initialize the "ran new tests" flag.
+        self.__ran_new_tests = True
+
         # Maximum number of links to follow.
         self.__followed_links = 0
         self.__show_max_links_warning = True
@@ -539,8 +542,13 @@ class Audit (object):
 
         # Move to the next stage.
         if m_audit_plugins:
+            self.__ran_new_tests = True
             Logger.log_verbose("Launching tests...")
-        self.update_stage()
+            self.update_stage()
+        else:
+            self.__ran_new_tests = False
+            self.__current_stage = self.__plugin_manager.max_stage + 1
+            self.generate_reports()
 
 
     #--------------------------------------------------------------------------
@@ -872,10 +880,11 @@ class Audit (object):
 
             # Before generating the reports, set the audit stop time.
             # This is needed so the report can print the start and stop times.
-            self.config.stop_time = time()
+            if self.__ran_new_tests:
+                self.config.stop_time = time()
 
-            # Save the audit stop time in the database.
-            self.database.set_audit_stop_time(self.config.stop_time)
+                # Save the audit stop time in the database.
+                self.database.set_audit_stop_time(self.config.stop_time)
 
             # Show a log message.
             if self.__report_manager.plugin_count > 0:
