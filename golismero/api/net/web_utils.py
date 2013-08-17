@@ -563,6 +563,7 @@ class ParsedURL (object):
     + extension    = '.php'
     + query        = 'b=&param1=val1'
     + query_params = { 'param1' : 'val1', 'b' : '' }
+    + fragment     = 'anchor'
 
     The url property contains the normalized form of the URL, mostly
     preserving semantics (the query parameters may be sorted, and empty

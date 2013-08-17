@@ -124,6 +124,7 @@ simple = (
         'query'            : 'param=value',
         'query_char'       : '?',
         'query_params'     : { 'param' : 'value' },
+        'fragment'         : 'anchor',
     },
 
     # Simple http url with double extension.
@@ -150,6 +151,7 @@ simple = (
         'query'            : '',
         'query_char'       : '?',
         'query_params'     : {},
+        'fragment'         : '',
     },
 
     # Simple https url.
@@ -176,6 +178,7 @@ simple = (
         'query'            : '',
         'query_char'       : '?',
         'query_params'     : {},
+        'fragment'         : '',
     },
 
     # Simple ftp url.
@@ -202,6 +205,7 @@ simple = (
         'query'            : '',
         'query_char'       : '?',
         'query_params'     : {},
+        'fragment'         : '',
     },
 
     # Simple mailto url.
@@ -228,11 +232,12 @@ simple = (
         'query'            : 'subject=Hi%21',
         'query_char'       : '?',
         'query_params'     : { 'subject' : 'Hi!' },
+        'fragment'         : '',
     },
 
     # Localhost url.
     {
-        'url'              : 'http://localhost:1234/',
+        'url'              : 'http://localhost:1234/#fragment',
         'request_uri'      : '/',
         'scheme'           : 'http',
         'host'             : 'localhost',
@@ -254,6 +259,7 @@ simple = (
         'query'            : '',
         'query_char'       : '?',
         'query_params'     : {},
+        'fragment'         : 'fragment',
     },
 )
 
