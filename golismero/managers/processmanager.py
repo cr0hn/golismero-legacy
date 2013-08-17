@@ -933,8 +933,10 @@ class ProcessManager (object):
             if self.__max_processes is not None and self.__max_processes > 0:
 
                 # Create the process pool.
-                self.__launcher = PluginLauncher(self.__max_processes,
-                                                 self.__refresh_after_tasks)
+                #launcher_class = PluginPoolManager
+                launcher_class = PluginLauncher
+                self.__launcher = launcher_class(
+                    self.__max_processes, self.__refresh_after_tasks)
 
                 # Start it
                 self.__launcher.start()
