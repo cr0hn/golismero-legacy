@@ -819,7 +819,7 @@ class Audit (object):
                     plugin_name = message.plugin_name
                     if plugin_name:
                         plugin_info = pluginManager.get_plugin_by_name(plugin_name)
-                        if plugin_info.recursive:
+                        if not plugin_info.recursive:
                             database.mark_plugin_finished(data.identity, plugin_name)
 
                     # The data will be sent to the plugins.
