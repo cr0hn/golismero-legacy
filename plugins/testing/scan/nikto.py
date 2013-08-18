@@ -79,6 +79,10 @@ class NiktoPlugin(TestingPlugin):
                 Logger.log_error("Nikto not found! File: %s" % nikto_script)
                 return
 
+        # XXX Crude patch for ticket #120 until we think of something better.
+        elif sep == "/":
+            nikto_script = join(".", "nikto.pl")
+
         # Get the path to the configuration file.
         config = Config.plugin_args["config"]
         if config:
@@ -123,7 +127,8 @@ class NiktoPlugin(TestingPlugin):
                 cygwin = join(cygwin, "cygwin1.dll")
                 if exists(cygwin):
                     nikto_script = win_to_cygwin_path(nikto_script)
-                    config = win_to_cygwin_path(config)
+                    if config:
+                        config = win_to_cygwin_path(config)
                     use_cygwin = True
 
         # Build the command line arguments.

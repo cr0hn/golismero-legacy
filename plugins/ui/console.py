@@ -124,7 +124,7 @@ class ConsoleUIPlugin(UIPlugin):
                     else:
                         m_progress_txt = "Working..."
 
-                    m_text = "[*] %s:%s" % (m_plugin_name, m_progress_txt)
+                    m_text = "[*] %s: %s" % (m_plugin_name, m_progress_txt)
 
                     Console.display(m_text)
 
