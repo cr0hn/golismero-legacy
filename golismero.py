@@ -257,7 +257,7 @@ def main():
 
     # Parse the command line options.
     try:
-        args = sys.args[1:]
+        args = sys.argv[1:]
         envcfg = getenv("GOLISMERO_SETTINGS")
         if envcfg:
             args = parser.convert_arg_line_to_args(envcfg) + args
@@ -474,6 +474,8 @@ def main():
             print "%s %s" % (colorize("Source code:", "green"), m_src)
             if m_plugin_info.plugin_class:
                 print "%s  %s" % (colorize("Class name:", "green"), colorize(m_plugin_info.plugin_class, "cyan"))
+            print "%s    %s" % (colorize("Category:", "green"), m_plugin_info.category)
+            print "%s       %s" % (colorize("Stage:", "green"), m_plugin_info.stage)
             if m_plugin_info.description != m_plugin_info.display_name:
                 print
                 print "%s\n    %s" % (colorize("Description:", "green"), m_desc)

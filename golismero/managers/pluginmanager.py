@@ -102,10 +102,20 @@ class PluginInfo (object):
     @property
     def stage(self):
         """
+        :returns: Plugin stage name.
+        :rtype: int
+        """
+        if self.category == "testing":
+            return PluginManager.get_stage_name_from_value(self.__stage_number)
+        return self.category
+
+    @property
+    def stage_number(self):
+        """
         :returns: Plugin stage number.
         :rtype: int
         """
-        return self.__stage
+        return self.__stage_number
 
     @property
     def dependencies(self):
@@ -285,17 +295,22 @@ class PluginInfo (object):
         # Parse the stage name to get the number.
         if not stage:
             try:
-                subcategory  = plugin_name.split("/")[1].lower()
-                self.__stage = PluginManager.STAGES[subcategory]
+                category, subcategory = plugin_name.split("/")[:2]
+                category = category.strip().lower()
+                subcategory = subcategory.strip().lower()
+                if category == "testing":
+                    self.__stage_number = PluginManager.STAGES[subcategory]
+                else:
+                    self.__stage_number = 0
             except Exception:
-                self.__stage = 1
+                self.__stage_number = 0
         else:
             try:
-                self.__stage = PluginManager.STAGES[stage.lower()]
+                self.__stage_number = PluginManager.STAGES[stage.lower()]
             except KeyError:
                 try:
-                    self.__stage = int(stage)
-                    if self.__stage not in PluginManager.STAGES.values():
+                    self.__stage_number = int(stage)
+                    if self.__stage_number not in PluginManager.STAGES.values():
                         raise ValueError()
                 except Exception:
                     msg = "Error parsing %r: invalid execution stage: %r"
@@ -418,7 +433,7 @@ class PluginInfo (object):
         instance.__plugin_name         = self.__plugin_name
         instance.__descriptor_file     = self.__descriptor_file
         instance.__display_name        = self.__display_name
-        instance.__stage               = self.__stage
+        instance.__stage_number        = self.__stage_number
         instance.__recursive           = self.__recursive
         instance.__plugin_module       = self.__plugin_module
         instance.__plugin_class        = self.__plugin_class
@@ -584,7 +599,8 @@ class PluginManager (object):
 
 
     #----------------------------------------------------------------------
-    def get_stage_name_from_value(self, value):
+    @classmethod
+    def get_stage_name_from_value(cls, value):
         """
         :param value: Stage value. See STAGES.
         :type value: int
@@ -594,7 +610,7 @@ class PluginManager (object):
 
         :raise KeyError: Stage value not found.
         """
-        for name, val in self.STAGES.iteritems():
+        for name, val in cls.STAGES.iteritems():
             if value == val:
                 return name
         raise KeyError("Stage value not found: %r" % value)
@@ -740,7 +756,7 @@ class PluginManager (object):
             stage_num = self.STAGES[category]
             return { plugin_name: plugin_info
                      for plugin_name, plugin_info in self.__plugins.iteritems()
-                     if plugin_info.stage == stage_num }
+                     if plugin_info.stage_number == stage_num }
 
         # If it's neither, it's an error.
         raise KeyError("Unknown plugin category or stage: %r" % category)
@@ -1071,8 +1087,9 @@ class AuditPluginManager (PluginManager):
 
         # Apply the plugin black and white lists, and all the overrides.
         self._PluginManager__plugins = self.__apply_config(auditConfig)
-        for plugin_name, plugin_args in auditConfig.plugin_args.iteritems():
-            self.set_plugin_args(plugin_name, plugin_args)
+        if auditConfig.plugin_args:
+            for plugin_name, plugin_args in auditConfig.plugin_args.iteritems():
+                self.set_plugin_args(plugin_name, plugin_args)
 
         # Calculate the dependencies.
         self.__calculate_dependencies()
@@ -1309,7 +1326,7 @@ class AuditPluginManager (PluginManager):
         graph = defaultdict(set)
         stages = defaultdict(set)
         for name, info in plugins.iteritems():
-            stage = info.stage
+            stage = info.stage_number
             if not stage or stage < 0:
                 stage = 0
             stages[stage].add(name)
