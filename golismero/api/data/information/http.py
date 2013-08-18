@@ -51,7 +51,7 @@ class HTTP_Headers (object):
     preserves the original case but still letting your access them in a
     case-insensitive manner, and is read-only.
 
-    Also see: :ref:`parse_headers`
+    Also see: parse_headers
     """
 
     # Also see: https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
@@ -438,7 +438,7 @@ class HTTP_Request (Information):
         :param version: Protocol version.
         :type version: str
 
-        :param referer: Optional referer, overrides that of :ref:`headers`.
+        :param referer: Optional referer, overrides that of "headers".
         :type referer: str
         """
 
