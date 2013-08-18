@@ -19,7 +19,7 @@ import sys, os, os.path
 root = os.path.split(os.path.abspath(__file__))[0]
 if not root:  # if it fails use cwd instead
     root = os.path.abspath(os.getcwd())
-root = os.path.join(root, '..', '..')
+root = os.path.join(root, '..', '..', '..')
 root = os.path.abspath(root)
 sys.path.insert(0, root)
 sys.path.append(os.path.join(root, 'thirdparty_libs'))

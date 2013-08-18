@@ -105,8 +105,6 @@ def detect_language(text):
     Calculate the probability of given text to be written in different
     languages and return the highest scoring one.
 
-    Also see: :ref:`calculate_language_scores`
-
     Example:
         >>> text= "Hello my name is Golismero and I'm a function"
         >>> detect_language(text)

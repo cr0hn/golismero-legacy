@@ -522,7 +522,7 @@ def parse_url(url, base_url = None):
     """
     Parse an URL and return a mutable object with all its parts.
 
-    For more details see: :ref:`ParsedURL`
+    For more details see: ParsedURL
 
     :param url: URL to parse.
     :type url: str

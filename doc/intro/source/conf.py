@@ -19,7 +19,7 @@ import sys, os, os.path
 root = os.path.split(os.path.abspath(__file__))[0]
 if not root:  # if it fails use cwd instead
     root = os.path.abspath(os.getcwd())
-root = os.path.join(root, '..')
+root = os.path.join(root, '..', '..', '..')
 root = os.path.abspath(root)
 sys.path.insert(0, root)
 sys.path.append(os.path.join(root, 'thirdparty_libs'))
@@ -33,7 +33,7 @@ del root
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 #extensions = ['sphinx.ext.autodoc']
-extensions = ['sphinx.ext.autodoc', 'sphinxtogithub']
+extensions = ['sphinx.ext.autodoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

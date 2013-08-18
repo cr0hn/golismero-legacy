@@ -966,7 +966,7 @@ class PluginManager (object):
         Parse a list of tuples with plugin arguments as a dictionary of
         dictionaries, with plugin names sanitized.
 
-        Once sanitized, you can all :ref:`set_plugin_args`() to set them.
+        Once sanitized, you can all set_plugin_args() to set them.
 
         :param plugin_args: Arguments as specified in the command line.
         :type plugin_args: list(tuple(str, str, str))

@@ -14,16 +14,6 @@ This is a quick introduction to GoLismero:
    api
    plugins
 
-Documentation
-=============
-
-Complete documentation for the GoLismero source code:
-
-.. toctree::
-   :maxdepth: 2
-
-   autodoc
-
 Project page
 ============
 

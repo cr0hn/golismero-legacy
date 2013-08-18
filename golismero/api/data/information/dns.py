@@ -294,7 +294,35 @@ class DnsRegister(Information):
     #----------------------------------------------------------------------
     def __init__(self, **kwargs):
         """
-        :param type: Type of DNS register. Valid types are: 'A', 'AAAA', 'AFSDB', 'CERT', 'CNAME', 'DNSKEY', 'DS', 'HINFO', 'IPSECKEY', 'ISDN', 'LOC', 'MX', 'NAPTR', 'NS', 'NSAP', 'NSEC', 'NSEC3', 'NSEC3PARAM', 'PTR', 'RP', 'RRSIG', 'SOA', 'SPF', 'SRV', 'TXT', 'WKS' or 'X25'.
+        :param type: Type of DNS register.
+            Valid types are:
+             - 'A'
+             - 'AAAA'
+             - 'AFSDB'
+             - 'CERT'
+             - 'CNAME'
+             - 'DNSKEY'
+             - 'DS'
+             - 'HINFO'
+             - 'IPSECKEY'
+             - 'ISDN'
+             - 'LOC'
+             - 'MX'
+             - 'NAPTR'
+             - 'NS'
+             - 'NSAP'
+             - 'NSEC'
+             - 'NSEC3'
+             - 'NSEC3PARAM'
+             - 'PTR'
+             - 'RP'
+             - 'RRSIG'
+             - 'SOA'
+             - 'SPF'
+             - 'SRV'
+             - 'TXT'
+             - 'WKS'
+             - 'X25'
         :type type: str
         """
         self._type = kwargs.get('type', None)
@@ -1066,13 +1094,11 @@ class DnsRegisterLOC(DnsRegister):
     #----------------------------------------------------------------------
     def __init__(self, latitude, longitude, altitude, coordinates, **kwargs):
         """
-        :param latitude: latitude
-        :type latitude: (int, int, int, int) tuple specifying the degrees, minutes,
-        seconds, and milliseconds of the coordinate.
+        :param latitude: tuple specifying the degrees, minutes, seconds, and milliseconds of the coordinate.
+        :type latitude: tuple(int, int, int, int)
 
-        :param latitude: longitude
-        :type longitude: (int, int, int, int) tuple specifying the degrees,
-        minutes, seconds, and milliseconds of the coordinate.
+        :param latitude: tuple specifying the degrees, minutes, seconds, and milliseconds of the coordinate.
+        :type longitude: tuple(int, int, int, int)
 
         :param altitude: altitude
         :type altitude: float
@@ -1121,9 +1147,8 @@ class DnsRegisterLOC(DnsRegister):
     @identity
     def latitude(self):
         """
-        :return: latitude
-        :rtype: (int, int, int, int) tuple specifying the degrees,
-        minutes, seconds, and milliseconds of the coordinate.
+        :return: tuple specifying the degrees, minutes, seconds, and milliseconds of the coordinate.
+        :rtype: (int, int, int, int)
         """
         return self.__latitude
 
@@ -1132,9 +1157,8 @@ class DnsRegisterLOC(DnsRegister):
     @identity
     def longitude(self):
         """
-        :return: longitude
-        :rtype: (int, int, int, int) tuple specifying the degrees,
-        minutes, seconds, and milliseconds of the coordinate.
+        :return: tuple specifying the degrees, minutes, seconds, and milliseconds of the coordinate.
+        :rtype: (int, int, int, int)
         """
         return self.__longitude
 
@@ -1763,7 +1787,7 @@ class DnsRegisterRRSIG(DNSRegisterAlgorithm):
     def type_covered(self):
         """
         :return: the rdata type this signature covers
-        :rtype:int
+        :rtype: int
         """
         return self.__type_covered
 
