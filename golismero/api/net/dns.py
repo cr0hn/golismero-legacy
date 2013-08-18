@@ -758,7 +758,7 @@ class _DNS(Singleton):
         :type answer_in: dns.resolver.Answer
 
         :return: DNS register.
-        :rtype: `list(DnsRegister)`
+        :rtype: list(DnsRegister)
         """
 
         m_return        = []

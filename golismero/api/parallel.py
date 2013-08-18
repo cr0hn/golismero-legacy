@@ -4,23 +4,23 @@
 """
 API for parallel execution within GoLismero plugins.
 
-.. note: It's often best to keep your plugins as simple as possible, breaking
-         down complex tasks into simple steps, and into multiple plugins if
-         necessary. That way GoLismero can take care of multiprocessing and
-         load balancing more efficiently.
+.. note:: It's often best to keep your plugins as simple as possible, breaking
+          down complex tasks into simple steps, and into multiple plugins if
+          necessary. That way GoLismero can take care of multiprocessing and
+          load balancing more efficiently.
 
-         Still, in some cases, it comes in handy to be able to run something
-         in parallel within a plugin. Just bear in mind that if your plugin
-         uses too many threads and it gets called often, the total number of
-         running threads in the machine would balloon quite fast!
+          Still, in some cases, it comes in handy to be able to run something
+          in parallel within a plugin. Just bear in mind that if your plugin
+          uses too many threads and it gets called often, the total number of
+          running threads in the machine would balloon quite fast!
 
-         Also, there are situations where threads won't help at all. For
-         example if the number of running threads is greater than the maximum
-         number of allowed connections to the target host. Additionally, in the
-         CPython VM, the Global Interpreter Lock (GIL) makes threads a lot less
-         efficient than they should be, so running pure-Python computation
-         tasks in parallel not only gives you no benefit, but may actually run
-         slower! See: `http://wiki.python.org/moin/GlobalInterpreterLock`_
+          Also, there are situations where threads won't help at all. For
+          example if the number of running threads is greater than the maximum
+          number of allowed connections to the target host. Additionally, in the
+          CPython VM, the Global Interpreter Lock (GIL) makes threads a lot less
+          efficient than they should be, so running pure-Python computation
+          tasks in parallel not only gives you no benefit, but may actually run
+          slower! See: `GlobalInterpreterLock <http://wiki.python.org/moin/GlobalInterpreterLock>`_
 """
 
 __license__ = """

@@ -205,7 +205,7 @@ class BaseAuditDB (BaseDB):
         Retrieve the audit configuration from a closed database.
 
         To get the configuration from an open database object, use the
-        :ref:`get_config`() method instead.
+        get_config() method instead.
 
         :param audit_db: Audit database connection string.
         :type audit_db: str

@@ -28,6 +28,12 @@ api Package
     :special-members:
     :show-inheritance:
 
+.. autoclass:: golismero.api.config._Config
+    :members:
+    :undoc-members:
+    :special-members:
+    :show-inheritance:
+
 :mod:`external` Module
 ----------------------
 
@@ -41,6 +47,12 @@ api Package
 ------------------
 
 .. automodule:: golismero.api.file
+    :members:
+    :undoc-members:
+    :special-members:
+    :show-inheritance:
+
+.. autoclass:: golismero.api.file._FileManager
     :members:
     :undoc-members:
     :special-members:

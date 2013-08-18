@@ -294,35 +294,7 @@ class DnsRegister(Information):
     #----------------------------------------------------------------------
     def __init__(self, **kwargs):
         """
-        :param type: Type of DNS register.
-            Valid types are:
-             - 'A'
-             - 'AAAA'
-             - 'AFSDB'
-             - 'CERT'
-             - 'CNAME'
-             - 'DNSKEY'
-             - 'DS'
-             - 'HINFO'
-             - 'IPSECKEY'
-             - 'ISDN'
-             - 'LOC'
-             - 'MX'
-             - 'NAPTR'
-             - 'NS'
-             - 'NSAP'
-             - 'NSEC'
-             - 'NSEC3'
-             - 'NSEC3PARAM'
-             - 'PTR'
-             - 'RP'
-             - 'RRSIG'
-             - 'SOA'
-             - 'SPF'
-             - 'SRV'
-             - 'TXT'
-             - 'WKS'
-             - 'X25'
+        :param type: Type of DNS register. Valid types are in the DNS_TYPES dictionary.
         :type type: str
         """
         self._type = kwargs.get('type', None)

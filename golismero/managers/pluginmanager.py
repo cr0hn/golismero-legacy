@@ -586,7 +586,7 @@ class PluginManager (object):
     #----------------------------------------------------------------------
     def get_stage_name_from_value(self, value):
         """
-        :param value: Stage value. See :ref:`STAGES`.
+        :param value: Stage value. See STAGES.
         :type value: int
 
         :returns: Stage name.

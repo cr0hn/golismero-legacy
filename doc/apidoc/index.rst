@@ -1,16 +1,17 @@
 Welcome to GoLismero's documentation!
 =====================================
 
-Contents:
+Indices
+-------
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
+Table of Contents
+-----------------
 
 .. toctree::
    :maxdepth: 4
 
    golismero
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

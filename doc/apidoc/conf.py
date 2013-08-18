@@ -16,8 +16,8 @@ import sys, os, os.path
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath(os.path.join('..', '..', '..')))
-sys.path.append(os.path.abspath(os.path.join('..', '..', '..', 'thirdparty_libs')))
+sys.path.insert(0, os.path.abspath(os.path.join('..', '..')))
+sys.path.append(os.path.abspath(os.path.join('..', '..', 'thirdparty_libs')))
 
 # -- General configuration -----------------------------------------------------
 
@@ -286,3 +286,10 @@ epub_copyright = u'2013, Golismero Project'
 
 # Allow duplicate toc entries.
 #epub_tocdup = True
+
+def skip(app, what, name, obj, skip, options):
+    if name in ("__module__", "__dict__ ", "__weakref__", "__metaclass__", "__repr__",):
+        return True
+    return skip
+def setup(app):
+    app.connect("autodoc-skip-member", skip)

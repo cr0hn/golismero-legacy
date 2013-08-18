@@ -132,7 +132,7 @@ class _HTTP(Singleton):
 
         :raises NetworkOutOfScope: The resource is out of the audit scope.
             Note that this can happen even if the URL has been checked against
-            :ref:`Config.audit_scope` -- if the server responds with a
+            Config.audit_scope -- if the server responds with a
             redirection against another URL that's out of scope.
         :raises NetworkException: A network error occurred.
         """
