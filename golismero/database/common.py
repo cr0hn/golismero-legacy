@@ -39,20 +39,20 @@ import zlib
 
 #------------------------------------------------------------------------------
 @decorator
-def transactional(fn, self, *argv, **argd):
+def transactional(fn, self, *args, **kwargs):
     """
     Transactional method.
     """
-    return self._transaction(fn, argv, argd)
+    return self._transaction(fn, args, kwargs)
 
 
 #------------------------------------------------------------------------------
 @decorator
-def atomic(fn, self, *argv, **argd):
+def atomic(fn, self, *args, **kwargs):
     """
     Atomic method.
     """
-    return self._atom(fn, argv, argd)
+    return self._atom(fn, args, kwargs)
 
 
 #------------------------------------------------------------------------------
@@ -69,7 +69,7 @@ class BaseDB (object):
 
 
     #----------------------------------------------------------------------
-    def _atom(self, fn, argv, argd):
+    def _atom(self, fn, args, kwargs):
         """
         Execute an atomic operation.
 
@@ -78,11 +78,11 @@ class BaseDB (object):
         :param fn: Method in this class marked as @atomic.
         :type fn: unbound method
 
-        :param argv: Positional arguments.
-        :type argv: tuple
+        :param args: Positional arguments.
+        :type args: tuple
 
-        :param argd: Keyword arguments.
-        :type argd: dict
+        :param kwargs: Keyword arguments.
+        :type kwargs: dict
 
         :returns: The return value after calling the 'fn' method.
         :raises: NotImplementedError -- Transactions not supported
@@ -91,7 +91,7 @@ class BaseDB (object):
 
 
     #----------------------------------------------------------------------
-    def _transaction(self, fn, argv, argd):
+    def _transaction(self, fn, args, kwargs):
         """
         Execute a transactional operation.
 
@@ -100,11 +100,11 @@ class BaseDB (object):
         :param fn: Method in this class marked as @transactional.
         :type fn: unbound method
 
-        :param argv: Positional arguments.
-        :type argv: tuple
+        :param args: Positional arguments.
+        :type args: tuple
 
-        :param argd: Keyword arguments.
-        :type argd: dict
+        :param kwargs: Keyword arguments.
+        :type kwargs: dict
 
         :returns: The return value after calling the 'fn' method.
         :raises: NotImplementedError -- Transactions not supported

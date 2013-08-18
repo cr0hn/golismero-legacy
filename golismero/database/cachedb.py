@@ -50,20 +50,20 @@ sqlite3 = None
 # Cache API implementors
 
 @implementor(MessageCode.MSG_RPC_CACHE_GET)
-def rpc_cache_get(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.cacheManager.get(audit_name, *argv, **argd)
+def rpc_cache_get(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.cacheManager.get(audit_name, *args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_CACHE_SET)
-def rpc_cache_set(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.cacheManager.set(audit_name, *argv, **argd)
+def rpc_cache_set(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.cacheManager.set(audit_name, *args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_CACHE_CHECK)
-def rpc_cache_check(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.cacheManager.exists(audit_name, *argv, **argd)
+def rpc_cache_check(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.cacheManager.exists(audit_name, *args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_CACHE_REMOVE)
-def rpc_cache_remove(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.cacheManager.remove(audit_name, *argv, **argd)
+def rpc_cache_remove(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.cacheManager.remove(audit_name, *args, **kwargs)
 
 
 #------------------------------------------------------------------------------
@@ -236,20 +236,20 @@ class PersistentNetworkCache(BaseNetworkCache):
 
 
     #----------------------------------------------------------------------
-    def _atom(self, fn, argv, argd):
+    def _atom(self, fn, args, kwargs):
         # this will fail for multithreaded accesses,
         # but sqlite is not multithreaded either
         if self.__busy:
             raise RuntimeError("The database is busy")
         try:
             self.__busy = True
-            return fn(self, *argv, **argd)
+            return fn(self, *args, **kwargs)
         finally:
             self.__busy = False
 
 
     #----------------------------------------------------------------------
-    def _transaction(self, fn, argv, argd):
+    def _transaction(self, fn, args, kwargs):
         # this will fail for multithreaded accesses,
         # but sqlite is not multithreaded either
         if self.__busy:
@@ -258,7 +258,7 @@ class PersistentNetworkCache(BaseNetworkCache):
             self.__busy = True
             self.__cursor = self.__db.cursor()
             try:
-                retval = fn(self, *argv, **argd)
+                retval = fn(self, *args, **kwargs)
                 self.__db.commit()
                 return retval
             except:

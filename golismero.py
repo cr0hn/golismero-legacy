@@ -257,7 +257,7 @@ def main():
 
     # Parse the command line options.
     try:
-        args = sys.argv[1:]
+        args = sys.args[1:]
         envcfg = getenv("GOLISMERO_SETTINGS")
         if envcfg:
             args = parser.convert_arg_line_to_args(envcfg) + args

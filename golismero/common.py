@@ -70,8 +70,8 @@ except ImportError:
         """
         def d(fn):
             @functools.wraps(fn)
-            def x(*argv, **argd):
-                return w(fn, *argv, **argd)
+            def x(*args, **kwargs):
+                return w(fn, *args, **kwargs)
             return x
         return d
 

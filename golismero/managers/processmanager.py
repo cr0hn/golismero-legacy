@@ -96,7 +96,7 @@ plugin_class_cache = dict()   # tuple(class, module) -> class object
 
 # Do-nothing function for "warming up" the process pool.
 # This increases startup time, but results in a speedup later on.
-def do_nothing(*argv, **argd):
+def do_nothing(*args, **kwargs):
     return
 
 # Serializable function to run plugins in subprocesses.
@@ -145,9 +145,9 @@ def _launcher(queue, max_process, refresh_after_tasks):
 # Serializable bootstrap function to run plugins in subprocesses.
 # This is required for Windows support, since we don't have os.fork() there.
 # See: http://docs.python.org/2/library/multiprocessing.html#windows
-def bootstrap(context, func, argv, argd):
-    return _bootstrap(context, func, argv, argd)
-def _bootstrap(context, func, argv, argd):
+def bootstrap(context, func, args, kwargs):
+    return _bootstrap(context, func, args, kwargs)
+def _bootstrap(context, func, args, kwargs):
     try:
         try:
             try:
@@ -166,9 +166,9 @@ def _bootstrap(context, func, argv, argd):
 
                             # Get the data sent to the plugin.
                             try:
-                                input_data = argd["info"]
+                                input_data = kwargs["info"]
                             except KeyError:
-                                input_data = argv[0]
+                                input_data = args[0]
 
                             # Abort if the data is out of scope for the current audit.
                             if not input_data.is_in_scope():
@@ -213,7 +213,7 @@ def _bootstrap(context, func, argv, argd):
                         # Call the callback method.
                         result = None
                         try:
-                            result = getattr(instance, func)(*argv, **argd)
+                            result = getattr(instance, func)(*args, **kwargs)
                         finally:
 
                             # Return value is a list of data for recv_info().
@@ -557,7 +557,7 @@ class PluginContext (object):
 
 
     #----------------------------------------------------------------------
-    def remote_call(self, rpc_code, *argv, **argd):
+    def remote_call(self, rpc_code, *args, **kwargs):
         """
         Make synchronous remote procedure calls on the Orchestrator.
 
@@ -574,7 +574,7 @@ class PluginContext (object):
         # Send the RPC message.
         self.send_msg(message_type = MessageType.MSG_TYPE_RPC,
                       message_code = rpc_code,
-                      message_info = (response_queue, argv, argd),
+                      message_info = (response_queue, args, kwargs),
                           priority = MessagePriority.MSG_PRIORITY_HIGH)
 
         # Get the response.
@@ -599,7 +599,7 @@ class PluginContext (object):
 
 
     #----------------------------------------------------------------------
-    def async_remote_call(self, rpc_code, *argv, **argd):
+    def async_remote_call(self, rpc_code, *args, **kwargs):
         """
         Make asynchronous remote procedure calls on the Orchestrator.
 
@@ -611,7 +611,7 @@ class PluginContext (object):
         # Send the RPC message.
         self.send_msg(message_type = MessageType.MSG_TYPE_RPC,
                       message_code = rpc_code,
-                      message_info = (None, argv, argd),
+                      message_info = (None, args, kwargs),
                           priority = MessagePriority.MSG_PRIORITY_HIGH)
 
 
@@ -681,7 +681,7 @@ class PluginPoolManager (object):
 
 
     #----------------------------------------------------------------------
-    def run_plugin(self, context, func, argv, argd):
+    def run_plugin(self, context, func, args, kwargs):
         """
         Run a plugin in a pooled process.
 
@@ -691,23 +691,23 @@ class PluginPoolManager (object):
         :param func: Name of the method to execute.
         :type func: str
 
-        :param argv: Positional arguments to the function call.
-        :type argv: tuple
+        :param args: Positional arguments to the function call.
+        :type args: tuple
 
-        :param argd: Keyword arguments to the function call.
-        :type argd: dict
+        :param kwargs: Keyword arguments to the function call.
+        :type kwargs: dict
         """
 
         # If we have a process pool, run the plugin asynchronously.
         if self.__pool is not None:
             self.__pool.apply_async(bootstrap,
-                    (context, func, argv, argd))
+                    (context, func, args, kwargs))
             return
 
         # Otherwise just call the plugin directly.
         old_context = Config._context
         try:
-            return bootstrap(context, func, argv, argd)
+            return bootstrap(context, func, args, kwargs)
         finally:
             Config._context = old_context
 
@@ -793,7 +793,7 @@ class PluginLauncher (object):
 
 
     #----------------------------------------------------------------------
-    def run_plugin(self, context, func, argv, argd):
+    def run_plugin(self, context, func, args, kwargs):
         """
         Run a plugin in a pooled process.
 
@@ -803,11 +803,11 @@ class PluginLauncher (object):
         :param func: Name of the method to execute.
         :type func: str
 
-        :param argv: Positional arguments to the function call.
-        :type argv: tuple
+        :param args: Positional arguments to the function call.
+        :type args: tuple
 
-        :param argd: Keyword arguments to the function call.
-        :type argd: dict
+        :param kwargs: Keyword arguments to the function call.
+        :type kwargs: dict
         """
 
         # Raise an exception if the launcher had been stopped.
@@ -815,7 +815,7 @@ class PluginLauncher (object):
             raise RuntimeError("Plugin launcher was stopped")
 
         # Send the plugin run request to the launcher process.
-        self.__queue.put_nowait( (context, func, argv, argd) )
+        self.__queue.put_nowait( (context, func, args, kwargs) )
 
 
     #----------------------------------------------------------------------
@@ -891,7 +891,7 @@ class ProcessManager (object):
 
 
     #----------------------------------------------------------------------
-    def run_plugin(self, context, func, argv, argd):
+    def run_plugin(self, context, func, args, kwargs):
         """
         Run a plugin in a pooled process.
 
@@ -901,21 +901,21 @@ class ProcessManager (object):
         :param func: Name of the method to execute.
         :type func: str
 
-        :param argv: Positional arguments to the function call.
-        :type argv: tuple
+        :param args: Positional arguments to the function call.
+        :type args: tuple
 
-        :param argd: Keyword arguments to the function call.
-        :type argd: dict
+        :param kwargs: Keyword arguments to the function call.
+        :type kwargs: dict
         """
 
         # If we have a dispatcher, run the plugin asynchronously.
         if self.__launcher is not None:
-            return self.__launcher.run_plugin(context, func, argv, argd)
+            return self.__launcher.run_plugin(context, func, args, kwargs)
 
         # Otherwise just call the plugin directly.
         old_context = Config._context
         try:
-            return bootstrap(context, func, argv, argd)
+            return bootstrap(context, func, args, kwargs)
         finally:
             Config._context = old_context
 

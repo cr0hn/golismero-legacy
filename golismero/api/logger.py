@@ -62,7 +62,7 @@ class Logger (object):
 
 
     #----------------------------------------------------------------------
-    def __new__(cls, *argv, **argd):
+    def __new__(cls, *args, **kwargs):
         """
         .. warning: This is a static class, do not try to instance it!
         """

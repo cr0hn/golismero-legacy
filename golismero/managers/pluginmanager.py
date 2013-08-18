@@ -57,16 +57,16 @@ class _EmptyNewStyleClass (object):
 # RPC implementors for the plugin manager API.
 
 @implementor(MessageCode.MSG_RPC_PLUGIN_GET_NAMES)
-def rpc_plugin_get_names(orchestrator, audit_name, *argv, **argd):
+def rpc_plugin_get_names(orchestrator, audit_name, *args, **kwargs):
     if audit_name:
-        return orchestrator.auditManager.get_audit(audit_name).pluginManager.get_plugin_names(*argv, **argd)
-    return orchestrator.pluginManager.get_plugin_names(*argv, **argd)
+        return orchestrator.auditManager.get_audit(audit_name).pluginManager.get_plugin_names(*args, **kwargs)
+    return orchestrator.pluginManager.get_plugin_names(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_PLUGIN_GET_INFO)
-def rpc_plugin_get_info(orchestrator, audit_name, *argv, **argd):
+def rpc_plugin_get_info(orchestrator, audit_name, *args, **kwargs):
     if audit_name:
-        return orchestrator.auditManager.get_audit(audit_name).pluginManager.get_plugin_by_name(*argv, **argd)
-    return orchestrator.pluginManager.get_plugin_by_name(*argv, **argd)
+        return orchestrator.auditManager.get_audit(audit_name).pluginManager.get_plugin_by_name(*args, **kwargs)
+    return orchestrator.pluginManager.get_plugin_by_name(*args, **kwargs)
 
 
 #----------------------------------------------------------------------

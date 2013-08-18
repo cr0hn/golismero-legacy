@@ -312,11 +312,11 @@ class BaseUrl(_AbstractUrl):
 
     For example, a plugin receiving both BaseUrl and Url may get this input:
 
-    - BaseUrl("http://www.my_site.com/")
-    - Url("http://www.my_site.com/")
-    - Url("http://www.my_site.com/index.php")
-    - Url("http://www.my_site.com/admin.php")
-    - Url("http://www.my_site.com/login.php")
+    - BaseUrl("http://www.example.com/")
+    - Url("http://www.example.com/")
+    - Url("http://www.example.com/index.php")
+    - Url("http://www.example.com/admin.php")
+    - Url("http://www.example.com/login.php")
 
     Notice how the root level URL is sent twice,
     once as BaseUrl and again the more generic Url.
@@ -379,19 +379,19 @@ class FolderUrl(_AbstractUrl):
 
     For example, a plugin receiving both FolderUrl and Url may get this input:
 
-    - Url("http://www.my_site.com/wp-content/uploads/2013/06/attachment.pdf")
-    - FolderUrl("http://www.my_site.com/wp-content/uploads/2013/06/")
-    - FolderUrl("http://www.my_site.com/wp-content/uploads/2013/")
-    - FolderUrl("http://www.my_site.com/wp-content/uploads/")
-    - FolderUrl("http://www.my_site.com/wp-content/")
+    - Url("http://www.example.com/wp-content/uploads/2013/06/attachment.pdf")
+    - FolderUrl("http://www.example.com/wp-content/uploads/2013/06/")
+    - FolderUrl("http://www.example.com/wp-content/uploads/2013/")
+    - FolderUrl("http://www.example.com/wp-content/uploads/")
+    - FolderUrl("http://www.example.com/wp-content/")
 
     Note that the folder URLs may or may not be sent again as an Url object.
     For example, for a site that has a link to the "incoming" directory in its
     index page, we may get something like this:
 
-    - Url("http://www.my_site.com/index.html")
-    - Url("http://www.my_site.com/incoming/")
-    - FolderUrl("http://www.my_site.com/incoming/")
+    - Url("http://www.example.com/index.html")
+    - Url("http://www.example.com/incoming/")
+    - FolderUrl("http://www.example.com/incoming/")
 
     FolderUrl objects are never sent for the root folder of a web site.
     For that, see the BaseUrl data type.

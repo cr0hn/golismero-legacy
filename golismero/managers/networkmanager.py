@@ -44,12 +44,12 @@ from threading import BoundedSemaphore, RLock
 # RPC implementors for the network connection manager API.
 
 @implementor(MessageCode.MSG_RPC_REQUEST_SLOT, blocking=True)
-def rpc_netdb_request_slot(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.netManager.request_slot(audit_name, *argv, **argd)
+def rpc_netdb_request_slot(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.netManager.request_slot(audit_name, *args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_RELEASE_SLOT)
-def rpc_netdb_release_slot(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.netManager.release_slot(audit_name, *argv, **argd)
+def rpc_netdb_release_slot(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.netManager.release_slot(audit_name, *args, **kwargs)
 
 
 #--------------------------------------------------------------------------

@@ -60,124 +60,124 @@ sqlite3 = None
 # RPC implementors for the database API.
 
 @implementor(MessageCode.MSG_RPC_DATA_ADD)
-def rpc_data_db_add(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.add_data(*argv, **argd)
+def rpc_data_db_add(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.add_data(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_DATA_ADD_MANY)
-def rpc_data_db_add_many(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.add_many_data(*argv, **argd)
+def rpc_data_db_add_many(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.add_many_data(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_DATA_REMOVE)
-def rpc_data_db_remove(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.remove_data(*argv, **argd)
+def rpc_data_db_remove(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.remove_data(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_DATA_REMOVE_MANY)
-def rpc_data_db_remove_many(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.remove_many_data(*argv, **argd)
+def rpc_data_db_remove_many(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.remove_many_data(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_DATA_CHECK)
-def rpc_data_db_check(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.has_data_key(*argv, **argd)
+def rpc_data_db_check(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_data_key(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_DATA_GET)
-def rpc_data_db_get(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.get_data(*argv, **argd)
+def rpc_data_db_get(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_data(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_DATA_GET_MANY)
-def rpc_data_db_get_many(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.get_many_data(*argv, **argd)
+def rpc_data_db_get_many(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_many_data(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_DATA_KEYS)
-def rpc_data_db_keys(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.get_data_keys(*argv, **argd)
+def rpc_data_db_keys(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_data_keys(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_DATA_COUNT)
-def rpc_data_db_count(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.get_data_count(*argv, **argd)
+def rpc_data_db_count(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_data_count(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_DATA_PLUGINS)
-def rpc_data_db_plugins(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.get_past_plugins(*argv, **argd)
+def rpc_data_db_plugins(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_past_plugins(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_STATE_ADD)
-def rpc_plugin_state_add(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.add_state_variable(*argv, **argd)
+def rpc_plugin_state_add(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.add_state_variable(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_STATE_REMOVE)
-def rpc_plugin_state_remove(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.remove_state_variable(*argv, **argd)
+def rpc_plugin_state_remove(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.remove_state_variable(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_STATE_CHECK)
-def rpc_plugin_state_check(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.has_state_variable(*argv, **argd)
+def rpc_plugin_state_check(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_state_variable(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_STATE_GET)
-def rpc_plugin_state_get(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.get_state_variable(*argv, **argd)
+def rpc_plugin_state_get(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_state_variable(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_STATE_KEYS)
-def rpc_plugin_state_keys(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.get_state_variable_names(*argv, **argd)
+def rpc_plugin_state_keys(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_state_variable_names(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_MAP_GET)
-def rpc_shared_map_get(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.get_mapped_values(*argv, **argd)
+def rpc_shared_map_get(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_mapped_values(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_MAP_CHECK_ALL)
-def rpc_shared_map_check_all(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.has_all_mapped_keys(*argv, **argd)
+def rpc_shared_map_check_all(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_all_mapped_keys(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_MAP_CHECK_ANY)
-def rpc_shared_map_check_any(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.has_any_mapped_key(*argv, **argd)
+def rpc_shared_map_check_any(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_any_mapped_key(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_MAP_CHECK_EACH)
-def rpc_shared_map_check_each(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.has_each_mapped_key(*argv, **argd)
+def rpc_shared_map_check_each(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_each_mapped_key(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_MAP_POP)
-def rpc_shared_map_pop(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.pop_mapped_values(*argv, **argd)
+def rpc_shared_map_pop(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.pop_mapped_values(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_MAP_PUT)
-def rpc_shared_map_put(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.put_mapped_values(*argv, **argd)
+def rpc_shared_map_put(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.put_mapped_values(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_MAP_SWAP)
-def rpc_shared_map_swap(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.swap_mapped_values(*argv, **argd)
+def rpc_shared_map_swap(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.swap_mapped_values(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_MAP_DELETE)
-def rpc_shared_map_delete(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.delete_mapped_values(*argv, **argd)
+def rpc_shared_map_delete(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.delete_mapped_values(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_MAP_KEYS)
-def rpc_shared_map_keys(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.get_mapped_keys(*argv, **argd)
+def rpc_shared_map_keys(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_mapped_keys(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_HEAP_CHECK_ALL)
-def rpc_shared_heap_check_all(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.has_all_shared_values(*argv, **argd)
+def rpc_shared_heap_check_all(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_all_shared_values(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_HEAP_CHECK_ANY)
-def rpc_shared_heap_check_any(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.has_any_shared_value(*argv, **argd)
+def rpc_shared_heap_check_any(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_any_shared_value(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_HEAP_CHECK_EACH)
-def rpc_shared_heap_check_each(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.has_each_shared_value(*argv, **argd)
+def rpc_shared_heap_check_each(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.has_each_shared_value(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_HEAP_POP)
-def rpc_shared_heap_pop(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.pop_shared_values(*argv, **argd)
+def rpc_shared_heap_pop(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.pop_shared_values(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_HEAP_ADD)
-def rpc_shared_heap_add(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.add_shared_values(*argv, **argd)
+def rpc_shared_heap_add(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.add_shared_values(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_SHARED_HEAP_REMOVE)
-def rpc_shared_heap_remove(orchestrator, audit_name, *argv, **argd):
-    return orchestrator.auditManager.get_audit(audit_name).database.remove_shared_values(*argv, **argd)
+def rpc_shared_heap_remove(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.remove_shared_values(*args, **kwargs)
 
 
 #------------------------------------------------------------------------------
@@ -1481,20 +1481,20 @@ class AuditSQLiteDB (BaseAuditDB):
 
 
     #--------------------------------------------------------------------------
-    def _atom(self, fn, argv, argd):
+    def _atom(self, fn, args, kwargs):
         # this will fail for multithreaded accesses,
         # but sqlite is not multithreaded either
         if self.__busy:
             raise RuntimeError("The database is busy")
         try:
             self.__busy = True
-            return fn(self, *argv, **argd)
+            return fn(self, *args, **kwargs)
         finally:
             self.__busy = False
 
 
     #--------------------------------------------------------------------------
-    def _transaction(self, fn, argv, argd):
+    def _transaction(self, fn, args, kwargs):
         """
         Execute a transactional operation.
         """
@@ -1506,7 +1506,7 @@ class AuditSQLiteDB (BaseAuditDB):
             self.__busy = True
             self.__cursor = self.__db.cursor()
             try:
-                retval = fn(self, *argv, **argd)
+                retval = fn(self, *args, **kwargs)
                 self.__db.commit()
                 return retval
             except:
