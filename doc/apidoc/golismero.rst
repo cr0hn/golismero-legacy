@@ -4,7 +4,7 @@ golismero Package
 :mod:`golismero` Package
 ------------------------
 
-.. automodule:: golismero
+.. automodule:: golismero.__init__
     :members:
     :undoc-members:
     :show-inheritance:
