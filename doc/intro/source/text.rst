@@ -5,24 +5,28 @@ matching_analyzer
 -----------------
 
 .. automodule:: golismero.api.text.matching_analyzer
-   :members: get_diff_ratio, MatchingAnalyzer
+   :members:
+   :special-members:
 
 Text utils
 ----------
 
 .. automodule:: golismero.api.text.text_utils
-   :members: char_count, line_count, word_count, generate_random_string, calculate_shannon_entropy, split_first
+   :members:
+   :special-members:
 
 Wordlist utils
 --------------
 
 .. automodule:: golismero.api.text.wordlist
-   :members: WordListLoader, _WordListLoader, SimpleWordList, AdvancedListWordlist
+   :members:
    :show-inheritance:
    :inherited-members:
+   :special-members:
 
 Natural language
 ----------------
 
 .. automodule:: golismero.api.text.natural_language
-   :members: get_words, detect_language, calculate_language_scores
+   :members:
+   :special-members:

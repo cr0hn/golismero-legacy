@@ -1,6 +1,13 @@
 Plugin API
 ==========
 
+Indices and tables
+------------------
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
 Plugin interfaces
 -----------------
 
@@ -51,7 +58,12 @@ Bundled files API
 -----------------
 
 .. automodule:: golismero.api.file
-   :members: FileManager, _FileManager
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+.. :autoclass:: golismero.api.file._FileManager
+   :members:
    :show-inheritance:
    :inherited-members:
 
