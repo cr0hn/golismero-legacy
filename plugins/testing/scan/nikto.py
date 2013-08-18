@@ -79,10 +79,6 @@ class NiktoPlugin(TestingPlugin):
                 Logger.log_error("Nikto not found! File: %s" % nikto_script)
                 return
 
-        # XXX Crude patch for ticket #120 until we think of something better.
-        elif sep == "/":
-            nikto_script = join(".", "nikto.pl")
-
         # Get the path to the configuration file.
         config = Config.plugin_args["config"]
         if config:
@@ -98,16 +94,27 @@ class NiktoPlugin(TestingPlugin):
                     Logger.log_error("Nikto config file not found! File: %s" % config)
                     return
 
+        # We'll execute the nikto script. (Or not, see below).
+        command = nikto_script
+
+        # XXX Crude patch for ticket #120 until we think of something better.
+        if sep == "/" and nikto_script != "/usr/bin/nikto":
+            command = "./nikto.pl"
+
         # On Windows, we must always call Perl explicitly.
         # On POSIX, only if the script is not marked as executable.
-        command = nikto_script
-        if sep == "\\" or os.stat(command)[stat.ST_MODE] & stat.S_IXUSR == 0:
+        if sep == "\\" or os.stat(nikto_script)[stat.ST_MODE] & stat.S_IXUSR == 0:
+
+            # XXX Crude patch for ticket #120 until we think of something better.
+            nikto_script = command
+
+            # Now the command to run is the Perl interpreter.
             if sep == "\\":
                 command = "perl.exe"
             else:
                 command = "perl"
 
-            # Look for the Perl binary on the PATH. Fail if not found.
+            # Look for the Perl interpreter on the PATH. Fail if not found.
             found = False
             for candidate in os.environ.get("PATH", "").split(pathsep):
                 candidate = candidate.strip()
