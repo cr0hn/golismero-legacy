@@ -49,6 +49,6 @@ Here you can find all concrete data types available in the GoLismero data model:
 
 .. toctree::
 
-   Information<data/information>
-   Resource<data/resource>
-   Vulnerability<data/vulnerability>
+   Information<data.information>
+   Resource<data.resource>
+   Vulnerability<data.vulnerability>
