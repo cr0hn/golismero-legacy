@@ -12,6 +12,7 @@ Copyright   = Copyright (C) 2011-2013 GoLismero Project
 License     = GNU Public License
 
 [Arguments]
+exec    =
 config  =
 Pause   = 0
 timeout = 10

@@ -63,50 +63,44 @@ class NiktoPlugin(TestingPlugin):
         self.update_status(progress = None)
 
         # Get the path to the Nikto scanner.
-        nikto_dir = split(__file__)[0]
-        nikto_dir = join(nikto_dir, "nikto")
-        nikto_dir = abspath(nikto_dir)
-
-        # Get the path to the Nikto script.
-        nikto_script = join(nikto_dir, "nikto.pl")
-
-        # If it doesn't exist, try the system default.
-        if not exists(nikto_script):
-            nikto_script = "/usr/bin/nikto"
-
-            # If it still doesn't exist, abort.
-            if not exists(nikto_script):
-                Logger.log_error("Nikto not found! File: %s" % nikto_script)
-                return
+        nikto_script = Config.plugin_args["exec"]
+        if nikto_script and exists(nikto_script):
+            nikto_dir = split(nikto_script)[0]
+            nikto_dir = abspath(nikto_dir)
+        else:
+            nikto_dir = split(__file__)[0]
+            nikto_dir = join(nikto_dir, "nikto")
+            nikto_dir = abspath(nikto_dir)
+            nikto_script = join(nikto_dir, "nikto.pl")
+            if not nikto_script or not exists(nikto_script):
+                nikto_script = "/usr/bin/nikto"
+                if not exists(nikto_script):
+                    nikto_script = Config.plugin_args["exec"]
+                    if nikto_script:
+                        Logger.log_error("Nikto not found! File: %s" % nikto_script)
+                    else:
+                        Logger.log_error("Nikto not found!")
+                    return
 
         # Get the path to the configuration file.
         config = Config.plugin_args["config"]
         if config:
             config = join(nikto_dir, config)
             config = abspath(config)
-
-            # If it doesn't exist, try the system default.
             if not exists(config):
                 config = "/etc/nikto.conf"
-
-                # If it still doesn't exist, abort.
                 if not exists(config):
-                    Logger.log_error("Nikto config file not found! File: %s" % config)
+                    config = Config.plugin_args["config"]
+                    if config:
+                        Logger.log_error("Nikto config file not found! File: %s" % config)
+                    else:
+                        Logger.log_error("Nikto config file not found!")
                     return
-
-        # We'll execute the nikto script. (Or not, see below).
-        command = nikto_script
-
-        # XXX Crude patch for ticket #120 until we think of something better.
-        if sep == "/" and nikto_script != "/usr/bin/nikto":
-            command = "./nikto.pl"
 
         # On Windows, we must always call Perl explicitly.
         # On POSIX, only if the script is not marked as executable.
+        command = nikto_script
         if sep == "\\" or os.stat(nikto_script)[stat.ST_MODE] & stat.S_IXUSR == 0:
-
-            # XXX Crude patch for ticket #120 until we think of something better.
-            nikto_script = command
 
             # Now the command to run is the Perl interpreter.
             if sep == "\\":
