@@ -7,6 +7,7 @@ messaging Package
 .. automodule:: golismero.messaging.codes
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`message` Module
@@ -15,6 +16,7 @@ messaging Package
 .. automodule:: golismero.messaging.message
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`notifier` Module
@@ -23,5 +25,5 @@ messaging Package
 .. automodule:: golismero.messaging.notifier
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
-

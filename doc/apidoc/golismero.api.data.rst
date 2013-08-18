@@ -7,6 +7,7 @@ data Package
 .. automodule:: golismero.api.data
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`db` Module
@@ -15,6 +16,7 @@ data Package
 .. automodule:: golismero.api.data.db
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 Subpackages
@@ -25,4 +27,3 @@ Subpackages
     golismero.api.data.information
     golismero.api.data.resource
     golismero.api.data.vulnerability
-

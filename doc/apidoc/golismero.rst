@@ -7,6 +7,7 @@ golismero Package
 .. automodule:: golismero.__init__
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`common` Module
@@ -15,6 +16,7 @@ golismero Package
 .. automodule:: golismero.common
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 Subpackages
@@ -27,4 +29,3 @@ Subpackages
     golismero.main
     golismero.managers
     golismero.messaging
-

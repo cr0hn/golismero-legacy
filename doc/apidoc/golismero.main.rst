@@ -7,6 +7,7 @@ main Package
 .. automodule:: golismero.main.console
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`launcher` Module
@@ -15,6 +16,7 @@ main Package
 .. automodule:: golismero.main.launcher
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`orchestrator` Module
@@ -23,6 +25,7 @@ main Package
 .. automodule:: golismero.main.orchestrator
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`scope` Module
@@ -31,6 +34,7 @@ main Package
 .. automodule:: golismero.main.scope
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`testing` Module
@@ -39,5 +43,5 @@ main Package
 .. automodule:: golismero.main.testing
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
-

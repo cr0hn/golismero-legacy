@@ -7,6 +7,7 @@ database Package
 .. automodule:: golismero.database.auditdb
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`cachedb` Module
@@ -15,6 +16,7 @@ database Package
 .. automodule:: golismero.database.cachedb
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`common` Module
@@ -23,5 +25,5 @@ database Package
 .. automodule:: golismero.database.common
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
-

@@ -7,6 +7,7 @@ api Package
 .. automodule:: golismero.api
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`audit` Module
@@ -15,6 +16,7 @@ api Package
 .. automodule:: golismero.api.audit
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`config` Module
@@ -23,6 +25,7 @@ api Package
 .. automodule:: golismero.api.config
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`external` Module
@@ -31,6 +34,7 @@ api Package
 .. automodule:: golismero.api.external
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`file` Module
@@ -39,6 +43,7 @@ api Package
 .. automodule:: golismero.api.file
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`logger` Module
@@ -47,6 +52,7 @@ api Package
 .. automodule:: golismero.api.logger
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`parallel` Module
@@ -55,6 +61,7 @@ api Package
 .. automodule:: golismero.api.parallel
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`plugin` Module
@@ -63,6 +70,7 @@ api Package
 .. automodule:: golismero.api.plugin
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`shared` Module
@@ -71,6 +79,7 @@ api Package
 .. automodule:: golismero.api.shared
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 Subpackages
@@ -81,4 +90,3 @@ Subpackages
     golismero.api.data
     golismero.api.net
     golismero.api.text
-

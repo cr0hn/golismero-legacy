@@ -7,6 +7,7 @@ information Package
 .. automodule:: golismero.api.data.information
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`auth` Module
@@ -15,6 +16,7 @@ information Package
 .. automodule:: golismero.api.data.information.auth
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`binary` Module
@@ -23,6 +25,7 @@ information Package
 .. automodule:: golismero.api.data.information.binary
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`dns` Module
@@ -31,6 +34,7 @@ information Package
 .. automodule:: golismero.api.data.information.dns
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`form` Module
@@ -39,6 +43,7 @@ information Package
 .. automodule:: golismero.api.data.information.form
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`html` Module
@@ -47,6 +52,7 @@ information Package
 .. automodule:: golismero.api.data.information.html
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`http` Module
@@ -55,6 +61,7 @@ information Package
 .. automodule:: golismero.api.data.information.http
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`os_fingerprint` Module
@@ -63,6 +70,7 @@ information Package
 .. automodule:: golismero.api.data.information.os_fingerprint
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`text` Module
@@ -71,6 +79,7 @@ information Package
 .. automodule:: golismero.api.data.information.text
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
 
 :mod:`webserver_fingerprint` Module
@@ -79,5 +88,5 @@ information Package
 .. automodule:: golismero.api.data.information.webserver_fingerprint
     :members:
     :undoc-members:
+    :special-members:
     :show-inheritance:
-
