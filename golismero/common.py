@@ -453,7 +453,7 @@ class Configuration (object):
         Get the settings from a Python dictionary.
 
         :param args: Settings.
-        :type args: dict(str -> *)
+        :type args: dict(str -> \\*)
         """
         for name, value in args.iteritems():
             if name in self._settings_:
@@ -542,7 +542,7 @@ class Configuration (object):
         Copy the settings to a Python dictionary.
 
         :returns: Dictionary that maps the setting names to their values.
-        :rtype: dict(str -> *)
+        :rtype: dict(str -> \\*)
         """
         result = {}
         for name, definition in self._settings_.iteritems():

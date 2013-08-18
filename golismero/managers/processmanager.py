@@ -504,7 +504,7 @@ class PluginContext (object):
         :type message_code: int
 
         :param message_info: The payload of the message. Its type depends on the message type and code.
-        :type message_info: *
+        :type message_info: \\*
 
         :param priority: Priority level. Must be one of the constants from MessagePriority.
         :type priority: int
@@ -565,7 +565,7 @@ class PluginContext (object):
         :type rpc_code: int
 
         :returns: Depends on the call.
-        :rtype: *
+        :rtype: \\*
         """
 
         # Create the response queue.

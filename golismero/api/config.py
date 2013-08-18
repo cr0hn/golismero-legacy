@@ -174,8 +174,10 @@ class _Config (Singleton):
         Here you will find all information in the plugin
         configuration file outside the following sections:
 
-        * [Core]
-        * [Documentation]
+        - [Core]
+        - [Documentation]
+        - [Arguments]
+        - [Configuration]
 
         >>> from golismero.api.config import Config
         >>> print open("suspicious_url.golismero").read()

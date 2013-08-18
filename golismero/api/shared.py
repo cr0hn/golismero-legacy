@@ -135,7 +135,7 @@ def check_value(obj):
     Shared data containers can also be used. Any other data type is forbidden.
 
     :param obj: Object to test.
-    :type obj: *
+    :type obj: \\*
 
     :raises TypeError: An invalid data type was found.
     """
@@ -187,7 +187,7 @@ def encode_key(obj):
     Shared data containers can also be used. Any other data type is forbidden.
 
     :param obj: Object to encode.
-    :type obj: *
+    :type obj: \\*
 
     :returns: Encoded object stream.
     :rtype: str
@@ -215,7 +215,7 @@ def decode_key(data):
     :type data: str
 
     :returns: Decoded object.
-    :rtype: *
+    :rtype: \\*
     """
 
     # Unpickle the object.
@@ -436,7 +436,7 @@ class SharedMap (AbstractSharedContainer):
     def put(self, key, value):
         """
         Map the given key to the given value, and return the previous value.
-        If you don't care for the previous value, try :ref:`async_put` instead.
+        If you don't care for the previous value, try async_put() instead.
 
         :param key: Key to map.
         :type key: immutable
@@ -454,7 +454,7 @@ class SharedMap (AbstractSharedContainer):
     def async_put(self, key, value):
         """
         Map the given key to the given value.
-        Unlike :ref:`put` this method is asynchronous and has no return value.
+        Unlike put() this method is asynchronous and has no return value.
 
         :param key: Key to map.
         :type key: immutable
@@ -469,7 +469,7 @@ class SharedMap (AbstractSharedContainer):
     def put_many(self, items):
         """
         Map the given keys to the given values, and return the previous values.
-        If you don't care for the previous values, try :ref:`async_put_many`
+        If you don't care for the previous values, try async_put_many()
         instead.
 
         :param items: Keys and values to map, in (key, value) tuples.
@@ -489,7 +489,7 @@ class SharedMap (AbstractSharedContainer):
     #--------------------------------------------------------------------------
     def async_put_many(self, items):
         """
-        Map the given key to the given value. Unlike :ref:`put_many` this
+        Map the given key to the given value. Unlike put_many() this
         method is asynchronous and has no return value.
 
         :param items: Keys and values to map, in (key, value) tuples.

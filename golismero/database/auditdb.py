@@ -521,7 +521,7 @@ class BaseAuditDB (BaseDB):
         :type key: str
 
         :returns: Variable value.
-        :rtype: *
+        :rtype: \\*
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 

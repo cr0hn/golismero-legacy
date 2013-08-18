@@ -126,10 +126,10 @@ class PluginState (object):
         :param default: Optional default value. If set, when the name
                         is not found the default is returned instead
                         of raising KeyError.
-        :type default: *
+        :type default: \\*
 
         :returns: Value of the variable.
-        :rtype: *
+        :rtype: \\*
 
         :raises KeyError: The variable was not defined.
         """
@@ -185,7 +185,7 @@ class PluginState (object):
         :type name: str
 
         :param value: Value of the variable.
-        :type value: *
+        :type value: \\*
         """
         if not type(name) in (str, unicode):
             raise TypeError("Expected str or unicode, got %s instead" % type(name))

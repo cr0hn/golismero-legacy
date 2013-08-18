@@ -186,7 +186,7 @@ class MatchingAnalyzer(object):
         """
         If the matching level of text var is sufficient similar
         to the base_text, then, store the text, and anything vars as
-        **kargs associated with this text.
+        \\*\\*kargs associated with this text.
 
         :param text: Text to compare with the base text.
         :type text: str

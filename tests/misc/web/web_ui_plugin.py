@@ -485,7 +485,7 @@ class WebUIPlugin(UIPlugin):
         Implementation of: /scan/create
 
         :param audit_config: Audit configuration.
-        :type audit_config: dict(str -> *)
+        :type audit_config: dict(str -> \\*)
         """
 
         # Load the audit configuration from the dictionary.
@@ -515,7 +515,7 @@ class WebUIPlugin(UIPlugin):
         Implementation of: /scan/list
 
         :returns: Dictionary mapping audit names to their configurations.
-        :rtype: dict(str -> dict(str -> *))
+        :rtype: dict(str -> dict(str -> \\*))
         """
         result = {}
         for audit_name in get_audit_names():
@@ -630,6 +630,6 @@ class WebUIPlugin(UIPlugin):
         Implementation of: /admin/config/details
 
         :returns: Orchestrator configuration.
-        :rtype: dict(str -> *)
+        :rtype: dict(str -> \\*)
         """
         return get_orchestrator_config().to_dictionary()

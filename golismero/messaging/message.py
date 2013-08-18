@@ -67,7 +67,7 @@ class Message (object):
         :type message_code: int
 
         :param message_info: The payload of the message. Its type depends on the message type and code.
-        :type message_info: *
+        :type message_info: \\*
 
         :param audit_name: Name of the audit this message belongs to, if any.
         :type audit_name: str | None
@@ -140,7 +140,7 @@ class Message (object):
     def message_info(self):
         """
         :returns: The payload of the message. Its type depends on the message type and code.
-        :rtype: *
+        :rtype: \\*
         """
         return self.__message_info
 

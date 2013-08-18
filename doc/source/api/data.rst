@@ -40,6 +40,7 @@ This is the common interface for vulnerabilities found by GoLismero plugins:
 .. automodule:: golismero.api.data.vulnerability
    :members:
    :show-inheritance:
+   :noindex:
 
 Concrete data types
 -------------------

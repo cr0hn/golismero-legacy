@@ -427,7 +427,7 @@ class Orchestrator (object):
         :type status_code: int
 
         :param status_data: Status data.
-        :type status_data: *
+        :type status_data: \\*
         """
         msg = Message(
             message_type = MessageType.MSG_TYPE_STATUS,

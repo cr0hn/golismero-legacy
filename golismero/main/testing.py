@@ -225,7 +225,7 @@ class PluginTester(object):
         :type data_or_msg: Data | Message
 
         :returns: Return value from the plugin.
-        :rtype: *
+        :rtype: \\*
         """
 
         # Load the plugin.

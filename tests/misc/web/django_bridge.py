@@ -47,13 +47,13 @@ def launch_django(orchestrator_config, plugin_config, plugin_extra_config):
     Launches the Django web application from the Web UI plugin.
 
     :param orchestrator_config: Orchestrator configuration.
-    :type orchestrator_config: dict(str -> *)
+    :type orchestrator_config: dict(str -> \\*)
 
     :param plugin_config: Web UI plugin configuration.
-    :type plugin_config: dict(str -> *)
+    :type plugin_config: dict(str -> \\*)
 
     :param plugin_extra_config: Web UI plugin extra configuration.
-    :type plugin_extra_config: dict(str -> dict(str -> *))
+    :type plugin_extra_config: dict(str -> dict(str -> \\*))
 
     :returns: Bridge that allows the Web UI plugin to talk to Django.
     :rtype: GoLismero2Django
@@ -116,13 +116,13 @@ def _launch_django(input_conn, output_conn,
     :type output_conn: Connection
 
     :param orchestrator_config: Orchestrator configuration.
-    :type orchestrator_config: dict(str -> *)
+    :type orchestrator_config: dict(str -> \\*)
 
     :param plugin_config: Web UI plugin configuration.
-    :type plugin_config: dict(str -> *)
+    :type plugin_config: dict(str -> \\*)
 
     :param plugin_extra_config: Web UI plugin extra configuration.
-    :type plugin_extra_config: dict(str -> dict(str -> *))
+    :type plugin_extra_config: dict(str -> dict(str -> \\*))
     """
 
     # Make sure all exceptions are caught.
@@ -211,7 +211,7 @@ class Bridge (object):
         :type timeout: int | float | None
 
         :returns: Packet.
-        :rtype: *
+        :rtype: \\*
         """
         if timeout is not None:
             self.__input_conn.poll(timeout)
@@ -227,7 +227,7 @@ class Bridge (object):
         :type timeout: int | float | None
 
         :param packet: Packet.
-        :type packet: *
+        :type packet: \\*
         """
         if timeout is not None:
             self.__output_conn.poll(timeout)
@@ -306,7 +306,7 @@ class GoLismeroStateMachine (threading.Thread):
         :type command: str
 
         :returns: Return value from the command.
-        :rtype: *
+        :rtype: \\*
         """
 
         # Abort if we're shutting down.

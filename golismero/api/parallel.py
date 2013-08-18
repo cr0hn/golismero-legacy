@@ -318,7 +318,7 @@ class Task(object):
         :type index: int
 
         :param output: Output dictionary that will receive the return value.
-        :type output: dict(int -> *)
+        :type output: dict(int -> \\*)
         """
 
         # Validate the parameters.
@@ -365,7 +365,7 @@ class Task(object):
     def output(self):
         """
         :returns: Output dictionary that will receive the return value.
-        :rtype: dict(int -> *)
+        :rtype: dict(int -> \\*)
         """
         return self.__output
 
@@ -402,7 +402,7 @@ class TaskGroup(object):
         :type func: callable
 
         :param data: List of tuples containing the parameters for each call.
-        :type data: list(tuple(*))
+        :type data: list(tuple(\\*))
         """
 
         # Validate the parameters.
@@ -428,7 +428,7 @@ class TaskGroup(object):
     def data(self):
         """
         :returns: List of tuples containing the parameters for each call.
-        :rtype: list(tuple(*))
+        :rtype: list(tuple(\\*))
         """
         return self.__data
 
@@ -436,7 +436,7 @@ class TaskGroup(object):
     def output(self):
         """
         :returns: Output dictionary that will receive the return values.
-        :rtype: dict(int -> *)
+        :rtype: dict(int -> \\*)
         """
         return self.__output
 

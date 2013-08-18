@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Fingerprint the operating system of a remote host.
+"""
+
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
@@ -51,13 +55,6 @@ import os
 import os.path
 import sys
 from collections import Counter
-
-
-__doc__ = """
-
-Fingerprint the operating system of remote host
-
-"""
 
 
 # Import ping library.
@@ -202,7 +199,7 @@ class OSFingerprinting(TestingPlugin):
         Detect if platform is Windows or \*NIX. To do this, get the first link, in scope, and
         does two resquest. If are the same response, then, platform are Windows. Else are \*NIX.
 
-        :returns: True, if the remote host is a Windows system. False is *NIX or None if unknown.
+        :returns: True, if the remote host is a Windows system. False is \*NIX or None if unknown.
         :rtype: bool
         """
         m_forbidden = (

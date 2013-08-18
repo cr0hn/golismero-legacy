@@ -87,8 +87,8 @@ def generate_random_string(length = 30):
 
     The key space used to generate random strings are:
 
-    * ASCII letters (both lowercase and uppercase).
-    * Digits (0-9).
+    - ASCII letters (both lowercase and uppercase).
+    - Digits (0-9).
 
     >>> from golismero.text.text_utils import generate_random_string
     >>> generate_random_string(10)
