@@ -1,15 +1,22 @@
-API
-===
+Plugin API
+==========
 
-Content:
+Plugin interfaces
+-----------------
 
-Data structures
----------------
+There is a general plugin interface. All sub classes implements and inherit their methods.
+
+.. automodule:: golismero.api.plugin
+   :members: Plugin, InformationPlugin, TestingPlugin, UIPlugin, ReportPlugin
+   :show-inheritance:
+   :inherited-members:
+
+Data model
+----------
 
 .. toctree::
 
    api/data
-
 
 Networking API
 ---------------
@@ -18,6 +25,59 @@ Networking API
 
    api/net
 
+External tools API
+------------------
+
+.. automodule:: golismero.api.external
+   :members: run_external_tool, win_to_cygwin_path, cygwin_to_win_path
+
+Logging API
+-----------
+
+.. automodule:: golismero.api.logger
+   :members: Logger
+   :show-inheritance:
+   :inherited-members:
+
+Configuration API
+-----------------
+
+.. automodule:: golismero.api.config
+   :members: Config, _Config
+   :show-inheritance:
+   :inherited-members:
+
+Bundled files API
+-----------------
+
+.. automodule:: golismero.api.file
+   :members: FileManager, _FileManager
+   :show-inheritance:
+   :inherited-members:
+
+Parallel execution API
+----------------------
+
+.. automodule:: golismero.api.parallel
+   :members: pmap, setInterval, TaskGroup, WorkerPool, Counter
+   :show-inheritance:
+   :inherited-members:
+
+Shared data API
+---------------
+
+.. automodule:: golismero.api.shared
+   :members: SharedMap, SharedHeap
+   :show-inheritance:
+   :inherited-members:
+
+Audit database API
+------------------
+
+.. automodule:: golismero.api.data.db
+   :members: Database
+   :show-inheritance:
+   :inherited-members:
 
 Text processing API
 -------------------
@@ -26,29 +86,8 @@ Text processing API
 
    api/text
 
+Audit control API
+-----------------
 
-Logger
-------
-
-.. automodule:: golismero.api.logger
-   :members:
-   :show-inheritance:
-   :inherited-members:
-
-Configuration manager
----------------------
-
-.. automodule:: golismero.api.config
-   :members: Config, _Config
-   :show-inheritance:
-   :private-members:
-
-Plugins interfaces
-------------------
-
-There is a general plugin interface. All sub classes implements and inherit their methods.
-
-.. automodule:: golismero.api.plugin
-   :members: Plugin, InformationPlugin, TestingPlugin, UIPlugin, ReportPlugin
-   :show-inheritance:
-
+.. automodule:: golismero.api.audit
+   :members: get_audit_count, get_audit_names, get_audit_config, start_audit, stop_audit

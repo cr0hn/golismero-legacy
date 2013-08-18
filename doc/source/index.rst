@@ -3,9 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-
-Documentation available
-=======================
+Documentation
+=============
 
 You can follow these links to read the documentation:
 
@@ -13,10 +12,9 @@ You can follow these links to read the documentation:
    :maxdepth: 2
 
    api
-   develop
    plugins
 
 Project page
 ============
 
-Oficial project page: `Golismero Project page <http://https://github.com/cr0hn/golismero>`_
+Oficial project page: `Golismero Project page <http://www.golismero-project.com>`_

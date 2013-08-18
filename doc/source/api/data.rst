@@ -1,53 +1,53 @@
 Data API
 ========
 
-GoLismero has 3 types os data:
+The GoLismero data model is divided into three fundamental types of data:
+ - Information
+ - Resource
+ - Vulnerability
 
-.. toctree::
+Common properties to all data types
+-----------------------------------
 
-   Information structures details<data/information>
-   Resources structures details<data/resource>
-   Vulnerabilities structures details<data/vulnerabilities>
-
-Each type of data respresent a particular information.
-
-Generic base types
-==================
-
-Each type of information has one of de follow common interface:
-
-The base class: Data
---------------------
-
-This class defines the base of all subtypes of data
+All data types in the GoLismero data model have a common interface:
 
 .. automodule:: golismero.api.data
    :members: Data
 
+The Information interface
+-------------------------
 
-Sub-type: Information
----------------------
-
-The methods and params for general Information types are:
+This is the common interface for informational data:
 
 .. automodule:: golismero.api.data.information
    :members:
    :show-inheritance:
 
-Sub-type: Resource
-------------------
+The Resouce interface
+---------------------
 
-The methods and params for general Resources types are:
+This is the common interface for resouce location data:
 
 .. automodule:: golismero.api.data.resource
    :members:
    :show-inheritance:
 
-Sub-type: Vulnerability
------------------------
+The Vulnerability interface
+---------------------------
 
-The methods and params for general vulnerabilities types are:
+This is the common interface for vulnerabilities found by GoLismero plugins:
 
 .. automodule:: golismero.api.data.vulnerability
    :members:
    :show-inheritance:
+
+Concrete data types
+-------------------
+
+Here you can find all concrete data types available in the GoLismero data model:
+
+.. toctree::
+
+   Information<data/information>
+   Resource<data/resource>
+   Vulnerability<data/vulnerability>

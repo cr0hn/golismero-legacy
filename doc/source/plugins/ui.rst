@@ -1,10 +1,10 @@
 UI plugins
 ==========
 
-There are the list of plugins that are responsible of generate the **User Interface**:
-
-Console plugin
-++++++++++++++
+User Interface plugins control the way in which the user interacts with GoLismero.
 
 .. automodule:: plugins.ui.console
+   :members:
+
+.. automodule:: plugins.ui.disabled
    :members:

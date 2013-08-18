@@ -1,32 +1,34 @@
-Details for information types
-=============================
-
-
-Text type
----------
+Data types following the Information interface
+==============================================
 
 .. automodule:: golismero.api.data.information.text
-   :members:
+   :members: Text
    :show-inheritance:
-
-Binary type
------------
 
 .. automodule:: golismero.api.data.information.binary
-   :members:
+   :members: Binary
    :show-inheritance:
-
-HTML type
----------
 
 .. automodule:: golismero.api.data.information.html
-   :members:
+   :members: HTML
    :show-inheritance:
 
+.. automodule:: golismero.api.data.information.form
+   :members: Form
+   :show-inheritance:
 
-Fingerprint type
-----------------
+.. automodule:: golismero.api.data.information.http
+   :members: HTTP_Request, HTTP_Raw_Request, HTTP_Response
+   :show-inheritance:
+
+.. automodule:: golismero.api.data.information.auth
+   :members: Username, Password
+   :show-inheritance:
+
+.. automodule:: golismero.api.data.information.os_fingerprint
+   :members: OSFingerprint
+   :show-inheritance:
 
 .. automodule:: golismero.api.data.information.webserver_fingerprint
-   :members:
+   :members: WebServerFingerprint
    :show-inheritance:

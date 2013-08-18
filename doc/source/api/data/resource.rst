@@ -1,16 +1,18 @@
-Details for resource types
-=============================
-
-Url types
----------
+Data types following the Resource interface
+===========================================
 
 .. automodule:: golismero.api.data.resource.url
-   :members:
+   :members: Url, BaseUrl, FolderUrl
    :show-inheritance:
 
-Domain type
------------
-
 .. automodule:: golismero.api.data.resource.domain
-   :members:
+   :members: Domain
+   :show-inheritance:
+
+.. automodule:: golismero.api.data.resource.ip
+   :members: IP
+   :show-inheritance:
+
+.. automodule:: golismero.api.data.resource.email
+   :members: Email
    :show-inheritance:
