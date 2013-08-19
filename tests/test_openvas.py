@@ -44,7 +44,13 @@ except NameError:
         sys.path.insert(0, golismero)
     _FIXED_PATH_ = True
 
-from plugins.testing.scan.openvas.openvas_lib import VulnscanManager
+
+from golismero.api.data import Data
+from golismero.api.data.db import Database
+from golismero.common import AuditConfig, OrchestratorConfig
+from golismero.main.testing import PluginTester
+
+from plugins.testing.scan.openvas import VulnscanManager
 from threading import Semaphore
 from functools import partial
 
@@ -93,7 +99,6 @@ def test_callback():
 
 #----------------------------------------------------------------------
 def callback_step(a):
-    """"""
     print "Openvas status: %s" % str(a)
 
 
@@ -105,9 +110,26 @@ def test_status():
     print manager.get_progress("4aa8df2f-3b35-4c1e-8c26-74202f02dd12")
 
 
+#----------------------------------------------------------------------
+def test_import():
+    orchestrator_config = OrchestratorConfig()
+    orchestrator_config.ui_mode = "disabled"
+    audit_config = AuditConfig()
+    audit_config.targets  = ["192.168.56.101"]
+    audit_config.audit_db = "memory://"
+    with PluginTester(orchestrator_config, audit_config) as t:
+        t.run_plugin("import/xml", path.join(here, "test_openvas.xml"))
+        results = Database.get_many( Database.keys(), Data.TYPE_VULNERABILITY )
+        assert len(results) == 1
+        v = results[0]
+        assert v.level == "low"
+        assert v.plugin_id == "import/xml"
+        assert "Remote web server does not reply with 404 error code." in v.description
 
+
+#----------------------------------------------------------------------
 if __name__ == "__main__":
-    pass
+    test_import()
     #launch_scan_test()
     #get_info_test()
     #test_callback()
