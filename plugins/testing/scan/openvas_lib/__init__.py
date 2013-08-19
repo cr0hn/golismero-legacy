@@ -498,7 +498,10 @@ class VulnscanManager(object):
             self.__function_handle.set()
 
             # Then, remove the target
-            self.delete_target(self.__target_id)
+            try:
+                self.delete_target(self.__target_id)
+            except Exception:
+                pass  # XXX FIXME #135
 
             # Call the callback function
             if func_end:
