@@ -413,7 +413,7 @@ def main():
                 desc = desc.replace("\n", "\n    ")
                 print "\n%s:\n    %s" % (colorize(name[3:], "cyan"), desc)
 
-        if sep == "/":
+        if path.sep == "/":
             print
         exit(0)
 
@@ -498,7 +498,7 @@ def main():
             print "[!] Error recovering plugin info: %s" % str(e)
             exit(1)
 
-        if sep == "/":
+        if path.sep == "/":
             print
         exit(0)
 
@@ -528,7 +528,7 @@ def main():
                 else:
                     print "+ %s" % name
 
-        if sep == "/":
+        if path.sep == "/":
             print
         exit(0)
 
