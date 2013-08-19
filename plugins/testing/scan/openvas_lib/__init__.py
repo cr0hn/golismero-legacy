@@ -236,7 +236,6 @@ class VulnscanManager(object):
         profile              = kwargs.get("profile", None)
         call_back_end        = kwargs.get("callback_end", None)
         call_back_progress   = kwargs.get("callback_progress", None)
-        call_back_progress(1)
         if not (isinstance(target, basestring) or isinstance(target, Iterable)):
             raise TypeError("Expected basestring or iterable, got %s instead" % type(target))
         if not isinstance(profile, basestring):

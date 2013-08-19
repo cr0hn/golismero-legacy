@@ -45,6 +45,18 @@ from openvas_lib import VulnscanManager, VulnscanException
 
 
 #------------------------------------------------------------------------------
+# TODO: maybe polish up this class and add it to the API, see #64
+class OpenVASProgress(object):
+    def __init__(self, func):
+        self.func = func
+        self.previous = None
+    def __call__(self, progress):
+        if self.previous != progress:
+            self.previous = progress
+            self.func(progress)
+
+
+#------------------------------------------------------------------------------
 class OpenVASPlugin(TestingPlugin):
 
 
@@ -95,7 +107,7 @@ class OpenVASPlugin(TestingPlugin):
             target = info.address,
             profile = m_profile,
             callback_end = partial(lambda x: x.set(), m_event),
-            callback_progress = self.update_status
+            callback_progress = OpenVASProgress(self.update_status)
         )
 
         # Wait for completion.
