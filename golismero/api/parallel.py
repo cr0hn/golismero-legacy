@@ -165,10 +165,15 @@ def setInterval(interval, times = -1):
         def wrap(*args, **kwargs):
 
             stop = Event()
+            current_context = Config._context
 
             # This is another function to be executed
             # in a different thread to simulate setInterval
             def inner_wrap():
+                try:
+                    Config._context
+                except SyntaxError:
+                    Config._context = current_context
                 i = 0
                 while i != times and not stop.isSet():
                     stop.wait(interval)
