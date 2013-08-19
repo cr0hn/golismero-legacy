@@ -168,7 +168,7 @@ class OpenVASPlugin(TestingPlugin):
                 target = ip
                 if host in hosts_seen:
                     target = hosts_seen[host]
-                elif ip and ip.address != host:
+                elif not ip or ip.address != host:
                     try:
                         target = IP(host)
                     except ValueError:
