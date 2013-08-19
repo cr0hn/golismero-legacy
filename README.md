@@ -100,4 +100,4 @@ The next features of golismero will be:
 Need help? Found a bug?
 =======================
 
-If you have found a bug, you can report it using the Github issues system. You can also drop us an email (golismero.project@gmail.com) or find us on Twitter (@golismero_pro).
+If you have found a bug, you can report it using the Github issues system. You can also drop us an email (golismero.project@gmail.com) or find us on Twitter ([@golismero_pro](https://twitter.com/golismero_pro)).
