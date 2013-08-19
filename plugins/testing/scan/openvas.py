@@ -261,7 +261,6 @@ class OpenVASImportPlugin(ImportPlugin):
             Logger.log_error_more_verbose(format_exc())
         else:
             if golismero_results:
-                print golismero_results
                 Logger.log(
                     "Loaded %d results from file: %s" %
                     (len(golismero_results), input_file)
