@@ -132,7 +132,10 @@ class OpenVASPlugin(TestingPlugin):
         finally:
 
             # Clean up.
-            m_scanner.delete_scan(m_scan_id)
+            try:
+                m_scanner.delete_scan(m_scan_id)
+            except Exception:
+                pass   # XXX FIXME #135
 
 
     #----------------------------------------------------------------------
