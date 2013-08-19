@@ -183,7 +183,7 @@ class OSFingerprinting(TestingPlugin):
 
         # If there is information, associate it with the resource
         if m_return:
-            info.associated_informations(m_return)
+            info.add_information(m_return)
 
 
         return m_return
