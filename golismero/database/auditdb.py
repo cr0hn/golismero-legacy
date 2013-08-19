@@ -1364,7 +1364,7 @@ class AuditSQLiteDB (BaseAuditDB):
             # Generate the filename from the audit name.
             filename = "".join(
                 (c if c in "-_~" or c.isalnum() else "_")
-                for c in self.audit_name
+                for c in audit_name
             )
             filename = filename + ".db"
 

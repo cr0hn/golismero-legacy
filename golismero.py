@@ -541,6 +541,7 @@ def main():
         if auditParams.targets:
             auditParams.check_params()
     except Exception, e:
+        ##raise # XXX DEBUG
         parser.error(str(e))
 
     try:
@@ -609,6 +610,7 @@ def main():
         else:
             ui_plugin.check_params(cmdParams)
     except Exception, e:
+        ##raise # XXX DEBUG
         msg = str(e)
         if not msg:
             msg = "configuration error!"
