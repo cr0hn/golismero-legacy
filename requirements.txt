@@ -1,7 +1,7 @@
 BeautifulSoup < 4.0.0
 colorizer
 decorator
-django
+django >= 1.5
 dnspython
 netaddr
 nltk
