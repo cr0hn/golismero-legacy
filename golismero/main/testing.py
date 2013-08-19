@@ -59,7 +59,29 @@ class PluginTester(object):
         >>> from golismero.api.data.resource.url import BaseUrl
         >>> from golismero.main.testing import PluginTester
         >>> with PluginTester() as t:
-        ...    t.audit.config.targets = ["http://www.example.com/"]
+        ...    u = BaseUrl("http://www.example.com/")
+        ...    print t.run_plugin("testing/recon/robots", u)
+        ...
+        [<BaseUrl url='http://www.example.com/'>]
+
+    Another example (with a scope):
+        >>> from golismero.api.data.resource.url import BaseUrl
+        >>> from golismero.main.testing import PluginTester
+        >>> with PluginTester(autoinit=False) as t:
+        ...    t.audit_config.targets = ["http://www.example.com/"]
+        ...    t.init_environment()
+        ...    u = BaseUrl("http://www.example.com/")
+        ...    print t.run_plugin("testing/recon/robots", u)
+        ...
+        [<BaseUrl url='http://www.example.com/'>]
+
+    Yet another way of doing it:
+        >>> from golismero.api.data.resource.url import BaseUrl
+        >>> from golismero.common import AuditConfig
+        >>> from golismero.main.testing import PluginTester
+        >>> cfg = AuditConfig()
+        >>> cfg.targets = ["http://www.example.com/"]
+        >>> with PluginTester(audit_config = cfg) as t:
         ...    u = BaseUrl("http://www.example.com/")
         ...    print t.run_plugin("testing/recon/robots", u)
         ...
