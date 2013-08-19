@@ -290,7 +290,7 @@ epub_copyright = u'2013, Golismero Project'
 def skip(app, what, name, obj, skip, options):
     if name in (
         "__module__", "__dict__ ", "__weakref__", "__metaclass__",
-        "__repr__", "__str__",
+        "__repr__", "__str__", "__new__",
     ):
         return True
     return skip
