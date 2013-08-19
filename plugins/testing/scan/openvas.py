@@ -31,7 +31,7 @@ from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.vulnerability import Vulnerability
 from golismero.api.logger import Logger
-from golismero.api.plugin import TestingPlugin
+from golismero.api.plugin import TestingPlugin, ImportPlugin
 
 from threading import Event
 from traceback import format_exc
@@ -220,3 +220,40 @@ class OpenVASPlugin(TestingPlugin):
 
         # Return the converted results.
         return results
+
+
+#------------------------------------------------------------------------------
+class OpenVASImportPlugin(ImportPlugin):
+
+
+    #--------------------------------------------------------------------------
+    def is_supported(self, input_file):
+        if input_file and input_file.lower().endswith(".xml"):
+            with open(input_file, "rU") as fd:
+                line = fd.readline()
+                return line.startswith('<report extension="xml" id="')
+        return False
+
+
+    #--------------------------------------------------------------------------
+    def import_results(self, input_file):
+        try:
+            with open(input_file, "rU") as fd:
+                xml_results   = fd.read()
+            openvas_results   = VulnscanManager.transform(xml_results)
+            golismero_results = OpenVASPlugin.parse_results(openvas_results)
+            if golismero_results:
+                Database.async_add_many(golismero_results)
+        except Exception, e:
+            Logger.log_error(
+                "Could not load OpenVAS results from file: %s" % input_file)
+            Logger.log_error_verbose(str(e))
+            Logger.log_error_more_verbose(format_exc())
+        else:
+            if golismero_results:
+                Logger.log(
+                    "Loaded %d vulnerabilities and %d resources from file: %s" %
+                    (vuln_count, len(golismero_results) - vuln_count, input_file)
+                )
+            else:
+                Logger.log_verbose("No data found in file: %s" % input_file)

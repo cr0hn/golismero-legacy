@@ -371,14 +371,18 @@ class NiktoImportPlugin(ImportPlugin):
         try:
             results, vuln_count = NiktoPlugin.parse_nikto_results(
                 None, input_file)
+            if results:
+                Database.async_add_many(results)
         except Exception, e:
             Logger.log_error(
                 "Could not load Nikto results from file: %s" % input_file)
             Logger.log_error_verbose(str(e))
             Logger.log_error_more_verbose(format_exc())
         else:
-            Database.async_add_many(results)
-            Logger.log(
-                "Loaded %d vulnerabilities and %d resources from file: %s" %
-                (vuln_count, len(results) - vuln_count, input_file)
-            )
+            if results:
+                Logger.log(
+                    "Loaded %d vulnerabilities and %d resources from file: %s" %
+                    (vuln_count, len(results) - vuln_count, input_file)
+                )
+            else:
+                Logger.log_verbose("No data found in file: %s" % input_file)

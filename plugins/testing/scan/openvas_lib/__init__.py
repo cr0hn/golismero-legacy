@@ -347,7 +347,7 @@ class VulnscanManager(object):
         except ServerError, e:
             raise VulnscanServerError("Can't get the results for the task %s. Error: %s" % (scan_id, e.message))
 
-        return self._transform(m_response)
+        return self.transform(m_response)
 
 
     #----------------------------------------------------------------------
@@ -420,7 +420,8 @@ class VulnscanManager(object):
 
 
     #----------------------------------------------------------------------
-    def _transform(self, xml_results):
+    @staticmethod
+    def transform(xml_results):
         """
         Transform the XML results of OpenVAS into GoLismero structures.
 
@@ -440,8 +441,8 @@ class VulnscanManager(object):
             for l_results in l_results.findall("result"):
                 l_partial_result = OpenVASResult.make_empty_object()
 
-                # Store only High, Medium and Low threat
-                if l_results.find("threat").text not in ("High","Medium", "Low"):
+                # Ignore log messages, only get the results
+                if l_results.find("threat").text == "Log":
                     continue
 
                 # For each result
