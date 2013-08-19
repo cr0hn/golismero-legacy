@@ -413,6 +413,8 @@ def main():
                 desc = desc.replace("\n", "\n    ")
                 print "\n%s:\n    %s" % (colorize(name[3:], "cyan"), desc)
 
+        if sep == "/":
+            print
         exit(0)
 
 
@@ -495,11 +497,15 @@ def main():
         except Exception, e:
             print "[!] Error recovering plugin info: %s" % str(e)
             exit(1)
+
+        if sep == "/":
+            print
         exit(0)
 
 
     #--------------------------------------------------------------------------
     # List profiles and quit.
+
     if P.profile_list:
         Console.use_colors = cmdParams.colorize
         profiles = sorted(get_available_profiles())
@@ -521,7 +527,8 @@ def main():
                     print "+ %s: %s" % (name, desc)
                 else:
                     print "+ %s" % name
-        if os.sep != "\\":
+
+        if sep == "/":
             print
         exit(0)
 
@@ -610,6 +617,7 @@ def main():
 
     #--------------------------------------------------------------------------
     # Launch GoLismero.
+
     if auditParams.targets:
         launcher.run(cmdParams, auditParams)
     else:
