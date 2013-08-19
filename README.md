@@ -41,7 +41,7 @@ And you can produce reports in different file formats. The format is guessed fro
 
 ```python golismero.py <target> -o <output file name>```
 
-![Run example](https://raw.github.com/cr0hn/golismero/gh-pages/images/run_mac_2.png "Run example")
+![Run example](https://raw.github.com/cr0hn/golismero/gh-pages/images/run_mac.png "Run example")
 
 Additionally, you can import results from other tools with the -i option. You can use -i several times to import multiple files. This example shows how to parse the results from a Nikto scan and produce a report. To keep GoLismero from re-scanning the target, we'll disable all plugins:
 
