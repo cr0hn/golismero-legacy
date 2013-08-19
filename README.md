@@ -19,8 +19,8 @@ Quick help
 
 Using GoLismero 2.0 is very easy. Below are some basic commands to start to using it:
 
-How to install GoLismero 2.0?
------------------------------
+Installing
+----------
 
 Currently GoLismero 2.0 is under active development so it isn't in the main branch of the github project. To download it, you must write the following:
 
@@ -41,13 +41,13 @@ And you can produce reports in different file formats. The format is guessed fro
 
 ```python golismero.py <target> -o <output file name>```
 
-![Run example](http://raw.github.com/cr0hn/golismero/gh-pages/images/run_mac_2.png "Run example")
+![Run example](https://raw.github.com/cr0hn/golismero/gh-pages/images/run_mac_2.png "Run example")
 
 Additionally, you can import results from other tools with the -i option. You can use -i several times to import multiple files. This example shows how to parse the results from a Nikto scan and produce a report. To keep GoLismero from re-scanning the target, we'll disable all plugins:
 
 ```python golismero.py www.example.com -i nikto_output.csv -o report.html -d all```
 
-![Import export example](http://raw.github.com/cr0hn/golismero/gh-pages/images/import_export_win.png "Import export example")
+![Import export example](https://raw.github.com/cr0hn/golismero/gh-pages/images/import_export_win.png "Import export example")
 
 All results are automatically stored in a database file. You can prevent this with the -nd option:
 
@@ -70,13 +70,13 @@ To display the list of available plugins:
 
 ```python golismero.py --plugin-list```
 
-![Plugin list example](http://raw.github.com/cr0hn/golismero/gh-pages/images/plugin_list_mac_2.png "Plugin list example")
+![Plugin list example](https://raw.github.com/cr0hn/golismero/gh-pages/images/plugin_list_mac_2.png "Plugin list example")
 
 You can also query more information about specific plugins:
 
 ```python golismero.py --plugin-info <plugin name>```
 
-![Plugin info example](http://raw.github.com/cr0hn/golismero/gh-pages/images/plugin_info_mint.png "Plugin list example")
+![Plugin info example](https://raw.github.com/cr0hn/golismero/gh-pages/images/plugin_info_mint.png "Plugin list example")
 
 Select a specific plugin
 ------------------------
@@ -85,7 +85,7 @@ Use the -e option to enable only some specific plugins, and -d to disable plugin
 
 ```python golismero.py <target> -e <plugin id>```
 
-![Run plugin example](http://raw.github.com/cr0hn/golismero/gh-pages/images/run_plugin_mac_2.png "Run plugin example")
+![Run plugin example](https://raw.github.com/cr0hn/golismero/gh-pages/images/run_plugin_mac_2.png "Run plugin example")
 
 What will be the next features?
 ===============================
