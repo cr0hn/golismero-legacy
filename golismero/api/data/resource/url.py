@@ -360,7 +360,10 @@ class BaseUrl(_AbstractUrl):
     @property
     def discovered(self):
         if self.is_in_scope():
-            return [Domain(self.hostname)]
+            try:
+                return [IP(self.hostname)]
+            except ValueError:
+                return [Domain(self.hostname)]
         return []
 
 
