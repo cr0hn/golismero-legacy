@@ -54,27 +54,35 @@ from plugins.testing.scan.openvas import VulnscanManager
 from threading import Semaphore
 from functools import partial
 
-host         = "192.168.0.208"
+host         = "192.168.56.101"
 user         = "admin"
 password     = "admin"
-target       = "8.8.0.0/24"
-config       = "Full and fast"
+target       = "192.168.56.101"
+profile      = "Full and fast"
 
 global sem
 
 #----------------------------------------------------------------------
-def launch_scan_test():
-
+def test_launch_scan():
+    print "Testing launching an OpenVAS scan..."
+    sem = Semaphore(0)
     manager = VulnscanManager(host, user, password)
-    manager.launch_scan(target)
+    scan_id, target_id = manager.launch_scan(
+        target, profile=profile,
+        callback_end=partial(lambda x: x.release(), sem),
+        callback_progress=callback_step
+    )
+    sem.acquire()
+    print manager.get_results(scan_id)
 
-def get_info_test():
+def test_get_info():
+    print "Testing OpenVAS manager properties..."
     manager = VulnscanManager(host, user, password)
     print "All scans"
     print manager.get_all_scans
     print "Finished scans"
     print manager.get_finished_scans
-    print "running scans"
+    print "Running scans"
     print manager.get_running_scans
     print "Available profiles"
     print manager.get_profiles
@@ -83,6 +91,7 @@ def get_info_test():
 sem = None # For control the interval
 
 def test_callback():
+    print "Testing openvas lib callbacks..."
 
     sem = Semaphore(0)
     manager = VulnscanManager(host, user, password)
@@ -106,12 +115,13 @@ def callback_step(a):
 def test_status():
     manager = VulnscanManager(host, user, password)
 
-    print "status"
+    print "Testing OpenVAS status..."
     print manager.get_progress("4aa8df2f-3b35-4c1e-8c26-74202f02dd12")
 
 
 #----------------------------------------------------------------------
 def test_import():
+    print "Testing OpenVAS importer..."
     orchestrator_config = OrchestratorConfig()
     orchestrator_config.ui_mode = "disabled"
     audit_config = AuditConfig()
@@ -130,7 +140,7 @@ def test_import():
 #----------------------------------------------------------------------
 if __name__ == "__main__":
     test_import()
-    #launch_scan_test()
-    #get_info_test()
-    #test_callback()
-    #test_status()
+    test_callback()
+    test_get_info()
+    test_status()
+    test_launch_scan()

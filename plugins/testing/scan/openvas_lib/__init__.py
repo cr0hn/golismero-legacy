@@ -233,7 +233,7 @@ class VulnscanManager(object):
         :rtype: (str, str)
         """
 
-        profile              = kwargs.get("profile", None)
+        profile              = kwargs.get("profile", "Full and fast")
         call_back_end        = kwargs.get("callback_end", None)
         call_back_progress   = kwargs.get("callback_progress", None)
         if not (isinstance(target, basestring) or isinstance(target, Iterable)):
