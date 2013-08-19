@@ -235,7 +235,7 @@ class VulnscanManager(object):
         :rtype: (str, str)
         """
 
-        profile              = kwargs.get("profile", None)
+        profile              = kwargs.get("profile", "Full and fast")
         call_back_end        = kwargs.get("callback_end", None)
         call_back_progress   = kwargs.get("callback_progress", None)
         if not (isinstance(target, basestring) or isinstance(target, Iterable)):
@@ -349,7 +349,7 @@ class VulnscanManager(object):
         except ServerError, e:
             raise VulnscanServerError("Can't get the results for the task %s. Error: %s" % (scan_id, e.message))
 
-        return self._transform(m_response)
+        return self.transform(m_response)
 
 
     #----------------------------------------------------------------------
@@ -422,7 +422,8 @@ class VulnscanManager(object):
 
 
     #----------------------------------------------------------------------
-    def _transform(self, xml_results):
+    @staticmethod
+    def transform(xml_results):
         """
         Transform the XML results of OpenVAS into GoLismero structures.
 
@@ -438,12 +439,12 @@ class VulnscanManager(object):
         m_return_append  = m_return.append
 
         # All the results
-        for l_results in xml_results.findall("results"):
+        for l_results in xml_results.findall(".//results"):
             for l_results in l_results.findall("result"):
                 l_partial_result = OpenVASResult.make_empty_object()
 
-                # Store only High, Medium and Low threat
-                if l_results.find("threat").text not in ("High","Medium", "Low"):
+                # Ignore log messages, only get the results
+                if l_results.find("threat").text == "Log":
                     continue
 
                 # For each result

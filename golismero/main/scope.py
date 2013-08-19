@@ -95,7 +95,10 @@ class AuditScope (object):
             # If it's an IP address...
             else:
                 try:
-                    IPAddress(target)
+                    if target.startswith("[") and target.endswith("]"):
+                        IPAddress(target[1:-1], version=6)
+                    else:
+                        IPAddress(target)
                     address = target
                 except Exception:
                     address = None
@@ -142,7 +145,10 @@ class AuditScope (object):
                             # Extract the domain or IP address.
                             host = parsed_url.host
                             try:
-                                IPAddress(host)
+                                if host.startswith("[") and host.endswith("]"):
+                                    IPAddress(host[1:-1], version=6)
+                                else:
+                                    IPAddress(host)
                                 self.__addresses.add(host)
                             except Exception:
                                 self.__domains.add( host.lower() )
@@ -264,8 +270,9 @@ class AuditScope (object):
         # If it's an IP address...
         try:
             if target.startswith("[") and target.endswith("]"):
-                target = target[1:-1]
-            IPAddress(target)
+                IPAddress(target[1:-1], version=6)
+            else:
+                IPAddress(target)
             address = target
         except Exception:
             address = None

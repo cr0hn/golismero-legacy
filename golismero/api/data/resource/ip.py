@@ -59,7 +59,11 @@ class IP(Resource):
             raise TypeError("Expected str, got %r instead" % type(address))
 
         try:
-            version = int( IPAddress(address).version )
+            if address.startswith("[") and address.endswith("]"):
+                parsed = IPAddress(address[1:-1], version=6)
+            else:
+                parsed = IPAddress(address)
+            version = int( parsed.version )
         except Exception:
             raise ValueError("Invalid IP address: %s" % address)
 

@@ -44,31 +44,45 @@ except NameError:
         sys.path.insert(0, golismero)
     _FIXED_PATH_ = True
 
-from plugins.testing.scan.openvas.openvas_lib import VulnscanManager
+
+from golismero.api.data import Data
+from golismero.api.data.db import Database
+from golismero.common import AuditConfig, OrchestratorConfig
+from golismero.main.testing import PluginTester
+
+from plugins.testing.scan.openvas import VulnscanManager
 from threading import Semaphore
 from functools import partial
 
-host         = "192.168.0.208"
+host         = "192.168.56.101"
 user         = "admin"
 password     = "admin"
-target       = "8.8.0.0/24"
-config       = "Full and fast"
+target       = "192.168.56.101"
+profile      = "Full and fast"
 
 global sem
 
 #----------------------------------------------------------------------
-def launch_scan_test():
-
+def test_launch_scan():
+    print "Testing launching an OpenVAS scan..."
+    sem = Semaphore(0)
     manager = VulnscanManager(host, user, password)
-    manager.launch_scan(target)
+    scan_id, target_id = manager.launch_scan(
+        target, profile=profile,
+        callback_end=partial(lambda x: x.release(), sem),
+        callback_progress=callback_step
+    )
+    sem.acquire()
+    print manager.get_results(scan_id)
 
-def get_info_test():
+def test_get_info():
+    print "Testing OpenVAS manager properties..."
     manager = VulnscanManager(host, user, password)
     print "All scans"
     print manager.get_all_scans
     print "Finished scans"
     print manager.get_finished_scans
-    print "running scans"
+    print "Running scans"
     print manager.get_running_scans
     print "Available profiles"
     print manager.get_profiles
@@ -77,6 +91,7 @@ def get_info_test():
 sem = None # For control the interval
 
 def test_callback():
+    print "Testing openvas lib callbacks..."
 
     sem = Semaphore(0)
     manager = VulnscanManager(host, user, password)
@@ -93,7 +108,6 @@ def test_callback():
 
 #----------------------------------------------------------------------
 def callback_step(a):
-    """"""
     print "Openvas status: %s" % str(a)
 
 
@@ -101,14 +115,32 @@ def callback_step(a):
 def test_status():
     manager = VulnscanManager(host, user, password)
 
-    print "status"
+    print "Testing OpenVAS status..."
     print manager.get_progress("4aa8df2f-3b35-4c1e-8c26-74202f02dd12")
 
 
+#----------------------------------------------------------------------
+def test_import():
+    print "Testing OpenVAS importer..."
+    orchestrator_config = OrchestratorConfig()
+    orchestrator_config.ui_mode = "disabled"
+    audit_config = AuditConfig()
+    audit_config.targets  = ["192.168.56.101"]
+    audit_config.audit_db = "memory://"
+    with PluginTester(orchestrator_config, audit_config) as t:
+        t.run_plugin("import/xml", path.join(here, "test_openvas.xml"))
+        results = Database.get_many( Database.keys(), Data.TYPE_VULNERABILITY )
+        assert len(results) == 1
+        v = results[0]
+        assert v.level == "low"
+        assert v.plugin_id == "import/xml"
+        assert "Remote web server does not reply with 404 error code." in v.description
 
+
+#----------------------------------------------------------------------
 if __name__ == "__main__":
-    pass
-    #launch_scan_test()
-    #get_info_test()
-    #test_callback()
-    #test_status()
+    test_import()
+    test_callback()
+    test_get_info()
+    test_status()
+    test_launch_scan()

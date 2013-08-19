@@ -27,20 +27,27 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
+from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.vulnerability import Vulnerability
 from golismero.api.logger import Logger
-from golismero.api.plugin import TestingPlugin
+from golismero.api.plugin import TestingPlugin, ImportPlugin
 
 from threading import Event
 from traceback import format_exc
 from functools import partial
 
+try:
+    from xml.etree import cElementTree as etree
+except ImportError:
+    from xml.etree import ElementTree as etree
+
 # Import the OpenVAS libraries from the plugin data folder.
-# FIXME the library should go to thirdparty_libs once it's published!
 import os, sys
-sys.path.insert(0, os.path.abspath(os.path.split(__file__)[0]))
+_lib_path = os.path.abspath(os.path.split(__file__)[0])
+if _lib_path not in sys.path:
+    sys.path.insert(0, _lib_path)
 from openvas_lib import VulnscanManager, VulnscanException
 
 
@@ -120,25 +127,28 @@ class OpenVASPlugin(TestingPlugin):
             m_openvas_results = m_scanner.get_results(m_scan_id)
 
             # Convert the scan results to the GoLismero data model.
-            return self.parse_results(info, m_openvas_results)
+            return self.parse_results(m_openvas_results, info)
 
         finally:
 
             # Clean up.
-            m_scanner.delete_scan(m_scan_id)
+            try:
+                m_scanner.delete_scan(m_scan_id)
+            except Exception:
+                pass   # XXX FIXME #135
 
 
     #----------------------------------------------------------------------
     @staticmethod
-    def parse_results(ip, openvas_results):
+    def parse_results(openvas_results, ip = None):
         """
         Convert the OpenVAS scan results to the GoLismero data model.
 
-        :param ip: (Optional) IP address to link the vulnerabilities to.
-        :type ip: IP | None
-
         :param openvas_results: OpenVAS scan results.
         :type openvas_results: list(OpenVASResult)
+
+        :param ip: (Optional) IP address to link the vulnerabilities to.
+        :type ip: IP | None
 
         :returns: Scan results converted to the GoLismero data model.
         :rtype: list(Data)
@@ -161,7 +171,7 @@ class OpenVASPlugin(TestingPlugin):
                 target = ip
                 if host in hosts_seen:
                     target = hosts_seen[host]
-                elif ip and ip.address != host:
+                elif not ip or ip.address != host:
                     try:
                         target = IP(host)
                     except ValueError:
@@ -189,10 +199,11 @@ class OpenVASPlugin(TestingPlugin):
                         description = nvt.summary
                         if not description:
                             description = "A vulnerability has been found."
-                description += "\n" + "\n".join(
-                    " - " + note.text
-                    for note in opv.notes
-                )
+                if opv.notes:
+                    description += "\n" + "\n".join(
+                        " - " + note.text
+                        for note in opv.notes
+                    )
 
                 # Create the vulnerability instance.
                 vuln = Vulnerability(
@@ -220,3 +231,39 @@ class OpenVASPlugin(TestingPlugin):
 
         # Return the converted results.
         return results
+
+
+#------------------------------------------------------------------------------
+class OpenVASImportPlugin(ImportPlugin):
+
+
+    #--------------------------------------------------------------------------
+    def is_supported(self, input_file):
+        if input_file and input_file.lower().endswith(".xml"):
+            with open(input_file, "rU") as fd:
+                line = fd.readline()
+                return line.startswith('<report extension="xml" id="')
+        return False
+
+
+    #--------------------------------------------------------------------------
+    def import_results(self, input_file):
+        try:
+            xml_results       = etree.parse(input_file)
+            openvas_results   = VulnscanManager.transform(xml_results.getroot())
+            golismero_results = OpenVASPlugin.parse_results(openvas_results)
+            if golismero_results:
+                Database.async_add_many(golismero_results)
+        except Exception, e:
+            Logger.log_error(
+                "Could not load OpenVAS results from file: %s" % input_file)
+            Logger.log_error_verbose(str(e))
+            Logger.log_error_more_verbose(format_exc())
+        else:
+            if golismero_results:
+                Logger.log(
+                    "Loaded %d results from file: %s" %
+                    (len(golismero_results), input_file)
+                )
+            else:
+                Logger.log_verbose("No data found in file: %s" % input_file)

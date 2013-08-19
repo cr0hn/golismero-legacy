@@ -35,7 +35,7 @@ __all__ = ["PluginTester"]
 from .launcher import _sanitize_config
 from .orchestrator import Orchestrator
 from .scope import AuditScope, DummyScope
-from ..api.data import LocalDataCache
+from ..api.data import Data, LocalDataCache
 from ..api.config import Config
 from ..api.file import FileManager
 from ..api.net.cache import NetworkCache
@@ -233,7 +233,7 @@ class PluginTester(object):
 
 
     #--------------------------------------------------------------------------
-    def run_plugin(self, plugin_name, data_or_msg):
+    def run_plugin(self, plugin_name, plugin_input):
         """
         Run the requested plugin. You can test both data and messages.
 
@@ -243,14 +243,17 @@ class PluginTester(object):
         :param plugin_name: Name of the plugin to test.
         :type plugin_name: str
 
-        :param data_or_msg: Data or message to send.
-        :type data_or_msg: Data | Message
+        :param plugin_input: Plugin input.
+            Testing plugins accept Data objects, Import and Report plugins
+            accept filenames, and UI plugins accept both Data and Message.
+        :type plugin_input: str | Data | Message
 
         :returns: Return value from the plugin.
         :rtype: \\*
         """
 
         # Load the plugin.
+        # The name MUST be the full ID. This is intentional.
         plugin, plugin_info = self.get_plugin(plugin_name)
         Config._context._PluginContext__plugin_info = plugin_info
 
@@ -263,39 +266,66 @@ class PluginTester(object):
             LocalDataCache.on_run()
 
             # If it's a message, send it and return.
-            if isinstance(data_or_msg, Message):
-                return plugin.recv_msg(data_or_msg)
+            if isinstance(plugin_input, Message):
+                return plugin.recv_msg(plugin_input)
 
-            # It's data.
-            data = data_or_msg
+            # If it's data....
+            if isinstance(plugin_input, Data):
+                data = plugin_input
 
-            # If the data is out of scope, don't run the plugin.
-            if not data.is_in_scope():
-                return []
+                # If the data is out of scope, don't run the plugin.
+                if not data.is_in_scope():
+                    return []
 
-            # Make sure the plugin can actually process this type of data.
-            # Raise an exception if it doesn't.
-            found = False
-            for clazz in plugin.get_accepted_info():
-                if isinstance(data, clazz):
-                    found = True
-                    break
-            if not found:
-                msg = "Plugin %s cannot process data of type %s"
-                raise TypeError(msg % (plugin_name, type(data)))
+                # Make sure the plugin can actually process this type of data.
+                # Raise an exception if it doesn't.
+                found = False
+                for clazz in plugin.get_accepted_info():
+                    if isinstance(data, clazz):
+                        found = True
+                        break
+                if not found:
+                    msg = "Plugin %s cannot process data of type %s"
+                    raise TypeError(msg % (plugin_name, type(data)))
 
-            # Call the plugin.
-            result = plugin.recv_info(data)
+                # Call the plugin.
+                result = plugin.recv_info(data)
 
-            # Process the results.
-            result = LocalDataCache.on_finish(result)
+                # Process the results.
+                result = LocalDataCache.on_finish(result)
 
-            # If the input data was not returned, make sure to add it.
-            if data not in result:
-                result.insert(0, data)
+                # If the input data was not returned, make sure to add it.
+                if data not in result:
+                    result.insert(0, data)
 
-            # Return the results.
-            return result
+                # Return the results.
+                return result
+
+            # If it's not a string, we have a type error.
+            if not type(plugin_input) is str:
+                raise TypeError(
+                    "Cannot process input of type: %s" % type(plugin_input))
+
+            # It's a filename.
+            filename = plugin_input
+
+            # If it's an import plugin...
+            if plugin_info.category == "import":
+
+                # Call the import method.
+                plugin.import_results(filename)
+
+            # If it's a report plugin...
+            elif plugin_info.category == "report":
+
+                # Call the report method.
+                plugin.generate_report(filename)
+
+            # If it's another plugin type, it's an error.
+            else:
+                raise TypeError(
+                    "Plugins of category %s cannot process filenames."
+                    % plugin_info.category)
 
         finally:
 

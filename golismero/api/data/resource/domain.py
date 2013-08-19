@@ -37,6 +37,8 @@ from .. import identity
 from ...config import Config
 from ...net.web_utils import split_hostname
 
+from netaddr import IPAddress
+
 
 #------------------------------------------------------------------------------
 class Domain(Resource):
@@ -59,6 +61,17 @@ class Domain(Resource):
         if not isinstance(hostname, basestring):
             raise TypeError("Expected string, got %s instead" % type(hostname))
         hostname = str(hostname)
+
+        # Check we've not confused an IP address for a hostname.
+        try:
+            if hostname.startswith("[") and hostname.endswith("]"):
+                parsed = IPAddress(hostname[1:-1], version=6)
+            else:
+                parsed = IPAddress(hostname)
+        except Exception:
+            pass
+        else:
+            raise ValueError("This is an IP address (%s) not a domain!" % hostname)
 
         # Domain name.
         self.__hostname = hostname

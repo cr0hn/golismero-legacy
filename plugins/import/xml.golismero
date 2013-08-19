@@ -1,10 +1,10 @@
 [Core]
-Name   = Nikto CSV Importer
-Module = ../testing/scan/nikto.py
-Class  = NiktoImportPlugin
+Name   = OpenVAS XML Importer
+Module = ../testing/scan/openvas.py
+Class  = OpenVASImportPlugin
 
 [Documentation]
-Description = Import the results of a Nikto scan in CSV format.
+Description = Import the results of an OpenVAS scan.
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

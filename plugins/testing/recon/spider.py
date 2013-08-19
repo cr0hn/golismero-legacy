@@ -70,11 +70,10 @@ class Spider(TestingPlugin):
             allow_redirects = Config.audit_config.follow_redirects or \
                              (m_depth == 0 and Config.audit_config.follow_first_redirect)
             p = download(m_url, self.check_download, allow_redirects=allow_redirects)
-            if not p:
-                return m_return
-
         except NetworkException,e:
             Logger.log_more_verbose("Error while processing %r: %s" % (m_url, str(e)))
+        if not p:
+            return m_return
 
         # Send back the data
         m_return.append(p)
