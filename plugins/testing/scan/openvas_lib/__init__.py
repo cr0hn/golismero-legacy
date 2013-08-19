@@ -46,6 +46,7 @@ from .data import *  # noqa
 import socket
 import ssl
 import re
+
 from collections import Iterable
 
 try:
@@ -53,58 +54,8 @@ try:
 except ImportError:
     from xml.etree import ElementTree as etree
 
-
-# This function was taken from: http://stackoverflow.com/q/5179467
-from threading import Event, Timer
-def setInterval(interval, times = -1):
-    # This will be the actual decorator,
-    # with fixed interval and times parameter
-    def outer_wrap(function):
-        # This will be the function to be
-        # called
-        def wrap(*args, **kwargs):
-            stop = Event()
-
-            # This is another function to be executed
-            # in a different thread to simulate setInterval
-            def inner_wrap():
-                i = 0
-                while i != times and not stop.isSet():
-                    stop.wait(interval)
-                    function(*args, **kwargs)
-                    i += 1
-
-            t = Timer(0, inner_wrap)
-            t.daemon = True
-            t.start()
-            return stop
-        return wrap
-    return outer_wrap
-
-# This function was taken from the GoLismero Project.
-# http://www.golismero-project.com
-def generate_random_string(length = 30):
-    """
-    Generates a random string of the specified length.
-
-    The key space used to generate random strings are:
-
-    * ASCII letters (both lowercase and uppercase).
-    * Digits (0-9).
-
-    >>> from golismero.text.text_utils import generate_random_string
-    >>> generate_random_string(10)
-    Asi91Ujsn5
-    >>> generate_random_string(30)
-    8KNLs981jc0h1ls8b2ks01bc7slgu2
-
-    :param length: Desired string length.
-    :type length: int
-    """
-
-    m_available_chars = ascii_letters + digits
-
-    return "".join(choice(m_available_chars) for _ in xrange(length))
+from golismero.api.parallel import setInterval
+from golismero.api.text.text_utils import generate_random_string
 
 
 #------------------------------------------------------------------------------
@@ -605,7 +556,7 @@ class OMPv4(object):
 
 
     #----------------------------------------------------------------------
-    def __init__(cls, host, username, password, port=9390, timeout=None):
+    def __init__(self, host, username, password, port=9390, timeout=None):
         """
         Open a connection to the manager and authenticate the user.
 
@@ -651,14 +602,11 @@ class OMPv4(object):
         except socket.error, e:
             raise ServerError(str(e))
 
-        # Create and configure object
-        cls         = OMPv4()
-        cls.socket  = sock
+        # Configure object
+        self.socket = sock
 
         # Try to authenticate
-        cls._authenticate(username, password)
-
-        return cls
+        self._authenticate(username, password)
 
 
     #----------------------------------------------------------------------
