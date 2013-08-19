@@ -285,6 +285,26 @@ class VulnscanManager(object):
 
 
     #----------------------------------------------------------------------
+    @property
+    def task_id(self):
+        """
+        :returns: OpenVAS task ID.
+        :rtype: str
+        """
+        return self.__task_id
+
+
+    #----------------------------------------------------------------------
+    @property
+    def target_id(self):
+        """
+        :returns: OpenVAS target ID.
+        :rtype: str
+        """
+        return self.__target_id
+
+
+    #----------------------------------------------------------------------
     def delete_scan(self, scan_id):
         """
         Delete specified scan ID in the OpenVAS server.
