@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
+from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.vulnerability import Vulnerability
@@ -37,10 +38,16 @@ from threading import Event
 from traceback import format_exc
 from functools import partial
 
+try:
+    from xml.etree import cElementTree as etree
+except ImportError:
+    from xml.etree import ElementTree as etree
+
 # Import the OpenVAS libraries from the plugin data folder.
-# FIXME the library should go to thirdparty_libs once it's published!
 import os, sys
-sys.path.insert(0, os.path.abspath(os.path.split(__file__)[0]))
+_lib_path = os.path.abspath(os.path.split(__file__)[0])
+if _lib_path not in sys.path:
+    sys.path.insert(0, _lib_path)
 from openvas_lib import VulnscanManager, VulnscanException
 
 
@@ -120,7 +127,7 @@ class OpenVASPlugin(TestingPlugin):
             m_openvas_results = m_scanner.get_results(m_scan_id)
 
             # Convert the scan results to the GoLismero data model.
-            return self.parse_results(info, m_openvas_results)
+            return self.parse_results(m_openvas_results, info)
 
         finally:
 
@@ -130,15 +137,15 @@ class OpenVASPlugin(TestingPlugin):
 
     #----------------------------------------------------------------------
     @staticmethod
-    def parse_results(ip, openvas_results):
+    def parse_results(openvas_results, ip = None):
         """
         Convert the OpenVAS scan results to the GoLismero data model.
 
-        :param ip: (Optional) IP address to link the vulnerabilities to.
-        :type ip: IP | None
-
         :param openvas_results: OpenVAS scan results.
         :type openvas_results: list(OpenVASResult)
+
+        :param ip: (Optional) IP address to link the vulnerabilities to.
+        :type ip: IP | None
 
         :returns: Scan results converted to the GoLismero data model.
         :rtype: list(Data)
@@ -189,10 +196,11 @@ class OpenVASPlugin(TestingPlugin):
                         description = nvt.summary
                         if not description:
                             description = "A vulnerability has been found."
-                description += "\n" + "\n".join(
-                    " - " + note.text
-                    for note in opv.notes
-                )
+                if opv.notes:
+                    description += "\n" + "\n".join(
+                        " - " + note.text
+                        for note in opv.notes
+                    )
 
                 # Create the vulnerability instance.
                 vuln = Vulnerability(
@@ -238,9 +246,8 @@ class OpenVASImportPlugin(ImportPlugin):
     #--------------------------------------------------------------------------
     def import_results(self, input_file):
         try:
-            with open(input_file, "rU") as fd:
-                xml_results   = fd.read()
-            openvas_results   = VulnscanManager.transform(xml_results)
+            xml_results       = etree.parse(input_file)
+            openvas_results   = VulnscanManager.transform(xml_results.getroot())
             golismero_results = OpenVASPlugin.parse_results(openvas_results)
             if golismero_results:
                 Database.async_add_many(golismero_results)
@@ -251,9 +258,10 @@ class OpenVASImportPlugin(ImportPlugin):
             Logger.log_error_more_verbose(format_exc())
         else:
             if golismero_results:
+                print golismero_results
                 Logger.log(
-                    "Loaded %d vulnerabilities and %d resources from file: %s" %
-                    (vuln_count, len(golismero_results) - vuln_count, input_file)
+                    "Loaded %d results from file: %s" %
+                    (len(golismero_results), input_file)
                 )
             else:
                 Logger.log_verbose("No data found in file: %s" % input_file)

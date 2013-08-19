@@ -437,7 +437,7 @@ class VulnscanManager(object):
         m_return_append  = m_return.append
 
         # All the results
-        for l_results in xml_results.findall("results"):
+        for l_results in xml_results.findall(".//results"):
             for l_results in l_results.findall("result"):
                 l_partial_result = OpenVASResult.make_empty_object()
 
