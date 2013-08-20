@@ -50,6 +50,8 @@ from golismero.api.data.resource.url import BaseUrl
 from golismero.common import AuditConfig
 from golismero.main.testing import PluginTester
 
+from collections import defaultdict
+
 
 def test_nikto():
     plugin_name = "testing/scan/nikto"
@@ -65,11 +67,21 @@ def test_nikto():
         plugin, plugin_info = t.get_plugin(plugin_name)
         Config._context._PluginContext__plugin_info = plugin_info
         try:
-            r = plugin.parse_nikto_results(BaseUrl("http://%s/" % target),
+            r, c = plugin.parse_nikto_results(BaseUrl("http://%s/" % target),
                                            path.join(here, csv_file))
+            #for d in r:
+                #print "-" * 10
+                #print repr(d)
+            assert c == 3
+            assert len(r) == 5
+            c = defaultdict(int)
             for d in r:
-                print
-                print repr(d)
+                c[d.__class__.__name__] += 1
+            #print c
+            assert c.pop("IP") == 1
+            assert c.pop("Url") == 1
+            assert c.pop("UrlVulnerability") == 3
+            assert len(c) == 0
         finally:
             Config._context._PluginContext__plugin_info = None
 
