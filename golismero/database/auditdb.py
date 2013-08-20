@@ -1411,7 +1411,6 @@ class AuditSQLiteDB (BaseAuditDB):
                     try:
                         audit_config = cls.decode(row[0])
                     except Exception:
-                        raise
                         raise IOError("Corrupted database!")
 
                     # Finish the transaction.
