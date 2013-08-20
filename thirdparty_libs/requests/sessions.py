@@ -93,7 +93,7 @@ class SessionRedirectMixin(object):
         cookiejar = resp.cookies
 
         # ((resp.status_code is codes.see_other))
-        while (('location' in resp.headers and resp.status_code in REDIRECT_STATI)):
+        while (('location' in resp.headers and resp.headers['location'] != resp.url and resp.status_code in REDIRECT_STATI)):
 
             resp.content  # Consume socket so it can be released
 
@@ -177,7 +177,7 @@ class Session(SessionRedirectMixin):
     """
 
     __attrs__ = [
-        'headers', 'cookies', 'auth', 'timeout', 'proxies', 'hooks',   
+        'headers', 'cookies', 'auth', 'timeout', 'proxies', 'hooks',
         'params', 'verify', 'cert', 'prefetch']
 
     def __init__(self):
