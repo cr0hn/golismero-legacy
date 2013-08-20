@@ -87,11 +87,11 @@ Use the -e option to enable only some specific plugins, and -d to disable plugin
 
 ```python golismero.py <target> -e <plugin id>```
 
-![Run plugin example](https://raw.github.com/cr0hn/golismero/gh-pages/images/run_plugin_mac_2.png "Run plugin example")
-
 You can also select multiple plugins using wildcards. For example, you can select all bruteforce plugins like this:
 
 ```python golismero.py <target> -e brute*```
+
+![Run plugin example](https://raw.github.com/cr0hn/golismero/gh-pages/images/run_plugin_mac_2.png "Run plugin example")
 
 What will be the next features?
 ===============================
