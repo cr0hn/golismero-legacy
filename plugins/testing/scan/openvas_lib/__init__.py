@@ -1062,7 +1062,7 @@ class OMPv4(object):
 
             try:
 
-                self.socket.send(data)
+                self.socket.sendall(data)
             except Exception,e:
                 print str(e)
 

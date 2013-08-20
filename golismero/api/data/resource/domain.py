@@ -65,9 +65,9 @@ class Domain(Resource):
         # Check we've not confused an IP address for a hostname.
         try:
             if hostname.startswith("[") and hostname.endswith("]"):
-                parsed = IPAddress(hostname[1:-1], version=6)
+                IPAddress(hostname[1:-1], version=6)
             else:
-                parsed = IPAddress(hostname)
+                IPAddress(hostname)
         except Exception:
             pass
         else:
