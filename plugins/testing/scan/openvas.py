@@ -126,9 +126,15 @@ class OpenVASPlugin(TestingPlugin):
             # Get the scan results.
             m_openvas_results = m_scanner.get_results(m_scan_id)
 
+            # Clear the info
+
+            m_scanner.delete_scan(m_scan_id)
+            m_scanner.delete_target(m_target_id)
+
             # Convert the scan results to the GoLismero data model.
             return self.parse_results(m_openvas_results, info)
-
+        except Exception,e:
+            Logger.log_error(e)
         finally:
 
             # Clean up.

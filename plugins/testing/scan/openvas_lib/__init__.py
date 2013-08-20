@@ -43,6 +43,7 @@ sys.path.insert(0, cwd)
 
 from .data import *  # noqa
 
+from traceback import format_exc
 import socket
 import ssl
 import re
@@ -56,6 +57,7 @@ except ImportError:
 
 from golismero.api.parallel import setInterval
 from golismero.api.text.text_utils import generate_random_string
+from data import *
 
 
 #------------------------------------------------------------------------------
@@ -488,21 +490,23 @@ class VulnscanManager(object):
 
 
     #----------------------------------------------------------------------
-    @setInterval(10.0)
+    @setInterval(1.0)
     def _callback(self, func_end, func_status):
         """
         This callback function is called every 10 seconds.
         """
+
         # Check if audit was finish
         if self.__task_id in self.__manager.get_tasks_ids_by_status(status="Done").values():
+
             # Task is finished. Stop the callback interval
             self.__function_handle.set()
 
             # Then, remove the target
-            try:
-                self.delete_target(self.__target_id)
-            except Exception:
-                pass  # XXX FIXME #135
+            #try:
+                #self.delete_target(self.__target_id)
+            #except Exception, e:
+                #raise VulnscanException("Error while try to delete the target %s. Error: %s" % (self.__target_id, e.message))
 
             # Call the callback function
             if func_end:
@@ -612,24 +616,18 @@ class OMPv4(object):
             if not isinstance(timeout, int):
                 raise TypeError("Expected int, got %s instead" % type(timeout))
 
-        # Connect
-        sock        = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__host             = host
+        self.__username         = username
+        self.__password         = password
+        self.__port             = port
+
         # Controls for timeout
-        m_timeout   = OMPv4.TIMEOUT
+        self.__timeout          = OMPv4.TIMEOUT
         if timeout:
-            m_timeout = timeout
-        sock.settimeout(m_timeout)
-        sock        = ssl.wrap_socket(sock)
-        try:
-            sock.connect((host, int(port)))
-        except socket.error, e:
-            raise ServerError(str(e))
+            self.__timeout = timeout
 
-        # Configure object
-        self.socket = sock
-
-        # Try to authenticate
-        self._authenticate(username, password)
+        # Make the connection
+        self._connect()
 
 
     #----------------------------------------------------------------------
@@ -840,7 +838,7 @@ class OMPv4(object):
         if task_id:
             return self.make_xml_request('<get_tasks id="%s"/>' % name, xml_result=True)
         else:
-            return self.make_xml_request("<get_tasks/>", xml_result=True)
+            return self.make_xml_request("<get_tasks />", xml_result=True)
 
 
     #----------------------------------------------------------------------
@@ -928,20 +926,14 @@ class OMPv4(object):
         if status not in ("Done", "Paused", "Running", "Stopped"):
             raise ValueError("Requested status are not allowed")
 
-        m_task_ids     = set()
-        m_task_ids_add = m_task_ids.add
+
+        m_task_ids        = {}
 
         for x in self.get_tasks().findall("task"):
             if x.find("status").text == status:
-                m_task_ids_add(x.find("name").text)
+                m_task_ids[x.find("name").text] = x.attrib["id"]
 
-        # Get the tasks
-        m_return        = {}
-        m_return_update = m_return.update
-        for t_name in m_task_ids:
-            m_return_update(self.get_tasks_ids(t_name))
-
-        return m_return
+        return m_task_ids
 
 
     #----------------------------------------------------------------------
@@ -991,6 +983,30 @@ class OMPv4(object):
     #
     #----------------------------------------------------------------------
 
+    #----------------------------------------------------------------------
+    def _connect(self):
+        """
+        Makes the connection and initializes the socket.
+        """
+        # Connect
+        sock        = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # Controls for timeout
+        m_timeout   = OMPv4.TIMEOUT
+        if self.__timeout:
+            m_timeout = self.__timeout
+        sock.settimeout(m_timeout)
+        sock        = ssl.wrap_socket(sock, ssl_version=ssl.PROTOCOL_TLSv1)
+        try:
+            sock.connect((self.__host, int(self.__port)))
+        except socket.error, e:
+            raise ServerError(str(e))
+
+        # Configure object
+        self.socket = sock
+
+        # Try to authenticate
+        self._authenticate(self.__username, self.__password)
+
 
     #----------------------------------------------------------------------
     def _authenticate(self, username, password):
@@ -1039,28 +1055,90 @@ class OMPv4(object):
         BLOCK_SIZE = 1024
         if etree.iselement(data):
             root = etree.ElementTree(data)
-            root.write(self.socket, 'utf-8')
+            root.send(self.socket, 'utf-8')
         else:
             if isinstance(data, unicode):
                 data = data.encode('utf-8')
-            self.socket.send(data)
-        parser = etree.XMLTreeBuilder()
-        m_errors = 0
-        while 1:
+
             try:
-                res = self.socket.recv(BLOCK_SIZE)
-            except ssl.SSLError:
-                m_errors += 1
 
-                if m_errors > 3:
-                    break
+                self.socket.send(data)
+            except Exception,e:
+                print str(e)
 
-                continue
+            #error = False
+            #m_errors = 0
+            #while not error:
+                #try:
 
-            parser.feed(res)
-            if len(res) < BLOCK_SIZE:
-                break
-        root = parser.close()
+                    #error = True
+                #except Exception,e:
+                    #print "adsfas"
+                    #if not self.socket._connected:
+                        #print "Retry %s" % str(m_errors)
+
+                        #self._connect()
+
+                    #if m_errors > 3:
+                        #return
+
+                    #m_errors += 1
+
+            m_errors = 0
+            res = self.socket.read(20000)
+            total = res
+            #while len(res) > BLOCK_SIZE:
+                #print "22222"
+                #res = self.socket.recv()
+                #print "2342423"
+                #print res
+                #total += res
+
+            #total = ""
+            #while 1:
+                #try:
+                    ##res = self.socket.recv(BLOCK_SIZE)
+                    #res = self.socket.read()
+                    #total +=res
+
+                #except ssl.SSLError,e:
+                    #m_errors += 1
+
+                    #if m_errors > 3:
+                        #break
+
+                    #print "@@@@"
+                    #print self.socket._connected
+                    #print e
+
+                    #continue
+                #except ssl.socket_error,e:
+                    #m_errors += 1
+
+                    #if m_errors > 3:
+                        #break
+                    #print "####"
+                    #print self.socket._connected
+                    #print e
+                    #continue
+                #except Exception,e:
+                    #m_errors += 1
+
+                    #if m_errors > 3:
+                        #break
+                    #print "|||||"
+                    #print self.socket._connected
+                    #print e
+
+            parser = etree.XMLTreeBuilder()
+            parser.feed(total)
+            #if len(res) < BLOCK_SIZE:
+                #return
+
+            #if m_errors > 3:
+                #print "errorr"
+                #return parser
+            root = parser.close()
 
         return root
 
@@ -1081,6 +1159,9 @@ class OMPv4(object):
 
         :raises: RunTimeError, ClientError, ServerError
         """
+        if response is None:
+            raise TypeError("Expected ElementTree, got '%s' instead" % type(response))
+
         status = response.get('status')
 
         if status is None:
