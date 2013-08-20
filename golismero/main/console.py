@@ -62,16 +62,19 @@ m_colors = {
 if os.path.sep == "\\":
     m_colors.update({
 
+        # Fix "grey", it doesn't work on Windows
+        'grey'      : 'white',
+
         # String log levels to color names
         'info'      : 'cyan',
-        'low'       : 'grey',
+        'low'       : 'green',
         'middle'    : 'white',
         'high'      : 'magenta',
         'critical'  : 'yellow',
 
         # Integer log levels to color names
         0           : 'cyan',
-        1           : 'grey',
+        1           : 'green',
         2           : 'white',
         3           : 'magenta',
         4           : 'yellow',
