@@ -192,6 +192,7 @@ class OpenVASPlugin(TestingPlugin):
                         target = IP(host)
                     except ValueError:
                         target = Domain(host)
+                    hosts_seen[host] = target
                     results.append(target)
 
                 # Get the threat level.
