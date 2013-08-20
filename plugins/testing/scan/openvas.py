@@ -168,6 +168,14 @@ class OpenVASPlugin(TestingPlugin):
         # Remember the hosts we've seen so we don't create them twice.
         hosts_seen = {}
 
+        LEVELS_CORRESPONDENCES = {
+            'debug' : 'low',
+            'log'   : 'informational',
+            'low'   : "low",
+            'medium': 'middle',
+            'high'  : "high",
+        }
+
         # For each OpenVAS result...
         for opv in openvas_results:
             try:
@@ -215,7 +223,7 @@ class OpenVASPlugin(TestingPlugin):
 
                 # Create the vulnerability instance.
                 vuln = Vulnerability(
-                    level       = level,
+                    level       = LEVELS_CORRESPONDENCES[level.lower()],
                     description = description,
                     ##cvss        = cvss,
                     ##cve         = cve,
