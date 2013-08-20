@@ -490,10 +490,10 @@ class VulnscanManager(object):
 
 
     #----------------------------------------------------------------------
-    @setInterval(1.0)
+    @setInterval(10.0)
     def _callback(self, func_end, func_status):
         """
-        This callback function is called every 10 seconds.
+        This callback function is called periodically from a timer.
         """
 
         # Check if audit was finish

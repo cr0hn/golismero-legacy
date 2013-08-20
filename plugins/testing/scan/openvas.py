@@ -134,7 +134,9 @@ class OpenVASPlugin(TestingPlugin):
             # Convert the scan results to the GoLismero data model.
             return self.parse_results(m_openvas_results, info)
         except Exception,e:
-            Logger.log_error(e)
+            t = format_exc()
+            Logger.log_error_verbose("Error parsing OpenVAS results: %s" % str(e))
+            Logger.log_error_more_verbose(t)
         finally:
 
             # Clean up.
