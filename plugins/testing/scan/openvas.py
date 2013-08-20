@@ -133,7 +133,7 @@ class OpenVASPlugin(TestingPlugin):
 
             # Convert the scan results to the GoLismero data model.
             return self.parse_results(m_openvas_results, info)
-        except Exception.e:
+        except Exception,e:
             Logger.log_error(e)
         finally:
 
