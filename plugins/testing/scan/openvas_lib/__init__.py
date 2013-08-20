@@ -44,9 +44,11 @@ sys.path.insert(0, cwd)
 from .data import *  # noqa
 
 from traceback import format_exc
+
 import socket
 import ssl
 import re
+import threading
 
 from collections import Iterable
 
@@ -116,8 +118,6 @@ class VulnscanManager(object):
 
     ..warning: Only compatible with OMP 4.0.
     """
-
-    TIMEOUT = 10
 
 
     #----------------------------------------------------------------------
@@ -496,7 +496,7 @@ class VulnscanManager(object):
         This callback function is called periodically from a timer.
         """
 
-        # Check if audit was finish
+        # Check if audit was finished
         if self.__task_id in self.__manager.get_tasks_ids_by_status(status="Done").values():
 
             # Task is finished. Stop the callback interval
@@ -579,7 +579,7 @@ class OMPv4(object):
         This code is only compatible with OMP 4.0.
     """
 
-    TIMEOUT  = 10
+    TIMEOUT = 10.0
 
 
     #----------------------------------------------------------------------
@@ -621,6 +621,10 @@ class OMPv4(object):
         self.__password         = password
         self.__port             = port
 
+        # Synchronizes access to the socket,
+        # which is shared by all threads in this plugin
+        self.__socket_lock      = threading.RLock()
+
         # Controls for timeout
         self.__timeout          = OMPv4.TIMEOUT
         if timeout:
@@ -640,8 +644,9 @@ class OMPv4(object):
     #----------------------------------------------------------------------
     def close(self):
         """Close the connection to the manager."""
-        self.socket.close()
-        self.socket = None
+        if self.socket is not None:
+            self.socket.close()
+            self.socket = None
 
 
     #----------------------------------------------------------------------
@@ -983,28 +988,28 @@ class OMPv4(object):
     #
     #----------------------------------------------------------------------
 
+
     #----------------------------------------------------------------------
     def _connect(self):
         """
         Makes the connection and initializes the socket.
         """
-        # Connect
-        sock        = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # Controls for timeout
-        m_timeout   = OMPv4.TIMEOUT
+
+        # Get the timeout
+        m_timeout = OMPv4.TIMEOUT
         if self.__timeout:
             m_timeout = self.__timeout
+
+        # Connect to the server
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(m_timeout)
-        sock        = ssl.wrap_socket(sock, ssl_version=ssl.PROTOCOL_TLSv1)
         try:
             sock.connect((self.__host, int(self.__port)))
         except socket.error, e:
             raise ServerError(str(e))
+        self.socket = ssl.wrap_socket(sock, ssl_version=ssl.PROTOCOL_TLSv1)
 
-        # Configure object
-        self.socket = sock
-
-        # Try to authenticate
+        # Authenticate to the server
         self._authenticate(self.__username, self.__password)
 
 
@@ -1047,100 +1052,42 @@ class OMPv4(object):
         string or an etree Element. The result is as an etree Element.
 
         :param data: data to send.
-        :type data: str| ElementTree
+        :type data: str | ElementTree
 
-        :return: and xml tree.
+        :return: XML tree element.
         :rtype: `ElementTree`
         """
-        BLOCK_SIZE = 1024
+
+        # Make sure the data is a string.
         if etree.iselement(data):
-            root = etree.ElementTree(data)
-            root.send(self.socket, 'utf-8')
-        else:
-            if isinstance(data, unicode):
-                data = data.encode('utf-8')
+            data = etree.dump(data)
+        if isinstance(data, unicode):
+            data = data.encode('utf-8')
 
-            try:
+        # Synchronize access to the socket.
+        with self.__socket_lock:
 
-                self.socket.sendall(data)
-            except Exception,e:
-                print str(e)
+            # Send the data to the server.
+            self.socket.sendall(data)
 
-            #error = False
-            #m_errors = 0
-            #while not error:
-                #try:
+            # Get the response from the server.
+            data = ""
+            tree = None
+            while True:
+                chunk = self.socket.recv(1024)
+                if not chunk:
+                    break
+                data += chunk
+                try:
+                    tree = etree.fromstring(data)
+                except Exception:
+                    continue
+                break
+            if tree is None:
+                tree = etree.fromstring(data)
 
-                    #error = True
-                #except Exception,e:
-                    #print "adsfas"
-                    #if not self.socket._connected:
-                        #print "Retry %s" % str(m_errors)
-
-                        #self._connect()
-
-                    #if m_errors > 3:
-                        #return
-
-                    #m_errors += 1
-
-            m_errors = 0
-            res = self.socket.read(20000)
-            total = res
-            #while len(res) > BLOCK_SIZE:
-                #print "22222"
-                #res = self.socket.recv()
-                #print "2342423"
-                #print res
-                #total += res
-
-            #total = ""
-            #while 1:
-                #try:
-                    ##res = self.socket.recv(BLOCK_SIZE)
-                    #res = self.socket.read()
-                    #total +=res
-
-                #except ssl.SSLError,e:
-                    #m_errors += 1
-
-                    #if m_errors > 3:
-                        #break
-
-                    #print "@@@@"
-                    #print self.socket._connected
-                    #print e
-
-                    #continue
-                #except ssl.socket_error,e:
-                    #m_errors += 1
-
-                    #if m_errors > 3:
-                        #break
-                    #print "####"
-                    #print self.socket._connected
-                    #print e
-                    #continue
-                #except Exception,e:
-                    #m_errors += 1
-
-                    #if m_errors > 3:
-                        #break
-                    #print "|||||"
-                    #print self.socket._connected
-                    #print e
-
-            parser = etree.XMLTreeBuilder()
-            parser.feed(total)
-            #if len(res) < BLOCK_SIZE:
-                #return
-
-            #if m_errors > 3:
-                #print "errorr"
-                #return parser
-            root = parser.close()
-
-        return root
+            # Return the parsed response.
+            return tree
 
 
     #----------------------------------------------------------------------
