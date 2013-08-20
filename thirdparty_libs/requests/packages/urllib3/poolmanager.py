@@ -1,10 +1,15 @@
 # urllib3/poolmanager.py
-# Copyright 2008-2012 Andrey Petrov and contributors (see CONTRIBUTORS.txt)
+# Copyright 2008-2013 Andrey Petrov and contributors (see CONTRIBUTORS.txt)
 #
 # This module is part of urllib3 and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 import logging
+
+try:  # Python 3
+    from urllib.parse import urljoin
+except ImportError:
+    from urlparse import urljoin
 
 from ._collections import RecentlyUsedContainer
 from .connectionpool import HTTPConnectionPool, HTTPSConnectionPool
@@ -22,6 +27,9 @@ pool_classes_by_scheme = {
 }
 
 log = logging.getLogger(__name__)
+
+SSL_KEYWORDS = ('key_file', 'cert_file', 'cert_reqs', 'ca_certs',
+                'ssl_version')
 
 
 class PoolManager(RequestMethods):
@@ -67,7 +75,13 @@ class PoolManager(RequestMethods):
         to be overridden for customization.
         """
         pool_cls = pool_classes_by_scheme[scheme]
-        return pool_cls(host, port, **self.connection_pool_kw)
+        kwargs = self.connection_pool_kw
+        if scheme == 'http':
+            kwargs = self.connection_pool_kw.copy()
+            for kw in SSL_KEYWORDS:
+                kwargs.pop(kw, None)
+
+        return pool_cls(host, port, **kwargs)
 
     def clear(self):
         """
@@ -90,15 +104,16 @@ class PoolManager(RequestMethods):
 
         pool_key = (scheme, host, port)
 
-        # If the scheme, host, or port doesn't match existing open connections,
-        # open a new ConnectionPool.
-        pool = self.pools.get(pool_key)
-        if pool:
-            return pool
+        with self.pools.lock:
+          # If the scheme, host, or port doesn't match existing open connections,
+          # open a new ConnectionPool.
+          pool = self.pools.get(pool_key)
+          if pool:
+              return pool
 
-        # Make a fresh ConnectionPool of the desired type
-        pool = self._new_pool(scheme, host, port)
-        self.pools[pool_key] = pool
+          # Make a fresh ConnectionPool of the desired type
+          pool = self._new_pool(scheme, host, port)
+          self.pools[pool_key] = pool
         return pool
 
     def connection_from_url(self, url):
@@ -136,11 +151,16 @@ class PoolManager(RequestMethods):
         if not redirect_location:
             return response
 
+        # Support relative URLs for redirecting.
+        redirect_location = urljoin(url, redirect_location)
+
+        # RFC 2616, Section 10.3.4
         if response.status == 303:
             method = 'GET'
 
         log.info("Redirecting %s -> %s" % (url, redirect_location))
         kw['retries'] = kw.get('retries', 3) - 1  # Persist retries countdown
+        kw['redirect'] = redirect
         return self.urlopen(method, redirect_location, **kw)
 
 
@@ -161,9 +181,9 @@ class ProxyManager(RequestMethods):
         """
         headers_ = {'Accept': '*/*'}
 
-        host = parse_url(url).host
-        if host:
-            headers_['Host'] = host
+        netloc = parse_url(url).netloc
+        if netloc:
+            headers_['Host'] = netloc
 
         if headers:
             headers_.update(headers)

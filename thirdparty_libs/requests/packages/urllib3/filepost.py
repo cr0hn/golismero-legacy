@@ -1,5 +1,5 @@
 # urllib3/filepost.py
-# Copyright 2008-2012 Andrey Petrov and contributors (see CONTRIBUTORS.txt)
+# Copyright 2008-2013 Andrey Petrov and contributors (see CONTRIBUTORS.txt)
 #
 # This module is part of urllib3 and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -93,6 +93,6 @@ def encode_multipart_formdata(fields, boundary=None):
 
     body.write(b('--%s--\r\n' % (boundary)))
 
-    content_type = b('multipart/form-data; boundary=%s' % boundary)
+    content_type = str('multipart/form-data; boundary=%s' % boundary)
 
     return body.getvalue(), content_type

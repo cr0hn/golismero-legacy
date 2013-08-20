@@ -1,5 +1,5 @@
 # urllib3/util.py
-# Copyright 2008-2012 Andrey Petrov and contributors (see CONTRIBUTORS.txt)
+# Copyright 2008-2013 Andrey Petrov and contributors (see CONTRIBUTORS.txt)
 #
 # This module is part of urllib3 and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -8,6 +8,8 @@
 from base64 import b64encode
 from collections import namedtuple
 from socket import error as SocketError
+from hashlib import md5, sha1
+from binascii import hexlify, unhexlify
 
 try:
     from select import poll, POLLIN
@@ -23,15 +25,14 @@ try:  # Test for SSL features
     HAS_SNI = False
 
     import ssl
-    from ssl import wrap_socket, CERT_NONE, SSLError, PROTOCOL_SSLv23
+    from ssl import wrap_socket, CERT_NONE, PROTOCOL_SSLv23
     from ssl import SSLContext  # Modern SSL?
     from ssl import HAS_SNI  # Has SNI?
 except ImportError:
     pass
 
-
 from .packages import six
-from .exceptions import LocationParseError
+from .exceptions import LocationParseError, SSLError
 
 
 class Url(namedtuple('Url', ['scheme', 'auth', 'host', 'port', 'path', 'query', 'fragment'])):
@@ -58,6 +59,13 @@ class Url(namedtuple('Url', ['scheme', 'auth', 'host', 'port', 'path', 'query', 
             uri += '?' + self.query
 
         return uri
+
+    @property
+    def netloc(self):
+        """Network location including host and port"""
+        if self.port:
+            return '%s:%d' % (self.host, self.port)
+        return self.host
 
 
 def split_first(s, delims):
@@ -112,7 +120,7 @@ def parse_url(url):
 
     # While this code has overlap with stdlib's urlparse, it is much
     # simplified for our needs and less annoying.
-    # Additionally, this imeplementations does silly things to be optimal
+    # Additionally, this implementations does silly things to be optimal
     # on CPython.
 
     scheme = None
@@ -141,7 +149,8 @@ def parse_url(url):
 
     # IPv6
     if url and url[0] == '[':
-        host, url = url[1:].split(']', 1)
+        host, url = url.split(']', 1)
+        host += ']'
 
     # Port
     if ':' in url:
@@ -232,7 +241,7 @@ def make_headers(keep_alive=None, accept_encoding=None, user_agent=None,
     return headers
 
 
-def is_connection_dropped(conn):
+def is_connection_dropped(conn):  # Platform-specific
     """
     Returns True if the connection is dropped and should be closed.
 
@@ -246,7 +255,7 @@ def is_connection_dropped(conn):
     if not sock: # Platform-specific: AppEngine
         return False
 
-    if not poll: # Platform-specific
+    if not poll:
         if not select: # Platform-specific: AppEngine
             return False
 
@@ -301,6 +310,58 @@ def resolve_ssl_version(candidate):
         return res
 
     return candidate
+
+
+def assert_fingerprint(cert, fingerprint):
+    """
+    Checks if given fingerprint matches the supplied certificate.
+
+    :param cert:
+        Certificate as bytes object.
+    :param fingerprint:
+        Fingerprint as string of hexdigits, can be interspersed by colons.
+    """
+
+    # Maps the length of a digest to a possible hash function producing
+    # this digest.
+    hashfunc_map = {
+        16: md5,
+        20: sha1
+    }
+
+    fingerprint = fingerprint.replace(':', '').lower()
+
+    digest_length, rest = divmod(len(fingerprint), 2)
+
+    if rest or digest_length not in hashfunc_map:
+        raise SSLError('Fingerprint is of invalid length.')
+
+    # We need encode() here for py32; works on py2 and p33.
+    fingerprint_bytes = unhexlify(fingerprint.encode())
+
+    hashfunc = hashfunc_map[digest_length]
+
+    cert_digest = hashfunc(cert).digest()
+
+    if not cert_digest == fingerprint_bytes:
+        raise SSLError('Fingerprints did not match. Expected "{0}", got "{1}".'
+                       .format(hexlify(fingerprint_bytes),
+                               hexlify(cert_digest)))
+
+def is_fp_closed(obj):
+    """
+    Checks whether a given file-like object is closed.
+
+    :param obj:
+        The file-like object to check.
+    """
+    if hasattr(obj, 'fp'):
+        # Object is a container for another file-like object that gets released
+        # on exhaustion (e.g. HTTPResponse)
+        return obj.fp is None
+
+    return obj.closed
+
 
 if SSLContext is not None:  # Python 3.2+
     def ssl_wrap_socket(sock, keyfile=None, certfile=None, cert_reqs=None,
