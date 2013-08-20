@@ -42,7 +42,7 @@ import stat
 
 from csv import reader
 from tempfile import NamedTemporaryFile
-from os.path import abspath, join, basename, exists, pathsep, sep, split
+from os.path import abspath, join, exists, pathsep, sep, split
 from traceback import format_exc
 from urlparse import urljoin
 
