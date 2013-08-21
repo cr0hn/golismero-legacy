@@ -34,7 +34,6 @@ from golismero.api.config import Config
 from golismero.api.logger import Logger
 from golismero.api.data import discard_data
 from golismero.api.net.http import HTTP
-from golismero.api.net.scraper import extract_from_html
 from golismero.api.net.scraper import extract_from_html, extract_from_text
 from golismero.api.plugin import TestingPlugin
 from golismero.api.net.web_utils import ParsedURL, download
@@ -44,7 +43,6 @@ from golismero.api.text.matching_analyzer import get_diff_ratio
 
 # Resources
 from golismero.api.data.resource.ip import IP
-from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.url import BaseUrl
 
 # Informations
@@ -108,7 +106,6 @@ class OSFingerprinting(TestingPlugin):
         m_host    = None
 
         is_windows     = None
-        OS_AND_VERSION = []
 
         if isinstance(info, IP):
             m_host = info.address
