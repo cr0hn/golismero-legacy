@@ -101,7 +101,7 @@ def test_a_aaaa():
 #----------------------------------------------------------------------
 def test_ptr():
     """
-    Try to make a inverse resolution
+    Try to make an inverse resolution
     """
     ips = ["173.194.34.197"] # google.com
 

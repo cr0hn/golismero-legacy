@@ -326,11 +326,8 @@ golismero/main/console.py:235: Warning (W, _get_terminal_size_windows): Unused v
 golismero/main/console.py:236: Warning (W, _get_terminal_size_windows): Unused variable 'maxx'
 golismero/main/console.py:236: Warning (W, _get_terminal_size_windows): Unused variable 'maxy'
 golismero/main/console.py:255: Warning (W, _get_terminal_size_tput): No exception type(s) specified
-golismero/main/console.py:261: [F, _get_terminal_size_linux.ioctl_GWINSZ] Unable to import 'fcntl'
-golismero/main/console.py:261: [F, _get_terminal_size_linux.ioctl_GWINSZ] Unable to import 'termios'
 golismero/main/console.py:263: Warning (W, _get_terminal_size_linux.ioctl_GWINSZ): No exception type(s) specified
 golismero/main/console.py:269: Warning (W, _get_terminal_size_linux): Redefining name 'os' from outer scope (line 41)
-golismero/main/console.py:270: Error (E, _get_terminal_size_linux): Module 'os' has no 'ctermid' member
 golismero/main/console.py:273: Warning (W, _get_terminal_size_linux): No exception type(s) specified
 golismero/main/console.py:273: Warning (W, _get_terminal_size_linux): No exception type(s) specified
 golismero/main/console.py:320: Warning (W, Console._display): Catching too general exception Exception
@@ -340,7 +337,6 @@ golismero/main/launcher.py:70: Error (E, run): Instance of 'OrchestratorConfig' 
 golismero/main/launcher.py:76: Error (E, run): Instance of 'OrchestratorConfig' has no 'colorize' member (but some types could not be inferred)
 golismero/main/launcher.py:119: Warning (W, _run): Catching too general exception Exception
 golismero/main/launcher.py:119: Warning (W, _run): Catching too general exception Exception
-golismero/main/launcher.py:174: Error (E, _sanitize_config): Instance of 'OrchestratorConfig' has no 'targets' member (but some types could not be inferred)
 golismero/main/orchestrator.py:85: Error (E, Orchestrator.__init__): Instance of 'SyncManager' has no 'Queue' member
 golismero/main/orchestrator.py:91: Warning (W, Orchestrator.__init__): Access to a protected member _context of a client class
 golismero/main/orchestrator.py:97: Warning (W, Orchestrator.__init__): Access to a protected member _orchestrator of a client class
@@ -367,11 +363,8 @@ golismero/main/scope.py:147: Warning (W, AuditScope.__init__): Catching too gene
 golismero/main/scope.py:244: Warning (W, AuditScope.__contains__): Catching too general exception Exception
 golismero/main/scope.py:270: Warning (W, AuditScope.__contains__): Catching too general exception Exception
 golismero/main/testing.py:167: Warning (W, PluginTester.init_environment): Access to a protected member _Audit__database of a client class
-golismero/main/testing.py:167: Warning (W, PluginTester.init_environment): Attribute '_Audit__database' defined outside __init__
 golismero/main/testing.py:174: Warning (W, PluginTester.init_environment): Access to a protected member _Audit__audit_scope of a client class
-golismero/main/testing.py:174: Warning (W, PluginTester.init_environment): Attribute '_Audit__audit_scope' defined outside __init__
 golismero/main/testing.py:178: Warning (W, PluginTester.init_environment): Access to a protected member _Audit__plugin_manager of a client class
-golismero/main/testing.py:178: Warning (W, PluginTester.init_environment): Attribute '_Audit__plugin_manager' defined outside __init__
 golismero/main/testing.py:189: Error (E, PluginTester.init_environment): Instance of 'AuditManager' has no '_AuditManager__audits' member
 golismero/main/testing.py:189: Warning (W, PluginTester.init_environment): Access to a protected member _AuditManager__audits of a client class
 golismero/main/testing.py:192: Warning (W, PluginTester.init_environment): Access to a protected member _context of a client class
@@ -389,7 +382,6 @@ golismero/main/testing.py:264: Warning (W, PluginTester.run_plugin): Access to a
 golismero/main/testing.py:265: Warning (W, PluginTester.run_plugin): Access to a protected member _update_plugin_path of a client class
 golismero/main/testing.py:333: Warning (W, PluginTester.run_plugin): Access to a protected member _PluginContext__plugin_info of a client class
 golismero/main/testing.py:333: Warning (W, PluginTester.run_plugin): Access to a protected member _context of a client class
-golismero/main/testing.py:333: Warning (W, PluginTester.run_plugin): Attribute '_PluginContext__plugin_info' defined outside __init__
 golismero/main/testing.py:342: Warning (W, PluginTester.cleanup): Access to a protected member _update_plugin_path of a client class
 golismero/main/testing.py:343: Warning (W, PluginTester.cleanup): Access to a protected member _clear_local_cache of a client class
 golismero/main/testing.py:345: Warning (W, PluginTester.cleanup): Access to a protected member _finalize of a client class
@@ -433,7 +425,7 @@ golismero/managers/pluginmanager.py:374: Warning (W, PluginInfo.__init__): Catch
 golismero/managers/pluginmanager.py:374: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:374: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:374: Warning (W, PluginInfo.__init__): Catching too general exception Exception
-golismero/managers/pluginmanager.py:392: Warning (W, PluginInfo.__init__): Catching too general exception Exception
+golismero/managers/pluginmanager.py:374: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:392: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:404: Warning (W, PluginInfo.__init__): Catching too general exception Exception
 golismero/managers/pluginmanager.py:433: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_name of a client class
