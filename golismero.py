@@ -438,7 +438,7 @@ def main():
                 m_plugin_info = manager.get_plugin_by_name(P.plugin_name)
             except KeyError:
                 try:
-                    m_found = manager.search_plugins_by_name(P.plugin_name)
+                    m_found = manager.search_plugins(P.plugin_name)
                     if len(m_found) > 1:
                         print "[!] Error: which plugin did you mean?"
                         for plugin_name in m_found.iterkeys():

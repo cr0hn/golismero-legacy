@@ -50,15 +50,15 @@ from golismero.api.data.resource.url import BaseUrl
 from golismero.common import AuditConfig
 from golismero.main.testing import PluginTester
 
+from collections import defaultdict
+
 
 def test_nikto():
     plugin_name = "testing/scan/nikto"
-    target = "www.example.com"
-    ##csv_file = "test_nikto.csv"
-    csv_file = "terra.csv"
+    csv_file = "test_nikto.csv"
     print "Testing plugin: %s" % plugin_name
     audit_config = AuditConfig()
-    audit_config.targets = [target]
+    audit_config.targets = ["www.example.com", "localhost"]
     audit_config.include_subdomains = False
     with PluginTester(audit_config = audit_config) as t:
 
@@ -66,18 +66,28 @@ def test_nikto():
         plugin, plugin_info = t.get_plugin(plugin_name)
         Config._context._PluginContext__plugin_info = plugin_info
         try:
-            r = plugin.parse_nikto_results(BaseUrl("http://%s/" % target),
+            r, c = plugin.parse_nikto_results(BaseUrl("http://www.example.com/"),
                                            path.join(here, csv_file))
+            #for d in r:
+                #print "-" * 10
+                #print repr(d)
+            assert c == 3
+            assert len(r) == 5
+            c = defaultdict(int)
             for d in r:
-                print
-                print repr(d)
+                c[d.__class__.__name__] += 1
+            #print c
+            assert c.pop("IP") == 1
+            assert c.pop("Url") == 1
+            assert c.pop("UrlVulnerability") == 3
+            assert len(c) == 0
         finally:
             Config._context._PluginContext__plugin_info = None
 
-        #print "Testing Nikto plugin against example.com..."
-        #r = t.run_plugin(plugin_name, BaseUrl("http://%s/" % target))
-        #for d in r:
-            #print "\t%r" % d
+        print "Testing Nikto plugin against localhost..."
+        r = t.run_plugin(plugin_name, BaseUrl("http://localhost/"))
+        for d in r:
+            print "\t%r" % d
 
 
 # Run all tests from the command line.

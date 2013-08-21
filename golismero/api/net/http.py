@@ -247,13 +247,20 @@ class _HTTP(Singleton):
         # Use a connection slot.
         with ConnectionSlot(request.hostname):
 
+            # Filter the Host header to work around a Requests quirk.
+            headers = request.headers.to_dict()
+            try:
+                del headers['host']
+            except KeyError:
+                pass
+
             # Send the request.
             try:
                 t1 = time()
                 resp = self.__session.request(
                     method  = request.method,
                     url     = request.url,
-                    headers = request.headers.to_dict(),
+                    headers = headers,
                     data    = request.post_data,
                     ##files   = request.files,   # not supported yet!
                     verify  = False,

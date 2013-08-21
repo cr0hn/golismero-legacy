@@ -22,9 +22,11 @@ Using GoLismero 2.0 is very easy. Below are some basic commands to start to usin
 Installing
 ----------
 
-Currently GoLismero 2.0 is under active development so it isn't in the main branch of the github project. To download it, you must write the following:
+Just [download](https://github.com/golismero/golismero/archive/master.zip) and extract the compressed file anywhere you like. GoLismero already ships all of its dependencies, with the exception of the Python interpreter itself.
 
-```git clone -b 2.0.0 https://github.com/cr0hn/golismero.git golismero-2.0```
+You can also get the latest version using Git:
+
+```git clone https://github.com/golismero/golismero.git```
 
 Basic usage
 -----------
@@ -78,6 +80,8 @@ You can also query more information about specific plugins:
 
 ![Plugin info example](https://raw.github.com/cr0hn/golismero/gh-pages/images/plugin_info_mint.png "Plugin list example")
 
+The full plugin list is also available [online](http://golismero-project.com/doc/plugin_list/index.html).
+
 Select a specific plugin
 ------------------------
 
@@ -85,7 +89,26 @@ Use the -e option to enable only some specific plugins, and -d to disable plugin
 
 ```python golismero.py <target> -e <plugin id>```
 
+You can also select multiple plugins using wildcards. For example, you can select all bruteforce plugins like this:
+
+```python golismero.py <target> -e brute*```
+
 ![Run plugin example](https://raw.github.com/cr0hn/golismero/gh-pages/images/run_plugin_mac_2.png "Run plugin example")
+
+Reporting and eye candy
+-----------------------
+
+This is how to generate an HTML report for an audit:
+
+```python golismero.py <target> -o report.html```
+
+Report summary:
+
+![Report summary](https://raw.github.com/cr0hn/golismero/gh-pages/images/report1.png "Report summary")
+
+Report details:
+
+![Report details](https://raw.github.com/cr0hn/golismero/gh-pages/images/report2.png "Report details")
 
 What will be the next features?
 ===============================
@@ -96,6 +119,15 @@ The next features of golismero will be:
 - Web UI. We all know true h4xx0rs only use the console, but sometimes drag&drop does come in handy. ;)
 - Export results in PDF format.
 - And more plugins of course!
+
+Not enough? Roll your own!
+==========================
+
+GoLismero is fully extensible through plugins, and that means you can always roll your own scripts, tailored to your specific needs, or using your favorite tools.
+
+You can start from the [plugin API documentation](http://golismero-project.com/doc/plugin_developers/index.html), and move on to the [full specifications](http://golismero-project.com/doc/fulldoc/index.html) if you want to tinker with GoLismero's internals.
+
+More step-by-step tutorials and howtos are coming soon!
 
 Need help? Found a bug?
 =======================

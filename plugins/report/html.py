@@ -44,7 +44,46 @@ class HTMLReport(ReportPlugin):
     Plugin to generate HTML reports.
     """
 
+    # The main porperties of the resources
+    MAIN_RESOURCES_PROPERTIES = {
+        'URL'           : 'url',
+        'BASE_URL'      : 'url',
+        'FOLDER_URL'    : 'url',
+        'DOMAIN'        : 'hostname',
+        'IP'            : 'address',
+        'EMAIL'         : 'address'
+    }
 
+    # This properties/methods are the common info for the vulnerability types.
+    PRIVATE_INFO_VULN = ['DEFAULTS', 'TYPE', 'add_information', 'RESOURCE',
+                         'add_link', 'add_resource', 'add_vulnerability', 'associated_informations',
+                         'associated_resources', 'associated_vulnerabilities', 'cve', 'cwe',
+                         'data_type', 'discovered', 'get_associated_informations_by_category',
+                         'get_associated_resources_by_category', 'get_associated_vulnerabilities_by_category',
+                         'get_linked_data', 'get_links', 'identity', 'impact', 'is_in_scope', 'linked_data',
+                         'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
+                         'merge', 'min_data', 'min_informations', 'min_resources', 'min_vulnerabilities',
+                         'references', 'reverse_merge', 'risk', 'severity', 'validate_link_minimums', 'vulnerability_type',
+                         'resource_type']
+
+    # This properties/methods are the common info for the vulnerability types.
+    PRIVATE_INFO_RESOURCES = ['DEFAULTS', 'TYPE', 'add_information', 'RESOURCE',
+                              'add_link', 'add_resource', 'add_vulnerability', 'associated_informations',
+                              'associated_resources', 'associated_vulnerabilities', 'cve', 'cwe',
+                              'data_type', 'discovered', 'get_associated_informations_by_category',
+                              'get_associated_resources_by_category', 'get_associated_vulnerabilities_by_category',
+                              'get_linked_data', 'get_links', 'identity', 'impact', 'is_in_scope', 'linked_data',
+                              'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
+                              'merge', 'min_data', 'min_informations', 'min_resources', 'min_vulnerabilities',
+                              'references', 'reverse_merge', 'risk', 'severity', 'validate_link_minimums', 'vulnerability_type',
+                              'resource_type']
+
+
+
+    #--------------------------------------------------------------------------
+    #
+    # Aux functions
+    #
     #--------------------------------------------------------------------------
     def is_supported(self, output_file):
         return output_file and (
@@ -117,6 +156,9 @@ class HTMLReport(ReportPlugin):
         # Fill the info of the resources
         self.fill_content_resource(c)
 
+        # Fill the info of the resources
+        self.fill_content_vuln(c)
+
         #
         # Write the output
         #
@@ -169,73 +211,6 @@ class HTMLReport(ReportPlugin):
 
 
     #----------------------------------------------------------------------
-    def fill_content_resource__(self, context):
-        """
-        Fill the context var with the "resource" information.
-
-        :param context: Context var to fill.
-        :type context: Context
-        """
-
-
-        context['info_by_resource']  = [
-            {
-                # Resource type URL
-                'resource_type' : "URL",
-                'info'          : [
-                    # Resource 1
-                    {
-                        # Index of row
-                        'index'  :  '1',
-
-                        # Resource info
-                        'resource' : {
-                            'URI'       : "http",
-                            'main_info' : "http://www.mytest.site.com"
-                        },
-
-                        # Vulns
-                        'vulns'  : [
-                            {
-                                'level'   : 'high',
-                                'number'  : '4'
-                            }
-                        ]
-                    },
-
-                    # Resource 2
-                    {
-                        # Index of row
-                        'index'  :  '2',
-
-                        # Resource info
-                        'resource' : {
-                            'URI'       : "http",
-                            'main_info' : "http://www.othersite.com"
-                        },
-
-                        # Vulns
-                        'vulns'  : [
-                            {
-                                'level'   : 'high',
-                                'number'  : '2'
-                            },
-                            {
-                                'level'   : 'middle',
-                                'number'  : '23'
-                            },
-                            {
-                                'level'   : 'low',
-                                'number'  : '1'
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-
-
-    #----------------------------------------------------------------------
     #
     # Concrete displayer for resources
     #
@@ -244,39 +219,61 @@ class HTMLReport(ReportPlugin):
         """
         Fill the context var with the "resource" information.
 
+        This method generates a list as format:
+
+        [
+            {
+                'resource_type' : "URL",
+
+                'info'          : [
+                    # Resource 1
+                    {
+                        # Resource info
+                        'main_info' : "http://www.mytest.site.com",
+
+                        'properties' : [
+                           {
+                              'name'  : 'name property 1',
+                              'value'  : 'value property 1',
+                           },
+                        ],
+
+                        'associated_vulns' : [
+                           {
+                              'vuln_name': 'name of vuln',
+                              'vuln_properties: [
+                                 {
+                                    'name': 'name of property 1',
+                                    'value' : 'value of property 1'
+                                 }
+                              ]
+                           }
+                        ]
+
+                        # Vulns
+                        'vulns'  : [
+                            {
+                                'level'   : 'high',
+                                'number'  : '4'
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+
         :param context: Context var to fill.
         :type context: Context
         """
-
-        # The main porperties of the resources
-        MAIN_PROPERTIES = {
-            'URL'           : 'url',
-            'BASE_URL'      : 'url',
-            'FOLDER_URL'    : 'url',
-            'DOMAIN'        : 'hostname',
-            'IP'            : 'address',
-            'EMAIL'         : 'address'
-        }
-
-
-        # This properties/methods are the common info for the vulnerability types.
-        PRIVATE_INFO = ['DEFAULTS', 'TYPE', 'add_information', 'RESOURCE',
-                        'add_link', 'add_resource', 'add_vulnerability', 'associated_informations',
-                        'associated_resources', 'associated_vulnerabilities', 'cve', 'cwe',
-                        'data_type', 'discovered', 'get_associated_informations_by_category',
-                        'get_associated_resources_by_category', 'get_associated_vulnerabilities_by_category',
-                        'get_linked_data', 'get_links', 'identity', 'impact', 'is_in_scope', 'linked_data',
-                        'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
-                        'merge', 'min_data', 'min_informations', 'min_resources', 'min_vulnerabilities',
-                        'references', 'reverse_merge', 'risk', 'severity', 'validate_link_minimums', 'vulnerability_type',
-                        'resource_type']
-
 
         m_results        = []
         m_results_append = m_results.append
 
         # Get all type of resources
-        m_all_resources = set([x for x in dir(Resource) if x.startswith("RESOURCE")])
+        #
+        # FIXME: take the BaseURL and FolderUrl resources, unify their vulns and put them in the common URL resource
+        #
+        m_all_resources = set([x for x in dir(Resource) if x.startswith("RESOURCE") and x != "RESOURCE_BASE_URL" and x != "RESOURCE_FOLDER_URL"])
 
         for l_resource in m_all_resources:
             l_res_result = {}
@@ -299,75 +296,34 @@ class HTMLReport(ReportPlugin):
                 # Dict where store the results
                 l_concrete_res  = {}
 
-                # Index
-                l_concrete_res['index']    = i
-
                 # Resource to display
-                l_concrete_res['resource'] = {}
-                l_concrete_res['resource']['main_info'] = getattr(r, MAIN_PROPERTIES[l_resource.replace("RESOURCE_", "")])
+                l_concrete_res['main_info'] = getattr(r, self.MAIN_RESOURCES_PROPERTIES[l_resource.replace("RESOURCE_", "")])
 
                 # Summary vulns
                 l_concrete_res['vulns']    = self.__get_vulns_counter(r.associated_vulnerabilities)
 
-
-                #
-                # Display the resource
-                #
-
-                # Get all no trivial properties
-                m_valid_params = set()
-                for x in dir(r):
-                    found = False
-                    for y in PRIVATE_INFO:
-                        if x.startswith("_") or x.startswith(y):
-                            found = True
-                            break
-
-                    if not found:
-                        m_valid_params.add(x)
-
-                    found = False
-
                 #
                 # Display resource params
                 #
-                l_resource_prop          = []
-                l_resource_prop_append   = l_resource_prop.append
-                for l_p in m_valid_params:
-                    l_print_value = getattr(r, l_p)
+                l_concrete_res['properties'] = self.__get_object_properties(r, self.PRIVATE_INFO_RESOURCES)
 
-                    if l_print_value is not None:
-
-                        # String data
-                        if isinstance(l_print_value, basestring):
-                            l_resource_prop_append({'name' : l_p.capitalize(), 'value' : getattr(r, l_p)})
-
-                        continue
-
-                        # Dict data
-                        if isinstance(l_print_value, dict) and len(l_print_value) > 0:
-                            l_table.add_row([ "%s: %s" % (k.capitalize(), v) for k, v in l_print_value.iteritems()], cell_title= l_p.replace("_", " ").capitalize())
-
-                        # List data
-                        if isinstance(l_print_value, list) and len(l_print_value) > 0:
-                            l_table.add_row(l_print_value, cell_title= l_p.replace("_", " ").capitalize())
-
-                l_concrete_res['resource']['prop'] = l_resource_prop
-
-                m_resource_appender(l_concrete_res)
-                continue
 
                 #
                 # Display the vulns
                 #
                 if r.associated_vulnerabilities:
-                    l_table.add_row(self.vuln_genereral_displayer(r.associated_vulnerabilities), "Vulnerabilities")
+                    l_assoc        = []
+                    l_assoc_append = l_assoc.append
+                    for l_res_vuln in r.associated_vulnerabilities:
+                        l_assoc_res = {}
+                        l_assoc_res['vuln_name']       = l_res_vuln.__class__.__name__
+                        l_assoc_res['vuln_properties'] = self.__get_object_properties(l_res_vuln, self.PRIVATE_INFO_VULN)
 
-                a = l_table.get_content()
-                if a:
-                    l_b.write(a)
+                        l_assoc_append(l_assoc_res)
 
-                print l_b.getvalue()
+                    l_concrete_res['associated_vulns'] = l_assoc
+
+                m_resource_appender(l_concrete_res)
 
 
 
@@ -376,10 +332,100 @@ class HTMLReport(ReportPlugin):
 
         context['info_by_resource'] = m_results
 
+    def fill_content_vuln(self, context):
+        """
+        Fill the context var with the "vulns" information.
+
+
+        This method generates a list as format:
+
+        >>>[
+            {
+               'vuln_name' : 'Name of vuln',
+
+               'affected_resources':
+               [
+                   {
+                       'resource_type': 'Type 1',
+                       'main_info'    : 'http://www.info.com'
+                   }
+               ],
+
+               'properties':
+               [
+                   {
+                       'name'  : 'name of property',
+                       'value' : 'value of property,
+                   }
+               ],
+
+               'level': 'low'
+            }
+        ]
+
+        :param context: Context var to fill.
+        :type context: Context
+        """
+
+        m_results        = []
+        m_results_append = m_results.append
+
+        # Get all type of resources
+        m_all_resources = set([x for x in dir(Resource) if x.startswith("RESOURCE")])
+
+        for l_resource in m_all_resources:
+            l_res_result = {}
+
+            # Get resources URL resources
+            resource = self.common_get_resources(Data.TYPE_RESOURCE, getattr(Resource, l_resource))
+
+            if not resource:
+                continue
+
+            # Get the vulns of each resource
+            for l_each_res in resource:
+                for l_vuln in l_each_res.associated_vulnerabilities:
+                    # Get the vuln name using the class name
+                    l_res_result['vuln_name']           = l_vuln.__class__.__name__
+
+                    # Get the properties
+                    l_res_result['properties']          = self.__get_object_properties(l_vuln, self.PRIVATE_INFO_VULN)
+
+                    # Get associated resources with this vuln
+                    l_res_affected        = []
+                    l_res_affected_append = l_res_affected.append
+                    for l_res in l_vuln.associated_resources:
+                        l_info = {}
+                        l_info['resource_type'] = l_res.__class__.__name__
+                        l_info['main_info']     = getattr(l_res, self.MAIN_RESOURCES_PROPERTIES[l_res.__class__.__name__.upper()])
+
+                        l_res_affected_append(l_info)
+
+                    l_res_result['affected_resources']  = l_res_affected
+
+
+                    m_results_append(l_res_result)
+
+        context['info_by_vuln'] = m_results
+
+
 
     #----------------------------------------------------------------------
     def __get_vulns_counter(self, vuln):
-        """"""
+        """
+        Count the number of vulns of each type and return a list with the
+        level of the vuln and the number of ocurrences.
+
+        ..note:
+           This function only return those levels that have more than 1
+           ocurrences.
+
+        :param vuln: List of vulnerabilities.
+        :type vuln: list(Vulnerability)
+
+        :return: a list as format: [{'low' : 1}, {'middle' : 2}]
+        :rtype: list(dict())
+        """
         m_counter                   = Counter()
 
         m_total                     = len(vuln)
@@ -404,3 +450,82 @@ class HTMLReport(ReportPlugin):
                 m_results_append({'level' : k, 'number' : v})
 
         return m_results
+
+
+    #----------------------------------------------------------------------
+    def __get_non_trivial_properties(self, in_object, EXCLUDED_PARAMS=None):
+        """
+        Get an object and get their properties that are not private or are not
+        in the EXCLUDED_PARAMS list an return a set with them.
+
+        :param in_object: object instance.
+        :type in_object: object.
+
+        :param EXCLUDED_PARAMS: iterable with a list of parameters to ignore.
+        :type EXCLUDED_PARAMS: Iterable
+
+        :return: a set() with the object properties.
+        :type: set
+        """
+        if in_object is None:
+            raise ValueError("in_object can't be None")
+
+        m_return = set()
+
+        # Get all no trivial properties
+        for x in dir(in_object):
+            found = False
+
+            # Looking for invalud param
+            for y in EXCLUDED_PARAMS:
+                if x.startswith("_") or x.startswith(y):
+                    found = True
+                    break
+
+            if not found:
+                m_return.add(x)
+
+            found = False
+
+        return m_return
+
+    #----------------------------------------------------------------------
+    def __get_object_properties(self, in_object, EXCLUDED_PARAMS):
+        """
+        Get an object a return a dict with their properties and values.
+
+        :param in_object: object to get the properties.
+        :type in_object: object instance.
+
+        :param EXCLUDED_PARAMS: iterable with a list of parameters to ignore.
+        :type EXCLUDED_PARAMS: Iterable
+
+        :return: a list of dicts with the properties/values of the object as format: [{'prop1' : 'value1'}, {'prop2' : 'value2'}]
+        :rtype: list(dict)
+        """
+        if in_object is None:
+            raise ValueError("in_object can't be None")
+        if EXCLUDED_PARAMS is None:
+            raise ValueError("EXCLUDED_PARAMS can't be None")
+
+        m_return        = []
+        m_return_append = m_return.append
+
+        for l_p in self.__get_non_trivial_properties(in_object, EXCLUDED_PARAMS):
+            l_print_value = getattr(in_object, l_p)
+
+            if l_print_value is not None:
+
+                # String data
+                if isinstance(l_print_value, basestring):
+                    m_return_append({'name' : l_p.capitalize(), 'value' : getattr(in_object, l_p)})
+
+                # Dict data
+                if isinstance(l_print_value, dict) and len(l_print_value) > 0:
+                    m_return_append({'name': l_p.capitalize(), 'value': "Dictionary"})
+
+                # List data
+                if isinstance(l_print_value, list) and len(l_print_value) > 0:
+                    m_return_append({'name': l_p.capitalize(), 'value': "List"})
+
+        return m_return

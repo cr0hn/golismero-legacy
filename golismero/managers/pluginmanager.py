@@ -37,12 +37,13 @@ from ..api.plugin import UIPlugin, ImportPlugin, TestingPlugin, ReportPlugin
 from ..common import Configuration, OrchestratorConfig, AuditConfig
 from ..messaging.codes import MessageCode
 
-from os import path, walk
-from keyword import iskeyword
 from collections import defaultdict
 from ConfigParser import RawConfigParser
+from keyword import iskeyword
+from os import path, walk
 
 import re
+import fnmatch
 import imp
 import warnings
 
@@ -816,6 +817,11 @@ class PluginManager (object):
         :raises KeyError: The requested plugin doesn't exist,
             or more than one plugin matches the request.
         """
+        if any(c in plugin_name for c in "?*["):
+            found = self.search_plugins_by_mask(plugin_name)
+            if len(found) != 1:
+                raise KeyError("Plugin not found: %s" % plugin_name)
+            return found.popitem()[1]
         try:
             return self.get_plugin_by_name(plugin_name)
         except KeyError:
@@ -836,9 +842,62 @@ class PluginManager (object):
         :returns: Mapping of plugin names to instances of PluginInfo.
         :rtype: dict(str -> PluginInfo)
         """
-        return { plugin_name: plugin_info
-                 for plugin_name, plugin_info in self.__plugins.iteritems()
-                 if search_string in plugin_name }
+        return {
+            plugin_name: plugin_info
+            for plugin_name, plugin_info in self.__plugins.iteritems()
+            if search_string == plugin_name[ plugin_name.rfind("/") + 1 : ]
+        }
+
+
+    #----------------------------------------------------------------------
+    def search_plugins_by_mask(self, glob_mask):
+        """
+        Try to match the glob mask against plugin names.
+
+        If the glob mask has a / then it applies to the whole path,
+        if it doesn't then it applies to either the whole path or
+        a single component of it.
+
+        :param glob_mask: Glob mask.
+        :type glob_mask: str
+
+        :returns: Mapping of plugin names to instances of PluginInfo.
+        :rtype: dict(str -> PluginInfo)
+        """
+        gfilter = fnmatch.filter
+        gmatch  = fnmatch.fnmatch
+        plugins = self.__plugins
+        matches = {
+            plugin_name: plugins[plugin_name]
+            for plugin_name in gfilter(plugins.iterkeys(), glob_mask)
+        }
+        if "/" not in glob_mask:
+            matches.update({
+                plugin_name: plugin_info
+                for plugin_name, plugin_info in plugins.iteritems()
+                if any(
+                    gmatch(token, glob_mask)
+                    for token in plugin_name.split("/")
+                )
+            })
+        return matches
+
+
+    #----------------------------------------------------------------------
+    def search_plugins(self, search_string):
+        """
+        Try to match the search string against plugin names.
+        The search string may be any substring or a glob mask.
+
+        :param search_string: Search string.
+        :type search_string: str
+
+        :returns: Mapping of plugin names to instances of PluginInfo.
+        :rtype: dict(str -> PluginInfo)
+        """
+        if any(c in search_string for c in "?*["):
+            return self.search_plugins_by_mask(search_string)
+        return self.search_plugins_by_name(search_string)
 
 
     #----------------------------------------------------------------------
@@ -1213,18 +1272,25 @@ class AuditPluginManager (PluginManager):
                         raise ValueError("Not a testing plugin: %s" % token)
                     overrides.append( (flag, (token,)) )
                 else:
-                    matching_plugins = self.pluginManager.search_plugins_by_name(token)
-                    if not matching_plugins:
-                        raise ValueError("Unknown plugin: %s" % token)
-                    if len(matching_plugins) > 1:
-                        msg = ("Ambiguous plugin name %r"
-                               " may refer to any of the following plugins: %s")
-                        msg %= (token, ", ".join(sorted(matching_plugins.iterkeys)))
-                        raise ValueError(msg)
-                    name, info = matching_plugins.items()[0]
-                    if info.category != "testing":
-                        raise ValueError("Not a testing plugin: %s" % token)
-                    overrides.append( (flag, (name,)) )
+                    if any(c in token for c in "?*["):
+                        matching_plugins = self.pluginManager.search_plugins_by_mask(token)
+                        for name, info in matching_plugins.iteritems():
+                            if info.category != "testing":
+                                raise ValueError("Not a testing plugin: %s" % token)
+                            overrides.append( (flag, (name,)) )
+                    else:
+                        matching_plugins = self.pluginManager.search_plugins_by_name(token)
+                        if not matching_plugins:
+                            raise ValueError("Unknown plugin: %s" % token)
+                        if len(matching_plugins) > 1:
+                            msg = ("Ambiguous plugin name %r"
+                                   " may refer to any of the following plugins: %s")
+                            msg %= (token, ", ".join(sorted(matching_plugins.iterkeys())))
+                            raise ValueError(msg)
+                        name, info = matching_plugins.items()[0]
+                        if info.category != "testing":
+                            raise ValueError("Not a testing plugin: %s" % token)
+                        overrides.append( (flag, (name,)) )
 
             # Apply the processed plugin load overrides.
             for enable, names in overrides:
@@ -1284,7 +1350,7 @@ class AuditPluginManager (PluginManager):
         all_plugins = self.pluginManager.get_plugin_names()
         for name in sorted(plugin_list):
             if name not in all_plugins:
-                matching_plugins = set(self.pluginManager.search_plugins_by_name(name).keys())
+                matching_plugins = set(self.pluginManager.search_plugins(name).keys())
                 if not matching_plugins:
                     missing_plugins.add(name)
                     continue

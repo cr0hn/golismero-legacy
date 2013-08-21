@@ -18,14 +18,17 @@ from .structures import CaseInsensitiveDict
 from .auth import HTTPBasicAuth
 from .cookies import cookiejar_from_dict, get_cookie_header
 from .packages.urllib3.filepost import encode_multipart_formdata
-from .exceptions import HTTPError, RequestException, MissingSchema, InvalidURL
+from .packages.urllib3.util import parse_url
+from .exceptions import (
+    HTTPError, RequestException, MissingSchema, InvalidURL,
+    ChunkedEncodingError)
 from .utils import (
-    stream_untransfer, guess_filename, requote_uri,
+    guess_filename, get_auth_from_url, requote_uri,
     stream_decode_response_unicode, to_key_val_list, parse_header_links,
     iter_slices, guess_json_utf, super_len)
 from .compat import (
-    cookielib, urlparse, urlunparse, urlsplit, urlencode, str, bytes, StringIO,
-    is_py2, chardet, json, builtin_str, basestring)
+    cookielib, urlunparse, urlsplit, urlencode, str, bytes, StringIO,
+    is_py2, chardet, json, builtin_str, basestring, IncompleteRead)
 
 CONTENT_CHUNK_SIZE = 10 * 1024
 ITER_CHUNK_SIZE = 512
@@ -60,7 +63,7 @@ class RequestEncodingMixin(object):
         """Encode parameters in a piece of data.
 
         Will successfully encode parameters when passed as a dict or a list of
-        2-tuples. Order is retained if data is a list of 2-tuples but abritrary
+        2-tuples. Order is retained if data is a list of 2-tuples but arbitrary
         if parameters are supplied as a dict.
         """
 
@@ -99,11 +102,13 @@ class RequestEncodingMixin(object):
         files = to_key_val_list(files or {})
 
         for field, val in fields:
-            if isinstance(val, list):
-                for v in val:
-                    new_fields.append((field, builtin_str(v)))
-            else:
-                new_fields.append((field, builtin_str(val)))
+            if isinstance(val, basestring) or not hasattr(val, '__iter__'):
+                val = [val]
+            for v in val:
+                if v is not None:
+                    new_fields.append(
+                        (field.decode('utf-8') if isinstance(field, bytes) else field,
+                         v.encode('utf-8') if isinstance(v, str) else v))
 
         for (k, v) in files:
             # support for explicit filename
@@ -206,7 +211,6 @@ class Request(RequestHooksMixin):
         self.params = params
         self.auth = auth
         self.cookies = cookies
-        self.hooks = hooks
 
     def __repr__(self):
         return '<Request [%s]>' % (self.method)
@@ -214,18 +218,17 @@ class Request(RequestHooksMixin):
     def prepare(self):
         """Constructs a :class:`PreparedRequest <PreparedRequest>` for transmission and returns it."""
         p = PreparedRequest()
-
-        p.prepare_method(self.method)
-        p.prepare_url(self.url, self.params)
-        p.prepare_headers(self.headers)
-        p.prepare_cookies(self.cookies)
-        p.prepare_body(self.data, self.files)
-        # Note that prepare_auth must be last to enable authentication schemes
-        # such as OAuth to work on a fully prepared request.
-        p.prepare_auth(self.auth)
-        # This MUST go after prepare_auth. Authenticators could add a hook
-        p.prepare_hooks(self.hooks)
-
+        p.prepare(
+            method=self.method,
+            url=self.url,
+            headers=self.headers,
+            files=self.files,
+            data=self.data,
+            params=self.params,
+            auth=self.auth,
+            cookies=self.cookies,
+            hooks=self.hooks,
+        )
         return p
 
 
@@ -260,8 +263,33 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
         #: dictionary of callback hooks, for internal usage.
         self.hooks = default_hooks()
 
+    def prepare(self, method=None, url=None, headers=None, files=None,
+                data=None, params=None, auth=None, cookies=None, hooks=None):
+        """Prepares the the entire request with the given parameters."""
+
+        self.prepare_method(method)
+        self.prepare_url(url, params)
+        self.prepare_headers(headers)
+        self.prepare_cookies(cookies)
+        self.prepare_body(data, files)
+        self.prepare_auth(auth, url)
+        # Note that prepare_auth must be last to enable authentication schemes
+        # such as OAuth to work on a fully prepared request.
+
+        # This MUST go after prepare_auth. Authenticators could add a hook
+        self.prepare_hooks(hooks)
+
     def __repr__(self):
         return '<PreparedRequest [%s]>' % (self.method)
+
+    def copy(self):
+        p = PreparedRequest()
+        p.method = self.method
+        p.url = self.url
+        p.headers = self.headers
+        p.body = self.body
+        p.hooks = self.hooks
+        return p
 
     def prepare_method(self, method):
         """Prepares the given HTTP method."""
@@ -281,15 +309,27 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
             pass
 
         # Support for unicode domain names and paths.
-        scheme, netloc, path, _params, query, fragment = urlparse(url)
+        scheme, auth, host, port, path, query, fragment = parse_url(url)
 
-        if not (scheme and netloc):
+        if not scheme:
             raise MissingSchema("Invalid URL %r: No schema supplied" % url)
 
+        if not host:
+            raise InvalidURL("Invalid URL %r: No host supplied" % url)
+
+        # Only want to apply IDNA to the hostname
         try:
-            netloc = netloc.encode('idna').decode('utf-8')
+            host = host.encode('idna').decode('utf-8')
         except UnicodeError:
             raise InvalidURL('URL has an invalid label.')
+
+        # Carefully reconstruct the network location
+        netloc = auth or ''
+        if netloc:
+            netloc += '@'
+        netloc += host
+        if port:
+            netloc += ':' + str(port)
 
         # Bare domains aren't valid URLs.
         if not path:
@@ -302,8 +342,6 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
                 netloc = netloc.encode('utf-8')
             if isinstance(path, str):
                 path = path.encode('utf-8')
-            if isinstance(_params, str):
-                _params = _params.encode('utf-8')
             if isinstance(query, str):
                 query = query.encode('utf-8')
             if isinstance(fragment, str):
@@ -316,8 +354,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
             else:
                 query = enc_params
 
-        #url = requote_uri(urlunparse([scheme, netloc, path, _params, query, fragment]))
-        url = urlunparse([scheme, netloc, path, _params, query, fragment])
+        url = requote_uri(urlunparse([scheme, netloc, path, None, query, fragment]))
         self.url = url
 
     def prepare_headers(self, headers):
@@ -339,7 +376,6 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
         body = None
         content_type = None
         length = None
-        is_stream = False
 
         is_stream = all([
             hasattr(data, '__iter__'),
@@ -349,9 +385,9 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
         ])
 
         try:
-            length = str(super_len(data))
+            length = super_len(data)
         except (TypeError, AttributeError):
-            length = False
+            length = None
 
         if is_stream:
             body = data
@@ -359,13 +395,10 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
             if files:
                 raise NotImplementedError('Streamed bodies and files are mutually exclusive.')
 
-            if length:
-                self.headers['Content-Length'] = length
+            if length is not None:
+                self.headers['Content-Length'] = str(length)
             else:
                 self.headers['Transfer-Encoding'] = 'chunked'
-        # Check if file, fo, generator, iterator.
-        # If not, run through normal process.
-
         else:
             # Multi-part file uploads.
             if files:
@@ -392,12 +425,20 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
             self.headers['Content-Length'] = str(body.tell())
             body.seek(0, 0)
         elif body is not None:
-            self.headers['Content-Length'] = str(len(body))
+            l = super_len(body)
+            if l:
+                self.headers['Content-Length'] = str(l)
         elif self.method not in ('GET', 'HEAD'):
             self.headers['Content-Length'] = '0'
 
-    def prepare_auth(self, auth):
+    def prepare_auth(self, auth, url=''):
         """Prepares the given HTTP auth data."""
+
+        # If no Auth is explicitly provided, extract it from the URL first.
+        if auth is None:
+            url_auth = get_auth_from_url(self.url)
+            auth = url_auth if any(url_auth) else None
+
         if auth:
             if isinstance(auth, tuple) and len(auth) == 2:
                 # special-case basic HTTP auth
@@ -505,24 +546,36 @@ class Response(object):
         return chardet.detect(self.content)['encoding']
 
     def iter_content(self, chunk_size=1, decode_unicode=False):
-        """Iterates over the response data.  This avoids reading the content
-        at once into memory for large responses.  The chunk size is the number
-        of bytes it should read into memory.  This is not necessarily the
-        length of each item returned as decoding can take place.
+        """Iterates over the response data.  When stream=True is set on the
+        request, this avoids reading the content at once into memory for
+        large responses.  The chunk size is the number of bytes it should
+        read into memory.  This is not necessarily the length of each item
+        returned as decoding can take place.
         """
         if self._content_consumed:
             # simulate reading small chunks of the content
             return iter_slices(self._content, chunk_size)
 
         def generate():
-            while 1:
-                chunk = self.raw.read(chunk_size)
-                if not chunk:
-                    break
-                yield chunk
+            try:
+                # Special case for urllib3.
+                try:
+                    for chunk in self.raw.stream(chunk_size,
+                                                 decode_content=True):
+                        yield chunk
+                except IncompleteRead as e:
+                    raise ChunkedEncodingError(e)
+            except AttributeError:
+                # Standard file-like object.
+                while 1:
+                    chunk = self.raw.read(chunk_size)
+                    if not chunk:
+                        break
+                    yield chunk
+
             self._content_consumed = True
 
-        gen = stream_untransfer(generate(), self)
+        gen = generate()
 
         if decode_unicode:
             gen = stream_decode_response_unicode(gen, self)
@@ -530,9 +583,9 @@ class Response(object):
         return gen
 
     def iter_lines(self, chunk_size=ITER_CHUNK_SIZE, decode_unicode=None):
-        """Iterates over the response data, one line at a time.  This
-        avoids reading the content at once into memory for large
-        responses.
+        """Iterates over the response data, one line at a time.  When
+        stream=True is set on the request, this avoids reading the
+        content at once into memory for large responses.
         """
 
         pending = None
@@ -566,7 +619,7 @@ class Response(object):
                     raise RuntimeError(
                         'The content for this response was already consumed')
 
-                if self.status_code is 0:
+                if self.status_code == 0:
                     self._content = None
                 else:
                     self._content = bytes().join(self.iter_content(CONTENT_CHUNK_SIZE)) or bytes()
@@ -632,7 +685,7 @@ class Response(object):
     def links(self):
         """Returns the parsed header links of the response, if any."""
 
-        header = self.headers['link']
+        header = self.headers.get('link')
 
         # l = MultiDict()
         l = {}
@@ -661,4 +714,9 @@ class Response(object):
             raise HTTPError(http_error_msg, response=self)
 
     def close(self):
+        """Closes the underlying file descriptor and releases the connection
+        back to the pool.
+
+        *Note: Should not normally need to be called explicitly.*
+        """
         return self.raw.release_conn()
