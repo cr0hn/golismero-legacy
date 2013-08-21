@@ -68,6 +68,7 @@ golismero/api/data/information/http.py:913: Warning (W, HTTP_Response.content_le
 golismero/api/data/information/http.py:985: Warning (W, HTTP_Response.__parse_raw_response): Catching too general exception Exception
 golismero/api/data/information/http.py:985: Warning (W, HTTP_Response.__parse_raw_response): Catching too general exception Exception
 golismero/api/data/information/webserver_fingerprint.py:48: Warning (W): TODO: we may want to add a list of default servers and descriptions.
+golismero/api/data/resource/domain.py:71: Warning (W, Domain.__init__): Catching too general exception Exception
 golismero/api/data/vulnerability/__init__.py:137: Error (E, Vulnerability.false_positive): An attribute affected in golismero.api.data.vulnerability line 119 hide this method
 golismero/api/data/vulnerability/__init__.py:149: Warning (W, Vulnerability.false_positive): Attribute '__false_positive' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:175: Warning (W, Vulnerability.plugin_id): Attribute '__plugin_id' defined outside __init__
@@ -153,11 +154,12 @@ golismero/api/net/dns.py:995: Warning (W, _DNS._make_request): Catching too gene
 golismero/api/net/http.py:276: Warning (W, _HTTP.make_request): Catching too general exception Exception
 golismero/api/net/http.py:501: Warning (W, _HTTP.make_raw_request): Catching too general exception Exception
 golismero/api/net/http.py:501: Warning (W, _HTTP.make_raw_request): Catching too general exception Exception
-golismero/api/net/scraper.py:103: Warning (W, is_link): Catching too general exception Exception
+golismero/api/net/scraper.py:115: Warning (W, is_link): Catching too general exception Exception
 golismero/api/net/scraper.py:165: Warning (W, extract_from_text): Catching too general exception Exception
 golismero/api/net/scraper.py:256: Warning (W, extract_from_html): Catching too general exception Exception
 golismero/api/net/scraper.py:256: Warning (W, extract_from_html): Catching too general exception Exception
-golismero/api/net/scraper.py:262: Warning (W, extract_from_html): Catching too general exception Exception
+golismero/api/net/scraper.py:277: Warning (W, extract_from_html): Catching too general exception Exception
+golismero/api/net/scraper.py:277: Warning (W, extract_from_html): Catching too general exception Exception
 golismero/api/net/web_utils.py:391: Error (E, check_auth): Instance of 'LookupDict' has no 'ok' member
 golismero/api/net/web_utils.py:605: Warning (W): TODO: for the time being we're using the buggy quote and unquote
 golismero/api/net/web_utils.py:888: Warning (W): TODO: maybe use **kwargs so we can support 'case_sensitive' (common mistake),
@@ -475,6 +477,8 @@ golismero/managers/pluginmanager.py:1424: Warning (W, AuditPluginManager.load_pl
 golismero/managers/processmanager.py:73: Warning (W, Process.daemon): Arguments number differs from overridden method
 golismero/managers/processmanager.py:73: Warning (W, Process.daemon): Arguments number differs from overridden method
 golismero/managers/processmanager.py:82: Warning (W, Pool): Method '__reduce__' is abstract in class 'Pool' but is not overridden
+golismero/managers/processmanager.py:99: Warning (W, do_nothing): Unused argument 'args'
+golismero/managers/processmanager.py:99: Warning (W, do_nothing): Unused argument 'kwargs'
 golismero/managers/processmanager.py:122: Warning (W, _launcher): No exception type(s) specified
 golismero/managers/processmanager.py:133: Warning (W, _launcher): Used * or ** magic
 golismero/managers/processmanager.py:140: Warning (W, _launcher): No exception type(s) specified
@@ -489,7 +493,9 @@ golismero/managers/processmanager.py:255: Warning (W, _bootstrap): Catching too 
 golismero/managers/processmanager.py:255: Warning (W, _bootstrap): Catching too general exception Exception
 golismero/managers/processmanager.py:266: Warning (W, _bootstrap): No exception type(s) specified
 golismero/managers/processmanager.py:278: Warning (W, _bootstrap): No exception type(s) specified
+golismero/managers/processmanager.py:519: Error (E, PluginContext.send_msg): Instance of 'PluginContext' has no '_orchestrator' member
 golismero/managers/processmanager.py:519: Warning (W, PluginContext.send_msg): Used * or ** magic
+golismero/managers/processmanager.py:547: Error (E, PluginContext.send_raw_msg): Instance of 'PluginContext' has no '_orchestrator' member
 golismero/managers/processmanager.py:572: Error (E, PluginContext.remote_call): Instance of 'SyncManager' has no 'Queue' member
 golismero/managers/processmanager.py:585: Warning (W, PluginContext.remote_call): No exception type(s) specified
 golismero/managers/processmanager.py:595: Warning (W, PluginContext.remote_call): Catching too general exception Exception
