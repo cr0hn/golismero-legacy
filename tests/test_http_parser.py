@@ -300,7 +300,7 @@ def test_http_request():
     assert request.post_data == None
     assert request.request_uri == "/index.html"
     assert request.hostname == "www.example.com"
-    assert request.user_agent == "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +https://github.com/cr0hn/golismero)"
+    assert request.user_agent == "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +https://github.com/golismero/golismero)"
     assert request.accept_language == "en-US"
     assert request.accept == "*/*"
     assert request.referer == None
@@ -319,7 +319,7 @@ def test_http_request():
     assert request.post_data == "hola=manola"
     assert request.request_uri == "/form.php"
     assert request.hostname == "www.example.com"
-    assert request.user_agent == "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +https://github.com/cr0hn/golismero)"
+    assert request.user_agent == "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +https://github.com/golismero/golismero)"
     assert request.accept_language == "en-US"
     assert request.accept == "*/*"
     assert request.referer == None
