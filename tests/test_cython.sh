@@ -6,9 +6,10 @@ find `pwd` -name "*.py" >> ../_tmp.txt
 cd ../tests/plugin_tests
 find `pwd` -name "*.py" >> ../_tmp.txt
 cd ../..
-rm *.c > /dev/null 2> /dev/null
-rm *.pyc > /dev/null 2> /dev/null
-rm *.pyo > /dev/null 2> /dev/null
+
+find . -name "*.c" -delete > /dev/null 2> /dev/null
+find . -name "*.pyc" -delete > /dev/null 2> /dev/null
+find . -name "*.pyo" -delete > /dev/null 2> /dev/null
 
 for f in $(cat _tmp.txt);
 do
