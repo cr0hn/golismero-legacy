@@ -95,10 +95,10 @@ You can also select multiple plugins using wildcards. For example, you can selec
 
 ![Run plugin example](https://raw.github.com/cr0hn/golismero/gh-pages/images/run_plugin_mac_2.png "Run plugin example")
 
-Beautiful and useful report
----------------------------
+Reporting and eye candy
+-----------------------
 
-Golismero can generates an HTML report putting the "-o report_name.html" in the command line:
+This is how to generate an HTML report for an audit:
 
 ```python golismero.py <target> -o report.html```
 
