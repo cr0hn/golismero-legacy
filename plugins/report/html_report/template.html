@@ -341,7 +341,7 @@
           $('#filter-form-vulns').submit(function(){
             theTableVulns.find("tbody > tr:visible > td:eq(1)").mousedown();
             return false;
-          }).focus(); //Give focus to input field         
+          }).focus(); //Give focus to input field
 
           {% for l_vuln in info_by_resource %}
             /* Table of resources _{{forloop.counter}}*/
@@ -358,8 +358,8 @@
             $('#filter-form-resources_{{forloop.counter}}').submit(function(){
               theTableResources_{{forloop.counter}}.find("tbody > tr:visible > td:eq(1)").mousedown();
               return false;
-            }).focus(); //Give focus to input field       
-          {% endfor %}    
+            }).focus(); //Give focus to input field
+          {% endfor %}
 
       });
     </script>
@@ -467,10 +467,10 @@
               <!-- Tabs info -->
               <div id="myTabContent" class="tab-content border-tabs">
 
-                <!-- 
+                <!--
                   #########
-                  
-                  By Vuln 
+
+                  By Vuln
 
                   #########
                 -->
@@ -533,7 +533,7 @@
                                                       <div class="accordion-inner">
                                                         <div class="row">
                                                           <div class="col-12">
-                                                          
+
                                                             <!-- Properties of vuln -->
                                                             <div class="context" style="padding-top: 5px; margin-left: 20px;">
                                                               <div class="row">
@@ -544,7 +544,7 @@
                                                                         <div class="col-3 text-center"><b>Property</b></div>
                                                                         <div class="col-9 text-center"><b>Value</b></div>
                                                                       </div>
-                                                                      
+
                                                                       {% for l_vuln_pro in l_vuln.properties %}
                                                                         <div class="row" style="padding: 2px 2px 2px 2px;">
                                                                           <div class="col-3" style="border-right: 1px solid #dcdbd9;"><span class="btn btn-primary btn-small">{{l_vuln_pro.name}}</span></div>
@@ -554,7 +554,7 @@
                                                                         <div class="row">
                                                                           <div class="col-12">This resource has not properties</div>
                                                                         </div>
-                                                                      {% endfor %}                                                          
+                                                                      {% endfor %}
                                                                     </div>
                                                                   </div>
                                                                 </div>
@@ -596,7 +596,7 @@
                                                       <div class="accordion-inner">
                                                         <div class="row">
                                                           <div class="col-12">
-                                                          
+
                                                             <!-- Affected resources of vuln -->
                                                             <div class="context" style="padding-top: 5px; margin-left: 20px;">
                                                               <div class="row">
@@ -607,7 +607,7 @@
                                                                         <div class="col-3 text-center"><b>Resource type</b></div>
                                                                         <div class="col-9 text-center"><b>Value</b></div>
                                                                       </div>
-                                                                      
+
                                                                       {% for l_vuln_affected_res in l_vuln.affected_resources %}
                                                                         <div class="row" style="padding: 2px 2px 2px 2px;">
                                                                           <div class="col-3" style="border-right: 1px solid #dcdbd9;"><span class="btn btn-primary btn-small">{{l_vuln_affected_res.resource_type}}</span></div>
@@ -617,7 +617,7 @@
                                                                         <div class="row">
                                                                           <div class="col-12">There is not affected resources</div>
                                                                         </div>
-                                                                      {% endfor %}                                                          
+                                                                      {% endfor %}
                                                                     </div>
                                                                   </div>
                                                                 </div>
@@ -672,20 +672,20 @@
                     {% endfor %}
 
                 </div>
-                <!-- 
+                <!--
                   #########
 
-                  End by Vuln 
+                  End by Vuln
 
                   #########
                 -->
 
 
 
-                <!-- 
+                <!--
                   #########
-                  
-                  By Resource 
+
+                  By Resource
 
                   #########
                 -->
@@ -722,7 +722,7 @@
                                             <div class="accordion" id="v_{{l_vuln.resource_type|slugify}}_{{forloop.counter}}_1">
                                               <div class="accordion-group">
                                                 <!-- Name and affected resource -->
-                                                <div class="accordion-heading">                                                  
+                                                <div class="accordion-heading">
                                                   <div class="row no_sep">
                                                     <div class="col-12 vcenter">
                                                       <a class="accordion-toggle" data-toggle="collapse" data-parent="#v_{{l_vuln.resource_type|slugify}}_{{forloop.counter}}_1" href="#v_i_{{l_vuln.resource_type|slugify}}_{{forloop.counter}}_2"><span>[+]</span>&nbsp;{{l_row.main_info}}</a>
@@ -752,7 +752,7 @@
                                                           <div class="accordion-inner">
                                                             <div class="row">
                                                               <div class="col-12">
-                                                              
+
                                                                 <!-- Properties of resource -->
                                                                 <div class="context" style="padding-top: 5px; margin-left: 20px;">
                                                                   <div class="row">
@@ -763,7 +763,7 @@
                                                                             <div class="col-3 text-center"><b>Property</b></div>
                                                                             <div class="col-9 text-center"><b>Value</b></div>
                                                                           </div>
-                                                                          
+
                                                                           {% for l_res_pro in l_row.properties %}
                                                                             <div class="row" style="padding: 2px 2px 2px 2px;">
                                                                               <div class="col-3" style="border-right: 1px solid #dcdbd9;"><span class="btn btn-primary btn-small">{{l_res_pro.name}}</span></div>
@@ -773,7 +773,7 @@
                                                                             <div class="row">
                                                                               <div class="col-12">This resource has not properties</div>
                                                                             </div>
-                                                                          {% endfor %}                                                          
+                                                                          {% endfor %}
                                                                         </div>
                                                                       </div>
                                                                     </div>
@@ -812,7 +812,7 @@
                                                           <div class="accordion-inner">
                                                             <div class="row">
                                                               <div class="col-12">
-                                                              
+
                                                                 {% for l_res_rel_vuln in l_row.associated_vulns %}
 
                                                                   <!-- Related vuln properties -->
@@ -832,7 +832,7 @@
                                                                         <div class="accordion-inner">
                                                                           <div class="row">
                                                                             <div class="col-12">
-                                                                            
+
                                                                               <!-- Properties of resource -->
                                                                               <div class="context" style="padding-top: 5px; margin-left: 20px;">
                                                                                 <div class="row">
@@ -843,7 +843,7 @@
                                                                                           <div class="col-3 text-center"><b>Property</b></div>
                                                                                           <div class="col-9 text-center"><b>Value</b></div>
                                                                                         </div>
-                                                                                        
+
                                                                                         {% for l_res_rel_pro in l_res_rel_vuln.vuln_properties %}
                                                                                           <div class="row" style="padding: 2px 2px 2px 2px;">
                                                                                             <div class="col-3" style="border-right: 1px solid #dcdbd9;"><span class="btn btn-primary btn-small">{{l_res_rel_pro.name}}</span></div>
@@ -853,7 +853,7 @@
                                                                                           <div class="row">
                                                                                             <div class="col-12">This resource has not properties</div>
                                                                                           </div>
-                                                                                        {% endfor %}                                                          
+                                                                                        {% endfor %}
                                                                                       </div>
                                                                                     </div>
                                                                                   </div>
@@ -896,7 +896,7 @@
 
                                                   </div>
                                                 </div>
-                                                <!-- End accordion target -->                                                
+                                                <!-- End accordion target -->
 
 
                                               </div>
@@ -929,10 +929,10 @@
                     {% endfor %}
 
                 </div>
-                <!-- 
+                <!--
                   #########
 
-                  End by Resource 
+                  End by Resource
 
                   #########
                 -->
@@ -955,7 +955,7 @@
             <ul class="list-unstyled">
               <li class="pull-right"><a href="#top">Back to top</a></li>
               <li><a href="https://twitter.com/golismero_pro">Twitter</a></li>
-              <li><a href="https://github.com/cr0hn/golismero">GitHub</a></li>
+              <li><a href="https://github.com/golismero/golismero">GitHub</a></li>
             </ul>
             <p style="font-size: 10px;">Template by <a href="http://thomaspark.me">Thomas Park</a></p>
           </div>

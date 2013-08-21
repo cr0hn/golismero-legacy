@@ -408,7 +408,7 @@ class HTTP_Request (Information):
 
     # Default headers to use in HTTP requests.
     DEFAULT_HEADERS = (
-        ("User-Agent", "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +https://github.com/cr0hn/golismero)"),
+        ("User-Agent", "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +https://github.com/golismero/golismero)"),
         ("Accept-Language", "en-US"),
         ("Accept", "*/*"),
         ("Cache-Control", "no-store"),

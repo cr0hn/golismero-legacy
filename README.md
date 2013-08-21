@@ -22,9 +22,11 @@ Using GoLismero 2.0 is very easy. Below are some basic commands to start to usin
 Installing
 ----------
 
-Currently GoLismero 2.0 is under active development so it isn't in the main branch of the github project. To download it, you must write the following:
+Just [download](https://github.com/golismero/golismero/archive/master.zip) and extract the compressed file anywhere you like. GoLismero already ships all of its dependencies, with the exception of the Python interpreter itself.
 
-```git clone -b 2.0.0 https://github.com/cr0hn/golismero.git golismero-2.0```
+You can also get the latest version using Git:
+
+```git clone https://github.com/golismero/golismero.git```
 
 Basic usage
 -----------
