@@ -1,3 +1,7 @@
+<p><font size=20>This repository contains the unstable development version. For the stable version go to: <a href="https://github.com/golismero/golismero">https://github.com/golismero/golismero</a></font></p>
+
+---
+
 What's GoLismero 2.0?
 =====================
 
