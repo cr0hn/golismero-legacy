@@ -50,12 +50,33 @@ from multiprocessing import Manager
 from multiprocessing import Process as _Original_Process
 from multiprocessing.pool import Pool as _Original_Pool
 from os import getpid
-from warnings import catch_warnings, simplefilter
+from signal import signal, SIGINT
 from thread import get_ident
 from traceback import format_exc, print_exc, format_exception_only, format_list
-from signal import signal, SIGINT
+from warnings import catch_warnings, simplefilter
 
 import sys
+
+
+#------------------------------------------------------------------------------
+# HACK: this patches the multiprocessing module in runtime to prevent bogus
+# error messages to be shown when Control-C is pressed by the user.
+class __FakeFile(object):
+    def write(self, str):
+        pass
+    def flush(self):
+        pass
+    def close(self):
+        pass
+def __patched_bootstrap(self):
+    stdout, stderr = sys.stdout, sys.stderr
+    sys.stdout, sys.stderr = __FakeFile(), __FakeFile()
+    try:
+        return __original_bootstrap(self)
+    finally:
+        sys.stdout, sys.stderr = stdout, stderr
+__original_bootstrap = _Original_Process._bootstrap
+_Original_Process._bootstrap = __patched_bootstrap
 
 
 #------------------------------------------------------------------------------
@@ -845,18 +866,24 @@ class PluginLauncher (object):
         if not self.__alive:
             raise RuntimeError("Plugin launcher was stopped")
 
-        # Signal the launcher process to stop.
-        self.__queue.put_nowait(wait)
+        try:
 
-        # Wait for the launcher process to stop.
-        if wait:
-            self.__process.join()
-        else:
-            self.__process.join(3)
-            try:
-                self.__process.terminate()
-            except Exception:
-                pass
+            # Signal the launcher process to stop.
+            self.__queue.put_nowait(wait)
+
+            # Wait for the launcher process to stop.
+            if wait:
+                self.__process.join()
+            else:
+                self.__process.join(3)
+                try:
+                    self.__process.terminate()
+                except Exception:
+                    pass
+
+        # If the pipe is closed, terminate the process.
+        except IOError:
+            self.__process.terminate()
 
         # Clean up.
         self.__alive   = False

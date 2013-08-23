@@ -199,7 +199,12 @@ class RPCManager (object):
         except Exception:
             if response_queue:
                 error = self.prepare_exception(*sys.exc_info())
-                response_queue.put_nowait( (False, error) )
+                try:
+                    response_queue.put_nowait( (False, error) )
+                except IOError:
+
+                    # If we reached this point, assume the process must die.
+                    exit(1)
 
 
     #----------------------------------------------------------------------
