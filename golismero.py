@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 __license__="""
 GoLismero 2.0 - The web knife.
 
