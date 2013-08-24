@@ -867,9 +867,9 @@ class PluginLauncher (object):
         :type wait: bool
         """
 
-        # Raise an exception if the launcher was already stopped.
+        # Ignore the request if the launcher was already stopped.
         if not self.__alive:
-            raise RuntimeError("Plugin launcher was stopped")
+            return
 
         try:
 
