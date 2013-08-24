@@ -37,7 +37,10 @@ import os
 from os import path
 import sys
 
-here = path.split(path.abspath(__file__))[0]
+script = __file__
+if path.islink(script):
+    script = path.realpath(script)
+here = path.split(path.abspath(script))[0]
 if not here:  # if it fails use cwd instead
     here = path.abspath(os.getcwd())
 thirdparty_libs = path.join(here, "thirdparty_libs")
@@ -57,13 +60,6 @@ if path.exists(thirdparty_libs):
             # When installing: prefer system version to ours
             sys.path.insert(0, here)
             sys.path.append(thirdparty_libs)
-
-
-#------------------------------------------------------------------------------
-# Fix the module name.
-# This is required by the multiprocessing patch on Windows.
-
-__file__ = path.join(path.split(__file__)[0], "golismero-cli.py")
 
 
 #------------------------------------------------------------------------------

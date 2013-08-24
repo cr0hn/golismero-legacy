@@ -113,6 +113,18 @@ if sys.platform == "win32":
         args[-2] = code
         return args
 
+    # Our wrapper works around a sanity check of multiprocessing.
+    # At one point it checks the main module wasn't already loaded.
+    # However the check fails because our launch script (golismero.py)
+    # results in the same module name as ourselves (golismero/__init__.py).
+    def __patched_prepare(data):
+        golismero = sys.modules["golismero"]
+        try:
+            del sys.modules["golismero"]
+            return _original_prepare(data)
+        finally:
+            sys.modules["golismero"] = golismero
+
     # Our wrapper to the main() function of new processes.
     # It replaces stdout and stderr with a fake file object.
     def main():
@@ -135,8 +147,12 @@ if __name__ != "__parents_main__" and __name__ != "__main__":
     Process._bootstrap = __patched_bootstrap
 
     if sys.platform == "win32":
+        from multiprocessing import forking
 
         # Patch the function that calculates the command line for child processes.
-        from multiprocessing import forking
         from multiprocessing.forking import get_command_line as _original_get_command_line
         forking.get_command_line = __patched_get_command_line
+
+        # Patch the function that prepares the data for child processes.
+        from multiprocessing.forking import prepare as _original_prepare
+        forking.prepare = __patched_prepare
