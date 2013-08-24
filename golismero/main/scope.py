@@ -97,9 +97,10 @@ class AuditScope (object):
                 try:
                     if target.startswith("[") and target.endswith("]"):
                         IPAddress(target[1:-1], version=6)
+                        address = target[1:-1]
                     else:
                         IPAddress(target)
-                    address = target
+                        address = target
                 except Exception:
                     address = None
                 if address is not None:
