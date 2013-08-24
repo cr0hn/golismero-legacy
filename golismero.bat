@@ -1,3 +1,4 @@
 @echo off
+set script="%~dp0\golismero.py"
 shift
-python golismero.py %*
+python %script% %*
