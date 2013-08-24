@@ -216,6 +216,13 @@ def _bootstrap(context, func, args, kwargs):
                         # Instance the plugin.
                         instance = cls()
 
+                        # Notify the Orchestrator of the plugin execution start.
+                        context.send_msg(
+                            message_type = MessageType.MSG_TYPE_STATUS,
+                            message_code = MessageCode.MSG_STATUS_PLUGIN_BEGIN,
+                            message_info = context.ack_identity,
+                        )
+
                         # Call the callback method.
                         result = None
                         try:
@@ -235,35 +242,45 @@ def _bootstrap(context, func, args, kwargs):
                                 # Send the result data to the Orchestrator.
                                 if result:
                                     try:
-                                        context.send_msg(message_type = MessageType.MSG_TYPE_DATA,
-                                                         message_code = MessageCode.MSG_DATA,
-                                                         message_info = result)
+                                        context.send_msg(
+                                            message_type = MessageType.MSG_TYPE_DATA,
+                                            message_code = MessageCode.MSG_DATA,
+                                            message_info = result,
+                                        )
                                     except Exception, e:
-                                        context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                                         message_code = MessageCode.MSG_CONTROL_ERROR,
-                                                         message_info = (str(e), format_exc()),
-                                                             priority = MessagePriority.MSG_PRIORITY_HIGH)
+                                        context.send_msg(
+                                            message_type = MessageType.MSG_TYPE_CONTROL,
+                                            message_code = MessageCode.MSG_CONTROL_ERROR,
+                                            message_info = (str(e), format_exc()),
+                                                priority = MessagePriority.MSG_PRIORITY_HIGH,
+                                        )
 
                 # Send plugin warnings to the Orchestrator.
                 finally:
                     if plugin_warnings:
                         try:
-                            context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                             message_code = MessageCode.MSG_CONTROL_WARNING,
-                                             message_info = plugin_warnings,
-                                                 priority = MessagePriority.MSG_PRIORITY_HIGH)
+                            context.send_msg(
+                                message_type = MessageType.MSG_TYPE_CONTROL,
+                                message_code = MessageCode.MSG_CONTROL_WARNING,
+                                message_info = plugin_warnings,
+                                    priority = MessagePriority.MSG_PRIORITY_HIGH,
+                            )
                         except Exception, e:
-                            context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                             message_code = MessageCode.MSG_CONTROL_ERROR,
-                                             message_info = (str(e), format_exc()),
-                                                 priority = MessagePriority.MSG_PRIORITY_HIGH)
+                            context.send_msg(
+                                message_type = MessageType.MSG_TYPE_CONTROL,
+                                message_code = MessageCode.MSG_CONTROL_ERROR,
+                                message_info = (str(e), format_exc()),
+                                    priority = MessagePriority.MSG_PRIORITY_HIGH,
+                            )
 
             # Tell the Orchestrator there's been an error.
             except Exception, e:
-                context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                 message_code = MessageCode.MSG_CONTROL_ERROR,
-                                 message_info = (str(e), format_exc()),
-                                     priority = MessagePriority.MSG_PRIORITY_HIGH)
+                context.send_msg(
+                    message_type = MessageType.MSG_TYPE_CONTROL,
+                    message_code = MessageCode.MSG_CONTROL_ERROR,
+                    message_info = (str(e), format_exc()),
+                        priority = MessagePriority.MSG_PRIORITY_HIGH,
+                )
 
         # Send back an ACK.
         finally:
@@ -274,9 +291,11 @@ def _bootstrap(context, func, args, kwargs):
 
         # Send a message to the Orchestrator to stop.
         try:
-            context.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                             message_code = MessageCode.MSG_CONTROL_STOP,
-                             message_info = False)
+            context.send_msg(
+                message_type = MessageType.MSG_TYPE_CONTROL,
+                message_code = MessageCode.MSG_CONTROL_STOP,
+                message_info = False,
+            )
         except SystemExit:
             raise
         except:

@@ -536,14 +536,6 @@ class AuditNotifier(AbstractNotifier):
             # Add the plugin to the currently processing data map.
             self.__processing[ack_identity].add(context.plugin_name)
 
-            # Notify the Orchestrator of the plugin execution start.
-            orchestrator.notify_plugin_status(
-                audit.name,
-                context.plugin_name,
-                MessageCode.MSG_STATUS_PLUGIN_BEGIN,
-                ack_identity,
-            )
-
         # If it's any other message type...
         else:
 
