@@ -330,7 +330,7 @@ def main():
     # If no plugins folder is given, use the default.
     plugins_folder = cmdParams.plugins_folder
     if not plugins_folder:
-        plugins_folder = path.abspath(__file__)
+        plugins_folder = path.abspath(script)
         plugins_folder = path.dirname(plugins_folder)
         plugins_folder = path.join(plugins_folder, "plugins")
         if not path.isdir(plugins_folder):
