@@ -67,12 +67,12 @@ class OpenVASProgress(object):
 class OpenVASPlugin(TestingPlugin):
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [IP]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def recv_info(self, info):
 
         # Synchronization object to wait for completion.
@@ -101,7 +101,10 @@ class OpenVASPlugin(TestingPlugin):
 
         # Connect to the scanner.
         try:
-            m_scanner = VulnscanManager(m_host, m_user, m_password, m_port, m_timeout)
+            Logger.log_more_verbose(
+                "Connecting to OpenVAS server at %s:%d" % (m_host, m_port))
+            m_scanner = VulnscanManager(
+                m_host, m_user, m_password, m_port, m_timeout)
         except VulnscanException, e:
             t = format_exc()
             Logger.log_error("Error connecting to OpenVAS, aborting scan!")
@@ -135,7 +138,8 @@ class OpenVASPlugin(TestingPlugin):
             return self.parse_results(m_openvas_results, info)
         except Exception,e:
             t = format_exc()
-            Logger.log_error_verbose("Error parsing OpenVAS results: %s" % str(e))
+            Logger.log_error_verbose(
+                "Error parsing OpenVAS results: %s" % str(e))
             Logger.log_error_more_verbose(t)
         finally:
 
@@ -146,7 +150,7 @@ class OpenVASPlugin(TestingPlugin):
                 pass   # XXX FIXME #135
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @staticmethod
     def parse_results(openvas_results, ip = None):
         """
@@ -239,7 +243,8 @@ class OpenVASPlugin(TestingPlugin):
             # Skip on error.
             except Exception, e:
                 t = format_exc()
-                Logger.log_error_verbose("Error parsing OpenVAS results: %s" % str(e))
+                Logger.log_error_verbose(
+                    "Error parsing OpenVAS results: %s" % str(e))
                 Logger.log_error_more_verbose(t)
                 continue
 
