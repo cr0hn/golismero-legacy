@@ -31,35 +31,39 @@ __all__ = []
 
 
 #------------------------------------------------------------------------------
-# Fix the module load path when running as a portable script and after installation.
+# Fix the module load path.
 
 import os
 from os import path
 import sys
-try:
-    _FIXED_PATH_
-except NameError:
-    here = path.split(path.abspath(__file__))[0]
-    if not here:  # if it fails use cwd instead
-        here = path.abspath(os.getcwd())
-    thirdparty_libs = path.join(here, "thirdparty_libs")
-    if path.exists(thirdparty_libs):
-        has_here = here in sys.path
-        has_thirdparty_libs = thirdparty_libs in sys.path
-        if not (has_here and has_thirdparty_libs):
-            if has_here:
-                sys.path.remove(here)
-            if has_thirdparty_libs:
-                sys.path.remove(thirdparty_libs)
-            if __name__ == "__main__":
-                # As a portable script: use our versions always
-                sys.path.insert(0, thirdparty_libs)
-                sys.path.insert(0, here)
-            else:
-                # When installing: prefer system version to ours
-                sys.path.insert(0, here)
-                sys.path.append(thirdparty_libs)
-    _FIXED_PATH_ = True
+
+here = path.split(path.abspath(__file__))[0]
+if not here:  # if it fails use cwd instead
+    here = path.abspath(os.getcwd())
+thirdparty_libs = path.join(here, "thirdparty_libs")
+if path.exists(thirdparty_libs):
+    has_here = here in sys.path
+    has_thirdparty_libs = thirdparty_libs in sys.path
+    if not (has_here and has_thirdparty_libs):
+        if has_here:
+            sys.path.remove(here)
+        if has_thirdparty_libs:
+            sys.path.remove(thirdparty_libs)
+        if __name__ == "__main__":
+            # As a portable script: use our versions always
+            sys.path.insert(0, thirdparty_libs)
+            sys.path.insert(0, here)
+        else:
+            # When installing: prefer system version to ours
+            sys.path.insert(0, here)
+            sys.path.append(thirdparty_libs)
+
+
+#------------------------------------------------------------------------------
+# Fix the module name.
+# This is required by the multiprocessing patch on Windows.
+
+__file__ = path.join(path.split(__file__)[0], "golismero-cli.py")
 
 
 #------------------------------------------------------------------------------

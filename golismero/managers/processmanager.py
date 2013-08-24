@@ -47,9 +47,7 @@ from ..messaging.message import Message
 
 from imp import load_source
 from multiprocessing import Manager
-from multiprocessing import Process as _Original_Process
-from multiprocessing.pool import Pool as _Original_Pool
-from os import getpid
+from os import getpid, path
 from signal import signal, SIGINT
 from thread import get_ident
 from traceback import format_exc, print_exc, format_exception_only, format_list
@@ -57,26 +55,13 @@ from warnings import catch_warnings, simplefilter
 
 import sys
 
+# Make some runtime patches to the multiprocessing module.
+# Just importing this submodule does the magic!
+from ..patches import mp
 
-#------------------------------------------------------------------------------
-# HACK: this patches the multiprocessing module in runtime to prevent bogus
-# error messages to be shown when Control-C is pressed by the user.
-class __FakeFile(object):
-    def write(self, str):
-        pass
-    def flush(self):
-        pass
-    def close(self):
-        pass
-def __patched_bootstrap(self):
-    stdout, stderr = sys.stdout, sys.stderr
-    sys.stdout, sys.stderr = __FakeFile(), __FakeFile()
-    try:
-        return __original_bootstrap(self)
-    finally:
-        sys.stdout, sys.stderr = stdout, stderr
-__original_bootstrap = _Original_Process._bootstrap
-_Original_Process._bootstrap = __patched_bootstrap
+# Imports needed to override the multiprocessing Process and Pool classes.
+from multiprocessing import Process as _Original_Process
+from multiprocessing.pool import Pool as _Original_Pool
 
 
 #------------------------------------------------------------------------------
@@ -1012,18 +997,3 @@ class ProcessManager (object):
 
             # Clean up.
             self.__launcher = None
-
-
-#----------------------------------------------------------------------
-def _suicide(signum, frame):
-    """
-    Child processes Control-C handler.
-
-    .. warning: Do not call!
-    """
-
-    # Kill the process. This should trigger a chain reaction.
-    exit(1)
-
-if __name__ == "__parents_main__":
-    signal(SIGINT, _suicide)
