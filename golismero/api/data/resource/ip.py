@@ -63,6 +63,7 @@ class IP(Resource):
                 parsed = IPAddress(address[1:-1], version=6)
             else:
                 parsed = IPAddress(address)
+                address = "[%s]" % address
             version = int( parsed.version )
         except Exception:
             raise ValueError("Invalid IP address: %s" % address)

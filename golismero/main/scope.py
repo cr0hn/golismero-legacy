@@ -147,6 +147,7 @@ class AuditScope (object):
                             try:
                                 if host.startswith("[") and host.endswith("]"):
                                     IPAddress(host[1:-1], version=6)
+                                    host = host[1:-1]
                                 else:
                                     IPAddress(host)
                                 self.__addresses.add(host)
