@@ -370,7 +370,7 @@ class TextReport(ReportPlugin):
                         'TYPE_UNKNOWN', 'TYPE_VULNERABILITY', 'add_information',
                         'add_link', 'add_resource', 'add_vulnerability', 'associated_informations',
                         'associated_resources', 'associated_vulnerabilities', 'cve', 'cwe',
-                        'data_type', 'discovered', 'get_associated_informations_by_category',
+                        'data_type', 'discovered', 'false_positive', 'get_associated_informations_by_category',
                         'get_associated_resources_by_category', 'get_associated_vulnerabilities_by_category',
                         'get_linked_data', 'get_links', 'identity', 'impact', 'is_in_scope', 'linked_data',
                         'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
@@ -387,6 +387,10 @@ class TextReport(ReportPlugin):
         m_return        = []
         m_return_append = m_return.append
         for vuln in vulns:
+
+            # Skip false positives.
+            if vuln.false_positive:
+                continue
 
             # Vuln name as raw format
             l_vuln_name      = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]

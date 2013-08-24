@@ -58,7 +58,7 @@ class HTMLReport(ReportPlugin):
     PRIVATE_INFO_VULN = ['DEFAULTS', 'TYPE', 'add_information', 'RESOURCE',
                          'add_link', 'add_resource', 'add_vulnerability', 'associated_informations',
                          'associated_resources', 'associated_vulnerabilities', 'cve', 'cwe',
-                         'data_type', 'discovered', 'get_associated_informations_by_category',
+                         'data_type', 'discovered', 'false_positive', 'get_associated_informations_by_category',
                          'get_associated_resources_by_category', 'get_associated_vulnerabilities_by_category',
                          'get_linked_data', 'get_links', 'identity', 'impact', 'is_in_scope', 'linked_data',
                          'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
@@ -182,7 +182,7 @@ class HTMLReport(ReportPlugin):
         m_results          = {}
 
         # Total vulns
-        m_results['total'] = len(m_all_vulns)
+        m_results['total'] = 0
 
         # Count each type of vuln
         m_counter = Counter()
@@ -193,15 +193,15 @@ class HTMLReport(ReportPlugin):
         m_counter['middle']         = 0
         m_counter['low']            = 0
         m_counter['informational']  = 0
-        m_counter['no_vulns']       = 0
 
         # Vulnerabilities by type
-        if m_results['total'] > 0:
+        for l_v in m_all_vulns:
+            if l_v.false_positive:
+                continue
+            m_counter['total']   += 1
+            m_counter[l_v.level] += 1
 
-            for l_v in m_all_vulns:
-                m_counter[l_v.level] +=1
-        else:
-            m_counter['no_vulns'] = m_results['total'] if m_results['total'] > 0 else 1
+        m_counter['no_vulns'] = int(bool(m_results['total'] == 0))
 
         for k,v in m_counter.iteritems():
             m_results[k] = v
@@ -315,6 +315,8 @@ class HTMLReport(ReportPlugin):
                     l_assoc        = []
                     l_assoc_append = l_assoc.append
                     for l_res_vuln in r.associated_vulnerabilities:
+                        if l_res_vuln.false_positive:
+                            continue
                         l_assoc_res = {}
                         l_assoc_res['vuln_name']       = l_res_vuln.__class__.__name__
                         l_assoc_res['vuln_properties'] = self.__get_object_properties(l_res_vuln, self.PRIVATE_INFO_VULN)
@@ -385,6 +387,9 @@ class HTMLReport(ReportPlugin):
             # Get the vulns of each resource
             for l_each_res in resource:
                 for l_vuln in l_each_res.associated_vulnerabilities:
+                    if l_vuln.false_positive:
+                        continue
+
                     # Get the vuln name using the class name
                     l_res_result['vuln_name']           = l_vuln.__class__.__name__
 
@@ -426,30 +431,25 @@ class HTMLReport(ReportPlugin):
         :return: a list as format: [{'low' : 1}, {'middle' : 2}]
         :rtype: list(dict())
         """
+
         m_counter                   = Counter()
-
-        m_total                     = len(vuln)
-
-        # Init
         m_counter['critical']       = 0
         m_counter['high']           = 0
         m_counter['middle']         = 0
         m_counter['low']            = 0
         m_counter['informational']  = 0
+        m_total                     = 0
 
-        # Vulnerabilities by type
-        if m_total > 0:
-
-            for l_v in vuln:
+        for l_v in vuln:
+            if not l_v.false_positive:
+                m_total += 1
                 m_counter[l_v.level] +=1
 
-        m_results                   = []
-        m_results_append            = m_results.append
-        for k,v in m_counter.iteritems():
-            if v > 0:
-                m_results_append({'level' : k, 'number' : v})
-
-        return m_results
+        return [
+            {'level' : k, 'number' : v}
+            for k, v in m_counter.iteritems()
+            if v > 0
+        ]
 
 
     #----------------------------------------------------------------------
