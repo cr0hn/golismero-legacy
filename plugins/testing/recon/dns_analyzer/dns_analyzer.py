@@ -275,7 +275,7 @@ class DNSBruteforcer(TestingPlugin):
                     else:
                         m_tmp_append(str(x))
 
-                Logger.log_more_verbose("Subdomains found: \n\t+ %s" % "\n\t+ ".join(m_tmp))
+                Logger.log_more_verbose("Subdomains found: \n  + %s" % "\n  + ".join(m_tmp))
 
         return m_return
 
