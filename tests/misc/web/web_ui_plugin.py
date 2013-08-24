@@ -335,7 +335,7 @@ class WebUIPlugin(UIPlugin):
 
         # This catch prevents exceptions from being shown in stderr.
         except:
-            raise # XXX DEBUG
+            ##raise # XXX DEBUG
             pass
 
 
