@@ -573,7 +573,7 @@ class PluginContext (object):
             self.msg_queue.put_nowait(message)
 
         # If we reached this point we can assume the parent process is dead.
-        except IOError:
+        except:
             exit(1)
 
 
@@ -590,7 +590,12 @@ class PluginContext (object):
         """
 
         # Create the response queue.
-        response_queue = Manager().Queue()
+        try:
+            response_queue = Manager().Queue()
+
+        # If the above fails we can assume the parent process is dead.
+        except:
+            exit(1)
 
         # Send the RPC message.
         self.send_msg(message_type = MessageType.MSG_TYPE_RPC,
@@ -804,8 +809,14 @@ class PluginLauncher (object):
         """
 
         # Initialize the launcher process, but do not start it yet.
-        self.__manager = Manager()
-        self.__queue = self.__manager.Queue()
+        try:
+            self.__manager = Manager()
+            self.__queue = self.__manager.Queue()
+
+        # If the above fails we can assume the parent process is dead.
+        except:
+            exit(1)
+
         self.__process = Process(
             target = launcher,
             args   = (self.__queue, max_process, refresh_after_tasks),
@@ -836,7 +847,16 @@ class PluginLauncher (object):
             raise RuntimeError("Plugin launcher was stopped")
 
         # Send the plugin run request to the launcher process.
-        self.__queue.put_nowait( (context, func, args, kwargs) )
+        try:
+            self.__queue.put_nowait( (context, func, args, kwargs) )
+
+        # If the above fails we can assume the parent process is dead.
+        except:
+            try:
+                self.stop(wait = False)
+            except:
+                pass
+            exit(1)
 
 
     #----------------------------------------------------------------------
@@ -882,7 +902,7 @@ class PluginLauncher (object):
                     pass
 
         # If the pipe is closed, terminate the process.
-        except IOError:
+        except:
             self.__process.terminate()
 
         # Clean up.
