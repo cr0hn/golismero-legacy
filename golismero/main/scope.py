@@ -190,7 +190,7 @@ class AuditScope (object):
 
         # If subdomains are allowed, we must include the parent domains.
         if include_subdomains:
-            for hostname in self.__domains.copy():
+            for hostname in new_domains.copy():
                 subdomain, domain, suffix = split_hostname(hostname)
                 if subdomain:
                     prefix = ".".join( (domain, suffix) )
@@ -201,6 +201,8 @@ class AuditScope (object):
                         self.__domains.add(prefix)
                         self.__roots.add(prefix)
                         prefix = ".".join( (part, prefix) )
+                else:
+                    self.__roots.add(hostname)
 
         # Resolve each (new?) domain name and add the IP addresses as targets.
         if dns_resolution:
@@ -217,7 +219,7 @@ class AuditScope (object):
 
                 # Resolve the IPv6 addresses.
                 resolved_6 = DNS.get_aaaa(domain)
-                for register in resolved_4:
+                for register in resolved_6:
                     self.__addresses.add(register.address)
 
                 # Abort the audit if one of the domains cannot be resolved.
