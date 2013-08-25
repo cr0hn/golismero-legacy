@@ -62,19 +62,45 @@ class AuditScope (object):
 
 
     #--------------------------------------------------------------------------
-    def __init__(self, audit_config):
+    def __init__(self, audit_config = None):
         """
-        :param audit_config: Audit configuration.
-        :type audit_config: AuditConfig
+        :param audit_config: (Optional) Audit configuration.
+        :type audit_config: AuditConfig | None
         """
 
         # This is where we'll keep the parsed targets.
         self.__domains   = set()   # Domain names.
+        self.__roots     = set()   # Domain names for subdomain matching.
         self.__addresses = set()   # IP addresses.
         self.__web_pages = set()   # URLs.
 
+        # Add the targets from the audit config if given.
+        if audit_config is not None:
+            self.add_targets(audit_config)
+
+
+    #--------------------------------------------------------------------------
+    def add_targets(self, audit_config, dns_resolution = 1):
+        """
+        :param audit_config: Audit configuration.
+        :type audit_config: AuditConfig
+
+        :param dns_resolution: DNS resolution mode.
+            Use 0 to disable, 1 to enable only for new targets (default),
+            or 2 to enable for all targets.
+        :type dns_resolution: int
+        """
+
+        # Validate the arguments.
+        if dns_resolution not in (0, 1, 2):
+            raise ValueError(
+                "Argument 'dns_resolution' can only be 0, 1 or 2, got %r instead" % dns_resolution)
+
         # Remember if subdomains are allowed.
-        self.__include_subdomains = audit_config.include_subdomains
+        include_subdomains = audit_config.include_subdomains
+
+        # We'll remember here what *new* domains were added, for IP resolution.
+        new_domains = set()
 
         # For each user-supplied target string...
         for target in audit_config.targets:
@@ -85,12 +111,16 @@ class AuditScope (object):
                 # Convert it to lowercase.
                 target = target.lower()
 
-                # Keep the domain name.
-                self.__domains.add(target)
+                # Is the domain new?
+                if target not in self.__domains:
 
-                # Guess an URL from it.
-                # FIXME: this should be smarter and use port scanning!
-                self.__web_pages.add("http://%s/" % target)
+                    # Keep the domain name.
+                    self.__domains.add(target)
+                    new_domains.add(target)
+
+                    # Guess an URL from it.
+                    # FIXME: this should be smarter and use port scanning!
+                    self.__web_pages.add("http://%s/" % target)
 
             # If it's an IP address...
             else:
@@ -153,38 +183,47 @@ class AuditScope (object):
                                     IPAddress(host)
                                 self.__addresses.add(host)
                             except Exception:
-                                self.__domains.add( host.lower() )
+                                host = host.lower()
+                                if host not in self.__domains:
+                                    self.__domains.add(host)
+                                    new_domains.add(host)
 
         # If subdomains are allowed, we must include the parent domains.
-        if self.__include_subdomains:
+        if include_subdomains:
             for hostname in self.__domains.copy():
                 subdomain, domain, suffix = split_hostname(hostname)
                 if subdomain:
                     prefix = ".".join( (domain, suffix) )
                     for part in reversed(subdomain.split(".")):
+                        if prefix not in self.__roots and \
+                           prefix not in self.__domains:
+                            new_domains.add(prefix)
                         self.__domains.add(prefix)
+                        self.__roots.add(prefix)
                         prefix = ".".join( (part, prefix) )
 
-        # Resolve each domain name.
-        dns_registers = []
-        for domain in self.__domains:
+        # Resolve each (new?) domain name and add the IP addresses as targets.
+        if dns_resolution:
+            if dns_resolution == 1:
+                domains_to_resolve = new_domains
+            else:
+                domains_to_resolve = self.__domains
+            for domain in domains_to_resolve:
 
-            # Resolve the IPv4 addresses.
-            dns_registers.extend( DNS.get_a(domain) )
+                # Resolve the IPv4 addresses.
+                resolved_4 = DNS.get_a(domain)
+                for register in resolved_4:
+                    self.__addresses.add(register.address)
 
-            # Resolve the IPv6 addresses.
-            dns_registers.extend( DNS.get_aaaa(domain) )
+                # Resolve the IPv6 addresses.
+                resolved_6 = DNS.get_aaaa(domain)
+                for register in resolved_4:
+                    self.__addresses.add(register.address)
 
-        # If no IP addresses could be resolved, abort the audit.
-        if self.__domains and not dns_registers:
-            raise RuntimeError(
-                "No IP addresses could be resolved from"
-                " the target domains, aborting audit!"
-            )
-
-        # Add the addresses to the set of target addresses.
-        for register in dns_registers:
-            self.__addresses.add(register.address)
+                # Abort the audit if one of the domains cannot be resolved.
+                if not resolved_4 and not resolved_6:
+                    raise RuntimeError(
+                        "Aborting audit: cannot resolve: %s" % domain)
 
 
     #--------------------------------------------------------------------------
@@ -203,8 +242,8 @@ class AuditScope (object):
 
 
     #--------------------------------------------------------------------------
-    def __repr__(self):
-        result = ["<Audit scope:\n"]
+    def __str__(self):
+        result = ["Audit scope:\n"]
         if self.__addresses:
             result.append("\tIP addresses:\n")
             for address in sorted(self.__addresses):
@@ -213,12 +252,20 @@ class AuditScope (object):
             result.append("\tDomains:\n")
             for domain in sorted(self.__domains):
                 result.append("\t\t%s\n" % domain)
+        if self.__roots:
+            result.append("\tRoot domains:\n")
+            for domain in sorted(self.__roots):
+                result.append("\t\t%s\n" % domain)
         if self.__web_pages:
             result.append("\tWeb pages:\n")
             for url in sorted(self.__web_pages):
                 result.append("\t\t%s\n" % url)
-        result.append(">")
         return "".join(result)
+
+
+    #--------------------------------------------------------------------------
+    def __repr__(self):
+        return "<%s>" % self
 
 
     #--------------------------------------------------------------------------
@@ -279,9 +326,12 @@ class AuditScope (object):
 
             # Test if the domain is one of the targets. If subdomains are
             # allowed, check if it's a subdomain of a target domain.
-            return target in self.__domains or (
-                self.__include_subdomains and
-                any(target.endswith("." + domain) for domain in self.__domains)
+            return (
+                target in self.__domains or
+                any(
+                    target.endswith("." + domain)
+                    for domain in self.__roots
+                )
             )
 
         # We don't know what this is, so we'll consider it out of scope.

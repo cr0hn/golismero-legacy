@@ -291,6 +291,42 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
+    def get_audit_config(self):
+        """
+        :returns: Audit configuration.
+        :rtype: AuditConfig
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def save_audit_config(self, audit_config):
+        """
+        :param audit_config: Audit configuration.
+        :type audit_config: AuditConfig
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def get_audit_scope(self):
+        """
+        :returns: Audit scope.
+        :rtype: AuditScope
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def save_audit_scope(self, audit_scope):
+        """
+        :param audit_scope: Audit scope.
+        :type audit_scope: AuditScope
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
     def add_data(self, data):
         """
         Add data to the database.
@@ -881,6 +917,8 @@ class AuditMemoryDB (BaseAuditDB):
         super(AuditMemoryDB, self).__init__(audit_config)
         self.__start_time   = None
         self.__end_time     = None
+        self.__audit_config = audit_config
+        self.__audit_scope  = None
         self.__results      = dict()
         self.__state        = collections.defaultdict(dict)
         self.__history      = collections.defaultdict(set)
@@ -891,6 +929,10 @@ class AuditMemoryDB (BaseAuditDB):
 
     #--------------------------------------------------------------------------
     def close(self):
+        self.__start_time   = None
+        self.__end_time     = None
+        self.__audit_config = None
+        self.__audit_scope  = None
         self.__results      = dict()
         self.__state        = collections.defaultdict(dict)
         self.__history      = collections.defaultdict(set)
@@ -928,6 +970,26 @@ class AuditMemoryDB (BaseAuditDB):
     #--------------------------------------------------------------------------
     def set_audit_stop_time(self, end_time):
         self.__end_time = end_time
+
+
+    #--------------------------------------------------------------------------
+    def get_audit_config(self):
+        return self.__audit_config
+
+
+    #--------------------------------------------------------------------------
+    def save_audit_config(self, audit_config):
+        self.__audit_config = audit_config
+
+
+    #--------------------------------------------------------------------------
+    def get_audit_scope(self):
+        return self.__audit_scope
+
+
+    #--------------------------------------------------------------------------
+    def save_audit_scope(self, audit_scope):
+        self.__audit_scope = audit_scope
 
 
     #--------------------------------------------------------------------------
@@ -1566,7 +1628,8 @@ class AuditSQLiteDB (BaseAuditDB):
                 audit_name STRING NOT NULL,
                 start_time REAL DEFAULT NULL,
                 end_time REAL DEFAULT NULL,
-                audit_config BLOB NOT NULL
+                audit_config BLOB NOT NULL,
+                audit_scope BLOB DEFAULT NULL
             );
 
             ----------------------------------------------------------
@@ -1652,7 +1715,7 @@ class AuditSQLiteDB (BaseAuditDB):
 
             # Insert the file information.
             self.__cursor.execute(
-                "INSERT INTO golismero VALUES (?, ?, NULL, NULL, ?);",
+                "INSERT INTO golismero VALUES (?, ?, NULL, NULL, ?, NULL);",
                 (self.SCHEMA_VERSION,
                  self.audit_name,
                  self.encode(audit_config))
@@ -1739,6 +1802,48 @@ class AuditSQLiteDB (BaseAuditDB):
             "UPDATE golismero SET end_time = ?;",
             (end_time,)
         )
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def get_audit_config(self):
+        self.__cursor.execute("SELECT audit_config FROM golismero LIMIT 1;")
+        row = self.__cursor.fetchone()
+        if row and row[0]:
+            return self.decode(row[0])
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def save_audit_config(self, audit_config):
+        if audit_config:
+            self.__cursor.execute(
+                "UPDATE golismero SET audit_config = ?;",
+                (self.encode(audit_config),)
+            )
+        else:
+            self.__cursor.execute("UPDATE golismero SET audit_config = NULL;")
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def get_audit_scope(self):
+        self.__cursor.execute("SELECT audit_scope FROM golismero LIMIT 1;")
+        row = self.__cursor.fetchone()
+        if row and row[0]:
+            return self.decode(row[0])
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def save_audit_scope(self, audit_scope):
+        if audit_scope:
+            self.__cursor.execute(
+                "UPDATE golismero SET audit_scope = ?;",
+                (self.encode(audit_scope),)
+            )
+        else:
+            self.__cursor.execute("UPDATE golismero SET audit_scope = NULL;")
 
 
     #--------------------------------------------------------------------------

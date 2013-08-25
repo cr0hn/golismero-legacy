@@ -448,18 +448,6 @@ class Audit (object):
                                             orchestrator_pid = old_context._orchestrator_pid,
                                             orchestrator_tid = old_context._orchestrator_tid)
 
-            # Calculate the audit scope.
-            # This is done here because some DNS queries may be made.
-            self.__audit_scope = AuditScope(self.config)
-
-            # Update the execution context again, with the scope.
-            Config._context = PluginContext(       msg_queue = old_context.msg_queue,
-                                                  audit_name = self.name,
-                                                audit_config = self.config,
-                                                 audit_scope = self.scope,
-                                            orchestrator_pid = old_context._orchestrator_pid,
-                                            orchestrator_tid = old_context._orchestrator_tid)
-
             # Create the plugin manager for this audit.
             self.__plugin_manager = self.orchestrator.pluginManager.get_plugin_manager_for_audit(self)
 
@@ -477,6 +465,24 @@ class Audit (object):
 
             # Create the report manager.
             self.__report_manager = ReportManager(self.orchestrator, self)
+
+            # (Re)calculate the audit scope. Some DNS queries may be made.
+            audit_scope = self.database.get_audit_scope()
+            if audit_scope is None:
+                audit_scope = AuditScope(self.config)
+            else:
+                audit_scope.add_targets(self.config)
+            self.database.save_audit_scope(audit_scope)
+            self.__audit_scope = audit_scope
+
+            # Update the execution context again, with the scope.
+            Config._context = PluginContext(       msg_queue = old_context.msg_queue,
+                                                  audit_name = self.name,
+                                                audit_config = self.config,
+                                                 audit_scope = self.scope,
+                                            orchestrator_pid = old_context._orchestrator_pid,
+                                            orchestrator_tid = old_context._orchestrator_tid)
+            Logger.log_more_verbose(str(audit_scope).strip())
 
             # Get the original audit start time, if found.
             # If not, save the new audit start time.
