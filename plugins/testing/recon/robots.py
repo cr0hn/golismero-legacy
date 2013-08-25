@@ -97,8 +97,6 @@ class Robots(TestingPlugin):
 
             p = download(m_url_robots_txt, self.check_download)
 
-            self.update_status(progress=40.0)
-
         except NetworkOutOfScope:
             Logger.log_more_verbose("Url %r is out of scope" % (m_url_robots_txt))
             return
@@ -142,10 +140,6 @@ class Robots(TestingPlugin):
 
         for m_step, m_line in enumerate(m_lines):
 
-            # Update status
-            progress = (float(m_step * 60) / m_total) + 40.0
-            self.update_status(progress=progress)
-
             # Remove comments
             m_octothorpe = m_line.find('#')
             if m_octothorpe >= 0:
@@ -188,7 +182,10 @@ class Robots(TestingPlugin):
             # Analyze results
             match = {}
             m_analyzer = MatchingAnalyzer(m_response_error_page.data)
-            for l_url in set(m_discovered_urls):
+            m_total = len(set(m_discovered_urls))
+            for m_step, l_url in enumerate(set(m_discovered_urls)):
+                progress = (float(m_step * 100) / m_total)
+                self.update_status(progress=progress)
                 l_url = fix_url(l_url, m_url)
                 if l_url in Config.audit_scope:
                     l_p = HTTP.get_url(l_url, callback=self.check_response)  # FIXME handle exceptions!
@@ -207,7 +204,10 @@ class Robots(TestingPlugin):
 
         # No tricky error page, assume the status codes work
         else:
-            for l_url in set(m_discovered_urls):
+            m_total = len(set(m_discovered_urls))
+            for m_step, l_url in enumerate(set(m_discovered_urls)):
+                progress = (float(m_step * 100) / m_total)
+                self.update_status(progress=progress)
                 l_url = fix_url(l_url, m_url)   # XXX FIXME
                 try:
                     l_p = HTTP.get_url(l_url, callback=self.check_response)
@@ -223,5 +223,7 @@ class Robots(TestingPlugin):
 
         if m_return:
             Logger.log_more_verbose("Robots - discovered %s URLs" % len(m_return))
+        else:
+            Logger.log_more_verbose("Robots - no URLs discovered")
 
         return m_return
