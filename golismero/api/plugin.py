@@ -314,7 +314,6 @@ class Plugin (object):
         """
         self = super(Plugin, cls).__new__(cls, *args, **kwargs)
         self.__progress = _PluginProgress()
-        self.__state    = PluginState()
         return self
 
 
@@ -328,7 +327,7 @@ class Plugin (object):
         :returns: Shared plugin state variables.
         :rtype: PluginState
         """
-        return self.__state
+        return PluginState()
 
 
     #--------------------------------------------------------------------------

@@ -103,7 +103,8 @@ class Progress (object):
         self.__total     = total
         self.__completed = completed
         self.__percent   = percent
-        self._previous  = percent
+        self.__min_delta = min_delta
+        self._previous   = percent
 
         # Create or save the lock.
         self._lock = lock if lock else RLock()
