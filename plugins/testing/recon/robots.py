@@ -92,13 +92,13 @@ class Robots(TestingPlugin):
 
         p = None
         try:
-            msg = "Looking for robots.txt in %s" % m_hostname
+            msg = "Looking for robots.txt in: %s" % m_hostname
             Logger.log_more_verbose(msg)
 
             p = download(m_url_robots_txt, self.check_download)
 
         except NetworkOutOfScope:
-            Logger.log_more_verbose("Url %r is out of scope" % (m_url_robots_txt))
+            Logger.log_more_verbose("URL out of scope: %s" % (m_url_robots_txt))
             return
         except Exception, e:
             Logger.log_more_verbose("Error while processing %r: %s" % (m_url_robots_txt, str(e)))
@@ -125,7 +125,7 @@ class Robots(TestingPlugin):
             elif m_robots_text.startswith(codecs.BOM_UTF16):
                 m_robots_text = m_robots_text.decode('utf-16')
         except UnicodeDecodeError:
-            Logger.log_error_verbose("Robots - error while parsing robots.txt: Unicode format error.")
+            Logger.log_error_verbose("Error while parsing robots.txt: Unicode format error.")
             return
 
         # Extract URLs
@@ -222,8 +222,8 @@ class Robots(TestingPlugin):
                     m_return.append(l_p)
 
         if m_return:
-            Logger.log_more_verbose("Robots - discovered %s URLs" % len(m_return))
+            Logger.log_more_verbose("Discovered %s URLs." % len(m_return))
         else:
-            Logger.log_more_verbose("Robots - no URLs discovered")
+            Logger.log_more_verbose("No URLs discovered.")
 
         return m_return
