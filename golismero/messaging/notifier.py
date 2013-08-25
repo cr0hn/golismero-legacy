@@ -37,7 +37,7 @@ from ..api.data import Data
 ##from ..api.logger import Logger
 from ..api.plugin import Plugin
 from .message import Message
-from .codes import MessageType, MessageCode
+from .codes import MessageType, MessageCode, MessagePriority
 
 from collections import defaultdict
 ##from traceback import format_exc
@@ -346,7 +346,7 @@ class AuditNotifier(AbstractNotifier):
         """
 
         # Get the identity and the plugin name.
-        identity = message.message_info
+        identity = message.ack_identity
         plugin_name = message.plugin_name
 
         # Only ACKs for data messages carry the identity.
@@ -368,11 +368,15 @@ class AuditNotifier(AbstractNotifier):
                         warn(msg % (identity, plugin_name))
 
                     # Notify the Orchestrator that the plugin has finished running.
-                    self.orchestrator.notify_plugin_status(
-                        self.audit.name, plugin_name,
-                        MessageCode.MSG_STATUS_PLUGIN_END,
-                        identity,
+                    msg = Message(
+                        message_type = MessageType.MSG_TYPE_STATUS,
+                        message_code = MessageCode.MSG_STATUS_PLUGIN_END,
+                         plugin_name = plugin_name,
+                          audit_name = self.audit.name,
+                        ack_identity = identity,
+                            priority = MessagePriority.MSG_PRIORITY_MEDIUM,
                     )
+                    self.orchestrator.dispatch_msg(msg)
 
             finally:
 

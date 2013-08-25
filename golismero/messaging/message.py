@@ -58,6 +58,7 @@ class Message (object):
                        message_info = None,
                          audit_name = None,
                         plugin_name = None,
+                       ack_identity = None,
                            priority = MessagePriority.MSG_PRIORITY_MEDIUM):
         """
         :param message_type: Message type. Must be one of the constants from MessageType.
@@ -75,6 +76,9 @@ class Message (object):
         :param plugin_name: Name of the plugin that sent this message, if any.
         :type plugin_name: str | None
 
+        :param ack_identity: Identity hash of the current input data, or None if not running a plugin.
+        :type ack_identity: str | None
+
         :param priority: Priority level. Must be one of the constants from MessagePriority.
         :type priority: int
         """
@@ -88,6 +92,8 @@ class Message (object):
             raise TypeError("Expected int, got %s instead" % type(audit_name))
         if plugin_name is not None and type(plugin_name) not in (str, unicode):
             raise TypeError("Expected int, got %s instead" % type(plugin_name))
+        if ack_identity is not None and type(ack_identity) != str:
+            raise TypeError("Expected str, got %s instead" % type(ack_identity))
         if type(priority) != int:
             raise TypeError("Expected int, got %s instead" % type(priority))
 
@@ -115,6 +121,7 @@ class Message (object):
         self.__message_info = message_info
         self.__audit_name   = audit_name
         self.__plugin_name  = plugin_name
+        self.__ack_identity = ack_identity
         self.__priority     = priority
         self.__timestamp    = time()
 
@@ -159,6 +166,14 @@ class Message (object):
         :rtype: str | None
         """
         return self.__plugin_name
+
+    @property
+    def ack_identity(self):
+        """"
+        :returns: Identity hash of the current input data, or None if not running a plugin.
+        :rtype: str | None
+        """
+        return self.__ack_identity
 
     @property
     def priority(self):

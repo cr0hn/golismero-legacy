@@ -136,18 +136,17 @@ class WebUIPlugin(UIPlugin):
             # A plugin has started processing a Data object.
             if message.message_type == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
                 plugin_name = self.get_plugin_name(message)
-                self.notify_progress(message.audit_name, plugin_name, message.message_info, 0.0)
+                self.notify_progress(message.audit_name, plugin_name, message.ack_identity, 0.0)
 
             # A plugin has finished processing a Data object.
             elif message.message_type == MessageCode.MSG_STATUS_PLUGIN_END:
                 plugin_name = self.get_plugin_name(message)
-                self.notify_progress(message.audit_name, plugin_name, message.message_info, 100.0)
+                self.notify_progress(message.audit_name, plugin_name, message.ack_identity, 100.0)
 
             # A plugin is currently processing a Data object.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
                 plugin_name = self.get_plugin_name(message)
-                identity, progress = message.message_info
-                self.notify_progress(message.audit_name, plugin_name, identity, progress)
+                self.notify_progress(message.audit_name, plugin_name, message.ack_identity, message.message_info)
 
             # An audit has switched to another execution stage.
             elif message.message_code == MessageCode.MSG_STATUS_STAGE_UPDATE:

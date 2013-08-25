@@ -252,10 +252,11 @@ class PluginTester(object):
         :rtype: \\*
         """
 
-        # Load the plugin.
+        # Load the plugin and reset the ACK identity.
         # The name MUST be the full ID. This is intentional.
         plugin, plugin_info = self.get_plugin(plugin_name)
-        Config._context._PluginContext__plugin_info = plugin_info
+        Config._context._PluginContext__plugin_info  = plugin_info
+        Config._context._PluginContext__ack_identity = None
 
         try:
 
@@ -288,8 +289,14 @@ class PluginTester(object):
                     msg = "Plugin %s cannot process data of type %s"
                     raise TypeError(msg % (plugin_name, type(data)))
 
+                # Set the ACK identity.
+                Config._context._PluginContext__ack_identity = data.identity
+
                 # Call the plugin.
                 result = plugin.recv_info(data)
+
+                # Reset the ACK identity.
+                Config._context._PluginContext__ack_identity = None
 
                 # Process the results.
                 result = LocalDataCache.on_finish(result)
@@ -329,8 +336,9 @@ class PluginTester(object):
 
         finally:
 
-            # Unload the plugin.
-            Config._context._PluginContext__plugin_info = None
+            # Unload the plugin and reset the ACK identity.
+            Config._context._PluginContext__plugin_info  = None
+            Config._context._PluginContext__ack_identity = None
 
 
     #--------------------------------------------------------------------------

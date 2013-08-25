@@ -416,34 +416,6 @@ class Orchestrator (object):
 
 
     #----------------------------------------------------------------------
-    def notify_plugin_status(self, audit_name, plugin_name, status_code, status_data):
-        """
-        Notify the Orchestrator of a change in a plugin execution state.
-
-        :param audit_name: Name of the audit.
-        :type audit_name: str
-
-        :param plugin_name: Name of the plugin.
-        :type plugin_name: str
-
-        :param status_code: Status code. Must be one of the MessageCode.MSG_STATUS_* constants.
-        :type status_code: int
-
-        :param status_data: Status data.
-        :type status_data: \\*
-        """
-        msg = Message(
-            message_type = MessageType.MSG_TYPE_STATUS,
-            message_code = status_code,
-            message_info = status_data,
-             plugin_name = plugin_name,
-              audit_name = audit_name,
-                priority = MessagePriority.MSG_PRIORITY_MEDIUM,
-        )
-        self.dispatch_msg(msg)
-
-
-    #----------------------------------------------------------------------
     def run(self, *audits):
         """
         Message loop.

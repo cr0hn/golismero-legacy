@@ -754,6 +754,7 @@ class Audit (object):
                                                   audit_name = self.name,
                                                 audit_config = self.config,
                                                  audit_scope = self.scope,
+                                                ack_identity = message.ack_identity,
                                             orchestrator_pid = old_context._orchestrator_pid,
                                             orchestrator_tid = old_context._orchestrator_tid)
 

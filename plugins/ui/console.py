@@ -111,11 +111,11 @@ class ConsoleUIPlugin(UIPlugin):
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
 
                 if Console.level >= Console.VERBOSE:
-                    m_id, m_progress = message.message_info
 
                     m_plugin_name = self.get_plugin_name(message.plugin_name)
                     m_plugin_name = colorize(m_plugin_name, "info")
 
+                    m_progress = message.message_info
                     if m_progress is not None:
                         m_progress_h   = int(m_progress)
                         m_progress_l   = int((m_progress - float(m_progress_h)) * 100)

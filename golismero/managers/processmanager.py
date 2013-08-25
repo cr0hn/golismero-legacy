@@ -220,7 +220,6 @@ def _bootstrap(context, func, args, kwargs):
                         context.send_msg(
                             message_type = MessageType.MSG_TYPE_STATUS,
                             message_code = MessageCode.MSG_STATUS_PLUGIN_BEGIN,
-                            message_info = context.ack_identity,
                         )
 
                         # Call the callback method.
@@ -479,7 +478,6 @@ class PluginContext (object):
         """
         self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                       message_code = MessageCode.MSG_CONTROL_ACK,
-                      message_info = self.ack_identity,
                           priority = MessagePriority.MSG_PRIORITY_LOW)
 
 
@@ -510,7 +508,7 @@ class PluginContext (object):
         # Send the status message to the Orchestrator.
         self.send_msg(message_type = MessageType.MSG_TYPE_STATUS,
                       message_code = MessageCode.MSG_STATUS_PLUGIN_STEP,
-                      message_info = (self.ack_identity, progress),
+                      message_info = progress,
                           priority = MessagePriority.MSG_PRIORITY_MEDIUM)
 
 
@@ -551,6 +549,7 @@ class PluginContext (object):
                           message_info = message_info,
                             audit_name = self.audit_name,
                            plugin_name = self.plugin_name,
+                          ack_identity = self.ack_identity,
                               priority = priority)
         self.send_raw_msg(message)
 
