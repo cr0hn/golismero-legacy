@@ -43,6 +43,7 @@ __all__ = [
 ]
 
 from .config import Config
+from .progress import Progress
 from .shared import check_value
 from ..messaging.codes import MessageCode
 
@@ -80,6 +81,23 @@ def get_plugin_info(plugin_name = None):
         return Config.plugin_info
     return Config._context.remote_call(
         MessageCode.MSG_RPC_PLUGIN_GET_INFO, plugin_name)
+
+
+#------------------------------------------------------------------------------
+class _PluginProgress (Progress):
+    """
+    Progress monitor for plugins.
+
+    .. warning: Do not instance this class!
+                Use self.progress in your plugin instead.
+    """
+
+
+    #--------------------------------------------------------------------------
+    def _notify(self):
+        percent = self.percent
+        if percent:
+            Config._context.send_status(percent)
 
 
 #------------------------------------------------------------------------------
@@ -287,13 +305,43 @@ class Plugin (object):
 
 
     #--------------------------------------------------------------------------
+    def __new__(cls, *args, **kwargs):
+        """
+        Initializes the plugin instance.
+
+        .. warning::
+            Do not override this method!
+        """
+        self = super(Plugin, cls).__new__(cls, *args, **kwargs)
+        self.__progress = _PluginProgress()
+        self.__state    = PluginState()
+        return self
+
+
+    #--------------------------------------------------------------------------
     @property
     def state(self):
         """
+        .. warning::
+            Do not override this method!
+
         :returns: Shared plugin state variables.
         :rtype: PluginState
         """
-        return PluginState()
+        return self.__state
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def progress(self):
+        """
+        .. warning::
+            Do not override this method!
+
+        :returns: Plugin progress notifier.
+        :rtype: Progress
+        """
+        return self.__progress
 
 
     #--------------------------------------------------------------------------
@@ -312,7 +360,9 @@ class Plugin (object):
                          or None to indicate progress can't be measured.
         :type progress: float | None
         """
-        Config._context.send_status(progress)
+        ##Config._context.send_status(progress)
+        if progress:
+            self.progress.set_percent(progress)
 
 
 #------------------------------------------------------------------------------
