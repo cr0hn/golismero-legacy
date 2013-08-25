@@ -245,21 +245,21 @@ class AuditScope (object):
     def __str__(self):
         result = ["Audit scope:\n"]
         if self.__addresses:
-            result.append("\tIP addresses:\n")
+            result.append("\nIP addresses:\n")
             for address in sorted(self.__addresses):
-                result.append("\t\t%s\n" % address)
+                result.append("    %s\n" % address)
         if self.__domains:
-            result.append("\tDomains:\n")
+            result.append("\nDomains:\n")
             for domain in sorted(self.__domains):
-                result.append("\t\t%s\n" % domain)
+                result.append("    %s\n" % domain)
         if self.__roots:
-            result.append("\tRoot domains:\n")
+            result.append("\nRoot domains:\n")
             for domain in sorted(self.__roots):
-                result.append("\t\t%s\n" % domain)
+                result.append("    %s\n" % domain)
         if self.__web_pages:
-            result.append("\tWeb pages:\n")
+            result.append("\nWeb pages:\n")
             for url in sorted(self.__web_pages):
-                result.append("\t\t%s\n" % url)
+                result.append("    %s\n" % url)
         return "".join(result)
 
 

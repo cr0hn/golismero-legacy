@@ -482,7 +482,7 @@ class Audit (object):
                                                  audit_scope = self.scope,
                                             orchestrator_pid = old_context._orchestrator_pid,
                                             orchestrator_tid = old_context._orchestrator_tid)
-            Logger.log_more_verbose(str(audit_scope).strip())
+            Logger.log_more_verbose(str(audit_scope))
 
             # Get the original audit start time, if found.
             # If not, save the new audit start time.
