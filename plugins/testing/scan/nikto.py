@@ -32,8 +32,7 @@ from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.resource.url import BaseUrl, Url
 from golismero.api.data.vulnerability import UrlVulnerability
-from golismero.api.external import run_external_tool, \
-     win_to_cygwin_path, cygwin_to_win_path
+from golismero.api.external import run_external_tool, find_cygwin_binary_in_path
 from golismero.api.logger import Logger
 from golismero.api.plugin import ImportPlugin, TestingPlugin
 
@@ -77,7 +76,8 @@ class NiktoPlugin(TestingPlugin):
                 if not exists(nikto_script):
                     nikto_script = Config.plugin_args["exec"]
                     if nikto_script:
-                        Logger.log_error("Nikto not found! File: %s" % nikto_script)
+                        Logger.log_error(
+                            "Nikto not found! File: %s" % nikto_script)
                     else:
                         Logger.log_error("Nikto not found!")
                     return
@@ -91,46 +91,17 @@ class NiktoPlugin(TestingPlugin):
                 config = "/etc/nikto.conf"
                 if not exists(config):
                     config = Config.plugin_args["config"]
-                    if config:
-                        Logger.log_error("Nikto config file not found! File: %s" % config)
+                    if config and exists(config):
+                        config = abspath(config)
                     else:
-                        Logger.log_error("Nikto config file not found!")
-                    return
-
-        # On Windows, we must always call Perl explicitly.
-        # On POSIX, only if the script is not marked as executable.
-        command = nikto_script
-        if sep == "\\" or os.stat(nikto_script)[stat.ST_MODE] & stat.S_IXUSR == 0:
-
-            # Now the command to run is the Perl interpreter.
-            if sep == "\\":
-                command = "perl.exe"
-            else:
-                command = "perl"
-
-            # Look for the Perl interpreter on the PATH. Fail if not found.
-            found = False
-            for candidate in os.environ.get("PATH", "").split(pathsep):
-                candidate = candidate.strip()
-                candidate = join(candidate, command)
-                if exists(candidate):
-                    found = True
-                    command = candidate
-                    break
-            if not found:
-                Logger.log_error("Perl interpreter not found!")
-
-            # Detect if it's the Cygwin version but we're outside Cygwin.
-            # If so we need to use Unix style paths.
-            use_cygwin = False
-            if sep == "\\":
-                cygwin = split(command)[0]
-                cygwin = join(cygwin, "cygwin1.dll")
-                if exists(cygwin):
-                    nikto_script = win_to_cygwin_path(nikto_script)
-                    if config:
-                        config = win_to_cygwin_path(config)
-                    use_cygwin = True
+                        if config:
+                            Logger.log_error(
+                                "Nikto config file not found! File: %s"
+                                % config
+                            )
+                        else:
+                            Logger.log_error("Nikto config file not found!")
+                        return
 
         # Build the command line arguments.
         # The -output argument will be filled by run_nikto.
@@ -144,17 +115,11 @@ class NiktoPlugin(TestingPlugin):
             ##"-useproxy",
         ]
         if config:
-            args.insert(0, config)
-            args.insert(0, "-config")
-        if command != nikto_script:
-            args.insert(0, nikto_script)
+            args = ["-config", config] + args
         for option in ("Pause", "timeout", "Tuning"):
             value = Config.plugin_args.get(option.lower(), None)
             if value:
                 args.extend(["-" + option, value])
-
-        # Get the current folder, so we can restore it later.
-        cwd = os.getcwd()
 
         # On Windows we can't open a temporary file twice (although it's
         # actually Python who won't let us). Note that there is no exploitable
@@ -162,16 +127,10 @@ class NiktoPlugin(TestingPlugin):
         # filesystem links from an Administrator account.
         if sep == "\\":
             output_file = NamedTemporaryFile(suffix = ".csv", delete = False)
+            output = output_file.name
+            output_file.close()
             try:
-                output = output_file.name
-                if use_cygwin:
-                    output = win_to_cygwin_path(output)
-                output_file.close()
-                try:
-                    os.chdir(nikto_dir)
-                    return self.run_nikto(info, output, command, args)
-                finally:
-                    os.chdir(cwd)
+                return self.run_nikto(info, output, nikto_script, args)
             finally:
                 os.unlink(output_file.name)
 
@@ -181,11 +140,7 @@ class NiktoPlugin(TestingPlugin):
         else:
             with NamedTemporaryFile(suffix = ".csv") as output_file:
                 output = output_file.name
-                try:
-                    os.chdir(nikto_dir)
-                    return self.run_nikto(info, output, command, args)
-                finally:
-                    os.chdir(cwd)
+                return self.run_nikto(info, output, nikto_script, args)
 
 
     #--------------------------------------------------------------------------
@@ -200,12 +155,10 @@ class NiktoPlugin(TestingPlugin):
             The format should always be CSV.
         :type output_filename:
 
-        :param command: Path to the Nikto executable.
-            May also be the Perl interpreter executable, with the
-            Nikto script as its first argument.
+        :param command: Path to the Nikto script.
         :type command: str
 
-        :param args: Arguments to pass to the executable.
+        :param args: Arguments to pass to Nikto.
         :type args: list(str)
 
         :returns: Results from the Nikto scan.
@@ -216,21 +169,22 @@ class NiktoPlugin(TestingPlugin):
         args.append("-output")
         args.append(output_filename)
 
-        # Turn off DOS path warnings for Cygwin.
-        # Does nothing on other platforms.
-        env = os.environ.copy()
-        cygwin = env.get("CYGWIN", "")
-        if "nodosfilewarning" not in cygwin:
-            if cygwin:
-                cygwin += " "
-            cygwin += "nodosfilewarning"
-        env["CYGWIN"] = cygwin
+        # Get the Nikto directory.
+        curdir = split(abspath(command))[0]
+
+        # On Windows, we must run Perl explicitly.
+        # Also it only works under Cygwin.
+        if sep == "\\":
+            perl = find_cygwin_binary_in_path("perl.exe")
+            if not perl:
+                Logger.log_error("Perl interpreter not found, cannot run Nikto!")
+            args.insert(0, command)
+            command = perl
 
         # Run Nikto and capture the text output.
         Logger.log("Launching Nikto against: %s" % info.hostname)
         Logger.log_more_verbose("Nikto arguments: %s %s" % (command, " ".join(args)))
-        ##output, code = run_external_tool("C:\\cygwin\\bin\\perl.exe", ["-V"], env) # DEBUG
-        output, code = run_external_tool(command, args, env)
+        output, code = run_external_tool(command, args, curdir = curdir)
 
         # Log the output in extra verbose mode.
         if code:
@@ -283,8 +237,6 @@ class NiktoPlugin(TestingPlugin):
         hosts_seen = set()
         urls_seen = {}
         try:
-            if output_filename.startswith("/cygdrive/"):
-                output_filename = cygwin_to_win_path(output_filename)
             with open(output_filename, "rU") as f:
                 csv_reader = reader(f)
                 for row in csv_reader:
