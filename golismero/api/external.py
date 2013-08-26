@@ -59,6 +59,10 @@ import subprocess
 import stat
 import shlex
 
+# Needed on non-Windows platforms to prevent a syntax error.
+if not hasattr(__builtins__, "WindowsError"):
+    class WindowsError(OSError): pass
+
 # TODO: Use pexpect to run tools interactively.
 # TODO: A callback in run_external_tool() to receive the output line by line.
 
