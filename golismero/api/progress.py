@@ -155,6 +155,9 @@ class Progress (object):
             notify() method.
         :type min_delta: float
         """
+        min_delta = float(min_delta) if min_delta else 0.0
+        if min_delta and (min_delta < 0.0 or min_delta > 100.0):
+            raise ValueError("Invalid percent value: %r" % min_delta)
         self.__min_delta = min_delta
 
 
@@ -211,7 +214,7 @@ class Progress (object):
 
 
     #--------------------------------------------------------------------------
-    def add_completed(self, delta):
+    def add_completed(self, delta = 1):
         """
         Add the value to the number of tasks completed.
 
