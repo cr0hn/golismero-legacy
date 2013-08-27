@@ -274,15 +274,15 @@ class Progress (object):
     def __refresh(self):
         ".. warning: Called internally, do not call it yourself!"
         if self._previous != self.__percent:
-            try:
-                min_delta = self.min_delta
-                if (
-                    not min_delta or
-                    abs(self.__percent - self._previous) >= min_delta
-                ):
+            min_delta = self.min_delta
+            if (
+                not min_delta or
+                abs(self.__percent - self._previous) >= min_delta
+            ):
+                try:
                     self._notify()
-            finally:
-                self._previous = self.__percent
+                finally:
+                    self._previous = self.__percent
 
 
     #--------------------------------------------------------------------------
