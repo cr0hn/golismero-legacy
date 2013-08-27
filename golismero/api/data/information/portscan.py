@@ -77,6 +77,7 @@ class Portscan(Information):
             for state, protocol, port in ports:
                 state    = state.upper()
                 protocol = protocol.upper()
+                port     = int(port)
                 assert state in ("OPEN", "CLOSED", "FILTERED"), state
                 assert protocol in ("TCP", "UDP"), state
                 assert 0 < port < 65536, port
