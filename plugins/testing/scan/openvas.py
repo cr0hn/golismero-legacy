@@ -277,10 +277,11 @@ class OpenVASImportPlugin(ImportPlugin):
             if golismero_results:
                 Database.async_add_many(golismero_results)
         except Exception, e:
+            fmt = format_exc()
             Logger.log_error(
                 "Could not load OpenVAS results from file: %s" % input_file)
             Logger.log_error_verbose(str(e))
-            Logger.log_error_more_verbose(format_exc())
+            Logger.log_error_more_verbose(fmt)
         else:
             if golismero_results:
                 Logger.log(
