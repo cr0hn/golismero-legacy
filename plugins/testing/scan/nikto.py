@@ -324,10 +324,11 @@ class NiktoImportPlugin(ImportPlugin):
             if results:
                 Database.async_add_many(results)
         except Exception, e:
+            fmt = format_exc()
             Logger.log_error(
                 "Could not load Nikto results from file: %s" % input_file)
             Logger.log_error_verbose(str(e))
-            Logger.log_error_more_verbose(format_exc())
+            Logger.log_error_more_verbose(fmt)
         else:
             if results:
                 Logger.log(
