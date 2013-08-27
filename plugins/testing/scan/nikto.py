@@ -37,6 +37,7 @@ from golismero.api.logger import Logger
 from golismero.api.plugin import ImportPlugin, TestingPlugin
 
 import os
+import sys
 import stat
 
 from csv import reader
@@ -57,9 +58,6 @@ class NiktoPlugin(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
-
-        # We can't calculate how long will Nikto take.
-        self.update_status(progress = None)
 
         # Get the path to the Nikto scanner.
         nikto_script = Config.plugin_args["exec"]
@@ -125,7 +123,7 @@ class NiktoPlugin(TestingPlugin):
         # actually Python who won't let us). Note that there is no exploitable
         # race condition here, because on Windows you can only create
         # filesystem links from an Administrator account.
-        if sep == "\\":
+        if os.name != 'posix' or sys.platform == 'cygwin':
             output_file = NamedTemporaryFile(suffix = ".csv", delete = False)
             output = output_file.name
             output_file.close()
@@ -217,9 +215,9 @@ class NiktoPlugin(TestingPlugin):
     @staticmethod
     def parse_nikto_results(info, output_filename):
         """
-        Run Nikto and convert the output to the GoLismero data model.
+        Convert the output of a Nikto scan to the GoLismero data model.
 
-        :param info: Base URL to scan.
+        :param info: Data object to link all results to (optional).
         :type info: BaseUrl
 
         :param output_filename: Path to the output filename.
