@@ -253,11 +253,11 @@ class MessageCode(MessageConstants):
     # Plugin API
     MSG_RPC_PLUGIN_GET_NAMES       = 20
     MSG_RPC_PLUGIN_GET_INFO        = 21
-    MSG_RPC_STATE_ADD              = 22
-    MSG_RPC_STATE_REMOVE           = 23
-    MSG_RPC_STATE_CHECK            = 24
-    MSG_RPC_STATE_GET              = 25
-    MSG_RPC_STATE_KEYS             = 26
+
+    # Audit information
+    MSG_RPC_AUDIT_COUNT            = 30
+    MSG_RPC_AUDIT_NAMES            = 31
+    MSG_RPC_AUDIT_CONFIG           = 32
 
     # Shared map API
     MSG_RPC_SHARED_MAP_GET         = 40
@@ -277,11 +277,6 @@ class MessageCode(MessageConstants):
     MSG_RPC_SHARED_HEAP_POP        = 53
     MSG_RPC_SHARED_HEAP_ADD        = 54
     MSG_RPC_SHARED_HEAP_REMOVE     = 55
-
-    # Audit information
-    MSG_RPC_AUDIT_COUNT            = 60
-    MSG_RPC_AUDIT_NAMES            = 61
-    MSG_RPC_AUDIT_CONFIG           = 62
 
 
     #--------------------------------------------------------------------------

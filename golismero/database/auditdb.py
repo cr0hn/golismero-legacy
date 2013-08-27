@@ -99,26 +99,6 @@ def rpc_data_db_count(orchestrator, audit_name, *args, **kwargs):
 def rpc_data_db_plugins(orchestrator, audit_name, *args, **kwargs):
     return orchestrator.auditManager.get_audit(audit_name).database.get_past_plugins(*args, **kwargs)
 
-@implementor(MessageCode.MSG_RPC_STATE_ADD)
-def rpc_plugin_state_add(orchestrator, audit_name, *args, **kwargs):
-    return orchestrator.auditManager.get_audit(audit_name).database.add_state_variable(*args, **kwargs)
-
-@implementor(MessageCode.MSG_RPC_STATE_REMOVE)
-def rpc_plugin_state_remove(orchestrator, audit_name, *args, **kwargs):
-    return orchestrator.auditManager.get_audit(audit_name).database.remove_state_variable(*args, **kwargs)
-
-@implementor(MessageCode.MSG_RPC_STATE_CHECK)
-def rpc_plugin_state_check(orchestrator, audit_name, *args, **kwargs):
-    return orchestrator.auditManager.get_audit(audit_name).database.has_state_variable(*args, **kwargs)
-
-@implementor(MessageCode.MSG_RPC_STATE_GET)
-def rpc_plugin_state_get(orchestrator, audit_name, *args, **kwargs):
-    return orchestrator.auditManager.get_audit(audit_name).database.get_state_variable(*args, **kwargs)
-
-@implementor(MessageCode.MSG_RPC_STATE_KEYS)
-def rpc_plugin_state_keys(orchestrator, audit_name, *args, **kwargs):
-    return orchestrator.auditManager.get_audit(audit_name).database.get_state_variable_names(*args, **kwargs)
-
 @implementor(MessageCode.MSG_RPC_SHARED_MAP_GET)
 def rpc_shared_map_get(orchestrator, audit_name, *args, **kwargs):
     return orchestrator.auditManager.get_audit(audit_name).database.get_mapped_values(*args, **kwargs)
@@ -498,85 +478,6 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
-    def add_state_variable(self, plugin_name, key, value):
-        """
-        Add a plugin state variable to the database.
-
-        :param plugin_name: Plugin name.
-        :type plugin_name: str
-
-        :param key: Variable name.
-        :type key: str
-
-        :param value: Variable value.
-        :type value: anything
-        """
-        raise NotImplementedError("Subclasses MUST implement this method!")
-
-
-    #--------------------------------------------------------------------------
-    def remove_state_variable(self, plugin_name, key):
-        """
-        Remove a plugin state variable from the database.
-
-        :param plugin_name: Plugin name.
-        :type plugin_name: str
-
-        :param key: Variable name.
-        :type key: str
-        """
-        raise NotImplementedError("Subclasses MUST implement this method!")
-
-
-    #--------------------------------------------------------------------------
-    def has_state_variable(self, plugin_name, key):
-        """
-        Check if plugin state variable is present in the database.
-
-        :param plugin_name: Plugin name.
-        :type plugin_name: str
-
-        :param key: Variable name.
-        :type key: str
-
-        :returns: True if the variable is present, False otherwise.
-        :rtype: bool
-        """
-        raise NotImplementedError("Subclasses MUST implement this method!")
-
-
-    #--------------------------------------------------------------------------
-    def get_state_variable(self, plugin_name, key):
-        """
-        Get the value of a plugin state variable given its name.
-
-        :param plugin_name: Plugin name.
-        :type plugin_name: str
-
-        :param key: Variable name.
-        :type key: str
-
-        :returns: Variable value.
-        :rtype: \\*
-        """
-        raise NotImplementedError("Subclasses MUST implement this method!")
-
-
-    #--------------------------------------------------------------------------
-    def get_state_variable_names(self, plugin_name):
-        """
-        Get all plugin state variable names in the database.
-
-        :param plugin_name: Plugin name.
-        :type plugin_name: str
-
-        :returns: Variable names.
-        :rtype: set(str)
-        """
-        raise NotImplementedError("Subclasses MUST implement this method!")
-
-
-    #--------------------------------------------------------------------------
     def mark_plugin_finished(self, identity, plugin_name):
         """
         Mark the data as having been processed by the plugin.
@@ -920,7 +821,6 @@ class AuditMemoryDB (BaseAuditDB):
         self.__audit_config = audit_config
         self.__audit_scope  = None
         self.__results      = dict()
-        self.__state        = collections.defaultdict(dict)
         self.__history      = collections.defaultdict(set)
         self.__stages       = collections.defaultdict(int)
         self.__shared_maps  = collections.defaultdict(dict)
@@ -934,7 +834,6 @@ class AuditMemoryDB (BaseAuditDB):
         self.__audit_config = None
         self.__audit_scope  = None
         self.__results      = dict()
-        self.__state        = collections.defaultdict(dict)
         self.__history      = collections.defaultdict(set)
         self.__stages       = collections.defaultdict(int)
         self.__shared_maps  = collections.defaultdict(dict)
@@ -1134,31 +1033,6 @@ class AuditMemoryDB (BaseAuditDB):
                      and data.vulnerability_type == data_subtype })
         raise NotImplementedError(
             "Unknown data type: %r" % data_type)
-
-
-    #--------------------------------------------------------------------------
-    def add_state_variable(self, plugin_name, key, value):
-        self.__state[plugin_name][key] = value
-
-
-    #--------------------------------------------------------------------------
-    def remove_state_variable(self, plugin_name, key):
-        del self.__state[plugin_name][key]
-
-
-    #--------------------------------------------------------------------------
-    def has_state_variable(self, plugin_name, key):
-        return key in self.__state[plugin_name]
-
-
-    #--------------------------------------------------------------------------
-    def get_state_variable(self, plugin_name, key):
-        return self.__state[plugin_name][key]
-
-
-    #--------------------------------------------------------------------------
-    def get_state_variable_names(self, plugin_name):
-        return set(self.__state[plugin_name].iterkeys())
 
 
     #--------------------------------------------------------------------------
@@ -1658,21 +1532,12 @@ class AuditSQLiteDB (BaseAuditDB):
             );
 
             ----------------------------------------------------------
-            -- Tables to store the plugin state and history.
+            -- Tables to store the plugin history.
             ----------------------------------------------------------
 
             CREATE TABLE plugin (
                 rowid INTEGER PRIMARY KEY,
                 name STRING UNIQUE NOT NULL
-            );
-
-            CREATE TABLE state (
-                rowid INTEGER PRIMARY KEY,
-                plugin_id INTEGER NOT NULL,
-                key STRING NOT NULL,
-                value BLOB NOT NULL,
-                FOREIGN KEY(plugin_id) REFERENCES plugin(rowid),
-                UNIQUE(plugin_id, key) ON CONFLICT REPLACE
             );
 
             CREATE TABLE history (
@@ -2097,130 +1962,6 @@ class AuditSQLiteDB (BaseAuditDB):
             values = (data_subtype,)
         self.__cursor.execute(query, values)
         return int(self.__cursor.fetchone()[0])
-
-
-    #--------------------------------------------------------------------------
-    @transactional
-    def add_state_variable(self, plugin_name, key, value):
-        if type(plugin_name) is not str:
-            raise TypeError("Expected string, got %s" % type(plugin_name))
-        if type(key) is not str:
-            raise TypeError("Expected string, got %s" % type(key))
-
-        # Fetch the plugin rowid, add it if missing.
-        self.__cursor.execute(
-            "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
-            (plugin_name,))
-        rows = self.__cursor.fetchone()
-        if rows:
-            plugin_id = rows[0]
-        else:
-            self.__cursor.execute(
-                "INSERT INTO plugin VALUES (NULL, ?);",
-                (plugin_name,))
-            plugin_id = self.__cursor.lastrowid
-            if plugin_id is None:
-                self.__cursor.execute(
-                    "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
-                    (plugin_name,))
-                rows = self.__cursor.fetchone()
-                plugin_id = rows[0]
-
-        # Save the state variable.
-        self.__cursor.execute(
-            "INSERT INTO state VALUES (NULL, ?, ?, ?);",
-            (plugin_id, key, self.encode(value)))
-
-
-    #--------------------------------------------------------------------------
-    @transactional
-    def remove_state_variable(self, plugin_name, key):
-        if type(plugin_name) is not str:
-            raise TypeError("Expected string, got %s" % type(plugin_name))
-        if type(key) is not str:
-            raise TypeError("Expected string, got %s" % type(key))
-
-        # Fetch the plugin rowid, fail if missing.
-        self.__cursor.execute(
-            "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
-            (plugin_name,))
-        rows = self.__cursor.fetchone()
-        plugin_id = rows[0]
-
-        # Delete the state variable.
-        self.__cursor.execute(
-            "DELETE FROM state WHERE plugin_id = ? AND key = ?;",
-            (plugin_id, key))
-
-
-    #--------------------------------------------------------------------------
-    @transactional
-    def has_state_variable(self, plugin_name, key):
-        if type(plugin_name) is not str:
-            raise TypeError("Expected string, got %s" % type(plugin_name))
-        if type(key) is not str:
-            raise TypeError("Expected string, got %s" % type(key))
-
-        # Fetch the plugin rowid, return False if missing.
-        self.__cursor.execute(
-            "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
-            (plugin_name,))
-        rows = self.__cursor.fetchone()
-        if not rows:
-            return False
-        plugin_id = rows[0]
-
-        # Check if the state variable is defined.
-        self.__cursor.execute(
-            "SELECT COUNT(rowid) FROM state"
-            " WHERE plugin_id = ? AND key = ? LIMIT 1",
-            (plugin_id, key))
-        return bool(self.__cursor.fetchone()[0])
-
-
-    #--------------------------------------------------------------------------
-    @transactional
-    def get_state_variable(self, plugin_name, key):
-        if type(plugin_name) is not str:
-            raise TypeError("Expected string, got %s" % type(plugin_name))
-        if type(key) is not str:
-            raise TypeError("Expected string, got %s" % type(key))
-
-        # Fetch the plugin rowid, fail if missing.
-        self.__cursor.execute(
-            "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
-            (plugin_name,))
-        rows = self.__cursor.fetchone()
-        plugin_id = rows[0]
-
-        # Get the state variable value, fail if missing.
-        self.__cursor.execute(
-            "SELECT value FROM state"
-            " WHERE plugin_id = ? AND key = ? LIMIT 1;",
-            (plugin_id, key))
-        return self.decode(self.__cursor.fetchone()[0])
-
-
-    #--------------------------------------------------------------------------
-    @transactional
-    def get_state_variable_names(self, plugin_name):
-        if type(plugin_name) is not str:
-            raise TypeError("Expected string, got %s" % type(plugin_name))
-
-        # Fetch the plugin rowid, return an empty set if missing.
-        self.__cursor.execute(
-            "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
-            (plugin_name,))
-        rows = self.__cursor.fetchone()
-        if not rows:
-            return set()
-        plugin_id = rows[0]
-
-        # Get the state variable names.
-        self.__cursor.execute(
-            "SELECT key FROM state WHERE plugin_id = ?;",
-            (plugin_id,))
-        return {str(row[0]) for row in self.__cursor.fetchall()}
 
 
     #--------------------------------------------------------------------------

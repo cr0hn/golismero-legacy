@@ -44,11 +44,8 @@ __all__ = [
 
 from .config import Config
 from .progress import Progress
-from .shared import check_value
+from .shared import SharedMap
 from ..messaging.codes import MessageCode
-
-# Sentinel value.
-_sentinel = object()
 
 
 #------------------------------------------------------------------------------
@@ -101,7 +98,7 @@ class _PluginProgress (Progress):
 
 
 #------------------------------------------------------------------------------
-class PluginState (object):
+class PluginState (SharedMap):
     """
     Container of plugin state variables.
 
@@ -109,6 +106,9 @@ class PluginState (object):
     That way plugins can maintain state regardless of which process
     (or machine!) is running them at any given point in time.
     """
+
+    # Compatibility, remove once nobody is using this method.
+    set = SharedMap.async_put
 
 
     #--------------------------------------------------------------------------
@@ -120,7 +120,7 @@ class PluginState (object):
         """
         if not plugin_name:
             plugin_name = Config.plugin_name
-        self.__plugin_name = plugin_name
+        self._shared_id = Config.plugin_name
 
 
     #--------------------------------------------------------------------------
@@ -130,160 +130,7 @@ class PluginState (object):
         :returns: Name of the plugin these state variables belong to.
         :rtype: str
         """
-        return self.__plugin_name
-
-
-    #--------------------------------------------------------------------------
-    def get(self, name, default = _sentinel):
-        """
-        Get the value of a state variable.
-
-        :param name: Name of the variable.
-        :type name: str
-
-        :param default: Optional default value. If set, when the name
-                        is not found the default is returned instead
-                        of raising KeyError.
-        :type default: \\*
-
-        :returns: Value of the variable.
-        :rtype: \\*
-
-        :raises KeyError: The variable was not defined.
-        """
-        if not type(name) in (str, unicode):
-            raise TypeError("Expected str or unicode, got %s instead" % type(name))
-        try:
-            return Config._context.remote_call(
-                MessageCode.MSG_RPC_STATE_GET, self.plugin_name, name)
-        except KeyError:
-            if default is not _sentinel:
-                return default
-            raise
-
-
-    #--------------------------------------------------------------------------
-    def check(self, name):
-        """
-        Check if a state variable has been defined.
-
-        .. warning: Due to the asynchronous nature of GoLismero plugins, it's
-            possible that another instance of the plugin may remove or add new
-            variables right after you call this method.
-
-            Therefore this pattern is NOT recommended:
-                myvar = None
-                if "myvar" in self.state:
-                    myvar = self.state["myvar"]
-
-            You should do this instead:
-                try:
-                    myvar = self.state["myvar"]
-                except KeyError:
-                    myvar = None
-
-        :param name: Name of the variable to test.
-        :type name: str
-
-        :returns: True if the variable was defined, False otherwise.
-        :rtype: bool
-        """
-        if not type(name) in (str, unicode):
-            raise TypeError("Expected str or unicode, got %s instead" % type(name))
-        return Config._context.remote_call(
-            MessageCode.MSG_RPC_STATE_CHECK, self.plugin_name, name)
-
-
-    #--------------------------------------------------------------------------
-    def set(self, name, value):
-        """
-        Set the value of a state variable.
-
-        :param name: Name of the variable.
-        :type name: str
-
-        :param value: Value of the variable.
-        :type value: \\*
-        """
-        if not type(name) in (str, unicode):
-            raise TypeError("Expected str or unicode, got %s instead" % type(name))
-        check_value(value)
-        Config._context.async_remote_call(
-            MessageCode.MSG_RPC_STATE_ADD, self.plugin_name, name, value)
-
-
-    #--------------------------------------------------------------------------
-    def remove(self, name):
-        """
-        Remove a state variable.
-
-        :param name: Name of the variable.
-        :type name: str
-
-        :raises KeyError: The variable was not defined.
-        """
-        if not type(name) in (str, unicode):
-            raise TypeError("Expected str or unicode, got %s instead" % type(name))
-        Config._context.async_remote_call(
-            MessageCode.MSG_RPC_STATE_REMOVE, self.plugin_name, name)
-
-
-    #--------------------------------------------------------------------------
-    def get_names(self):
-        """
-        Get the names of the defined state variables.
-
-        .. warning: Due to the asynchronous nature of GoLismero plugins, it's
-            possible the list of variables is not accurate - another instance
-            of the plugin may remove or add new variables right after you call
-            this method.
-
-            Therefore this pattern is NOT recommended::
-                myvar = None
-                if "myvar" in self.state.get_names():
-                    myvar = self.state["myvar"]      # wrong!
-
-            You should do this instead::
-                try:
-                    myvar = self.state["myvar"]
-                except KeyError:                     # right!
-                    myvar = None
-
-            This pattern is also WRONG: it would fail if a key is removed,
-            and would miss newly created keys::
-                data = {}
-                for key in self.state.get_names():
-                    data[key] = self.state.get(key)  # wrong!
-
-        :returns: Names of the defined state variables.
-        :rtype: set(str)
-        """
-        Config._context.async_remote_call(
-            MessageCode.MSG_RPC_STATE_KEYS, self.plugin_name)
-
-
-    #--------------------------------------------------------------------------
-    # Overloaded operators.
-
-    def __getitem__(self, name):
-        'x.__getitem__(y) <==> x[y]'
-        return self.get(name)
-
-    def __setitem__(self, name, value):
-        'x.__setitem__(i, y) <==> x[i]=y'
-        return self.set(name, value)
-
-    def __delitem__(self, name):
-        'x.__delitem__(y) <==> del x[y]'
-        return self.remove(name)
-
-    def __contains__(self, name):
-        'D.__contains__(k) -> True if D has a key k, else False'
-        return self.check(name)
-
-    def keys(self):
-        "D.keys() -> list of D's keys"
-        return list( self.get_names() )
+        return self._shared_id
 
 
 #------------------------------------------------------------------------------
