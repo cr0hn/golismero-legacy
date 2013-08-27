@@ -48,7 +48,7 @@ class SuspiciousURLPlugin(TestingPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
 
-        m_url = info.url
+        m_parsed_url = info.parsed_url
         m_results = []
 
         #------------------------------------------------------------------
@@ -61,12 +61,14 @@ class SuspiciousURLPlugin(TestingPlugin):
         # Add matching keywords at any positions of URL.
         m_results.extend([SuspiciousURL(info, x)
                           for x in m_wordlist_middle
-                          if x in m_url])
+                          if x in m_parsed_url.directory.split("/") or
+                          x == m_parsed_url.filebase or
+                          x == m_parsed_url.extension])
 
         # Add matching keywords at any positions of URL.
         m_results.extend([SuspiciousURL(info, x)
                           for x in m_wordlist_extensions
-                          if m_url.endswith(x)])
+                          if m_parsed_url.extension == x])
 
         #------------------------------------------------------------------
         # Find suspicious URLs by calculating the Shannon entropy of the hostname.
