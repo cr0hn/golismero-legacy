@@ -1,7 +1,5 @@
-[Core]
-Name = Text Report
-
 [Documentation]
+Name        = Text Report
 Description = Creates text reports in files or on screen.
 Author      = GoLismero project team
 Version     = 0.1

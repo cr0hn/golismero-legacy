@@ -1,7 +1,5 @@
-[Core]
-Name = DNS Bruteforcer
-
 [Documentation]
+Name        = DNS Bruteforcer
 Description = Tries to find hidden subdomains by brute force.
 Author      = GoLismero project team
 Version     = 0.1

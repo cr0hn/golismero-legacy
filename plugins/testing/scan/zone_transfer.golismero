@@ -1,7 +1,5 @@
-[Core]
-Name = DNS Zone Transfer
-
 [Documentation]
+Name        = DNS Zone Transfer
 Description = Detects and exploits DNS zone transfer vulnerabilities.
 Author      = GoLismero project team
 Version     = 0.1

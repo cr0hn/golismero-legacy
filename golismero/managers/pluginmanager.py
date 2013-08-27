@@ -269,10 +269,6 @@ class PluginInfo (object):
 
         # Read the "[Core]" section.
         try:
-            self.__display_name = parser.get("Core", "Name")
-        except Exception:
-            self.__display_name = plugin_name
-        try:
             plugin_module       = parser.get("Core", "Module")
         except Exception:
             plugin_module       = path.splitext(path.basename(descriptor_file))[0]
@@ -358,7 +354,11 @@ class PluginInfo (object):
             msg = "Error parsing %r: invalid recursive flag: %r"
             raise ValueError(msg % (descriptor_file, recursive))
 
-        # Read the "[Description]" section.
+        # Read the "[Documentation]" section.
+        try:
+            self.__display_name = parser.get("Documentation", "Name")
+        except Exception:
+            self.__display_name = plugin_name
         try:
             self.__description = parser.get("Documentation", "Description")
         except Exception:

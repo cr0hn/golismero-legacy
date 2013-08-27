@@ -1,7 +1,5 @@
-[Core]
-Name = HTML Report
-
 [Documentation]
+Name        = HTML Report
 Description = Plugin to generate HTML reports.
 Author      = GoLismero project team
 Version     = 0.1

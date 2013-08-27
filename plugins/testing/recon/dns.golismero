@@ -1,7 +1,5 @@
-[Core]
-Name = DNS Resolver
-
 [Documentation]
+Name        = DNS Resolver
 Description = DNS resolver plugin. Without it, GoLismero can't resolve domain names to IP addresses.
 Author      = GoLismero project team
 Version     = 0.1
