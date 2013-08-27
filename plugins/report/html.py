@@ -145,7 +145,8 @@ class HTMLReport(ReportPlugin):
         c['end_date']          = datetime.datetime.fromtimestamp(Config.audit_config.stop_time)
 
         # Execution time
-        c['execution_time']    = '{:.3f}'.format(Config.audit_config.stop_time - Config.audit_config.start_time)
+        m_tmp_time             = datetime.datetime(1,1,1) + datetime.timedelta(int(Config.audit_config.stop_time - Config.audit_config.start_time))
+        c['execution_time']    = "%s days %s hours %s minutes %s seconds" % (m_tmp_time.day -1, m_tmp_time.hour, m_tmp_time.minute, m_tmp_time.second)
 
         # Targets
         c['targets']           = Config.audit_config.targets

@@ -75,79 +75,87 @@ class OpenVASPlugin(TestingPlugin):
     #--------------------------------------------------------------------------
     def recv_info(self, info):
 
-        # Synchronization object to wait for completion.
-        m_event = Event()
 
-        # Get the config.
-        m_user      = Config.plugin_args["user"]
-        m_password  = Config.plugin_args["password"]
-        m_host      = Config.plugin_args["host"]
-        m_port      = Config.plugin_args["port"]
-        m_timeout   = Config.plugin_args["timeout"]
-        m_profile   = Config.plugin_args["profile"]
 
-        # Sanitize the port and timeout.
-        try:
-            m_port = int(m_port)
-        except Exception:
-            m_port = 9390
-        if m_timeout.lower().strip() in ("inf", "infinite", "none"):
-            m_timeout = None
-        else:
+        # Checks if connection was not setted as down
+        if not self.state.check("connection_down"):
+
+            # Synchronization object to wait for completion.
+            m_event = Event()
+
+            # Get the config.
+            m_user      = Config.plugin_args["user"]
+            m_password  = Config.plugin_args["password"]
+            m_host      = Config.plugin_args["host"]
+            m_port      = Config.plugin_args["port"]
+            m_timeout   = Config.plugin_args["timeout"]
+            m_profile   = Config.plugin_args["profile"]
+
+            # Sanitize the port and timeout.
             try:
-                m_timeout = int(m_timeout)
+                m_port = int(m_port)
             except Exception:
+                m_port = 9390
+            if m_timeout.lower().strip() in ("inf", "infinite", "none"):
                 m_timeout = None
+            else:
+                try:
+                    m_timeout = int(m_timeout)
+                except Exception:
+                    m_timeout = None
 
-        # Connect to the scanner.
-        try:
-            Logger.log_more_verbose(
-                "Connecting to OpenVAS server at %s:%d" % (m_host, m_port))
-            m_scanner = VulnscanManager(
-                m_host, m_user, m_password, m_port, m_timeout)
-        except VulnscanException, e:
-            t = format_exc()
-            Logger.log_error("Error connecting to OpenVAS, aborting scan!")
-            #Logger.log_error_verbose(str(e))
-            Logger.log_error_more_verbose(t)
-            return
-
-        # Launch the scanner.
-        m_scan_id, m_target_id = m_scanner.launch_scan(
-            target = info.address,
-            profile = m_profile,
-            callback_end = partial(lambda x: x.set(), m_event),
-            callback_progress = OpenVASProgress(self.update_status)
-        )
-        Logger.log_more_verbose("OpenVAS task ID: %s" % m_scan_id)
-
-        # Wait for completion.
-        m_event.wait()
-
-        try:
-
-            # Get the scan results.
-            m_openvas_results = m_scanner.get_results(m_scan_id)
-
-            # Clear the info
-
-            m_scanner.delete_scan(m_scan_id)
-            m_scanner.delete_target(m_target_id)
-
-            # Convert the scan results to the GoLismero data model.
-            return self.parse_results(m_openvas_results, info)
-        except Exception,e:
-            t = format_exc()
-            Logger.log_error_verbose(
-                "Error parsing OpenVAS results: %s" % str(e))
-            Logger.log_error_more_verbose(t)
-        finally:
-
-            # Clean up.
+            # Connect to the scanner.
             try:
+                Logger.log_more_verbose(
+                    "Connecting to OpenVAS server at %s:%d" % (m_host, m_port))
+                m_scanner = VulnscanManager(
+                    m_host, m_user, m_password, m_port, m_timeout)
+            except VulnscanException, e:
+                t = format_exc()
+                Logger.log_error("Error connecting to OpenVAS, aborting scan!")
+                #Logger.log_error_verbose(str(e))
+                Logger.log_error_more_verbose(t)
+
+                # Set the openvas connection down and remember it.
+                self.state.put("connection_down", True)
+                return
+
+            # Launch the scanner.
+            m_scan_id, m_target_id = m_scanner.launch_scan(
+                target = info.address,
+                profile = m_profile,
+                callback_end = partial(lambda x: x.set(), m_event),
+                callback_progress = OpenVASProgress(self.update_status)
+            )
+            Logger.log_more_verbose("OpenVAS task ID: %s" % m_scan_id)
+
+            # Wait for completion.
+            m_event.wait()
+
+            try:
+
+                # Get the scan results.
+                m_openvas_results = m_scanner.get_results(m_scan_id)
+
+                # Clear the info
+
                 m_scanner.delete_scan(m_scan_id)
-            except Exception:
-                pass   # XXX FIXME #135
+                m_scanner.delete_target(m_target_id)
+
+                # Convert the scan results to the GoLismero data model.
+                return self.parse_results(m_openvas_results, info)
+            except Exception,e:
+                t = format_exc()
+                Logger.log_error_verbose(
+                    "Error parsing OpenVAS results: %s" % str(e))
+                Logger.log_error_more_verbose(t)
+            finally:
+
+                # Clean up.
+                try:
+                    m_scanner.delete_scan(m_scan_id)
+                except Exception:
+                    pass   # XXX FIXME #135
 
 
     #--------------------------------------------------------------------------
