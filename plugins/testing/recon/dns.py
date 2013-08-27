@@ -59,6 +59,9 @@ class DNSPlugin(TestingPlugin):
         # We have as many steps as DNS register types there are.
         self.progress.set_total( len(DnsRegister.DNS_TYPES) )
 
+        # Only show progress updates every 10%.
+        self.progress.min_delta = 10
+
         # Try to get a DNS record of each type.
         results = []
         for step, rtype in enumerate(DnsRegister.DNS_TYPES):

@@ -68,7 +68,7 @@ class DNSBruteforcer(TestingPlugin):
 
         # Configure the progress notifier.
         self.progress.set_total(len(wordlist))
-        self.progress.min_delta = 10  # notify every 10%
+        self.progress.min_delta = 1  # notify every 1%
 
         # For each subdomain in the wordlist...
         found = 0
@@ -93,11 +93,13 @@ class DNSBruteforcer(TestingPlugin):
             records.extend( DNS.get_aaaa(name, also_CNAME=True) )
 
             # If no DNS records were found, skip.
-            if not addresses:
+            if not records:
                 continue
 
-            # Increment the counter of subdomains found.
+            # We found a subdomain!
             found += 1
+            Logger.log_more_verbose(
+                "Subdomain found: %s" % name)
 
             # Create the Domain object for the subdomain.
             domain = Domain(name)
