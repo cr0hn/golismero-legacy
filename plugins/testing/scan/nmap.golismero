@@ -15,4 +15,4 @@ Class  = NmapPlugin
 
 # For now we'll just accept a command line verbatim.
 # In a future version we should "understand" all options instead.
-args = -v -P0 -sT -sU
+args = -v -P0 -sT

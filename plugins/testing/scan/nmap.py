@@ -116,7 +116,7 @@ class NmapPlugin(TestingPlugin):
         args.append(output_filename)
 
         # Run Nmap and capture the text output.
-        Logger.log("Launching Nmap against: %s" % info.hostname)
+        Logger.log("Launching Nmap against: %s" % info.address)
         Logger.log_more_verbose("Nmap arguments: %s" % " ".join(args))
         t1 = time()
         output, code = run_external_tool("nmap", args)
@@ -129,7 +129,7 @@ class NmapPlugin(TestingPlugin):
                 Logger.log_error_more_verbose(output)
         else:
             Logger.log("Nmap scan finished in %s seconds for target: %s"
-                       % (t2 - t1, info.hostname))
+                       % (t2 - t1, info.address))
             if output:
                 Logger.log_more_verbose(output)
 
@@ -162,33 +162,27 @@ class NmapPlugin(TestingPlugin):
             hostmap[info.address] = info
         try:
             tree = ET.parse(output_filename)
-            root = tree.getroot()
-            for scan in root.findall("nmaprun"):
+            scan = tree.getroot()
+
+            # Get the scan arguments and log them.
+            try:
+                args = scan.get("args", None)
+                if not args:
+                    args = scan.get("scanner", None)
+                if args:
+                    Logger.log_more_verbose(
+                        "Loading data from scan: %s" % args)
+            except Exception:
+                ##raise # XXX DEBUG
+                pass
+
+            # For each scanned host...
+            for host in scan.findall(".//host"):
                 try:
 
-                    # Get the scan arguments and log them.
-                    try:
-                        args = scan.get("args", None)
-                        if not args:
-                            args = scan.get("scanner", None)
-                        if args:
-                            Logger.log_more_verbose(
-                                "Loading data from scan: %s" % args)
-                    except Exception:
-                        pass
-
-                    # For each scanned host...
-                    for host in scan.findall(".//host"):
-                        try:
-
-                            # Parse the information from the scanned host.
-                            results.extend(
-                                self.parse_nmap_host(host, hostmap) )
-
-                        # On error, log the exception and continue.
-                        except Exception, e:
-                            Logger.log_error_verbose(str(e))
-                            Logger.log_error_more_verbose(format_exc())
+                    # Parse the information from the scanned host.
+                    results.extend(
+                        cls.parse_nmap_host(host, hostmap) )
 
                 # On error, log the exception and continue.
                 except Exception, e:
@@ -236,7 +230,9 @@ class NmapPlugin(TestingPlugin):
         for node in host.findall(".//address"):
             if node.get("addrtype", "") not in ("ipv4, ipv6"):
                 continue
-            address = node.get("address")
+            address = node.get("addr")
+            if not address:
+                continue
             if address not in hostmap:
                 hostmap[address] = IP(address)
             ip_addresses.append( hostmap[address] )
@@ -255,7 +251,9 @@ class NmapPlugin(TestingPlugin):
         # Get all the hostnames.
         domain_names = []
         for node in host.findall(".//hostname"):
-            hostname = node.get("hostname")
+            hostname = node.get("name")
+            if not hostname:
+                continue
             if hostname not in hostmap:
                 hostmap[hostname] = Domain(hostname)
             domain_names.append( hostmap[hostname] )
@@ -286,6 +284,7 @@ class NmapPlugin(TestingPlugin):
                     continue
                 ports.add( (state, protocol, port) )
             except Exception:
+                ##raise # XXX DEBUG
                 continue
 
         # This is where we'll gather all the results.
@@ -293,7 +292,7 @@ class NmapPlugin(TestingPlugin):
 
         # Link the portscan results to the IP addresses.
         for ip in ip_addresses:
-            portscan = Portscan(ip.address, ports, timestamp)
+            portscan = Portscan(ip, ports, timestamp)
             results.append(portscan)
 
         # Return the results.
@@ -326,6 +325,7 @@ class NmapImportPlugin(ImportPlugin):
             Logger.log_error_more_verbose(fmt)
         else:
             if results:
-                Logger.log("Loaded %d elements from file: %s" % input_file)
+                Logger.log("Loaded %d elements from file: %s" %
+                           (len(results), input_file))
             else:
                 Logger.log_verbose("No data found in file: %s" % input_file)

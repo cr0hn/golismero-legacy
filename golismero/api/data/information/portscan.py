@@ -87,6 +87,7 @@ class Portscan(Information):
                 sane.add( (state, protocol, port) )
             self.__ports = frozenset(sane)
         except Exception:
+            ##raise # XXX DEBUG
             raise ValueError("Malformed portscan results!")
 
         # Call the superclass constructor.
