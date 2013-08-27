@@ -133,7 +133,7 @@ def run_external_tool(command, args = None, env = None, curdir = None):
 
             # Prepend the interpreter to the command line.
             command = interpreter[0]
-            args = interpreter + args
+            args = interpreter[1:] + args
 
         # If it's not a script...
         else:
@@ -213,7 +213,7 @@ def is_executable(binary):
     return os.path.isfile(binary) and (
         (os.path.sep == "\\" and binary.lower().endswith(".exe")) or
         (os.path.sep == "/" and
-         os.stat(binary)[stat.ST_MODE] & stat.S_IXUSR == 0)
+         os.stat(binary)[stat.ST_MODE] & stat.S_IXUSR != 0)
     )
 
 
