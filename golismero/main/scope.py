@@ -58,7 +58,7 @@ class AuditScope (object):
         False
     """
 
-    _re_is_domain = re.compile(r"^[A-Za-z][A-Za-z0-9\_\-\.]*[A-Za-z0-9]$")
+    _re_is_domain = re.compile(r"^[A-Za-z0-9][A-Za-z0-9\_\-\.]*[A-Za-z0-9]$")
 
 
     #--------------------------------------------------------------------------
