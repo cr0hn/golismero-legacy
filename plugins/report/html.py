@@ -144,14 +144,19 @@ class HTMLReport(ReportPlugin):
         # Start date
         start_time, stop_time  = get_audit_times()
         c['start_date']        = datetime.datetime.fromtimestamp(start_time) if start_time else "Unknown"
-        c['end_date']          = datetime.datetime.fromtimestamp(stop_time) if stop_time else "Interrupted"
+        c['end_date']          = datetime.datetime.fromtimestamp(stop_time)  if stop_time  else "Interrupted"
 
         # Execution time
         if start_time and stop_time and start_time < stop_time:
             try:
-                m_tmp_time          = datetime.timedelta(int(stop_time - start_time))
-                c['execution_time'] = "%d days %d hours %d minutes %d seconds" % (m_tmp_time.day -1, m_tmp_time.hour, m_tmp_time.minute, m_tmp_time.second)
-            except Exception:
+                td      = datetime.datetime.fromtimestamp(stop_time) - datetime.datetime.fromtimestamp(start_time)
+                days    = td.days
+                hours   = td.seconds // 3600
+                minutes = (td.seconds // 60) % 60
+                seconds = td.seconds
+                c['execution_time'] = "%d days %d hours %d minutes %d seconds" % (days, hours, minutes, seconds)
+            except Exception, e:
+                Logger.log_error("Error while calculating the execution time: %s" % str(e))
                 c['execution_time'] = "Unknown"
         else:
             c['execution_time']     = "Unknown"
