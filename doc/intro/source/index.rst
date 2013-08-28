@@ -57,12 +57,7 @@ Configuration API
 Bundled files API
 -----------------
 
-.. automodule:: golismero.api.file
-   :members:
-   :show-inheritance:
-   :inherited-members:
-
-.. :autoclass:: golismero.api.file._FileManager
+.. automodule:: golismero.api.localfile
    :members:
    :show-inheritance:
    :inherited-members:

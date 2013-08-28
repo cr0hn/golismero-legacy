@@ -40,7 +40,7 @@ __all__ = [
     "get_profiles_folder", "get_profile", "get_available_profiles",
 
     # Helper classes and decorators.
-    "Singleton", "decorator",
+    "Singleton", "decorator", "export_methods_as_functions",
 
     # Configuration objects.
     "OrchestratorConfig", "AuditConfig"
@@ -82,6 +82,7 @@ from os import path
 
 import os
 import random
+import sys
 import urlparse
 
 
@@ -268,6 +269,37 @@ class Singleton (object):
 
         # Return the instance.
         return cls._instance
+
+
+#------------------------------------------------------------------------------
+def export_methods_as_functions(singleton, module):
+    """
+    Export all methods from a Singleton instance as bare functions of a module.
+
+    :param singleton: Singleton instance to export.
+    :type singleton: Singleton
+
+    :param module: Target module name. This would tipically be \_\_name\_\_.
+    :type module: str
+
+    :raises KeyError: No module with that name is loaded.
+    """
+    # TODO: maybe take the module name as input instead,
+    # and pull everything else from sys.modules.
+    clazz = singleton.__class__
+    module_obj = sys.modules[module]
+    try:
+        exports = module_obj.__all__
+    except AttributeError:
+        exports = module_obj.__all__ = []
+    for name in dir(clazz):
+        if name[0] != "_":
+            unbound = getattr(clazz, name)
+            if callable(unbound) and not isinstance(unbound, property):
+                bound = getattr(singleton, name)
+                setattr(module_obj, name, bound)
+                if name not in exports:
+                    exports.append(name)
 
 
 #------------------------------------------------------------------------------
