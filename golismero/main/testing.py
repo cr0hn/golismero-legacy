@@ -37,7 +37,7 @@ from .orchestrator import Orchestrator
 from .scope import AuditScope, DummyScope
 from ..api.data import Data, LocalDataCache
 from ..api.config import Config
-from ..api.file import FileManager
+from ..api.localfile import LocalFile
 from ..api.net.cache import NetworkCache
 from ..api.net.http import HTTP
 from ..common import OrchestratorConfig
@@ -201,7 +201,7 @@ class PluginTester(object):
         # Initialize the environment.
         HTTP._initialize()
         NetworkCache._clear_local_cache()
-        FileManager._update_plugin_path()
+        LocalFile._update_plugin_path()
         LocalDataCache._enabled = True  # force enable
         LocalDataCache.on_run()
         LocalDataCache._enabled = True  # force enable
@@ -263,7 +263,7 @@ class PluginTester(object):
             # Initialize the environment.
             HTTP._initialize()
             NetworkCache._clear_local_cache()
-            FileManager._update_plugin_path()
+            LocalFile._update_plugin_path()
             LocalDataCache.on_run()
 
             # If it's a message, send it and return.
@@ -347,7 +347,7 @@ class PluginTester(object):
         Cleanup the mock environment.
         """
 
-        FileManager._update_plugin_path()
+        LocalFile._update_plugin_path()
         NetworkCache._clear_local_cache()
         LocalDataCache.on_run()
         HTTP._finalize()

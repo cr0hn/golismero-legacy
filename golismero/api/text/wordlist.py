@@ -35,7 +35,7 @@ __all__ = ["WordListLoader"]
 from os import walk
 from os.path import join, sep, abspath
 from golismero.api.text.matching_analyzer import get_diff_ratio
-from golismero.api.file import FileManager
+from golismero.api.localfile import LocalFile
 import bisect
 import re
 import copy
@@ -84,12 +84,12 @@ class _WordListLoader(Singleton):
             m_return = open(self.__store[wordlist], "rU")
         except KeyError: # Wordlist is not in the internal database
             # Exits the file
-            if not FileManager.exists(wordlist):
+            if not LocalFile.exists(wordlist):
                 raise IOError("Wordlist file '%s' does not exist." % wordlist)
-            if not FileManager.isfile(wordlist):
+            if not LocalFile.isfile(wordlist):
                 raise TypeError("Wordlist '%s' is not a file." % wordlist)
 
-            m_return = FileManager.open(wordlist, "rU")
+            m_return = LocalFile.open(wordlist, "rU")
 
         return m_return
 

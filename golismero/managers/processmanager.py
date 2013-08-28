@@ -39,7 +39,7 @@ __all__ = ["ProcessManager", "PluginContext"]
 
 from ..api.config import Config
 from ..api.data import LocalDataCache
-from ..api.file import FileManager
+from ..api.localfile import LocalFile
 from ..api.net.cache import NetworkCache
 from ..api.net.http import HTTP
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
@@ -192,7 +192,7 @@ def _bootstrap(context, func, args, kwargs):
                         LocalDataCache.on_run()
 
                         # Initialize the private file API.
-                        FileManager._update_plugin_path()
+                        LocalFile._update_plugin_path()
 
                         # Try to get the plugin from the cache.
                         cache_key = (context.plugin_module, context.plugin_class)

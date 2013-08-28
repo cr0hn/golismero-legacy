@@ -46,13 +46,7 @@ api Package
 :mod:`file` Module
 ------------------
 
-.. automodule:: golismero.api.file
-    :members:
-    :undoc-members:
-    :special-members:
-    :show-inheritance:
-
-.. autoclass:: golismero.api.file._FileManager
+.. automodule:: golismero.api.localfile
     :members:
     :undoc-members:
     :special-members:

@@ -30,11 +30,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["FileManager"]
+__all__ = ["LocalFile"]  # More symbols added later, see the end of the file!
 
 from .config import Config
 from .logger import Logger
-from ..common import Singleton
+from ..common import Singleton, export_methods_as_functions
 
 from os import path, listdir, walk
 
@@ -42,9 +42,9 @@ import tempfile
 
 
 #------------------------------------------------------------------------------
-class _FileManager (Singleton):
+class _LocalFile (Singleton):
     """
-    File API for plugins.
+    Local file API.
     """
 
 
@@ -311,4 +311,7 @@ class _FileManager (Singleton):
 #------------------------------------------------------------------------------
 
 # Instance the singleton.
-FileManager = _FileManager()
+LocalFile = _LocalFile()
+
+# Export the singleton's methods as bare functions.
+export_methods_as_functions(LocalFile, __name__)
