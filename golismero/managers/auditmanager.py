@@ -69,6 +69,10 @@ def rpc_audit_get_config(orchestrator, audit_name):
         return orchestrator.auditManager.get_audit(audit_name).config
     return orchestrator.config
 
+@implementor(MessageCode.MSG_RPC_AUDIT_TIMES)
+def rpc_audit_get_names(orchestrator, audit_name):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_audit_times()
+
 
 #--------------------------------------------------------------------------
 class AuditManager (object):
@@ -430,11 +434,11 @@ class Audit (object):
         Start execution of an audit.
         """
 
+        # Tentative audit start time.
+        start_time = time()
+
         # Reset the number of unacknowledged messages.
         self.__expecting_ack = 0
-
-        # Set the audit start time.
-        self.config.start_time = time()
 
         # Keep the original execution context.
         old_context = Config._context
@@ -452,13 +456,13 @@ class Audit (object):
             self.__plugin_manager = self.orchestrator.pluginManager.get_plugin_manager_for_audit(self)
 
             # Load the testing plugins.
-            m_audit_plugins = self.pluginManager.load_plugins("testing")
+            testing_plugins = self.pluginManager.load_plugins("testing")
 
             # Create the notifier.
             self.__notifier = AuditNotifier(self)
 
             # Register the testing plugins with the notifier.
-            self.__notifier.add_multiple_plugins(m_audit_plugins)
+            self.__notifier.add_multiple_plugins(testing_plugins)
 
             # Create the import manager.
             self.__import_manager = ImportManager(self.orchestrator, self)
@@ -476,21 +480,18 @@ class Audit (object):
             self.__audit_scope = audit_scope
 
             # Update the execution context again, with the scope.
-            Config._context = PluginContext(       msg_queue = old_context.msg_queue,
-                                                  audit_name = self.name,
-                                                audit_config = self.config,
-                                                 audit_scope = self.scope,
-                                            orchestrator_pid = old_context._orchestrator_pid,
-                                            orchestrator_tid = old_context._orchestrator_tid)
+            Config._context = PluginContext(
+                                     msg_queue = old_context.msg_queue,
+                                    audit_name = self.name,
+                                  audit_config = self.config,
+                                   audit_scope = self.scope,
+                              orchestrator_pid = old_context._orchestrator_pid,
+                              orchestrator_tid = old_context._orchestrator_tid)
             Logger.log_more_verbose(str(audit_scope))
 
-            # Get the original audit start time, if found.
-            # If not, save the new audit start time.
-            start_time = self.database.get_audit_times()[0]
-            if start_time is not None:
-                self.config.start_time = start_time
-            else:
-                self.database.set_audit_start_time(self.config.start_time)
+            # If the audit database doesn't have a start time, set the new one.
+            if not self.database.get_audit_times()[0]:
+                self.database.set_audit_start_time(start_time)
 
             # Log the number of objects previously in the database.
             count = self.database.get_data_count()
@@ -552,13 +553,12 @@ class Audit (object):
             Config._context = old_context
 
         # The audit stop time must be updated if:
-        # 1) There are testing plugins enabled, or
+        # 1) Testing plugins were run, or
         # 2) There was new data added to the database.
-        self.__must_update_stop_time = \
-            m_audit_plugins or imported_count or targets_added_count
+        self.__must_update_stop_time = imported_count or targets_added_count
 
         # If there are testing plugins enabled, move to stage 1.
-        if m_audit_plugins:
+        if testing_plugins:
             Logger.log_verbose("Launching tests...")
             self.update_stage()
 
@@ -705,6 +705,10 @@ class Audit (object):
 
                         # Skip to the next stage.
                         continue
+
+                    # We're going to run testing plugins,
+                    # so we need to update the audit stop time.
+                    self.__must_update_stop_time = True
 
                     # Tell the Orchestrator we just moved to another stage.
                     stage_name = pluginManager.get_stage_name_from_value(stage)
@@ -899,10 +903,7 @@ class Audit (object):
             # Before generating the reports, set the audit stop time.
             # This is needed so the report can print the start and stop times.
             if self.__must_update_stop_time:
-                self.config.stop_time = time()
-
-                # Save the audit stop time in the database.
-                self.database.set_audit_stop_time(self.config.stop_time)
+                self.database.set_audit_stop_time( time() )
 
             # Show a log message.
             if self.__report_manager.plugin_count > 0:

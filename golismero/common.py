@@ -750,11 +750,6 @@ class AuditConfig (Configuration):
     #--------------------------------------------------------------------------
     # Options that are only set in runtime, not loaded from the config file.
 
-    # Start and stop time for the audit.
-    # These values are filled on runtime.
-    start_time   = None
-    stop_time    = None
-
     # Configuration files.
     config_file  = get_default_config_file()
     profile      = None

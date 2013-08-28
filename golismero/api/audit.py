@@ -36,10 +36,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = [
 
     # Query functions.
-    "get_audit_count", "get_audit_names", "get_audit_config",
+    "get_audit_count", "get_audit_names",
+    "get_audit_config", "get_audit_times",
 
     # Control functions.
-    "start_audit", "stop_audit", ##pause_audit, resume_audit,
+    "start_audit", "stop_audit",
+    ##pause_audit, resume_audit,
 ]
 
 from .config import Config
@@ -80,6 +82,19 @@ def get_audit_config(audit_name = None):
         return Config.audit_config
     return Config._context.remote_call(
         MessageCode.MSG_RPC_AUDIT_CONFIG, audit_name)
+
+
+#------------------------------------------------------------------------------
+def get_audit_times():
+    """
+    Get the audit start and stop times.
+
+    :returns: Audit start time (None if it hasn't started yet)
+        and audit stop time (None if it hasn't finished yet).
+        Times are returned as POSIX timestamps.
+    :rtype: tuple(float|None, float|None)
+    """
+    return Config._context.remote_call(MessageCode.MSG_RPC_AUDIT_TIMES)
 
 
 #------------------------------------------------------------------------------
