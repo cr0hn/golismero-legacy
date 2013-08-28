@@ -98,8 +98,8 @@ def test_data_type_unique_ids():
     helper_test_dupes(Information, "INFORMATION_", numbers)
     helper_test_dupes(Resource, "RESOURCE_", numbers)
 
-    # Make sure the base vulnerability type is "generic".
-    assert Vulnerability.vulnerability_type == "generic"
+    # Make sure the base vulnerability type is "abstract".
+    assert Vulnerability.vulnerability_type == "abstract"
 
 
 # Helper function to load all data types.
