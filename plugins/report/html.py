@@ -139,30 +139,26 @@ class HTMLReport(ReportPlugin):
         #
 
         # Audit name
-        c['audit_name']        = Config.audit_name
+        c['audit_name'] = Config.audit_name
 
         # Start date
-        start_time, stop_time  = get_audit_times()
-        c['start_date']        = datetime.datetime.fromtimestamp(start_time) if start_time else "Unknown"
-        c['end_date']          = datetime.datetime.fromtimestamp(stop_time)  if stop_time  else "Interrupted"
+        start_time, stop_time = get_audit_times()
+        c['start_date']       = datetime.datetime.fromtimestamp(start_time) if start_time else "Unknown"
+        c['end_date']         = datetime.datetime.fromtimestamp(stop_time)  if stop_time  else "Interrupted"
 
         # Execution time
         if start_time and stop_time and start_time < stop_time:
-            try:
-                td      = datetime.datetime.fromtimestamp(stop_time) - datetime.datetime.fromtimestamp(start_time)
-                days    = td.days
-                hours   = td.seconds // 3600
-                minutes = (td.seconds // 60) % 60
-                seconds = td.seconds
-                c['execution_time'] = "%d days %d hours %d minutes %d seconds" % (days, hours, minutes, seconds)
-            except Exception, e:
-                Logger.log_error("Error while calculating the execution time: %s" % str(e))
-                c['execution_time'] = "Unknown"
+            td      = datetime.datetime.fromtimestamp(stop_time) - datetime.datetime.fromtimestamp(start_time)
+            days    = td.days
+            hours   = td.seconds // 3600
+            minutes = (td.seconds // 60) % 60
+            seconds = td.seconds
+            c['execution_time'] = "%d days %d hours %d minutes %d seconds" % (days, hours, minutes, seconds)
         else:
-            c['execution_time']     = "Unknown"
+            c['execution_time'] = "Unknown"
 
         # Targets
-        c['targets']           = Config.audit_config.targets
+        c['targets'] = Config.audit_config.targets
 
         # Fill the vulnerabilities summary
         self.fill_summary_vulns(c)
