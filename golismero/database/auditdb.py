@@ -49,6 +49,7 @@ from os import path
 import collections
 import md5
 import posixpath
+import time
 import urlparse  # cannot use ParsedURL here!
 import warnings
 
@@ -236,12 +237,28 @@ class BaseAuditDB (BaseDB):
     #--------------------------------------------------------------------------
     def get_audit_times(self):
         """
-        Get the audit start and end times.
+        Get the audit start and stop times.
 
         :returns: Audit start time (None if it hasn't started yet)
-            and audit end time (None if it hasn't finished yet).
+            and audit stop time (None if it hasn't finished yet).
             Times are returned as POSIX timestamps.
         :rtype: tuple(float|None, float|None)
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def set_audit_times(self, start_time, stop_time):
+        """
+        Set the audit start and stop times.
+
+        :param start_time: Audit start time (None if it hasn't started yet).
+            Time is given as a POSIX timestamp.
+        :type start_time: float | None
+
+        :param stop_time: Audit stop time (None if it hasn't finished yet).
+            Time is given as a POSIX timestamp.
+        :type stop_time: float | None
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -253,19 +270,19 @@ class BaseAuditDB (BaseDB):
 
         :param start_time: Audit start time (None if it hasn't started yet).
             Time is given as a POSIX timestamp.
-        :type start_time: float
+        :type start_time: float | None
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
     #--------------------------------------------------------------------------
-    def set_audit_stop_time(self, end_time):
+    def set_audit_stop_time(self, stop_time):
         """
-        Set the audit end time.
+        Set the audit stop time.
 
-        :param end_time: Audit end time (None if it hasn't finished yet).
+        :param stop_time: Audit stop time (None if it hasn't finished yet).
             Time is given as a POSIX timestamp.
-        :type end_time: float
+        :type stop_time: float | None
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -816,8 +833,8 @@ class AuditMemoryDB (BaseAuditDB):
     #--------------------------------------------------------------------------
     def __init__(self, audit_config):
         super(AuditMemoryDB, self).__init__(audit_config)
-        self.__start_time   = None
-        self.__end_time     = None
+        self.__start_time   = time.time()
+        self.__stop_time    = None
         self.__audit_config = audit_config
         self.__audit_scope  = None
         self.__results      = dict()
@@ -830,14 +847,14 @@ class AuditMemoryDB (BaseAuditDB):
     #--------------------------------------------------------------------------
     def close(self):
         self.__start_time   = None
-        self.__end_time     = None
+        self.__stop_time    = None
         self.__audit_config = None
         self.__audit_scope  = None
-        self.__results      = dict()
-        self.__history      = collections.defaultdict(set)
-        self.__stages       = collections.defaultdict(int)
-        self.__shared_maps  = collections.defaultdict(dict)
-        self.__shared_heaps = collections.defaultdict(set)
+        self.__results.clear()
+        self.__history.clear()
+        self.__stages.clear()
+        self.__shared_maps.clear()
+        self.__shared_heaps.clear()
 
 
     #--------------------------------------------------------------------------
@@ -858,7 +875,12 @@ class AuditMemoryDB (BaseAuditDB):
 
     #--------------------------------------------------------------------------
     def get_audit_times(self):
-        return self.__start_time, self.__end_time
+        return self.__start_time, self.__stop_time
+
+
+    #--------------------------------------------------------------------------
+    def set_audit_times(self, start_time, stop_time):
+        self.__start_time, self.__stop_time = start_time, stop_time
 
 
     #--------------------------------------------------------------------------
@@ -867,8 +889,8 @@ class AuditMemoryDB (BaseAuditDB):
 
 
     #--------------------------------------------------------------------------
-    def set_audit_stop_time(self, end_time):
-        self.__end_time = end_time
+    def set_audit_stop_time(self, stop_time):
+        self.__stop_time = stop_time
 
 
     #--------------------------------------------------------------------------
@@ -1501,7 +1523,7 @@ class AuditSQLiteDB (BaseAuditDB):
                 schema_version INTEGER NOT NULL,
                 audit_name STRING NOT NULL,
                 start_time REAL DEFAULT NULL,
-                end_time REAL DEFAULT NULL,
+                stop_time REAL DEFAULT NULL,
                 audit_config BLOB NOT NULL,
                 audit_scope BLOB DEFAULT NULL
             );
@@ -1646,9 +1668,18 @@ class AuditSQLiteDB (BaseAuditDB):
     @transactional
     def get_audit_times(self):
         self.__cursor.execute(
-            "SELECT start_time, end_time FROM golismero LIMIT 1;")
-        start_time, end_time = self.__cursor.fetchone()
-        return start_time, end_time
+            "SELECT start_time, stop_time FROM golismero LIMIT 1;")
+        start_time, stop_time = self.__cursor.fetchone()
+        return start_time, stop_time
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def set_audit_times(self, start_time, stop_time):
+        self.__cursor.execute(
+            "UPDATE golismero SET start_time = ?, stop_time = ?;",
+            (start_time, stop_time)
+        )
 
 
     #--------------------------------------------------------------------------
@@ -1662,10 +1693,10 @@ class AuditSQLiteDB (BaseAuditDB):
 
     #--------------------------------------------------------------------------
     @transactional
-    def set_audit_stop_time(self, end_time):
+    def set_audit_stop_time(self, stop_time):
         self.__cursor.execute(
-            "UPDATE golismero SET end_time = ?;",
-            (end_time,)
+            "UPDATE golismero SET stop_time = ?;",
+            (stop_time,)
         )
 
 

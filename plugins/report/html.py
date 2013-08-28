@@ -26,6 +26,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from golismero.api.audit import get_audit_times
 from golismero.api.config import Config
 from golismero.api.data import Data
 from golismero.api.data.db import Database
@@ -141,15 +142,19 @@ class HTMLReport(ReportPlugin):
         c['audit_name']        = Config.audit_name
 
         # Start date
-        c['start_date']        = datetime.datetime.fromtimestamp(Config.audit_config.start_time) if Config.audit_config.start_time else datetime.datetime.now()
-        c['end_date']          = datetime.datetime.fromtimestamp(Config.audit_config.stop_time) if Config.audit_config.stop_time else datetime.datetime.now()
+        start_time, stop_time  = get_audit_times()
+        c['start_date']        = datetime.datetime.fromtimestamp(start_time) if start_time else "Unknown"
+        c['end_date']          = datetime.datetime.fromtimestamp(stop_time) if stop_time else "Interrupted"
 
         # Execution time
-        if Config.audit_config.start_time and Config.audit_config.stop_time and Config.audit_config.start_time < Config.audit_config.stop_time:
-            m_tmp_time         = datetime.datetime(1,1,1) + datetime.timedelta(int(Config.audit_config.stop_time - Config.audit_config.start_time))
+        if start_time and stop_time and start_time < stop_time:
+            try:
+                m_tmp_time          = datetime.timedelta(int(stop_time - start_time))
+                c['execution_time'] = "%d days %d hours %d minutes %d seconds" % (m_tmp_time.day -1, m_tmp_time.hour, m_tmp_time.minute, m_tmp_time.second)
+            except Exception:
+                c['execution_time'] = "Unknown"
         else:
-            m_tmp_time         = datetime.datetime(1,1,1) + datetime.timedelta(0)
-        c['execution_time']    = "%s days %s hours %s minutes %s seconds" % (m_tmp_time.day -1, m_tmp_time.hour, m_tmp_time.minute, m_tmp_time.second)
+            c['execution_time']     = "Unknown"
 
         # Targets
         c['targets']           = Config.audit_config.targets
