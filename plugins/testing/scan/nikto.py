@@ -31,7 +31,7 @@ from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.resource.url import BaseUrl, Url
-from golismero.api.data.vulnerability import UrlVulnerability
+from golismero.api.data.vulnerability import GenericVulnerability
 from golismero.api.external import run_external_tool, find_cygwin_binary_in_path
 from golismero.api.logger import Logger
 from golismero.api.plugin import ImportPlugin, TestingPlugin
@@ -282,11 +282,11 @@ class NiktoPlugin(TestingPlugin):
                             url = urls_seen[ (target, method) ]
 
                         # Report the vulnerabilities.
-                        vuln = UrlVulnerability(
-                            url = url,
+                        vuln = GenericVulnerability(
                             level = "informational",  # TODO: use the OSVDB API
                             description = "%s: %s" % (vuln_tag, text),
                         )
+                        vuln.add_resource(url)
                         results.append(vuln)
                         vuln_count += 1
 
