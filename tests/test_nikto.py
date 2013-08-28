@@ -79,7 +79,7 @@ def test_nikto():
             #print c
             assert c.pop("IP") == 1
             assert c.pop("Url") == 1
-            assert c.pop("UrlVulnerability") == 3
+            assert c.pop("GenericVulnerability") == 3
             assert len(c) == 0
         finally:
             Config._context._PluginContext__plugin_info = None
