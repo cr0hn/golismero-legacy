@@ -79,7 +79,7 @@ class Orchestrator (object):
         self.__config = config
 
         # Incoming message queue.
-        if getattr(config, "max_process", 0) <= 0:
+        if getattr(config, "max_concurrent", 0) <= 0:
             from Queue import Queue
             self.__queue = Queue(maxsize = 0)
         else:

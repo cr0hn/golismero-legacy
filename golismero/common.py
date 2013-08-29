@@ -626,39 +626,39 @@ class OrchestratorConfig (Configuration):
     _settings_ = {
 
         #
-        # Main options
+        # Main options.
         #
 
-        # UI mode
+        # UI mode.
         "ui_mode": (str, "console"),
 
-        # Verbosity level
+        # Verbosity level.
         "verbose": (Configuration.integer, 2),
 
         # Colorize console?
         "colorize": (Configuration.boolean, True),
 
         #
-        # Plugin options
+        # Plugin options.
         #
 
-        # Enabled plugins
+        # Enabled plugins.
         "enable_plugins": (Configuration.comma_separated_list, ["all"]),
 
-        # Disabled plugins
+        # Disabled plugins.
         "disable_plugins": (Configuration.comma_separated_list, []),
 
-        # Plugins folder
+        # Plugins folder.
         "plugins_folder": Configuration.string,
 
-        # Maximum number of processes to execute plugins
-        "max_process": (Configuration.integer, 4 if path.sep == "\\" else 20),
+        # Maximum number plugins to execute concurrently.
+        "max_concurrent": (Configuration.integer, 4 if path.sep == "\\" else 20),
 
         #
-        # Network options
+        # Network options.
         #
 
-        # Maximum number of connections per host
+        # Maximum number of connections per host.
         "max_connections": (Configuration.integer, 20),
 
         # Use persistent cache?
@@ -686,8 +686,8 @@ class OrchestratorConfig (Configuration):
             raise ValueError("Number of connections must be greater than 0, got %i." % self.max_connections)
 
         # Validate the number of concurrent processes.
-        if self.max_process < 0:
-            raise ValueError("Number of processes cannot be a negative number, got %i." % self.max_process)
+        if self.max_concurrent < 0:
+            raise ValueError("Number of processes cannot be a negative number, got %i." % self.max_concurrent)
 
         # Validate the list of plugins.
         if not self.enable_plugins:

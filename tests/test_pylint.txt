@@ -235,8 +235,8 @@ golismero/common.py:564: Warning (W, Configuration.to_json): Using global for 'j
 golismero/common.py:568: Warning (W, Configuration.to_json): Redefining name 'json_encode' from outer scope (line 58)
 golismero/common.py:649: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'max_connections' member
 golismero/common.py:649: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'max_connections' member
-golismero/common.py:653: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'max_process' member
-golismero/common.py:653: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'max_process' member
+golismero/common.py:653: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'max_concurrent' member
+golismero/common.py:653: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'max_concurrent' member
 golismero/common.py:657: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'enable_plugins' member
 golismero/common.py:657: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'enable_plugins' member
 golismero/common.py:659: Error (E, OrchestratorConfig.check_params): Instance of 'OrchestratorConfig' has no 'disable_plugins' member
