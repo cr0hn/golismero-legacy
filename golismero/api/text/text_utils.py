@@ -33,7 +33,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = [ "char_count", "line_count", "word_count",
             "generate_random_string", "split_first" ]
 
-from math import log
 from random import choice
 from re import finditer
 from string import ascii_letters, digits

@@ -32,6 +32,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["guess_hash", "validate_hash", "calculate_shannon_entropy"]
 
+from math import log
+
 
 #----------------------------------------------------------------------
 def calculate_shannon_entropy(string):
