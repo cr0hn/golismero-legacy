@@ -178,7 +178,7 @@ class MessageCode(MessageConstants):
         :rtype: str
         """
         if type(message_type) != int:
-            raise TypeError("Expected int, got %s instead" % type(message_type))
+            raise TypeError("Expected int, got %r instead" % type(message_type))
         if message_type == MessageType.MSG_TYPE_DATA:
             return "MSG_DATA" if value == MessageCode.MSG_DATA else None
         try:

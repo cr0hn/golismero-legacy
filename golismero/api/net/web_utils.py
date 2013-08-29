@@ -183,7 +183,7 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True):
     if callback is not None and not callable(callback):
         raise TypeError(
             "Expected callable (function, class, instance with __call__),"
-            " got %s instead" % type(callback)
+            " got %r instead" % type(callback)
         )
 
     # Autogenerate an Url object if a string is given (common mistake).

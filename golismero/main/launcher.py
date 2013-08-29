@@ -151,7 +151,7 @@ def _sanitize_config(options, audits):
     if options is None:
         options = OrchestratorConfig()
     elif not isinstance(options, OrchestratorConfig):
-        raise TypeError("Expected OrchestratorConfig, got %s instead" % type(options))
+        raise TypeError("Expected OrchestratorConfig, got %r instead" % type(options))
     if not hasattr(options, "profile"):
         options.profile = None
         options.profile_file = None
@@ -167,7 +167,7 @@ def _sanitize_config(options, audits):
         if params is None:
             params = AuditConfig()
         elif not isinstance(params, AuditConfig):
-            raise TypeError("Expected AuditConfig, got %s instead" % type(params))
+            raise TypeError("Expected AuditConfig, got %r instead" % type(params))
         if not hasattr(params, "profile"):
             params.profile = options.profile
             params.profile_file = options.profile_file

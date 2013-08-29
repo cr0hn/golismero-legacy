@@ -144,7 +144,7 @@ def extract_from_text(text, base_url, only_links = True):
 
     # Check the type.
     if not isinstance(text, basestring):
-        raise TypeError("Expected string, got %s instead" % type(text))
+        raise TypeError("Expected string, got %r instead" % type(text))
 
     # Make sure the text is really ASCII text.
     # We don't support Unicode yet.

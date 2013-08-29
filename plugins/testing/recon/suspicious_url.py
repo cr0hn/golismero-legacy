@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.config import Config
 from golismero.api.crypto import calculate_shannon_entropy
 from golismero.api.data.resource.url import Url
-from golismero.api.data.vulnerability.information_disclosure.suspicious_url import SuspiciousURL
+from golismero.api.data.vulnerability.suspicious.url import SuspiciousURL
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist import WordListLoader
 

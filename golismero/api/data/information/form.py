@@ -59,17 +59,17 @@ class Form(Information):
         """
 
         if not isinstance(url, basestring):
-            raise TypeError("Expected string, got %s instead" % type(url))
+            raise TypeError("Expected string, got %r instead" % type(url))
         url = str(url)
 
         if not isinstance(method, str):
-            raise TypeError("Expected string, got %s instead" % type(method))
+            raise TypeError("Expected string, got %r instead" % type(method))
 
         if isinstance(parameters, basestring):
-            raise TypeError("Expected tuple, got %s instead" % type(parameters))
+            raise TypeError("Expected tuple, got %r instead" % type(parameters))
         for name in parameters:
             if not isinstance(name, str):
-                raise TypeError("Expected string, got %s instead" % type(name))
+                raise TypeError("Expected string, got %r instead" % type(name))
 
         # Set the properties.
         self.__url = url

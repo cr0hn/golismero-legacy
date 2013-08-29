@@ -304,7 +304,7 @@ class Orchestrator (object):
         :rtype: bool
         """
         if not isinstance(message, Message):
-            raise TypeError("Expected Message, got %s instead" % type(message))
+            raise TypeError("Expected Message, got %r instead" % type(message))
 
         try:
 
@@ -365,7 +365,7 @@ class Orchestrator (object):
         :type message: Message
         """
         if not isinstance(message, Message):
-            raise TypeError("Expected Message, got %s instead" % type(message))
+            raise TypeError("Expected Message, got %r instead" % type(message))
         try:
             self.__queue.put_nowait(message)
         except Exception:

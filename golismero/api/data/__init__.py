@@ -440,7 +440,7 @@ def discard_data(data):
     if hasattr(data, "identity"):
         data = data.identity
     if type(data) is not str:
-        raise TypeError("Expected Data, got %s instead" % type(data))
+        raise TypeError("Expected Data, got %r instead" % type(data))
     LocalDataCache.discard(data)
 
 
@@ -797,7 +797,7 @@ class Data(object):
         :returns: Set of linked Data elements.
         :rtype: set(Data)
         """
-        return self._convert_links_to_data( self.__linked[None][None] )
+        return self.resolve_links( self.__linked[None][None] )
 
 
     #----------------------------------------------------------------------
@@ -824,7 +824,7 @@ class Data(object):
 
 
     #----------------------------------------------------------------------
-    def get_linked_data(self, data_type = None, data_subtype = None):
+    def find_linked_data(self, data_type = None, data_subtype = None):
         """
         Get the linked Data elements of the given data type.
 
@@ -840,17 +840,38 @@ class Data(object):
         :raises ValueError: Invalid data_type argument.
         """
         links = self.get_links(data_type, data_subtype)
-        return self._convert_links_to_data(links)
+        return self.resolve_links(links)
 
 
+    #----------------------------------------------------------------------
     @staticmethod
-    def _convert_links_to_data(links):
+    def resolve(identity):
+        """
+        Get the Data object from an identity.
+        This will include both new objects created by this plugins,
+        and old objects already stored in the database.
+
+        :param link: Identity hash of the object to fetch.
+        :type link: str
+
+        :returns: Data object.
+        :rtype: Data
+        """
+        if not LocalDataCache._enabled:
+            return Database.get(identity)
+        data = LocalDataCache.get(identity)
+        if data is not None:
+            return data
+        return Database.get(identity)
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def resolve_links(links):
         """
         Get the Data objects from a given set of identities.
         This will include both new objects created by this plugins,
         and old objects already stored in the database.
-
-        .. warning: This is an internally used method. Do not call!
 
         :param links: Set of identities to fetch.
         :type links: set(str)
@@ -882,7 +903,7 @@ class Data(object):
         :type other: Data
         """
         if not isinstance(other, Data):
-            raise TypeError("Expected Data, got %s instead" % type(other))
+            raise TypeError("Expected Data, got %r instead" % type(other))
         if self._can_link(other) and other._can_link(self):
             other._add_link(self)
             self._add_link(other)
@@ -983,7 +1004,7 @@ class Data(object):
         :return: Resources.
         :rtype: set(Resource)
         """
-        return self.get_linked_data(Data.TYPE_RESOURCE)
+        return self.find_linked_data(Data.TYPE_RESOURCE)
 
 
     #----------------------------------------------------------------------
@@ -995,7 +1016,7 @@ class Data(object):
         :return: Informations.
         :rtype: set(Information)
         """
-        return self.get_linked_data(Data.TYPE_INFORMATION)
+        return self.find_linked_data(Data.TYPE_INFORMATION)
 
 
     #----------------------------------------------------------------------
@@ -1007,7 +1028,7 @@ class Data(object):
         :return: Vulnerabilities.
         :rtype: set(Vulnerability)
         """
-        return self.get_linked_data(Data.TYPE_VULNERABILITY)
+        return self.find_linked_data(Data.TYPE_VULNERABILITY)
 
 
     #----------------------------------------------------------------------
@@ -1021,7 +1042,7 @@ class Data(object):
         :return: Associated vulnerabilites. Returns an empty set if the category doesn't exist.
         :rtype: set(Vulnerability)
         """
-        return self.get_linked_data(self.TYPE_VULNERABILITY, cat_name)
+        return self.find_linked_data(self.TYPE_VULNERABILITY, cat_name)
 
 
     #----------------------------------------------------------------------
@@ -1041,7 +1062,7 @@ class Data(object):
             raise TypeError("Expected int, got %r instead" % type(information_type))
 ##        if not Information.INFORMATION_FIRST >= information_type >= Information.INFORMATION_LAST:
 ##            raise ValueError("Invalid information_type: %r" % information_type)
-        return self.get_linked_data(self.TYPE_INFORMATION, information_type)
+        return self.find_linked_data(self.TYPE_INFORMATION, information_type)
 
 
     #----------------------------------------------------------------------
@@ -1061,7 +1082,7 @@ class Data(object):
             raise TypeError("Expected int, got %r instead" % type(resource_type))
 ##        if not Resource.RESOURCE_FIRST >= resource_type >= Resource.RESOURCE_LAST:
 ##            raise ValueError("Invalid resource_type: %r" % resource_type)
-        return self.get_linked_data(self.TYPE_RESOURCE, resource_type)
+        return self.find_linked_data(self.TYPE_RESOURCE, resource_type)
 
 
     #----------------------------------------------------------------------
@@ -1073,7 +1094,7 @@ class Data(object):
         :type res: Resource
         """
         if not hasattr(res, "data_type") or res.data_type != self.TYPE_RESOURCE:
-            raise TypeError("Expected Resource, got %s instead" % type(res))
+            raise TypeError("Expected Resource, got %r instead" % type(res))
         self.add_link(res)
 
 
@@ -1086,7 +1107,7 @@ class Data(object):
         :type info: Information
         """
         if not hasattr(info, "data_type") or info.data_type != self.TYPE_INFORMATION:
-            raise TypeError("Expected Information, got %s instead" % type(info))
+            raise TypeError("Expected Information, got %r instead" % type(info))
         self.add_link(info)
 
 
@@ -1099,7 +1120,7 @@ class Data(object):
         :type info: Vulnerability
         """
         if not hasattr(vuln, "data_type") or vuln.data_type != self.TYPE_VULNERABILITY:
-            raise TypeError("Expected Vulnerability, got %s instead" % type(vuln))
+            raise TypeError("Expected Vulnerability, got %r instead" % type(vuln))
         self.add_link(vuln)
 
 

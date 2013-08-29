@@ -115,9 +115,9 @@ except ImportError:
         if isinstance(interval, int):
             interval = float(interval)
         elif not isinstance(interval, float):
-            raise TypeError("Expected int or float, got %s instead" % type(interval))
+            raise TypeError("Expected int or float, got %r instead" % type(interval))
         if not isinstance(times, int):
-            raise TypeError("Expected int, got %s instead" % type(times))
+            raise TypeError("Expected int, got %r instead" % type(times))
 
         # Code adapted from: http://stackoverflow.com/q/5179467
 
@@ -125,7 +125,7 @@ except ImportError:
         # with fixed interval and times parameter
         def outer_wrap(function):
             if not callable(function):
-                raise TypeError("Expected function, got %s instead" % type(function))
+                raise TypeError("Expected function, got %r instead" % type(function))
 
             # This will be the function to be
             # called
@@ -262,16 +262,16 @@ class VulnscanManager(object):
         """
 
         if not isinstance(host, basestring):
-            raise TypeError("Expected string, got %s instead" % type(host))
+            raise TypeError("Expected string, got %r instead" % type(host))
         if not isinstance(user, basestring):
-            raise TypeError("Expected string, got %s instead" % type(user))
+            raise TypeError("Expected string, got %r instead" % type(user))
         if not isinstance(password, basestring):
-            raise TypeError("Expected string, got %s instead" % type(password))
+            raise TypeError("Expected string, got %r instead" % type(password))
         if isinstance(port, int):
             if not (0 < port <= 65535):
                 raise ValueError("Port number must be in range (0, 65535]")
         else:
-            raise TypeError("Expected int, got %s instead" % type(port))
+            raise TypeError("Expected int, got %r instead" % type(port))
 
         m_time_out = None
         if timeout:
@@ -281,7 +281,7 @@ class VulnscanManager(object):
                 else:
                     m_time_out = timeout
             else:
-                raise TypeError("Expected int, got %s instead" % type(timeout))
+                raise TypeError("Expected int, got %r instead" % type(timeout))
 
         # Create the manager
         try:
@@ -357,9 +357,9 @@ class VulnscanManager(object):
         call_back_end        = kwargs.get("callback_end", None)
         call_back_progress   = kwargs.get("callback_progress", None)
         if not (isinstance(target, basestring) or isinstance(target, Iterable)):
-            raise TypeError("Expected basestring or iterable, got %s instead" % type(target))
+            raise TypeError("Expected basestring or iterable, got %r instead" % type(target))
         if not isinstance(profile, basestring):
-            raise TypeError("Expected string, got %s instead" % type(profile))
+            raise TypeError("Expected string, got %r instead" % type(profile))
 
         # Generate the random names used
         m_target_name = "golismero_target_%s" % generate_random_string(20)
@@ -459,7 +459,7 @@ class VulnscanManager(object):
         """
 
         if not isinstance(scan_id, basestring):
-            raise TypeError("Expected string, got %s instead" % type(scan_id))
+            raise TypeError("Expected string, got %r instead" % type(scan_id))
 
         m_response = None
         try:
@@ -482,7 +482,7 @@ class VulnscanManager(object):
         :rtype: float
         """
         if not isinstance(scan_id, basestring):
-            raise TypeError("Expected string, got %s instead" % type(scan_id))
+            raise TypeError("Expected string, got %r instead" % type(scan_id))
 
         return self.__manager.get_tasks_progress(scan_id)
 
@@ -722,17 +722,17 @@ class OMPv4(object):
         """
 
         if not isinstance(host, basestring):
-            raise TypeError("Expected string, got %s instead" % type(host))
+            raise TypeError("Expected string, got %r instead" % type(host))
         if not isinstance(username, basestring):
-            raise TypeError("Expected string, got %s instead" % type(username))
+            raise TypeError("Expected string, got %r instead" % type(username))
         if isinstance(port, int):
             if not (0 < port < 65535):
                 raise ValueError("Port must be between 0-65535")
         else:
-            raise TypeError("Expected int, got %s instead" % type(port))
+            raise TypeError("Expected int, got %r instead" % type(port))
         if timeout:
             if not isinstance(timeout, int):
-                raise TypeError("Expected int, got %s instead" % type(timeout))
+                raise TypeError("Expected int, got %r instead" % type(timeout))
 
         self.__host             = host
         self.__username         = username
@@ -1004,7 +1004,7 @@ class OMPv4(object):
         :raises: RunTimeError, ClientError, ServerError
         """
         if not isinstance(task_id, basestring):
-            raise TypeError("Expected string, got %s instead" % type(task_id))
+            raise TypeError("Expected string, got %r instead" % type(task_id))
 
         m_sum_progress = 0.0 # Partial progress
         m_progress_len = 0.0 # All of tasks
@@ -1093,7 +1093,7 @@ class OMPv4(object):
         :raises: RunTimeError, ClientError, ServerError
         """
         if not isinstance(task_id, basestring):
-            raise TypeError("Expected string, got %s instead" % type(task_id))
+            raise TypeError("Expected string, got %r instead" % type(task_id))
 
         m_query = '<start_task task_id="%s"/>' % task_id
 
@@ -1145,9 +1145,9 @@ class OMPv4(object):
         :raises: AuthFailedError
         """
         if not isinstance(username, basestring):
-            raise TypeError("Expected string, got %s instead" % type(username))
+            raise TypeError("Expected string, got %r instead" % type(username))
         if not isinstance(password, basestring):
-            raise TypeError("Expected string, got %s instead" % type(password))
+            raise TypeError("Expected string, got %r instead" % type(password))
 
         m_request = """<authenticate>
             <credentials>

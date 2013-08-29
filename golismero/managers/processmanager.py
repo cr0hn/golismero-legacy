@@ -499,7 +499,7 @@ class PluginContext (object):
             if type(progress) in (int, long):
                 progress = float(progress)
             elif type(progress) is not float:
-                raise TypeError("Expected float, got %s instead", type(progress))
+                raise TypeError("Expected float, got %r instead", type(progress))
             if progress < 0.0:
                 progress = 0.0
             elif progress > 100.0:

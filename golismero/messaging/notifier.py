@@ -110,7 +110,7 @@ class AbstractNotifier (object):
         :type plugin: Plugin
         """
         if not isinstance(plugin, Plugin):
-            raise TypeError("Expected Plugin, got %s instead" % type(plugin))
+            raise TypeError("Expected Plugin, got %r instead" % type(plugin))
 
         # Add the plugin to the names map.
         self._map_name_to_plugin[name] = plugin
@@ -173,7 +173,7 @@ class AbstractNotifier (object):
         :type message: Message
         """
         if not isinstance(message, Message):
-            raise TypeError("Expected Message, got %s instead" % type(message))
+            raise TypeError("Expected Message, got %r instead" % type(message))
 
         # Keep count of how many messages are sent.
         count = 0

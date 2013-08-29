@@ -85,7 +85,7 @@ golismero/api/data/vulnerability/__init__.py:411: Error (E, UrlVulnerability): M
 golismero/api/data/vulnerability/information_disclosure/dns_zone_transfer.py:71: Error (E, DNSZoneTransfer): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/information_disclosure/default_error_page.py:65: Error (E, DefaultErrorPage): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/information_disclosure/directory_listing.py:63: Error (E, DirectoryListing): Method '__init__' has no '__doc__' member
-golismero/api/data/vulnerability/information_disclosure/suspicious_url.py:68: Error (E, SuspiciousURL): Method '__init__' has no '__doc__' member
+golismero/api/data/vulnerability/suspicious/url.py:68: Error (E, SuspiciousURL): Method '__init__' has no '__doc__' member
 golismero/api/external.py:37: Warning (W): TODO: Use pexpect to run tools interactively.
 golismero/api/logger.py:82: Warning (W, Logger._log): Access to a protected member _context of a client class
 golismero/api/net/__init__.py:89: Warning (W, ConnectionSlot.__enter__): Access to a protected member _context of a client class

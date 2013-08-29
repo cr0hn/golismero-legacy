@@ -230,7 +230,7 @@ class AuditManager (object):
         :rtype: bool
         """
         if not isinstance(message, Message):
-            raise TypeError("Expected Message, got %s instead" % type(message))
+            raise TypeError("Expected Message, got %r instead" % type(message))
 
         # Send info messages to their target audit
         if message.message_type == MessageType.MSG_TYPE_DATA:
@@ -290,7 +290,7 @@ class Audit (object):
         """
 
         if not isinstance(audit_config, AuditConfig):
-            raise TypeError("Expected AuditConfig, got %s instead" % type(audit_config))
+            raise TypeError("Expected AuditConfig, got %r instead" % type(audit_config))
 
         # Keep the audit settings.
         self.__audit_config = audit_config
@@ -746,7 +746,7 @@ class Audit (object):
         :rtype: bool
         """
         if not isinstance(message, Message):
-            raise TypeError("Expected Message, got %s instead" % type(message))
+            raise TypeError("Expected Message, got %r instead" % type(message))
 
         # Keep the original execution context.
         old_context = Config._context
