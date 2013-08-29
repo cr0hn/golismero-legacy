@@ -82,7 +82,7 @@ golismero/api/data/vulnerability/__init__.py:344: Warning (W, Vulnerability.desc
 golismero/api/data/vulnerability/__init__.py:367: Warning (W, Vulnerability.references): Attribute '__references' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:390: Warning (W, UrlVulnerability.__init__): Catching too general exception Exception
 golismero/api/data/vulnerability/__init__.py:411: Error (E, UrlVulnerability): Method '__init__' has no '__doc__' member
-golismero/api/data/vulnerability/dns/zone_transfer.py:71: Error (E, DNSZoneTransfer): Method '__init__' has no '__doc__' member
+golismero/api/data/vulnerability/information_disclosure/dns_zone_transfer.py:71: Error (E, DNSZoneTransfer): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/information_disclosure/default_error_page.py:65: Error (E, DefaultErrorPage): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/information_disclosure/directory_listing.py:63: Error (E, DirectoryListing): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/information_disclosure/suspicious_url.py:68: Error (E, SuspiciousURL): Method '__init__' has no '__doc__' member

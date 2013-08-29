@@ -30,22 +30,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.config import Config
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
-from golismero.api.data.vulnerability.dns.zone_transfer import DNSZoneTransfer
+from golismero.api.data.vulnerability.information_disclosure.dns_zone_transfer\
+     import DNSZoneTransfer
 from golismero.api.logger import Logger
 from golismero.api.net.dns import DNS
 from golismero.api.plugin import TestingPlugin
 
 
-#--------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class DNSZoneTransferPlugin(TestingPlugin):
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Domain]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def recv_info(self, info):
 
         # Get the root domain only.
