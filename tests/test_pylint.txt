@@ -547,3 +547,5 @@ golismero/patches/mp.py:133: Warning (W, main): Access to a protected member _bo
 golismero/patches/mp.py:133: Warning (W, main): Redefining name '__original_bootstrap' from outer scope (line 146)
 golismero/patches/mp.py:146: Warning (W): Access to a protected member _bootstrap of a client class
 golismero/patches/mp.py:146: Warning (W): Access to a protected member _bootstrap of a client class
+golismero/api/net/dns.py:519: Warning (W, _DNS.zone_transfer): Unused variable 'name'
+golismero/api/text/wordlist.py:317: Warning (W, AdvancedListWordlist): Method 'search_mutations' is abstract in class 'AbstractWordlist' but is not overridden
