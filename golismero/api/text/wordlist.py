@@ -579,7 +579,7 @@ class AdvancedDicWordlist(object):
 
 
     #----------------------------------------------------------------------
-    def matches_by_value(self, word, debug = False):
+    def matches_by_value(self, word):
         """
         Search a word passed as parameter in the values of wordlist and return a list of lists with
         matches found.
