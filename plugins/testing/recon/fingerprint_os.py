@@ -274,7 +274,7 @@ class OSFingerprinting(TestingPlugin):
             m_ttl               = do_ping_and_receive_ttl(ParsedURL(main_url).hostname, 2)
 
             # Load words for the wordlist
-            l_wordlist_instance = WordListLoader.get_advanced_wordlist_as_dict(Config.plugin_config["Wordlist_ttl"])
+            l_wordlist_instance = WordListLoader.get_advanced_wordlist_as_dict(Config.plugin_config["wordlist_ttl"])
             # Looking for matches
             l_matches           = l_wordlist_instance.matches_by_value(m_ttl)
 
