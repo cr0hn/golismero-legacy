@@ -153,12 +153,7 @@ class AbstractNotifier (object):
                     filtered_info = None
                     break
                 if type(item) not in (int, long):
-                    if item.data_type == Data.TYPE_INFORMATION:
-                        item = item.information_type
-                    elif item.data_type == Data.TYPE_RESOURCE:
-                        item = item.resource_type
-                    elif item.data_type == Data.TYPE_VULNERABILITY:
-                        item = item.vulnerability_type
+                    item = item.data_subtype
                 filtered_info.add(item)
             return filtered_info
         return None
@@ -226,21 +221,9 @@ class AbstractNotifier (object):
         m_plugins_to_notify.update(self._notification_info_all)
 
         # Plugins that expect this type of info.
-        m_type = None
-        data_type = data.data_type
-        if data_type == Data.TYPE_INFORMATION:
-            m_type = data.information_type
-        elif data_type == Data.TYPE_RESOURCE:
-            m_type = data.resource_type
-        elif data_type == Data.TYPE_VULNERABILITY:
-            m_type = data.vulnerability_type
-        else:
-            warn("Data type not handled by notifier: %r" % data_type)
+        m_type = data.data_subtype
         if m_type in self._notification_info_map:
             m_plugins_to_notify.update(self._notification_info_map[m_type])
-        ##else:  # XXX DEBUG
-        ##    warn("Data type not handled by any plugins: %r" % data_type)
-
         return m_plugins_to_notify
 
 

@@ -455,33 +455,45 @@ class _data_metaclass(type):
     def __init__(cls, name, bases, namespace):
         super(_data_metaclass, cls).__init__(name, bases, namespace)
 
-        # Skip checks for the base classes.
-        if cls.__module__ in (
+        # Validate all mergeable properties.
+        for _, prop in cls.__dict__.iteritems():
+            if merge.is_mergeable_property(prop):
+                prop.validate(cls)
+
+        # The Data class itself has to be processed differently.
+        if cls.__module__ == "golismero.api.data" and name == "Data":
+            cls.data_subtype = None
+            return
+
+        # Skip some checks for the base classes.
+        is_child_class = cls.__module__ not in (
             "golismero.api.data",
             "golismero.api.data.information",
             "golismero.api.data.resource",
             "golismero.api.data.vulnerability",
-        ):
-            return
+        )
 
         # Check the data_type is not TYPE_UNKNOWN.
-        if not cls.data_type:
+        if is_child_class and not cls.data_type:
             msg = "Error in %s.%s: Subclasses of Data MUST define their data_type!"
             raise TypeError(msg % (cls.__module__, cls.__name__))
 
         # Check the information_type is not INFORMATION_UNKNOWN.
         if cls.data_type == Data.TYPE_INFORMATION:
-            if not cls.information_type:
+            if is_child_class and not cls.information_type:
                 msg = "Error in %s.%s: Subclasses of Information MUST define their information_type!"
                 raise TypeError(msg % (cls.__module__, cls.__name__))
+            cls.data_subtype = cls.information_type
 
         # Check the resource_type is not RESOURCE_UNKNOWN.
         elif cls.data_type == Data.TYPE_RESOURCE:
-            if not cls.resource_type:
+            if is_child_class and not cls.resource_type:
                 msg = "Error in %s.%s: Subclasses of Resource MUST define their resource_type!"
                 raise TypeError(msg % (cls.__module__, cls.__name__))
+            cls.data_subtype = cls.resource_type
 
         # Automatically calculate the vulnerability type from the module name.
+        # If we can't, at least make sure it's defined manually.
         elif cls.data_type == Data.TYPE_VULNERABILITY:
             is_vuln_type_missing = "vulnerability_type" not in cls.__dict__
             if cls.__module__.startswith("golismero.api.data.vulnerability."):
@@ -489,16 +501,10 @@ class _data_metaclass(type):
                     vuln_type = cls.__module__[33:]
                     vuln_type = vuln_type.replace(".", "/")
                     cls.vulnerability_type = vuln_type
-
-            # If we can't, at least make sure it's defined manually.
-            elif is_vuln_type_missing:
-                msg = "Error in %s.%s: Subclasses of Vulnerability MUST define their vulnerability_type!"
+            elif is_child_class and is_vuln_type_missing:
+                msg = "Error in %s.%s: Missing vulnerability_type!"
                 raise TypeError(msg % (cls.__module__, cls.__name__))
-
-        # Validate all mergeable properties.
-        for name, prop in cls.__dict__.iteritems():
-            if merge.is_mergeable_property(prop):
-                prop.validate(cls)
+            cls.data_subtype = cls.vulnerability_type
 
 
 #------------------------------------------------------------------------------
@@ -951,14 +957,7 @@ class Data(object):
         data_type = other.data_type
         self.__linked[None][None].add(data_id)
         self.__linked[data_type][None].add(data_id)
-        if data_type == self.TYPE_INFORMATION:
-            self.__linked[data_type][other.information_type].add(data_id)
-        elif data_type == self.TYPE_RESOURCE:
-            self.__linked[data_type][other.resource_type].add(data_id)
-        elif data_type == self.TYPE_VULNERABILITY:
-            self.__linked[data_type][other.vulnerability_type].add(data_id)
-        else:
-            raise ValueError("Internal error! Unknown data_type: %r" % data_type)
+        self.__linked[data_type][other.data_subtype].add(data_id)
 
 
     #----------------------------------------------------------------------
