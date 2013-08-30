@@ -36,7 +36,7 @@ from golismero.api.data.resource.domain import Domain
 from golismero.api.logger import Logger
 from golismero.api.net.dns import DNS
 from golismero.api.plugin import TestingPlugin
-from golismero.api.text.wordlist import WordListLoader
+from golismero.api.text.wordlist import WordListLoader, WordlistNotFound
 
 
 #--------------------------------------------------------------------------
@@ -62,9 +62,16 @@ class DNSBruteforcer(TestingPlugin):
         if self.state.put(root, True):
             return
 
+
         # Load the subdomains wordlist.
-        wordlist = WordListLoader.get_advanced_wordlist_as_list(
-            Config.plugin_config["wordlist"])
+        try:
+            wordlist = WordListLoader.get_advanced_wordlist_as_list(Config.plugin_args["wordlist"])
+        except WordlistNotFound:
+            Logger.log_error_verbose("Wordlist '%s' not found.." % Config.plugin_args["wordlist"])
+            return
+        except TypeError:
+            Logger.log_error_verbose("Wordlist '%s' is not a file." % Config.plugin_args["wordlist"])
+            return
 
         # Configure the progress notifier.
         self.progress.set_total(len(wordlist))

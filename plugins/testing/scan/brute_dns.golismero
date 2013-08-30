@@ -7,5 +7,5 @@ Website     = https://github.com/golismero
 Copyright   = Copyright (C) 2011-2013 GoLismero Project
 License     = GNU Public License
 
-[Configuration]
-wordlist = dnsrecon/subs_small.txt
+[Arguments]
+wordlist   = dns/dnsrecon.txt
