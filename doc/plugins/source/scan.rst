@@ -14,6 +14,12 @@ DNS Bruteforcer (*brute_dns*)
 
 Tries to find hidden subdomains by brute force.
 
+================= =================
+**Argument name** **Default value**
+----------------- -----------------
+wordlist          dns/dnsrecon.txt 
+================= =================
+
 Bruteforce file extensions discovery (*brute_extensions*)
 =========================================================
 
