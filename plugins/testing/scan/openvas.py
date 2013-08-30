@@ -43,11 +43,6 @@ try:
 except ImportError:
     from xml.etree import ElementTree as etree
 
-# Import the OpenVAS libraries from the plugin data folder.
-import os, sys
-_lib_path = os.path.abspath(os.path.split(__file__)[0])
-if _lib_path not in sys.path:
-    sys.path.insert(0, _lib_path)
 from openvas_lib import VulnscanManager, VulnscanException
 
 
@@ -155,8 +150,7 @@ class OpenVASPlugin(TestingPlugin):
                 try:
                     m_scanner.delete_scan(m_scan_id)
                 except Exception:
-                    pass   # XXX FIXME #135
-
+                    Logger.log_error_more_verbose("Error while deleting scan Id: %s" % str(m_scan_id if m_scan_id else "(No scan id)"))
 
     #--------------------------------------------------------------------------
     @staticmethod
