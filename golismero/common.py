@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = [
 
     # Dynamically loaded modules, picks the fastest one available.
-    "pickle", "random",
+    "pickle", "random", "json_encode", "json_decode",
 
     # Helper functions.
     "get_user_settings_folder", "get_default_config_file",
@@ -53,8 +53,6 @@ try:
 except ImportError:
     import pickle
 
-# Lazy import of the JSON codec.
-json_decode = None
 json_encode = None
 
 # Import @decorator from the decorator module, if available.
@@ -74,6 +72,20 @@ except ImportError:
                 return w(fn, *args, **kwargs)
             return x
         return d
+
+try:
+    # The fastest JSON parser available for Python.
+    from cjson import decode as json_decode
+    from cjson import encode as json_encode
+except ImportError:
+    try:
+        # Faster than the built-in module, usually found.
+        from simplejson import loads as json_decode
+        from simplejson import dumps as json_encode
+    except ImportError:
+        # Built-in module since Python 2.6, very very slow!
+        from json import loads as json_decode
+        from json import dumps as json_encode
 
 # Other imports.
 from ConfigParser import RawConfigParser
@@ -520,20 +532,6 @@ class Configuration (object):
         :type json_raw_data: str
         """
 
-        # Lazy import of the JSON decoder function.
-        global json_decode
-        if json_decode is None:
-            try:
-                # The fastest JSON parser available for Python.
-                from cjson import decode as json_decode
-            except ImportError:
-                try:
-                    # Faster than the built-in module, usually found.
-                    from simplejson import loads as json_decode
-                except ImportError:
-                    # Built-in module since Python 2.6, very very slow!
-                    from json import loads as json_decode
-
         # Converts the JSON data into a dictionary.
         args = json_decode(json_raw_data)
         if not isinstance(args, dict):
@@ -594,20 +592,6 @@ class Configuration (object):
         :retruns: Settings as a JSON encoded dictionary.
         :rtype: str
         """
-
-        # Lazy import of the JSON encoder function.
-        global json_encode
-        if json_encode is None:
-            try:
-                # The fastest JSON parser available for Python.
-                from cjson import encode as json_encode
-            except ImportError:
-                try:
-                    # Faster than the built-in module, usually found.
-                    from simplejson import dumps as json_encode
-                except ImportError:
-                    # Built-in module since Python 2.6, very very slow!
-                    from json import dumps as json_encode
 
         # Extract the settings to a dictionary and encode it with JSON.
         return json_encode( self.to_dictionary() )
