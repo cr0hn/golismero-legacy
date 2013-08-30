@@ -97,7 +97,7 @@ class DNSZoneTransferPlugin(TestingPlugin):
         if not ns_servers:
 
             # Link the vulnerability to the root domain instead.
-            vulnerability = DNSZoneTransfer(ns)
+            vulnerability = DNSZoneTransfer(root)
             vulnerability.add_resource(domain)
             results.append(vulnerability)
 

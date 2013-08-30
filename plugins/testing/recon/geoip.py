@@ -61,12 +61,12 @@ class GeoIP(TestingPlugin):
         results = []
 
         # Get the IP address or domain name.
-        if info.resource_type == IP.resource_type:
+        if info.data_subtype == IP.data_subtype:
             target = info.address
-        elif info.resource_type == Domain.resource_type:
+        elif info.data_subtype == Domain.data_subtype:
             target = info.hostname
         else:
-            assert False, type(target)
+            assert False, type(info)
 
         # Query the freegeoip.net service.
         # FIXME: the service supports SSL, but we need up to date certificates.

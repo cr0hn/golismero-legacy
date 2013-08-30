@@ -156,6 +156,7 @@ def test_data_types_have_id():
         assert type(clazz.data_type) == int
         if issubclass(clazz, Information):
             assert clazz.data_type == Data.TYPE_INFORMATION
+            assert clazz.data_subtype == clazz.information_type
             assert type(clazz.information_type) == int
             if clazz.__module__ != "golismero.api.data.information":
                 assert clazz.information_type != Information.INFORMATION_UNKNOWN
@@ -164,6 +165,7 @@ def test_data_types_have_id():
                 assert clazz.information_type == Information.INFORMATION_UNKNOWN
         elif issubclass(clazz, Resource):
             assert clazz.data_type == Data.TYPE_RESOURCE
+            assert clazz.data_subtype == clazz.resource_type
             assert type(clazz.resource_type) == int
             if clazz.__module__ != "golismero.api.data.resource":
                 assert clazz.resource_type != Resource.RESOURCE_UNKNOWN
@@ -172,6 +174,7 @@ def test_data_types_have_id():
                 assert clazz.resource_type == Resource.RESOURCE_UNKNOWN
         elif issubclass(clazz, Vulnerability):
             assert clazz.data_type == Data.TYPE_VULNERABILITY
+            assert clazz.data_subtype == clazz.vulnerability_type
             assert type(clazz.vulnerability_type) == str
             if clazz.__module__ != "golismero.api.data.vulnerability":
                 assert clazz.vulnerability_type != "generic"
@@ -200,6 +203,18 @@ def helper_data_links():
     d2 = Text("some text")
     d3 = UrlDisclosure(d1)
     d1.add_information(d2)
+
+    # Test data_type, data_subtype, etc.
+    print "Testing Data type checks..."
+    assert d1.data_type == Data.TYPE_RESOURCE
+    assert d1.data_subtype == Resource.RESOURCE_URL
+    assert d1.resource_type == Resource.RESOURCE_URL
+    assert d2.data_type == Data.TYPE_INFORMATION
+    assert d2.data_subtype == Information.INFORMATION_PLAIN_TEXT
+    assert d2.information_type == Information.INFORMATION_PLAIN_TEXT
+    assert d3.data_type == Data.TYPE_VULNERABILITY
+    assert d3.data_subtype == "information_disclosure/url_disclosure"
+    assert d3.vulnerability_type == d3.data_subtype
 
     # Test validate_link_minimums().
     print "Testing Data.validate_link_minimums()..."

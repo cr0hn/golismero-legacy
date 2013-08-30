@@ -146,15 +146,14 @@ class merge(property):
 
 
     #--------------------------------------------------------------------------
-    @classmethod
-    def validate(prop, cls):
+    def validate(self, cls, name):
 
         # Check all mergeable properties have setters.
-        if prop.fset is None:
+        if self.fset is None:
             msg = (
                 "Error in %s.%s.%s:"
                 " Properties tagged with @%s MUST have a setter!"
-                % (cls.__module__, cls.__name__, name, prop.__class__.__name__)
+                % (cls.__module__, cls.__name__, name, self.__class__.__name__)
             )
             raise TypeError(msg)
 
@@ -192,14 +191,10 @@ class merge(property):
 
             # Combine sets, dictionaries, lists and tuples.
             elif isinstance(their_value, (set, dict)):
-                if reverse:
-                    my_value = my_value.copy()
+                my_value = my_value.copy()
                 my_value.update(their_value)
             elif isinstance(their_value, list):
-                if reverse:
-                    my_value = my_value + their_value
-                else:
-                    my_value.extend(their_value)
+                my_value = my_value + their_value
             elif isinstance(their_value, tuple):
                 my_value = my_value + their_value
 
@@ -264,7 +259,7 @@ class keep_greater(merge):
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def do_merge(old_data, new_data, key, reverse = False):
+    def do_merge(old_data, new_data, key):
 
         # Get the values.
         old_value = getattr(old_data, key, None)
@@ -320,10 +315,10 @@ class keep_true(merge):
         try:
             old_bool = bool(old_value)
             new_bool = bool(new_value)
-        except Exception, e:
+        except Exception:
             old_bool = new_bool = True
             msg = "Failed to evaluate property %s.%s as boolean!"
-            msg %= (cls.__name__, key)
+            msg %= (old_data.__class__.__name__, key)
             warn(msg, stacklevel=5)
 
         # If they are equal, choose the new value.
@@ -354,10 +349,10 @@ class keep_false(merge):
         try:
             old_bool = bool(old_value)
             new_bool = bool(new_value)
-        except Exception, e:
+        except Exception:
             old_bool = new_bool = False
             msg = "Failed to evaluate property %s.%s as boolean!"
-            msg %= (cls.__name__, key)
+            msg %= (old_data.__class__.__name__, key)
             warn(msg, stacklevel=5)
 
         # If they are equal, choose the new value.
@@ -381,38 +376,36 @@ class custom(merge):
     def __init__(self,
                  fget=None, fset=None, fdel=None, doc=None,
                  callback=None):
-        super(keep_custom, self).__init__(
+        super(custom, self).__init__(
             fget=fget, fset=fset, fdel=fdel, doc=doc)
         self.callback = callback
 
 
     #--------------------------------------------------------------------------
-    @classmethod
-    def validate(prop, cls):
-        if prop.callback is None:
+    def validate(self, cls, name):
+        if self.callback is None:
             msg = (
                 "Error in %s.%s.%s:"
                 " Properties tagged with @%s MUST have a callback!"
-                % (cls.__module__, cls.__name__, name, prop.__class__.__name__)
+                % (cls.__module__, cls.__name__, name, self.__class__.__name__)
             )
             raise TypeError(msg)
-        if not callable(prop.callback):
+        if not callable(self.callback):
             msg = (
                 "Error in %s.%s.%s:"
                 " Properties tagged with @%s need a callback function,"
                 " got %r instead!"
                 % (cls.__module__, cls.__name__, name,
-                   prop.__class__.__name__, type(prop.callback))
+                   self.__class__.__name__, type(self.callback))
             )
             raise TypeError(msg)
 
         # Do the rest of the checks.
-        super(keep_custom, prop).validate(cls)
+        super(custom, self).validate(cls, name)
 
 
     #--------------------------------------------------------------------------
-    @staticmethod
-    def do_merge(old_data, new_data, key):
+    def do_merge(self, old_data, new_data, key):
 
         # Return whatever the callback function returns.
         return self.callback(old_data, new_data, key)
@@ -455,33 +448,45 @@ class _data_metaclass(type):
     def __init__(cls, name, bases, namespace):
         super(_data_metaclass, cls).__init__(name, bases, namespace)
 
-        # Skip checks for the base classes.
-        if cls.__module__ in (
+        # Validate all mergeable properties.
+        for propname, prop in cls.__dict__.iteritems():
+            if merge.is_mergeable_property(prop):
+                prop.validate(cls, propname)
+
+        # The Data class itself has to be processed differently.
+        if cls.__module__ == "golismero.api.data" and name == "Data":
+            cls.data_subtype = None
+            return
+
+        # Skip some checks for the base classes.
+        is_child_class = cls.__module__ not in (
             "golismero.api.data",
             "golismero.api.data.information",
             "golismero.api.data.resource",
             "golismero.api.data.vulnerability",
-        ):
-            return
+        )
 
         # Check the data_type is not TYPE_UNKNOWN.
-        if not cls.data_type:
+        if is_child_class and not cls.data_type:
             msg = "Error in %s.%s: Subclasses of Data MUST define their data_type!"
             raise TypeError(msg % (cls.__module__, cls.__name__))
 
         # Check the information_type is not INFORMATION_UNKNOWN.
         if cls.data_type == Data.TYPE_INFORMATION:
-            if not cls.information_type:
+            if is_child_class and not cls.information_type:
                 msg = "Error in %s.%s: Subclasses of Information MUST define their information_type!"
                 raise TypeError(msg % (cls.__module__, cls.__name__))
+            cls.data_subtype = cls.information_type
 
         # Check the resource_type is not RESOURCE_UNKNOWN.
         elif cls.data_type == Data.TYPE_RESOURCE:
-            if not cls.resource_type:
+            if is_child_class and not cls.resource_type:
                 msg = "Error in %s.%s: Subclasses of Resource MUST define their resource_type!"
                 raise TypeError(msg % (cls.__module__, cls.__name__))
+            cls.data_subtype = cls.resource_type
 
         # Automatically calculate the vulnerability type from the module name.
+        # If we can't, at least make sure it's defined manually.
         elif cls.data_type == Data.TYPE_VULNERABILITY:
             is_vuln_type_missing = "vulnerability_type" not in cls.__dict__
             if cls.__module__.startswith("golismero.api.data.vulnerability."):
@@ -489,16 +494,10 @@ class _data_metaclass(type):
                     vuln_type = cls.__module__[33:]
                     vuln_type = vuln_type.replace(".", "/")
                     cls.vulnerability_type = vuln_type
-
-            # If we can't, at least make sure it's defined manually.
-            elif is_vuln_type_missing:
-                msg = "Error in %s.%s: Subclasses of Vulnerability MUST define their vulnerability_type!"
+            elif is_child_class and is_vuln_type_missing:
+                msg = "Error in %s.%s: Missing vulnerability_type!"
                 raise TypeError(msg % (cls.__module__, cls.__name__))
-
-        # Validate all mergeable properties.
-        for name, prop in cls.__dict__.iteritems():
-            if merge.is_mergeable_property(prop):
-                prop.validate(cls)
+            cls.data_subtype = cls.vulnerability_type
 
 
 #------------------------------------------------------------------------------
@@ -951,14 +950,7 @@ class Data(object):
         data_type = other.data_type
         self.__linked[None][None].add(data_id)
         self.__linked[data_type][None].add(data_id)
-        if data_type == self.TYPE_INFORMATION:
-            self.__linked[data_type][other.information_type].add(data_id)
-        elif data_type == self.TYPE_RESOURCE:
-            self.__linked[data_type][other.resource_type].add(data_id)
-        elif data_type == self.TYPE_VULNERABILITY:
-            self.__linked[data_type][other.vulnerability_type].add(data_id)
-        else:
-            raise ValueError("Internal error! Unknown data_type: %r" % data_type)
+        self.__linked[data_type][other.data_subtype].add(data_id)
 
 
     #----------------------------------------------------------------------

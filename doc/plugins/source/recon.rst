@@ -23,6 +23,11 @@ Web Server fingerprinting plugin (*fingerprint_web*)
 
 Fingerprinter of web servers.
 
+Freegeoip.net connector (*geoip*)
+=================================
+
+Geolocates IP addresses using the Freegeoip.net service.
+
 Robots.txt Analyzer (*robots*)
 ==============================
 

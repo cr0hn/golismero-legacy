@@ -291,7 +291,8 @@ def export_methods_as_functions(singleton, module):
     :param singleton: Singleton instance to export.
     :type singleton: Singleton
 
-    :param module: Target module name. This would tipically be \_\_name\_\_.
+    :param module: Target module name.
+        This would tipically be \\_\\_name\\_\\_.
     :type module: str
 
     :raises KeyError: No module with that name is loaded.

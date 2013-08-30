@@ -70,7 +70,7 @@ def rpc_audit_get_config(orchestrator, audit_name):
     return orchestrator.config
 
 @implementor(MessageCode.MSG_RPC_AUDIT_TIMES)
-def rpc_audit_get_names(orchestrator, audit_name):
+def rpc_audit_get_times(orchestrator, audit_name):
     return orchestrator.auditManager.get_audit(audit_name).database.get_audit_times()
 
 

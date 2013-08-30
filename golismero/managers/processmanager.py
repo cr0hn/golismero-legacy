@@ -47,8 +47,7 @@ from ..messaging.message import Message
 
 from imp import load_source
 from multiprocessing import Manager
-from os import getpid, path
-from signal import signal, SIGINT
+from os import getpid
 from thread import get_ident
 from traceback import format_exc, print_exc, format_exception_only, format_list
 from warnings import catch_warnings, simplefilter
@@ -57,7 +56,7 @@ import sys
 
 # Make some runtime patches to the multiprocessing module.
 # Just importing this submodule does the magic!
-from ..patches import mp
+from ..patches import mp  # noqa
 
 # Imports needed to override the multiprocessing Process and Pool classes.
 from multiprocessing import Process as _Original_Process

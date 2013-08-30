@@ -982,23 +982,10 @@ class AuditMemoryDB (BaseAuditDB):
             return { identity
                      for identity, data in self.__results.iteritems()
                      if data.data_type == data_type }
-        if data_type == Data.TYPE_INFORMATION:
-            return { identity
-                     for identity, data in self.__results.iteritems()
-                     if data.data_type == data_type
-                     and data.information_type == data_subtype }
-        if data_type == Data.TYPE_RESOURCE:
-            return { identity
-                     for identity, data in self.__results.iteritems()
-                     if data.data_type == data_type
-                     and data.resource_type == data_subtype }
-        if data_type == Data.TYPE_VULNERABILITY:
-            return { identity
-                     for identity, data in self.__results.iteritems()
-                     if data.data_type == data_type
-                     and data.vulnerability_type == data_subtype }
-        raise NotImplementedError(
-            "Unknown data type: %r" % data_type)
+        return { identity
+                 for identity, data in self.__results.iteritems()
+                 if data.data_type == data_type
+                 and data.data_subtype == data_subtype }
 
 
     #--------------------------------------------------------------------------
@@ -1012,23 +999,12 @@ class AuditMemoryDB (BaseAuditDB):
 
     def __get_data_type(self, identity):
         data = self.__results.get(identity, None)
-        if data is None:
-            return None
-        data_type = data.data_type
-        if data_type == Data.TYPE_INFORMATION:
-            return data_type, data.information_type
-        if data_type == Data.TYPE_RESOURCE:
-            return data_type, data.resource_type
-        if data_type == Data.TYPE_VULNERABILITY:
-            return data_type, data.vulnerability_type
-        return None
+        if data is not None:
+            return data.data_type, data.data_subtype
 
 
     #--------------------------------------------------------------------------
     def get_data_count(self, data_type = None, data_subtype = None):
-
-        # Ugly but (hopefully) efficient code follows.
-
         if data_type is None:
             if data_subtype is not None:
                 raise NotImplementedError(
@@ -1038,23 +1014,10 @@ class AuditMemoryDB (BaseAuditDB):
             return len({ identity
                      for identity, data in self.__results.iteritems()
                      if data.data_type == data_type })
-        if data_type == Data.TYPE_INFORMATION:
-            return len({ identity
-                     for identity, data in self.__results.iteritems()
-                     if data.data_type == data_type
-                     and data.information_type == data_subtype })
-        if data_type == Data.TYPE_RESOURCE:
-            return len({ identity
-                     for identity, data in self.__results.iteritems()
-                     if data.data_type == data_type
-                     and data.resource_type == data_subtype })
-        if data_type == Data.TYPE_VULNERABILITY:
-            return len({ identity
-                     for identity, data in self.__results.iteritems()
-                     if data.data_type == data_type
-                     and data.vulnerability_type == data_subtype })
-        raise NotImplementedError(
-            "Unknown data type: %r" % data_type)
+        return len({ identity
+                 for identity, data in self.__results.iteritems()
+                 if data.data_type == data_type
+                 and data.data_subtype == data_subtype })
 
 
     #--------------------------------------------------------------------------

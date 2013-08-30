@@ -140,7 +140,7 @@ class Portscan(Information):
         :rtype: list(int)
         """
         ports = [
-            port for state, protocol, port in ports
+            port for state, protocol, port in self.ports
             if state == "OPEN" and protocol == "TCP"
         ]
         ports.sort()
@@ -155,7 +155,7 @@ class Portscan(Information):
         :rtype: list(int)
         """
         ports = [
-            port for state, protocol, port in ports
+            port for state, protocol, port in self.ports
             if state == "CLOSED" and protocol == "TCP"
         ]
         ports.sort()
@@ -170,7 +170,7 @@ class Portscan(Information):
         :rtype: list(int)
         """
         ports = [
-            port for state, protocol, port in ports
+            port for state, protocol, port in self.ports
             if state == "FILTERED" and protocol == "TCP"
         ]
         ports.sort()
@@ -185,7 +185,7 @@ class Portscan(Information):
         :rtype: list(int)
         """
         ports = [
-            port for state, protocol, port in ports
+            port for state, protocol, port in self.ports
             if state == "OPEN" and protocol == "UDP"
         ]
         ports.sort()
@@ -200,7 +200,7 @@ class Portscan(Information):
         :rtype: list(int)
         """
         ports = [
-            port for state, protocol, port in ports
+            port for state, protocol, port in self.ports
             if state == "CLOSED" and protocol == "UDP"
         ]
         ports.sort()
@@ -215,7 +215,7 @@ class Portscan(Information):
         :rtype: list(int)
         """
         ports = [
-            port for state, protocol, port in ports
+            port for state, protocol, port in self.ports
             if state == "FILTERED" and protocol == "UDP"
         ]
         ports.sort()
