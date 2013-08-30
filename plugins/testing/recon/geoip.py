@@ -84,32 +84,7 @@ class GeoIP(TestingPlugin):
 
         # Log the location.
         try:
-            coords = "(%f, %f)" % (geoip.latitude, geoip.longitude)
-            where = ""
-            if geoip.country_name:
-                where = geoip.country_name
-            elif geoip.country_code:
-                where = geoip.country_code
-            if geoip.region_name:
-                if where:
-                    where = "%s, %s" % (geoip.region_name, where)
-                else:
-                    where = geoip.region_name
-            elif geoip.region_code:
-                if where:
-                    where = "%s, %s" % (geoip.region_code, where)
-                else:
-                    where = geoip.region_code
-            if geoip.city:
-                if where:
-                    where = "%s, %s" % (geoip.city, where)
-                else:
-                    where = geoip.city
-            if where:
-                where = "%s %s" % (where, coords)
-            else:
-                where = coords
-            Logger.log_verbose("%s is in %s" % (target, where))
+            Logger.log_verbose("%s is in %s" % (target, geoip))
         except Exception, e:
             fmt = traceback.format_exc()
             Logger.log_error("Error: %s" % str(e))

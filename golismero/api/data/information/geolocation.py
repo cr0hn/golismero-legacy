@@ -126,6 +126,52 @@ class Geolocation(Information):
 
 
     #----------------------------------------------------------------------
+    def __str__(self):
+
+        # Simplified view of the geographic location.
+        coords = "(%f, %f)" % (self.latitude, self.longitude)
+        where = ""
+        if self.country_name:
+            where = self.country_name
+        elif self.country_code:
+            where = self.country_code
+        if self.region_name:
+            if where:
+                where = "%s, %s" % (self.region_name, where)
+            else:
+                where = self.region_name
+        elif self.region_code:
+            if where:
+                where = "%s, %s" % (self.region_code, where)
+            else:
+                where = self.region_code
+        if self.city:
+            if where:
+                where = "%s, %s" % (self.city, where)
+            else:
+                where = self.city
+        if where:
+            where = "%s %s" % (where, coords)
+        else:
+            where = coords
+        return where
+
+
+    #----------------------------------------------------------------------
+    def __repr__(self):
+
+        # Print out all the details.
+        return (
+            "<%s latitude=%f, longitude=%f, country_code=%s,"
+            " country_name=%s, region_code=%s, region_name=%s,"
+            " city=%s, zipcode=%s, metro_code=%s, areacode=%s>"
+            % (latitude, longitude, country_code,
+               country_name, region_code, region_name,
+               city, zipcode, metro_code, areacode)
+        )
+
+
+    #----------------------------------------------------------------------
     @identity
     def latitude(self):
         """
