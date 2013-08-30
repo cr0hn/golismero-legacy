@@ -85,17 +85,17 @@ class Message (object):
 
         # Validate the argument types.
         if type(message_type) != int:
-            raise TypeError("Expected int, got %s instead" % type(message_type))
+            raise TypeError("Expected int, got %r instead" % type(message_type))
         if type(message_code) != int:
-            raise TypeError("Expected int, got %s instead" % type(message_code))
+            raise TypeError("Expected int, got %r instead" % type(message_code))
         if audit_name is not None and type(audit_name) not in (str, unicode):
-            raise TypeError("Expected int, got %s instead" % type(audit_name))
+            raise TypeError("Expected int, got %r instead" % type(audit_name))
         if plugin_name is not None and type(plugin_name) not in (str, unicode):
-            raise TypeError("Expected int, got %s instead" % type(plugin_name))
+            raise TypeError("Expected int, got %r instead" % type(plugin_name))
         if ack_identity is not None and type(ack_identity) != str:
-            raise TypeError("Expected str, got %s instead" % type(ack_identity))
+            raise TypeError("Expected str, got %r instead" % type(ack_identity))
         if type(priority) != int:
-            raise TypeError("Expected int, got %s instead" % type(priority))
+            raise TypeError("Expected int, got %r instead" % type(priority))
 
         # Validate the codes.
         if message_type not in MSG_TYPES:

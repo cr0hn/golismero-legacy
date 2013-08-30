@@ -49,7 +49,7 @@ class TestUIPlugin(UIPlugin):
     #----------------------------------------------------------------------
     def recv_info(self, info):
         if not isinstance(info, Data):
-            raise TypeError("Expected Data, got %s instead" % type(info))
+            raise TypeError("Expected Data, got %r instead" % type(info))
         print "-" * 79
         print "ID:   %s" % info.identity
         print "Data: %r" % info
@@ -64,7 +64,7 @@ class TestUIPlugin(UIPlugin):
     #----------------------------------------------------------------------
     def recv_msg(self, message):
         if not isinstance(message, Message):
-            raise TypeError("Expected Message, got %s instead" % type(message))
+            raise TypeError("Expected Message, got %r instead" % type(message))
 
         print "-" * 79
         print "Message:"

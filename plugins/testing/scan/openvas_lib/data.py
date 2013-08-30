@@ -50,16 +50,16 @@ class OpenVASPort(object):
         :type proto: str
         """
         if not isinstance(port_name, basestring):
-            raise TypeError("Expected string, got %s instead" % type(port_name))
+            raise TypeError("Expected string, got %r instead" % type(port_name))
 
         if isinstance(number, int):
             if not (0 < number < 65535):
                 raise ValueError("port must be between ranges: [0-65535]")
         else:
-            raise TypeError("Expected int, got %s instead" % type(number))
+            raise TypeError("Expected int, got %r instead" % type(number))
 
         if not isinstance(proto, basestring):
-            raise TypeError("Expected string, got %s instead" % type(proto))
+            raise TypeError("Expected string, got %r instead" % type(proto))
 
         self.__port_name             = port_name
         self.__number                = number
@@ -142,48 +142,48 @@ class OpenVASNVT(object):
         """
 
         if not isinstance(oid, basestring):
-            raise TypeError("Expected string, got %s instead" % type(oid))
+            raise TypeError("Expected string, got %r instead" % type(oid))
         if not isinstance(name, basestring):
-            raise TypeError("Expected string, got %s instead" % type(name))
+            raise TypeError("Expected string, got %r instead" % type(name))
         if not isinstance(cvss_base, int):
-            raise TypeError("Expected int, got %s instead" % type(cvss_base))
+            raise TypeError("Expected int, got %r instead" % type(cvss_base))
         if not isinstance(risk_factor, int):
-            raise TypeError("Expected int, got %s instead" % type(risk_factor))
+            raise TypeError("Expected int, got %r instead" % type(risk_factor))
         if not isinstance(summary, basestring):
-            raise TypeError("Expected string, got %s instead" % type(summary))
+            raise TypeError("Expected string, got %r instead" % type(summary))
         if not isinstance(description, basestring):
-            raise TypeError("Expected string, got %s instead" % type(description))
+            raise TypeError("Expected string, got %r instead" % type(description))
 
         if family:
             if not isinstance(family, basestring):
-                raise TypeError("Expected string, got %s instead" % type(family))
+                raise TypeError("Expected string, got %r instead" % type(family))
         if category:
             if not isinstance(category, basestring):
-                raise TypeError("Expected string, got %s instead" % type(category))
+                raise TypeError("Expected string, got %r instead" % type(category))
 
         if cve:
             if not isinstance(cve, basestring):
-                raise TypeError("Expected string, got %s instead" % type(cve))
+                raise TypeError("Expected string, got %r instead" % type(cve))
 
         if bid:
             if not isinstance(bid, basestring):
-                raise TypeError("Expected string, got %s instead" % type(bid))
+                raise TypeError("Expected string, got %r instead" % type(bid))
 
         if bugtraq:
             if not isinstance(bugtraq, basestring):
-                raise TypeError("Expected string, got %s instead" % type(bugtraq))
+                raise TypeError("Expected string, got %r instead" % type(bugtraq))
 
         if xrefs:
             if not isinstance(xrefs, basestring):
-                raise TypeError("Expected string, got %s instead" % type(xrefs))
+                raise TypeError("Expected string, got %r instead" % type(xrefs))
 
         if fingerprints:
             if not isinstance(fingerprints, basestring):
-                raise TypeError("Expected string, got %s instead" % type(fingerprints))
+                raise TypeError("Expected string, got %r instead" % type(fingerprints))
 
         if tags:
             if not isinstance(tags, basestring):
-                raise TypeError("Expected string, got %s instead" % type(tags))
+                raise TypeError("Expected string, got %r instead" % type(tags))
 
         cls                   = OpenVASNVT()
         cls.__oid             = oid
@@ -232,7 +232,7 @@ class OpenVASNVT(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__oid = val
 
@@ -254,7 +254,7 @@ class OpenVASNVT(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__name = val
 
@@ -277,7 +277,7 @@ class OpenVASNVT(object):
         :type val: int
         """
         if not isinstance(val, int):
-            raise TypeError("Expected int, got %s instead" % type(val))
+            raise TypeError("Expected int, got %r instead" % type(val))
 
         self.__cvss_base = val
 
@@ -300,7 +300,7 @@ class OpenVASNVT(object):
         :type val: int
         """
         if not isinstance(val, int):
-            raise TypeError("Expected int, got %s instead" % type(val))
+            raise TypeError("Expected int, got %r instead" % type(val))
 
         self.__risk_factor = val
 
@@ -323,7 +323,7 @@ class OpenVASNVT(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__summary = val
 
@@ -346,7 +346,7 @@ class OpenVASNVT(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__description = val
 
@@ -369,7 +369,7 @@ class OpenVASNVT(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__family = val
 
@@ -392,7 +392,7 @@ class OpenVASNVT(object):
         :type val: basestring
         """
         if not isinstance(val,  basestring):
-            raise TypeError("Expected  basestring, got %s instead" % type(val))
+            raise TypeError("Expected  basestring, got %r instead" % type(val))
 
         self.__category = val
 
@@ -415,7 +415,7 @@ class OpenVASNVT(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__cve = val
 
@@ -438,7 +438,7 @@ class OpenVASNVT(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__bid = val
 
@@ -461,7 +461,7 @@ class OpenVASNVT(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__bugtraq = val
 
@@ -484,7 +484,7 @@ class OpenVASNVT(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__xrefs = val
 
@@ -507,7 +507,7 @@ class OpenVASNVT(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__fingerprints = val
 
@@ -530,7 +530,7 @@ class OpenVASNVT(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__tags = val
 
@@ -547,19 +547,19 @@ class OpenVASOverride(object):
     def make_object(cls, oid, name, text, text_is_excerpt, threat, new_threat, orphan):
 
         if not isinstance(oid, basestring):
-            raise TypeError("Expected string, got %s instead" % type(oid))
+            raise TypeError("Expected string, got %r instead" % type(oid))
         if not isinstance(name, basestring):
-            raise TypeError("Expected string, got %s instead" % type(name))
+            raise TypeError("Expected string, got %r instead" % type(name))
         if not isinstance(text, basestring):
-            raise TypeError("Expected string, got %s instead" % type(text))
+            raise TypeError("Expected string, got %r instead" % type(text))
         if not isinstance(text_is_excerpt, bool):
-            raise TypeError("Expected bool, got %s instead" % type(text_is_excerpt))
+            raise TypeError("Expected bool, got %r instead" % type(text_is_excerpt))
         if not isinstance(threat, basestring):
-            raise TypeError("Expected string, got %s instead" % type(threat))
+            raise TypeError("Expected string, got %r instead" % type(threat))
         if not isinstance(new_threat, basestring):
-            raise TypeError("Expected string, got %s instead" % type(new_threat))
+            raise TypeError("Expected string, got %r instead" % type(new_threat))
         if not isinstance(orphan, bool):
-            raise TypeError("Expected bool, got %s instead" % type(orphan))
+            raise TypeError("Expected bool, got %r instead" % type(orphan))
 
         cls                   = OpenVASOverride()
         cls.__nvt_oid         = oid
@@ -606,7 +606,7 @@ class OpenVASOverride(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__nvt_oid = val
 
@@ -628,7 +628,7 @@ class OpenVASOverride(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__name = val
 
@@ -650,7 +650,7 @@ class OpenVASOverride(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__text = val
 
@@ -672,7 +672,7 @@ class OpenVASOverride(object):
         :type val: bool
         """
         if not isinstance(val,  bool):
-            raise TypeError("Expected  bool, got %s instead" % type(val))
+            raise TypeError("Expected  bool, got %r instead" % type(val))
 
         self.__text_is_excerpt = val
 
@@ -694,7 +694,7 @@ class OpenVASOverride(object):
         :type val: str - (High|Medium|Low|Log|Debug)
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected  str - (), got %s instead" % type(val))
+            raise TypeError("Expected  str - (), got %r instead" % type(val))
 
         self.__threat = val
 
@@ -716,7 +716,7 @@ class OpenVASOverride(object):
         :type val: str - (High|Medium|Low|Log|Debug)
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected  str - (), got %s instead" % type(val))
+            raise TypeError("Expected  str - (), got %r instead" % type(val))
 
         self.__new_threat = val
 
@@ -738,7 +738,7 @@ class OpenVASOverride(object):
         :type val: bool
         """
         if not isinstance(val, bool):
-            raise TypeError("Expected bool, got %s instead" % type(val))
+            raise TypeError("Expected bool, got %r instead" % type(val))
 
         self.__orphan = val
 
@@ -754,15 +754,15 @@ class OpenVASNotes(object):
     def __init__(self, oid, name, text, text_is_excerpt, orphan):
 
         if not isinstance(oid, basestring):
-            raise TypeError("Expected string, got %s instead" % type(oid))
+            raise TypeError("Expected string, got %r instead" % type(oid))
         if not isinstance(name, basestring):
-            raise TypeError("Expected string, got %s instead" % type(name))
+            raise TypeError("Expected string, got %r instead" % type(name))
         if not isinstance(text, basestring):
-            raise TypeError("Expected string, got %s instead" % type(text))
+            raise TypeError("Expected string, got %r instead" % type(text))
         if not isinstance(text_is_excerpt, bool):
-            raise TypeError("Expected bool, got %s instead" % type(text_is_excerpt))
+            raise TypeError("Expected bool, got %r instead" % type(text_is_excerpt))
         if not isinstance(orphan, bool):
-            raise TypeError("Expected bool, got %s instead" % type(orphan))
+            raise TypeError("Expected bool, got %r instead" % type(orphan))
 
         self.__nvt_oid             = oid
         self.__nvt_name            = name
@@ -833,25 +833,25 @@ class OpenVASResult(object):
     def make_object(cls, id, subnet, host, port, nvt, threat, description=None, notes=None, overrides=None):
 
         if not isinstance(subnet, basestring):
-            raise TypeError("Expected string, got %s instead" % type(subnet))
+            raise TypeError("Expected string, got %r instead" % type(subnet))
         if not isinstance(host, basestring):
-            raise TypeError("Expected string, got %s instead" % type(host))
+            raise TypeError("Expected string, got %r instead" % type(host))
         if not isinstance(port, basestring):
-            raise TypeError("Expected string, got %s instead" % type(port))
+            raise TypeError("Expected string, got %r instead" % type(port))
         if not isinstance(nvt, OpenVASNVT):
-            raise TypeError("Expected OpenVASNVT, got %s instead" % type(nvt))
+            raise TypeError("Expected OpenVASNVT, got %r instead" % type(nvt))
         if isinstance(threat, basestring):
             if threat not in ("High", "Medium", "Low", "Log", "Debug"):
                 raise ValueError("Value incorrect. Allowed values are: High|Medium|Low|Log|Debug")
         else:
-            raise TypeError("Expected OpenVASThreat, got %s instead" % type(threat))
+            raise TypeError("Expected OpenVASThreat, got %r instead" % type(threat))
 
         if not isinstance(description, basestring):
-            raise TypeError("Expected string, got %s instead" % type(description))
+            raise TypeError("Expected string, got %r instead" % type(description))
         if not isinstance(notes, OpenVASNotes):
-            raise TypeError("Expected OpenVASNotes, got %s instead" % type(notes))
+            raise TypeError("Expected OpenVASNotes, got %r instead" % type(notes))
         if not isinstance(overrides, OpenVASOverride):
-            raise TypeError("Expected OpenVASOverride, got %s instead" % type(overrides))
+            raise TypeError("Expected OpenVASOverride, got %r instead" % type(overrides))
 
 
         cls                  = OpenVASResult()
@@ -906,7 +906,7 @@ class OpenVASResult(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__id = val
 
@@ -928,7 +928,7 @@ class OpenVASResult(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__host = val
 
@@ -949,7 +949,7 @@ class OpenVASResult(object):
         :type val: OpenVASPort
         """
         if not isinstance(val, OpenVASPort):
-            raise TypeError("Expected int, got %s instead" % type(val))
+            raise TypeError("Expected int, got %r instead" % type(val))
 
         self.__port = val
 
@@ -971,7 +971,7 @@ class OpenVASResult(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__subnet = val
 
@@ -993,7 +993,7 @@ class OpenVASResult(object):
         :type val: OpenVASNVT
         """
         if not isinstance(val, OpenVASNVT):
-            raise TypeError("Expected OpenVASNVT, got %s instead" % type(val))
+            raise TypeError("Expected OpenVASNVT, got %r instead" % type(val))
 
         self.__nvt = val
 
@@ -1019,7 +1019,7 @@ class OpenVASResult(object):
             if val not in ("High", "Medium", "Low", "Log", "Debug"):
                 raise ValueError("Value incorrect. Allowed values are: High|Medium|Low|Log|Debug")
         else:
-            raise TypeError("Expected string , got %s instead" % type(val))
+            raise TypeError("Expected string , got %r instead" % type(val))
 
         self.__threat = val
 
@@ -1040,7 +1040,7 @@ class OpenVASResult(object):
         :type val: basestring
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected string, got %s instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__description = val
 
@@ -1063,7 +1063,7 @@ class OpenVASResult(object):
         val = list(val)
         for v in val:
             if not isinstance(v, OpenVASNotes):
-                raise TypeError("Expected OpenVASNotes, got %s instead" % type(v))
+                raise TypeError("Expected OpenVASNotes, got %r instead" % type(v))
 
         self.__notes = val
 
@@ -1085,6 +1085,6 @@ class OpenVASResult(object):
         :type val: OpenVASOverride
         """
         if not isinstance(val, OpenVASOverride):
-            raise TypeError("Expected OpenVASOverride, got %s instead" % type(val))
+            raise TypeError("Expected OpenVASOverride, got %r instead" % type(val))
 
         self.__overrides = val

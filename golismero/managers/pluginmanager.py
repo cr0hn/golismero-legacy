@@ -471,7 +471,7 @@ class PluginInfo (object):
 
         # Check the argument type.
         if not isinstance(audit_config, AuditConfig):
-            raise TypeError("Expected AuditConfig, got %s instead" % type(audit_config))
+            raise TypeError("Expected AuditConfig, got %r instead" % type(audit_config))
 
         # Make a customized copy and return it.
         new_instance = self.__deepcopy__()
@@ -644,7 +644,7 @@ class PluginManager (object):
 
         # Check the argument type.
         if not isinstance(orchestrator_config, OrchestratorConfig):
-            raise TypeError("Expected OrchestratorConfig, got %s instead" % type(orchestrator_config))
+            raise TypeError("Expected OrchestratorConfig, got %r instead" % type(orchestrator_config))
 
         # Get the plugins folder.
         plugins_folder = orchestrator_config.plugins_folder
@@ -1204,7 +1204,7 @@ class AuditPluginManager (PluginManager):
 
         # Check the argument type.
         if not isinstance(auditConfig, AuditConfig):
-            raise TypeError("Expected AuditConfig, got %s instead" % type(auditConfig))
+            raise TypeError("Expected AuditConfig, got %r instead" % type(auditConfig))
 
         # Get the black and white lists and the plugin load overrides.
         enable_plugins        = auditConfig.enable_plugins

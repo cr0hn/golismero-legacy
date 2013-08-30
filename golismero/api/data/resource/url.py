@@ -60,7 +60,7 @@ class _AbstractUrl(Resource):
         """
 
         if not isinstance(url, basestring):
-            raise TypeError("Expected string, got %s instead" % type(url))
+            raise TypeError("Expected string, got %r instead" % type(url))
         url = str(url)
 
         # Parse, verify and canonicalize the URL.
@@ -195,15 +195,15 @@ class Url(_AbstractUrl):
 
         # Validate the argument types.
         if not isinstance(method, str):
-            raise TypeError("Expected string, got %s instead" % type(method))
+            raise TypeError("Expected string, got %r instead" % type(method))
         if post_params is not None and not isinstance(post_params, dict):
-            raise TypeError("Expected dict, got %s instead" % type(post_params))
+            raise TypeError("Expected dict, got %r instead" % type(post_params))
         if not depth:
             depth = 0
         elif not isinstance(depth, int):
-            raise TypeError("Expected int, got %s instead" % type(depth))
+            raise TypeError("Expected int, got %r instead" % type(depth))
         if referer is not None and not isinstance(referer, str):
-            raise TypeError("Expected string, got %s instead" % type(referer))
+            raise TypeError("Expected string, got %r instead" % type(referer))
 
         # Save the properties.
         self.__method = method.strip().upper() if method else "GET"
@@ -336,7 +336,7 @@ class BaseUrl(_AbstractUrl):
 
         # Validate the argument types.
         if not isinstance(url, basestring):
-            raise TypeError("Expected string, got %s instead" % type(url))
+            raise TypeError("Expected string, got %r instead" % type(url))
         url = str(url)
 
         # Parse, verify and canonicalize the URL.
@@ -413,7 +413,7 @@ class FolderUrl(_AbstractUrl):
         """
 
         if not isinstance(url, basestring):
-            raise TypeError("Expected string, got %s instead" % type(url))
+            raise TypeError("Expected string, got %r instead" % type(url))
         url = str(url)
 
         # Parse, verify and canonicalize the URL.

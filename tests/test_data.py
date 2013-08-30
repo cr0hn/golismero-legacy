@@ -244,24 +244,24 @@ def helper_data_links():
     # Test the get_linked_data() method.
     # There should be no accesses to the database since all data is local.
     print "Testing Data.get_linked_data()..."
-    assert {x.identity for x in d1.get_linked_data(d1.data_type)} == set()
-    assert {x.identity for x in d1.get_linked_data(d1.data_type, d1.resource_type)} == set()
-    assert {x.identity for x in d1.get_linked_data(d2.data_type)} == {d2.identity}
-    assert {x.identity for x in d1.get_linked_data(d2.data_type, d2.information_type)} == {d2.identity}
-    assert {x.identity for x in d1.get_linked_data(d3.data_type)} == {d3.identity}
-    assert {x.identity for x in d1.get_linked_data(d3.data_type, d3.vulnerability_type)} == {d3.identity}
-    assert {x.identity for x in d2.get_linked_data(d2.data_type)} == set()
-    assert {x.identity for x in d2.get_linked_data(d2.data_type, d2.information_type)} == set()
-    assert {x.identity for x in d2.get_linked_data(d1.data_type)} == {d1.identity}
-    assert {x.identity for x in d2.get_linked_data(d1.data_type, d1.resource_type)} == {d1.identity}
-    assert {x.identity for x in d2.get_linked_data(d3.data_type)} == set()
-    assert {x.identity for x in d2.get_linked_data(d3.data_type, d3.vulnerability_type)} == set()
-    assert {x.identity for x in d3.get_linked_data(d3.data_type)} == set()
-    assert {x.identity for x in d3.get_linked_data(d3.data_type, d3.vulnerability_type)} == set()
-    assert {x.identity for x in d3.get_linked_data(d1.data_type)} == {d1.identity}
-    assert {x.identity for x in d3.get_linked_data(d1.data_type, d1.resource_type)} == {d1.identity}
-    assert {x.identity for x in d3.get_linked_data(d2.data_type)} == set()
-    assert {x.identity for x in d3.get_linked_data(d2.data_type, d2.information_type)} == set()
+    assert {x.identity for x in d1.find_linked_data(d1.data_type)} == set()
+    assert {x.identity for x in d1.find_linked_data(d1.data_type, d1.resource_type)} == set()
+    assert {x.identity for x in d1.find_linked_data(d2.data_type)} == {d2.identity}
+    assert {x.identity for x in d1.find_linked_data(d2.data_type, d2.information_type)} == {d2.identity}
+    assert {x.identity for x in d1.find_linked_data(d3.data_type)} == {d3.identity}
+    assert {x.identity for x in d1.find_linked_data(d3.data_type, d3.vulnerability_type)} == {d3.identity}
+    assert {x.identity for x in d2.find_linked_data(d2.data_type)} == set()
+    assert {x.identity for x in d2.find_linked_data(d2.data_type, d2.information_type)} == set()
+    assert {x.identity for x in d2.find_linked_data(d1.data_type)} == {d1.identity}
+    assert {x.identity for x in d2.find_linked_data(d1.data_type, d1.resource_type)} == {d1.identity}
+    assert {x.identity for x in d2.find_linked_data(d3.data_type)} == set()
+    assert {x.identity for x in d2.find_linked_data(d3.data_type, d3.vulnerability_type)} == set()
+    assert {x.identity for x in d3.find_linked_data(d3.data_type)} == set()
+    assert {x.identity for x in d3.find_linked_data(d3.data_type, d3.vulnerability_type)} == set()
+    assert {x.identity for x in d3.find_linked_data(d1.data_type)} == {d1.identity}
+    assert {x.identity for x in d3.find_linked_data(d1.data_type, d1.resource_type)} == {d1.identity}
+    assert {x.identity for x in d3.find_linked_data(d2.data_type)} == set()
+    assert {x.identity for x in d3.find_linked_data(d2.data_type, d2.information_type)} == set()
 
     # Test the associated_* properties.
     # There should be no accesses to the database since all data is local.

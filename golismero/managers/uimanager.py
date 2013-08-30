@@ -148,7 +148,7 @@ class UIManager (object):
         :type message: Message
         """
         if not isinstance(message, Message):
-            raise TypeError("Expected Message, got %s instead" % type(message))
+            raise TypeError("Expected Message, got %r instead" % type(message))
 
         # Filter out ACKs but send all other messages.
         if not message.is_ack:

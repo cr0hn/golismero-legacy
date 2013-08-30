@@ -67,11 +67,11 @@ class OSFingerprint(Information):
 
         # Check the data types.
         if not isinstance(family, str):
-            raise TypeError("Expected str, got %s instead" % type(family))
+            raise TypeError("Expected str, got %r instead" % type(family))
 
         if version:
             if not isinstance(version, str):
-                raise TypeError("Expected str, got %s instead" % type(version))
+                raise TypeError("Expected str, got %r instead" % type(version))
 
         if cpe is not None:
             if not isinstance(cpe, basestring):
@@ -79,12 +79,12 @@ class OSFingerprint(Information):
 
         if others is not None:
             if not isinstance(others, dict):
-                raise TypeError("Expected dict, got %s instead" % type(others))
+                raise TypeError("Expected dict, got %r instead" % type(others))
             for k, v in others.iteritems():
                 if not isinstance(k, str):
-                    raise TypeError("Expected str, got %s instead" % type(k))
+                    raise TypeError("Expected str, got %r instead" % type(k))
                 if not isinstance(v, float):
-                    raise TypeError("Expected float, got %s instead" % type(v))
+                    raise TypeError("Expected float, got %r instead" % type(v))
 
         # OS name.
         self.__family         = family

@@ -29,6 +29,11 @@ api Package
     :show-inheritance:
 
 .. autoclass:: golismero.api.config._Config
+
+:mod:`crypto` Module
+--------------------
+
+.. automodule:: golismero.api.crypto
     :members:
     :undoc-members:
     :special-members:
@@ -43,8 +48,8 @@ api Package
     :special-members:
     :show-inheritance:
 
-:mod:`file` Module
-------------------
+:mod:`localfile` Module
+-----------------------
 
 .. automodule:: golismero.api.localfile
     :members:
@@ -74,6 +79,15 @@ api Package
 --------------------
 
 .. automodule:: golismero.api.plugin
+    :members:
+    :undoc-members:
+    :special-members:
+    :show-inheritance:
+
+:mod:`progress` Module
+----------------------
+
+.. automodule:: golismero.api.progress
     :members:
     :undoc-members:
     :special-members:

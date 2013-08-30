@@ -107,7 +107,7 @@ def start_audit(audit_config):
     """
     if not isinstance(audit_config, AuditConfig):
         raise TypeError(
-            "Expected AuditConfig, got %s instead" % type(audit_config))
+            "Expected AuditConfig, got %r instead" % type(audit_config))
     audit_config.check_params()
     Config._context.send_msg(
         message_type = MessageType.MSG_TYPE_CONTROL,

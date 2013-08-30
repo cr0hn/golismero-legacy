@@ -315,7 +315,7 @@ class TaskProgress (Progress):
         if task_percent and (task_percent < 0.0 or task_percent > 100.0):
             raise ValueError("Invalid percent value: %r" % task_percent)
         if not isinstance(parent, Progress):
-            raise TypeError("Expected Progress, got %s instead" % type(parent))
+            raise TypeError("Expected Progress, got %r instead" % type(parent))
 
         # Save the values.
         self.__parent       = parent

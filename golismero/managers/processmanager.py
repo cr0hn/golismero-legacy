@@ -108,12 +108,12 @@ def do_nothing(*args, **kwargs):
 # Serializable function to run plugins in subprocesses.
 # This is required for Windows support, since we don't have os.fork() there.
 # See: http://docs.python.org/2/library/multiprocessing.html#windows
-def launcher(queue, max_process, refresh_after_tasks):
-    return _launcher(queue, max_process, refresh_after_tasks)
-def _launcher(queue, max_process, refresh_after_tasks):
+def launcher(queue, max_concurrent, refresh_after_tasks):
+    return _launcher(queue, max_concurrent, refresh_after_tasks)
+def _launcher(queue, max_concurrent, refresh_after_tasks):
 
     # Instance the pool manager.
-    pool = PluginPoolManager(max_process, refresh_after_tasks)
+    pool = PluginPoolManager(max_concurrent, refresh_after_tasks)
 
     # Start the pool manager.
     wait = True
@@ -499,7 +499,7 @@ class PluginContext (object):
             if type(progress) in (int, long):
                 progress = float(progress)
             elif type(progress) is not float:
-                raise TypeError("Expected float, got %s instead", type(progress))
+                raise TypeError("Expected float, got %r instead", type(progress))
             if progress < 0.0:
                 progress = 0.0
             elif progress > 100.0:
@@ -934,7 +934,7 @@ class ProcessManager (object):
         config = orchestrator.config
 
         # Maximum number of processes to create
-        self.__max_processes       = getattr(config, "max_process",         None)
+        self.__max_processes       = getattr(config, "max_concurrent",      None)
 
         # Maximum number of function calls to make before refreshing a subprocess
         self.__refresh_after_tasks = getattr(config, "refresh_after_tasks", None)

@@ -71,7 +71,7 @@ if __name__ == '__main__':
     with PluginTester(autoinit = False) as t:
         t.orchestrator_config.use_colors = False
         t.orchestrator_config.verbose = 0
-        t.orchestrator_config.max_process = 0
+        t.orchestrator_config.max_concurrent = 0
         t.init_environment()
         for stage in ("import", "recon", "scan", "attack", "intrude", "cleanup", "report", "ui"):
             with open(path.join(here, "source", stage + ".rst"), "w") as f:
