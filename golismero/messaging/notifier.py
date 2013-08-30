@@ -33,7 +33,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["AuditNotifier", "OrchestratorNotifier"]
 
 from ..api.config import Config
-from ..api.data import Data
 ##from ..api.logger import Logger
 from ..api.plugin import Plugin
 from .message import Message

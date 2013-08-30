@@ -70,6 +70,10 @@ def test_pylint():
                     line = line.strip()
                     if not line:
                         continue
+                    if ": Warning (W): FIXME" in line or \
+                       ": Warning (W): TODO" in line or \
+                       ": Warning (W): XXX" in line:
+                        continue
                     if line.startswith(golismero):
                         line = line[ len(golismero) : ]
                     try:

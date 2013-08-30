@@ -146,15 +146,14 @@ class merge(property):
 
 
     #--------------------------------------------------------------------------
-    @classmethod
-    def validate(prop, cls):
+    def validate(self, cls, name):
 
         # Check all mergeable properties have setters.
-        if prop.fset is None:
+        if self.fset is None:
             msg = (
                 "Error in %s.%s.%s:"
                 " Properties tagged with @%s MUST have a setter!"
-                % (cls.__module__, cls.__name__, name, prop.__class__.__name__)
+                % (cls.__module__, cls.__name__, name, self.__class__.__name__)
             )
             raise TypeError(msg)
 
@@ -192,14 +191,10 @@ class merge(property):
 
             # Combine sets, dictionaries, lists and tuples.
             elif isinstance(their_value, (set, dict)):
-                if reverse:
-                    my_value = my_value.copy()
+                my_value = my_value.copy()
                 my_value.update(their_value)
             elif isinstance(their_value, list):
-                if reverse:
-                    my_value = my_value + their_value
-                else:
-                    my_value.extend(their_value)
+                my_value = my_value + their_value
             elif isinstance(their_value, tuple):
                 my_value = my_value + their_value
 
@@ -264,7 +259,7 @@ class keep_greater(merge):
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def do_merge(old_data, new_data, key, reverse = False):
+    def do_merge(old_data, new_data, key):
 
         # Get the values.
         old_value = getattr(old_data, key, None)
@@ -320,10 +315,10 @@ class keep_true(merge):
         try:
             old_bool = bool(old_value)
             new_bool = bool(new_value)
-        except Exception, e:
+        except Exception:
             old_bool = new_bool = True
             msg = "Failed to evaluate property %s.%s as boolean!"
-            msg %= (cls.__name__, key)
+            msg %= (old_data.__class__.__name__, key)
             warn(msg, stacklevel=5)
 
         # If they are equal, choose the new value.
@@ -354,10 +349,10 @@ class keep_false(merge):
         try:
             old_bool = bool(old_value)
             new_bool = bool(new_value)
-        except Exception, e:
+        except Exception:
             old_bool = new_bool = False
             msg = "Failed to evaluate property %s.%s as boolean!"
-            msg %= (cls.__name__, key)
+            msg %= (old_data.__class__.__name__, key)
             warn(msg, stacklevel=5)
 
         # If they are equal, choose the new value.
@@ -381,38 +376,36 @@ class custom(merge):
     def __init__(self,
                  fget=None, fset=None, fdel=None, doc=None,
                  callback=None):
-        super(keep_custom, self).__init__(
+        super(custom, self).__init__(
             fget=fget, fset=fset, fdel=fdel, doc=doc)
         self.callback = callback
 
 
     #--------------------------------------------------------------------------
-    @classmethod
-    def validate(prop, cls):
-        if prop.callback is None:
+    def validate(self, cls, name):
+        if self.callback is None:
             msg = (
                 "Error in %s.%s.%s:"
                 " Properties tagged with @%s MUST have a callback!"
-                % (cls.__module__, cls.__name__, name, prop.__class__.__name__)
+                % (cls.__module__, cls.__name__, name, self.__class__.__name__)
             )
             raise TypeError(msg)
-        if not callable(prop.callback):
+        if not callable(self.callback):
             msg = (
                 "Error in %s.%s.%s:"
                 " Properties tagged with @%s need a callback function,"
                 " got %r instead!"
                 % (cls.__module__, cls.__name__, name,
-                   prop.__class__.__name__, type(prop.callback))
+                   self.__class__.__name__, type(self.callback))
             )
             raise TypeError(msg)
 
         # Do the rest of the checks.
-        super(keep_custom, prop).validate(cls)
+        super(custom, self).validate(cls, name)
 
 
     #--------------------------------------------------------------------------
-    @staticmethod
-    def do_merge(old_data, new_data, key):
+    def do_merge(self, old_data, new_data, key):
 
         # Return whatever the callback function returns.
         return self.callback(old_data, new_data, key)
@@ -456,9 +449,9 @@ class _data_metaclass(type):
         super(_data_metaclass, cls).__init__(name, bases, namespace)
 
         # Validate all mergeable properties.
-        for _, prop in cls.__dict__.iteritems():
+        for propname, prop in cls.__dict__.iteritems():
             if merge.is_mergeable_property(prop):
-                prop.validate(cls)
+                prop.validate(cls, propname)
 
         # The Data class itself has to be processed differently.
         if cls.__module__ == "golismero.api.data" and name == "Data":

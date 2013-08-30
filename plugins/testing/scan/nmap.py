@@ -278,7 +278,7 @@ class NmapPlugin(TestingPlugin):
                 try:
                     port = int(portid)
                 except Exception:
-                    port = getservicebyname(portid)
+                    port = getservbyname(portid)
                 state = node.find("state").get("state")
                 if state not in ("open", "closed", "filtered"):
                     continue

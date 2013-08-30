@@ -114,21 +114,21 @@ def validate_hash(hash_name, hash_value):
     for algo, signature in HASH_SIGNATURES.iteritems():
         if hash_name == algo.lower():
             (length, alnum, alpha, digit, lower, upper, match) = signature
-            if not len(hash_to_guess) == length:
+            if not len(hash_value) == length:
                 return False
-            if alnum is not None and hash_to_guess.isalnum() != alnum:
+            if alnum is not None and hash_value.isalnum() != alnum:
                 return False
-            if alpha is not None and hash_to_guess.isalpha() != alpha:
+            if alpha is not None and hash_value.isalpha() != alpha:
                 return False
-            if digit is not None and hash_to_guess.isdigit() != digit:
+            if digit is not None and hash_value.isdigit() != digit:
                 return False
-            if lower is not None and hash_to_guess.islower() != lower:
+            if lower is not None and hash_value.islower() != lower:
                 return False
-            if upper is not None and hash_to_guess.isupper() != upper:
+            if upper is not None and hash_value.isupper() != upper:
                 return False
             if match is not None:
                 (begin, end, string) = match
-                if hash_to_guess[begin:end] != string:
+                if hash_value[begin:end] != string:
                     return False
             return True
 

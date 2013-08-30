@@ -121,6 +121,7 @@ class PluginState (SharedMap):
         if not plugin_name:
             plugin_name = Config.plugin_name
         self._shared_id = Config.plugin_name
+        # We intentionally don't call the superclass constructor here.
 
 
     #--------------------------------------------------------------------------

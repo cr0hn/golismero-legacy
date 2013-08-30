@@ -66,7 +66,7 @@ class GeoIP(TestingPlugin):
         elif info.data_subtype == Domain.data_subtype:
             target = info.hostname
         else:
-            assert False, type(target)
+            assert False, type(info)
 
         # Query the freegeoip.net service.
         # FIXME: the service supports SSL, but we need up to date certificates.

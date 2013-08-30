@@ -165,9 +165,10 @@ class Geolocation(Information):
             "<%s latitude=%f, longitude=%f, country_code=%s,"
             " country_name=%s, region_code=%s, region_name=%s,"
             " city=%s, zipcode=%s, metro_code=%s, areacode=%s>"
-            % (latitude, longitude, country_code,
-               country_name, region_code, region_name,
-               city, zipcode, metro_code, areacode)
+            % (self.__class__.__name__,
+            self.latitude, self.longitude, self.country_code,
+            self.country_name, self.region_code, self.region_name,
+            self.city, self.zipcode, self.metro_code, self.areacode)
         )
 
 
