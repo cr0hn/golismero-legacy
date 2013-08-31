@@ -37,6 +37,7 @@ from golismero.api.logger import Logger
 from golismero.api.plugin import TestingPlugin
 from golismero.api.net.web_utils import json_decode
 
+import netaddr
 import requests
 import traceback
 
@@ -60,10 +61,20 @@ class GeoIP(TestingPlugin):
         results = []
 
         # Get the IP address or domain name.
+        # Skip unsupported targets.
         if info.data_subtype == IP.data_subtype:
+            if info.version != 4:
+                return
             target = info.address
+            parsed = netaddr.IPAddress(target)
+            if parsed.is_loopback() or \
+               parsed.is_private()  or \
+               parsed.is_link_local():
+                return
         elif info.data_subtype == Domain.data_subtype:
             target = info.hostname
+            if "." not in target:
+                return
         else:
             assert False, type(info)
 
