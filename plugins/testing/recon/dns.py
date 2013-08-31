@@ -27,13 +27,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from golismero.api.config import Config
 from golismero.api.data.information.dns import DnsRegister
 from golismero.api.data.resource.domain import Domain
-from golismero.api.data.resource.ip import IP
 from golismero.api.logger import Logger
 from golismero.api.net.dns import DNS
-from golismero.api.parallel import pmap
 from golismero.api.plugin import TestingPlugin
 
 
