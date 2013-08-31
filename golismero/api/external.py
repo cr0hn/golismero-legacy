@@ -126,7 +126,7 @@ def run_external_tool(command, args = None, env = None, curdir = None):
 
         # Check if the command is a script.
         try:
-            interpreter = get_interpreter(command, force = False)
+            interpreter = get_interpreter(command)
         except IOError:
             interpreter = None
         if interpreter:
@@ -248,23 +248,19 @@ DEFAULT_INTERPRETER = {
 
 
 #------------------------------------------------------------------------------
-def get_interpreter(script, force = False):
+def get_interpreter(script):
     """
     Get the correct interpreter for the given script.
 
     :param script: Path to the script file.
     :type script: str
 
-    :param force: True to force a result always (defaults to the shell),
-        False to only return a result if a valid interpreter was found.
-    :type force: bool
-
     :returns: Command line arguments to replace the script with.
         Normally this will be the path to the interpreter followed
         by the path to the script, but not always.
     :rtype: list(str)
     :raises IOError: An error occurred, the file was not a script, or the
-        interpreter was not found and the 'force' argument was set to False.
+        interpreter was not found.
     """
 
     # Get the file extension.
@@ -324,25 +320,30 @@ def get_interpreter(script, force = False):
         signature = signature.strip()
         args = shlex.split(signature)
         if args:
+
+            # If it exists and is executable, use it.
             if is_executable(args[0]):
                 args.append(script)
                 return args
+
+            # Try to guess which interpreter it is.
             for ext, interpreter in DEFAULT_INTERPRETER.iteritems():
-                if re.search("\\b%s\\b" % interpreter[0], args[0]):
+                regex = interpreter[0]
+                regex = "".join((c if c.isalnum() else "\\"+c) for c in regex)
+                regex = "\\b%s\\b" % regex
+                if re.search(regex, args[0]):
                     return interpreter + [script] # must be a copy!
 
-    # If all fails use the shell, but only if 'force' is set to True.
-    if not force:
-        raise IOError("Interpreter not found for script: %s" % script)
-    if os.path.sep == "\\":
-        binary_list = find_binary_in_path("bash.exe")
-        if binary_list:
-            bash = get_cygwin_binary(binary_list)
-            if bash:
-                return [ bash, "-c", script ]
-            return [ binary_list[0], "-c", script ]
-        return [ os.environ["COMSPEC"], "/C", script ]
-    return [ "/bin/sh", "-c", script ]
+            # Broader search, matches stuff like python2, ruby1.9, etc.
+            for ext, interpreter in DEFAULT_INTERPRETER.iteritems():
+                regex = interpreter[0]
+                if regex.isalpha():
+                    regex = "\\b%s[0-9\\.]*\\b" % regex
+                    if re.search(regex, args[0]):
+                        return interpreter + [script] # must be a copy!
+
+    # No valid interpreter was found.
+    raise IOError("Interpreter not found for script: %s" % script)
 
 
 #------------------------------------------------------------------------------
