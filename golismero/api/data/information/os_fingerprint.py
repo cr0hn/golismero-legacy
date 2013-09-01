@@ -54,7 +54,7 @@ class OSFingerprint(Information):
         :param version: OS version. Example: "XP"
         :type version: str
 
-        :param cpe: CPE (Common Platform Enumeration) of the OS, in URI binding format. Example: "/o:microsoft:windows_xp"
+        :param cpe: CPE (Common Platform Enumeration) of the OS. Example: "/o:microsoft:windows_xp"
         :type cpe: str
 
         :param others: Map of other possible OS by name and their probabilities of being correct [0.0 ~ 1.0].
@@ -82,12 +82,15 @@ class OSFingerprint(Information):
                 if not isinstance(v, float):
                     raise TypeError("Expected float, got %r instead" % type(v))
 
-        # Convert CPE 2.3 (string binding) to CPE 2.2 (URI binding).
+        # Convert CPE <2.3 (URI binding) to CPE 2.3 (formatted string binding).
         if cpe is not None:
             if not cpe.startswith("cpe:"):
                 raise ValueError("Not a CPE name: %r" % cpe)
-            if cpe.startswith("cpe:2.3:"):
-                cpe = "cpe:/" + ":".join(x for x in cpe.split(":") if x != "*")
+            if cpe.startswith("cpe:/"):
+                cpe_parts = cpe[5:].split(":")
+                if len(cpe_parts) < 11:
+                    cpe_parts.extend( "*" * (11 - len(cpe_parts)) )
+                cpe = "cpe:2.3:" + ":".join(cpe_parts)
 
         # OS name.
         self.__family         = family
