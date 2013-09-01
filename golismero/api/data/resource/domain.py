@@ -79,6 +79,9 @@ class Domain(Resource):
         # Parent constructor.
         super(Domain, self).__init__()
 
+        # Reset the crawling depth.
+        self.depth = 0
+
 
     #----------------------------------------------------------------------
     def __str__(self):

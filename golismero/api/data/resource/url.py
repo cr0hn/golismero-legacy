@@ -201,11 +201,13 @@ class Url(_AbstractUrl):
         # Save the properties.
         self.__method      = method if method else "GET"
         self.__post_params = post_params if post_params else {}
-        self.__depth       = Config.crawling_depth + 1
         self.__referer     = referer
 
         # Call the parent constructor.
         super(Url, self).__init__(url)
+
+        # Increment the crawling depth by one.
+        self.depth += 1
 
 
     #----------------------------------------------------------------------
@@ -262,14 +264,6 @@ class Url(_AbstractUrl):
         :rtype: bool
         """
         return bool(self.post_params)
-
-    @property
-    def depth(self):
-        """
-        :return: The recursion depth reached to find this URL.
-        :rtype: int
-        """
-        return self.__depth
 
     @property
     def referer(self):
@@ -347,6 +341,9 @@ class BaseUrl(_AbstractUrl):
 
         # Call the parent constructor.
         super(BaseUrl, self).__init__(url)
+
+        # Reset the crawling depth.
+        self.depth = 0
 
 
     #----------------------------------------------------------------------
