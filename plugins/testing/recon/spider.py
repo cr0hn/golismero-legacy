@@ -55,12 +55,6 @@ class Spider(TestingPlugin):
         m_return = []
 
         m_url = info.url
-        m_depth = info.depth
-
-        # Check depth
-        if Config.audit_config.depth is not None and m_depth > Config.audit_config.depth:
-            Logger.log_more_verbose("Spider depth level exceeded for URL: %s" % m_url)
-            return m_return
 
         Logger.log_verbose("Spidering URL: %r" % m_url)
 
@@ -68,7 +62,7 @@ class Spider(TestingPlugin):
         p = None
         try:
             allow_redirects = Config.audit_config.follow_redirects or \
-                             (m_depth == 0 and Config.audit_config.follow_first_redirect)
+                             (info.depth == 0 and Config.audit_config.follow_first_redirect)
             p = download(m_url, self.check_download, allow_redirects=allow_redirects)
         except NetworkException,e:
             Logger.log_more_verbose("Error while processing %r: %s" % (m_url, str(e)))
@@ -113,7 +107,7 @@ class Spider(TestingPlugin):
 
         # Convert to Url data type
         for u in m_urls_allowed:
-            m_resource = Url(url = u, depth = m_depth + 1, referer = m_url)
+            m_resource = Url(url = u, referer = m_url)
             m_resource.add_resource(info)
             m_return.append(m_resource)
 

@@ -207,6 +207,15 @@ class _Config (Singleton):
         return self.plugin_info.plugin_extra_config
 
 
+    @property
+    def crawling_depth(self):
+        """"
+        :returns: Current crawling depth.
+        :rtype: int
+        """
+        return self._context._depth
+
+
     #--------------------------------------------------------------------------
     # The following properties may only be used internally.
 

@@ -179,7 +179,19 @@ def _bootstrap(context, func, args, kwargs):
                             if not input_data.is_in_scope():
                                 return
 
+                            # Save the current crawling depth.
+                            if hasattr(input_data, "depth"):
+                                context._depth = input_data.depth
+
+                                # Check we didn't exceed the maximum depth.
+                                max_depth = context.audit_config.depth
+                                if max_depth is not None and context._depth > max_depth:
+                                    return
+
                         # TODO: hook stdout and stderr to catch print statements
+
+                        # Initialize the private file API.
+                        LocalFile._update_plugin_path()
 
                         # Clear the HTTP connection pool.
                         HTTP._initialize()
@@ -189,9 +201,8 @@ def _bootstrap(context, func, args, kwargs):
 
                         # Initialize the local data cache for this run.
                         LocalDataCache.on_run()
-
-                        # Initialize the private file API.
-                        LocalFile._update_plugin_path()
+                        if func == "recv_info":
+                            LocalDataCache.on_create(input_data)
 
                         # Try to get the plugin from the cache.
                         cache_key = (context.plugin_module, context.plugin_class)
@@ -253,8 +264,9 @@ def _bootstrap(context, func, args, kwargs):
                                                 priority = MessagePriority.MSG_PRIORITY_HIGH,
                                         )
 
-                # Send plugin warnings to the Orchestrator.
                 finally:
+
+                    # Send plugin warnings to the Orchestrator.
                     if plugin_warnings:
                         try:
                             context.send_msg(
@@ -271,8 +283,9 @@ def _bootstrap(context, func, args, kwargs):
                                     priority = MessagePriority.MSG_PRIORITY_HIGH,
                             )
 
-            # Tell the Orchestrator there's been an error.
             except Exception, e:
+
+                # Tell the Orchestrator there's been an error.
                 context.send_msg(
                     message_type = MessageType.MSG_TYPE_CONTROL,
                     message_code = MessageCode.MSG_CONTROL_ERROR,
@@ -280,9 +293,13 @@ def _bootstrap(context, func, args, kwargs):
                         priority = MessagePriority.MSG_PRIORITY_HIGH,
                 )
 
-        # Send back an ACK.
         finally:
+
+            # Send back an ACK.
             context.send_ack()
+
+            # Reset the current crawling depth.
+            context._depth = -1
 
     # On keyboard interrupt or fatal error, tell the Orchestrator we need to stop.
     except:
@@ -311,6 +328,9 @@ class PluginContext (object):
     """
     Serializable execution context for the plugins.
     """
+
+    # Current crawling depth, set automatically by the plugin bootstrap.
+    _depth = -1
 
     def __init__(self, msg_queue, ack_identity = None, plugin_info = None,
                  audit_name = None, audit_config = None, audit_scope = None,
@@ -435,6 +455,14 @@ class PluginContext (object):
         """
         if self.__plugin_info:
             return self.__plugin_info.plugin_config
+
+    @property
+    def crawling_depth(self):
+        """"
+        :returns: Current crawling depth.
+        :rtype: int
+        """
+        return self._depth
 
     @property
     def _orchestrator_pid(self):
