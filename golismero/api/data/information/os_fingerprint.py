@@ -44,10 +44,6 @@ class OSFingerprint(Information):
 
     information_type = Information.INFORMATION_OS_FINGERPRINT
 
-    #----------------------------------------------------------------------
-    # TODO: we may want to add a list of default servers and descriptions.
-    #----------------------------------------------------------------------
-
 
     #----------------------------------------------------------------------
     def __init__(self, family, version=None, cpe=None, others = None):
@@ -58,7 +54,7 @@ class OSFingerprint(Information):
         :param version: OS version. Example: "XP"
         :type version: str
 
-        :param cpe: CPE (Common Platform Enumeration) of the OS. Example: "/o:microsoft:windows_xp"
+        :param cpe: CPE (Common Platform Enumeration) of the OS, in URI binding format. Example: "/o:microsoft:windows_xp"
         :type cpe: str
 
         :param others: Map of other possible OS by name and their probabilities of being correct [0.0 ~ 1.0].
@@ -75,7 +71,7 @@ class OSFingerprint(Information):
 
         if cpe is not None:
             if not isinstance(cpe, basestring):
-                raise TypeError("Expected basestring, got '%s' instead" % type(cpe))
+                raise TypeError("Expected str, got '%s' instead" % type(cpe))
 
         if others is not None:
             if not isinstance(others, dict):
@@ -86,11 +82,21 @@ class OSFingerprint(Information):
                 if not isinstance(v, float):
                     raise TypeError("Expected float, got %r instead" % type(v))
 
+        # Convert CPE 2.3 (string binding) to CPE 2.2 (URI binding).
+        if cpe is not None:
+            if not cpe.startswith("cpe:"):
+                raise ValueError("Not a CPE name: %r" % cpe)
+            if cpe.startswith("cpe:2.3:"):
+                cpe = "cpe:/" + ":".join(x for x in cpe.split(":") if x != "*")
+
         # OS name.
         self.__family         = family
 
         # OS version.
         self.__version        = version
+
+        # CPE name.
+        self.__cpe            = cpe
 
         # Other possibilities for this OS.
         self.__others         = others
@@ -105,6 +111,7 @@ class OSFingerprint(Information):
             self.__family,
             self.__version
         )
+
 
     #----------------------------------------------------------------------
     @identity
@@ -124,6 +131,16 @@ class OSFingerprint(Information):
         :rtype: str
         """
         return self.__version
+
+
+    #----------------------------------------------------------------------
+    @identity
+    def cpe(self):
+        """
+        :return: CPE name.
+        :rtype: str
+        """
+        return self.__cpe
 
 
     #----------------------------------------------------------------------
