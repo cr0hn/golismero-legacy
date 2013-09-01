@@ -154,6 +154,7 @@ def bootstrap(context, func, args, kwargs):
     return _bootstrap(context, func, args, kwargs)
 def _bootstrap(context, func, args, kwargs):
     try:
+        do_notify_end = False
         try:
             try:
                 plugin_warnings = []
@@ -231,6 +232,7 @@ def _bootstrap(context, func, args, kwargs):
                             message_type = MessageType.MSG_TYPE_STATUS,
                             message_code = MessageCode.MSG_STATUS_PLUGIN_BEGIN,
                         )
+                        do_notify_end = True
 
                         # Call the callback method.
                         result = None
@@ -296,7 +298,7 @@ def _bootstrap(context, func, args, kwargs):
         finally:
 
             # Send back an ACK.
-            context.send_ack()
+            context.send_ack(do_notify_end)
 
             # Reset the current crawling depth.
             context._depth = -1
@@ -499,12 +501,17 @@ class PluginContext (object):
 
 
     #----------------------------------------------------------------------
-    def send_ack(self):
+    def send_ack(self, do_notify_end):
         """
         Send ACK messages from the plugins to the Orchestrator.
+
+        :param do_notify_end: True to send the plugin end notification to
+            the UI plugin, False otherwise.
+        :type do_notify_end: bool
         """
         self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                       message_code = MessageCode.MSG_CONTROL_ACK,
+                      message_info = do_notify_end,
                           priority = MessagePriority.MSG_PRIORITY_LOW)
 
 
