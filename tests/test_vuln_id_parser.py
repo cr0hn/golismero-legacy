@@ -45,19 +45,22 @@ except NameError:
     _FIXED_PATH_ = True
 
 
-from golismero.api.text.text_utils import extract_vuln_ids
+from golismero.api.text.text_utils import extract_vuln_ids, \
+     convert_references_to_vuln_ids, convert_vuln_ids_to_references
 
 
-_test_case = """
-Testing BID: let's use 7 examples: BID-123, BID: 321, BID:456; BUGTRAQ: 1234, BUGTRAQ:4567, BUGTRAQ-4321;
+_test_case_extract = """
+Testing BID: let's use 7 examples: BID-999, BID: 321, BID:456; BUGTRAQ: 1234, BUGTRAQ:4567, BUGTRAQ-4321;
   and finally BUGTRAQ ID: 12345 and BUGTRAQ ID:45678.
+Testing CAPEC with 2 samples: CAPEC-3 and CAPEC: 1.
 Testing CVE with CVE-1234-4321 and CVE-1234-12345, the new format.
-Testing CWE with CWE-1234-1234. But CWE-1234-12345 must not match.
-Testing OSVDB: using 3 examples. The first being OSVDB: 1 and the second being OSVDB-0. The third is: OSVDB:2
+Testing CWE with CWE-123.
+Testing OSVDB: using 4 examples. The first being OSVDB: 1 and the second being OSVDB-5. The third is: OSVDB:2
+  and the fourth is OSVDB ID: 3.
 Testing SA: with 6 IDs, namely: SA-0, SA:1, SA: 2, SECUNIA-3, SECUNIA:4 and SECUNIA: 5.
-Testing SECTRACK: try 3 samples; SECTRACK-0, SECTRACK: 1 and SECTRACK:2.
-Testing XF: we have 4 samples now. XF:this-is-valid(123), XF: this-is-valid-too (321), XF: (55) and XF:(66).
-  These should not match: XF-5, XF: 6 nor XF: this is not valid (7).
+Testing SECTRACK: try 4 samples: SECTRACK-0, SECTRACK: 1, SECTRACK:2 and SECTRACK ID: 3.
+Testing XF: we have 5 samples now. XF:this-is-valid(123), XF: this-is-valid-too (321), XF: (55), XF:(66) and XF-11.
+  These should not match: XF: 6 nor XF: this is not valid (7).
 
 Now let's try breaking the parser with newlines! :)
 
@@ -87,25 +90,48 @@ And now let's put some duplicates to see if they're being filtered:
 CVE-1234-4321 CVE-1234-4321 CVE-1234-4321 CVE-1234-4321 CVE-1234-4321
 """
 
-_test_case_solution = {
-    "bid": ["BID-123", "BID-1234", "BID-12345", "BID-321", "BID-4321", "BID-456", "BID-4567", "BID-45678"],
+_test_case_extract_solution = {
+    "bid": ["BID-1234", "BID-12345", "BID-321", "BID-4321", "BID-456", "BID-4567", "BID-45678", "BID-999"],
+    "capec": ["CAPEC-1", "CAPEC-3"],
     "cve": ["CVE-1234-12345", "CVE-1234-4321"],
-    "cwe": ["CWE-1234-1234"],
-    "osvdb": ["OSVDB-0", "OSVDB-1", "OSVDB-2"],
+    "cwe": ["CWE-123"],
+    "osvdb": ["OSVDB-1", "OSVDB-2", "OSVDB-3", "OSVDB-5"],
     "sa": ["SA-0", "SA-1", "SA-2", "SA-3", "SA-4", "SA-5"],
-    "sectrack": ["SECTRACK-0", "SECTRACK-1", "SECTRACK-2", ],
-    "xf": ["XF-123", "XF-321", "XF-55", "XF-66"],
+    "sectrack": ["SECTRACK-0", "SECTRACK-1", "SECTRACK-2", "SECTRACK-3"],
+    "xf": ["XF-11", "XF-123", "XF-321", "XF-55", "XF-66"],
 }
 
 def test_vuln_id_parser():
-    print "Testing the vulnerability ID extractor parser..."
     ##from pprint import pprint
+
+    print "Testing the vulnerability ID parsers..."
     ##print "-" * 79
     ##pprint(_test_case_solution)
     ##print "-" * 79
-    ##pprint(extract_vuln_ids(_test_case))
+    vulns = extract_vuln_ids(_test_case_extract)
+    ##pprint(vulns)
     ##print "-" * 79
-    assert extract_vuln_ids(_test_case) == _test_case_solution
+    assert vulns == _test_case_extract_solution
+    all_vulns = []
+    for v in vulns.values():
+        all_vulns.extend(v)
+    all_vulns.sort()
+    ##pprint(all_vulns)
+    ##print "-" * 79
+    refs = convert_vuln_ids_to_references(all_vulns)
+    ##pprint(refs)
+    ##print "-" * 79
+    unrefs = convert_references_to_vuln_ids(refs)
+    ##pprint(unrefs)
+    ##print "-" * 79
+    assert unrefs == vulns
+
+    print "Testing reference URLs..."
+    import requests
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.62 Safari/537.36"}
+    for url in refs:
+        print "--> " + url
+        requests.get(url, headers=headers)
 
 
 if __name__ == "__main__":
