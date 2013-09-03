@@ -109,6 +109,8 @@ class PluginTester(object):
         if orchestrator_config is None:
             orchestrator_config = OrchestratorConfig()
             orchestrator_config.targets = ["http://www.example.com/"]
+            orchestrator_config.ui_mode = "disabled"
+            orchestrator_config.color = False
         orchestrator_config, (audit_config,) = \
             _sanitize_config(orchestrator_config, (audit_config,))
 

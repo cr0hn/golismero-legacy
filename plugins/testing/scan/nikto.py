@@ -315,8 +315,7 @@ class NiktoPlugin(TestingPlugin):
                                 "%s: %s" % (vuln_tag, text))
                         kwargs["description"] = text
                         kwargs["references"]  = refs
-                        vuln = VulnerableWebApp(**kwargs)
-                        vuln.add_resource(url)
+                        vuln = VulnerableWebApp(url, **kwargs)
                         results.append(vuln)
                         vuln_count += 1
 
