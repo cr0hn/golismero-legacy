@@ -302,20 +302,16 @@ def main():
             auditParams.reports = ["-"]
 
         # If there are no targets but there's a database,
-        # get the targets (scope) from the database.
+        # get the targets from the database. (The actual
+        # scope will be loaded later, this just bypasses
+        # some sanity checks more easily).
         if not auditParams.targets and auditParams.audit_db:
             try:
-                cfg = AuditDB.get_config_from_closed_database(
+                cfg, _ = AuditDB.get_config_from_closed_database(
                     auditParams.audit_db, auditParams.audit_name)
                 if cfg:
                     auditParams.targets = cfg.targets
                     auditParams.include_subdomains = cfg.include_subdomains
-                    if cmdParams.verbose > 1:
-                        if auditParams.targets:
-                            print "Found the following targets in the database:"
-                            for t in auditParams.targets:
-                                print "--> " + t
-                            print
             except Exception:
                 pass
                 ##raise    # XXX DEBUG
@@ -537,8 +533,7 @@ def main():
 
     try:
         cmdParams.check_params()
-        if auditParams.targets:
-            auditParams.check_params()
+        auditParams.check_params()
     except Exception, e:
         ##raise # XXX DEBUG
         parser.error(str(e))
