@@ -557,10 +557,10 @@ class Data(object):
         # Identity hash cache.
         self.__identity = None
 
-        # Crawling depth is preserved for all objects, except a select few.
+        # Analysis depth is preserved as-is for all objects, except for a few.
         # For example the Url type increments the depth by one, and the
         # BaseUrl, IP and Domain types force the depth to zero.
-        self.__depth = Config.crawling_depth
+        self.__depth = Config.depth
 
         # Tell the temporary storage about this instance.
         LocalDataCache.on_create(self)
