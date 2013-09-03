@@ -37,6 +37,7 @@ from golismero.api.external import run_external_tool, \
      find_cygwin_binary_in_path
 from golismero.api.logger import Logger
 from golismero.api.net.scraper import extract_from_text
+from golismero.api.parallel import setInterval
 from golismero.api.plugin import ImportPlugin, TestingPlugin
 from golismero.api.text.text_utils import extract_vuln_ids
 
@@ -188,7 +189,13 @@ class NiktoPlugin(TestingPlugin):
         Logger.log("Launching Nikto against: %s" % info.hostname)
         Logger.log_more_verbose(
             "Nikto arguments: %s %s" % (command, " ".join(args)))
-        output, code = run_external_tool(command, args, curdir = curdir)
+        event = None
+        try:
+            event = self.__waiting_for_nikto()
+            output, code = run_external_tool(command, args, curdir = curdir)
+        finally:
+            if event is not None:
+                event.set()
 
         # Log the output in extra verbose mode.
         if code:
@@ -215,6 +222,12 @@ class NiktoPlugin(TestingPlugin):
 
         # Return the results.
         return results
+
+
+    #--------------------------------------------------------------------------
+    @setInterval(20)
+    def __waiting_for_nikto(self):
+        Logger.log_verbose("...still waiting for Nikto to finish...")
 
 
     #--------------------------------------------------------------------------
