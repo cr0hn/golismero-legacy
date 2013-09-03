@@ -314,7 +314,7 @@ class NiktoPlugin(TestingPlugin):
                         else:
                             kwargs = extract_vuln_ids(
                                 "%s: %s" % (vuln_tag, text))
-                        kwargs["description"] = text
+                        kwargs["description"] = text if text else None
                         kwargs["references"]  = refs
                         if vuln_tag == "OSVDB-0":
                             vuln = GenericVulnerability(**kwargs)

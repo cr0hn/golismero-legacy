@@ -220,7 +220,7 @@ class OpenVASPlugin(TestingPlugin):
                     if not description:
                         description = nvt.summary
                         if not description:
-                            description = "A vulnerability has been found."
+                            description = None
                 if opv.notes:
                     description += "\n" + "\n".join(
                         " - " + note.text
