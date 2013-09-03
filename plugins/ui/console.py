@@ -33,6 +33,7 @@ from golismero.api.plugin import UIPlugin, get_plugin_info
 from golismero.main.console import Console, colorize
 from golismero.messaging.codes import MessageType, MessageCode, MessagePriority
 
+import collections
 import warnings
 
 #
@@ -56,7 +57,7 @@ class ConsoleUIPlugin(UIPlugin):
 
     #--------------------------------------------------------------------------
     def __init__(self):
-        self.already_seen_info = set()   # set(str)
+        self.already_seen_info = collections.defaultdict(set)
 
 
     #--------------------------------------------------------------------------
@@ -72,20 +73,24 @@ class ConsoleUIPlugin(UIPlugin):
         if Console.level < Console.STANDARD:
             return
 
-        # Filter out info we've already seen.
-        if info.identity in self.already_seen_info:
+        # Ignore everything but vulnerabilities.
+        if info.data_type != Data.TYPE_VULNERABILITY:
             return
-        self.already_seen_info.add(info.identity)
+
+        # Filter out info we've already seen.
+        if info.identity in self.already_seen_info[Config.audit_name]:
+            return
+        self.already_seen_info[Config.audit_name].add(info.identity)
 
         # Print newly discovered vulnerabilities.
-        if info.data_type == Data.TYPE_VULNERABILITY:
-            text = "%s Vulnerability '%s' dicovered by plugin '%s'. Risk level: %s" % (
-                colorize("<!>", info.risk),
-                colorize(info.vulnerability_type, info.risk),
-                colorize(self.get_plugin_name(info.plugin_id), info.risk),
-                colorize(str(info.risk), info.risk)
-            )
-            Console.display(text)
+        text = "%s Vulnerability '%s' dicovered by plugin '%s'. Risk level: %s"
+        text %= (
+            colorize("<!>", info.risk),
+            colorize(info.vulnerability_type, info.risk),
+            colorize(self.get_plugin_name(info.plugin_id), info.risk),
+            colorize(str(info.risk), info.risk)
+        )
+        Console.display(text)
 
 
     #--------------------------------------------------------------------------
@@ -134,6 +139,7 @@ class ConsoleUIPlugin(UIPlugin):
             # When an audit is finished, check if there are more running audits.
             # If there aren't any, stop the Orchestrator.
             if message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
+                del self.already_seen_info[Config.audit_name]
                 if get_audit_count() == 1:  # this is the last one
                     Config._context.send_msg(  # XXX FIXME hide this from plugins!
                         message_type = MessageType.MSG_TYPE_CONTROL,
