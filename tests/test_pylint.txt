@@ -60,24 +60,28 @@ golismero/api/data/information/http.py:913: Warning (W, HTTP_Response.content_le
 golismero/api/data/information/http.py:985: Warning (W, HTTP_Response.__parse_raw_response): Catching too general exception Exception
 golismero/api/data/information/http.py:985: Warning (W, HTTP_Response.__parse_raw_response): Catching too general exception Exception
 golismero/api/data/resource/domain.py:71: Warning (W, Domain.__init__): Catching too general exception Exception
-golismero/api/data/vulnerability/__init__.py:227: Warning (W, Vulnerability.plugin_id): Attribute '__plugin_id' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:252: Warning (W, Vulnerability.level): Attribute '__level' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:275: Warning (W, Vulnerability.impact): Attribute '__impact' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:295: Warning (W, Vulnerability.bid): Attribute '__bid' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:315: Warning (W, Vulnerability.capec): Attribute '__capec' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:335: Warning (W, Vulnerability.cve): Attribute '__cve' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:355: Warning (W, Vulnerability.cwe): Attribute '__cwe' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:375: Warning (W, Vulnerability.osvdb): Attribute '__osvdb' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:395: Warning (W, Vulnerability.sa): Attribute '__sa' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:415: Warning (W, Vulnerability.sectrack): Attribute '__sectrack' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:435: Warning (W, Vulnerability.xf): Attribute '__xf' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:458: Warning (W, Vulnerability.severity): Attribute '__severity' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:481: Warning (W, Vulnerability.risk): Attribute '__risk' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:501: Warning (W, Vulnerability.description): Attribute '__description' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:506: Error (E, Vulnerability.references): An attribute affected in golismero.api.data.vulnerability line 150 hide this method
-golismero/api/data/vulnerability/__init__.py:524: Warning (W, Vulnerability.references): Attribute '__references' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:591: Warning (W, UrlVulnerability.__init__): Catching too general exception Exception
-golismero/api/data/vulnerability/__init__.py:612: Error (E, UrlVulnerability): Method '__init__' has no '__doc__' member
+golismero/api/data/vulnerability/__init__.py:243: Warning (W, Vulnerability.plugin_id): Attribute '__plugin_id' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:268: Warning (W, Vulnerability.level): Attribute '__level' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:291: Warning (W, Vulnerability.impact): Attribute '__impact' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:311: Warning (W, Vulnerability.bid): Attribute '__bid' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:331: Warning (W, Vulnerability.capec): Attribute '__capec' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:351: Warning (W, Vulnerability.cve): Attribute '__cve' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:371: Warning (W, Vulnerability.cwe): Attribute '__cwe' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:391: Warning (W, Vulnerability.osvdb): Attribute '__osvdb' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:411: Warning (W, Vulnerability.sa): Attribute '__sa' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:431: Warning (W, Vulnerability.sectrack): Attribute '__sectrack' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:451: Warning (W, Vulnerability.xf): Attribute '__xf' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:474: Warning (W, Vulnerability.severity): Attribute '__severity' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:497: Warning (W, Vulnerability.risk): Attribute '__risk' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:519: Warning (W, Vulnerability.cvss_base): Attribute '__cvss_base' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:538: Warning (W, Vulnerability.cvss_base_vector): Attribute '__cvss_base_vector' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:558: Warning (W, Vulnerability.solution): Attribute '__solution' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:578: Warning (W, Vulnerability.title): Attribute '__title' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:598: Warning (W, Vulnerability.description): Attribute '__description' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:603: Error (E, Vulnerability.references): An attribute affected in golismero.api.data.vulnerability line 166 hide this method
+golismero/api/data/vulnerability/__init__.py:621: Warning (W, Vulnerability.references): Attribute '__references' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:688: Warning (W, UrlVulnerability.__init__): Catching too general exception Exception
+golismero/api/data/vulnerability/__init__.py:709: Error (E, UrlVulnerability): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/authentication/weak_credentials.py:93: Error (E, WeakCredentials): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/cookie/__init__.py:79: Error (E, CookieVulnerability): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/information_disclosure/default_error_page.py:65: Error (E, DefaultErrorPage): Method '__init__' has no '__doc__' member
