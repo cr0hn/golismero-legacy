@@ -31,14 +31,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 __all__ = [ "char_count", "line_count", "word_count",
-            "generate_random_string", "split_first" ]
+            "generate_random_string", "split_first",
+            "extract_vuln_ids", ]
 
 from random import choice
-from re import finditer
+from re import findall, finditer
 from string import ascii_letters, digits
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def char_count(text):
     """
     :param text: Text.
@@ -50,7 +51,7 @@ def char_count(text):
     return sum(1 for _ in finditer(r"\w", text))
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def line_count(text):
     """
     :param text: Text.
@@ -65,7 +66,7 @@ def line_count(text):
     return count
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def word_count(text):
     """
     :param text: Text.
@@ -77,7 +78,7 @@ def word_count(text):
     return sum(1 for _ in finditer(r"\w+", text))
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def generate_random_string(length = 30):
     """
     Generates a random string of the specified length.
@@ -102,7 +103,60 @@ def generate_random_string(length = 30):
     return "".join(choice(m_available_chars) for _ in xrange(length))
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def extract_vuln_ids(text):
+    """
+    Extract vulnerability IDs from plain text using regular expressions.
+    Currently CVE, CWE and OSVDB are supported.
+
+    Example::
+        >>> extract_vuln_ids(\"\"\"
+        ... Here we have CVE-1234-1234 and CVE-4321-4321.
+        ... We also have a CWE, namely CWE-1234-1234.
+        ... However we're only mentioning OSVDB, not using it.
+        ... \"\"\")
+        {'cve': ['CVE-1234-1234', 'CVE-4321-4321'], 'cwe': ['CWE-1234-1234']}
+        >>> extract_vuln_ids("There is nothing here!")
+        {}
+
+    This can be useful when instancing Vulnerability objects::
+        >>> from golismero.api.data.vulnerability import GenericVulnerability
+        >>> description = "This vulnerability is CVE-1234-4321."
+        >>> kwargs = extract_vuln_ids(description)
+        >>> kwargs['description'] = description
+        >>> vuln = GenericVulnerability( **kwargs )
+        >>> vuln.description
+        'This vulnerability is CVE-1234-4321.'
+        >>> vuln.cve
+        ['CVE-1234-4321']
+        >>> vuln.cwe
+        ()
+
+    :param text: Plain text to search.
+    :type text: str
+
+    :returns: Map of ID type ("cve", "cwe", "osvdb") to lists containing one
+        or more strings, each string being a vulnerability ID of that type.
+        Vulnerability types not found will not be present in the dictionary. If
+        no vulnerability IDs were found at all, the dictionary will be empty.
+    :rtype: dict( str -> list(str, ...) )
+    """
+    d = {}
+    found = findall(r"\b(OSVDB\-[0-9]+)\b", text)
+    if found:
+        d["osvdb"] = found
+    found = findall(
+        r"\b(CVE\-[0-9][0-9][0-9][0-9]\-[0-9][0-9][0-9][0-9][0-9]?)\b", text)
+    if found:
+        d["cve"] = found
+    found = findall(
+        r"\b(CWE\-[0-9][0-9][0-9][0-9]\-[0-9][0-9][0-9][0-9])\b", text)
+    if found:
+        d["cwe"] = found
+    return d
+
+
+#------------------------------------------------------------------------------
 # This function was borrowed from the urllib3 project.
 #
 # Urllib3 is copyright 2008-2012 Andrey Petrov and contributors (see
@@ -124,7 +178,8 @@ def split_first(s, delims):
         >>> split_first('foo/bar?baz', '123')
         ('foo/bar?baz', '', None)
 
-    Scales linearly with number of delimiters. Not ideal for a large number of delimiters.
+    Scales linearly with number of delimiters.
+    Not ideal for a large number of delimiters.
 
     .. warning: This function was borrowed from the urllib3 project.
                 It may be removed in future versions of GoLismero.
