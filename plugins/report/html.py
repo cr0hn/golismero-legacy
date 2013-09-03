@@ -158,7 +158,14 @@ class HTMLReport(ReportPlugin):
             c['execution_time'] = "Unknown"
 
         # Targets
-        c['targets'] = Config.audit_scope.get_targets()
+        # XXX FIXME: the HTML template only knows how to show URL targets! :(
+        targets = Config.audit_scope.get_targets()
+        targets = [
+            x.url for x in targets
+                  if   x.data_type == x.TYPE_RESOURCE and
+                   x.resource_type == x.RESOURCE_URL
+        ]
+        c['targets'] = targets
 
         # Fill the vulnerabilities summary
         self.fill_summary_vulns(c)
