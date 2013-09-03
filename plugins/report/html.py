@@ -158,7 +158,7 @@ class HTMLReport(ReportPlugin):
             c['execution_time'] = "Unknown"
 
         # Targets
-        c['targets'] = Config.audit_config.targets
+        c['targets'] = Config.audit_scope.get_targets()
 
         # Fill the vulnerabilities summary
         self.fill_summary_vulns(c)
