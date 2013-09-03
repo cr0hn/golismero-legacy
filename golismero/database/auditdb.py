@@ -49,6 +49,7 @@ from os import path
 import collections
 import md5
 import posixpath
+import threading
 import time
 import urlparse  # cannot use ParsedURL here!
 import warnings
@@ -1179,7 +1180,7 @@ class AuditSQLiteDB (BaseAuditDB):
         self.__cursor = None
 
         # Create the lock to make this class thread safe.
-        self.__lock = RLock()
+        self.__lock = threading.RLock()
 
         # Load the SQLite module.
         global sqlite3
