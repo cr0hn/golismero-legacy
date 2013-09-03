@@ -357,7 +357,7 @@ class _HTTP(Singleton):
         """
         Send a raw HTTP request to the server and get the response back.
 
-        .. note: This method does not support the use of the cache.
+        .. note: This method does not support the use of the cache or a proxy.
 
         .. warning::
            This method only returns the HTTP response headers, **NOT THE CONTENT**.
@@ -395,9 +395,9 @@ class _HTTP(Singleton):
         :raises NetworkException: A network error occurred.
         """
 
-        # Check initialization.
-        if self.__session is None:
-            self._initialize()
+        # Abort if a proxy is configured, because we don't support this yet.
+        if Config.audit_config.proxy_addr:
+            raise NotImplementedError("Proxy not yet supported")
 
         # Check the arguments.
         if type(raw_request) is str:

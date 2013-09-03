@@ -73,7 +73,7 @@ def run(options, *audits):
     Console.level = options.verbose
 
     # Set the console color configuration.
-    Console.use_colors = options.colorize
+    Console.use_colors = options.color
 
     # Show the start message.
     Console.display("GoLismero started at %s" % datetime.datetime.now())

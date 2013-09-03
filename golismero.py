@@ -196,8 +196,8 @@ def cmdline_parser():
     gr_main.add_argument("--ui-mode", metavar="MODE", help="UI mode")
     gr_main.add_argument("-v", "--verbose", action="count", help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
-    gr_main.add_argument("--color", action="store_true", default=None, dest="colorize", help="use colors in console output")
-    gr_main.add_argument("--no-color", action="store_false", default=None, dest="colorize", help="suppress colors in console output")
+    gr_main.add_argument("--color", action="store_true", default=None, dest="color", help="use colors in console output")
+    gr_main.add_argument("--no-color", action="store_false", default=None, dest="color", help="suppress colors in console output")
 ##    gr_main.add_argument("--forward-io", metavar="ADDRESS:PORT", help="forward all input and output to the given TCP address and port")
 
     gr_audit = parser.add_argument_group("audit options")
@@ -346,7 +346,7 @@ def main():
     # List plugins and quit.
 
     if P.plugin_list:
-        Console.use_colors = cmdParams.colorize
+        Console.use_colors = cmdParams.color
 
         # Load the plugins list
         try:
@@ -421,7 +421,7 @@ def main():
     # Display plugin info and quit.
 
     if P.plugin_name:
-        Console.use_colors = cmdParams.colorize
+        Console.use_colors = cmdParams.color
 
         # Load the plugins list.
         try:
@@ -506,7 +506,7 @@ def main():
     # List profiles and quit.
 
     if P.profile_list:
-        Console.use_colors = cmdParams.colorize
+        Console.use_colors = cmdParams.color
         profiles = sorted(get_available_profiles())
         if not profiles:
             print "No available profiles!"

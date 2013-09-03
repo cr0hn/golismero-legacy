@@ -618,10 +618,10 @@ class OrchestratorConfig (Configuration):
         "ui_mode": (str, "console"),
 
         # Verbosity level.
-        "verbose": (Configuration.integer, 2),
+        "verbose": (Configuration.integer, 3),
 
         # Colorize console?
-        "colorize": (Configuration.boolean, True),
+        "color": (Configuration.boolean, False),
 
         #
         # Plugin options.

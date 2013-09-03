@@ -1178,6 +1178,9 @@ class AuditSQLiteDB (BaseAuditDB):
         self.__busy   = False
         self.__cursor = None
 
+        # Create the lock to make this class thread safe.
+        self.__lock = RLock()
+
         # Load the SQLite module.
         global sqlite3
         if sqlite3 is None:
@@ -1418,23 +1421,22 @@ class AuditSQLiteDB (BaseAuditDB):
         """
         Execute a transactional operation.
         """
-        # this will fail for multithreaded accesses,
-        # but sqlite is not multithreaded either
-        if self.__busy:
-            raise RuntimeError("The database is busy")
-        try:
-            self.__busy = True
-            self.__cursor = self.__db.cursor()
+        with self.__lock:
+            if self.__busy:
+                raise RuntimeError("The database is busy")
             try:
-                retval = fn(self, *args, **kwargs)
-                self.__db.commit()
-                return retval
-            except:
-                self.__db.rollback()
-                raise
-        finally:
-            self.__cursor = None
-            self.__busy = False
+                self.__busy   = True
+                self.__cursor = self.__db.cursor()
+                try:
+                    retval = fn(self, *args, **kwargs)
+                    self.__db.commit()
+                    return retval
+                except:
+                    self.__db.rollback()
+                    raise
+            finally:
+                self.__cursor = None
+                self.__busy   = False
 
 
     #--------------------------------------------------------------------------
@@ -1448,9 +1450,10 @@ class AuditSQLiteDB (BaseAuditDB):
         """
 
         # Check if the schema is already created.
-        self.__cursor.execute((
+        self.__cursor.execute(
             "SELECT count(*) FROM sqlite_master"
-            " WHERE type = 'table' AND name = 'golismero';"))
+            " WHERE type = 'table' AND name = 'golismero';"
+        )
 
         # If it's already present...
         if self.__cursor.fetchone()[0]:

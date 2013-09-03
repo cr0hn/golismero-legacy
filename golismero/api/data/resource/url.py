@@ -173,7 +173,7 @@ class Url(_AbstractUrl):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, url, method = "GET", post_params = None, depth = 0, referer = None):
+    def __init__(self, url, method = "GET", post_params = None, referer = None):
         """
         :param url: Absolute URL.
         :type url: str
@@ -183,9 +183,6 @@ class Url(_AbstractUrl):
 
         :param post_params: POST parameters.
         :type post_params: dict(str -> str)
-
-        :param depth: Crawling depth.
-        :type depth: int
 
         :param referer: Referrer URL.
         :type referer: str
@@ -198,21 +195,19 @@ class Url(_AbstractUrl):
             raise TypeError("Expected string, got %r instead" % type(method))
         if post_params is not None and not isinstance(post_params, dict):
             raise TypeError("Expected dict, got %r instead" % type(post_params))
-        if not depth:
-            depth = 0
-        elif not isinstance(depth, int):
-            raise TypeError("Expected int, got %r instead" % type(depth))
         if referer is not None and not isinstance(referer, str):
             raise TypeError("Expected string, got %r instead" % type(referer))
 
         # Save the properties.
-        self.__method = method.strip().upper() if method else "GET"
+        self.__method      = method if method else "GET"
         self.__post_params = post_params if post_params else {}
-        self.__depth = depth
-        self.__referer = referer
+        self.__referer     = referer
 
         # Call the parent constructor.
         super(Url, self).__init__(url)
+
+        # Increment the crawling depth by one.
+        self.depth += 1
 
 
     #----------------------------------------------------------------------
@@ -269,14 +264,6 @@ class Url(_AbstractUrl):
         :rtype: bool
         """
         return bool(self.post_params)
-
-    @property
-    def depth(self):
-        """
-        :return: The recursion depth reached to find this URL.
-        :rtype: int
-        """
-        return self.__depth
 
     @property
     def referer(self):
@@ -354,6 +341,9 @@ class BaseUrl(_AbstractUrl):
 
         # Call the parent constructor.
         super(BaseUrl, self).__init__(url)
+
+        # Reset the crawling depth.
+        self.depth = 0
 
 
     #----------------------------------------------------------------------

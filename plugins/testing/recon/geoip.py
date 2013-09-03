@@ -30,7 +30,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # Thank you Danito for pointing out the Freegeoip.net service!
 # https://twitter.com/dan1t0
 
-from golismero.api.config import Config
 from golismero.api.data.information.geolocation import Geolocation
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
@@ -38,6 +37,7 @@ from golismero.api.logger import Logger
 from golismero.api.plugin import TestingPlugin
 from golismero.api.net.web_utils import json_decode
 
+import netaddr
 import requests
 import traceback
 
@@ -61,10 +61,20 @@ class GeoIP(TestingPlugin):
         results = []
 
         # Get the IP address or domain name.
+        # Skip unsupported targets.
         if info.data_subtype == IP.data_subtype:
+            if info.version != 4:
+                return
             target = info.address
+            parsed = netaddr.IPAddress(target)
+            if parsed.is_loopback() or \
+               parsed.is_private()  or \
+               parsed.is_link_local():
+                return
         elif info.data_subtype == Domain.data_subtype:
             target = info.hostname
+            if "." not in target:
+                return
         else:
             assert False, type(info)
 

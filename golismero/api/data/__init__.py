@@ -525,7 +525,7 @@ class Data(object):
     data_type = TYPE_UNKNOWN
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Minimum number of linked objects per data type.
     # Use None to enforce no limits.
 
@@ -535,7 +535,7 @@ class Data(object):
     min_vulnerabilities = None   # Minimum linked vulnerabilities.
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Maximum number of linked objects per data type.
     # Use None to enforce no limits.
 
@@ -545,7 +545,7 @@ class Data(object):
     max_vulnerabilities = None   # Maximum linked vulnerabilities.
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self):
 
         # Linked Data objects.
@@ -557,16 +557,21 @@ class Data(object):
         # Identity hash cache.
         self.__identity = None
 
+        # Analysis depth is preserved as-is for all objects, except for a few.
+        # For example the Url type increments the depth by one, and the
+        # BaseUrl, IP and Domain types force the depth to zero.
+        self.__depth = Config.depth
+
         # Tell the temporary storage about this instance.
         LocalDataCache.on_create(self)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __repr__(self):
         return "<%s identity=%s>" % (self.__class__.__name__, self.identity)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def identity(self):
         """
@@ -643,7 +648,7 @@ class Data(object):
         return collection
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def merge(self, other):
         """
         Merge another data object with this one.
@@ -779,7 +784,30 @@ class Data(object):
                     my_subdict[data_subtype].update(identity_set)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    @keep_lesser
+    def depth(self):
+        """
+        :returns: Shortest path in the data graph from here to one of the
+            root nodes (audit targets).
+        :rtype: int
+        """
+        return self.__depth
+
+    @depth.setter
+    def depth(self, depth):
+        """
+        .. warning: Normally you don't need to set this value yourself!
+                    The framework keeps track of it automatically.
+
+        :param depth: Shortest path in the data graph from here to one of the
+            root nodes (audit targets).
+        :type depth: int
+        """
+        self.__depth = int(depth)
+
+
+    #--------------------------------------------------------------------------
     @property
     def links(self):
         """
@@ -789,7 +817,7 @@ class Data(object):
         return self.__linked[None][None]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def linked_data(self):
         """
@@ -799,7 +827,7 @@ class Data(object):
         return self.resolve_links( self.__linked[None][None] )
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_links(self, data_type = None, data_subtype = None):
         """
         Get the linked Data identities of the given data type.
@@ -822,7 +850,7 @@ class Data(object):
         return self.__linked[data_type][data_subtype]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def find_linked_data(self, data_type = None, data_subtype = None):
         """
         Get the linked Data elements of the given data type.
@@ -842,7 +870,7 @@ class Data(object):
         return self.resolve_links(links)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @staticmethod
     def resolve(identity):
         """
@@ -864,7 +892,7 @@ class Data(object):
         return Database.get(identity)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @staticmethod
     def resolve_links(links):
         """
@@ -893,7 +921,7 @@ class Data(object):
         return instances
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def add_link(self, other):
         """
         Link two Data instances together.
@@ -953,7 +981,7 @@ class Data(object):
         self.__linked[data_type][other.data_subtype].add(data_id)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def validate_link_minimums(self):
         """
         Validates the link minimum constraints. Raises an exception if not met.
@@ -987,7 +1015,7 @@ class Data(object):
                     raise ValueError(msg % (s_type, min_data, found_data))
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def associated_resources(self):
         """
@@ -999,7 +1027,7 @@ class Data(object):
         return self.find_linked_data(Data.TYPE_RESOURCE)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def associated_informations(self):
         """
@@ -1011,7 +1039,7 @@ class Data(object):
         return self.find_linked_data(Data.TYPE_INFORMATION)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def associated_vulnerabilities(self):
         """
@@ -1023,7 +1051,7 @@ class Data(object):
         return self.find_linked_data(Data.TYPE_VULNERABILITY)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_associated_vulnerabilities_by_category(self, cat_name = None):
         """
         Get associated vulnerabilites by category.
@@ -1037,7 +1065,7 @@ class Data(object):
         return self.find_linked_data(self.TYPE_VULNERABILITY, cat_name)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_associated_informations_by_category(self, information_type = None):
         """
         Get associated informations by type.
@@ -1057,7 +1085,7 @@ class Data(object):
         return self.find_linked_data(self.TYPE_INFORMATION, information_type)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_associated_resources_by_category(self, resource_type = None):
         """
         Get associated informations by type.
@@ -1077,7 +1105,7 @@ class Data(object):
         return self.find_linked_data(self.TYPE_RESOURCE, resource_type)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def add_resource(self, res):
         """
         Associate a resource.
@@ -1090,7 +1118,7 @@ class Data(object):
         self.add_link(res)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def add_information(self, info):
         """
         Associate an information.
@@ -1103,7 +1131,7 @@ class Data(object):
         self.add_link(info)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def add_vulnerability(self, vuln):
         """
         Associate a vulnerability.
@@ -1116,7 +1144,7 @@ class Data(object):
         self.add_link(vuln)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def discovered(self):
         """
@@ -1131,7 +1159,7 @@ class Data(object):
         return []
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def is_in_scope(self):
         """
         Determines if this Data object is within the scope of the current audit.
@@ -1145,7 +1173,7 @@ class Data(object):
         return True
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __eq__(self, obj):
         """
         Determines equality of Data objects by comparing its identity property.
@@ -1160,7 +1188,7 @@ class Data(object):
         return self.identity == obj.identity
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class _LocalDataCache(Singleton):
     """
     Temporary storage for newly created objects.
@@ -1169,12 +1197,12 @@ class _LocalDataCache(Singleton):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self):
         self.__cleanup()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __cleanup(self):
         """
         Reset the internal state.
@@ -1187,19 +1215,19 @@ class _LocalDataCache(Singleton):
             self._enabled = False   # plugin environment not initialized
 
         # Map of identities to newly created instances.
-        self.__new_data  = {}
+        self.__new_data   = {}
 
         # List of fresh instances, not yet fully initialized.
-        self.__fresh     = []
+        self.__fresh      = []
 
         # Set of ignored data ids.
-        self.__discarded = set()
+        self.__discarded  = set()
 
         # Set of autogenerated data ids.
-        self.__autogen   = set()
+        self.__autogen    = set()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def on_run(self):
         """
         Called by the plugin bootstrap when a plugin is run.
@@ -1207,7 +1235,7 @@ class _LocalDataCache(Singleton):
         self.__cleanup()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def on_create(self, data):
         """
         Called by instances when being created.
@@ -1223,7 +1251,7 @@ class _LocalDataCache(Singleton):
             self.__fresh.append(data)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def update(self):
         """
         Process the fresh instances.
@@ -1258,7 +1286,7 @@ class _LocalDataCache(Singleton):
         self.__discarded.difference_update(new_ids)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get(self, data_id):
         """
         Fetch an unsent instance given its identity.
@@ -1282,7 +1310,7 @@ class _LocalDataCache(Singleton):
         return self.__new_data.get(data_id, None)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def discard(self, data_id):
         """
         Explicitly disables consistency checks for the given data identity,
@@ -1313,7 +1341,7 @@ class _LocalDataCache(Singleton):
             ##    self.__autogen.remove(data_id)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def on_autogeneration(self, data):
         """
         Called by the GoLismero API for autogenerated instances.
@@ -1332,7 +1360,7 @@ class _LocalDataCache(Singleton):
             self.__autogen.add(data.identity)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def on_finish(self, result):
         """
         Called by the plugin bootstrap when a plugin finishes running.

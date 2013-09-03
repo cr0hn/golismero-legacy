@@ -98,7 +98,7 @@ class Orchestrator (object):
 
         # Set the console configuration.
         Console.level = config.verbose
-        Console.use_colors = config.colorize
+        Console.use_colors = config.color
 
         # Search for plugins.
         self.__pluginManager = PluginManager()

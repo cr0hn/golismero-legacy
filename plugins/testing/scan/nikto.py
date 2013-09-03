@@ -31,12 +31,16 @@ from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.resource.url import BaseUrl, Url
-from golismero.api.data.vulnerability import GenericVulnerability
-from golismero.api.external import run_external_tool, find_cygwin_binary_in_path
+from golismero.api.data.vulnerability.infrastructure.vulnerable_webapp \
+     import VulnerableWebApp
+from golismero.api.external import run_external_tool, \
+     find_cygwin_binary_in_path
 from golismero.api.logger import Logger
 from golismero.api.plugin import ImportPlugin, TestingPlugin
+from golismero.api.text.text_utils import extract_vuln_ids
 
 import os
+import re
 import sys
 import stat
 
@@ -181,7 +185,8 @@ class NiktoPlugin(TestingPlugin):
 
         # Run Nikto and capture the text output.
         Logger.log("Launching Nikto against: %s" % info.hostname)
-        Logger.log_more_verbose("Nikto arguments: %s %s" % (command, " ".join(args)))
+        Logger.log_more_verbose(
+            "Nikto arguments: %s %s" % (command, " ".join(args)))
         output, code = run_external_tool(command, args, curdir = curdir)
 
         # Log the output in extra verbose mode.
@@ -247,7 +252,10 @@ class NiktoPlugin(TestingPlugin):
                         host, ip, port, vuln_tag, method, path, text = row[:7]
 
                         # Report domain names and IP addresses.
-                        if (info is None or host != info.hostname) and host not in hosts_seen:
+                        if (
+                            (info is None or host != info.hostname) and
+                            host not in hosts_seen
+                        ):
                             hosts_seen.add(host)
                             if host in Config.audit_scope:
                                 results.append( Domain(host) )
@@ -282,10 +290,10 @@ class NiktoPlugin(TestingPlugin):
                             url = urls_seen[ (target, method) ]
 
                         # Report the vulnerabilities.
-                        vuln = GenericVulnerability(
-                            level = "informational",  # TODO: use the OSVDB API
-                            description = "%s: %s" % (vuln_tag, text),
-                        )
+                        kwargs = extract_vuln_ids("%s: %s" % (vuln_tag, text))
+                        kwargs["level"] = "informational"
+                        kwargs["description"] = text
+                        vuln = VulnerableWebApp(**kwargs)
                         vuln.add_resource(url)
                         results.append(vuln)
                         vuln_count += 1
@@ -332,8 +340,8 @@ class NiktoImportPlugin(ImportPlugin):
         else:
             if results:
                 Logger.log(
-                    "Loaded %d vulnerabilities and %d resources from file: %s" %
-                    (vuln_count, len(results) - vuln_count, input_file)
+                    "Loaded %d vulnerabilities and %d resources from file: %s"
+                    % (vuln_count, len(results) - vuln_count, input_file)
                 )
             else:
                 Logger.log_verbose("No data found in file: %s" % input_file)

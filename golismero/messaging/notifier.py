@@ -350,15 +350,16 @@ class AuditNotifier(AbstractNotifier):
                         warn(msg % (identity, plugin_name))
 
                     # Notify the Orchestrator that the plugin has finished running.
-                    msg = Message(
-                        message_type = MessageType.MSG_TYPE_STATUS,
-                        message_code = MessageCode.MSG_STATUS_PLUGIN_END,
-                         plugin_name = plugin_name,
-                          audit_name = self.audit.name,
-                        ack_identity = identity,
-                            priority = MessagePriority.MSG_PRIORITY_MEDIUM,
-                    )
-                    self.orchestrator.dispatch_msg(msg)
+                    if message.message_info: # 'do_notify_end' flag
+                        msg = Message(
+                            message_type = MessageType.MSG_TYPE_STATUS,
+                            message_code = MessageCode.MSG_STATUS_PLUGIN_END,
+                             plugin_name = plugin_name,
+                              audit_name = self.audit.name,
+                            ack_identity = identity,
+                                priority = MessagePriority.MSG_PRIORITY_MEDIUM,
+                        )
+                        self.orchestrator.dispatch_msg(msg)
 
             finally:
 

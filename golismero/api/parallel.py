@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-API for parallel execution within GoLismero plugins.
+Advanced API for parallel execution within GoLismero plugins.
 
 .. note:: It's often best to keep your plugins as simple as possible, breaking
           down complex tasks into simple steps, and into multiple plugins if
@@ -21,6 +21,10 @@ API for parallel execution within GoLismero plugins.
           efficient than they should be, so running pure-Python computation
           tasks in parallel not only gives you no benefit, but may actually run
           slower! See: `GlobalInterpreterLock <http://wiki.python.org/moin/GlobalInterpreterLock>`_
+
+.. warning:: Some parts of the GoLismero API doesn't guarantee thread safety!
+             When in doubt, avoid sharing objects or mutable structures among
+             threads, and pipe the API calls through the main thread.
 """
 
 __license__ = """
