@@ -34,8 +34,10 @@ __all__ = [ "char_count", "line_count", "word_count",
             "generate_random_string", "split_first",
             "extract_vuln_ids", ]
 
+import re
+
 from random import choice
-from re import findall, finditer
+from re import finditer
 from string import ascii_letters, digits
 
 
@@ -104,10 +106,27 @@ def generate_random_string(length = 30):
 
 
 #------------------------------------------------------------------------------
+_vuln_id_regex = {
+    "bid": re.compile(
+        r"\b(?:BID\-|BID\: ?|BUGTRAQ\-|BUGTRAQ\: ?|BUGTRAQ ID: ?)([0-9]+)\b"),
+    "cve": re.compile(
+        r"\bCVE\-([0-9][0-9][0-9][0-9]\-[0-9][0-9][0-9][0-9][0-9]?)\b"),
+    "cwe": re.compile(
+        r"\bCWE\-([0-9][0-9][0-9][0-9]\-[0-9][0-9][0-9][0-9])\b"),
+    "osvdb": re.compile(
+        r"\bOSVDB(?:\-|\: ?)([0-9]+)\b"),
+    "sa": re.compile(
+        r"\b(?:SECUNIA|SA)(?:\-|\: ?)([0-9]+)\b"),
+    "sectrack": re.compile(
+        r"\bSECTRACK(?:\-|\: ?)([0-9]+)\b"),
+    "xf": re.compile(
+        r"\bXF\: ?[a-z0-9\-]* ?\(([0-9]+)\)(?:[^\w]|$)"),
+}
 def extract_vuln_ids(text):
     """
     Extract vulnerability IDs from plain text using regular expressions.
-    Currently CVE, CWE and OSVDB are supported.
+    Currently the following ID types are supported:
+    Bugtraq ID, CVE, CWE, OSVDB, Secunia, Security Tracker and ISS X-Force.
 
     Example::
         >>> extract_vuln_ids(\"\"\"
@@ -135,24 +154,23 @@ def extract_vuln_ids(text):
     :param text: Plain text to search.
     :type text: str
 
-    :returns: Map of ID type ("cve", "cwe", "osvdb") to lists containing one
-        or more strings, each string being a vulnerability ID of that type.
-        Vulnerability types not found will not be present in the dictionary. If
-        no vulnerability IDs were found at all, the dictionary will be empty.
+    :returns:
+        Map of ID type ("bid", "cve", "cwe", "osvdb", "sa", "sectrack", "xf")
+        to lists of one or more strings, each string being a vulnerability ID
+        of that type. Vulnerability types not found will not be present in the
+        dictionary. If no vulnerability IDs were found at all, the dictionary
+        will be empty.
     :rtype: dict( str -> list(str, ...) )
     """
     d = {}
-    found = findall(r"\b(OSVDB\-[0-9]+)\b", text)
-    if found:
-        d["osvdb"] = found
-    found = findall(
-        r"\b(CVE\-[0-9][0-9][0-9][0-9]\-[0-9][0-9][0-9][0-9][0-9]?)\b", text)
-    if found:
-        d["cve"] = found
-    found = findall(
-        r"\b(CWE\-[0-9][0-9][0-9][0-9]\-[0-9][0-9][0-9][0-9])\b", text)
-    if found:
-        d["cwe"] = found
+    for vuln_type, vuln_re in _vuln_id_regex.iteritems():
+        found = set(vuln_re.findall(text))
+        if found:
+            prefix = vuln_type.upper() + "-"
+            d[vuln_type] = sorted(
+                prefix + vuln_id
+                for vuln_id in found
+            )
     return d
 
 

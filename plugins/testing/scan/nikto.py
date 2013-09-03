@@ -289,16 +289,8 @@ class NiktoPlugin(TestingPlugin):
                         else:
                             url = urls_seen[ (target, method) ]
 
-                        # Extract the vulnerability tags.
-                        kwargs = extract_vuln_ids(text)
-                        if vuln_tag.startswith("OSVDB-"):
-                            kwargs["osvdb"].insert(0, vuln_tag)
-                        elif vuln_tag.startswith("CVE-"):
-                            kwargs["cve"].insert(0, vuln_tag)
-                        elif vuln_tag.startswith("CWE-"):
-                            kwargs["cwe"].insert(0, vuln_tag)
-
                         # Report the vulnerabilities.
+                        kwargs = extract_vuln_ids("%s: %s" % (vuln_tag, text))
                         kwargs["level"] = "informational"
                         kwargs["description"] = text
                         vuln = VulnerableWebApp(**kwargs)
