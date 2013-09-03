@@ -459,9 +459,9 @@ class PluginContext (object):
             return self.__plugin_info.plugin_config
 
     @property
-    def crawling_depth(self):
+    def depth(self):
         """"
-        :returns: Current crawling depth.
+        :returns: Current analysis depth.
         :rtype: int
         """
         return self._depth
