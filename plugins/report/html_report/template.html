@@ -816,19 +816,19 @@
                                                                 {% for l_res_rel_vuln in l_row.associated_vulns %}
 
                                                                   <!-- Related vuln properties -->
-                                                                  <div class="accordion" id="r_p_rel_v_{{l_vuln.resource_type|slugify}}_{{l_res_rel_vuln.vuln_name}}_{{forloop.counter}}_3" style="margin-left: 30px;">
+                                                                  <div class="accordion" id="r_p_rel_v_{{l_vuln.resource_type|slugify}}_{{l_res_rel_vuln.vuln_name|slugify}}_{{forloop.counter}}_3" style="margin-left: 30px;">
                                                                     <div class="accordion-group">
 
                                                                       <!-- Related Vulns of resources accordion header -->
                                                                       <div class="accordion-heading">
                                                                         <div class="row">
-                                                                          <div class="col-12"><a class="accordion-toggle" data-toggle="collapse" data-parent="#r_p_rel_v_{{l_vuln.resource_type|slugify}}_{{l_res_rel_vuln.vuln_name}}_{{forloop.counter}}_3" href="#r_p_rel_v_i_{{l_vuln.resource_type|slugify}}_{{l_res_rel_vuln.vuln_name}}_{{forloop.counter}}_4" style="color: #383839;"><span>[+]</span>&nbsp;{{l_res_rel_vuln.vuln_name}}</a></div>
+                                                                          <div class="col-12"><a class="accordion-toggle" data-toggle="collapse" data-parent="#r_p_rel_v_{{l_vuln.resource_type|slugify}}_{{l_res_rel_vuln.vuln_name|slugify}}_{{forloop.counter}}_3" href="#r_p_rel_v_i_{{l_vuln.resource_type|slugify}}_{{l_res_rel_vuln.vuln_name|slugify}}_{{forloop.counter}}_4" style="color: #383839;"><span>[+]</span>&nbsp;{{l_res_rel_vuln.vuln_name}}</a></div>
                                                                         </div>
                                                                       </div>
                                                                       <!-- End Related vuln of resources accordion header -->
 
                                                                       <!-- Vuln accordion info -->
-                                                                      <div id="r_p_rel_v_i_{{l_vuln.resource_type|slugify}}_{{l_res_rel_vuln.vuln_name}}_{{forloop.counter}}_4" class="accordion-body collapse">
+                                                                      <div id="r_p_rel_v_i_{{l_vuln.resource_type|slugify}}_{{l_res_rel_vuln.vuln_name|slugify}}_{{forloop.counter}}_4" class="accordion-body collapse">
                                                                         <div class="accordion-inner">
                                                                           <div class="row">
                                                                             <div class="col-12">
