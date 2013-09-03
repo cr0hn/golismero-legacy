@@ -195,8 +195,8 @@ class BaseAuditDB (BaseDB):
         :param audit_name: Optional, audit name.
         :type audit_name: str | None
 
-        :returns: Audit configuration.
-        :rtype: AuditConfig
+        :returns: Audit configuration and scope.
+        :rtype: AuditConfig, AuditScope
 
         :raises IOError: The database could not be opened.
         """
@@ -1329,20 +1329,24 @@ class AuditSQLiteDB (BaseAuditDB):
                 try:
 
                     # Read the config.
-                    cursor.execute("SELECT audit_config FROM golismero LIMIT 1;")
+                    cursor.execute(
+                        "SELECT audit_config, audit_scope"
+                        " FROM golismero"
+                        " LIMIT 1;")
                     row = cursor.fetchone()
                     if not row:
                         raise IOError("Missing data in database!")
                     try:
                         audit_config = cls.decode(row[0])
+                        audit_scope  = cls.decode(row[1])
                     except Exception:
                         raise IOError("Corrupted database!")
 
                     # Finish the transaction.
                     db.commit()
 
-                    # Return the config.
-                    return audit_config
+                    # Return the config and scope.
+                    return audit_config, audit_scope
 
                 except:
 

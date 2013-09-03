@@ -870,10 +870,6 @@ class AuditConfig (Configuration):
     #--------------------------------------------------------------------------
     def check_params(self):
 
-        # Validate the list of targets.
-        if not self.targets:
-            raise ValueError("No targets selected for execution.")
-
         # Validate the list of plugins.
         if not self.enable_plugins:
             raise ValueError("No plugins selected for execution.")

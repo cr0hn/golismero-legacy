@@ -176,9 +176,8 @@ def _sanitize_config(options, audits):
         if not hasattr(params, "plugin_load_overrides"):
             params.plugin_load_overrides = options.plugin_load_overrides
         if not hasattr(params, "targets") or not params.targets:
-            if not hasattr(options, "targets"):
-                raise ValueError("No targets selected!")
-            params.targets = list(options.targets)
+            if hasattr(options, "targets"):
+                params.targets = list(options.targets)
         params.check_params()
         sane_audits.append(params)
 
