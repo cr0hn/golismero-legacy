@@ -115,19 +115,18 @@ class OpenVASPlugin(TestingPlugin):
                 self.state.put("connection_down", True)
                 return
 
-            # Launch the scanner.
-            m_scan_id, m_target_id = m_scanner.launch_scan(
-                target = info.address,
-                profile = m_profile,
-                callback_end = partial(lambda x: x.set(), m_event),
-                callback_progress = OpenVASProgress(self.update_status)
-            )
-            Logger.log_more_verbose("OpenVAS task ID: %s" % m_scan_id)
-
-            # Wait for completion.
-            m_event.wait()
-
             try:
+                # Launch the scanner.
+                m_scan_id, m_target_id = m_scanner.launch_scan(
+                    target = info.address,
+                    profile = m_profile,
+                    callback_end = partial(lambda x: x.set(), m_event),
+                    callback_progress = OpenVASProgress(self.update_status)
+                )
+                Logger.log_more_verbose("OpenVAS task ID: %s" % m_scan_id)
+
+                # Wait for completion.
+                m_event.wait()
 
                 # Get the scan results.
                 m_openvas_results = m_scanner.get_results(m_scan_id)
