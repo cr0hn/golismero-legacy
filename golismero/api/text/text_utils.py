@@ -30,9 +30,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = [ "char_count", "line_count", "word_count", "generate_random_string",
-            "extract_vuln_ids", "convert_references_to_vuln_ids",
-            "convert_vuln_ids_to_references", "split_first", ]
+__all__ = [
+    "char_count", "line_count", "word_count", "generate_random_string",
+    "uncamelcase", "extract_vuln_ids",  "convert_references_to_vuln_ids",
+    "convert_vuln_ids_to_references", "split_first",
+]
 
 import re
 
@@ -103,6 +105,50 @@ def generate_random_string(length = 30):
     m_available_chars = ascii_letters + digits
 
     return "".join(choice(m_available_chars) for _ in xrange(length))
+
+
+#------------------------------------------------------------------------------
+# Adapted from: http://stackoverflow.com/a/2560017/426293
+__uncamelcase_re = re.compile("%s|%s|%s" % (
+    r"(?<=[A-Z])(?=[A-Z][a-z])",
+    r"(?<=[^A-Z])(?=[A-Z])",
+    r"(?<=[A-Za-z])(?=[^A-Za-z])",
+))
+def uncamelcase(string):
+    """
+    Converts a CamelCase string into a human-readable string.
+
+    Examples::
+        >>> uncamelcase("lowercase")
+        'lowercase'
+        >>> uncamelcase("Class")
+        'Class'
+        >>> uncamelcase("MyClass")
+        'My Class'
+        >>> uncamelcase("HTML")
+        'HTML'
+        >>> uncamelcase("PDFLoader")
+        'PDF Loader'
+        >>> uncamelcase("AString")
+        'A String'
+        >>> uncamelcase("SimpleXMLParser")
+        'Simple XML Parser'
+        >>> uncamelcase("GL11Version")
+        'GL 11 Version'
+        >>> uncamelcase("99Bottles")
+        '99 Bottles'
+        >>> uncamelcase("May5")
+        'May 5'
+        >>> uncamelcase("BFG9000")
+        'BFG 9000'
+
+    :param string: CamelCase string.
+    :type string: str
+
+    :returns: Human-readable string.
+    :rtype: str
+    """
+    return __uncamelcase_re.sub(" ", string)
 
 
 #------------------------------------------------------------------------------

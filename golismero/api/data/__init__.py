@@ -51,6 +51,7 @@ __all__ = [
 
 from .db import Database
 from ..config import Config
+from ..text.text_utils import uncamelcase
 from ...common import pickle, Singleton
 
 from collections import defaultdict
@@ -569,6 +570,16 @@ class Data(object):
     #--------------------------------------------------------------------------
     def __repr__(self):
         return "<%s identity=%s>" % (self.__class__.__name__, self.identity)
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def display_name(self):
+        """
+        :returns: A user-friendly display name for this data type.
+        :rtype: str
+        """
+        return uncamelcase(self.__class__.__name__)
 
 
     #--------------------------------------------------------------------------

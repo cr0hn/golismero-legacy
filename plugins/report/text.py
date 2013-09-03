@@ -393,10 +393,7 @@ class TextReport(ReportPlugin):
             if vuln.false_positive:
                 continue
 
-            # Vuln name as raw format
-            l_vuln_name      = vuln.vulnerability_type[vuln.vulnerability_type.rfind("/") + 1:]
-            # Vuln name as display mode
-            l_vuln_name_text = l_vuln_name.replace("_", " ").capitalize()
+            l_vuln_name_text = vuln.display_name
 
             # Call to the function resposible to display the vuln info
             try:
