@@ -475,8 +475,8 @@
                   #########
                 -->
                 <div class="tab-pane fade active in" id="by_vuln">
-                    {% for l_vuln in info_by_vuln %}
-
+                    {% for key, l_info in info_by_vuln.items %}
+                      <h3>{{key}}</h3>
                         <div class="row">
                           <div class="col-lg-12">
                               <form id="filter-form-vulns" style="margin-top:10px">Filter:&nbsp;&nbsp;&nbsp;<input name="filter-vulns" id="filter-vulns" value="" maxlength="30" size="30" type="text"></form><br>
@@ -490,6 +490,8 @@
                                 </thead>
 
                                 <tbody>
+
+                                  {% for l_vuln in l_info %}                              
                                     <!-- Start row content -->
                                     <tr>
                                       <!-- Start row number -->
@@ -580,53 +582,40 @@
 
 
                                                 <!-- Vuln affected resources -->
-                                                <div class="accordion" id="v_ar_{{l_vuln.vuln_name|slugify}}_{{forloop.counter}}_1" style="margin-left: 15px;">
+                                                <div class="accordion" id="v_ar_{{l_vuln.vuln_name|slugify}}_{{forloop.counter}}_1">
                                                   <div class="accordion-group">
 
-                                                    <!-- Vuln accordion header -->
-                                                    <div class="accordion-heading">
-                                                      <div class="row">
-                                                        <div class="col-12"><a class="accordion-toggle" data-toggle="collapse" data-parent="#v_ar_{{l_vuln.vuln_name|slugify}}_{{forloop.counter}}_1" href="#v_af_i_{{l_vuln.vuln_name|slugify}}_{{forloop.counter}}_1" style="color: #383839;"><span>[+]</span>&nbsp;Affected resources</a></div>
-                                                      </div>
-                                                    </div>
-                                                    <!-- End Vuln accordion header -->
-
                                                     <!-- Vuln accordion info -->
-                                                    <div id="v_af_i_{{l_vuln.vuln_name|slugify}}_{{forloop.counter}}_1" class="accordion-body collapse">
-                                                      <div class="accordion-inner">
-                                                        <div class="row">
-                                                          <div class="col-12">
+                                                    <div class="row">
+                                                      <div class="col-12">
 
-                                                            <!-- Affected resources of vuln -->
-                                                            <div class="context" style="padding-top: 5px; margin-left: 20px;">
-                                                              <div class="row">
-                                                                <div class="col-12">
-                                                                  <div class="panel accordion-panel" style="border: none;">
-                                                                    <div style="padding-top: 0px;">
-                                                                      <div class="row" style="border-bottom: 1px solid #dcdbd9; padding-bottom: 2px; margin-bottom: 2px;">
-                                                                        <div class="col-3 text-center"><b>Resource type</b></div>
-                                                                        <div class="col-9 text-center"><b>Value</b></div>
-                                                                      </div>
-
-                                                                      {% for l_vuln_affected_res in l_vuln.affected_resources %}
-                                                                        <div class="row" style="padding: 2px 2px 2px 2px;">
-                                                                          <div class="col-3" style="border-right: 1px solid #dcdbd9;"><span class="btn btn-primary btn-small">{{l_vuln_affected_res.resource_type}}</span></div>
-                                                                          <div class="col-9" >{{l_vuln_affected_res.main_info}}</div>
-                                                                        </div>
-                                                                      {% empty %}
-                                                                        <div class="row">
-                                                                          <div class="col-12">There are no affected resources</div>
-                                                                        </div>
-                                                                      {% endfor %}
-                                                                    </div>
+                                                        <!-- Affected resources of vuln -->
+                                                        <div class="context" style="padding-top: 5px; margin-left: 20px;">
+                                                          <div class="row">
+                                                            <div class="col-12">
+                                                              <div class="panel accordion-panel" style="border: none;">
+                                                                <div style="padding-top: 0px;">
+                                                                  <div class="row" style="border-bottom: 1px solid #dcdbd9; padding-bottom: 2px; margin-bottom: 2px;">
+                                                                    <div class="col-3 text-left"><b>Affected resource</b></div>
+                                                                    <div class="col-9 text-center"><b>Value</b></div>
                                                                   </div>
+
+                                                                  {% for l_vuln_affected_res in l_vuln.affected_resources %}
+                                                                    <div class="row" style="padding: 2px 2px 2px 2px;">
+                                                                      <div class="col-3" style="border-right: 1px solid #dcdbd9;"><span class="btn btn-primary btn-small">{{l_vuln_affected_res.resource_type}}</span></div>
+                                                                      <div class="col-9" >{{l_vuln_affected_res.main_info}}</div>
+                                                                    </div>
+                                                                  {% empty %}
+                                                                    <div class="row">
+                                                                      <div class="col-12">There are no affected resources</div>
+                                                                    </div>
+                                                                  {% endfor %}
                                                                 </div>
                                                               </div>
                                                             </div>
-                                                            <!-- End affected resources of vuln -->
-
                                                           </div>
                                                         </div>
+                                                        <!-- End affected resources of vuln -->
 
                                                       </div>
                                                     </div>
@@ -660,14 +649,11 @@
 
                                     </tr>
                                     <!-- End row content-->
-
+                                  {% endfor %}  
                                 </tbody>
                               </table>
                           </div>
                         </div>
-
-
-
 
                     {% endfor %}
 
