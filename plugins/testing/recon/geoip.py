@@ -48,6 +48,10 @@ class GeoIP(TestingPlugin):
     This plugin tries to geolocate all IP addresses and domain names.
     """
 
+    # TODO: this could be useful as a fallback if freegeoip.net fails:
+    # http://linux.die.net/man/1/geoiplookup
+    # https://github.com/ioerror/blockfinder
+
 
     #----------------------------------------------------------------------
     def get_accepted_info(self):
