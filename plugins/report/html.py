@@ -35,7 +35,7 @@ from golismero.api.logger import Logger
 from golismero.api.plugin import ReportPlugin
 
 from os.path import join, dirname
-from collections import Counter
+from collections import Counter, defaultdict
 import datetime
 
 
@@ -351,7 +351,7 @@ class HTMLReport(ReportPlugin):
 
         context['info_by_resource'] = m_results
 
-    def fill_content_vuln(self, context):
+    def fill_content_vuln_(self, context):
         """
         Fill the context var with the "vulns" information.
 
@@ -429,6 +429,86 @@ class HTMLReport(ReportPlugin):
                     m_results_append(l_res_result)
 
         context['info_by_vuln'] = m_results
+
+
+    def fill_content_vuln(self, context):
+        """
+        Fill the context var with the "vulns" information.
+
+
+        This method generates a list as format:
+
+        >>>[
+            {
+               'vuln_name' : 'Name of vuln',
+
+               'affected_resources':
+               [
+                   {
+                       'resource_type': 'Type 1',
+                       'main_info'    : 'http://www.info.com'
+                   }
+               ],
+
+               'properties':
+               [
+                   {
+                       'name'  : 'name of property',
+                       'value' : 'value of property,
+                   }
+               ],
+
+               'level': 'low'
+            }
+        ]
+
+        :param context: Context var to fill.
+        :type context: Context
+        """
+
+        m_results        = defaultdict(list)
+
+        # Get all type of resources
+        m_all_resources = set([x for x in dir(Resource) if x.startswith("RESOURCE")])
+
+        for l_resource in m_all_resources:
+
+            # Get resources URL resources
+            resource = self.common_get_resources(Data.TYPE_RESOURCE, getattr(Resource, l_resource))
+
+            if not resource:
+                continue
+
+            # Get the vulns of each resource
+            for l_each_res in resource:
+                for l_vuln in l_each_res.associated_vulnerabilities:
+                    if l_vuln.false_positive:
+                        continue
+                    l_res_result = {}
+
+                    # Get the vuln name using the class name
+                    l_res_result['vuln_name']           = l_vuln.__class__.__name__
+
+                    # Get the properties
+                    l_res_result['properties']          = self.__get_object_properties(l_vuln, self.PRIVATE_INFO_VULN)
+
+                    # Get associated resources with this vuln
+                    l_res_affected        = []
+                    l_res_affected_append = l_res_affected.append
+                    for l_res in l_vuln.associated_resources:
+                        l_info = {}
+                        l_info['resource_type'] = l_res.__class__.__name__
+                        l_info['main_info']     = getattr(l_res, self.MAIN_RESOURCES_PROPERTIES[l_res.__class__.__name__.upper()])
+
+                        l_res_affected_append(l_info)
+
+                    l_res_result['affected_resources']  = l_res_affected
+
+
+                    m_results[l_vuln.__class__.__name__].append(l_res_result)
+
+        context['info_by_vuln'] = dict(m_results)
+
 
 
 
