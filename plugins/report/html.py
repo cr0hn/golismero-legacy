@@ -58,26 +58,26 @@ class HTMLReport(ReportPlugin):
     # This properties/methods are the common info for the vulnerability types.
     PRIVATE_INFO_VULN = ['DEFAULTS', 'TYPE', 'add_information', 'RESOURCE',
                          'add_link', 'add_resource', 'add_vulnerability', 'associated_informations',
-                         'associated_resources', 'associated_vulnerabilities', 'cve', 'cwe',
+                         'associated_resources', 'associated_vulnerabilities',
                          'data_type', 'discovered', 'false_positive', 'get_associated_informations_by_category',
                          'get_associated_resources_by_category', 'get_associated_vulnerabilities_by_category',
                          'get_linked_data', 'get_links', 'identity', 'impact', 'is_in_scope', 'linked_data',
                          'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
                          'merge', 'min_data', 'min_informations', 'min_resources', 'min_vulnerabilities',
                          'references', 'reverse_merge', 'risk', 'severity', 'validate_link_minimums', 'vulnerability_type',
-                         'resource_type', 'resolve', 'resolve_links', 'find_linked_data', 'depth', 'taxonomies']
+                         'resource_type', 'resolve', 'resolve_links', 'find_linked_data', 'depth', 'taxonomies', 'data_subtype']
 
     # This properties/methods are the common info for the vulnerability types.
     PRIVATE_INFO_RESOURCES = ['DEFAULTS', 'TYPE', 'add_information', 'RESOURCE',
                               'add_link', 'add_resource', 'add_vulnerability', 'associated_informations',
-                              'associated_resources', 'associated_vulnerabilities', 'cve', 'cwe',
+                              'associated_resources', 'associated_vulnerabilities',
                               'data_type', 'discovered', 'get_associated_informations_by_category',
                               'get_associated_resources_by_category', 'get_associated_vulnerabilities_by_category',
                               'get_linked_data', 'get_links', 'identity', 'impact', 'is_in_scope', 'linked_data',
                               'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
                               'merge', 'min_data', 'min_informations', 'min_resources', 'min_vulnerabilities',
                               'references', 'reverse_merge', 'risk', 'severity', 'validate_link_minimums', 'vulnerability_type',
-                              'resource_type', 'resolve', 'resolve_links', 'find_linked_data', 'depth', 'taxonomies']
+                              'resource_type', 'resolve', 'resolve_links', 'find_linked_data', 'depth', 'taxonomies', 'data_subtype']
 
 
 

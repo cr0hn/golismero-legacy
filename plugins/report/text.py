@@ -376,7 +376,7 @@ class TextReport(ReportPlugin):
                         'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
                         'merge', 'min_data', 'min_informations', 'min_resources', 'min_vulnerabilities',
                         'references', 'reverse_merge', 'risk', 'severity', 'validate_link_minimums',
-                        'vulnerability_type', 'find_linked_data', 'depth', 'taxonomies']
+                        'vulnerability_type', 'find_linked_data', 'depth', 'taxonomies', 'data_subtype']
 
 
         if not vulns:

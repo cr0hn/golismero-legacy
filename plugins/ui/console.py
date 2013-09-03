@@ -139,7 +139,10 @@ class ConsoleUIPlugin(UIPlugin):
             # When an audit is finished, check if there are more running audits.
             # If there aren't any, stop the Orchestrator.
             if message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
-                del self.already_seen_info[Config.audit_name]
+                try:
+                    del self.already_seen_info[Config.audit_name]
+                except KeyError:
+                    pass # may happen when generating reports only
                 if get_audit_count() == 1:  # this is the last one
                     Config._context.send_msg(  # XXX FIXME hide this from plugins!
                         message_type = MessageType.MSG_TYPE_CONTROL,
