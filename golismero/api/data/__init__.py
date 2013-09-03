@@ -1361,7 +1361,7 @@ class _LocalDataCache(Singleton):
 
 
     #--------------------------------------------------------------------------
-    def on_finish(self, result):
+    def on_finish(self, result, input_data):
         """
         Called by the plugin bootstrap when a plugin finishes running.
         """
@@ -1371,7 +1371,7 @@ class _LocalDataCache(Singleton):
             self.update()
 
             # No results.
-            if result is None:
+            if not result:
                 result = []
 
             # Single result.
@@ -1386,7 +1386,15 @@ class _LocalDataCache(Singleton):
                         msg = "recv_info() returned an invalid data type: %r"
                         raise TypeError(msg % type(data))
 
-            # If the cache is disabled, do no further processing.
+            # Always send back the input data as a result,
+            # unless discarded by the plugin.
+            if (
+                input_data not in result and
+                input_data.identity not in self.__discarded
+            ):
+                result.insert(0, input_data)
+
+            # If the cache is disabled do no further processing.
             if not self._enabled:
                 return result
 

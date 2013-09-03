@@ -244,11 +244,7 @@ def _bootstrap(context, func, args, kwargs):
                             if func == "recv_info":
 
                                 # Validate and sanitize the result data.
-                                result = LocalDataCache.on_finish(result)
-
-                                # Always send back the input data as a result.
-                                if input_data not in result:
-                                    result.insert(0, input_data)
+                                result = LocalDataCache.on_finish(result, input_data)
 
                                 # Send the result data to the Orchestrator.
                                 if result:

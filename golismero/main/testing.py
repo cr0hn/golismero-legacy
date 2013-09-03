@@ -299,7 +299,7 @@ class PluginTester(object):
                 Config._context._PluginContext__ack_identity = None
 
                 # Process the results.
-                result = LocalDataCache.on_finish(result)
+                result = LocalDataCache.on_finish(result, data)
 
                 # If the input data was not returned, make sure to add it.
                 if data not in result:

@@ -306,9 +306,8 @@ def helper_data_links():
 
     # Test TempDataStorage.on_finish().
     print "Testing LocalDataCache.on_finish() on ideal conditions..."
-    result_before = [d1, d2, d3]
-    result_after  = LocalDataCache.on_finish(result_before)
-    assert set(result_before) == set(result_after)
+    result = LocalDataCache.on_finish([d2, d3], d1)
+    assert set(result) == set([d1, d2, d3])
     d1.validate_link_minimums()
     d2.validate_link_minimums()
     d3.validate_link_minimums()
