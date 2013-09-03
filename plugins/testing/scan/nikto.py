@@ -36,6 +36,7 @@ from golismero.api.data.vulnerability.infrastructure.vulnerable_webapp \
 from golismero.api.external import run_external_tool, \
      find_cygwin_binary_in_path
 from golismero.api.logger import Logger
+from golismero.api.net.scraper import extract_from_text
 from golismero.api.plugin import ImportPlugin, TestingPlugin
 from golismero.api.text.text_utils import extract_vuln_ids
 
@@ -289,10 +290,18 @@ class NiktoPlugin(TestingPlugin):
                         else:
                             url = urls_seen[ (target, method) ]
 
+                        # Get the reference URLs.
+                        refs = extract_from_text(text)
+                        refs.difference_update(urls_seen.itervalues())
+
                         # Report the vulnerabilities.
-                        kwargs = extract_vuln_ids("%s: %s" % (vuln_tag, text))
-                        kwargs["level"] = "informational"
+                        if vuln_tag == "OSVDB-0":
+                            kwargs = {"level": "informational"}
+                        else:
+                            kwargs = extract_vuln_ids(
+                                "%s: %s" % (vuln_tag, text))
                         kwargs["description"] = text
+                        kwargs["references"]  = refs
                         vuln = VulnerableWebApp(**kwargs)
                         vuln.add_resource(url)
                         results.append(vuln)
