@@ -173,8 +173,9 @@ class OpenVASPlugin(TestingPlugin):
         # Remember the hosts we've seen so we don't create them twice.
         hosts_seen = {}
 
-        LEVELS_CORRESPONDENCES = {
-            'debug' : 'low',
+        # Map of OpenVAS levels to GoLismero levels.
+        OPV_LEVELS_TO_GLM_LEVELS = {
+            'debug' : 'informational',
             'log'   : 'informational',
             'low'   : "low",
             'medium': 'middle',
@@ -227,14 +228,17 @@ class OpenVASPlugin(TestingPlugin):
                         for note in opv.notes
                     )
 
+                # Prepare the vulnerability properties.
+                kwargs = {
+                    "level": OPV_LEVELS_TO_GLM_LEVELS[level.lower()],
+                    "description": description,
+                    ##"cvss": cvss,
+                    ##"cve": cve,
+                    ##"references": references.split("\n"),
+                }
+
                 # Create the vulnerability instance.
-                vuln = GenericVulnerability(
-                    level       = LEVELS_CORRESPONDENCES[level.lower()],
-                    description = description,
-                    ##cvss        = cvss,
-                    ##cve         = cve,
-                    ##references  = references.split("\n"),
-                )
+                vuln = GenericVulnerability(**kwargs)
                 ##vuln.vulnerability_type = vulnerability_type
 
                 # Link the vulnerability to the resource.
