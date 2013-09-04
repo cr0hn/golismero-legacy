@@ -86,8 +86,11 @@ import datetime
 
 from collections import defaultdict
 from ConfigParser import RawConfigParser
+from datetime import datetime
 from getpass import getpass
 from os import getenv, getpid
+from pprint import pformat
+from re import compile
 from thread import get_ident
 
 
@@ -95,12 +98,14 @@ from thread import get_ident
 # GoLismero modules
 
 from golismero.api.config import Config
+from golismero.api.data import Data
 from golismero.common import OrchestratorConfig, AuditConfig, \
                              get_profile, get_available_profiles
 from golismero.database.auditdb import AuditDB
 from golismero.main import launcher
 from golismero.main.console import get_terminal_size, colorize, Console
 from golismero.main.orchestrator import Orchestrator
+from golismero.main.testing import PluginTester
 from golismero.managers.pluginmanager import PluginManager
 from golismero.managers.processmanager import PluginContext
 
@@ -206,6 +211,7 @@ def cmdline_parser():
     gr_audit.add_argument("-nd", "--no-db", dest="audit_db", action="store_const", const="memory://", help="do not store the results in a database")
     gr_audit.add_argument("-i", "--input", dest="imports", metavar="FILENAME", action="append", help="read results from external tools right before the audit")
     gr_audit.add_argument("-ni", "--no-input", dest="disable_importing", action="store_true", default=False, help="do not read results from external tools")
+    gr_audit.add_argument("--dump-database", action="store_true", default=False, help="dump the audit database and quit; the -o option is used to specify the database dump files instead of the report files")
 
     gr_report = parser.add_argument_group("report options")
     gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", help="write the results of the audit to this file (use - for stdout)")
@@ -241,6 +247,182 @@ def cmdline_parser():
     gr_plugins.add_argument("--plugin-info", metavar="NAME", dest="plugin_name", help="show plugin info and quit")
 
     return parser
+
+
+#------------------------------------------------------------------------------
+def dump_sql(db, filename):
+    try:
+        db.dump(filename)
+    except NotImplementedError:
+        print >>sys.stderr, ("Filetype not supported by this database,"
+                             " skipping file: " + filename)
+
+
+#------------------------------------------------------------------------------
+def dump_rst(db, filename):
+
+    # Open the output file.
+    with open(filename, "w") as f:
+
+        # Print the main header.
+        print >>f, "GoLismero database dump"
+        print >>f, "======================="
+        print >>f, ""
+
+        # Print the audit name.
+        print >>f, "- Audit name: " + db.audit_name
+
+        # Print the audit times.
+        start_time, stop_time = db.get_audit_times()
+        if start_time and stop_time:
+            start_time = datetime.fromtimestamp(start_time)
+            stop_time  = datetime.fromtimestamp(stop_time)
+            if start_time < stop_time:
+                td       = stop_time - start_time
+                days     = td.days
+                hours    = td.seconds // 3600
+                minutes  = (td.seconds // 60) % 60
+                seconds  = td.seconds
+                run_time = "%d days, %d hours, %d minutes and %d seconds" % \
+                    (days, hours, minutes, seconds)
+            else:
+                run_time = "Interrupted"
+            start_time = str(start_time)
+            stop_time  = str(stop_time)
+        else:
+            if start_time:
+                run_time = "Interrupted"
+            else:
+                run_time = "Unknown"
+            if not start_time:
+                start_time = "Unknown"
+            if not stop_time:
+                stop_time = "Interrupted"
+        print >>f, "- Start date: " + start_time
+        print >>f, "- End date: " + stop_time
+        print >>f, "- Execution time: " + run_time
+        print >>f, ""
+
+        # Dump the data.
+        _dump_rst(db, f, Data.TYPE_VULNERABILITY, "Vulnerability")
+        _dump_rst(db, f, Data.TYPE_RESOURCE,      "Resource")
+        _dump_rst(db, f, Data.TYPE_INFORMATION,   "Information")
+
+def _dump_rst(db, f, data_type, data_title):
+
+    # Collect the data.
+    datas = defaultdict(list)
+    identities = db.get_data_keys(data_type)
+    for x in db.get_many_data(identities, data_type):
+        datas[x.display_name].append((x.identity, x))
+    if datas:
+        for x in datas.itervalues():
+            x.sort()
+
+        # Get the titles.
+        titles = datas.keys()
+        titles.sort()
+
+        # Print the data type header.
+        header = "%s objects" % data_title
+        print >>f, header
+        print >>f, "-" * len(header)
+        print >>f, ""
+
+        # Dump the data per type.
+        for title in titles:
+
+            # Print the title.
+            print >>f, title
+            print >>f, "+" * len(title)
+            print >>f, ""
+
+            # Dump the data per title.
+            show_ruler = False
+            for _, data in datas[title]:
+
+                # Show the horizontal ruler for all items but the first.
+                if show_ruler:
+                    print >>f, "----"
+                    print >>f, ""
+                show_ruler = True
+
+                # Show the data title.
+                data_title = "ID: %s" % (data.identity)
+                print >>f, data_title
+                print >>f, "^" * len(data_title)
+                print >>f, ""
+
+                # Collect the properties.
+                # TODO: make them references so they can link to the corresponding object.
+                property_groups = data.display_properties
+                property_groups["Graph Links"]["Associated Informations"]    = sorted(data.get_links(Data.TYPE_INFORMATION))
+                property_groups["Graph Links"]["Associated Resources"]       = sorted(data.get_links(Data.TYPE_RESOURCE))
+                property_groups["Graph Links"]["Associated Vulnerabilities"] = sorted(data.get_links(Data.TYPE_VULNERABILITY))
+
+                # Get the groups.
+                groups = property_groups.keys()
+                groups.sort()
+
+                # Dump the data per group.
+                for group in groups:
+
+                    # Get the properties.
+                    properties = property_groups[group]
+
+                    # Get the property names.
+                    names = properties.keys()
+                    names.sort()
+
+                    # Hack to reorder some groups.
+                    if group == "Description":
+                        if "References" in names:
+                            names.remove("References")
+                            names.append("References")
+                        if "Title" in names:
+                            names.remove("Title")
+                            names.insert(0, "Title")
+                    elif group == "Risk":
+                        if "Level" in names:
+                            names.remove("Level")
+                            names.insert(0, "Level")
+
+                    # Get the width of the names column.
+                    h_names = "Property name"
+                    w_names = max(len(x) for x in names)
+                    w_names = max(w_names, len(h_names))
+
+                    # Get the width of the values column.
+                    h_values = "Property value"
+                    w_values = 0
+                    for v in properties.itervalues():
+                        for x in _format_rst(v).split("\n"):
+                            w_values = max(w_values, len(x.strip()))
+                    w_values = max(w_values, len(h_values))
+
+                    # Print the group header.
+                    if group:
+                        print >>f, group
+                        print >>f, "*" * len(group)
+                        print >>f, ""
+
+                    # Dump the properties.
+                    fmt = "| %%-%ds | %%-%ds |" % (w_names, w_values)
+                    separator = "+-%s-+-%s-+" % (("-" * w_names), ("-" * w_values))
+                    print >>f, separator
+                    print >>f, fmt % (h_names, h_values)
+                    print >>f, separator.replace("-", "=")
+                    for name in names:
+                        lines = _format_rst(properties[name]).split("\n")
+                        print >>f, fmt % (name, lines.pop(0).strip())
+                        for x in lines:
+                            print >>f, fmt % ("", x.strip())
+                        print >>f, separator
+                    print >>f, ""
+
+_escape_rst = compile("(%s)" % "|".join("\\" + x for x in "*:,.\"!-/';~?@[]|+^=_\\"))
+def _format_rst(obj):
+    return _escape_rst.sub(r"\\\1", pformat(obj))
 
 
 #------------------------------------------------------------------------------
@@ -310,6 +492,7 @@ def main():
                 cfg, _ = AuditDB.get_config_from_closed_database(
                     auditParams.audit_db, auditParams.audit_name)
                 if cfg:
+                    auditParams.audit_name = cfg.audit_name
                     auditParams.targets = cfg.targets
                     auditParams.include_subdomains = cfg.include_subdomains
             except Exception:
@@ -526,6 +709,49 @@ def main():
         if path.sep == "/":
             print
         exit(0)
+
+
+    #--------------------------------------------------------------------------
+    # Dump the database and quit.
+
+    if P.dump_database:
+        if not auditParams.audit_db:
+            parser.error("missing audit database!")
+        if auditParams.audit_db.startswith("memory:"):
+            parser.error("missing audit database!")
+        if auditParams.audit_db == "sqlite://" and \
+           not auditParams.audit_name:
+            parser.error("missing audit database!")
+        if not P.reports:
+            parser.error("missing output file(s)!"
+                         " supported types are: .rst, .sql")
+        output_files = sorted(set(P.reports))
+        for filename in output_files:
+            if not filename.lower().endswith(".rst")  and \
+               not filename.lower().endswith(".sql"):
+                parser.error("supported database dump file types are: "
+                             ".rst, .sql")
+        if P.verbose:
+            print "Loading database: %s" % auditParams.audit_db
+        try:
+            with PluginTester(autoinit=False, autodelete=False) as t:
+                t.orchestrator_config.verbose = 0
+                t.audit_config.audit_name = auditParams.audit_name
+                t.audit_config.audit_db   = auditParams.audit_db
+                t.init_environment()
+                db = t.audit.database
+                for filename in output_files:
+                    if P.verbose:
+                        print "Dumping to: " + filename
+                    if filename.lower().endswith(".sql"):
+                        dump_sql(db, filename)
+                    elif filename.lower().endswith(".rst"):
+                        dump_rst(db, filename)
+            exit(0)
+        except Exception, e:
+            raise # XXX DEBUG
+            print "Error! " + str(e)
+            exit(1)
 
 
     #--------------------------------------------------------------------------
