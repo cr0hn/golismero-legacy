@@ -316,6 +316,8 @@ class NiktoPlugin(TestingPlugin):
                                 "%s: %s" % (vuln_tag, text))
                         kwargs["description"] = text if text else None
                         kwargs["references"]  = refs
+                        if Config.plugin_name.startswith("import/"):
+                            kwargs["plugin_id"]   = "testing/scan/nikto"
                         if vuln_tag == "OSVDB-0":
                             vuln = GenericVulnerability(**kwargs)
                             vuln.add_resource(url)
