@@ -65,7 +65,8 @@ class HTMLReport(ReportPlugin):
                          'links', 'max_data', 'max_informations', 'max_resources', 'max_vulnerabilities',
                          'merge', 'min_data', 'min_informations', 'min_resources', 'min_vulnerabilities',
                          'references', 'reverse_merge', 'risk', 'severity', 'validate_link_minimums', 'vulnerability_type',
-                         'resource_type', 'resolve', 'resolve_links', 'find_linked_data', 'depth', 'taxonomies', 'data_subtype']
+                         'resource_type', 'resolve', 'resolve_links', 'find_linked_data', 'depth', 'taxonomies', 'data_subtype',
+                         'title']
 
     # This properties/methods are the common info for the vulnerability types.
     PRIVATE_INFO_RESOURCES = ['DEFAULTS', 'TYPE', 'add_information', 'RESOURCE',
@@ -315,6 +316,7 @@ class HTMLReport(ReportPlugin):
 
                 # Resource to display
                 l_concrete_res['main_info'] = getattr(r, self.MAIN_RESOURCES_PROPERTIES[l_resource.replace("RESOURCE_", "")])
+                l_concrete_res['res_id']    = r.identity
 
                 # Summary vulns
                 l_concrete_res['vulns']    = self.__get_vulns_counter(r.associated_vulnerabilities)
@@ -335,7 +337,9 @@ class HTMLReport(ReportPlugin):
                         if l_res_vuln.false_positive:
                             continue
                         l_assoc_res = {}
-                        l_assoc_res['vuln_name']       = l_res_vuln.__class__.__name__
+                        l_assoc_res['vuln_name']       = l_res_vuln.vulnerability_type
+                        l_assoc_res['vuln_title']      = l_res_vuln.title
+                        l_assoc_res['vuln_id']         = l_res_vuln.identity
                         l_assoc_res['vuln_properties'] = self.__get_object_properties(l_res_vuln, self.PRIVATE_INFO_VULN)
 
                         l_assoc_append(l_assoc_res)
@@ -350,86 +354,6 @@ class HTMLReport(ReportPlugin):
             m_results_append(l_res_result)
 
         context['info_by_resource'] = m_results
-
-    def fill_content_vuln_(self, context):
-        """
-        Fill the context var with the "vulns" information.
-
-
-        This method generates a list as format:
-
-        >>>[
-            {
-               'vuln_name' : 'Name of vuln',
-
-               'affected_resources':
-               [
-                   {
-                       'resource_type': 'Type 1',
-                       'main_info'    : 'http://www.info.com'
-                   }
-               ],
-
-               'properties':
-               [
-                   {
-                       'name'  : 'name of property',
-                       'value' : 'value of property,
-                   }
-               ],
-
-               'level': 'low'
-            }
-        ]
-
-        :param context: Context var to fill.
-        :type context: Context
-        """
-
-        m_results        = []
-        m_results_append = m_results.append
-
-        # Get all type of resources
-        m_all_resources = set([x for x in dir(Resource) if x.startswith("RESOURCE")])
-
-        for l_resource in m_all_resources:
-            l_res_result = {}
-
-            # Get resources URL resources
-            resource = self.common_get_resources(Data.TYPE_RESOURCE, getattr(Resource, l_resource))
-
-            if not resource:
-                continue
-
-            # Get the vulns of each resource
-            for l_each_res in resource:
-                for l_vuln in l_each_res.associated_vulnerabilities:
-                    if l_vuln.false_positive:
-                        continue
-
-                    # Get the vuln name using the class name
-                    l_res_result['vuln_name']           = l_vuln.__class__.__name__
-
-                    # Get the properties
-                    l_res_result['properties']          = self.__get_object_properties(l_vuln, self.PRIVATE_INFO_VULN)
-
-                    # Get associated resources with this vuln
-                    l_res_affected        = []
-                    l_res_affected_append = l_res_affected.append
-                    for l_res in l_vuln.associated_resources:
-                        l_info = {}
-                        l_info['resource_type'] = l_res.__class__.__name__
-                        l_info['main_info']     = getattr(l_res, self.MAIN_RESOURCES_PROPERTIES[l_res.__class__.__name__.upper()])
-
-                        l_res_affected_append(l_info)
-
-                    l_res_result['affected_resources']  = l_res_affected
-
-
-                    m_results_append(l_res_result)
-
-        context['info_by_vuln'] = m_results
-
 
     def fill_content_vuln(self, context):
         """
@@ -487,7 +411,7 @@ class HTMLReport(ReportPlugin):
                     l_res_result = {}
 
                     # Get the vuln name using the class name
-                    l_res_result['vuln_name']           = l_vuln.__class__.__name__
+                    l_res_result['vuln_name']           = "%s : %s" % (l_vuln.vulnerability_type, l_vuln.title)
 
                     # Get the properties
                     l_res_result['properties']          = self.__get_object_properties(l_vuln, self.PRIVATE_INFO_VULN)
@@ -505,7 +429,7 @@ class HTMLReport(ReportPlugin):
                     l_res_result['affected_resources']  = l_res_affected
 
 
-                    m_results[l_vuln.__class__.__name__].append(l_res_result)
+                    m_results[l_vuln.display_name].append(l_res_result)
 
         context['info_by_vuln'] = dict(m_results)
 
