@@ -1,0 +1,4 @@
+[
+	{"id":"1", "name":"Scan1", "targets":["www.terra.com"], "status":"Completed", "progress":"100"},
+	{"id":"2", "name":"Scan2", "targets":["www.golismero.com"], "status":"Running", "progress":"50"}
+]

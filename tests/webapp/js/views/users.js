@@ -9,6 +9,7 @@ window.UsersView = Backbone.View.extend({
 
     render: function () {
 		$(this.el).html(this.template({list:this.model.toJSON()}));
+		$(this.el).i18n();
         return this;
     },
 	

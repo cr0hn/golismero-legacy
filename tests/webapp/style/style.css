@@ -386,7 +386,7 @@ margin: 5px 0px;
 #sidebar.mini  li span{
 	display:none;
 }
-#sidebar.mini li i{
+#sidebar.mini #nav > li > a > i{
 	font-size:25pt;
 	margin-right:0px;
 }
@@ -394,7 +394,7 @@ margin: 5px 0px;
 #sidebar #nav > li > a { 
   display: block; 
   padding: 10px 20px;
-  font-size: 13px;
+  font-size: 15px;
   text-decoration: none;
   color: #000;
   border-bottom: 1px solid #000;
@@ -408,8 +408,12 @@ margin: 5px 0px;
   background: linear-gradient(top, #FFDF71, #EFCA52);  
 }
 
-#sidebar #nav > li > a:hover, #sidebar #nav > li > a.subdrop { 
-  border-bottom: 1px solid #000;
+#sidebar #nav > li > a > i
+{
+	font-size:17pt;
+}
+
+#sidebar #nav > li > a:hover, #sidebar #nav > li > a.subdrop ,#sidebar #nav > li.active > a{ 
   border-top: 1px solid #EFCA52;
   background-color: #EFCA52;
   background: -webkit-gradient(linear, left top, left bottom, from(#EFCA52), to(#FFDF71));
@@ -420,6 +424,8 @@ margin: 5px 0px;
   background: linear-gradient(top, #EFCA52, #FFDF71);	
   color: #fff;
 }
+
+
 
 #sidebar #nav > li > a:hover i, #sidebar #nav > li > a.subdrop i{
   color: #fff;
@@ -570,15 +576,18 @@ margin: 5px 0px;
         opacity:1;
     }
 }
-@-o-keyframes fadein { /* Opera */
+@-o-keyframes fadein { /* Safari and Chrome */
     from {
         opacity:0;
     }
     to {
-        opacity: 1;
+        opacity:1;
     }
-}​
+}
 
+.progress{
+	margin-bottom:0px !important;
+}
 /* Footer */
 
 footer{

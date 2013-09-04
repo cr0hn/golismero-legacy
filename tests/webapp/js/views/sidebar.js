@@ -7,14 +7,15 @@ window.SidebarView = Backbone.View.extend({
 
     render: function () {
         $(this.el).html(this.template());
+		
         return this;
     },
 
     selectMenuItem: function (menuItem) {
-        /*$('.nav li').removeClass('active');
+        $('#nav li').removeClass('active');
         if (menuItem) {
-            $('.' + menuItem).addClass('active');
-        }*/
+            $('#nav li.' + menuItem).addClass('active');
+        }
     }
 
 });

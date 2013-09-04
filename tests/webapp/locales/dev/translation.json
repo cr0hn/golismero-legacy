@@ -35,5 +35,16 @@
 			"administrator":"Administrador"
 		}
 	}
+  },
+  "scans": {
+	"title":"Escaneos",
+	"new":"Nuevo",
+	"table":{
+		"id":"Identificador",
+		"name":"Nombre",
+		"progress":"Progreso",
+		"target":"Target",
+		"status":"Estado"
+	}
   }
 }
