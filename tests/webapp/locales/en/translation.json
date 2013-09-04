@@ -1,0 +1,39 @@
+{
+  "home": {
+    "myaccount": "My account <b class='caret'>"
+  },
+  "form":{
+	"save":"Save"
+  },
+  "menu":{
+	"home":"Home",
+	"users":"Users",
+	"profiles":"Profiles",
+	"scans":"Scans",
+	"contactus":"Contact us"
+  },
+  "user": {
+	"new":"New",
+	"title":"Users",
+	"table":{
+		"id":"Identifier",
+		"username":"Username",
+		"nameandsurname":"Name and surname",
+		"rol":"Rol"
+	},
+	"form":{
+		"createUser":"Create user",
+		"editUser":"Edit user",
+		"username":"Username",
+		"password":"Password",
+		"repeatpassword":"Repeat password",
+		"rol":"Rol",
+		"email": "Email",
+		"nameandsurname":"Name and surname",
+		
+		"roles":{
+			"administrator":"Administrator"
+		}
+	}
+  }
+}
