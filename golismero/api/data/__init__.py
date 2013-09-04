@@ -36,16 +36,22 @@ __all__ = [
     "Data",
 
     # Identity properties.
+    # This is used by the Data subclasses.
     "identity",
 
     # Property merge strategies.
+    # This is used by the Data subclasses.
     "merge",                        # Default strategy.
     "custom",                       # Custom strategy.
     "keep_older",   "keep_newer",   # Time strategies.
     "keep_greater", "keep_lesser",  # Order strategies.
     "keep_true",    "keep_false",   # Truth strategies.
 
+    # Auxiliary functions.
+    "discard_data",
+
     # This class handles some of the magic behind the scenes.
+    # Plugins don't need to use it!
     "LocalDataCache",
 ]
 
@@ -59,6 +65,11 @@ from functools import partial
 from hashlib import md5
 from uuid import uuid4
 from warnings import warn
+
+# Lazy imports.
+Information   = None
+Resource      = None
+Vulnerability = None
 
 
 #------------------------------------------------------------------------------
@@ -576,10 +587,135 @@ class Data(object):
     @property
     def display_name(self):
         """
+        Plugins may call this method to get a
+        user-friendly name for this Data type.
+
+        .. note:: This is mostly useful for Report plugins.
+
         :returns: A user-friendly display name for this data type.
         :rtype: str
         """
         return uncamelcase(self.__class__.__name__)
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def display_properties(self):
+        """
+        Plugins may call this method to retrieve the properties of a Data
+        object in order to display it to the user.
+
+        .. note:: This is mostly useful for Report plugins.
+
+        The return value is a dictionary of dictionaries. In the outer one,
+        the keys are the names of property groups. The inner dictionaries are
+        the property groups, where the keys are the user-friendly property
+        names (not the _real_ property names!) and the values are the values
+        of the properties.
+
+        Usually you'll want to convert the property values to strings, but
+        this method won't do it for you, in case you need some other kind of
+        processing in your Report plugin - for example, to use the 'pprint'
+        module instead.
+
+        :returns: Grouped properties ready for display.
+        :rtype: dict(str -> dict(str -> *))
+        """
+
+        # TODO: Some of this logic could be delegated to subclasses.
+        # It's hard to figure out how, though. So for now we'll have
+        # a lot of hardcoded hacks in here.
+
+        # Lazy import of the Data subclasses.
+        global Information
+        if Information is None:
+            from .information import Information
+        global Resource
+        if Resource is None:
+            from .resource import Resource
+        global Vulnerability
+        if Vulnerability is None:
+            from .vulnerability import Vulnerability
+
+        # This is the dictionary we'll build and return.
+        display = defaultdict(dict)
+
+        # Enumerate properties and filter them using different criteria.
+        for propname in dir(self):
+
+            # Ignore private and protected symbols.
+            if propname.startswith("_"):
+                continue
+
+            # Handle the 'identity' and 'plugin_id' properties.
+            if propname in ("identity", "plugin_id"):
+                continue
+
+            # Handle the vulnerability type.
+            if propname == "vulnerability_type":
+                display[""]["Category"] = self.vulnerability_type
+                continue
+
+            # Handle the vulnerability taxonomy types.
+            if propname in Vulnerability.TAXONOMY_NAMES:
+                key = Vulnerability.TAXONOMY_NAMES[propname]
+                display["Taxonomy"][key] = getattr(self, propname)
+                continue
+
+            # Ignore the rest of the properties defined in Data.
+            if hasattr(Data, propname):
+                continue
+
+            # Get the class definition of the property.
+            propdef = getattr(self.__class__, propname)
+
+            # Ignore if it's not an identity or mergeable property.
+            if not identity.is_identity_property(propdef) and \
+               not merge.is_mergeable_property(propdef):
+                continue
+
+            # Convert the property name into a user-friendly string.
+            key = " ".join(x.title() for x in propname.split("_"))
+
+            # Some hardcoded hacks :P
+            # TODO: could maybe be done generically using regex.
+            if key == "Url":
+                key = "URL"
+            elif key.endswith(" Url"):
+                key = key[:-2] + "RL"
+            elif key.endswith(" Id"):
+                key = key[:-1] + "D"
+            elif key.startswith("Cvss "):
+                key = "CVSS" + key[4:]
+
+            # Get the property value.
+            value = getattr(self, propname)
+
+            # Get the group.
+            # More hardcoded hacks here... :(
+            if self.data_type == Data.TYPE_VULNERABILITY:
+                if propname in ("level", "impact", "severity", "risk"):
+                    group = "Risk"
+                elif propname.startswith("cvss"):
+                    group = "Risk"
+                elif propname in ("title", "description", "solution", "references"):
+                    group = "Description"
+                elif hasattr(Vulnerability, propname):
+                    group = ""
+                else:
+                    group = "Details"
+            elif self.data_type == Data.TYPE_RESOURCE:
+                group = ""
+            elif self.data_type == Data.TYPE_INFORMATION:
+                group = ""
+                if propname == "raw_data":
+                    value = value[:64].encode("hex") + "..."
+
+            # Add the key and value to the dictionary.
+            display[group][key] = value
+
+        # Return the dictionary.
+        return display
 
 
     #--------------------------------------------------------------------------

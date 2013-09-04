@@ -91,7 +91,7 @@ class PluginTester(object):
 
     #--------------------------------------------------------------------------
     def __init__(self, orchestrator_config = None, audit_config = None,
-                 autoinit = True):
+                 autoinit = True, autodelete = True):
         """
         :param orchestrator_config: Optional orchestrator configuration.
         :type orchestrator_config: OrchestratorConfig
@@ -103,14 +103,18 @@ class PluginTester(object):
             False otherwise. If set to False you need to call the
             init_environment() method manually.
         :type autoinit: bool
+
+        :param autodelete: True to automatically delete all files created
+            during the test, False to leave the files on disk.
+        :type autodelete: bool
         """
 
         # Sanitize the config.
         if orchestrator_config is None:
             orchestrator_config = OrchestratorConfig()
-            orchestrator_config.targets = ["http://www.example.com/"]
             orchestrator_config.ui_mode = "disabled"
-            orchestrator_config.color = False
+            orchestrator_config.color   = False
+            orchestrator_config.verbose = 4
         orchestrator_config, (audit_config,) = \
             _sanitize_config(orchestrator_config, (audit_config,))
 
@@ -121,6 +125,9 @@ class PluginTester(object):
         # Here's where the Orchestrator and Audit instances are stored.
         self.__orchestrator = None
         self.__audit = None
+
+        # Remember if the user wants to delete the files or not.
+        self.__autodelete = autodelete
 
         # Initialize the environment if requested.
         if autoinit:
@@ -365,8 +372,10 @@ class PluginTester(object):
         self.__audit = None
         self.__orchestrator = None
 
-        if filename:
-            try:
-                unlink(filename)
-            except IOError:
-                pass
+        if self.__autodelete:
+            if filename:
+                try:
+                    unlink(filename)
+                except IOError:
+                    pass
+            # TODO: delete the report files too
