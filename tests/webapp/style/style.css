@@ -1,5 +1,5 @@
 *{
-	border-radius: 0px !important;
+	/*border-radius: 0px !important;*/
 	box-shadow: none !important;
 }
 
@@ -546,6 +546,11 @@ footer{
 
 /* Responsive */
 
+#principal .header-table
+{
+	padding-bottom: 10px;
+	height: 30px;
+}
 
 
 
