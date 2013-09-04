@@ -1,0 +1,8 @@
+[
+	{"id":"1", "username":"admin", "name":"Admin", "surname":"Prueba", "rol":"2"},
+	{"id":"2", "username":"user", "name":"Usuario", "surname":"Usaurio", "rol":"2"},
+	{"id":"3", "username":"rareq", "name":"Ra", "surname":"Req", "rol":"2"},
+	{"id":"4", "username":"pepe", "name":"Pepe", "surname":"García", "rol":"2"},
+	{"id":"5", "username":"gonzalo", "name":"Gonzalo", "surname":"Prueba", "rol":"2"},
+	{"id":"6", "username":"guest", "name":"Guest", "surname":"Prueba", "rol":"2"}
+]

@@ -4,7 +4,7 @@ function sidebar()
 		if($(".arrow-sidebar").hasClass("hide-sidebar"))
 		{
 			//ocultar sidebar
-			$( ".sidebar" ).animate(
+			$( "#sidebar" ).animate(
 			{
 				width: "80px"
 			  }, 
@@ -15,13 +15,13 @@ function sidebar()
 				},
 				complete: function( currentwidth ){
 					$(".arrow-sidebar").removeClass("hide-sidebar").addClass("show-sidebar");
-					$( ".sidebar" ).addClass("mini");
+					$( "#sidebar" ).addClass("mini");
 				},
 			  }
 			)
 		}else{
 			//mostrar sidebar
-			$( ".sidebar" ).animate(
+			$( "#sidebar" ).animate(
 			{
 				width: "230px"
 			  }, 
@@ -32,7 +32,7 @@ function sidebar()
 				},
 				complete: function( currentwidth ){
 					$(".arrow-sidebar").removeClass("show-sidebar").addClass("hide-sidebar");
-					$( ".sidebar" ).removeClass("mini");
+					$( "#sidebar" ).removeClass("mini");
 				},
 			  }
 			)

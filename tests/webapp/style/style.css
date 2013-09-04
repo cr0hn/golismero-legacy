@@ -275,7 +275,7 @@ margin: 5px 0px;
 
 /* Sidebar */
 
-.sidebar{
+#sidebar{
 	background: #ffffff;
 	color: #eee;	
 	width: 230px;
@@ -284,7 +284,7 @@ margin: 5px 0px;
 	
 }
 
-.sidebar .content-sidebar
+#sidebar .content-sidebar
 {
 	background: #F7D358;
 	border-radius: 0px 0px 20px 0px !important;
@@ -292,7 +292,7 @@ margin: 5px 0px;
 	padding-bottom:20px;
 }
 
-.sidebar .content-sidebar .arrow-sidebar{
+#sidebar .content-sidebar .arrow-sidebar{
 	height:27px;
 	width:27px;
 	position:absolute;
@@ -302,19 +302,19 @@ margin: 5px 0px;
 	display:none;
 }
 
-.sidebar .content-sidebar .arrow-sidebar.hide-sidebar{
+#sidebar .content-sidebar .arrow-sidebar.hide-sidebar{
 	background: url("../img/bg_direction_nav.png") 0 0;
 }
 
-.sidebar .content-sidebar .arrow-sidebar.show-sidebar{
+#sidebar .content-sidebar .arrow-sidebar.show-sidebar{
 	background: url("../img/bg_direction_nav.png") -30px 0;
 }
 
-.sidebar .sidebar-dropdown{
+#sidebar #sidebar-dropdown{
 	display: none;
 }
 
-.sidebar .sidebar-dropdown a{
+#sidebar #sidebar-dropdown a{
 	color: #fff;  
   background: #c20d23;
   padding:6px;
@@ -326,25 +326,25 @@ margin: 5px 0px;
   border-bottom: 1px solid #111;
 }
 
-.sidebar .sidebar-dropdown a:hover{
+#sidebar #sidebar-dropdown a:hover{
 	text-decoration: none;
 }
 
-.sidebar ul{
+#sidebar ul{
 	padding: 0px;
 	margin: 0px;
 }
 
-.sidebar ul li{
+#sidebar ul li{
 	list-style-type: none;
 }
 
-.sidebar .s-content{
+#sidebar .s-content{
 	display: block;
 	width: 100%;
 }
 
-.sidebar #nav { 
+#sidebar #nav { 
   position: relative;
   border-top: 1px solid #000;	
   display: block; 
@@ -354,44 +354,44 @@ margin: 5px 0px;
   z-index: 60;
 }
 
-.sidebar .form-search{
+#sidebar .form-search{
 	z-index: 60;
 	padding: 5px 10px;
 	text-align: center;
 }
 
-.sidebar .s-widget{
+#sidebar .s-widget{
 	z-index: 60;
 	padding: 10px 20px;
 }
 
-.sidebar #nav li i{
+#sidebar #nav li i{
 	margin-right: 5px;
 }
 
-.sidebar  #nav li span i{
+#sidebar  #nav li span i{
 	margin: 0px;
 	color: #888;
 }
-.sidebar:hover  .arrow-sidebar
+#sidebar:hover  .arrow-sidebar
 {
 	display:block;
 }
 
 /*sidebar versión mini*/
 
-.sidebar.mini  li {
+#sidebar.mini  li {
 	text-align:center;
 }
-.sidebar.mini  li span{
+#sidebar.mini  li span{
 	display:none;
 }
-.sidebar.mini li i{
+#sidebar.mini li i{
 	font-size:25pt;
 	margin-right:0px;
 }
 
-.sidebar #nav > li > a { 
+#sidebar #nav > li > a { 
   display: block; 
   padding: 10px 20px;
   font-size: 13px;
@@ -408,7 +408,7 @@ margin: 5px 0px;
   background: linear-gradient(top, #FFDF71, #EFCA52);  
 }
 
-.sidebar #nav > li > a:hover, .sidebar #nav > li > a.subdrop { 
+#sidebar #nav > li > a:hover, #sidebar #nav > li > a.subdrop { 
   border-bottom: 1px solid #000;
   border-top: 1px solid #EFCA52;
   background-color: #EFCA52;
@@ -421,14 +421,14 @@ margin: 5px 0px;
   color: #fff;
 }
 
-.sidebar #nav > li > a:hover i, .sidebar #nav > li > a.subdrop i{
+#sidebar #nav > li > a:hover i, #sidebar #nav > li > a.subdrop i{
   color: #fff;
   text-shadow:none;
 }
 
-.sidebar #nav li ul { display: none; background: #000; }
+#sidebar #nav li ul { display: none; background: #000; }
 
-.sidebar #nav li ul li a { 
+#sidebar #nav li ul li a { 
   display: block; 
   background: none;
   padding: 10px 0px;
@@ -438,7 +438,7 @@ margin: 5px 0px;
   border-bottom: 1px solid #111;  
 }
 
-.sidebar #nav li ul li a:hover {
+#sidebar #nav li ul li a:hover {
   background: #0a0a0a; 
 }
 
@@ -457,7 +457,7 @@ margin: 5px 0px;
 	background:#F7D358;
 }
 
-.mainbar .principal{
+.mainbar #principal{
 	background: white;
 	border-radius: 20px 0px 0px 0px !important;
 	min-height: 540px;
@@ -551,24 +551,24 @@ footer{
 
 /*tablets*/
 @media (min-width: 768px) and (max-width: 1024px){
-	.sidebar{
+	#sidebar{
 		background: #ffffff;
 		color: #eee;	
 		width: 80px;
 		height: 100%;
 		position: fixed;	
 	}
-	.sidebar  li {
+	#sidebar  li {
 		text-align:center;
 	}
-	.sidebar  li span{
+	#sidebar  li span{
 		display:none;
 	}
-	.sidebar li i{
+	#sidebar li i{
 		font-size:25pt;
 		margin-right:0px;
 	}
-	.sidebar:hover  .arrow-sidebar
+	#sidebar:hover  .arrow-sidebar
 	{
 		display:none;
 	}
