@@ -237,10 +237,6 @@ class OpenVASPlugin(TestingPlugin):
                     ##"references": references.split("\n"),
                 }
 
-                # Fake the plugin name when importing.
-                if Config.plugin_name.startswith("import/"):
-                    kwargs["plugin_id"] = "testing/scan/openvas"
-
                 # Create the vulnerability instance.
                 vuln = GenericVulnerability(**kwargs)
                 ##vuln.vulnerability_type = vulnerability_type
