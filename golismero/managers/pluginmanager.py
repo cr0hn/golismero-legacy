@@ -46,6 +46,7 @@ import re
 import fnmatch
 import imp
 import warnings
+import traceback
 
 
 #----------------------------------------------------------------------
@@ -60,13 +61,19 @@ class _EmptyNewStyleClass (object):
 @implementor(MessageCode.MSG_RPC_PLUGIN_GET_NAMES)
 def rpc_plugin_get_names(orchestrator, audit_name, *args, **kwargs):
     if audit_name:
-        return orchestrator.auditManager.get_audit(audit_name).pluginManager.get_plugin_names(*args, **kwargs)
+        try:
+            return orchestrator.auditManager.get_audit(audit_name).pluginManager.get_plugin_names(*args, **kwargs)
+        except KeyError, e:
+            warnings.warn(traceback.format_exc(), RuntimeWarning)
     return orchestrator.pluginManager.get_plugin_names(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_PLUGIN_GET_INFO)
 def rpc_plugin_get_info(orchestrator, audit_name, *args, **kwargs):
     if audit_name:
-        return orchestrator.auditManager.get_audit(audit_name).pluginManager.get_plugin_by_name(*args, **kwargs)
+        try:
+            return orchestrator.auditManager.get_audit(audit_name).pluginManager.get_plugin_by_name(*args, **kwargs)
+        except KeyError:
+            warnings.warn(traceback.format_exc(), RuntimeWarning)
     return orchestrator.pluginManager.get_plugin_by_name(*args, **kwargs)
 
 
