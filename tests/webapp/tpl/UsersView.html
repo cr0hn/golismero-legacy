@@ -38,16 +38,17 @@
 						
 					</div>
 				</form>
-				<button type="button" class="btn pull-right" data-i18n="[html]form.save"></button>
+				<button type="button" id="btnSaveUser" class="btn pull-right" data-i18n="[html]form.save"></button>
 			</fieldset>
 		</div>
+		
 		<div class="header-table">
-			<button class="btn icon-user pull-right" type="button" onclick="javascript:usersView.createUser()" data-i18n="[html]user.new">Nuevo</button>
+			<button class="btn icon-user pull-right" type="button" onclick="javascript:app.usersView.createUser()" data-i18n="[html]user.new">Nuevo</button>
 		</div>
 		<table class="table table-striped table-hover table-bordered ">			
 			<thead>
-				<th data-i18n="[html]user.table.id">Id</th>
-				<th data-i18n="[html]user.table.username">Username</th>
+				<th data-i18n="[html]user.table.id">Identificador</th>
+				<th data-i18n="[html]user.table.username">Nombre de usuario</th>
 				<th data-i18n="[html]user.table.nameandsurname">Nombre y apellidos</th>
 				<th data-i18n="[html]user.table.rol">Rol</th>
 				<th></th>
@@ -60,8 +61,8 @@
 						<td><%= user.name + " " + user.surname %></td>
 						<td><%= user.rol %></td>
 						<td>
-							<a class="icon-edit" href="javascript:usersView.editUser(<%= user.id %>)"/>
-							<a class="icon-remove" href="javascript:usersView.removeUser(<%= user.id %>)"/>
+							<a class="icon-edit" href="javascript:app.usersView.editUser(<%= user.id %>)"/>
+							<a class="icon-remove" href="javascript:app.usersView.removeUser(<%= user.id %>)"/>
 						</td>
 					</tr>				
 				<% }); %>

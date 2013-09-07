@@ -5,6 +5,12 @@
   "form":{
 	"save":"Guardar"
   },
+  "login":{
+	"title":"Login",
+	"username":"Nombre de usuario",
+	"password": "Contraseña",
+	"accept":"Aceptar"
+  },
   "menu":{
 	"home":"Home",
 	"users":"Usuarios",

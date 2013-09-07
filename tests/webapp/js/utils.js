@@ -48,6 +48,9 @@ window.utils = {
 
     hideAlert: function() {
         $('.alert').hide();
-    }
+    },
+	scrollToTop:function(){
+		$('body,html').animate({scrollTop: 0}, 500);
+	}
 
 };
