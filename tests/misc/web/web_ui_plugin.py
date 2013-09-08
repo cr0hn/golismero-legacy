@@ -61,6 +61,15 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
+    def check_params(self, options, *audits):
+        for audit in audits:
+            if not audit.audit_db or audit.audit_db.startswith("memory:"):
+                raise ValueError("Database use is mandatory for the Web UI.")
+            if audit.audit_db.startswith("sqlite:"):
+                raise ValueError("Web UI does not support SQLite databases.")
+
+
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         "This method tells the Orchestrator we don't want to receive any Data."
         return []
