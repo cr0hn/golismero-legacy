@@ -67,8 +67,6 @@ from uuid import uuid4
 from warnings import warn
 
 # Lazy imports.
-Information   = None
-Resource      = None
 Vulnerability = None
 
 
@@ -626,13 +624,7 @@ class Data(object):
         # It's hard to figure out how, though. So for now we'll have
         # a lot of hardcoded hacks in here.
 
-        # Lazy import of the Data subclasses.
-        global Information
-        if Information is None:
-            from .information import Information
-        global Resource
-        if Resource is None:
-            from .resource import Resource
+        # Lazy import of the Vulnerability class.
         global Vulnerability
         if Vulnerability is None:
             from .vulnerability import Vulnerability

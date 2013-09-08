@@ -38,17 +38,11 @@ from golismero.api.external import run_external_tool, \
      find_cygwin_binary_in_path, tempfile
 from golismero.api.logger import Logger
 from golismero.api.net.scraper import extract_from_text
-from golismero.api.parallel import setInterval
 from golismero.api.plugin import ImportPlugin, TestingPlugin
 from golismero.api.text.text_utils import extract_vuln_ids
 
-import os
-import re
-import sys
-import stat
-
 from csv import reader
-from os.path import abspath, join, exists, pathsep, sep, split
+from os.path import abspath, join, exists, sep, split
 from traceback import format_exc
 from urlparse import urljoin
 
@@ -130,7 +124,7 @@ class NiktoPlugin(TestingPlugin):
 
             # Append the output file name to the arguments.
             args.append("-output")
-            args.append(output_filename)
+            args.append(output)
 
             # Run Nikto and parse the output.
             return self.run_nikto(info, output, nikto_script, args)
@@ -201,7 +195,8 @@ class NiktoPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def log_line(self, line):
+    @staticmethod
+    def log_line(line):
         """
         Log a line of text sent by the scanner.
 

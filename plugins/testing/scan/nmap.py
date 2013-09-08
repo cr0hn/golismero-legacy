@@ -61,7 +61,7 @@ class NmapImportPlugin(ImportPlugin):
 
     #--------------------------------------------------------------------------
     def import_results(self, input_file):
-        results = NmapPlugin.parse_nmap_results(None, input_file)
+        results = NmapScanPlugin.parse_nmap_results(None, input_file)
         if results:
             Database.async_add_many(results)
             Logger.log("Loaded %d elements from file: %s" %
@@ -97,7 +97,7 @@ class NmapScanPlugin(TestingPlugin):
             Logger.log("Launching Nmap against: %s" % info.address)
             Logger.log_more_verbose("Nmap arguments: %s" % " ".join(args))
             t1 = time()
-            code = run_external_tool("nmap", args, callback = log_line)
+            code = run_external_tool("nmap", args, callback = self.log_line)
             t2 = time()
 
             # Log the output in extra verbose mode.
@@ -109,11 +109,12 @@ class NmapScanPlugin(TestingPlugin):
                            % (t2 - t1, info.address))
 
             # Parse and return the results.
-            return self.parse_nmap_results(info, output_filename)
+            return self.parse_nmap_results(info, output)
 
 
     #--------------------------------------------------------------------------
-    def log_line(self, line):
+    @staticmethod
+    def log_line(line):
         """
         Log a line of text sent by the scanner.
 

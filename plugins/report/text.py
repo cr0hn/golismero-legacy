@@ -26,13 +26,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import os
 import sys
 
 from collections import defaultdict
-from cStringIO import StringIO
 from texttable import Texttable
-from os import path
 
 from golismero.api.audit import get_audit_times, parse_audit_times
 from golismero.api.config import Config

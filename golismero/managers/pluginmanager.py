@@ -63,7 +63,7 @@ def rpc_plugin_get_names(orchestrator, audit_name, *args, **kwargs):
     if audit_name:
         try:
             return orchestrator.auditManager.get_audit(audit_name).pluginManager.get_plugin_names(*args, **kwargs)
-        except KeyError, e:
+        except KeyError:
             warnings.warn(traceback.format_exc(), RuntimeWarning)
     return orchestrator.pluginManager.get_plugin_names(*args, **kwargs)
 
