@@ -90,8 +90,7 @@ class TextReport(ReportPlugin):
 
     #--------------------------------------------------------------------------
     def __iterate(self, data_type = None, data_subtype = None):
-        m_len_urls = Database.count(data_type, data_type)
-        if m_len_urls < 100:
+        if Database.count(data_type, data_type) < 100:
             return Database.get_many(
                 Database.keys(data_type=data_type, data_subtype=data_subtype)
             )
