@@ -38,6 +38,7 @@ __all__ = [
     # Query functions.
     "get_audit_count", "get_audit_names",
     "get_audit_config", "get_audit_times",
+    "parse_audit_times",
 
     # Control functions.
     "start_audit", "stop_audit",
@@ -48,6 +49,8 @@ from .config import Config
 from ..messaging.codes import MessageCode, MessageType, MessagePriority
 from ..messaging.message import Message
 from ..common import AuditConfig
+
+from datetime import datetime
 
 
 #------------------------------------------------------------------------------
@@ -95,6 +98,47 @@ def get_audit_times():
     :rtype: tuple(float|None, float|None)
     """
     return Config._context.remote_call(MessageCode.MSG_RPC_AUDIT_TIMES)
+
+
+#------------------------------------------------------------------------------
+def parse_audit_times(start_time, stop_time):
+    """
+    Converts the audit start and stop times into human readable strings.
+
+    :param start_time: Audit start time, as returned by get_audit_times().
+    :type start_time: float | None
+
+    :param start_time: Audit stop time, as returned by get_audit_times().
+    :type start_time: float | None
+
+    :returns: Audit start and stop times, total execution time.
+    :rtype: tuple(str, str, str)
+    """
+    if start_time and stop_time:
+        start_time = datetime.fromtimestamp(start_time)
+        stop_time  = datetime.fromtimestamp(stop_time)
+        if start_time < stop_time:
+            td       = stop_time - start_time
+            days     = td.days
+            hours    = td.seconds // 3600
+            minutes  = (td.seconds // 60) % 60
+            seconds  = td.seconds
+            run_time = "%d days, %d hours, %d minutes and %d seconds" % \
+                (days, hours, minutes, seconds)
+        else:
+            run_time = "Interrupted"
+        start_time = str(start_time)
+        stop_time  = str(stop_time)
+    else:
+        if start_time:
+            run_time = "Interrupted"
+        else:
+            run_time = "Unknown"
+        if not start_time:
+            start_time = "Unknown"
+        if not stop_time:
+            stop_time = "Interrupted"
+    return (start_time, stop_time, run_time)
 
 
 #------------------------------------------------------------------------------

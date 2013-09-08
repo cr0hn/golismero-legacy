@@ -97,6 +97,7 @@ from thread import get_ident
 #------------------------------------------------------------------------------
 # GoLismero modules
 
+from golismero.api.audit import parse_audit_times
 from golismero.api.config import Config
 from golismero.api.data import Data
 from golismero.common import OrchestratorConfig, AuditConfig, \
@@ -216,7 +217,8 @@ def cmdline_parser():
     gr_report = parser.add_argument_group("report options")
     gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", help="write the results of the audit to this file (use - for stdout)")
     gr_report.add_argument("-no", "--no-output", dest="disable_reporting", action="store_true", default=False, help="do not output the results")
-    gr_report.add_argument("--only-vulns", action="store_true", default=None, dest="only_vulns", help="display only the vulnerabilities, instead of all the resources found")
+    gr_report.add_argument("--full", action="store_false", default=None, dest="only_vulns", help="produce fully detailed reports")
+    gr_report.add_argument("--brief", action="store_true", dest="only_vulns", help="report only the highlights")
 
     gr_net = parser.add_argument_group("network options")
     gr_net.add_argument("--max-connections", help="maximum number of concurrent connections per host")
@@ -273,31 +275,8 @@ def dump_rst(db, filename):
         print >>f, "- Audit name: " + db.audit_name
 
         # Print the audit times.
-        start_time, stop_time = db.get_audit_times()
-        if start_time and stop_time:
-            start_time = datetime.fromtimestamp(start_time)
-            stop_time  = datetime.fromtimestamp(stop_time)
-            if start_time < stop_time:
-                td       = stop_time - start_time
-                days     = td.days
-                hours    = td.seconds // 3600
-                minutes  = (td.seconds // 60) % 60
-                seconds  = td.seconds
-                run_time = "%d days, %d hours, %d minutes and %d seconds" % \
-                    (days, hours, minutes, seconds)
-            else:
-                run_time = "Interrupted"
-            start_time = str(start_time)
-            stop_time  = str(stop_time)
-        else:
-            if start_time:
-                run_time = "Interrupted"
-            else:
-                run_time = "Unknown"
-            if not start_time:
-                start_time = "Unknown"
-            if not stop_time:
-                stop_time = "Interrupted"
+        start_time, stop_time, run_time = parse_audit_times(
+            *db.get_audit_times())
         print >>f, "- Start date: " + start_time
         print >>f, "- End date: " + stop_time
         print >>f, "- Execution time: " + run_time
@@ -482,22 +461,20 @@ def main():
             auditParams.reports = []
         elif not auditParams.reports:
             auditParams.reports = ["-"]
+            if auditParams.only_vulns is None:
+                auditParams.only_vulns = True
 
         # If there are no targets but there's a database,
         # get the targets from the database. (The actual
         # scope will be loaded later, this just bypasses
         # some sanity checks more easily).
         if not auditParams.targets and auditParams.audit_db:
-            try:
-                cfg, _ = AuditDB.get_config_from_closed_database(
-                    auditParams.audit_db, auditParams.audit_name)
-                if cfg:
-                    auditParams.audit_name = cfg.audit_name
-                    auditParams.targets = cfg.targets
-                    auditParams.include_subdomains = cfg.include_subdomains
-            except Exception:
-                pass
-                ##raise    # XXX DEBUG
+            cfg, _ = AuditDB.get_config_from_closed_database(
+                auditParams.audit_db, auditParams.audit_name)
+            if cfg:
+                auditParams.audit_name = cfg.audit_name
+                auditParams.targets = cfg.targets
+                auditParams.include_subdomains = cfg.include_subdomains
 
     # Show exceptions as command line parsing errors.
     except Exception, e:

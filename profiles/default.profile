@@ -18,7 +18,8 @@ description = Default user profile for GoLismero.
 #------------------------------------------------------------------------------
 
 # If true, report only the vulnerabilities. If false, report everything found.
-only_vulns = no
+# Use 'default' to let GoLismero decide what's more appropriate.
+only_vulns = default
 
 #------------------------------------------------------------------------------
 # Network options
