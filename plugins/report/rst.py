@@ -127,16 +127,13 @@ class RSTReport(ReportPlugin):
 
     #--------------------------------------------------------------------------
     __re_escape_rst = re.compile("(%s)" % "|".join("\\" + x for x in "*:,.\"!-/';~?@[]<>|+^=_\\"))
-    __re_escape_indent = re.compile("^( +)", re.M)
+    __re_unindent = re.compile("^( +)", re.M)
     def __escape_rst(self, s):
         s = s.replace("\t", " " * 8)
         s = s.replace("\r\n", "\n")
         s = s.replace("\r", "\n")
         s = self.__re_escape_rst.sub(r"\\\1", s)
-        m = self.__re_escape_indent.search(s)
-        while m:
-            s = s[:m.start()] + "\\" + "\\".join(s[m.start():m.end()]) + s[m.end():]
-            m = self.__re_escape_indent.search(s, m.end() + 1 + (m.end() - m.start()))
+        s = self.__re_unindent.sub("", s)
         return s
 
 
