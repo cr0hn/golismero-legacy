@@ -134,7 +134,7 @@ class Portscan(Information):
 
     #----------------------------------------------------------------------
     def __str__(self):
-        return "".join("%-8s %-3s %d" % p for p in sorted(self.ports))
+        return "\n".join("%-8s %-3s %d" % p for p in sorted(self.ports))
 
 
     #----------------------------------------------------------------------

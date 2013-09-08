@@ -127,160 +127,162 @@ class NmapScanPlugin(TestingPlugin):
             Logger.log_verbose(line)
 
 
-#------------------------------------------------------------------------------
-def parse_nmap_results(cls, info, output_filename):
-    """
-    Convert the output of an Nmap scan to the GoLismero data model.
+    #------------------------------------------------------------------------------
+    @classmethod
+    def parse_nmap_results(cls, info, output_filename):
+        """
+        Convert the output of an Nmap scan to the GoLismero data model.
 
-    :param info: Data object to link all results to (optional).
-    :type info: IP
+        :param info: Data object to link all results to (optional).
+        :type info: IP
 
-    :param output_filename: Path to the output filename.
-        The format should always be XML.
-    :type output_filename:
+        :param output_filename: Path to the output filename.
+            The format should always be XML.
+        :type output_filename:
 
-    :returns: Results from the Nmap scan.
-    :rtype: list(Data)
-    """
+        :returns: Results from the Nmap scan.
+        :rtype: list(Data)
+        """
 
-    # Parse the scan results.
-    # On error log the exception and continue.
-    results = []
-    hostmap = {}
-    if info:
-        hostmap[info.address] = info
-    try:
-        tree = ET.parse(output_filename)
-        scan = tree.getroot()
-
-        # Get the scan arguments and log them.
+        # Parse the scan results.
+        # On error log the exception and continue.
+        results = []
+        hostmap = {}
+        if info:
+            hostmap[info.address] = info
         try:
-            args = scan.get("args", None)
-            if not args:
-                args = scan.get("scanner", None)
-            if args:
-                Logger.log_more_verbose(
-                    "Loading data from scan: %s" % args)
-        except Exception:
-            ##raise # XXX DEBUG
-            pass
+            tree = ET.parse(output_filename)
+            scan = tree.getroot()
 
-        # For each scanned host...
-        for host in scan.findall(".//host"):
+            # Get the scan arguments and log them.
             try:
+                args = scan.get("args", None)
+                if not args:
+                    args = scan.get("scanner", None)
+                if args:
+                    Logger.log_more_verbose(
+                        "Loading data from scan: %s" % args)
+            except Exception:
+                ##raise # XXX DEBUG
+                pass
 
-                # Parse the information from the scanned host.
-                results.extend( parse_nmap_host(host, hostmap) )
+            # For each scanned host...
+            for host in scan.findall(".//host"):
+                try:
 
-            # On error, log the exception and continue.
-            except Exception, e:
-                Logger.log_error_verbose(str(e))
-                Logger.log_error_more_verbose(format_exc())
+                    # Parse the information from the scanned host.
+                    results.extend( cls.parse_nmap_host(host, hostmap) )
 
-    # On error, log the exception.
-    except Exception, e:
-        Logger.log_error_verbose(str(e))
-        Logger.log_error_more_verbose(format_exc())
+                # On error, log the exception and continue.
+                except Exception, e:
+                    Logger.log_error_verbose(str(e))
+                    Logger.log_error_more_verbose(format_exc())
 
-    # Return the results.
-    return results
+        # On error, log the exception.
+        except Exception, e:
+            Logger.log_error_verbose(str(e))
+            Logger.log_error_more_verbose(format_exc())
+
+        # Return the results.
+        return results
 
 
-#------------------------------------------------------------------------------
-def parse_nmap_host(host, hostmap):
-    """
-    Convert the output of an Nmap scan to the GoLismero data model.
+    #------------------------------------------------------------------------------
+    @staticmethod
+    def parse_nmap_host(host, hostmap):
+        """
+        Convert the output of an Nmap scan to the GoLismero data model.
 
-    :param host: XML node with the scanned host information.
-    :type host: xml.etree.ElementTree.Element
+        :param host: XML node with the scanned host information.
+        :type host: xml.etree.ElementTree.Element
 
-    :param hostmap: Dictionary that maps IP addresses to IP data objects.
-        This prevents the plugin from reporting duplicated addresses.
-        Updated by this method.
-    :type hostmap: dict( str -> IP )
+        :param hostmap: Dictionary that maps IP addresses to IP data objects.
+            This prevents the plugin from reporting duplicated addresses.
+            Updated by this method.
+        :type hostmap: dict( str -> IP )
 
-    :returns: Results from the Nmap scan for this host.
-    :rtype: list(Data)
-    """
+        :returns: Results from the Nmap scan for this host.
+        :rtype: list(Data)
+        """
 
-    # Get the timestamp.
-    timestamp = host.get("endtime")
-    if timestamp:
-        timestamp = long(timestamp)
-    if not timestamp:
-        timestamp = host.get("starttime")
+        # Get the timestamp.
+        timestamp = host.get("endtime")
         if timestamp:
             timestamp = long(timestamp)
+        if not timestamp:
+            timestamp = host.get("starttime")
+            if timestamp:
+                timestamp = long(timestamp)
 
-    # Get all the IP addresses. Skip the MAC addresses.
-    ip_addresses = []
-    for node in host.findall(".//address"):
-        if node.get("addrtype", "") not in ("ipv4, ipv6"):
-            continue
-        address = node.get("addr")
-        if not address:
-            continue
-        if address not in hostmap:
-            hostmap[address] = IP(address)
-        ip_addresses.append( hostmap[address] )
-
-    # Link all the IP addresses to each other.
-    ips_visited = set()
-    for ip_1 in ip_addresses:
-        if ip_1.address not in ips_visited:
-            ips_visited.add(ip_1.address)
-            for ip_2 in ip_addresses:
-                if ip_2.address not in ips_visited:
-                    ips_visited.add(ip_2.address)
-                    ip_1.add_resource(ip_2)
-    ips_visited.clear()
-
-    # Get all the hostnames.
-    domain_names = []
-    for node in host.findall(".//hostname"):
-        hostname = node.get("name")
-        if not hostname:
-            continue
-        if hostname not in hostmap:
-            hostmap[hostname] = Domain(hostname)
-        domain_names.append( hostmap[hostname] )
-
-    # Link all domain names to all IP addresses.
-    for name in domain_names:
-        for ip in ip_addresses:
-            name.add_resource(ip)
-
-    # Abort if no resources were found.
-    if not ip_addresses and not domain_names:
-        return []
-
-    # Get the portscan results.
-    ports = set()
-    for node in host.findall(".//port"):
-        try:
-            portid   = node.get("portid")
-            protocol = node.get("protocol")
-            if protocol not in ("tcp", "udp"):
+        # Get all the IP addresses. Skip the MAC addresses.
+        ip_addresses = []
+        for node in host.findall(".//address"):
+            if node.get("addrtype", "") not in ("ipv4, ipv6"):
                 continue
+            address = node.get("addr")
+            if not address:
+                continue
+            if address not in hostmap:
+                hostmap[address] = IP(address)
+            ip_addresses.append( hostmap[address] )
+
+        # Link all the IP addresses to each other.
+        ips_visited = set()
+        for ip_1 in ip_addresses:
+            if ip_1.address not in ips_visited:
+                ips_visited.add(ip_1.address)
+                for ip_2 in ip_addresses:
+                    if ip_2.address not in ips_visited:
+                        ips_visited.add(ip_2.address)
+                        ip_1.add_resource(ip_2)
+        ips_visited.clear()
+
+        # Get all the hostnames.
+        domain_names = []
+        for node in host.findall(".//hostname"):
+            hostname = node.get("name")
+            if not hostname:
+                continue
+            if hostname not in hostmap:
+                hostmap[hostname] = Domain(hostname)
+            domain_names.append( hostmap[hostname] )
+
+        # Link all domain names to all IP addresses.
+        for name in domain_names:
+            for ip in ip_addresses:
+                name.add_resource(ip)
+
+        # Abort if no resources were found.
+        if not ip_addresses and not domain_names:
+            return []
+
+        # Get the portscan results.
+        ports = set()
+        for node in host.findall(".//port"):
             try:
-                port = int(portid)
+                portid   = node.get("portid")
+                protocol = node.get("protocol")
+                if protocol not in ("tcp", "udp"):
+                    continue
+                try:
+                    port = int(portid)
+                except Exception:
+                    port = getservbyname(portid)
+                state = node.find("state").get("state")
+                if state not in ("open", "closed", "filtered"):
+                    continue
+                ports.add( (state, protocol, port) )
             except Exception:
-                port = getservbyname(portid)
-            state = node.find("state").get("state")
-            if state not in ("open", "closed", "filtered"):
+                ##raise # XXX DEBUG
                 continue
-            ports.add( (state, protocol, port) )
-        except Exception:
-            ##raise # XXX DEBUG
-            continue
 
-    # This is where we'll gather all the results.
-    results = ip_addresses + domain_names
+        # This is where we'll gather all the results.
+        results = ip_addresses + domain_names
 
-    # Link the portscan results to the IP addresses.
-    for ip in ip_addresses:
-        portscan = Portscan(ip, ports, timestamp)
-        results.append(portscan)
+        # Link the portscan results to the IP addresses.
+        for ip in ip_addresses:
+            portscan = Portscan(ip, ports, timestamp)
+            results.append(portscan)
 
-    # Return the results.
-    return results
+        # Return the results.
+        return results
