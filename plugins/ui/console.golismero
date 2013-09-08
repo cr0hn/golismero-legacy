@@ -1,6 +1,6 @@
 [Documentation]
 Name        = Console UI
-Description = Console user interface.
+Description = Console user interface. This is the default.
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

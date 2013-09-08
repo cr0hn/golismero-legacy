@@ -1,6 +1,6 @@
 [Documentation]
 Name        = OpenVAS
-Description = Run the OpenVAS scanner and import the results
+Description = Integration with OpenVAS: http://www.openvas.org/
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

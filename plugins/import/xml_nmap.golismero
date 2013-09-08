@@ -1,6 +1,6 @@
 [Documentation]
 Name        = Nmap XML Importer
-Description = Import the results of an Nmap scan.
+Description = Import the results of an Nmap scan in XML format.
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

@@ -1,6 +1,6 @@
 [Documentation]
 Name        = Nikto
-Description = Run the Nikto scanner and import the results.
+Description = Integration with Nikto: https://www.cirt.net/nikto2
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

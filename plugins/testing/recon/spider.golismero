@@ -1,6 +1,7 @@
 [Documentation]
 Name        = Web Spider
-Description = Web spider plugin. Without it, GoLismero can't crawl web sites.
+Description = Web spider plugin.
+              Without it, GoLismero can't crawl web sites.
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

@@ -1,6 +1,6 @@
 [Documentation]
 Name        = OpenVAS XML Importer
-Description = Import the results of an OpenVAS scan.
+Description = Import the results of an OpenVAS scan in XML format.
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

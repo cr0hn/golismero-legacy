@@ -1,6 +1,6 @@
 [Documentation]
 Name        = Nmap
-Description = Run nmap and import the results.
+Description = Integration with Nmap: http://nmap.org/
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

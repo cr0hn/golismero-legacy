@@ -1,6 +1,6 @@
 [Documentation]
 Name        = reStructured Text Report
-Description = Creates reports in reStructured Text format.
+Description = Writes reports in reStructured Text format.
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero
