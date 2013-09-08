@@ -117,19 +117,19 @@ class TextReport(ReportPlugin):
         print >>self.__fd, ""
 
         # Summary
-        if self.__show_data or not self.__console:
-            start_time, stop_time, run_time = parse_audit_times( *get_audit_times() )
-            vuln_count = Database.count(Data.TYPE_VULNERABILITY)
-            print >>self.__fd, "-# %s #- " % self.__colorize("Summary", "yellow")
-            print >>self.__fd, ""
-            print >>self.__fd, "Audit started:  %s" % self.__colorize(start_time, "yellow")
-            print >>self.__fd, "Audit ended:    %s" % self.__colorize(stop_time, "yellow")
-            print >>self.__fd, "Execution time: %s" % self.__colorize(run_time, "yellow")
-            print >>self.__fd, ""
-            print >>self.__fd, "Total hosts audited:   %s" % self.__colorize(str(Database.count(Data.TYPE_RESOURCE, Resource.RESOURCE_DOMAIN)), "yellow")
-            print >>self.__fd, "Total IPs audited:     %s" % self.__colorize(str(Database.count(Data.TYPE_RESOURCE, Resource.RESOURCE_IP)), "yellow")
-            print >>self.__fd, "Vulnerabilities found: %s" % self.__colorize(str(vuln_count), "red" if vuln_count else "yellow")
-            print >>self.__fd, ""
+        start_time, stop_time, run_time = parse_audit_times( *get_audit_times() )
+        host_count  = Database.count(Data.TYPE_RESOURCE, Resource.RESOURCE_DOMAIN)
+        host_count += Database.count(Data.TYPE_RESOURCE, Resource.RESOURCE_IP)
+        vuln_count  = Database.count(Data.TYPE_VULNERABILITY)
+        print >>self.__fd, "-# %s #- " % self.__colorize("Summary", "yellow")
+        print >>self.__fd, ""
+        print >>self.__fd, "Audit started:   %s" % self.__colorize(start_time, "yellow")
+        print >>self.__fd, "Audit ended:     %s" % self.__colorize(stop_time, "yellow")
+        print >>self.__fd, "Execution time:  %s" % self.__colorize(run_time, "yellow")
+        print >>self.__fd, ""
+        print >>self.__fd, "Scanned hosts:   %s" % self.__colorize(str(host_count), "yellow")
+        print >>self.__fd, "Vulnerabilities: %s" % self.__colorize(str(vuln_count), "red" if vuln_count else "yellow")
+        print >>self.__fd, ""
 
         # Audit scope
         if self.__show_data or not self.__console:
