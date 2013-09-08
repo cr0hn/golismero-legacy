@@ -3,8 +3,7 @@ window.ScansView = Backbone.View.extend({
     className: '',
     initialize: function () {
         this.render();
-		this.model.bind('change', this.render, this);
-        this.model.bind('remove', this.remove, this);
+		
     },
 
     render: function () {

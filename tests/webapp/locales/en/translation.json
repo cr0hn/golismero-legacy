@@ -5,6 +5,12 @@
   "form":{
 	"save":"Save"
   },
+  "login":{
+	"title":"Login",
+	"username":"Username",
+	"password": "Password",
+	"accept":"Accept"
+  },
   "menu":{
 	"home":"Home",
 	"users":"Users",

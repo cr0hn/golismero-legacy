@@ -1,41 +1,53 @@
 window.UsersView = Backbone.View.extend({
 	tagName: 'div',
     className: '',
+		
+	
     initialize: function () {
         this.render();
 		this.model.bind('change', this.render, this);
-        this.model.bind('remove', this.remove, this);
+        this.model.bind('remove', this.render, this);
     },
 
     render: function () {
 		$(this.el).html(this.template({list:this.model.toJSON()}));
 		$(this.el).i18n();
+		this.activateEvents();
         return this;
     },
 	
-	editUser: function(id) {
-		//mostramos el formulario y cargamos los datos
-		$("#form-user").removeClass("hide").addClass("show");
-		$("#form-user legend:first").html(i18n.t("user.form.editUser"));
-		$("#form-user > .close").click(function(){$("#form-user").addClass("hide").removeClass("show");})
+	activateEvents: function(){
+		$(this.el).find("#form-user > .close").click(function(){app.usersView.closePanel();});
+		$(this.el).find("#btnSaveUser").click(function(){app.usersView.saveUser()});
 	},
 	
-	createUser: function() {
-		//reseteamos el formulario
+	closePanel: function(){
+		$(this.el).find("#form-user").addClass("hide").removeClass("show");
+	},
+	
+	saveUser: function(){
+		alert("guardado");
+		this.closePanel();
+	},
+	//resetea, obtiene los datos(si es una edicion) y muestra el formulario
+	resetAndShowForm: function(id)
+	{
 		$("#form-user").removeClass("hide").addClass("show");
-		$("#form-user legend:first").html(i18n.t("user.form.createUser"));
-		$("#form-user > .close").click(function(){$("#form-user").addClass("hide").removeClass("show");})
+		$("#form-user legend:first").html(i18n.t("user.form.editUser"));
+		
+		utils.scrollToTop();
+	},
+	editUser: function(id) {
+		this.resetAndShowForm(id);
+				
+	},	
+	createUser: function() {
+		this.resetAndShowForm();		
 	},
 	
 	removeUser: function(id) {
 		user = this.model.get(id);
-		user.set({name:'pepe'});
-	},
-	
-	resetForm: function(){
-		
-	}	
-	
-
+		this.model.remove(user);
+	}
 });
 
