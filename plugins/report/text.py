@@ -99,11 +99,9 @@ class TextReport(ReportPlugin):
 
 
     #--------------------------------------------------------------------------
-    def __add_related(self, table, data, data_type, data_subtype, title, visited = None):
+    def __add_related(self, table, data, data_type, data_subtype, title):
         t = [ str(x) for x in data.find_linked_data(data_type, data_subtype) ]
         if t:
-            if visited is not None:
-                visited.update(t)
             if len(t) == 1:
                 table.add_row((title, t[0]))
             else:
@@ -153,11 +151,10 @@ class TextReport(ReportPlugin):
 
         # Discovered hosts
         if self.__show_data:
-            visited = set()
             need_header = True
             for domain in self.__iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_DOMAIN):
                 table = Texttable(self.__width)
-                self.__add_related(table, domain, Data.TYPE_RESOURCE, Resource.RESOURCE_IP, "IP Address", visited)
+                self.__add_related(table, domain, Data.TYPE_RESOURCE, Resource.RESOURCE_IP, "IP Address")
                 self.__add_related(table, domain, Data.TYPE_INFORMATION, Information.INFORMATION_GEOLOCATION, "Location")
                 self.__add_related(table, domain, Data.TYPE_INFORMATION, Information.INFORMATION_WEB_SERVER_FINGERPRINT, "Web Server")
                 self.__add_related(table, domain, Data.TYPE_INFORMATION, Information.INFORMATION_OS_FINGERPRINT, "OS Fingerprint")
@@ -173,8 +170,6 @@ class TextReport(ReportPlugin):
                     print >>self.__fd, text
                     print >>self.__fd, ""
             for ip in self.__iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_IP):
-                if ip.address in visited:
-                    continue
                 table = Texttable(self.__width)
                 self.__add_related(table, ip, Data.TYPE_RESOURCE, Resource.RESOURCE_DOMAIN, "Domain Name")
                 self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_GEOLOCATION, "Location")
