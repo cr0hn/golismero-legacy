@@ -33,14 +33,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = [
     "char_count", "line_count", "word_count", "generate_random_string",
     "uncamelcase", "extract_vuln_ids",  "convert_references_to_vuln_ids",
-    "convert_vuln_ids_to_references", "split_first",
+    "convert_vuln_ids_to_references", "split_first", "hexdump",
 ]
 
 import re
 
 from random import choice
 from re import finditer
-from string import ascii_letters, digits
+from string import ascii_letters, digits, printable
 
 
 #------------------------------------------------------------------------------
@@ -148,7 +148,31 @@ def uncamelcase(string):
     :returns: Human-readable string.
     :rtype: str
     """
-    return __uncamelcase_re.sub(" ", string)
+    string = string.replace("_"," ")
+    string = __uncamelcase_re.sub(" ", string)
+    while "  " in string:
+        string = string.replace("  ", " ")
+    return string
+
+
+#------------------------------------------------------------------------------
+def hexdump(s):
+    """
+    Produce an hexadecimal output from a binary string.
+
+    :param s: Binary string to dump.
+    :type s: str
+
+    :returns: Hexadecimal output.
+    :rtype: str
+    """
+    a = []
+    for i in xrange(0, len(s), 16):
+        h1 = " ".join("%.2x" % ord(c) for c in s[i:i+8])
+        h2 = " ".join("%.2x" % ord(c) for c in s[i+8:i+16])
+        d = "".join(c if c in printable else "." for c in s[i:i+16])
+        a.append("%-32s-%-32s %s\n" % (h, d))
+    return "".join(a)
 
 
 #------------------------------------------------------------------------------

@@ -224,17 +224,19 @@ class TextReport(ReportPlugin):
 
         # Emails
         if self.__show_data:
-            emails = [e.address for e in self.__iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_EMAIL)]
+            emails = {
+                e.address: "red" if e.get_links(Data.TYPE_VULNERABILITY) else "green"
+                for e in self.__iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_EMAIL)
+            }
             if emails:
-                emails.sort()
                 print >>self.__fd, "-# %s #- " % self.__colorize("Email Addresses", "yellow")
                 print >>self.__fd, ""
-                for e in emails:
-                    print >>self.__fd, "* " % self.__colorize(e, "red" if e.get_links(Data.TYPE_VULNERABILITY) else "green")
+                for e in sorted(emails):
+                    print >>self.__fd, "* " + self.__colorize(e, emails[e])
                 print >>self.__fd, ""
 
         # Vulnerabilities
-        print >>self.__fd, "-# %s #- "% self.__colorize("Vulnerabilities", "yellow")
+        print >>self.__fd, "-# %s #- " % self.__colorize("Vulnerabilities", "yellow")
         print >>self.__fd, ""
         count = Database.count(Data.TYPE_VULNERABILITY)
         if count:

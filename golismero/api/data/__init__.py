@@ -680,9 +680,6 @@ class Data(object):
             elif key.startswith("Cvss "):
                 key = "CVSS" + key[4:]
 
-            # Get the property value.
-            value = getattr(self, propname)
-
             # Get the group.
             # More hardcoded hacks here... :(
             if self.data_type == Data.TYPE_VULNERABILITY:
@@ -700,11 +697,9 @@ class Data(object):
                 group = ""
             elif self.data_type == Data.TYPE_INFORMATION:
                 group = ""
-                if propname.startswith("raw_"):
-                    value = value[:64].encode("hex") + "..."
 
             # Add the key and value to the dictionary.
-            display[group][key] = value
+            display[group][key] = getattr(self, propname)
 
         # Return the dictionary.
         return display
