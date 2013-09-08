@@ -309,12 +309,15 @@ def main():
         # scope will be loaded later, this just bypasses
         # some sanity checks more easily).
         if not auditParams.targets and auditParams.audit_db:
-            cfg, _ = AuditDB.get_config_from_closed_database(
-                auditParams.audit_db, auditParams.audit_name)
-            if cfg:
-                auditParams.audit_name = cfg.audit_name
-                auditParams.targets = cfg.targets
-                auditParams.include_subdomains = cfg.include_subdomains
+            try:
+                cfg, _ = AuditDB.get_config_from_closed_database(
+                    auditParams.audit_db, auditParams.audit_name)
+                if cfg:
+                    auditParams.audit_name = cfg.audit_name
+                    auditParams.targets = cfg.targets
+                    auditParams.include_subdomains = cfg.include_subdomains
+            except IOError:
+                pass  # missing database name, happens for new audits and other cases
 
     # Show exceptions as command line parsing errors.
     except Exception, e:
