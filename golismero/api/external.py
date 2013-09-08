@@ -38,7 +38,10 @@ __all__ = [
     # Run an external tool.
     "run_external_tool",
 
-    # Utility functions.
+    # Temporary file utility functions.
+    "tempfile",
+
+    # Executable file utility functions.
     "is_executable",
     "get_interpreter",
     "find_binary_in_path",
@@ -51,6 +54,7 @@ __all__ = [
     "cygwin_to_win_path",
 ]
 
+import contextlib
 import re
 import os
 import os.path
@@ -58,27 +62,47 @@ import ntpath
 import subprocess
 import stat
 import shlex
+import sys
+
+from tempfile import NamedTemporaryFile
 
 # Needed on non-Windows platforms to prevent a syntax error.
 if not hasattr(__builtins__, "WindowsError"):
     class WindowsError(OSError): pass
 
-# TODO: Use pexpect to run tools interactively.
-# TODO: A callback in run_external_tool() to receive the output line by line.
+
+#------------------------------------------------------------------------------
+class ExternalToolError(RuntimeError):
+    """
+    An error occurred when running an external tool.
+    """
+
+    def __init__(self, msg, errcode):
+        super(ExternalToolError, self).__init__(self, msg)
+        self.errcode = errcode
 
 
 #------------------------------------------------------------------------------
-def run_external_tool(command, args = None, env = None, curdir = None):
+def run_external_tool(command, args = None, env = None, cwd = None,
+                      callback = None):
     """
-    Run an external tool and fetch the output.
+    Run an external tool and optionally fetch the output.
 
-    Standard and error output are combined.
+    Standard output and standard error are combined into a single stream.
+    Newline characters are always '\\n' in all platforms.
 
     .. warning: SECURITY WARNING: Be *extremely* careful when passing
                 data coming from the target servers to this function.
                 Failure to properly validate the data may result in
                 complete compromise of your machine! See:
                 https://www.owasp.org/index.php/Command_Injection
+
+    Example::
+        >>> def callback(line):
+        ...    print line,
+        ...
+        >>> run_external_tool("uname", callback=callback)
+        Linux
 
     :param command: Command to execute.
     :type command: str
@@ -89,16 +113,19 @@ def run_external_tool(command, args = None, env = None, curdir = None):
     :param env: Environment variables to be passed to the command.
     :type env: dict(str -> str)
 
-    :param curdir: If given, change the current directory to this one while
-        running the tool, and switch back to the previous directory when done.
-        If not given, run the tool normally.
-
+    :param cwd: Current directory while running the tool.
         This is useful for tools that require you to be standing on a specific
         directory when running them.
-    :type curdir: str | None
+    :type cwd: str | None
 
-    :returns: Output from the tool and the exit status code.
-    :rtype: tuple(str, int)
+    :param callback: Optional callback function. If given, it will be called
+        once for each line of text printed by the external tool.
+    :type callback: callable
+
+    :returns: Return code from the external tool.
+    :rtype: int
+
+    :raises ExternalToolError: An error occurred when running an external tool.
     """
 
     # We put a large and nasty security warning here mostly to scare the noobs,
@@ -107,6 +134,10 @@ def run_external_tool(command, args = None, env = None, curdir = None):
     #
     # Still, especially on Windows, some external programs are really stupid
     # when it comes to parsing their own command line, so caveat emptor.
+
+    # Validate the callback argument.
+    if callback is not None and not callable(callback):
+        raise TypeError("Expected function, got %r instead" % type(callback))
 
     # Make a copy of the command line arguments.
     if not args:
@@ -170,33 +201,53 @@ def run_external_tool(command, args = None, env = None, curdir = None):
             cygwin += "nodosfilewarning"
         env["CYGWIN"] = cygwin
 
-    # Switch the working directory.
-    old_wd = os.getcwd()
+    # If the user doesn't want the output,
+    # just run the process and wait for completion.
+    if callback is None:
+        return subprocess.check_call(args,
+            executable = command,
+                   cwd = cwd,
+                   env = env)
+
+    proc = None
     try:
-        if curdir:
-            os.chdir(curdir)
 
-        # Run the command.
+        # Spawn the process.
         try:
-            code   = 0
-            output = subprocess.check_output(args,
-                                             executable = command,
-                                             env = env)
-        except subprocess.CalledProcessError, e:
-            code   = e.returncode
-            output = e.output
+            proc = subprocess.Popen(args,
+                        executable = command,
+                               cwd = cwd,
+                               env = env,
+                            stdout = subprocess.PIPE,
+                            stderr = subprocess.STDOUT,
+                universal_newlines = True,
+                           bufsize = 0,
+            )
+
+        # On error raise ExternalToolError.
         except WindowsError, e:
-            code   = e.winerror
-            output = str(e)
-            if "%1" in output:
-                output = output.replace("%1", command)
+            msg = str(e)
+            if "%1" in msg:
+                msg = msg.replace("%1", command)
+            raise ExternalToolError(msg, e.winerror)
+        except OSError, e:
+            raise ExternalToolError(str(e), e.errno)
 
-    # Restore the working directory.
+        # Read each line of output and send it to the callback function.
+        while True:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            callback(line)
+
     finally:
-        os.chdir(old_wd)
 
-    # Return the output and the exit code.
-    return output, code
+        # Make sure the spawned process is dead.
+        if proc is not None and proc.poll() is None:
+            proc.terminate()
+
+    # Return the exit code.
+    return proc.returncode
 
 
 #------------------------------------------------------------------------------
@@ -490,3 +541,42 @@ def cygwin_to_win_path(path):
         i += 1
     path = "".join(r)
     return "%s:%s" % (drive, path)
+
+
+#------------------------------------------------------------------------------
+@contextlib.contextmanager
+def tempfile(*args, **kwargs):
+    """
+    Context manager that creates a temporary file.
+    The file is deleted when leaving the context.
+
+    Example::
+        >>> with tempfile(prefix="tmp", suffix=".bat") as filename:
+        ...     with open(filename, "w") as fd:
+        ...         fd.write("@echo off\necho Hello World!\n")
+        ...     print run_external_tool("cmd.exe", ["/C", filename])
+        ...
+        ('Hello World!', 0)
+
+    The arguments are exactly the same used by the standard NamedTemporaryFile
+    class (from the tempfile module).
+    """
+
+    # On Windows we can't open a temporary file twice (although it's
+    # actually Python who won't let us). Note that there is no exploitable
+    # race condition here, because on Windows you can only create
+    # filesystem links from an Administrator account.
+    if sys.platform in ("win32", "cygwin"):
+        kwargs["delete"] = False
+        output_file = NamedTemporaryFile(*args, **kwargs)
+        output = output_file.name
+        output_file.close()
+        yield output
+        os.unlink(output_file.name)
+
+    # On POSIX we can do things more elegantly.
+    # It also prevents a race condition vulnerability, although if you're
+    # running a Python script from root you kinda deserve to get pwned.
+    else:
+        with NamedTemporaryFile(suffix = ".xml") as output_file:
+            yield output_file.name

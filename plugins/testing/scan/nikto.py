@@ -35,7 +35,7 @@ from golismero.api.data.vulnerability import GenericVulnerability
 from golismero.api.data.vulnerability.infrastructure.vulnerable_webapp \
      import VulnerableWebApp
 from golismero.api.external import run_external_tool, \
-     find_cygwin_binary_in_path
+     find_cygwin_binary_in_path, tempfile
 from golismero.api.logger import Logger
 from golismero.api.net.scraper import extract_from_text
 from golismero.api.parallel import setInterval
@@ -48,7 +48,6 @@ import sys
 import stat
 
 from csv import reader
-from tempfile import NamedTemporaryFile
 from os.path import abspath, join, exists, pathsep, sep, split
 from traceback import format_exc
 from urlparse import urljoin
@@ -126,26 +125,15 @@ class NiktoPlugin(TestingPlugin):
             if value:
                 args.extend(["-" + option, value])
 
-        # On Windows we can't open a temporary file twice (although it's
-        # actually Python who won't let us). Note that there is no exploitable
-        # race condition here, because on Windows you can only create
-        # filesystem links from an Administrator account.
-        if os.name != 'posix' or sys.platform == 'cygwin':
-            output_file = NamedTemporaryFile(suffix = ".csv", delete = False)
-            output = output_file.name
-            output_file.close()
-            try:
-                return self.run_nikto(info, output, nikto_script, args)
-            finally:
-                os.unlink(output_file.name)
+        # Create a temporary output file.
+        with tempfile(suffix = ".csv") as output:
 
-        # On POSIX we can do things more elegantly.
-        # It also prevents a race condition vulnerability, although if you're
-        # running a Python script from root you kinda deserve to get pwned.
-        else:
-            with NamedTemporaryFile(suffix = ".csv") as output_file:
-                output = output_file.name
-                return self.run_nikto(info, output, nikto_script, args)
+            # Append the output file name to the arguments.
+            args.append("-output")
+            args.append(output_filename)
+
+            # Run Nikto and parse the output.
+            return self.run_nikto(info, output, nikto_script, args)
 
 
     #--------------------------------------------------------------------------
@@ -158,7 +146,7 @@ class NiktoPlugin(TestingPlugin):
 
         :param output_filename: Path to the output filename.
             The format should always be CSV.
-        :type output_filename:
+        :type output_filename: str
 
         :param command: Path to the Nikto script.
         :type command: str
@@ -170,12 +158,8 @@ class NiktoPlugin(TestingPlugin):
         :rtype: list(Data)
         """
 
-        # Append the output file name to the arguments.
-        args.append("-output")
-        args.append(output_filename)
-
         # Get the Nikto directory.
-        curdir = split(abspath(command))[0]
+        cwd = split(abspath(command))[0]
 
         # On Windows, we must run Perl explicitly.
         # Also it only works under Cygwin.
@@ -190,21 +174,12 @@ class NiktoPlugin(TestingPlugin):
         Logger.log("Launching Nikto against: %s" % info.hostname)
         Logger.log_more_verbose(
             "Nikto arguments: %s %s" % (command, " ".join(args)))
-        event = None
-        try:
-            event = self.__waiting_for_nikto()
-            output, code = run_external_tool(command, args, curdir = curdir)
-        finally:
-            if event is not None:
-                event.set()
+        code = run_external_tool(command, args, cwd = cwd,
+                                 callback = self.log_line)
 
         # Log the output in extra verbose mode.
         if code:
             Logger.log_error("Nikto execution failed, status code: %d" % code)
-            if output:
-                Logger.log_error_more_verbose(output)
-        elif output:
-            Logger.log_more_verbose(output)
 
         # Parse the results.
         results, vuln_count = self.parse_nikto_results(info, output_filename)
@@ -226,9 +201,17 @@ class NiktoPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    @setInterval(60)
-    def __waiting_for_nikto(self):
-        Logger.log_verbose("...still waiting for Nikto to finish...")
+    def log_line(self, line):
+        """
+        Log a line of text sent by the scanner.
+
+        :param line: Line of text.
+        :type line: str
+        """
+        if line:
+            if line.endswith("\n"):
+                line = line[:-1]
+            Logger.log_verbose(line)
 
 
     #--------------------------------------------------------------------------

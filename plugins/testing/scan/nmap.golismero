@@ -9,10 +9,10 @@ License     = GNU Public License
 
 [Core]
 Module = nmap.py
-Class  = NmapPlugin
+Class  = NmapScanPlugin
 
 [Arguments]
 
 # For now we'll just accept a command line verbatim.
 # In a future version we should "understand" all options instead.
-args = -v -P0 -sT
+args = -vv -A -P0
