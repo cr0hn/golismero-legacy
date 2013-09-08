@@ -708,7 +708,7 @@ class Data(object):
                 group = ""
             elif self.data_type == Data.TYPE_INFORMATION:
                 group = ""
-                if propname == "raw_data":
+                if propname.startswith("raw_"):
                     value = value[:64].encode("hex") + "..."
 
             # Add the key and value to the dictionary.

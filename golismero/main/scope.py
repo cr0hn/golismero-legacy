@@ -80,6 +80,30 @@ class AuditScope (object):
 
 
     #--------------------------------------------------------------------------
+    @property
+    def addresses(self):
+        return sorted(self.__addresses)
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def domains(self):
+        return sorted(self.__domains)
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def roots(self):
+        return sorted(self.__roots)
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def web_pages(self):
+        return sorted(self.__web_pages)
+
+
+    #--------------------------------------------------------------------------
     def add_targets(self, audit_config, dns_resolution = 1):
         """
         :param audit_config: Audit configuration.
@@ -239,6 +263,7 @@ class AuditScope (object):
         result = []
         result.extend( IP(address) for address in self.__addresses )
         result.extend( Domain(domain) for domain in self.__domains )
+        result.extend( Domain(root) for root in self.__roots )
         result.extend( Url(url) for url in self.__web_pages )
         return result
 
@@ -246,21 +271,21 @@ class AuditScope (object):
     #--------------------------------------------------------------------------
     def __str__(self):
         result = ["Audit scope:\n"]
-        if self.__addresses:
+        addresses = self.addresses
+        if addresses:
             result.append("\nIP addresses:\n")
-            for address in sorted(self.__addresses):
+            for address in addresses:
                 result.append("    %s\n" % address)
-        if self.__domains:
+        domains = ["*." + domain for domain in self.roots]
+        domains.extend(self.domains)
+        if domains:
             result.append("\nDomains:\n")
-            for domain in sorted(self.__domains):
+            for domain in domains:
                 result.append("    %s\n" % domain)
-        if self.__roots:
-            result.append("\nRoot domains:\n")
-            for domain in sorted(self.__roots):
-                result.append("    %s\n" % domain)
-        if self.__web_pages:
+        web_pages = self.web_pages
+        if web_pages:
             result.append("\nWeb pages:\n")
-            for url in sorted(self.__web_pages):
+            for url in web_pages:
                 result.append("    %s\n" % url)
         return "".join(result)
 

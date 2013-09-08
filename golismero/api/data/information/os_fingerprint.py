@@ -110,10 +110,21 @@ class OSFingerprint(Information):
 
     #----------------------------------------------------------------------
     def __repr__(self):
-        return "<OSFingerprint server='%s-%s'>" % (
+        return "<OSFingerprint server='%s-%s' cpe=%r>" % (
             self.__family,
-            self.__version
+            self.__version,
+            self.__cpe,
         )
+
+
+    #----------------------------------------------------------------------
+    def __str__(self):
+        s = self.__family
+        if self.__version:
+            s += " " + self.__version
+        if self.__cpe:
+            s += " (%s)" % self.__cpe
+        return s
 
 
     #----------------------------------------------------------------------
