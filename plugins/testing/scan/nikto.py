@@ -31,7 +31,7 @@ from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.resource.url import BaseUrl, Url
-from golismero.api.data.vulnerability import GenericVulnerability
+from golismero.api.data.vulnerability import UncategorizedVulnerability
 from golismero.api.data.vulnerability.infrastructure.vulnerable_webapp \
      import VulnerableWebApp
 from golismero.api.external import run_external_tool, \
@@ -295,7 +295,7 @@ class NiktoPlugin(TestingPlugin):
                         kwargs["description"] = text if text else None
                         kwargs["references"]  = refs
                         if vuln_tag == "OSVDB-0":
-                            vuln = GenericVulnerability(**kwargs)
+                            vuln = UncategorizedVulnerability(**kwargs)
                             vuln.add_resource(url)
                         else:
                             vuln = VulnerableWebApp(url, **kwargs)

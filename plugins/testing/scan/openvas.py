@@ -30,7 +30,7 @@ from golismero.api.config import Config
 from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
-from golismero.api.data.vulnerability import GenericVulnerability
+from golismero.api.data.vulnerability import UncategorizedVulnerability
 from golismero.api.logger import Logger
 from golismero.api.plugin import TestingPlugin, ImportPlugin
 
@@ -238,7 +238,7 @@ class OpenVASPlugin(TestingPlugin):
                 }
 
                 # Create the vulnerability instance.
-                vuln = GenericVulnerability(**kwargs)
+                vuln = UncategorizedVulnerability(**kwargs)
                 ##vuln.vulnerability_type = vulnerability_type
 
                 # Link the vulnerability to the resource.

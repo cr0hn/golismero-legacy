@@ -288,11 +288,11 @@ def extract_vuln_ids(text):
         {}
 
     This can be useful when instancing Vulnerability objects::
-        >>> from golismero.api.data.vulnerability import GenericVulnerability
+        >>> from golismero.api.data.vulnerability import UncategorizedVulnerability
         >>> description = "This vulnerability is CVE-1234-4321."
         >>> kwargs = extract_vuln_ids(description)
         >>> kwargs['description'] = description
-        >>> vuln = GenericVulnerability( **kwargs )
+        >>> vuln = UncategorizedVulnerability( **kwargs )
         >>> vuln.description
         'This vulnerability is CVE-1234-4321.'
         >>> vuln.cve

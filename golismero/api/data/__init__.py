@@ -321,19 +321,43 @@ class keep_true(merge):
         old_value = getattr(old_data, key, None)
         new_value = getattr(new_data, key, None)
 
-        # Evaluate them as booleans.
+        # Evaluate the old value as a trinary (boolean + None).
         try:
-            old_bool = bool(old_value)
-            new_bool = bool(new_value)
+            if old_value is None:
+                old_bool = None
+            else:
+                old_bool = bool(old_value)
         except Exception:
-            old_bool = new_bool = True
-            msg = "Failed to evaluate property %s.%s as boolean!"
+            old_bool = True
+            msg = "Failed to evaluate old property %s.%s as boolean!"
             msg %= (old_data.__class__.__name__, key)
             warn(msg, stacklevel=5)
 
+        # Evaluate the new value as a trinary (boolean + None).
+        try:
+            if new_value is None:
+                new_bool = None
+            else:
+                new_bool = bool(new_value)
+        except Exception:
+            new_bool = True
+            msg = "Failed to evaluate new property %s.%s as boolean!"
+            msg %= (new_data.__class__.__name__, key)
+            warn(msg, stacklevel=5)
+
+        # Always prefer True or False over None.
         # If they are equal, choose the new value.
         # If not, choose the one that evaluates to True.
-        return new_value if new_bool or old_bool == new_bool else old_value
+        # (It could be written as an expression, but this is more readable).
+        if new_bool is old_bool:
+            return new_value
+        if old_bool is None:
+            return new_value
+        if new_bool is None:
+            return old_value
+        if new_bool:
+            return new_value
+        return old_value
 
 
 #------------------------------------------------------------------------------
@@ -355,19 +379,43 @@ class keep_false(merge):
         old_value = getattr(old_data, key, None)
         new_value = getattr(new_data, key, None)
 
-        # Evaluate them as booleans.
+        # Evaluate the old value as a trinary (boolean + None).
         try:
-            old_bool = bool(old_value)
-            new_bool = bool(new_value)
+            if old_value is None:
+                old_bool = None
+            else:
+                old_bool = bool(old_value)
         except Exception:
-            old_bool = new_bool = False
-            msg = "Failed to evaluate property %s.%s as boolean!"
+            old_bool = True
+            msg = "Failed to evaluate old property %s.%s as boolean!"
             msg %= (old_data.__class__.__name__, key)
             warn(msg, stacklevel=5)
 
+        # Evaluate the new value as a trinary (boolean + None).
+        try:
+            if new_value is None:
+                new_bool = None
+            else:
+                new_bool = bool(new_value)
+        except Exception:
+            new_bool = True
+            msg = "Failed to evaluate new property %s.%s as boolean!"
+            msg %= (new_data.__class__.__name__, key)
+            warn(msg, stacklevel=5)
+
+        # Always prefer True or False over None.
         # If they are equal, choose the new value.
         # If not, choose the one that evaluates to False.
-        return new_value if old_bool or old_bool == new_bool else old_value
+        # (It could be written as an expression, but this is more readable).
+        if new_bool is old_bool:
+            return new_value
+        if old_bool is None:
+            return new_value
+        if new_bool is None:
+            return old_value
+        if old_bool:
+            return new_value
+        return old_value
 
 
 #------------------------------------------------------------------------------
@@ -683,7 +731,7 @@ class Data(object):
             # Get the group.
             # More hardcoded hacks here... :(
             if self.data_type == Data.TYPE_VULNERABILITY:
-                if propname in ("level", "impact", "severity", "risk"):
+                if propname in ("impact", "severity", "risk"):
                     group = "Risk"
                 elif propname.startswith("cvss"):
                     group = "Risk"

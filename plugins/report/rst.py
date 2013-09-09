@@ -67,10 +67,12 @@ class RSTReport(ReportPlugin):
             print >>f, "GoLismero Report"
             print >>f, "================"
             print >>f, ""
+            print >>f, ".. title:: %s - GoLismero" % self.__format_rst(Config.audit_name)
+            print >>f, ""
             print >>f, ".. footer:: Report generation date: %s" % datetime.now()
             print >>f, ""
             print >>f, ".. contents:: Table of Contents"
-            print >>f, "   :depth: 2"
+            print >>f, "   :depth: 3"
             print >>f, "   :backlinks: top"
             print >>f, ""
 
@@ -102,12 +104,58 @@ class RSTReport(ReportPlugin):
                 print >>f, "  + " + self.__format_rst(url)
             print >>f, ""
 
-            # Dump the data.
+            # Determine the report type.
             self.__full_report = not Config.audit_config.only_vulns
-            self.__vulnerable  = set()
-            self.__write_rst(f, Data.TYPE_VULNERABILITY, "Vulnerabilities")
-            self.__write_rst(f, Data.TYPE_RESOURCE,      "Resources"    if self.__full_report else "Assets")
-            self.__write_rst(f, Data.TYPE_INFORMATION,   "Informations" if self.__full_report else "Evidences")
+
+            # Collect the vulnerabilities that are not false positives.
+            datas = self.__collect_vulns(False)
+
+            # If it's a brief report and we have no vulnerabilities,
+            # write a message and stop.
+            if not datas and not self.__full_report:
+                print >>f, "No vulnerabilities found."
+                print >>f, ""
+                return
+
+            # Collect the false positives.
+            # In brief mode, this is used to eliminate the references to them.
+            fp = self.__collect_vulns(True)
+            self.__fp = set()
+            for ids in fp.itervalues():
+                self.__fp.update(ids)
+
+            try:
+
+                # Report the vulnerabilities.
+                self.__write_rst(f, datas, Data.TYPE_VULNERABILITY, "Vulnerabilities")
+
+                # This dictionary tracks which data to show
+                # and which not to in brief report mode.
+                self.__vulnerable = set()
+
+                try:
+
+                    # Show the resources in the report.
+                    datas = self.__collect_data(Data.TYPE_RESOURCE)
+                    if datas:
+                        self.__write_rst(f, datas, Data.TYPE_RESOURCE,
+                                "Resources" if self.__full_report else "Assets")
+
+                    # Show the informations in the report.
+                    datas = self.__collect_data(Data.TYPE_INFORMATION)
+                    if datas:
+                        self.__write_rst(f, datas, Data.TYPE_INFORMATION,
+                                "Informations" if self.__full_report else "Evidences")
+
+                finally:
+                    self.__vulnerable.clear()
+
+            finally:
+                self.__fp.clear()
+
+            # Show the false positives in the full report.
+            if self.__full_report and fp:
+                self.__write_rst(f, fp, Data.TYPE_VULNERABILITY, "False Positives")
 
 
     #--------------------------------------------------------------------------
@@ -124,6 +172,8 @@ class RSTReport(ReportPlugin):
     __re_escape_rst = re.compile("(%s)" % "|".join("\\" + x for x in "*:,.\"!-/';~?@[]<>|+^=_\\"))
     __re_unindent = re.compile("^( +)", re.M)
     def __escape_rst(self, s):
+        if not isinstance(s, basestring):
+            s = str(s)
         s = s.replace("\t", " " * 8)
         s = s.replace("\r\n", "\n")
         s = s.replace("\r", "\n")
@@ -144,8 +194,15 @@ class RSTReport(ReportPlugin):
                 obj = "\n".join(wrap(obj, width, replace_whitespace=False,
                                      expand_tabs=False, drop_whitespace=False))
             return self.__escape_rst(obj)
+        if (
+            (isinstance(obj, list) or isinstance(obj, tuple)) and
+            all(isinstance(x, basestring) for x in obj)
+        ):
+            return "\n".join("- " + self.__escape_rst(pformat(x)) for x in obj)
         if isinstance(obj, dict):
-            return "\n".join(self.__escape_rst("%s: %s" % (k,v)) for k,v in obj.iteritems())
+            return "\n".join(
+                self.__escape_rst("%s: %s" % (k,v))
+                for k,v in obj.iteritems())
         try:
             text = str(obj)
         except Exception:
@@ -154,11 +211,9 @@ class RSTReport(ReportPlugin):
 
 
     #--------------------------------------------------------------------------
-    def __write_rst(self, f, data_type, header):
-
-        # Collect the data.
+    def __collect_data(self, data_type):
         datas = defaultdict(list)
-        if self.__full_report or data_type == Data.TYPE_VULNERABILITY:
+        if self.__full_report:
             for data in self.__iterate_data(data_type=data_type):
                 datas[data.display_name].append(data.identity)
         else:
@@ -167,21 +222,31 @@ class RSTReport(ReportPlugin):
                     datas[data.display_name].append(data.identity)
         for x in datas.itervalues():
             x.sort()
+        return datas
 
-        # If there's nothing to show...
-        if not datas:
 
-            # If it's a brief report, show a message.
-            if not self.__full_report and data_type == Data.TYPE_VULNERABILITY:
-                print >>f, "No vulnerabilities found."
-                print >>f, ""
+    #--------------------------------------------------------------------------
+    def __collect_vulns(self, fp_filter):
+        vulns = defaultdict(list)
+        for vuln in self.__iterate_data(data_type=Data.TYPE_VULNERABILITY):
+            if vuln.false_positive == fp_filter:
+                vulns[vuln.display_name].append(vuln.identity)
+        for x in vulns.itervalues():
+            x.sort()
+        return vulns
 
-            # Nothing else to do.
-            return
+
+    #--------------------------------------------------------------------------
+    def __write_rst(self, f, datas, data_type, header, fp_filter_mode = None):
 
         # Get the titles.
         titles = datas.keys()
         titles.sort()
+
+        # Hack to reorder some titles.
+        if "Uncategorized Vulnerability" in titles:
+            titles.remove("Uncategorized Vulnerability")
+            titles.append("Uncategorized Vulnerability")
 
         # Print the data type header.
         print >>f, header
@@ -219,6 +284,11 @@ class RSTReport(ReportPlugin):
                 linked_info = data.get_links(Data.TYPE_INFORMATION)
                 linked_res  = data.get_links(Data.TYPE_RESOURCE)
                 linked_vuln = data.get_links(Data.TYPE_VULNERABILITY)
+                if self.__fp:
+                    linked_fp = linked_vuln.intersection(self.__fp)
+                    linked_vuln.difference_update(linked_fp)
+                else:
+                    linked_fp = set()
                 if self.__full_report:
                     if linked_info:
                         property_groups["Graph Links"]["Informations"]    = sorted(linked_info)
@@ -226,6 +296,8 @@ class RSTReport(ReportPlugin):
                         property_groups["Graph Links"]["Resources"]       = sorted(linked_res)
                     if linked_vuln:
                         property_groups["Graph Links"]["Vulnerabilities"] = sorted(linked_vuln)
+                    if linked_fp:
+                        property_groups["Graph Links"]["False Positives"] = sorted(linked_fp)
                 elif data_type == Data.TYPE_VULNERABILITY:
                     if linked_info:
                         self.__vulnerable.update(linked_info)
@@ -249,12 +321,17 @@ class RSTReport(ReportPlugin):
                     properties = property_groups[group]
 
                     # Format the data for printing.
+                    # Remove empty properties.
                     hyperlinks = group == "Graph Links"
                     properties = {
                         key: self.__format_rst(value, hyperlinks).split("\n")
                         for key, value in properties.iteritems()
                         if value
                     }
+
+                    # Skip this group if we have no properties left to show.
+                    if not properties:
+                        continue
 
                     # Get the property names.
                     names = properties.keys()
@@ -275,8 +352,11 @@ class RSTReport(ReportPlugin):
 
                     # Get the width of the names column.
                     h_names = "Property name"
-                    w_names = max(len(x) for x in names)
-                    w_names = max(w_names, len(h_names))
+                    if names:
+                        w_names = max(len(x) for x in names)
+                        w_names = max(w_names, len(h_names))
+                    else:
+                        w_names = len(h_names)
 
                     # Get the width of the values column.
                     h_values = "Property value"
