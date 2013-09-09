@@ -4,7 +4,7 @@ GoLismero Report
 .. footer:: Report generation date: 2013-09-10 01:25:27.245000
 
 .. contents:: Table of Contents
-   :depth: 2
+   :depth: 4
    :backlinks: top
 
 Summary
