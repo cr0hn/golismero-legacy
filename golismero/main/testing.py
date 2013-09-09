@@ -221,12 +221,12 @@ class PluginTester(object):
 
 
     #--------------------------------------------------------------------------
-    def get_plugin(self, plugin_name):
+    def get_plugin(self, plugin_id):
         """
         Get an instance of the requested plugin.
 
-        :param plugin_name: Name of the plugin to test.
-        :type plugin_name: str
+        :param plugin_id: ID of the plugin to test.
+        :type plugin_id: str
 
         :returns: Plugin instance and information.
         :rtype: tuple(Plugin, PluginInfo)
@@ -236,21 +236,21 @@ class PluginTester(object):
         self.init_environment()
 
         # Load the plugin.
-        plugin_info = self.audit.pluginManager.get_plugin_by_name(plugin_name)
-        plugin = self.audit.pluginManager.load_plugin_by_name(plugin_name)
+        plugin_info = self.audit.pluginManager.get_plugin_by_id(plugin_id)
+        plugin = self.audit.pluginManager.load_plugin_by_id(plugin_id)
         return plugin, plugin_info
 
 
     #--------------------------------------------------------------------------
-    def run_plugin(self, plugin_name, plugin_input):
+    def run_plugin(self, plugin_id, plugin_input):
         """
         Run the requested plugin. You can test both data and messages.
 
         It's the caller's resposibility to check the input message queue of
         the Orchestrator instance if the plugin sends any messages.
 
-        :param plugin_name: Name of the plugin to test.
-        :type plugin_name: str
+        :param plugin_id: ID of the plugin to test.
+        :type plugin_id: str
 
         :param plugin_input: Plugin input.
             Testing plugins accept Data objects, Import and Report plugins
@@ -263,7 +263,7 @@ class PluginTester(object):
 
         # Load the plugin and reset the ACK identity.
         # The name MUST be the full ID. This is intentional.
-        plugin, plugin_info = self.get_plugin(plugin_name)
+        plugin, plugin_info = self.get_plugin(plugin_id)
         Config._context._PluginContext__plugin_info  = plugin_info
         Config._context._PluginContext__ack_identity = None
 
@@ -296,7 +296,7 @@ class PluginTester(object):
                         break
                 if not found:
                     msg = "Plugin %s cannot process data of type %s"
-                    raise TypeError(msg % (plugin_name, type(data)))
+                    raise TypeError(msg % (plugin_id, type(data)))
 
                 # Set the ACK identity.
                 Config._context._PluginContext__ack_identity = data.identity

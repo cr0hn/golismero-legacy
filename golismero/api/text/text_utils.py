@@ -171,7 +171,7 @@ def hexdump(s):
         h1 = " ".join("%.2x" % ord(c) for c in s[i:i+8])
         h2 = " ".join("%.2x" % ord(c) for c in s[i+8:i+16])
         d = "".join(c if c in printable else "." for c in s[i:i+16])
-        a.append("%-32s-%-32s %s\n" % (h, d))
+        a.append("%-32s-%-32s %s\n" % (h1, h2, d))
     return "".join(a)
 
 

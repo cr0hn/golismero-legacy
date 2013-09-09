@@ -33,7 +33,9 @@ from golismero.api.plugin import UIPlugin, get_plugin_info
 from golismero.main.console import Console, colorize
 from golismero.messaging.codes import MessageType, MessageCode, MessagePriority
 
-import collections
+from collections import defaultdict
+from functools import partial
+
 import warnings
 
 #
@@ -57,7 +59,12 @@ class ConsoleUIPlugin(UIPlugin):
 
     #--------------------------------------------------------------------------
     def __init__(self):
-        self.already_seen_info = collections.defaultdict(set)
+
+        # audit_name -> set(identity)
+        self.already_seen_info = defaultdict(set)
+
+        # audit_name -> plugin_name -> ack_identity -> simple_id
+        self.current_plugins   = defaultdict( partial(defaultdict, dict) )
 
 
     #--------------------------------------------------------------------------
@@ -87,7 +94,7 @@ class ConsoleUIPlugin(UIPlugin):
         text %= (
             colorize("<!>", info.risk),
             colorize(info.vulnerability_type, info.risk),
-            colorize(self.get_plugin_name(info.plugin_id), info.risk),
+            colorize(self.get_plugin_name(info.plugin_id, info.identity), info.risk),
             colorize(str(info.risk), info.risk)
         )
         Console.display(text)
@@ -96,30 +103,46 @@ class ConsoleUIPlugin(UIPlugin):
     #--------------------------------------------------------------------------
     def recv_msg(self, message):
 
-        # Process status messages
+        # Process status messages.
         if message.message_type == MessageType.MSG_TYPE_STATUS:
 
+            # A plugin has started.
             if message.message_code == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
-                m_plugin_name = self.get_plugin_name(message.plugin_name)
+
+                # Create a simple ID for the plugin execution.
+                id_dict = self.current_plugins[Config.audit_name][message.plugin_id]
+                simple_id = len(id_dict)
+                id_dict[message.ack_identity] = simple_id
+
+                # Show a message to the user.
+                m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                 m_plugin_name = colorize(m_plugin_name, "info")
                 m_text        = "[*] %s: Started." % m_plugin_name
-
                 Console.display(m_text)
 
+            # A plugin has ended.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_END:
-                m_plugin_name = self.get_plugin_name(message.plugin_name)
+
+                # Show a message to the user.
+                m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                 m_plugin_name = colorize(m_plugin_name, "info")
                 m_text        = "[*] %s: Finished." % m_plugin_name
-
                 Console.display(m_text)
 
+                # Free the simple ID for the plugin execution.
+                del self.current_plugins[Config.audit_name][message.plugin_id][message.ack_identity]
+
+            # A plugin has advanced.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
 
+                # Don't show this event in quiet mode.
                 if Console.level >= Console.VERBOSE:
 
-                    m_plugin_name = self.get_plugin_name(message.plugin_name)
+                    # Get the plugin name.
+                    m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                     m_plugin_name = colorize(m_plugin_name, "info")
 
+                    # Get the progress percentage.
                     m_progress = message.message_info
                     if m_progress is not None:
                         m_progress_h   = int(m_progress)
@@ -129,11 +152,11 @@ class ConsoleUIPlugin(UIPlugin):
                     else:
                         m_progress_txt = "Working..."
 
+                    # Show it to the user.
                     m_text = "[*] %s: %s" % (m_plugin_name, m_progress_txt)
-
                     Console.display(m_text)
 
-        # Process control messages
+        # Process control messages.
         elif message.message_type == MessageType.MSG_TYPE_CONTROL:
 
             # When an audit is finished, check if there are more running audits.
@@ -151,13 +174,12 @@ class ConsoleUIPlugin(UIPlugin):
                             priority = MessagePriority.MSG_PRIORITY_LOW
                     )
 
-            # Show log messages
-            # (The verbosity is sent by Logger)
+            # Show log messages. The verbosity is sent by Logger.
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
                 (text, level, is_error) = message.message_info
                 if Console.level >= level:
                     try:
-                        m_plugin_name = self.get_plugin_name(message.plugin_name)
+                        m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                     except Exception:
                         m_plugin_name = "GoLismero"
                     m_plugin_name = colorize(m_plugin_name, 'info')
@@ -169,13 +191,13 @@ class ConsoleUIPlugin(UIPlugin):
                         text = "[*] %s: %s" % (m_plugin_name, text)
                         Console.display(text)
 
-            # Show plugin errors
-            # (Only the description in standard level,
-            # full traceback in more verbose level)
+            # Show plugin errors.
+            # Only the description in standard level,
+            # full traceback in more verbose level.
             if message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 (description, traceback) = message.message_info
                 try:
-                    m_plugin_name = self.get_plugin_name(message.plugin_name)
+                    m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                 except Exception:
                     m_plugin_name = "GoLismero"
                 text        = "[!] Plugin '%s' error: %s " % (m_plugin_name, str(description))
@@ -184,9 +206,9 @@ class ConsoleUIPlugin(UIPlugin):
                 Console.display_error(text)
                 Console.display_error_more_verbose(traceback)
 
-            # Show plugin warnings
-            # (Only the description in verbose level,
-            # full traceback in more verbose level)
+            # Show plugin warnings.
+            # Only the description in verbose level,
+            # full traceback in more verbose level.
             elif message.message_code == MessageCode.MSG_CONTROL_WARNING:
                 for w in message.message_info:
                     if Console.level >= Console.MORE_VERBOSE:
@@ -196,15 +218,26 @@ class ConsoleUIPlugin(UIPlugin):
                     else:
                         formatted = None
                     if formatted:
-                        m_plugin_name = self.get_plugin_name(message.plugin_name)
+                        m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                         text = "[!] Plugin '%s' warning: %s " % (m_plugin_name, str(formatted))
                         text = colorize(text, 'low')
                         Console.display_error(text)
 
 
     #--------------------------------------------------------------------------
-    @staticmethod
-    def get_plugin_name(plugin_name):
-        if plugin_name:
-            return get_plugin_info(plugin_name).display_name
-        return "GoLismero"
+    def get_plugin_name(self, plugin_id, ack_identity):
+
+        # If the message comes from the Orchestrator.
+        if not plugin_id:
+            return "GoLismero"
+
+        # Get the plugin display name.
+        plugin_name = get_plugin_info(plugin_id).display_name
+
+        # Append the simple ID if it's greater than zero.
+        simple_id = self.current_plugins[Config.audit_name][plugin_id][ack_identity]
+        if simple_id:
+            plugin_name = "%s (%d)" % (plugin_name, simple_id + 1)
+
+        # Return the display name.
+        return plugin_name

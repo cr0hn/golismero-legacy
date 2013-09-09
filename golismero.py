@@ -161,14 +161,14 @@ class SetPluginArgumentAction(argparse.Action):
             d = []
             setattr(namespace, self.dest, d)
         try:
-            plugin_name, token = values.split(":", 1)
-            plugin_name = plugin_name.strip()
-            key, value  = token.split("=", 1)
+            plugin_id, token = values.split(":", 1)
+            plugin_id  = plugin_id.strip()
+            key, value = token.split("=", 1)
             key   = key.strip()
             value = value.strip()
-            assert plugin_name
+            assert plugin_id
             assert key
-            d.append( (plugin_name, key, value) )
+            d.append( (plugin_id, key, value) )
         except Exception:
             parser.error("invalid plugin argument: %s" % values)
 
@@ -239,7 +239,7 @@ def cmdline_parser():
     gr_plugins.add_argument("--max-concurrent", metavar="N", type=int, default=None, help="maximum number of plugins to run concurrently")
     gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
     gr_plugins.add_argument("--plugin-list", action="store_true", default=False, help="list available plugins and quit")
-    gr_plugins.add_argument("--plugin-info", metavar="NAME", dest="plugin_name", help="show plugin info and quit")
+    gr_plugins.add_argument("--plugin-info", metavar="NAME", dest="plugin_id", help="show plugin info and quit")
 
     return parser
 
@@ -419,7 +419,7 @@ def main():
     #--------------------------------------------------------------------------
     # Display plugin info and quit.
 
-    if P.plugin_name:
+    if P.plugin_id:
         Console.use_colors = cmdParams.color
 
         # Load the plugins list.
@@ -433,23 +433,23 @@ def main():
         # Show the plugin information.
         try:
             try:
-                m_plugin_info = manager.get_plugin_by_name(P.plugin_name)
+                m_plugin_info = manager.get_plugin_by_id(P.plugin_id)
             except KeyError:
                 try:
-                    m_found = manager.search_plugins(P.plugin_name)
+                    m_found = manager.search_plugins(P.plugin_id)
                     if len(m_found) > 1:
                         print "[!] Error: which plugin did you mean?"
-                        for plugin_name in m_found.iterkeys():
-                            print "\t%s" % plugin_name
+                        for plugin_id in m_found.iterkeys():
+                            print "\t%s" % plugin_id
                         exit(1)
                     m_plugin_info = m_found.pop(m_found.keys()[0])
                 except Exception:
-                    raise KeyError(P.plugin_name)
+                    raise KeyError(P.plugin_id)
             Config._context = PluginContext( orchestrator_pid = getpid(),
                                              orchestrator_tid = get_ident(),
                                                   plugin_info = m_plugin_info,
                                                     msg_queue = None )
-            m_plugin_obj = manager.load_plugin_by_name(m_plugin_info.plugin_name)
+            m_plugin_obj = manager.load_plugin_by_id(m_plugin_info.plugin_id)
             m_root = cmdParams.plugins_folder
             m_root = path.abspath(m_root)
             if not m_root.endswith(path.sep):
@@ -462,7 +462,7 @@ def main():
             a, b = path.split(m_src)
             b = colorize(b, "cyan")
             m_src = path.join(a, b)
-            m_name = m_plugin_info.plugin_name
+            m_name = m_plugin_info.plugin_id
             p = m_name.rfind("/") + 1
             m_name = m_name[:p] + colorize(m_name[p:], "cyan")
             m_desc = m_plugin_info.description.strip()
@@ -487,10 +487,10 @@ def main():
                         default = "****************"
                     print "\t%s -> %s" % (colorize(name, "cyan"), default)
         except KeyError:
-            print "[!] Plugin name not found"
+            print "[!] Plugin ID not found"
             exit(1)
         except ValueError:
-            print "[!] Plugin name not found"
+            print "[!] Plugin ID not found"
             exit(1)
         except Exception, e:
             print "[!] Error recovering plugin info: %s" % str(e)
@@ -590,9 +590,9 @@ def main():
             parser.error(str(e))
 
         # Prompt for passwords.
-        for plugin_name in plugin_args.keys():
-            plugin_info = manager.get_plugin_by_name(plugin_name)
-            target_args = plugin_args[plugin_name]
+        for plugin_id in plugin_args.keys():
+            plugin_info = manager.get_plugin_by_id(plugin_id)
+            target_args = plugin_args[plugin_id]
             for key, value in target_args.items():
                 if not value and key in plugin_info.plugin_passwd_args:
                     if len(plugin_info.plugin_passwd_args) > 1:
@@ -609,8 +609,8 @@ def main():
             auditParams.plugin_args = plugin_args
 
         # Set the plugin arguments before loading the UI plugin.
-        for plugin_name, plugin_args in cmdParams.plugin_args.iteritems():
-            status = manager.set_plugin_args(plugin_name, plugin_args)
+        for plugin_id, plugin_args in cmdParams.plugin_args.iteritems():
+            status = manager.set_plugin_args(plugin_id, plugin_args)
             if status != 0:     # should never happen, but just in case...
                 if status == 1:
                     msg = "Unknown plugin: %s"
@@ -618,11 +618,11 @@ def main():
                     msg = "Invalid arguments for plugin: %s"
                 else:
                     msg = "Error setting arguments for plugin: %s"
-                parser.error(msg % plugin_name)
+                parser.error(msg % plugin_id)
 
         # Load the UI plugin.
-        ui_plugin_name = "ui/" + cmdParams.ui_mode
-        ui_plugin = manager.load_plugin_by_name(ui_plugin_name)
+        ui_plugin_id = "ui/" + cmdParams.ui_mode
+        ui_plugin = manager.load_plugin_by_id(ui_plugin_id)
 
     # Show an error message if something goes wrong.
     except Exception, e:

@@ -106,17 +106,17 @@ class Orchestrator (object):
         if not success:
             raise RuntimeError("Failed to find any plugins!")
 
-        # Set the user-defined arguments for the plugins.
-        for plugin_name, plugin_args in self.__config.plugin_args.iteritems():
-            self.pluginManager.set_plugin_args(plugin_name, plugin_args)
-
         # Load the UI plugin.
-        ui_plugin_name = "ui/%s" % self.__config.ui_mode
+        ui_plugin_id = "ui/%s" % self.__config.ui_mode
         try:
-            self.pluginManager.get_plugin_by_name(ui_plugin_name)
+            self.pluginManager.get_plugin_by_id(ui_plugin_id)
         except KeyError:
             raise ValueError("No plugin found for UI mode: %r" % self.__config.ui_mode)
-        self.pluginManager.load_plugin_by_name(ui_plugin_name)
+        self.pluginManager.load_plugin_by_id(ui_plugin_id)
+
+        # Set the user-defined arguments for the plugins.
+        for plugin_id, plugin_args in self.__config.plugin_args.iteritems():
+            self.pluginManager.set_plugin_args(plugin_id, plugin_args)
 
         # Network connection manager.
         self.__netManager = NetworkManager(self.__config)
@@ -149,8 +149,8 @@ class Orchestrator (object):
         Logger.log_more_verbose("Loaded %d plugins" % len(success))
         if failure:
             Logger.log_error("Failed to load %d plugins" % len(failure))
-            for plugin_name in failure:
-                Logger.log_error_verbose("\t%s" % plugin_name)
+            for plugin_id in failure:
+                Logger.log_error_verbose("\t%s" % plugin_id)
 
     @property
     def config(self):

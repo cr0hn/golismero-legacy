@@ -181,7 +181,7 @@ def stop_audit(audit_name = None):
         message_code = MessageCode.MSG_CONTROL_STOP_AUDIT,
         message_info = False,        # True for finished, False for user cancel
           audit_name = audit_name,
-         plugin_name = Config.plugin_name,
+         plugin_id = Config.plugin_id,
             priority = MessagePriority.MSG_PRIORITY_HIGH,
     )
     Config._context.send_raw_msg(msg)
@@ -202,7 +202,7 @@ def stop_audit(audit_name = None):
 ##        message_type = MessageType.MSG_TYPE_CONTROL,
 ##        message_code = MessageCode.MSG_CONTROL_PAUSE_AUDIT,
 ##          audit_name = audit_name,
-##         plugin_name = Config.plugin_name,
+##           plugin_id = Config.plugin_id,
 ##            priority = MessagePriority.MSG_PRIORITY_HIGH,
 ##    )
 ##    Config._context.send_raw_msg(msg)
@@ -223,7 +223,7 @@ def stop_audit(audit_name = None):
 ##        message_type = MessageType.MSG_TYPE_CONTROL,
 ##        message_code = MessageCode.MSG_CONTROL_RESUME_AUDIT,
 ##          audit_name = audit_name,
-##         plugin_name = Config.plugin_name,
+##           plugin_id = Config.plugin_id,
 ##            priority = MessagePriority.MSG_PRIORITY_HIGH,
 ##    )
 ##    Config._context.send_raw_msg(msg)

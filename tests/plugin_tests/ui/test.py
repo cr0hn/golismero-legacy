@@ -56,8 +56,8 @@ class TestUIPlugin(UIPlugin):
         history = Database.get_plugin_history(info.identity)
         if history:
             print "History:"
-            for plugin_name in history:
-                print "  " + plugin_name
+            for plugin_id in history:
+                print "  " + plugin_id
         print
 
 
@@ -70,7 +70,7 @@ class TestUIPlugin(UIPlugin):
         print "Message:"
         print "  Timestamp: %s" % time.ctime(message.timestamp)
         print "  Audit:     %s" % message.audit_name
-        print "  Plugin:    %s" % message.plugin_name
+        print "  Plugin:    %s" % message.plugin_id
         print "  Type:      %s" % MessageType.get_name_from_value(message.message_type)
         print "  Code:      %s" % MessageCode.get_name_from_value_and_type(message.message_code, message.message_type)
         print "  Priority:  %s" % MessagePriority.get_name_from_value(message.priority)

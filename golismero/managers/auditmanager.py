@@ -827,11 +827,11 @@ class Audit (object):
                 if data.is_in_scope():
 
                     # If the plugin is not recursive, mark the data as already processed by it.
-                    plugin_name = message.plugin_name
-                    if plugin_name:
-                        plugin_info = pluginManager.get_plugin_by_name(plugin_name)
+                    plugin_id = message.plugin_id
+                    if plugin_id:
+                        plugin_info = pluginManager.get_plugin_by_id(plugin_id)
                         if not plugin_info.recursive:
-                            database.mark_plugin_finished(data.identity, plugin_name)
+                            database.mark_plugin_finished(data.identity, plugin_id)
 
                     # The data will be sent to the plugins.
                     data_for_plugins.append(data)

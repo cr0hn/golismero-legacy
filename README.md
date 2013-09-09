@@ -81,7 +81,7 @@ To display the list of available plugins:
 
 You can also query more information about specific plugins:
 
-```python golismero.py --plugin-info <plugin name>```
+```python golismero.py --plugin-info <plugin>```
 
 ![Plugin info example](https://raw.github.com/cr0hn/golismero/gh-pages/images/plugin_info_mint.png "Plugin list example")
 
@@ -92,7 +92,7 @@ Select a specific plugin
 
 Use the -e option to enable only some specific plugins, and -d to disable plugins (you can use -e and -d many times):
 
-```python golismero.py <target> -e <plugin id>```
+```python golismero.py <target> -e <plugin>```
 
 You can also select multiple plugins using wildcards. For example, you can select all bruteforce plugins like this:
 

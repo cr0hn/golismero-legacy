@@ -660,7 +660,7 @@ class OrchestratorConfig (Configuration):
     profile_file = None
 
     # Plugin arguments.
-    plugin_args  = dict()   # plugin_name -> key -> value
+    plugin_args  = dict()   # plugin_id -> key -> value
 
 
     #--------------------------------------------------------------------------
@@ -773,7 +773,7 @@ class AuditConfig (Configuration):
     profile_file = None
 
     # Plugin arguments.
-    plugin_args  = None   # list of (plugin_name, key, value)
+    plugin_args  = None   # list of (plugin_id, key, value)
 
 
     #--------------------------------------------------------------------------

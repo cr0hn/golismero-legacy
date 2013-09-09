@@ -35,7 +35,7 @@ from golismero.api.audit import get_audit_times, parse_audit_times
 from golismero.api.config import Config
 from golismero.api.data.db import Database
 from golismero.api.logger import Logger
-from golismero.api.plugin import ReportPlugin
+from golismero.api.plugin import ReportPlugin, get_plugin_name
 
 # Data types
 from golismero.api.data import Data
@@ -257,6 +257,7 @@ class TextReport(ReportPlugin):
                     targets = [str(x) for x in vuln.associated_resources]
                     for info in vuln.associated_informations:
                         targets.extend(str(x) for x in info.associated_resources)
+                    table.add_row(("Found By", get_plugin_name(vuln.plugin_id)))
                     p = len(table.draw())
                     table.add_row(("Level", vuln.level.title()))
                     table.add_row(("Impact", vuln.impact.title()))

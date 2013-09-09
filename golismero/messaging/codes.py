@@ -46,28 +46,28 @@ from ..common import Singleton
 #   message_type = MessageType.MSG_TYPE_DATA
 #   message_code = MessageCode.MSG_DATA
 #   message_info = List of Data objects returned by a plugin
-#   plugin_name  = Name of the plugin that returned them
+#   plugin_id    = ID of the plugin that returned them
 #   priority     = MessagePriority.MSG_PRIORITY_MEDIUM
 #
 # Control messages:
 #   message_type = MessageType.MSG_TYPE_CONTROL
 #   message_code = MessageCode.MSG_CONTROL_*
 #   message_info = Optional, depends on the message, usually None
-#   plugin_name  = Optional, if None the message was sent by the Orchestrator
+#   plugin_id    = Optional, if None the message was sent by the Orchestrator
 #   priority     = MessagePriority.MSG_PRIORITY_* (depends on the message)
 #
 # RPC messages:
 #   message_type = MessageType.MSG_TYPE_RPC
 #   message_code = MessageCode.MSG_RPC_*
 #   message_info = (optional response queue, positional arguments, keyword arguments)
-#   plugin_name  = Name of the plugin that issued the RPC call
+#   plugin_id    = ID of the plugin that issued the RPC call
 #   priority     = MessagePriority.MSG_PRIORITY_HIGH
 #
 # Status messages:
 #   message_type = MessageType.MSG_TYPE_STATUS
 #   message_code = MessageCode.MSG_STATUS_*
 #   message_info = Depends on the message, usually a data identity hash
-#   plugin_name  = Name of the plugin that issued the RPC call
+#   plugin_id    = ID of the plugin that issued the RPC call
 #   priority     = MessagePriority.MSG_PRIORITY_MEDIUM
 #
 # For all message types, audit_name is the name of the current audit
@@ -251,7 +251,7 @@ class MessageCode(MessageConstants):
     MSG_RPC_DATA_PLUGINS           = 19
 
     # Plugin API
-    MSG_RPC_PLUGIN_GET_NAMES       = 20
+    MSG_RPC_PLUGIN_GET_IDS         = 20
     MSG_RPC_PLUGIN_GET_INFO        = 21
 
     # Audit information

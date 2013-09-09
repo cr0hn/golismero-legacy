@@ -419,13 +419,13 @@ class PluginContext (object):
         return self.__plugin_info
 
     @property
-    def plugin_name(self):
+    def plugin_id(self):
         """"
-        :returns: Plugin name, or None if not running a plugin.
+        :returns: Plugin ID, or None if not running a plugin.
         :rtype: str | None
         """
         if self.__plugin_info:
-            return self.__plugin_info.plugin_name
+            return self.__plugin_info.plugin_id
 
     @property
     def plugin_module(self):
@@ -578,7 +578,7 @@ class PluginContext (object):
                           message_code = message_code,
                           message_info = message_info,
                             audit_name = self.audit_name,
-                           plugin_name = self.plugin_name,
+                             plugin_id = self.plugin_id,
                           ack_identity = self.ack_identity,
                               priority = priority)
         self.send_raw_msg(message)

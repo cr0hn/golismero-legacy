@@ -130,11 +130,11 @@ class ReportManager (object):
         # For each output file, run its corresponding report plugin.
         # Skip the magic plugin for screen reports.
         count = 0
-        for output_file, plugin_name in self.__reporters.iteritems():
-            if plugin_name == "report/text" and (not output_file or output_file == "-"):
+        for output_file, plugin_id in self.__reporters.iteritems():
+            if plugin_id == "report/text" and (not output_file or output_file == "-"):
                 continue
             try:
-                notifier.start_report(self.__plugins[plugin_name], output_file)
+                notifier.start_report(self.__plugins[plugin_id], output_file)
             except Exception, e:
                 Logger.log_error("Failed to start report for file %r: %s" % (output_file, str(e)))
                 Logger.log_error_more_verbose(format_exc())
@@ -166,8 +166,8 @@ class ReportManager (object):
         # Skip if the filename is real, instead of the dummy
         # filename used to indicate we want console output.
         found = False
-        for output_file, plugin_name in self.__reporters.iteritems():
-            if plugin_name == "report/text" and (not output_file or output_file == "-"):
+        for output_file, plugin_id in self.__reporters.iteritems():
+            if plugin_id == "report/text" and (not output_file or output_file == "-"):
                 found = True
                 break
         if not found:
@@ -175,7 +175,7 @@ class ReportManager (object):
 
         # Run the text report plugin.
         try:
-            notifier.start_report(self.__plugins[plugin_name], self.__audit_name, output_file)
+            notifier.start_report(self.__plugins[plugin_id], self.__audit_name, output_file)
         except Exception, e:
             Logger.log_error("Failed to start screen report: %s" % str(e))
             Logger.log_error_more_verbose(format_exc())

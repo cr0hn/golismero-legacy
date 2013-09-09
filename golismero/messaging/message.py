@@ -57,7 +57,7 @@ class Message (object):
                        message_code = 0,
                        message_info = None,
                          audit_name = None,
-                        plugin_name = None,
+                          plugin_id = None,
                        ack_identity = None,
                            priority = MessagePriority.MSG_PRIORITY_MEDIUM):
         """
@@ -73,8 +73,8 @@ class Message (object):
         :param audit_name: Name of the audit this message belongs to, if any.
         :type audit_name: str | None
 
-        :param plugin_name: Name of the plugin that sent this message, if any.
-        :type plugin_name: str | None
+        :param plugin_id: ID of the plugin that sent this message, if any.
+        :type plugin_id: str | None
 
         :param ack_identity: Identity hash of the current input data, or None if not running a plugin.
         :type ack_identity: str | None
@@ -90,8 +90,8 @@ class Message (object):
             raise TypeError("Expected int, got %r instead" % type(message_code))
         if audit_name is not None and type(audit_name) not in (str, unicode):
             raise TypeError("Expected int, got %r instead" % type(audit_name))
-        if plugin_name is not None and type(plugin_name) not in (str, unicode):
-            raise TypeError("Expected int, got %r instead" % type(plugin_name))
+        if plugin_id is not None and type(plugin_id) not in (str, unicode):
+            raise TypeError("Expected int, got %r instead" % type(plugin_id))
         if ack_identity is not None and type(ack_identity) != str:
             raise TypeError("Expected str, got %r instead" % type(ack_identity))
         if type(priority) != int:
@@ -120,7 +120,7 @@ class Message (object):
         self.__message_code = message_code
         self.__message_info = message_info
         self.__audit_name   = audit_name
-        self.__plugin_name  = plugin_name
+        self.__plugin_id    = plugin_id
         self.__ack_identity = ack_identity
         self.__priority     = priority
         self.__timestamp    = time()
@@ -160,12 +160,12 @@ class Message (object):
         return self.__audit_name
 
     @property
-    def plugin_name(self):
+    def plugin_id(self):
         """
-        :returns: Name of the plugin that sent this message, if any.
+        :returns: ID of the plugin that sent this message, if any.
         :rtype: str | None
         """
-        return self.__plugin_name
+        return self.__plugin_id
 
     @property
     def ack_identity(self):
@@ -207,7 +207,7 @@ class Message (object):
     def __repr__(self):
         s  = "<Message timestamp=%r, type=%r, code=%r, audit=%r, plugin=%r, info=%r>"
         s %= (self.timestamp, self.message_type, self.message_code,
-              self.audit_name, self.plugin_name, self.message_info)
+              self.audit_name, self.plugin_id, self.message_info)
         return s
 
 

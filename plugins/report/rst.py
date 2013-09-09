@@ -27,12 +27,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import re
-import sys
 
 from collections import defaultdict
 from datetime import datetime
 from pprint import pformat
-from texttable import Texttable
 from textwrap import wrap
 
 from golismero.api.audit import get_audit_times, parse_audit_times
@@ -44,9 +42,6 @@ from golismero.api.text.text_utils import hexdump
 
 # Data types
 from golismero.api.data import Data
-from golismero.api.data.information import Information
-from golismero.api.data.resource import Resource
-from golismero.api.data.vulnerability import Vulnerability
 
 
 #------------------------------------------------------------------------------

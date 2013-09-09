@@ -496,15 +496,15 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
-    def mark_plugin_finished(self, identity, plugin_name):
+    def mark_plugin_finished(self, identity, plugin_id):
         """
         Mark the data as having been processed by the plugin.
 
         :param identity: Identity hash.
         :type identity: str
 
-        :param plugin_name: Plugin name.
-        :type plugin_name: str
+        :param plugin_id: Plugin ID.
+        :type plplugin_idstr
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -550,7 +550,7 @@ class BaseAuditDB (BaseDB):
         :param identity: Identity hash.
         :type identity: str
 
-        :returns: Set of plugin names.
+        :returns: Set of plugin IDs.
         :rtype: set(str)
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
@@ -1022,8 +1022,8 @@ class AuditMemoryDB (BaseAuditDB):
 
 
     #--------------------------------------------------------------------------
-    def mark_plugin_finished(self, identity, plugin_name):
-        self.__history[identity].add(plugin_name)
+    def mark_plugin_finished(self, identity, plugin_id):
+        self.__history[identity].add(plugin_id)
 
 
     #--------------------------------------------------------------------------
@@ -1968,28 +1968,28 @@ class AuditSQLiteDB (BaseAuditDB):
 
     #--------------------------------------------------------------------------
     @transactional
-    def mark_plugin_finished(self, identity, plugin_name):
+    def mark_plugin_finished(self, identity, plugin_id):
         if type(identity) is not str:
             raise TypeError("Expected string, got %s" % type(identity))
-        if type(plugin_name) is not str:
-            raise TypeError("Expected string, got %s" % type(plugin_name))
+        if type(plugin_id) is not str:
+            raise TypeError("Expected string, got %s" % type(plugin_id))
 
         # Fetch the plugin rowid, add it if missing.
         self.__cursor.execute(
             "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
-            (plugin_name,))
+            (plugin_id,))
         rows = self.__cursor.fetchone()
         if rows:
             plugin_id = rows[0]
         else:
             self.__cursor.execute(
                 "INSERT INTO plugin VALUES (NULL, ?);",
-                (plugin_name,))
+                (plugin_id,))
             plugin_id = self.__cursor.lastrowid
             if plugin_id is None:
                 self.__cursor.execute(
                     "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
-                    (plugin_name,))
+                    (plugin_id,))
                 rows = self.__cursor.fetchone()
                 plugin_id = rows[0]
 

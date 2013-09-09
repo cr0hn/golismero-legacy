@@ -32,7 +32,7 @@ from golismero.api.data import Data
 from golismero.api.data.db import Database
 from golismero.api.config import Config, get_orchestrator_config
 from golismero.api.logger import Logger
-from golismero.api.plugin import UIPlugin, get_plugin_info, get_plugin_names
+from golismero.api.plugin import UIPlugin, get_plugin_info, get_plugin_ids
 from golismero.common import AuditConfig
 from golismero.messaging.message import Message
 from golismero.messaging.codes import MessageType, MessageCode, \
@@ -175,8 +175,8 @@ class WebUIPlugin(UIPlugin):
         :returns: User-friendly name for the plugin.
         :rtype: str
         """
-        if message.plugin_name:
-            plugin_info = get_plugin_info(message.plugin_name)
+        if message.plugin_id:
+            plugin_info = get_plugin_info(message.plugin_id)
             if plugin_info:
                 return plugin_info.display_name
         return "GoLismero"
@@ -602,21 +602,21 @@ class WebUIPlugin(UIPlugin):
         :returns: List of plugin names.
         :rtype: list(str)
         """
-        return sorted( get_plugin_names() )
+        return sorted( get_plugin_ids() )
 
 
     #--------------------------------------------------------------------------
-    def do_plugin_details(self, plugin_name):
+    def do_plugin_details(self, plugin_id):
         """
         Implementation of: /plugin/details
 
-        :param plugin_name: Name of the plugin to query.
-        :type plugin_name: str
+        :param plugin_id: ID of the plugin to query.
+        :type plugin_id: str
 
         :returns: Plugin information.
         :rtype: PluginInfo
         """
-        return get_plugin_info(plugin_name)    # XXX TODO encode as JSON
+        return get_plugin_info(plugin_id)    # XXX TODO encode as JSON
 
 
     #--------------------------------------------------------------------------

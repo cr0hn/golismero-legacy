@@ -39,7 +39,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = [
     "UIPlugin", "ImportPlugin", "TestingPlugin", "ReportPlugin",
-    "get_plugin_info", "get_plugin_names", "PluginState",
+    "get_plugin_info", "get_plugin_ids", "get_plugin_name",
+    "PluginState",
 ]
 
 from .config import Config
@@ -49,35 +50,57 @@ from ..messaging.codes import MessageCode
 
 
 #------------------------------------------------------------------------------
-def get_plugin_names():
+def get_plugin_ids():
     """
-    Get the plugin names.
+    Get the plugin IDs.
 
-    :returns: Plugin names.
+    :returns: Plugin IDs.
     :rtype: set(str)
     """
-    return Config._context.remote_call(MessageCode.MSG_RPC_PLUGIN_GET_NAMES)
+    return Config._context.remote_call(MessageCode.MSG_RPC_PLUGIN_GET_IDS)
 
 
 #------------------------------------------------------------------------------
-def get_plugin_info(plugin_name = None):
+def get_plugin_info(plugin_id = None):
     """
     Get the plugin information for the requested plugin.
 
-    :param plugin_name: Full plugin name.
+    :param plugin_id: Full plugin ID.
         Example: "testing/recon/spider".
-        Defaults to the calling plugin name.
-    :type plugin_name: str
+        Defaults to the calling plugin ID.
+    :type plugin_id: str
 
     :returns: Plugin information.
     :rtype: PluginInfo
 
     :raises KeyError: The plugin was not found.
     """
-    if not plugin_name or (Config.plugin_info and plugin_name == Config.plugin_name):
+    if not plugin_id or (Config.plugin_info and plugin_id == Config.plugin_id):
         return Config.plugin_info
     return Config._context.remote_call(
-        MessageCode.MSG_RPC_PLUGIN_GET_INFO, plugin_name)
+        MessageCode.MSG_RPC_PLUGIN_GET_INFO, plugin_id)
+
+
+#------------------------------------------------------------------------------
+def get_plugin_name(plugin_id = None):
+    """
+    Get the plugin display name given its ID.
+
+    :param plugin_id: Full plugin ID.
+        Example: "testing/recon/spider".
+        Defaults to the calling plugin ID.
+    :type plugin_id: str
+
+    :returns: Plugin display name.
+    :rtype: str
+
+    :raises KeyError: The plugin was not found.
+    """
+    if not plugin_id:
+        return Config.plugin_info.display_name
+    if plugin_id == "GoLismero":
+        return "GoLismero"
+    return get_plugin_info(plugin_id).display_name
 
 
 #------------------------------------------------------------------------------
@@ -112,23 +135,23 @@ class PluginState (SharedMap):
 
 
     #--------------------------------------------------------------------------
-    def __init__(self, plugin_name = None):
+    def __init__(self, plugin_id = None):
         """
-        :param plugin_name: Plugin name.
+        :param plugin_id: Plugin ID.
             If ommitted, the calling plugin state variables are accessed.
-        :type plugin_name: str
+        :type plugin_id: str
         """
-        if not plugin_name:
-            plugin_name = Config.plugin_name
-        self._shared_id = Config.plugin_name
+        if not plugin_id:
+            plugin_id = Config.plugin_id
+        self._shared_id = plugin_id
         # We intentionally don't call the superclass constructor here.
 
 
     #--------------------------------------------------------------------------
     @property
-    def plugin_name(self):
+    def plugin_id(self):
         """
-        :returns: Name of the plugin these state variables belong to.
+        :returns: ID of the plugin these state variables belong to.
         :rtype: str
         """
         return self._shared_id
