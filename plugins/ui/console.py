@@ -64,7 +64,7 @@ class ConsoleUIPlugin(UIPlugin):
         self.already_seen_info = defaultdict(set)
 
         # audit_name -> plugin_name -> ack_identity -> simple_id
-        self.current_plugins   = defaultdict( partial(defaultdict, dict) )
+        self.current_plugins = defaultdict( partial(defaultdict, dict) )
 
 
     #--------------------------------------------------------------------------
@@ -230,6 +230,10 @@ class ConsoleUIPlugin(UIPlugin):
         # If the message comes from the Orchestrator.
         if not plugin_id:
             return "GoLismero"
+
+        # If the message is for us, just return our name.
+        if plugin_id == Config.plugin_id:
+            return Config.plugin_info.display_name
 
         # Get the plugin display name.
         plugin_name = get_plugin_info(plugin_id).display_name
