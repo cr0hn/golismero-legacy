@@ -94,7 +94,7 @@ class ConsoleUIPlugin(UIPlugin):
         text %= (
             colorize("<!>", info.risk),
             colorize(info.vulnerability_type, info.risk),
-            colorize(self.get_plugin_name(info.plugin_id, info.identity), info.risk),
+            colorize(self.get_plugin_name(info.plugin_id, None), info.risk),
             colorize(str(info.risk), info.risk)
         )
         Console.display(text)
@@ -239,9 +239,10 @@ class ConsoleUIPlugin(UIPlugin):
         plugin_name = get_plugin_info(plugin_id).display_name
 
         # Append the simple ID if it's greater than zero.
-        simple_id = self.current_plugins[Config.audit_name][plugin_id][ack_identity]
-        if simple_id:
-            plugin_name = "%s (%d)" % (plugin_name, simple_id + 1)
+        if ack_identity:
+            simple_id = self.current_plugins[Config.audit_name][plugin_id][ack_identity]
+            if simple_id:
+                plugin_name = "%s (%d)" % (plugin_name, simple_id + 1)
 
         # Return the display name.
         return plugin_name
