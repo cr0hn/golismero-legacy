@@ -67,7 +67,9 @@ import sys
 from tempfile import NamedTemporaryFile
 
 # Needed on non-Windows platforms to prevent a syntax error.
-if not hasattr(__builtins__, "WindowsError"):
+try:
+    WindowsError
+except NameError:
     class WindowsError(OSError): pass
 
 
@@ -139,6 +141,10 @@ def run_external_tool(command, args = None, env = None, cwd = None,
     if callback is not None and not callable(callback):
         raise TypeError("Expected function, got %r instead" % type(callback))
 
+    # An empty string in 'cwd' breaks Popen, so we need to convert it to None.
+    if not cwd:
+        cwd = None
+
     # Make a copy of the command line arguments.
     if not args:
         args = []
@@ -207,7 +213,8 @@ def run_external_tool(command, args = None, env = None, cwd = None,
         return subprocess.check_call(args,
             executable = command,
                    cwd = cwd,
-                   env = env)
+                   env = env,
+                 shell = False)
 
     proc = None
     try:
@@ -222,16 +229,17 @@ def run_external_tool(command, args = None, env = None, cwd = None,
                             stderr = subprocess.STDOUT,
                 universal_newlines = True,
                            bufsize = 0,
+                             shell = False,
             )
 
         # On error raise ExternalToolError.
-        except WindowsError, e:
-            msg = str(e)
-            if "%1" in msg:
-                msg = msg.replace("%1", command)
-            raise ExternalToolError(msg, e.winerror)
         except OSError, e:
-            raise ExternalToolError(str(e), e.errno)
+            msg = str(e)
+            if isinstance(e, WindowsError):
+                if "%1" in msg:
+                    msg = msg.replace("%1", command)
+                raise ExternalToolError(msg, e.winerror)
+            raise ExternalToolError(msg, e.errno)
 
         # Read each line of output and send it to the callback function.
         while True:
@@ -411,19 +419,42 @@ def find_binary_in_path(binary):
     """
 
     # Get the filename.
-    binary = os.path.abspath(binary)
     binary = os.path.split(binary)[1]
 
-    # On Windows, append the ".exe" extension.
-    if os.path.sep == "\\" and not binary.lower().endswith(".exe"):
-        binary += ".exe"
+    # Get the possible locations from the PATH environment variable.
+    locations = os.environ.get("PATH", "").split(os.path.pathsep)
+
+    # On Windows...
+    if sys.platform in ("win32", "cygwin"):
+
+        # Append the system folders.
+        comspec = os.environ.get("ComSpec", "C:\\Windows\\System32\\cmd.exe")
+        comspec = os.path.split(comspec)[0]
+        system_root = os.environ.get("SystemRoot", "C:\\Windows")
+        system_32 = os.path.join(system_root, "System32")
+        system_64 = os.path.join(system_root, "SysWOW64")
+        if comspec not in locations: locations.append(comspec)
+        if system_root not in locations: locations.append(system_root)
+        if system_32 not in locations: locations.append(system_32)
+        if system_64 not in locations: locations.append(system_64)
+
+        # Append the ".exe" extension to the binary if missing.
+        if os.path.splitext(binary)[1] == "":
+            binary += ".exe"
 
     # Look for the file in the PATH.
     found = []
-    for candidate in os.environ.get("PATH", "").split(os.path.pathsep):
-        candidate = os.path.join(candidate, binary)
-        if is_executable(candidate):
-            found.append(candidate)
+    for candidate in locations:
+        if candidate:
+            candidate = os.path.abspath(candidate)
+            candidate = os.path.join(candidate, binary)
+            if is_executable(candidate):
+                found.append(candidate)
+
+    # On Windows, remove duplicates caused by case differences.
+    if sys.platform in ("win32", "cygwin"):
+        upper = [x.upper() for x in found]
+        found = [x for i, x in enumerate(found) if x.upper() not in upper[:i]]
 
     # Return all instances found.
     return found
