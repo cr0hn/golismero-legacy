@@ -317,9 +317,8 @@ class Console (object):
         :type message: str
         """
         try:
-            if message:
-                sys.stdout.write("%s\n" % message)
-                sys.stdout.flush()
+            sys.stdout.write("%s\n" % (message,))
+            sys.stdout.flush()
         except Exception,e:
             print "[!] Error while writing to output onsole: %s" % str(e)
 
