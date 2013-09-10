@@ -174,7 +174,8 @@ class RSTReport(ReportPlugin):
                     p = token.find("$1", p + len(output_file))
                 args[i] = token
             cwd = os.path.split(output_file)[0]
-            run_external_tool(args[0], args[1:], cwd=cwd, callback=Logger.log_verbose)
+            log = lambda x: Logger.log_verbose(x[:-1] if x.endswith("\n") else x)
+            run_external_tool(args[0], args[1:], cwd=cwd, callback=log)
 
 
     #--------------------------------------------------------------------------
