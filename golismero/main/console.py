@@ -34,7 +34,7 @@ __all__ = ["Console", "colorize", "colorize_substring", "get_terminal_size"]
 
 from ..api.logger import Logger
 
-# do not use the "from sys import" form, or coloring won't work on Windows
+# Do not use the "from sys import" form, or coloring won't work on Windows.
 import sys
 
 import atexit
@@ -46,7 +46,7 @@ from colorizer import colored
 #------------------------------------------------------------------------------
 # Map of colors
 
-# Color names mapped to themselves
+# Color names mapped to themselves.
 m_colors = {
     'blue'      : 'blue',
     'green'     : 'green',
@@ -62,41 +62,41 @@ m_colors = {
 if os.path.sep == "\\":
     m_colors.update({
 
-        # Fix "grey", it doesn't work on Windows
-        'grey'      : 'white',
+        # Fix "grey", it doesn't work on Windows.
+        'grey' : 'white',
 
-        # String log levels to color names
-        'info'      : 'cyan',
-        'low'       : 'green',
-        'middle'    : 'white',
-        'high'      : 'magenta',
-        'critical'  : 'yellow',
+        # String log levels to color names.
+        'informational' : 'cyan',
+        'low'           : 'green',
+        'middle'        : 'white',
+        'high'          : 'magenta',
+        'critical'      : 'yellow',
 
-        # Integer log levels to color names
-        0           : 'cyan',
-        1           : 'green',
-        2           : 'white',
-        3           : 'magenta',
-        4           : 'yellow',
+        # Integer log levels to color names.
+        0 : 'cyan',
+        1 : 'green',
+        2 : 'white',
+        3 : 'magenta',
+        4 : 'yellow',
     })
 
 # Colors for all other operating systems.
 else:
     m_colors.update({
 
-        # String log levels to color names
-        'info'      : 'blue',
-        'low'       : 'cyan',
-        'middle'    : 'white',
-        'high'      : 'red',
-        'critical'  : 'yellow',
+        # String log levels to color names.
+        'informational' : 'blue',
+        'low'           : 'cyan',
+        'middle'        : 'white',
+        'high'          : 'red',
+        'critical'      : 'yellow',
 
-        # Integer log levels to color names
-        0           : 'blue',
-        1           : 'cyan',
-        2           : 'white',
-        3           : 'red',
-        4           : 'yellow',
+        # Integer log levels to color names.
+        0 : 'blue',
+        1 : 'cyan',
+        2 : 'white',
+        3 : 'red',
+        4 : 'yellow',
     })
 
 
@@ -104,7 +104,7 @@ else:
 def colorize_substring(text, substring, level_or_color):
     """
     Colorize a substring in a text depending of the type of alert:
-    - Information
+    - Informational
     - Low
     - Middle
     - Hight
@@ -177,7 +177,7 @@ def colorize_substring(text, substring, level_or_color):
 def colorize(text, level_or_color):
     """
     Colorize a text depends of type of alert:
-    - Information
+    - Informational
     - Low
     - Middle
     - High

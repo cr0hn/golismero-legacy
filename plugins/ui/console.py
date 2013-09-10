@@ -116,7 +116,7 @@ class ConsoleUIPlugin(UIPlugin):
 
                 # Show a message to the user.
                 m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
-                m_plugin_name = colorize(m_plugin_name, "info")
+                m_plugin_name = colorize(m_plugin_name, "informational")
                 m_text        = "[*] %s: Started." % m_plugin_name
                 Console.display(m_text)
 
@@ -125,7 +125,7 @@ class ConsoleUIPlugin(UIPlugin):
 
                 # Show a message to the user.
                 m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
-                m_plugin_name = colorize(m_plugin_name, "info")
+                m_plugin_name = colorize(m_plugin_name, "informational")
                 m_text        = "[*] %s: Finished." % m_plugin_name
                 Console.display(m_text)
 
@@ -140,7 +140,7 @@ class ConsoleUIPlugin(UIPlugin):
 
                     # Get the plugin name.
                     m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
-                    m_plugin_name = colorize(m_plugin_name, "info")
+                    m_plugin_name = colorize(m_plugin_name, "informational")
 
                     # Get the progress percentage.
                     m_progress = message.message_info
@@ -182,7 +182,7 @@ class ConsoleUIPlugin(UIPlugin):
                         m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                     except Exception:
                         m_plugin_name = "GoLismero"
-                    m_plugin_name = colorize(m_plugin_name, 'info')
+                    m_plugin_name = colorize(m_plugin_name, 'informational')
                     text = colorize(text, 'middle')
                     if is_error:
                         text = "[!] %s: %s" % (m_plugin_name, text)
