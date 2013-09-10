@@ -240,11 +240,15 @@ class TextReport(ReportPlugin):
         print >>self.__fd, ""
         count = Database.count(Data.TYPE_VULNERABILITY)
         if count:
-            print >>self.__fd, self.__colorize("%d vulnerabilities found!" % count, "red")
-            print >>self.__fd, ""
+            if self.__show_data:
+                print >>self.__fd, self.__colorize("%d vulnerabilities found!" % count, "red")
+                print >>self.__fd, ""
             vuln_types = { v.display_name: v.vulnerability_type for v in self.__iterate(Data.TYPE_VULNERABILITY) }
             titles = vuln_types.keys()
             titles.sort()
+            if "Uncategorized Vulnerability" in titles:
+                titles.remove("Uncategorized Vulnerability")
+                titles.append("Uncategorized Vulnerability")
             for title in titles:
                 data_subtype = vuln_types[title]
                 print >>self.__fd, "-- %s (%s) -- " % (self.__colorize(title, "cyan"), data_subtype)
@@ -252,22 +256,22 @@ class TextReport(ReportPlugin):
                 for vuln in self.__iterate(Data.TYPE_VULNERABILITY, data_subtype):
                     table = Texttable(self.__width)
                     table.header(("Occurrence ID", vuln.identity))
-                    x = len(table.draw())
+                    w = len(table.draw())
                     table.add_row(("Title", vuln.title))
                     targets = [str(x) for x in vuln.associated_resources]
                     for info in vuln.associated_informations:
                         targets.extend(str(x) for x in info.associated_resources)
                     table.add_row(("Found By", get_plugin_name(vuln.plugin_id)))
                     p = len(table.draw())
-                    table.add_row(("Level", vuln.level.title()))
-                    table.add_row(("Impact", vuln.impact.title()))
-                    table.add_row(("Severity", vuln.severity.title()))
-                    table.add_row(("Risk", vuln.risk.title()))
+                    table.add_row(("Level", vuln.level))
+                    table.add_row(("Impact", vuln.impact))
+                    table.add_row(("Severity", vuln.severity))
+                    table.add_row(("Risk", vuln.risk))
                     q = len(table.draw())
                     if vuln.cvss_base:
                         table.add_row(("CVSS Base", "%1.1f" % vuln.cvss_base))
-                    if vuln.cvss_vector:
-                        table.add_row(("CVSS Vector", vuln.cvss_vector))
+                    if vuln.cvss_base_vector:
+                        table.add_row(("CVSS Base Vector", vuln.cvss_base_vector))
                     if len(targets) > 1:
                         targets.sort()
                         table.add_row(("Locations", "\n".join(targets)))
@@ -277,34 +281,37 @@ class TextReport(ReportPlugin):
                     table.add_row(("Solution", vuln.solution))
                     taxonomy = []
                     if vuln.bid:
-                        taxonomy.append(vuln.bid)
+                        taxonomy.extend(vuln.bid)
                     if vuln.cve:
-                        taxonomy.append(vuln.cve)
+                        taxonomy.extend(vuln.cve)
                     if vuln.cwe:
-                        taxonomy.append(vuln.cwe)
+                        taxonomy.extend(vuln.cwe)
                     if vuln.osvdb:
-                        taxonomy.append(vuln.osvdb)
+                        taxonomy.extend(vuln.osvdb)
                     if vuln.sa:
-                        taxonomy.append(vuln.sa)
+                        taxonomy.extend(vuln.sa)
                     if vuln.sectrack:
-                        taxonomy.append(vuln.sectrack)
+                        taxonomy.extend(vuln.sectrack)
                     if vuln.xf:
-                        taxonomy.append(vuln.xf)
-                    table.add_row(("Taxonomy", "\n".join(taxonomy)))
-                    table.add_row(("References", "\n".join(sorted(vuln.references))))
+                        taxonomy.extend(vuln.xf)
+                    if taxonomy:
+                        table.add_row(("Taxonomy", "\n".join(taxonomy)))
+                    if vuln.references:
+                        table.add_row(("References", "\n".join(sorted(vuln.references))))
                     details = vuln.display_properties["Details"]
-                    props = details.keys()
-                    props.sort()
-                    table.add_row(("Additional details", "\n".join(("%s: %s" % (x, details[x])) for x in props)))
+                    if details:
+                        props = details.keys()
+                        props.sort()
+                        table.add_row(("Additional details", "\n".join(("%s: %s" % (x, details[x])) for x in props)))
                     text = table.draw()
                     if self.__color:
-                        text_1 = text[:x]
+                        text_1 = text[:w]
                         text_3 = text[p:q]
                         text_1 = colorize_substring(text_1, vuln.identity, vuln.level.lower())
                         for lvl in Vulnerability.VULN_LEVELS:
                             if lvl in text_3:
                                 text_3 = colorize_substring(text_3, lvl, lvl.lower())
-                        text = text_1 + text[x:p] + text_3 + text[q:]
+                        text = text_1 + text[w:p] + text_3 + text[q:]
                     print >>self.__fd, text
                     print >>self.__fd, ""
         else:

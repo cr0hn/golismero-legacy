@@ -728,11 +728,18 @@ class Data(object):
             elif key.startswith("Cvss "):
                 key = "CVSS" + key[4:]
 
+            # Get the property value.
+            # Values are preserved as-is, because we don't know how to parse
+            # them. Subclasses should override this method and change the
+            # values in the dictionary when needed.
+            value = getattr(self, propname)
+
             # Get the group.
             # More hardcoded hacks here... :(
             if self.data_type == Data.TYPE_VULNERABILITY:
                 if propname in ("impact", "severity", "risk"):
                     group = "Risk"
+                    value = Vulnerability.VULN_LEVELS[value].title()
                 elif propname.startswith("cvss"):
                     group = "Risk"
                 elif propname in ("title", "description", "solution", "references"):
@@ -747,7 +754,7 @@ class Data(object):
                 group = ""
 
             # Add the key and value to the dictionary.
-            display[group][key] = getattr(self, propname)
+            display[group][key] = value
 
         # Return the dictionary.
         return display

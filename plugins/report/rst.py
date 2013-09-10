@@ -364,7 +364,10 @@ class RSTReport(ReportPlugin):
                         if "Title" in names:
                             names.remove("Title")
                             names.insert(0, "Title")
-                    elif group == "Risk":
+                    elif group == "":
+                        if "Category" in names:
+                            names.remove("Category")
+                            names.insert(0, "Category")
                         if "Level" in names:
                             names.remove("Level")
                             names.insert(0, "Level")
