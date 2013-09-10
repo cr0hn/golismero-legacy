@@ -185,6 +185,9 @@ _vuln_id_regex = {
             r"\b(?:BID\-|BID\: ?|BUGTRAQ\-|BUGTRAQ\: ?|BUGTRAQ ID: ?)"
             r"([0-9]+)\b"),
     ],
+    "ca": [
+        re.compile(r"\bCA\-([0-9][0-9][0-9][0-9]\-[0-9][0-9])\b"),
+    ],
     "capec": [
         re.compile(r"\bCAPEC(?:\-|\: ?)([0-9]+)\b"),
     ],
@@ -205,6 +208,9 @@ _vuln_id_regex = {
     "sectrack": [
         re.compile(r"\b(?:SECTRACK\-|SECTRACK\: ?|SECTRACK ID\: ?)([0-9]+)\b"),
     ],
+    "vu": [
+        re.compile(r"\bVU[\#\-]([0-9]+)\b"),
+    ],
     "xf": [
         re.compile(r"\bXF\: ?[a-z0-9\-]* ?\(([0-9]+)\)(?:[^\w]|$)"),
         re.compile(r"\bXF\-([0-9]+)\b"),
@@ -216,6 +222,11 @@ _vuln_ref_regex = {
     "bid": [
         re.compile(
             r"^https?\:\/\/(?:www\.)?securityfocus\.com\/bid\/([0-9]+)$"),
+    ],
+    "ca": [
+        re.compile(
+            r"^https?\:\/\/(?:www\.)?cert\.org\/advisories\/"
+            r"CA\-([0-9][0-9][0-9][0-9]\-[0-9][0-9])\.html$"),
     ],
     "capec": [
         re.compile(
@@ -252,6 +263,10 @@ _vuln_ref_regex = {
             r"^https?\:\/\/(?:www\.)?securitytracker\.com\/alerts"
             r"\/[0-9]+\/[A-Za-z]+\/([0-9]+)\.html$"),
     ],
+    "vu": [
+        re.compile(
+            r"^https?\:\/\/(?:www\.)?kb\.cert\.org\/vuls\/id\/([0-9]+)$"),
+    ],
     "xf": [
         re.compile(
             r"^https?\:\/\/xforce\.iss\.net\/xforce\/xfdb\/([0-9]+)$"),
@@ -261,12 +276,14 @@ _vuln_ref_regex = {
 # URL templates for references.
 _vuln_ref_tpl = {
     "bid":      "http://www.securityfocus.com/bid/%s",
+    "ca":       "https://www.cert.org/advisories/CA-%s.html",
     "capec":    "https://capec.mitre.org/data/definitions/%s.html",
     "cve":      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-%s",
     "cwe":      "https://cwe.mitre.org/data/definitions/%s.html",
     "osvdb":    "http://osvdb.org/show/osvdb/%s",
     "sa":       "http://www.secunia.com/advisories/%s",
     "sectrack": "http://www.securitytracker.com/id?%s",
+    "vu":       "https://www.kb.cert.org/vuls/id/%s",
     "xf":       "http://xforce.iss.net/xforce/xfdb/%s",
 }
 
