@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.config import Config
 from golismero.api.data.db import Database
 from golismero.api.data.information.portscan import Portscan
+from golismero.api.data.information.traceroute import Traceroute, Hop
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.external import run_external_tool, tempfile
@@ -37,9 +38,10 @@ from golismero.api.plugin import ImportPlugin, TestingPlugin
 
 import shlex
 
-from time import time
-from traceback import format_exc
 from socket import getservbyname
+from traceback import format_exc
+from time import time
+from warnings import warn
 
 try:
     from xml.etree import cElementTree as ET
@@ -273,8 +275,42 @@ class NmapScanPlugin(TestingPlugin):
                     continue
                 ports.add( (state, protocol, port) )
             except Exception:
-                ##raise # XXX DEBUG
-                continue
+                warn("Error parsing portscan results: %s" % format_exc(),
+                     RuntimeWarning)
+
+        # Get the traceroute results.
+        traces = []
+        for node in host.findall(".//trace"):
+            try:
+                port   = int( node.get("port") )
+                proto  = node.get("proto")
+                hops   = {}
+                broken = False
+                for node in node.findall(".//hop"):
+                    try:
+                        ttl       = int( node.get("ttl") )
+                        address   = node.get("ipaddr")
+                        rtt       = float( node.get("rtt") )
+                        hostname  = node.get("host", None)
+                        hops[ttl] = Hop(address, rtt, hostname)
+                    except Exception:
+                        warn("Error parsing traceroute results: %s" %
+                             format_exc(), RuntimeWarning)
+                        broken = True
+                        break
+                if not broken:
+                    if hops:
+                        ttl = hops.keys()
+                        sane_hops = tuple(
+                            hops.get(i, None)
+                            for i in xrange(min(*ttl), max(*ttl) + 1)
+                        )
+                    else:
+                        sane_hops = ()
+                    traces.append( (port, proto, sane_hops) )
+            except Exception:
+                warn("Error parsing traceroute results: %s" %
+                     format_exc(), RuntimeWarning)
 
         # This is where we'll gather all the results.
         results = ip_addresses + domain_names
@@ -283,6 +319,13 @@ class NmapScanPlugin(TestingPlugin):
         for ip in ip_addresses:
             portscan = Portscan(ip, ports, timestamp)
             results.append(portscan)
+
+        # Link the traceroute results to the IP addresses.
+        for ip in ip_addresses:
+            if ip.version == 4:
+                for trace in traces:
+                    traceroute = Traceroute(ip, *trace)
+                    results.append(traceroute)
 
         # Return the results.
         return results

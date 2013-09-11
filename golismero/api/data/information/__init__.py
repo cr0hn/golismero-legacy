@@ -79,7 +79,8 @@ class Information(Data):
     ##INFORMATION_SERVICE_FINGERPRINT    = 1302  # Network service fingerprint
     INFORMATION_OS_FINGERPRINT         = 1303  # Operating system fingerprint
     INFORMATION_PORTSCAN               = 1304  # Portscan results
-    INFORMATION_GEOLOCATION            = 1305  # Geographic location
+    INFORMATION_TRACEROUTE             = 1305  # Traceroute results
+    INFORMATION_GEOLOCATION            = 1306  # Geographic location
 
 
     #----------------------------------------------------------------------

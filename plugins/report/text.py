@@ -109,6 +109,18 @@ class TextReport(ReportPlugin):
 
 
     #--------------------------------------------------------------------------
+    def __fix_table_width(self, table):
+        assert all(len(x) == 2 for x in table._rows), table._rows
+        w = max( len(x[0]) for x in table._rows )
+        if table._header:
+            assert len(table._header) == 2, len(table._header)
+            w = max( w, len(table._header[0]) )
+        m = w + 8
+        if self.__width > m:
+            table.set_cols_width((w, self.__width - m))
+
+
+    #--------------------------------------------------------------------------
     def __write_report(self):
 
         # Header
@@ -143,6 +155,7 @@ class TextReport(ReportPlugin):
             if Config.audit_scope.web_pages:
                 table.add_row(("Web pages", "\n".join(Config.audit_scope.web_pages)))
             if table._rows:
+                self.__fix_table_width(table)
                 print >>self.__fd, "-# %s #- " % self.__colorize("Audit Scope", "yellow")
                 print >>self.__fd, ""
                 print >>self.__fd, table.draw()
@@ -163,6 +176,7 @@ class TextReport(ReportPlugin):
                         print >>self.__fd, "-# %s #- " % self.__colorize("Hosts", "yellow")
                         print >>self.__fd, ""
                     table.header(("Domain Name", domain.hostname))
+                    self.__fix_table_width(table)
                     text = table.draw()
                     if self.__color:
                         text = colorize_substring(text, domain.hostname, "red" if domain.get_links(Data.TYPE_VULNERABILITY) else "green")
@@ -175,12 +189,14 @@ class TextReport(ReportPlugin):
                 self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_WEB_SERVER_FINGERPRINT, "Web Server")
                 self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_OS_FINGERPRINT, "OS Fingerprint")
                 self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_PORTSCAN, "Port Scan")
+                self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_TRACEROUTE, "Network Route")
                 if table._rows:
                     if need_header:
                         need_header = False
                         print >>self.__fd, "-# %s #- " % self.__colorize("Hosts", "yellow")
                         print >>self.__fd, ""
                     table.header(("IP Address", ip.address))
+                    self.__fix_table_width(table)
                     text = table.draw()
                     if self.__color:
                         text = colorize_substring(text, ip.address, "red" if ip.get_links(Data.TYPE_VULNERABILITY) else "green")
@@ -207,8 +223,7 @@ class TextReport(ReportPlugin):
                     urls.sort()
                     table.add_row(("Visited URLs", "\n".join(urls)))
                 if table._rows:
-                    if self.__width > 20:
-                        table.set_cols_width((12, self.__width - 20))
+                    self.__fix_table_width(table)
                     text = table.draw()
                     if self.__color:
                         p = text.find("\n")
@@ -303,6 +318,7 @@ class TextReport(ReportPlugin):
                         props = details.keys()
                         props.sort()
                         table.add_row(("Additional details", "\n".join(("%s: %s" % (x, details[x])) for x in props)))
+                    self.__fix_table_width(table)
                     text = table.draw()
                     if self.__color:
                         text_1 = text[:w]
