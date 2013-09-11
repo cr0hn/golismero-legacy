@@ -110,6 +110,8 @@ class TextReport(ReportPlugin):
 
     #--------------------------------------------------------------------------
     def __fix_table_width(self, table):
+        if hasattr(table, "_hline_string"):
+            table._hline_string = "" # workaround for bug in texttable
         assert all(len(x) == 2 for x in table._rows), table._rows
         w = max( len(x[0]) for x in table._rows )
         if table._header:
@@ -145,7 +147,7 @@ class TextReport(ReportPlugin):
 
         # Audit scope
         if self.__show_data or not self.__console:
-            table = Texttable(self.__width)
+            table = Texttable()
             scope_domains = ["*." + r for r in Config.audit_scope.roots]
             scope_domains.extend(Config.audit_scope.domains)
             if Config.audit_scope.addresses:
@@ -165,7 +167,7 @@ class TextReport(ReportPlugin):
         if self.__show_data:
             need_header = True
             for domain in self.__iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_DOMAIN):
-                table = Texttable(self.__width)
+                table = Texttable()
                 self.__add_related(table, domain, Data.TYPE_RESOURCE, Resource.RESOURCE_IP, "IP Address")
                 self.__add_related(table, domain, Data.TYPE_INFORMATION, Information.INFORMATION_GEOLOCATION, "Location")
                 self.__add_related(table, domain, Data.TYPE_INFORMATION, Information.INFORMATION_WEB_SERVER_FINGERPRINT, "Web Server")
@@ -183,7 +185,7 @@ class TextReport(ReportPlugin):
                     print >>self.__fd, text
                     print >>self.__fd, ""
             for ip in self.__iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_IP):
-                table = Texttable(self.__width)
+                table = Texttable()
                 self.__add_related(table, ip, Data.TYPE_RESOURCE, Resource.RESOURCE_DOMAIN, "Domain Name")
                 self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_GEOLOCATION, "Location")
                 self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_WEB_SERVER_FINGERPRINT, "Web Server")
@@ -214,7 +216,7 @@ class TextReport(ReportPlugin):
                 if self.__color and url.get_links(Data.TYPE_VULNERABILITY):
                     vulnerable.append(url)
             for url in self.__iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_BASE_URL):
-                table = Texttable(self.__width)
+                table = Texttable()
                 table.header(("Base URL", url.url))
                 self.__add_related(table, url, Data.TYPE_INFORMATION, Information.INFORMATION_WEB_SERVER_FINGERPRINT, "Server")
                 self.__add_related(table, url, Data.TYPE_INFORMATION, Information.INFORMATION_OS_FINGERPRINT, "Platform")
@@ -269,7 +271,7 @@ class TextReport(ReportPlugin):
                 print >>self.__fd, "-- %s (%s) -- " % (self.__colorize(title, "cyan"), data_subtype)
                 print >>self.__fd, ""
                 for vuln in self.__iterate(Data.TYPE_VULNERABILITY, data_subtype):
-                    table = Texttable(self.__width)
+                    table = Texttable()
                     table.header(("Occurrence ID", vuln.identity))
                     w = len(table.draw())
                     table.add_row(("Title", vuln.title))
