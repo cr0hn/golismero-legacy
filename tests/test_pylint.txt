@@ -66,12 +66,13 @@ golismero/api/data/information/http.py:985: Warning (W, HTTP_Response.__parse_ra
 golismero/api/data/information/http.py:985: Warning (W, HTTP_Response.__parse_raw_response): Catching too general exception Exception
 golismero/api/data/resource/domain.py:71: Warning (W, Domain.__init__): Catching too general exception Exception
 golismero/api/data/vulnerability/__init__.py:255: Warning (W, Vulnerability.__get_default_text): Catching too general exception Exception
-golismero/api/data/vulnerability/__init__.py:338: Error (E, Vulnerability.plugin_id): An attribute affected in golismero.api.data.vulnerability line 176 hide this method
 golismero/api/data/vulnerability/__init__.py:357: Warning (W, Vulnerability.plugin_id): Catching too general exception Exception
 golismero/api/data/vulnerability/__init__.py:359: Warning (W, Vulnerability.plugin_id): Attribute '__plugin_id' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:374: Error (E, Vulnerability.plugin_id): An attribute affected in golismero.api.data.vulnerability line 198 hide this method
 golismero/api/data/vulnerability/__init__.py:384: Warning (W, Vulnerability.level): Attribute '__level' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:408: Warning (W, Vulnerability.impact): Attribute '__impact' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:428: Warning (W, Vulnerability.bid): Attribute '__bid' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:428: Warning (W, Vulnerability.tool_id): Attribute '__tool_id' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:448: Warning (W, Vulnerability.ca): Attribute '__ca' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:468: Warning (W, Vulnerability.capec): Attribute '__capec' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:488: Warning (W, Vulnerability.cve): Attribute '__cve' defined outside __init__
@@ -88,8 +89,8 @@ golismero/api/data/vulnerability/__init__.py:702: Warning (W, Vulnerability.cvss
 golismero/api/data/vulnerability/__init__.py:725: Warning (W, Vulnerability.title): Attribute '__title' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:748: Warning (W, Vulnerability.description): Attribute '__description' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:771: Warning (W, Vulnerability.solution): Attribute '__solution' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:776: Error (E, Vulnerability.references): An attribute affected in golismero.api.data.vulnerability line 204 hide this method
 golismero/api/data/vulnerability/__init__.py:794: Warning (W, Vulnerability.references): Attribute '__references' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:845: Error (E, Vulnerability.references): An attribute affected in golismero.api.data.vulnerability line 226 hide this method
 golismero/api/data/vulnerability/__init__.py:862: Warning (W, UrlVulnerability.__init__): Catching too general exception Exception
 golismero/api/data/vulnerability/__init__.py:883: Error (E, UrlVulnerability): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/authentication/weak_credentials.py:93: Error (E, WeakCredentials): Method '__init__' has no '__doc__' member
