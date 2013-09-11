@@ -71,15 +71,15 @@ def test_nikto():
             #for d in r:
                 #print "-" * 10
                 #print repr(d)
-            assert c == 3
-            assert len(r) == 5
+            assert c == 6, c
+            assert len(r) == 10, len(r)
             c = defaultdict(int)
             for d in r:
                 c[d.__class__.__name__] += 1
             #print c
             assert c.pop("IP") == 1
-            assert c.pop("Url") == 1
-            assert c.pop("VulnerableWebApp") == 3
+            assert c.pop("Url") == 3
+            assert c.pop("UncategorizedVulnerability") == 6
             assert len(c) == 0
         finally:
             Config._context._PluginContext__plugin_info = None

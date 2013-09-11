@@ -826,14 +826,16 @@ class Data(object):
             if not key.startswith("_") and key != "identity":
                 prop = getattr(clazz, key, None)
                 if prop is not None and is_identity_property(prop):
-                    # ASCII or UTF-8 is assumed for all strings!
+                    # Ignore properties if the value is None.
                     value = prop.__get__(self)
-                    if isinstance(value, unicode):
-                        try:
-                            value = value.encode("UTF-8")
-                        except UnicodeError:
-                            pass
-                    collection[key] = value
+                    if value is not None:
+                        # ASCII or UTF-8 is assumed for all strings!
+                        if isinstance(value, unicode):
+                            try:
+                                value = value.encode("UTF-8")
+                            except UnicodeError:
+                                pass
+                        collection[key] = value
         return collection
 
 
