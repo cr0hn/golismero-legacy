@@ -340,6 +340,7 @@ def helper_test_auditdb_data_consistency(db, key, data):
     assert isinstance(db, BaseAuditDB)
 
     # Test the database start and end times.
+    db.set_audit_times(None, None)
     assert db.get_audit_times() == (None, None)
     db.set_audit_start_time(1)
     assert db.get_audit_times() == (1, None)
