@@ -569,7 +569,7 @@ class Audit (object):
                              orchestrator_tid = old_context._orchestrator_tid)
 
             # Show the scope. Abort if the scope is wrong.
-            Logger.log_verbose(str(self.scope))
+            Logger.log_more_verbose(str(self.scope))
             assert not isinstance(self.scope, DummyScope), "Internal error!"
             if not self.scope.targets:
                 raise ValueError(
