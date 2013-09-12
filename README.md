@@ -72,7 +72,9 @@ And then generate the report from the database at a later time (or from a differ
 
 ```python golismero.py report -db database.db -o report.html```
 
-This example shows how to parse the results from a Nikto scan and produce a report.
+You can also specify multiple output files by repeating the -o option:
+
+```python golismero.py report -db database.db -o report.html -o report.rst -o report.txt```
 
 ![Import export example](https://raw.github.com/cr0hn/golismero/gh-pages/images/import_export_win.png "Import export example")
 
