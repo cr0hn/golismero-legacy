@@ -52,7 +52,7 @@ And you can produce reports in different file formats. The format is guessed fro
 
 ```python golismero.py scan <target> -o <output file name>```
 
-![Run example](https://raw.github.com/cr0hn/golismero/gh-pages/images/run_mac.png "Run example")
+![Run example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/run_mac.png "Run example")
 
 Additionally, you can import results from other tools with the -i option. You can use -i several times to import multiple files.
 
@@ -62,7 +62,7 @@ All results are automatically stored in a database file. You can prevent this wi
 
 ```python golismero.py <target> -nd```
 
-![No database example](https://raw.github.com/cr0hn/golismero/gh-pages/images/no_db_mint.png "No database example")
+![No database example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/no_db_mint.png "No database example")
 
 This allows you to scan the target in one step, and generating the report later. For example, to scan without generating a report:
 
@@ -76,7 +76,7 @@ You can also specify multiple output files by repeating the -o option:
 
 ```python golismero.py report -db database.db -o report.html -o report.rst -o report.txt```
 
-![Import export example](https://raw.github.com/cr0hn/golismero/gh-pages/images/import_export_win.png "Import export example")
+![Import export example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/import_export_win.png "Import export example")
 
 Available plugins
 -----------------
@@ -85,13 +85,13 @@ To display the list of available plugins:
 
 ```python golismero.py plugins```
 
-![Plugin list example](https://raw.github.com/cr0hn/golismero/gh-pages/images/plugin_list_mac_2.png "Plugin list example")
+![Plugin list example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/plugin_list_mac_2.png "Plugin list example")
 
 You can also query more information about specific plugins:
 
 ```python golismero.py info <plugin>```
 
-![Plugin info example](https://raw.github.com/cr0hn/golismero/gh-pages/images/plugin_info_mint.png "Plugin list example")
+![Plugin info example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/plugin_info_mint.png "Plugin list example")
 
 The full plugin list is also available [online](http://golismero-project.com/doc/plugin_list/index.html).
 
@@ -106,7 +106,7 @@ You can also select multiple plugins using wildcards. For example, you can selec
 
 ```python golismero.py <target> -e brute*```
 
-![Run plugin example](https://raw.github.com/cr0hn/golismero/gh-pages/images/run_plugin_mac_2.png "Run plugin example")
+![Run plugin example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/run_plugin_mac_2.png "Run plugin example")
 
 Reporting and eye candy
 -----------------------
@@ -119,11 +119,11 @@ If no output files are specified, GoLismero reports on the console by default. B
 
 Here's what the HTML report summary looks like:
 
-![Report summary](https://raw.github.com/cr0hn/golismero/gh-pages/images/report1.png "Report summary")
+![Report summary](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report1.png "Report summary")
 
 And the HTML report details:
 
-![Report details](https://raw.github.com/cr0hn/golismero/gh-pages/images/report2.png "Report details")
+![Report details](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report2.png "Report details")
 
 Putting it all together
 -----------------------
