@@ -76,7 +76,7 @@ You can also specify multiple output files by repeating the -o option:
 
 ```python golismero.py report -db database.db -o report.html -o report.rst -o report.txt```
 
-![Import export example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/import_export_win.png "Import export example")
+![Report example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_win.png "Report example")
 
 Available plugins
 -----------------
