@@ -109,6 +109,7 @@ from golismero.managers.processmanager import PluginContext
 
 class CustomArgumentParser(argparse.ArgumentParser):
     def error(self, message):
+        self.usage = None
         message += "\n\nUse -h or --help to show the full help text."
         return super(CustomArgumentParser, self).error(message)
 
@@ -185,7 +186,8 @@ def cmdline_parser():
         pass
 
     parser = CustomArgumentParser(fromfile_prefix_chars="@")
-    parser.add_argument("targets", metavar="TARGET", nargs="*", help="one or more target web sites")
+    parser.add_argument("command", metavar="COMMAND", choices=["SCAN", "PROFILES", "PLUGINS", "INFO", "REPORT", "IMPORT", "DUMP"], type=str.upper, help="action to perform")
+    parser.add_argument("targets", metavar="TARGET", nargs="*", help="zero or more arguments, meaning depends on command")
 
     gr_main = parser.add_argument_group("main options")
     gr_main.add_argument("-f", "--file", metavar="FILE", action=LoadListFromFileAction, help="load a list of targets from a plain text file")
@@ -205,7 +207,6 @@ def cmdline_parser():
     gr_audit.add_argument("-nd", "--no-db", dest="audit_db", action="store_const", const="memory://", help="do not store the results in a database")
     gr_audit.add_argument("-i", "--input", dest="imports", metavar="FILENAME", action="append", help="read results from external tools right before the audit")
     gr_audit.add_argument("-ni", "--no-input", dest="disable_importing", action="store_true", default=False, help="do not read results from external tools")
-    gr_audit.add_argument("--dump-db", metavar="FILENAME", default=None, help="dump the audit database and quit")
 
     gr_report = parser.add_argument_group("report options")
     gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", help="write the results of the audit to this file (use - for stdout)")
@@ -238,8 +239,65 @@ def cmdline_parser():
     gr_plugins.add_argument("-d", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="plugin_load_overrides", help="disable a plugin")
     gr_plugins.add_argument("--max-concurrent", metavar="N", type=int, default=None, help="maximum number of plugins to run concurrently")
     gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
-    gr_plugins.add_argument("--plugin-list", action="store_true", default=False, help="list available plugins and quit")
-    gr_plugins.add_argument("--plugin-info", metavar="NAME", dest="plugin_id", help="show plugin info and quit")
+
+    parser.usage = parser.format_usage()[7:] + (
+        ################################################################################
+        "\n"
+        "available commands:\n"
+        "\n"
+        "  SCAN:\n"
+        "    Perform a vulnerability scan on the given targets. Optionally import\n"
+        "    results from other tools and write a report. The arguments that follow may\n"
+        "    be domain names, IP addresses or web pages.\n"
+        "\n"
+        "  PROFILES:\n"
+        "    Show a list of available config profiles. This command takes no arguments.\n"
+        "\n"
+        "  PLUGINS:\n"
+        "    Show a list of available plugins. This command takes no arguments.\n"
+        "\n"
+        "  INFO:\n"
+        "    Show detailed information on a given plugin. The arguments that follow are\n"
+        "    the plugin IDs. You can use glob-style wildcards.\n"
+        "\n"
+        "  REPORT:\n"
+        "    Write a report from an earlier scan. This command takes no arguments.\n"
+        "    To specify output files use the -o switch.\n"
+        "\n"
+        "  IMPORT:\n"
+        "    Import results from other tools and optionally write a report, but don't\n"
+        "    scan the targets. This command takes no arguments. To specify input files\n"
+        "    use the -i switch.\n"
+        "\n"
+        "  DUMP:\n"
+        "    Dump the database from an earlier scan in SQL format. This command takes no\n"
+        "    arguments. To specify output files use the -o switch.\n"
+        "\n"
+        "examples:\n"
+        "\n"
+        "  scan a website and show the results on screen:\n"
+        "    %(prog)s scan http://www.example.com\n"
+        "\n"
+        "  grab Nmap results, scan all hosts found and write an HTML report:\n"
+        "    %(prog)s scan -i nmap_output.xml -o report.html\n"
+        "\n"
+        "  grab results from OpenVAS and show them on screen, but don't scan anything:\n"
+        "    %(prog)s import -i openvas_output.xml\n"
+        "\n"
+        "  show a list of all available configuration profiles:\n"
+        "    %(prog)s profiles\n"
+        "\n"
+        "  show a list of all available plugins:\n"
+        "    %(prog)s plugins\n"
+        "\n"
+        "  show information on all bruteforcer plugins:\n"
+        "    %(prog)s info brute_*\n"
+        "\n"
+        "  dump the database from a previous scan:\n"
+        "    %(prog)s dump -db example.db -o dump.sql\n"
+        "\n"
+        ################################################################################
+    )
 
     return parser
 
@@ -265,6 +323,7 @@ def main():
 
         # Load the Orchestrator options.
         cmdParams = OrchestratorConfig()
+        cmdParams.command = P.command
         if P.config:
             cmdParams.config_file = path.abspath(P.config)
             if not path.isfile(cmdParams.config_file):
@@ -299,25 +358,10 @@ def main():
         # Otherwise, if no reports are specified, default to screen report.
         if P.disable_reporting:
             auditParams.reports = []
-        elif not auditParams.reports:
+        elif not auditParams.reports and P.command in ("SCAN", "REPORT"):
             auditParams.reports = ["-"]
             if auditParams.only_vulns is None:
                 auditParams.only_vulns = True
-
-        # If there are no targets but there's a database,
-        # get the targets from the database. (The actual
-        # scope will be loaded later, this just bypasses
-        # some sanity checks more easily).
-        if not auditParams.targets and auditParams.audit_db:
-            try:
-                cfg, _ = AuditDB.get_config_from_closed_database(
-                    auditParams.audit_db, auditParams.audit_name)
-                if cfg:
-                    auditParams.audit_name = cfg.audit_name
-                    auditParams.targets = cfg.targets
-                    auditParams.include_subdomains = cfg.include_subdomains
-            except IOError:
-                pass  # missing database name, happens for new audits and other cases
 
     # Show exceptions as command line parsing errors.
     except Exception, e:
@@ -344,16 +388,19 @@ def main():
     #--------------------------------------------------------------------------
     # List plugins and quit.
 
-    if P.plugin_list:
+    if P.command == "PLUGINS":
         Console.use_colors = cmdParams.color
 
-        # Load the plugins list
+        # Fail if we have arguments.
+        if P.targets:
+            parser.error("too many arguments")
+
+        # Load the plugins list.
         try:
             manager = PluginManager()
             manager.find_plugins(cmdParams)
         except Exception, e:
-            print "[!] Error loading plugins list: %s" % str(e)
-            exit(1)
+            parser.error("error loading plugins list: %s" % str(e))
 
         # Show the list of plugins.
         print colorize("-------------", "red")
@@ -419,100 +466,102 @@ def main():
     #--------------------------------------------------------------------------
     # Display plugin info and quit.
 
-    if P.plugin_id:
+    if P.command == "INFO":
         Console.use_colors = cmdParams.color
+
+        # Fail if we don't have arguments.
+        if not P.targets:
+            parser.error("too few arguments")
 
         # Load the plugins list.
         try:
             manager = PluginManager()
             manager.find_plugins(cmdParams)
         except Exception, e:
-            print "[!] Error loading plugins list: %s" % str(e)
-            exit(1)
+            parser.error("error loading plugins list: %s" % str(e))
 
         # Show the plugin information.
         try:
-            try:
-                m_plugin_info = manager.get_plugin_by_id(P.plugin_id)
-            except KeyError:
-                try:
-                    m_found = manager.search_plugins(P.plugin_id)
-                    if len(m_found) > 1:
-                        print "[!] Error: which plugin did you mean?"
-                        for plugin_id in m_found.iterkeys():
-                            print "\t%s" % plugin_id
-                        exit(1)
-                    m_plugin_info = m_found.pop(m_found.keys()[0])
-                except Exception:
-                    raise KeyError(P.plugin_id)
-            Config._context = PluginContext( orchestrator_pid = getpid(),
-                                             orchestrator_tid = get_ident(),
-                                                  plugin_info = m_plugin_info,
-                                                    msg_queue = None )
-            m_plugin_obj = manager.load_plugin_by_id(m_plugin_info.plugin_id)
-            m_root = cmdParams.plugins_folder
-            m_root = path.abspath(m_root)
-            if not m_root.endswith(path.sep):
-                m_root += path.sep
-            m_location = m_plugin_info.descriptor_file[len(m_root):]
-            a, b = path.split(m_location)
-            b = colorize(b, "cyan")
-            m_location = path.join(a, b)
-            m_src = m_plugin_info.plugin_module[len(m_root):]
-            a, b = path.split(m_src)
-            b = colorize(b, "cyan")
-            m_src = path.join(a, b)
-            m_name = m_plugin_info.plugin_id
-            p = m_name.rfind("/") + 1
-            m_name = m_name[:p] + colorize(m_name[p:], "cyan")
-            m_desc = m_plugin_info.description.strip()
-            m_desc = m_desc.replace("\n", "\n    ")
-            print "Information for plugin: %s" % colorize(m_plugin_info.display_name, "yellow")
-            print "-" * len("Information for plugin: %s" % m_plugin_info.display_name)
-            print "%s          %s" % (colorize("ID:", "green"), m_name)
-            print "%s    %s" % (colorize("Location:", "green"), m_location)
-            print "%s %s" % (colorize("Source code:", "green"), m_src)
-            if m_plugin_info.plugin_class:
-                print "%s  %s" % (colorize("Class name:", "green"), colorize(m_plugin_info.plugin_class, "cyan"))
-            print "%s    %s" % (colorize("Category:", "green"), m_plugin_info.category)
-            print "%s       %s" % (colorize("Stage:", "green"), m_plugin_info.stage)
-            if m_plugin_info.description != m_plugin_info.display_name:
-                print
-                print "%s\n    %s" % (colorize("Description:", "green"), m_desc)
-            if m_plugin_info.plugin_args:
-                print
-                print colorize("Arguments:", "green")
-                for name, default in sorted(m_plugin_info.plugin_args.items()):
-                    if name in m_plugin_info.plugin_passwd_args:
-                        default = "****************"
-                    print "\t%s -> %s" % (colorize(name, "cyan"), default)
+            to_print = []
+            plugin_infos = []
+            for plugin_id in P.targets:
+                m_found = manager.search_plugins_by_mask(plugin_id)
+                plugin_infos.extend( m_found.values() )
+            if not plugin_infos:
+                raise KeyError()
+            for m_plugin_info in plugin_infos:
+                Config._context = PluginContext( orchestrator_pid = getpid(),
+                                                 orchestrator_tid = get_ident(),
+                                                      plugin_info = m_plugin_info,
+                                                        msg_queue = None )
+                m_plugin_obj = manager.load_plugin_by_id(m_plugin_info.plugin_id)
+                m_root = cmdParams.plugins_folder
+                m_root = path.abspath(m_root)
+                if not m_root.endswith(path.sep):
+                    m_root += path.sep
+                m_location = m_plugin_info.descriptor_file[len(m_root):]
+                a, b = path.split(m_location)
+                b = colorize(b, "cyan")
+                m_location = path.join(a, b)
+                m_src = m_plugin_info.plugin_module[len(m_root):]
+                a, b = path.split(m_src)
+                b = colorize(b, "cyan")
+                m_src = path.join(a, b)
+                m_name = m_plugin_info.plugin_id
+                p = m_name.rfind("/") + 1
+                m_name = m_name[:p] + colorize(m_name[p:], "cyan")
+                m_desc = m_plugin_info.description.strip()
+                m_desc = m_desc.replace("\n", "\n    ")
+                to_print.append("")
+                to_print.append("Information for plugin: %s" % colorize(m_plugin_info.display_name, "yellow"))
+                to_print.append("-" * len("Information for plugin: %s" % m_plugin_info.display_name))
+                to_print.append("%s          %s" % (colorize("ID:", "green"), m_name))
+                to_print.append("%s    %s" % (colorize("Location:", "green"), m_location))
+                to_print.append("%s %s" % (colorize("Source code:", "green"), m_src))
+                if m_plugin_info.plugin_class:
+                    to_print.append("%s  %s" % (colorize("Class name:", "green"), colorize(m_plugin_info.plugin_class, "cyan")))
+                to_print.append("%s    %s" % (colorize("Category:", "green"), m_plugin_info.category))
+                to_print.append("%s       %s" % (colorize("Stage:", "green"), m_plugin_info.stage))
+                if m_plugin_info.description != m_plugin_info.display_name:
+                    to_print.append("")
+                    to_print.append("%s\n    %s" % (colorize("Description:", "green"), m_desc))
+                if m_plugin_info.plugin_args:
+                    to_print.append("")
+                    to_print.append(colorize("Arguments:", "green"))
+                    for name, default in sorted(m_plugin_info.plugin_args.items()):
+                        if name in m_plugin_info.plugin_passwd_args:
+                            default = "****************"
+                        to_print.append("\t%s -> %s" % (colorize(name, "cyan"), default))
+                to_print.append("")
         except KeyError:
-            print "[!] Plugin ID not found"
-            exit(1)
+            ##raise # XXX DEBUG
+            parser.error("plugin ID not found")
         except ValueError:
-            print "[!] Plugin ID not found"
-            exit(1)
+            ##raise # XXX DEBUG
+            parser.error("plugin ID not found")
         except Exception, e:
-            print "[!] Error recovering plugin info: %s" % str(e)
-            exit(1)
+            ##raise # XXX DEBUG
+            parser.error("error recovering plugin info: %s" % str(e))
 
-        if path.sep == "/":
-            print
+        for line in to_print:
+            print line
         exit(0)
 
 
     #--------------------------------------------------------------------------
     # List profiles and quit.
 
-    if P.profile_list:
+    if P.command == "PROFILES":
+        if P.targets:
+            parser.error("too many arguments")
         Console.use_colors = cmdParams.color
         profiles = sorted(get_available_profiles())
         if not profiles:
             print "No available profiles!"
         else:
-            print "-------------------"
-            print " Available profiles"
-            print "-------------------"
+            print "--------------------"
+            print " " + colorize("Available profiles", "yellow")
+            print "--------------------"
             print
             for name in profiles:
                 try:
@@ -522,9 +571,9 @@ def main():
                 except Exception:
                     desc = None
                 if desc:
-                    print "+ %s: %s" % (name, desc)
+                    print "+ %s: %s" % (colorize(name, "cyan"), desc)
                 else:
-                    print "+ %s" % name
+                    print "+ %s" % colorize(name, "cyan")
 
         if path.sep == "/":
             print
@@ -534,34 +583,39 @@ def main():
     #--------------------------------------------------------------------------
     # Dump the database and quit.
 
-    if P.dump_db:
-        if not auditParams.audit_db:
-            parser.error("missing audit database!")
-        if auditParams.audit_db.startswith("memory:"):
-            parser.error("missing audit database!")
-        if auditParams.audit_db == "sqlite://" and \
-           not auditParams.audit_name:
-            parser.error("missing audit database!")
+    if P.command == "DUMP":
+        if auditParams.is_new_audit():
+            parser.error("missing audit database")
+        if not P.reports:
+            parser.error("missing output filename")
+        Console.use_colors = cmdParams.color
         if P.verbose != 0:
-            print "Loading database: %s" % auditParams.audit_db
-        try:
-            with PluginTester(autoinit=False, autodelete=False) as t:
-                t.orchestrator_config.verbose = 0
-                t.audit_config.audit_name = auditParams.audit_name
-                t.audit_config.audit_db   = auditParams.audit_db
-                t.init_environment()
+            print "Loading database: %s" % \
+                  colorize(auditParams.audit_db, "yellow")
+        with PluginTester(autoinit=False, autodelete=False) as t:
+            t.orchestrator_config.verbose = 0
+            t.audit_config.audit_name = auditParams.audit_name
+            t.audit_config.audit_db   = auditParams.audit_db
+            t.init_environment()
+            Console.use_colors = cmdParams.color
+            for filename in P.reports:
                 if P.verbose != 0:
-                    print "Dumping to file: %s" % P.dump_db
-                t.audit.database.dump(P.dump_db)
-            exit(0)
-        except Exception, e:
-            raise # XXX DEBUG
-            print "Error! " + str(e)
-            exit(1)
+                    print "Dumping to file: %s" % colorize(filename, "cyan")
+                t.audit.database.dump(filename)
+        exit(0)
 
 
     #--------------------------------------------------------------------------
     # Check if all options are correct.
+
+    if P.command != "SCAN":
+        auditParams.plugin_load_overrides.append( (False, "testing") )
+
+    guessed_urls = []
+    for target in auditParams.targets:
+        if not "://" in target:
+            guessed_urls.append("http://" + target)
+    auditParams.targets.extend(guessed_urls)
 
     try:
         cmdParams.check_params()
@@ -604,9 +658,8 @@ def main():
                     target_args[key] = getpass(msg)
 
         # Save the plugin arguments for the Orchestrator and the Audit.
-        cmdParams.plugin_args = plugin_args
-        if auditParams.targets:
-            auditParams.plugin_args = plugin_args
+        cmdParams.plugin_args   = plugin_args
+        auditParams.plugin_args = plugin_args
 
         # Set the plugin arguments before loading the UI plugin.
         for plugin_id, plugin_args in cmdParams.plugin_args.iteritems():
@@ -631,10 +684,7 @@ def main():
 
     # Check the settings with the UI plugin.
     try:
-        if auditParams.targets:
-            ui_plugin.check_params(cmdParams, auditParams)
-        else:
-            ui_plugin.check_params(cmdParams)
+        ui_plugin.check_params(cmdParams, auditParams)
     except Exception, e:
         ##raise # XXX DEBUG
         msg = str(e)
@@ -646,10 +696,7 @@ def main():
     #--------------------------------------------------------------------------
     # Launch GoLismero.
 
-    if auditParams.targets:
-        launcher.run(cmdParams, auditParams)
-    else:
-        launcher.run(cmdParams)
+    launcher.run(cmdParams, auditParams)
     exit(0)
 
 

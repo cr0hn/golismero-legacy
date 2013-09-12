@@ -248,7 +248,7 @@ def get_available_profiles():
     if not profiles_folder or not path.isdir(profiles_folder):
         return set()
     return {
-        name[:-4]
+        path.splitext(name)[0]
         for name in os.listdir(profiles_folder)
         if name.endswith(".profile")
     }
@@ -775,6 +775,9 @@ class AuditConfig (Configuration):
     # Plugin arguments.
     plugin_args  = None   # list of (plugin_id, key, value)
 
+    # Command to run.
+    command = "SCAN"
+
 
     #--------------------------------------------------------------------------
 
@@ -789,8 +792,7 @@ class AuditConfig (Configuration):
         self._targets = getattr(self, "_targets", [])
         if targets:
             targets = [
-                (x if (x.startswith("http://") or x.startswith("https://"))
-                   else "http://" + x)
+                x.strip()
                 for x in targets
                 if x not in self._targets
             ]
@@ -888,3 +890,31 @@ class AuditConfig (Configuration):
         # Validate the recursion depth.
         if self.depth is not None and self.depth < 0:
             raise ValueError("Spidering depth can't be negative: %r" % self.depth)
+
+
+    #--------------------------------------------------------------------------
+    def is_new_audit(self):
+        """
+        Determine if this is a brand new audit.
+
+        :returns: True if this is a new audit, False if it's an old audit.
+        :rtype: bool
+        """
+
+        # Memory databases are always new audits.
+        if not self.audit_db or self.audit_db.lower().startswith("memory://"):
+            return True
+
+        # SQLite databases are new audits if the file doesn't exist.
+        # If we have no filename, use the audit name.
+        # If we don't have that either it's a new audit.
+        if self.audit_db.lower().startswith("sqlite://"):
+            filename = self.audit_db[9:]
+            if not filename:
+                filename = self.audit_name
+                if not filename:
+                    return True
+            return not path.exists(filename)
+
+        # We don't know how to parse this database connection string.
+        raise ValueError("Unsupported connection string: %s" % self.audit_db)

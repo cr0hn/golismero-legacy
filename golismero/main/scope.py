@@ -39,13 +39,110 @@ from ..api.net.dns import DNS
 from ..api.net.web_utils import ParsedURL, split_hostname
 
 from netaddr import IPAddress, IPNetwork
+from warnings import warn
 
 import re
-import warnings
 
 
 #------------------------------------------------------------------------------
-class AuditScope (object):
+class AbstractScope (object):
+
+
+    #--------------------------------------------------------------------------
+    def __init__(self, audit_config = None):
+        """
+        :param audit_config: (Optional) Audit configuration.
+        :type audit_config: AuditConfig | None
+        """
+        raise NotImplementedError()
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def addresses(self):
+        raise NotImplementedError()
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def domains(self):
+        raise NotImplementedError()
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def roots(self):
+        raise NotImplementedError()
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def web_pages(self):
+        raise NotImplementedError()
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def targets(self):
+        return self.addresses + self.domains + self.roots + self.web_pages
+
+
+    #--------------------------------------------------------------------------
+    def add_targets(self, audit_config, dns_resolution = 1):
+        """
+        :param audit_config: Audit configuration.
+        :type audit_config: AuditConfig
+
+        :param dns_resolution: DNS resolution mode.
+            Use 0 to disable, 1 to enable only for new targets (default),
+            or 2 to enable for all targets.
+        :type dns_resolution: int
+        """
+        raise NotImplementedError()
+
+
+    #--------------------------------------------------------------------------
+    def get_targets(self):
+        """
+        Get the audit targets as Data objects.
+
+        :returns: Data objects.
+        :rtype: list(Data)
+        """
+        result = []
+        result.extend( IP(address) for address in self.addresses )
+        result.extend( Domain(domain) for domain in self.domains )
+        result.extend( Domain(root) for root in self.roots )
+        result.extend( Url(url) for url in self.web_pages )
+        return result
+
+
+    #--------------------------------------------------------------------------
+    def __str__(self):
+        raise NotImplementedError()
+
+
+    #--------------------------------------------------------------------------
+    def __repr__(self):
+        return "<%s>" % self
+
+
+    #--------------------------------------------------------------------------
+    def __contains__(self, target):
+        """
+        Tests if the given target is included in the current audit scope.
+
+        :param target: Target. May be an URL, a hostname or an IP address.
+        :type target: str
+
+        :returns: True if the target is in scope, False otherwise.
+        :rtype: bool
+        """
+        raise NotImplementedError()
+
+
+#------------------------------------------------------------------------------
+class AuditScope (AbstractScope):
     """
     Audit scope.
 
@@ -63,10 +160,6 @@ class AuditScope (object):
 
     #--------------------------------------------------------------------------
     def __init__(self, audit_config = None):
-        """
-        :param audit_config: (Optional) Audit configuration.
-        :type audit_config: AuditConfig | None
-        """
 
         # This is where we'll keep the parsed targets.
         self.__domains   = set()   # Domain names.
@@ -105,15 +198,6 @@ class AuditScope (object):
 
     #--------------------------------------------------------------------------
     def add_targets(self, audit_config, dns_resolution = 1):
-        """
-        :param audit_config: Audit configuration.
-        :type audit_config: AuditConfig
-
-        :param dns_resolution: DNS resolution mode.
-            Use 0 to disable, 1 to enable only for new targets (default),
-            or 2 to enable for all targets.
-        :type dns_resolution: int
-        """
 
         # Validate the arguments.
         if dns_resolution not in (0, 1, 2):
@@ -129,88 +213,80 @@ class AuditScope (object):
         # For each user-supplied target string...
         for target in audit_config.targets:
 
-            # If it's a domain name...
-            if self._re_is_domain.match(target):
-
-                # Convert it to lowercase.
-                target = target.lower()
-
-                # Is the domain new?
-                if target not in self.__domains:
-
-                    # Keep the domain name.
-                    self.__domains.add(target)
-                    new_domains.add(target)
-
-                    # Guess an URL from it.
-                    # FIXME: this should be smarter and use port scanning!
-                    self.__web_pages.add("http://%s/" % target)
-
             # If it's an IP address...
+            try:
+                if target.startswith("[") and target.endswith("]"):
+                    IPAddress(target[1:-1], version=6)
+                    address = target[1:-1]
+                else:
+                    IPAddress(target)
+                    address = target
+            except Exception:
+                address = None
+            if address is not None:
+
+                # Keep the IP address.
+                self.__addresses.add(address)
+
+            # If it's an IP network...
             else:
                 try:
-                    if target.startswith("[") and target.endswith("]"):
-                        IPAddress(target[1:-1], version=6)
-                        address = target[1:-1]
-                    else:
-                        IPAddress(target)
-                        address = target
+                    network = IPNetwork(target)
                 except Exception:
-                    address = None
-                if address is not None:
+                    network = None
+                if network is not None:
 
-                    # Keep the IP address.
-                    self.__addresses.add(address)
+                    # For each host IP address in range...
+                    for address in network.iter_hosts():
+                        address = str(address)
 
-                    # Guess an URL from it.
-                    # FIXME: this should be smarter and use port scanning!
-                    self.__web_pages.add("http://%s/" % address)
+                        # Keep the IP address.
+                        self.__addresses.add(address)
 
-                # If it's an IP network...
+                # If it's a domain name...
+                elif self._re_is_domain.match(target):
+
+                    # Convert it to lowercase.
+                    target = target.lower()
+
+                    # Is the domain new?
+                    if target not in self.__domains:
+
+                        # Keep the domain name.
+                        self.__domains.add(target)
+                        new_domains.add(target)
+
+                # If it's an URL...
                 else:
                     try:
-                        network = IPNetwork(target)
+                        parsed_url = ParsedURL(target)
+                        url = parsed_url.url
                     except Exception:
-                        network = None
-                    if network is not None:
+                        url = None
+                    if url is not None:
 
-                        # For each host IP address in range...
-                        for address in network.iter_hosts():
-                            address = str(address)
+                        # Keep the URL.
+                        self.__web_pages.add(url)
 
-                            # Keep the IP address.
-                            self.__addresses.add(address)
-
-                            # Guess an URL from it.
-                            # FIXME: this should be smarter and use port scanning!
-                            self.__web_pages.add("http://%s/" % address)
-
-                    # If it's an URL...
-                    else:
+                        # Extract the domain or IP address.
+                        host = parsed_url.host
                         try:
-                            parsed_url = ParsedURL(target)
-                            url = parsed_url.url
+                            if host.startswith("[") and host.endswith("]"):
+                                IPAddress(host[1:-1], version=6)
+                                host = host[1:-1]
+                            else:
+                                IPAddress(host)
+                            self.__addresses.add(host)
                         except Exception:
-                            url = None
-                        if url is not None:
+                            host = host.lower()
+                            if host not in self.__domains:
+                                self.__domains.add(host)
+                                new_domains.add(host)
 
-                            # Keep the URL.
-                            self.__web_pages.add(url)
-
-                            # Extract the domain or IP address.
-                            host = parsed_url.host
-                            try:
-                                if host.startswith("[") and host.endswith("]"):
-                                    IPAddress(host[1:-1], version=6)
-                                    host = host[1:-1]
-                                else:
-                                    IPAddress(host)
-                                self.__addresses.add(host)
-                            except Exception:
-                                host = host.lower()
-                                if host not in self.__domains:
-                                    self.__domains.add(host)
-                                    new_domains.add(host)
+                    # If it's none of the above, fail.
+                    else:
+                        raise ValueError(
+                            "I don't know what to do with this: %s" % target)
 
         # If subdomains are allowed, we must include the parent domains.
         if include_subdomains:
@@ -246,26 +322,10 @@ class AuditScope (object):
                 for register in resolved_6:
                     self.__addresses.add(register.address)
 
-                # Abort the audit if one of the domains cannot be resolved.
+                # Warn when a domain cannot be resolved.
                 if not resolved_4 and not resolved_6:
-                    raise RuntimeError(
-                        "Aborting audit: cannot resolve: %s" % domain)
-
-
-    #--------------------------------------------------------------------------
-    def get_targets(self):
-        """
-        Get the audit targets as Data objects.
-
-        :returns: Data objects.
-        :rtype: list(Data)
-        """
-        result = []
-        result.extend( IP(address) for address in self.__addresses )
-        result.extend( Domain(domain) for domain in self.__domains )
-        result.extend( Domain(root) for root in self.__roots )
-        result.extend( Url(url) for url in self.__web_pages )
-        return result
+                    msg = "Cannot resolve domain name: %s" % domain
+                    warn(msg, RuntimeWarning)
 
 
     #--------------------------------------------------------------------------
@@ -291,21 +351,7 @@ class AuditScope (object):
 
 
     #--------------------------------------------------------------------------
-    def __repr__(self):
-        return "<%s>" % self
-
-
-    #--------------------------------------------------------------------------
     def __contains__(self, target):
-        """
-        Tests if the given target is included in the current audit scope.
-
-        :param target: Target. May be an URL, a hostname or an IP address.
-        :type target: str
-
-        :returns: True if the target is in scope, False otherwise.
-        :rtype: bool
-        """
 
         # Trivial case.
         if not target:
@@ -362,7 +408,7 @@ class AuditScope (object):
             )
 
         # We don't know what this is, so we'll consider it out of scope.
-        warnings.warn(
+        warn(
             "Can't determine if this is out of scope or not: %r" % original,
             stacklevel=2
         )
@@ -370,7 +416,7 @@ class AuditScope (object):
 
 
 #------------------------------------------------------------------------------
-class DummyScope (object):
+class DummyScope (AbstractScope):
     """
     Dummy scope tells you everything is in scope, all the time.
     """
@@ -378,8 +424,38 @@ class DummyScope (object):
     def __init__(self):
         pass
 
+    @property
+    def addresses(self):
+        return []
+
+    @property
+    def domains(self):
+        return []
+
+    @property
+    def roots(self):
+        return []
+
+    @property
+    def web_pages(self):
+        return []
+
     def get_targets(self):
         return []
 
     def __contains__(self, target):
         return True
+
+    def __str__(self):
+        return (
+            "Audit scope:\n"
+            "\n"
+            "IP addresses:\n"
+            "    *\n"
+            "\n"
+            "Domains:\n"
+            "    *\n"
+            "\n"
+            "Web pages:\n"
+            "    *\n"
+        )

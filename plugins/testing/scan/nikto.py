@@ -39,7 +39,7 @@ from golismero.api.external import run_external_tool, \
 from golismero.api.logger import Logger
 from golismero.api.net.scraper import extract_from_text
 from golismero.api.plugin import ImportPlugin, TestingPlugin
-from golismero.api.text.text_utils import extract_vuln_ids
+from golismero.api.data.vulnerability.vuln_utils import extract_vuln_ids
 
 from csv import reader
 from os.path import abspath, join, exists, sep, split
@@ -294,6 +294,13 @@ class NiktoPlugin(TestingPlugin):
                                 "%s: %s" % (vuln_tag, text))
                         kwargs["description"] = text if text else None
                         kwargs["references"]  = refs
+                        if "osvdb" in kwargs and "OSVDB-0" in kwargs["osvdb"]:
+                            tmp = list(kwargs["osvdb"])
+                            tmp.remove("OSVDB-0")
+                            if tmp:
+                                kwargs["osvdb"] = tuple(tmp)
+                            else:
+                                del kwargs["osvdb"]
                         if vuln_tag == "OSVDB-0":
                             vuln = UncategorizedVulnerability(**kwargs)
                             vuln.add_resource(url)

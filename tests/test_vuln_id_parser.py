@@ -45,7 +45,7 @@ except NameError:
     _FIXED_PATH_ = True
 
 
-from golismero.api.text.text_utils import extract_vuln_ids, \
+from golismero.api.data.vulnerability.vuln_utils import extract_vuln_ids, \
      convert_references_to_vuln_ids, convert_vuln_ids_to_references
 
 

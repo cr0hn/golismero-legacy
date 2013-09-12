@@ -35,6 +35,8 @@ __all__ = ["Traceroute", "Hop"]
 from . import Information
 from .. import identity
 from ..resource.ip import IP
+from ..resource.domain import Domain
+from ...config import Config
 
 from time import time
 
@@ -220,3 +222,15 @@ class Traceroute(Information):
                 for i, h in enumerate(self.hops)
             )
         return s
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def discovered(self):
+        result = []
+        for hop in self.hops:
+            if hop.address in Config.audit_scope:
+                result.append( IP(hop.address) )
+            if hop.hostname and hop.hostname in Config.audit_scope:
+                result.append( Domain(hop.hostname) )
+        return result

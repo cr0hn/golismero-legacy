@@ -42,7 +42,7 @@ from ..api.config import Config
 from ..api.logger import Logger
 from ..common import AuditConfig
 from ..database.auditdb import AuditDB
-from ..main.scope import AuditScope
+from ..main.scope import AuditScope, DummyScope
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 from ..messaging.notifier import AuditNotifier
@@ -445,10 +445,14 @@ class Audit (object):
 
         try:
 
+            # Create a dummy scope.
+            self.__audit_scope = DummyScope()
+
             # Update the execution context for this audit.
             Config._context = PluginContext(       msg_queue = old_context.msg_queue,
                                                   audit_name = self.name,
                                                 audit_config = self.config,
+                                                 audit_scope = self.scope,
                                             orchestrator_pid = old_context._orchestrator_pid,
                                             orchestrator_tid = old_context._orchestrator_tid)
 
@@ -473,21 +477,20 @@ class Audit (object):
             # (Re)calculate the audit scope. Some DNS queries may be made.
             audit_scope = self.database.get_audit_scope()
             if audit_scope is None:
-                audit_scope = AuditScope(self.config)
+                if self.config.targets:
+                    audit_scope = AuditScope(self.config)
             else:
                 audit_scope.add_targets(self.config)
-            self.database.save_audit_scope(audit_scope)
-            self.__audit_scope = audit_scope
-
-            # Update the execution context again, with the scope.
-            Config._context = PluginContext(
-                                     msg_queue = old_context.msg_queue,
-                                    audit_name = self.name,
-                                  audit_config = self.config,
-                                   audit_scope = self.scope,
-                              orchestrator_pid = old_context._orchestrator_pid,
-                              orchestrator_tid = old_context._orchestrator_tid)
-            Logger.log_more_verbose(str(audit_scope))
+            if audit_scope is not None:
+                self.__audit_scope = audit_scope
+                self.database.save_audit_scope(self.scope)
+                Config._context = PluginContext(
+                                    msg_queue = old_context.msg_queue,
+                                   audit_name = self.name,
+                                 audit_config = self.config,
+                                  audit_scope = self.scope,
+                             orchestrator_pid = old_context._orchestrator_pid,
+                             orchestrator_tid = old_context._orchestrator_tid)
 
             # If the audit database doesn't have a start time, set the new one.
             if not self.database.get_audit_times()[0]:
@@ -527,7 +530,50 @@ class Audit (object):
             # Import external results.
             # This is done after storing the targets, so the importers
             # can overwrite the targets with new information if available.
+            # If we had no scope, build one based on the imported data.
+            if not target_data:
+                target_types = (
+                    Resource.RESOURCE_BASE_URL,
+                    Resource.RESOURCE_FOLDER_URL,
+                    Resource.RESOURCE_URL,
+                    Resource.RESOURCE_IP,
+                    Resource.RESOURCE_DOMAIN,
+                )
+                old_data = set()
+                for data_subtype in target_types:
+                    old_data.update(
+                        self.database.get_data_keys(
+                            Data.TYPE_RESOURCE, data_subtype) )
             imported_count = self.importManager.import_results()
+            if not target_data:
+                new_data = set()
+                for data_subtype in target_types:
+                    new_data.update(
+                        self.database.get_data_keys(
+                            Data.TYPE_RESOURCE, data_subtype) )
+                new_data.difference_update(old_data)
+                old_data.clear()
+                self.config.targets = [
+                    str( self.database.get_data(identity) )
+                    for identity in new_data
+                ]
+                new_data.clear()
+                self.__audit_scope = AuditScope(self.config) # does DNS queries
+                self.database.save_audit_scope(self.scope)
+                Config._context = PluginContext(
+                                    msg_queue = old_context.msg_queue,
+                                   audit_name = self.name,
+                                 audit_config = self.config,
+                                  audit_scope = self.scope,
+                             orchestrator_pid = old_context._orchestrator_pid,
+                             orchestrator_tid = old_context._orchestrator_tid)
+
+            # Show the scope. Abort if the scope is wrong.
+            Logger.log_verbose(str(self.scope))
+            assert not isinstance(self.scope, DummyScope), "Internal error!"
+            if not self.scope.targets:
+                raise ValueError(
+                    "No targets selected for audit, aborting execution.")
 
             # Discover new data from the data already in the database.
             # Only add newly discovered data, to avoid overwriting anything.

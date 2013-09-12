@@ -70,7 +70,14 @@ class ConsoleUIPlugin(UIPlugin):
     #--------------------------------------------------------------------------
     def check_params(self, options, *audits):
         if not audits:
-            raise ValueError("No targets selected!")
+            raise ValueError("Daemon mode not supported.")
+        for audit in audits:
+            if (
+                audit.is_new_audit() and
+                not audit.targets and
+                not audit.imports
+            ):
+                raise ValueError("No targets selected for audit.")
 
 
     #--------------------------------------------------------------------------
