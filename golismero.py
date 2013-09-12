@@ -186,7 +186,7 @@ def cmdline_parser():
         pass
 
     parser = CustomArgumentParser(fromfile_prefix_chars="@")
-    parser.add_argument("command", metavar="COMMAND", choices=["SCAN", "PROFILES", "PLUGINS", "INFO", "REPORT", "IMPORT", "DUMP"], type=str.upper, help="action to perform")
+    parser.add_argument("command", metavar="COMMAND", help="action to perform")
     parser.add_argument("targets", metavar="TARGET", nargs="*", help="zero or more arguments, meaning depends on command")
 
     gr_main = parser.add_argument_group("main options")
@@ -320,6 +320,12 @@ def main():
         if envcfg:
             args = parser.convert_arg_line_to_args(envcfg) + args
         P = parser.parse_args(args)
+        command = P.command.upper()
+        if command in ("SCAN", "PROFILES", "PLUGINS", "INFO", "REPORT", "IMPORT", "DUMP"):
+            P.command = command
+        else:
+            P.targets.insert(0, P.command)
+            P.command = "SCAN"
 
         # Load the Orchestrator options.
         cmdParams = OrchestratorConfig()
