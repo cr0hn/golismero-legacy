@@ -654,15 +654,12 @@ class PluginManager (object):
         if not isinstance(config, OrchestratorConfig):
             raise TypeError("Expected OrchestratorConfig, got %r instead" % type(config))
 
-        # Get the plugins folder.
+        # Get the plugins folder. Must be an absolute path.
         plugins_folder = config.plugins_folder
-
-        # Default plugins folder if not given.
-        if not plugins_folder:
+        if plugins_folder:
+            plugins_folder = path.abspath(plugins_folder)
+        else:
             plugins_folder = get_default_plugins_folder()
-
-        # Make sure the plugins folder is an absolute path.
-        plugins_folder = path.abspath(plugins_folder)
 
         # Raise an exception if the plugins folder doesn't exist or isn't a folder.
         if not path.isdir(plugins_folder):

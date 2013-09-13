@@ -263,6 +263,7 @@ def get_default_plugins_folder():
     """
     plugins_folder = path.join(path.split(__file__)[0], "..", "plugins")
     plugins_folder = path.abspath(plugins_folder)
+    return plugins_folder
 
 
 #------------------------------------------------------------------------------
