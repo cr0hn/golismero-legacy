@@ -99,7 +99,7 @@ class NmapScanPlugin(TestingPlugin):
             Logger.log("Launching Nmap against: %s" % info.address)
             Logger.log_more_verbose("Nmap arguments: %s" % " ".join(args))
             t1 = time()
-            code = run_external_tool("nmap", args, callback = self.log_line)
+            code = run_external_tool("nmap", args, callback=Logger.log_verbose)
             t2 = time()
 
             # Log the output in extra verbose mode.
@@ -115,21 +115,6 @@ class NmapScanPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    @staticmethod
-    def log_line(line):
-        """
-        Log a line of text sent by the scanner.
-
-        :param line: Line of text.
-        :type line: str
-        """
-        if line:
-            if line.endswith("\n"):
-                line = line[:-1]
-            Logger.log_verbose(line)
-
-
-    #------------------------------------------------------------------------------
     @classmethod
     def parse_nmap_results(cls, info, output_filename):
         """
@@ -189,7 +174,7 @@ class NmapScanPlugin(TestingPlugin):
         return results
 
 
-    #------------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @staticmethod
     def parse_nmap_host(host, hostmap):
         """

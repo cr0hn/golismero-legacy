@@ -101,7 +101,7 @@ def run_external_tool(command, args = None, env = None, cwd = None,
 
     Example::
         >>> def callback(line):
-        ...    print line,
+        ...    print line
         ...
         >>> run_external_tool("uname", callback=callback)
         Linux
@@ -121,7 +121,8 @@ def run_external_tool(command, args = None, env = None, cwd = None,
     :type cwd: str | None
 
     :param callback: Optional callback function. If given, it will be called
-        once for each line of text printed by the external tool.
+        once for each line of text printed by the external tool. The trailing
+        newline character of each line is removed.
     :type callback: callable
 
     :returns: Return code from the external tool.
@@ -246,6 +247,8 @@ def run_external_tool(command, args = None, env = None, cwd = None,
             line = proc.stdout.readline()
             if not line:
                 break
+            if line.endswith("\n"):
+                line = line[:-1]
             callback(line)
 
     finally:

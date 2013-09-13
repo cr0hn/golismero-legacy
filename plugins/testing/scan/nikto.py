@@ -169,7 +169,7 @@ class NiktoPlugin(TestingPlugin):
         Logger.log_more_verbose(
             "Nikto arguments: %s %s" % (command, " ".join(args)))
         code = run_external_tool(command, args, cwd = cwd,
-                                 callback = self.log_line)
+                                 callback = Logger.log_verbose)
 
         # Log the output in extra verbose mode.
         if code:
@@ -192,21 +192,6 @@ class NiktoPlugin(TestingPlugin):
 
         # Return the results.
         return results
-
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def log_line(line):
-        """
-        Log a line of text sent by the scanner.
-
-        :param line: Line of text.
-        :type line: str
-        """
-        if line:
-            if line.endswith("\n"):
-                line = line[:-1]
-            Logger.log_verbose(line)
 
 
     #--------------------------------------------------------------------------
