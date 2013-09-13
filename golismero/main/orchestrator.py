@@ -439,6 +439,9 @@ class Orchestrator (object):
 
         try:
 
+            # Open the NIST CPE database.
+            ##self.cpedb   # disabled until we actually use it...
+
             # Start the UI.
             self.uiManager.start()
 

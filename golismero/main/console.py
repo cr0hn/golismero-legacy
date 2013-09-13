@@ -54,6 +54,7 @@ m_colors = {
     'cyan'      : 'cyan',
     'magenta'   : 'magenta',
     'grey'      : 'grey',
+    'gray'      : 'grey',  # tomayto, tomahto...
     'red'       : 'red',
     'yellow'    : 'yellow',
     'white'     : 'white',
@@ -72,6 +73,9 @@ m_colors = {
     3 : 'red',
     4 : 'yellow',
 }
+
+# Colors that need an increase in brightness.
+m_make_brighter = ['blue', 'grey', 'red']
 
 
 #------------------------------------------------------------------------------
@@ -171,7 +175,10 @@ def colorize(text, level_or_color):
 
         # Colorize the text.
         if color:
-            text = colored(text, color, attrs=["bold"])
+            if color in m_make_brighter:
+                text = colored(text, color, attrs=["bold"])
+            else:
+                text = colored(text, color)
 
     # Return the text.
     return text
