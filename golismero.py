@@ -110,6 +110,7 @@ from golismero.managers.processmanager import PluginContext
 # Custom argparse actions
 
 class CustomArgumentParser(argparse.ArgumentParser):
+    must_show_banner = True
     def error(self, message):
         if self.must_show_banner:
             self.must_show_banner = False
