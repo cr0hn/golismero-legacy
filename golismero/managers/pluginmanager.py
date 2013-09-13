@@ -34,7 +34,7 @@ __all__ = ["PluginManager", "PluginInfo"]
 
 from .rpcmanager import implementor
 from ..api.plugin import UIPlugin, ImportPlugin, TestingPlugin, ReportPlugin
-from ..common import Configuration, OrchestratorConfig, AuditConfig
+from ..common import Configuration, OrchestratorConfig, AuditConfig, get_default_plugins_folder
 from ..messaging.codes import MessageCode
 
 from collections import defaultdict
@@ -659,8 +659,7 @@ class PluginManager (object):
 
         # Default plugins folder if not given.
         if not plugins_folder:
-            plugins_folder = path.join(path.split(__file__)[0], "..", "..", "plugins")
-            plugins_folder = path.abspath(plugins_folder)
+            plugins_folder = get_default_plugins_folder()
 
         # Make sure the plugins folder is an absolute path.
         plugins_folder = path.abspath(plugins_folder)

@@ -38,6 +38,7 @@ __all__ = [
     # Helper functions.
     "get_user_settings_folder", "get_default_config_file",
     "get_profiles_folder", "get_profile", "get_available_profiles",
+    "get_default_plugins_folder",
 
     # Helper classes and decorators.
     "Singleton", "decorator", "export_methods_as_functions",
@@ -252,6 +253,16 @@ def get_available_profiles():
         for name in os.listdir(profiles_folder)
         if name.endswith(".profile")
     }
+
+
+#------------------------------------------------------------------------------
+def get_default_plugins_folder():
+    """
+    :returns: Default location for the plugins folder.
+    :rtype: str
+    """
+    plugins_folder = path.join(path.split(__file__)[0], "..", "plugins")
+    plugins_folder = path.abspath(plugins_folder)
 
 
 #------------------------------------------------------------------------------
