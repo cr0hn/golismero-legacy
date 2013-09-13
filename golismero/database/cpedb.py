@@ -275,7 +275,9 @@ class CPEDB(object):
                 src = urlopen(self.DOWNLOAD_URL)
             else:
                 try:
-                    ims = asctime(gmtime(getctime(xml_file)))
+                    ftm = getctime(xml_file)
+                    ftm -= 3600 # -1 minute to compensate timing errors
+                    ims = asctime(gmtime(ftm))
                     req = Request(self.DOWNLOAD_URL, headers = {
                         "If-Modified-Since": ims
                     })
