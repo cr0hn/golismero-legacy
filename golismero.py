@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# PYTHON_ARGCOMPLETE_OK
 
 __license__="""
 GoLismero 2.0 - The web knife.
@@ -95,8 +96,8 @@ from thread import get_ident
 from golismero.api.config import Config
 from golismero.api.external import run_external_tool
 from golismero.api.logger import Logger
-from golismero.common import OrchestratorConfig, AuditConfig, \
-                             get_profile, get_available_profiles
+from golismero.common import OrchestratorConfig, AuditConfig, get_profile, \
+     get_available_profiles, get_default_plugins_folder
 from golismero.database.auditdb import AuditDB
 from golismero.main import launcher
 from golismero.main.console import get_terminal_size, colorize, Console
@@ -208,32 +209,71 @@ def cmdline_parser():
     except Exception:
         pass
 
+    # Use Bash autocompletion when available.
+    try:
+        from argcomplete import autocomplete
+        from argcomplete.completers import ChoicesCompleter, FilesCompleter
+        autocomplete_enabled = True
+    except ImportError:
+        autocomplete_enabled = False
+
+    if autocomplete_enabled:
+        def profiles_completer(prefix, **kwargs):
+            return (v for v in get_available_profiles() if v.startswith(prefix))
+        def plugins_completer(prefix, **kwargs):
+            if ":" in prefix:
+                return (prefix,)
+            names = []
+            base = get_default_plugins_folder()
+            for cat in PluginManager.CATEGORIES:
+                for (_, _, filenames) in walk(path.join(base, cat)):
+                    for filename in filenames:
+                        if filename.startswith(prefix):
+                            name, ext = path.splitext(filename)
+                            if ext.lower() == ".golismero":
+                                names.append(name)
+            return names
+
     parser = CustomArgumentParser(fromfile_prefix_chars="@")
 
-    parser.add_argument("command", metavar="COMMAND", help="action to perform")
+    cmd = parser.add_argument("command", metavar="COMMAND", help="action to perform")
+    if autocomplete_enabled:
+        cmd.completer = ChoicesCompleter(COMMANDS + tuple(x.lower() for x in COMMANDS))
     parser.add_argument("targets", metavar="TARGET", nargs="*", help="zero or more arguments, meaning depends on command")
 
     gr_main = parser.add_argument_group("main options")
-    gr_main.add_argument("-f", "--file", metavar="FILE", action=LoadListFromFileAction, help="load a list of targets from a plain text file")
-    gr_main.add_argument("--config", metavar="FILE", help="global configuration file")
-    gr_main.add_argument("-p", "--profile", metavar="NAME", help="profile to use")
+    cmd = gr_main.add_argument("-f", "--file", metavar="FILE", action=LoadListFromFileAction, help="load a list of targets from a plain text file")
+    if autocomplete_enabled:
+        cmd.completer = FilesCompleter()
+    cmd = gr_main.add_argument("--config", metavar="FILE", help="global configuration file")
+    if autocomplete_enabled:
+        cmd.completer = FilesCompleter(allowednames=(".conf",))
+    cmd = gr_main.add_argument("-p", "--profile", metavar="NAME", help="profile to use")
+    if autocomplete_enabled:
+        cmd.completer = profiles_completer
     gr_main.add_argument("--profile-list", action="store_true", default=False, help="list available profiles and quit")
-    gr_main.add_argument("--ui-mode", metavar="MODE", help="UI mode")
+    cmd = gr_main.add_argument("--ui-mode", metavar="MODE", help="UI mode")
+    if autocomplete_enabled:
+        cmd.completer = ChoicesCompleter(("console", "disabled")) ##, "web"))
     gr_main.add_argument("-v", "--verbose", action="count", help="increase output verbosity")
     gr_main.add_argument("-q", "--quiet", action="store_const", dest="verbose", const=0, help="suppress text output")
     gr_main.add_argument("--color", action="store_true", default=None, dest="color", help="use colors in console output")
     gr_main.add_argument("--no-color", action="store_false", default=None, dest="color", help="suppress colors in console output")
-##    gr_main.add_argument("--forward-io", metavar="ADDRESS:PORT", help="forward all input and output to the given TCP address and port")
 
     gr_audit = parser.add_argument_group("audit options")
     gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
-    gr_audit.add_argument("-db", "--audit-db", metavar="DATABASE", dest="audit_db", help="specify a database connection string")
+    cmd = gr_audit.add_argument("-db", "--audit-db", metavar="DATABASE", dest="audit_db", help="specify a database connection string")
+    if autocomplete_enabled:
+        cmd.completer = FilesCompleter(allowednames=(".db",))
     gr_audit.add_argument("-nd", "--no-db", dest="audit_db", action="store_const", const="memory://", help="do not store the results in a database")
-    gr_audit.add_argument("-i", "--input", dest="imports", metavar="FILENAME", action="append", help="read results from external tools right before the audit")
+    cmd = gr_audit.add_argument("-i", "--input", dest="imports", metavar="FILENAME", action="append", help="read results from external tools right before the audit")
+    if autocomplete_enabled:
+        cmd.completer = FilesCompleter(allowednames=(".csv", ".xml"))
     gr_audit.add_argument("-ni", "--no-input", dest="disable_importing", action="store_true", default=False, help="do not read results from external tools")
-
     gr_report = parser.add_argument_group("report options")
-    gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", help="write the results of the audit to this file (use - for stdout)")
+    cmd = gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", help="write the results of the audit to this file (use - for stdout)")
+    if autocomplete_enabled:
+        cmd.completer = FilesCompleter(allowednames=(".html", ".rst", ".txt"))
     gr_report.add_argument("-no", "--no-output", dest="disable_reporting", action="store_true", default=False, help="do not output the results")
     gr_report.add_argument("--full", action="store_false", default=None, dest="only_vulns", help="produce fully detailed reports")
     gr_report.add_argument("--brief", action="store_true", dest="only_vulns", help="report only the highlights")
@@ -242,8 +282,10 @@ def cmdline_parser():
     gr_net.add_argument("--max-connections", help="maximum number of concurrent connections per host")
     gr_net.add_argument("--allow-subdomains", action="store_true", default=None, dest="include_subdomains", help="include subdomains in the target scope")
     gr_net.add_argument("--forbid-subdomains", action="store_false", default=None, dest="include_subdomains", help="do not include subdomains in the target scope")
-    gr_net.add_argument("--subdomain-regex", metavar="REGEX", help="filter subdomains using a regular expression")
-    gr_net.add_argument("-r", "--depth", help="maximum spidering depth (use \"infinite\" for no limit)")
+    ##gr_net.add_argument("--subdomain-regex", metavar="REGEX", help="filter subdomains using a regular expression")
+    cmd = gr_net.add_argument("-r", "--depth", help="maximum spidering depth (use \"infinite\" for no limit)")
+    if autocomplete_enabled:
+        cmd.completer = ChoicesCompleter(("infinite",))
     gr_net.add_argument("-l", "--max-links", type=int, default=None, help="maximum number of links to analyze (0 => infinite)")
     gr_net.add_argument("--follow-redirects", action="store_true", default=None, dest="follow_redirects", help="follow redirects")
     gr_net.add_argument("--no-follow-redirects", action="store_false", default=None, dest="follow_redirects", help="do not follow redirects")
@@ -253,16 +295,29 @@ def cmdline_parser():
     gr_net.add_argument("-pp","--proxy-pass", metavar="PASS", help="HTTP proxy password")
     gr_net.add_argument("-pa","--proxy-addr", metavar="ADDRESS:PORT", help="HTTP proxy address in format: address:port")
     gr_net.add_argument("--cookie", metavar="COOKIE", help="set cookie for requests")
-    gr_net.add_argument("--cookie-file", metavar="FILE", action=ReadValueFromFileAction, dest="cookie", help="load a cookie from file")
+    cmd = gr_net.add_argument("--cookie-file", metavar="FILE", action=ReadValueFromFileAction, dest="cookie", help="load a cookie from file")
+    if autocomplete_enabled:
+        cmd.completer = FilesCompleter()
     gr_net.add_argument("--persistent-cache", action="store_true", dest="use_cache_db", default=True, help="use a persistent network cache [default]")
     gr_net.add_argument("--volatile-cache", action="store_false", dest="use_cache_db", help="use a volatile network cache")
 
     gr_plugins = parser.add_argument_group("plugin options")
-    gr_plugins.add_argument("-a", "--plugin-arg", metavar="PLUGIN:KEY=VALUE", action=SetPluginArgumentAction, dest="plugin_args", help="pass an argument to a plugin")
-    gr_plugins.add_argument("-e", "--enable-plugin", metavar="NAME", action=EnablePluginAction, default=[], dest="plugin_load_overrides", help="enable a plugin")
-    gr_plugins.add_argument("-d", "--disable-plugin", metavar="NAME", action=DisablePluginAction, dest="plugin_load_overrides", help="disable a plugin")
+    cmd = gr_plugins.add_argument("-a", "--plugin-arg", metavar="PLUGIN:KEY=VALUE", action=SetPluginArgumentAction, dest="plugin_args", help="pass an argument to a plugin")
+    if autocomplete_enabled:
+        cmd.completer = plugins_completer
+    cmd = gr_plugins.add_argument("-e", "--enable-plugin", metavar="PLUGIN", action=EnablePluginAction, default=[], dest="plugin_load_overrides", help="enable a plugin")
+    if autocomplete_enabled:
+        cmd.completer = plugins_completer
+    cmd = gr_plugins.add_argument("-d", "--disable-plugin", metavar="PLUGIN", action=DisablePluginAction, dest="plugin_load_overrides", help="disable a plugin")
+    if autocomplete_enabled:
+        cmd.completer = plugins_completer
     gr_plugins.add_argument("--max-concurrent", metavar="N", type=int, default=None, help="maximum number of plugins to run concurrently")
-    gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
+    cmd = gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
+    if autocomplete_enabled:
+        cmd.completer = FilesCompleter()
+
+    if autocomplete_enabled:
+        autocomplete(parser)
 
     parser.usage = parser.format_usage()[7:] + (
         ################################################################################
