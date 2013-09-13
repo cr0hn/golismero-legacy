@@ -38,7 +38,7 @@ import re
 
 from time import gmtime, asctime
 from os import unlink
-from os.path import exists, getmtime, join
+from os.path import exists, getctime, join
 from threading import RLock
 from urllib import quote, unquote
 from urllib2 import urlopen, Request, HTTPError  # TODO use requests instead!
@@ -275,7 +275,7 @@ class CPEDB(object):
                 src = urlopen(self.DOWNLOAD_URL)
             else:
                 try:
-                    ims = asctime(gmtime(getmtime(xml_file)))
+                    ims = asctime(gmtime(getctime(xml_file)))
                     req = Request(self.DOWNLOAD_URL, headers = {
                         "If-Modified-Since": ims
                     })
