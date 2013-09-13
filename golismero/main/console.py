@@ -56,48 +56,21 @@ m_colors = {
     'red'       : 'red',
     'yellow'    : 'yellow',
     'white'     : 'white',
+
+    # String log levels to color names.
+    'informational' : 'blue',
+    'low'           : 'cyan',
+    'middle'        : 'grey',
+    'high'          : 'red',
+    'critical'      : 'yellow',
+
+    # Integer log levels to color names.
+    0 : 'blue',
+    1 : 'cyan',
+    2 : 'grey',
+    3 : 'red',
+    4 : 'yellow',
 }
-
-# Colors for the Windows console.
-if os.path.sep == "\\":
-    m_colors.update({
-
-        # Fix "grey", it doesn't work on Windows.
-        'grey' : 'white',
-
-        # String log levels to color names.
-        'informational' : 'cyan',
-        'low'           : 'green',
-        'middle'        : 'white',
-        'high'          : 'magenta',
-        'critical'      : 'yellow',
-
-        # Integer log levels to color names.
-        0 : 'cyan',
-        1 : 'green',
-        2 : 'white',
-        3 : 'magenta',
-        4 : 'yellow',
-    })
-
-# Colors for all other operating systems.
-else:
-    m_colors.update({
-
-        # String log levels to color names.
-        'informational' : 'blue',
-        'low'           : 'cyan',
-        'middle'        : 'white',
-        'high'          : 'red',
-        'critical'      : 'yellow',
-
-        # Integer log levels to color names.
-        0 : 'blue',
-        1 : 'cyan',
-        2 : 'white',
-        3 : 'red',
-        4 : 'yellow',
-    })
 
 
 #------------------------------------------------------------------------------
@@ -138,14 +111,6 @@ def colorize_substring(text, substring, level_or_color):
     # Check for trivial cases.
     if text and substring and Console.use_colors:
 
-        # Parse the color name or level into
-        # a color value that colored() expects.
-        try:
-            level_or_color = level_or_color.lower()
-        except AttributeError:
-            pass
-        color = m_colors[level_or_color]
-
         # Loop for each occurrence of the substring.
         m_pos = 0
         while 1:
@@ -163,7 +128,7 @@ def colorize_substring(text, substring, level_or_color):
             m_suffix  = text[m_pos + len(substring):]
 
             # Patch the text to colorize the substring.
-            m_content = colored(m_content, color)
+            m_content = colorize(m_content, color)
             text = "%s%s%s" % (m_prefix, m_content, m_suffix)
 
             # Update the current position and keep searching.
@@ -191,14 +156,26 @@ def colorize(text, level_or_color):
 
     :returns: str -- string with information to print.
     """
+
+    # Check if colors are enabled.
     if Console.use_colors:
+
+        # Parse the color name or level into
+        # a color value that colored() expects.
         try:
             level_or_color = level_or_color.lower()
         except AttributeError:
             pass
-        return colored(text, m_colors[level_or_color])
-    else:
-        return text
+        color = m_colors[level_or_color]
+
+        # Colorize the text.
+        if color == "grey":
+            text = colored(text, "white")
+        else:
+            text = colored(text, color, attrs=["bold"])
+
+    # Return the text.
+    return text
 
 
 #------------------------------------------------------------------------------
