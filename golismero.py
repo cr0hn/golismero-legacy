@@ -244,14 +244,13 @@ def cmdline_parser():
     gr_main = parser.add_argument_group("main options")
     cmd = gr_main.add_argument("-f", "--file", metavar="FILE", action=LoadListFromFileAction, help="load a list of targets from a plain text file")
     if autocomplete_enabled:
-        cmd.completer = FilesCompleter()
+        cmd.completer = FilesCompleter(directories=False)
     cmd = gr_main.add_argument("--config", metavar="FILE", help="global configuration file")
     if autocomplete_enabled:
-        cmd.completer = FilesCompleter(allowednames=(".conf",))
+        cmd.completer = FilesCompleter(allowednames=(".conf",), directories=False)
     cmd = gr_main.add_argument("-p", "--profile", metavar="NAME", help="profile to use")
     if autocomplete_enabled:
         cmd.completer = profiles_completer
-    gr_main.add_argument("--profile-list", action="store_true", default=False, help="list available profiles and quit")
     cmd = gr_main.add_argument("--ui-mode", metavar="MODE", help="UI mode")
     if autocomplete_enabled:
         cmd.completer = ChoicesCompleter(("console", "disabled")) ##, "web"))
@@ -264,16 +263,16 @@ def cmdline_parser():
     gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
     cmd = gr_audit.add_argument("-db", "--audit-db", metavar="DATABASE", dest="audit_db", help="specify a database connection string")
     if autocomplete_enabled:
-        cmd.completer = FilesCompleter(allowednames=(".db",))
+        cmd.completer = FilesCompleter(allowednames=(".db",), directories=False)
     gr_audit.add_argument("-nd", "--no-db", dest="audit_db", action="store_const", const="memory://", help="do not store the results in a database")
     cmd = gr_audit.add_argument("-i", "--input", dest="imports", metavar="FILENAME", action="append", help="read results from external tools right before the audit")
     if autocomplete_enabled:
-        cmd.completer = FilesCompleter(allowednames=(".csv", ".xml"))
+        cmd.completer = FilesCompleter(allowednames=(".csv", ".xml"), directories=False)
     gr_audit.add_argument("-ni", "--no-input", dest="disable_importing", action="store_true", default=False, help="do not read results from external tools")
     gr_report = parser.add_argument_group("report options")
     cmd = gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", help="write the results of the audit to this file (use - for stdout)")
     if autocomplete_enabled:
-        cmd.completer = FilesCompleter(allowednames=(".html", ".rst", ".txt"))
+        cmd.completer = FilesCompleter(allowednames=(".html", ".rst", ".txt"), directories=False)
     gr_report.add_argument("-no", "--no-output", dest="disable_reporting", action="store_true", default=False, help="do not output the results")
     gr_report.add_argument("--full", action="store_false", default=None, dest="only_vulns", help="produce fully detailed reports")
     gr_report.add_argument("--brief", action="store_true", dest="only_vulns", help="report only the highlights")
@@ -297,7 +296,7 @@ def cmdline_parser():
     gr_net.add_argument("--cookie", metavar="COOKIE", help="set cookie for requests")
     cmd = gr_net.add_argument("--cookie-file", metavar="FILE", action=ReadValueFromFileAction, dest="cookie", help="load a cookie from file")
     if autocomplete_enabled:
-        cmd.completer = FilesCompleter()
+        cmd.completer = FilesCompleter(directories=False)
     gr_net.add_argument("--persistent-cache", action="store_true", dest="use_cache_db", default=True, help="use a persistent network cache [default]")
     gr_net.add_argument("--volatile-cache", action="store_false", dest="use_cache_db", help="use a volatile network cache")
 
@@ -314,7 +313,7 @@ def cmdline_parser():
     gr_plugins.add_argument("--max-concurrent", metavar="N", type=int, default=None, help="maximum number of plugins to run concurrently")
     cmd = gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
     if autocomplete_enabled:
-        cmd.completer = FilesCompleter()
+        cmd.completer = FilesCompleter(directories=True)
 
     if autocomplete_enabled:
         autocomplete(parser)
