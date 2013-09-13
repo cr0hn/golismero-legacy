@@ -1684,9 +1684,17 @@ class DnsRegisterRP(DnsRegister):
     def discovered(self):
         result = []
         if self.mbox in Config.audit_scope:
-            result.append( Email(self.mbox) )
+            try:
+                result.append( Email(self.mbox) )
+            except Exception:
+                # Some people put arbitrary text instead.
+                pass
         if self.txt in Config.audit_scope:
-            result.append( Domain(self.txt) )
+            try:
+                result.append( Domain(self.txt) )
+            except Exception:
+                # Same here.
+                pass
         return result
 
 
