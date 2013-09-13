@@ -153,8 +153,8 @@ class Orchestrator (object):
             for plugin_id in failure:
                 Logger.log_error_verbose("\t%s" % plugin_id)
 
-        # Load the NIST CPE database.
-        self.__cpedb = CPEDB()
+        # This is where the NIST CPE database will be loaded on demand.
+        self.__cpedb = None
 
 
     #----------------------------------------------------------------------
@@ -239,6 +239,8 @@ class Orchestrator (object):
         :returns: NIST CPE database.
         :rtype: CPEDB
         """
+        if self.__cpedb is None:
+            self.__cpedb = CPEDB()
         return self.__cpedb
 
 
