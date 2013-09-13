@@ -48,6 +48,7 @@ from colorizer import colored
 
 # Color names mapped to themselves.
 m_colors = {
+    None        : None,
     'blue'      : 'blue',
     'green'     : 'green',
     'cyan'      : 'cyan',
@@ -60,14 +61,14 @@ m_colors = {
     # String log levels to color names.
     'informational' : 'blue',
     'low'           : 'cyan',
-    'middle'        : 'grey',
+    'middle'        : None,
     'high'          : 'red',
     'critical'      : 'yellow',
 
     # Integer log levels to color names.
     0 : 'blue',
     1 : 'cyan',
-    2 : 'grey',
+    2 : None,
     3 : 'red',
     4 : 'yellow',
 }
@@ -169,9 +170,7 @@ def colorize(text, level_or_color):
         color = m_colors[level_or_color]
 
         # Colorize the text.
-        if color == "grey":
-            text = colored(text, "white")
-        else:
+        if color:
             text = colored(text, color, attrs=["bold"])
 
     # Return the text.
