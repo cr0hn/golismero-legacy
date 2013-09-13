@@ -91,7 +91,7 @@ class PluginTester(object):
 
     #--------------------------------------------------------------------------
     def __init__(self, orchestrator_config = None, audit_config = None,
-                 autoinit = True, autodelete = True):
+                 autoinit = True, autodelete = True, mock_audit=True):
         """
         :param orchestrator_config: Optional orchestrator configuration.
         :type orchestrator_config: OrchestratorConfig
@@ -107,6 +107,13 @@ class PluginTester(object):
         :param autodelete: True to automatically delete all files created
             during the test, False to leave the files on disk.
         :type autodelete: bool
+
+        :param mock_audit: True to create a mock Audit object as well as
+            the mock Orchestrator object. False to create only the mock
+            Orchestrator object. Note that without a mock Audit object
+            most plugins won't run properly. This is useful for testing
+            UI plugins.
+        :type mock_audit: bool
         """
 
         # Sanitize the config.
@@ -131,7 +138,7 @@ class PluginTester(object):
 
         # Initialize the environment if requested.
         if autoinit:
-            self.init_environment()
+            self.init_environment(mock_audit)
 
 
     #--------------------------------------------------------------------------
@@ -158,53 +165,81 @@ class PluginTester(object):
     def audit_config(self):
         return self.__audit_config
 
+    @property
+    def audit_name(self):
+        if self.__audit:
+            return self.__audit.name
+        return None
+
+    @property
+    def audit_scope(self):
+        if self.__audit:
+            return self.__audit.scope
+        return DummyScope()
+
 
     #--------------------------------------------------------------------------
-    def init_environment(self):
+    def init_environment(self, mock_audit=True):
+        """
+        Initialize the mock environment.
+
+        Called automatically by the constructor when autoinit is True.
+        Otherwise you have to call this method before testing a plugin.
+
+        :param mock_audit: True to create a mock Audit object as well as
+            the mock Orchestrator object. False to create only the mock
+            Orchestrator object. Note that without a mock Audit object
+            most plugins won't run properly. This is useful for testing
+            UI plugins.
+        :type mock_audit: bool
+        """
 
         # Do nothing if the environment has already been initialized.
-        if self.audit is not None:
+        if self.orchestrator is not None:
             return
 
         # Instance the Orchestrator.
-        orchestrator = Orchestrator(self.orchestrator_config)
-
-        # Instance an Audit.
-        audit = Audit(self.audit_config, orchestrator)
-
-        # Create the audit database.
-        audit._Audit__database = AuditDB(self.audit_config)
-
-        # Calculate the audit scope.
-        if self.audit_config.targets:
-            audit_scope = AuditScope(self.audit_config)
-        else:
-            audit_scope = DummyScope()
-        audit._Audit__audit_scope = audit_scope
-
-        # Create the audit plugin manager.
-        plugin_manager = orchestrator.pluginManager.get_plugin_manager_for_audit(audit)
-        audit._Audit__plugin_manager = plugin_manager
+        self.__orchestrator = orchestrator = Orchestrator(self.orchestrator_config)
 
         # Load all the plugins.
-        plugins = plugin_manager.load_plugins()
+        plugins = orchestrator.pluginManager.load_plugins()
         if not plugins:
             raise RuntimeError("Failed to find any plugins!")
 
-        # Get the audit name.
-        audit_name = self.audit_config.audit_name
+        # If the audit mock is enabled...
+        if mock_audit:
 
-        # Register the Audit with the AuditManager.
-        orchestrator.auditManager._AuditManager__audits[audit_name] = audit
+            # Instance an Audit.
+            self.__audit = audit = Audit(self.audit_config, orchestrator)
+
+            # Create the audit database.
+            audit._Audit__database = AuditDB(self.audit_config)
+
+            # Calculate the audit scope.
+            if self.audit_config.targets:
+                audit_scope = AuditScope(self.audit_config)
+            else:
+                audit_scope = DummyScope()
+            audit._Audit__audit_scope = audit_scope
+
+            # Create the audit plugin manager.
+            plugin_manager = orchestrator.pluginManager.get_plugin_manager_for_audit(audit)
+            audit._Audit__plugin_manager = plugin_manager
+
+            # Get the audit name.
+            audit_name = self.audit_config.audit_name
+
+            # Register the Audit with the AuditManager.
+            orchestrator.auditManager._AuditManager__audits[audit_name] = audit
 
         # Setup a local plugin execution context.
         Config._context  = PluginContext(
             orchestrator_pid = getpid(),
             orchestrator_tid = get_ident(),
                    msg_queue = orchestrator._Orchestrator__queue,
-                audit_name   = audit_name,
+                  audit_name = self.audit_name,
                 audit_config = self.audit_config,
-                audit_scope  = audit_scope,
+                 audit_scope = self.audit_scope,
         )
 
         # Initialize the environment.
@@ -214,10 +249,6 @@ class PluginTester(object):
         LocalDataCache._enabled = True  # force enable
         LocalDataCache.on_run()
         LocalDataCache._enabled = True  # force enable
-
-        # Save the Orchestrator and Audit instances.
-        self.__orchestrator = orchestrator
-        self.__audit = audit
 
 
     #--------------------------------------------------------------------------

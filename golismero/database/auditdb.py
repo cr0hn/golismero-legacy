@@ -49,13 +49,11 @@ from os import path
 import collections
 import md5
 import posixpath
+import sqlite3
 import threading
 import time
 import urlparse  # cannot use ParsedURL here!
 import warnings
-
-# Lazy imports
-sqlite3 = None
 
 
 #----------------------------------------------------------------------
@@ -1181,11 +1179,6 @@ class AuditSQLiteDB (BaseAuditDB):
 
         # Create the lock to make this class thread safe.
         self.__lock = threading.RLock()
-
-        # Load the SQLite module.
-        global sqlite3
-        if sqlite3 is None:
-            import sqlite3
 
         # Get the filename from the connection string.
         filename = self.__parse_connection_string(

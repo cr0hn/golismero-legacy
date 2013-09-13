@@ -93,6 +93,8 @@ from thread import get_ident
 # GoLismero modules
 
 from golismero.api.config import Config
+from golismero.api.external import run_external_tool
+from golismero.api.logger import Logger
 from golismero.common import OrchestratorConfig, AuditConfig, \
                              get_profile, get_available_profiles
 from golismero.database.auditdb import AuditDB
@@ -109,6 +111,9 @@ from golismero.managers.processmanager import PluginContext
 
 class CustomArgumentParser(argparse.ArgumentParser):
     def error(self, message):
+        if self.must_show_banner:
+            self.must_show_banner = False
+            show_banner()
         self.usage = None
         message += "\n\nUse -h or --help to show the full help text."
         return super(CustomArgumentParser, self).error(message)
@@ -177,6 +182,23 @@ class SetPluginArgumentAction(argparse.Action):
 #------------------------------------------------------------------------------
 # Command line parser using argparse
 
+COMMANDS = (
+
+    # Scanning.
+    "SCAN",
+    "REPORT",
+    "IMPORT",
+
+    # Information.
+    "PROFILES",
+    "PLUGINS",
+    "INFO",
+
+    # Management.
+    "DUMP",
+    "UPDATE",
+)
+
 def cmdline_parser():
 
     # Fix the console width bug in argparse.
@@ -186,6 +208,7 @@ def cmdline_parser():
         pass
 
     parser = CustomArgumentParser(fromfile_prefix_chars="@")
+
     parser.add_argument("command", metavar="COMMAND", help="action to perform")
     parser.add_argument("targets", metavar="TARGET", nargs="*", help="zero or more arguments, meaning depends on command")
 
@@ -273,6 +296,10 @@ def cmdline_parser():
         "    Dump the database from an earlier scan in SQL format. This command takes no\n"
         "    arguments. To specify output files use the -o switch.\n"
         "\n"
+        "  UPDATE:\n"
+        "    Update GoLismero to the latest version. Requires Git to be installed and\n"
+        "    available in the PATH. This command takes no arguments.\n"
+        "\n"
         "examples:\n"
         "\n"
         "  scan a website and show the results on screen:\n"
@@ -307,9 +334,6 @@ def cmdline_parser():
 
 def main():
 
-    # Show the program banner.
-    show_banner()
-
     # Get the command line parser.
     parser = cmdline_parser()
 
@@ -321,7 +345,7 @@ def main():
             args = parser.convert_arg_line_to_args(envcfg) + args
         P = parser.parse_args(args)
         command = P.command.upper()
-        if command in ("SCAN", "PROFILES", "PLUGINS", "INFO", "REPORT", "IMPORT", "DUMP"):
+        if command in COMMANDS:
             P.command = command
         else:
             P.targets.insert(0, P.command)
@@ -343,6 +367,14 @@ def main():
             cmdParams.from_config_file(cmdParams.profile_file)
         cmdParams.from_object(P)
         cmdParams.plugin_load_overrides = P.plugin_load_overrides
+
+        # Enable console colors if requested.
+        Console.use_colors = cmdParams.color
+
+        # Show the program banner.
+        parser.must_show_banner = False
+        if cmdParams.verbose:
+            show_banner()
 
         # Load the target audit options.
         auditParams = AuditConfig()
@@ -395,7 +427,6 @@ def main():
     # List plugins and quit.
 
     if P.command == "PLUGINS":
-        Console.use_colors = cmdParams.color
 
         # Fail if we have arguments.
         if P.targets:
@@ -473,7 +504,6 @@ def main():
     # Display plugin info and quit.
 
     if P.command == "INFO":
-        Console.use_colors = cmdParams.color
 
         # Fail if we don't have arguments.
         if not P.targets:
@@ -560,7 +590,6 @@ def main():
     if P.command == "PROFILES":
         if P.targets:
             parser.error("too many arguments")
-        Console.use_colors = cmdParams.color
         profiles = sorted(get_available_profiles())
         if not profiles:
             print "No available profiles!"
@@ -594,7 +623,6 @@ def main():
             parser.error("missing audit database")
         if not P.reports:
             parser.error("missing output filename")
-        Console.use_colors = cmdParams.color
         if P.verbose != 0:
             print "Loading database: %s" % \
                   colorize(auditParams.audit_db, "yellow")
@@ -609,6 +637,38 @@ def main():
                     print "Dumping to file: %s" % colorize(filename, "cyan")
                 t.audit.database.dump(filename)
         exit(0)
+
+
+    #--------------------------------------------------------------------------
+    # Update GoLismero and quit.
+
+    if P.command == "UPDATE":
+
+        # Fail if we got any arguments.
+        if P.targets:
+            parser.error("too many arguments")
+
+        # Setup a dummy environment so we can call the API.
+        with PluginTester(autoinit=False) as t:
+            t.orchestrator_config.ui_mode = "console"
+            t.orchestrator_config.verbose = cmdParams.verbose
+            t.orchestrator_config.color   = cmdParams.color
+            t.init_environment(mock_audit=False)
+
+            # Run Git here to download the latest version.
+            if cmdParams.verbose:
+                Logger.log("Updating GoLismero...")
+            run_external_tool("git", ["pull"], cwd = here,
+                callback = Logger.log if cmdParams.verbose else lambda x: x)
+
+            # Update the NIST CPE database.
+            if cmdParams.verbose:
+                Logger.log("Updating NIST CPE database...")
+            t.orchestrator.cpedb.update()
+
+            # Done!
+            Logger.log("Update complete.")
+            exit(0)
 
 
     #--------------------------------------------------------------------------
