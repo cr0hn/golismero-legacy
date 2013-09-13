@@ -226,7 +226,7 @@ def cmdline_parser():
             names = []
             base = get_default_plugins_folder()
             for cat in PluginManager.CATEGORIES:
-                for (_, _, filenames) in walk(path.join(base, cat)):
+                for (_, _, filenames) in os.walk(path.join(base, cat)):
                     for filename in filenames:
                         if filename.startswith(prefix):
                             name, ext = path.splitext(filename)
