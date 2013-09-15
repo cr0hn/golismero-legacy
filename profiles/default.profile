@@ -55,13 +55,13 @@ follow_first_redirect = yes
 # Plugin options
 #------------------------------------------------------------------------------
 
-# Plugin whitelist, comma separated.
-# Use "all" to include all plugins.
+# Plugin whitelist, comma separated. Use "all" to include all plugins.
 enable_plugins = all
 
-# Plugin blacklist, comma separated.
-# Use "all" to disable all plugins.
-#disable_plugins = attack, intrude
+# Plugin blacklist, comma separated. Use "all" to disable all plugins.
+# By default it's best to disable plugins that require special configuration,
+# like a dedicated server or an API key.
+disable_plugins = openvas
 
 # Plugin settings overrides follow.
 # The format is the same as in the main config file.

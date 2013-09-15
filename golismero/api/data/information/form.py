@@ -34,6 +34,7 @@ __all__ = ["Form"]
 
 from . import Information
 from .. import identity
+from ..resource.url import Url
 
 
 #------------------------------------------------------------------------------
@@ -108,3 +109,11 @@ class Form(Information):
         :rtype: iterable(str)
         """
         return self.__parameters
+
+
+    #----------------------------------------------------------------------
+    @property
+    def discovered(self):
+        if self.url in Config.audit_scope:
+            return [Url(self.url)]
+        return []
