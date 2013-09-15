@@ -51,6 +51,7 @@ try:
 except ImportError:
     from xml.etree import ElementTree as etree
 
+from .common import BaseDB, transactional
 from ..api.data.vulnerability.vuln_utils import get_cpe_version, parse_cpe
 from ..api.logger import Logger
 from ..api.net.web_utils import parse_url
@@ -76,19 +77,7 @@ def rpc_cpe_search(orchestrator, audit_name, *args, **kwargs):
 
 
 #------------------------------------------------------------------------------
-def transactional(fn):
-    def wrapper(self, *args, **kwargs):
-        return self._transaction(fn, args, kwargs)
-    return wrapper
-
-def iter_transactional(fn):
-    def wrapper(self, *args, **kwargs):
-        return self._iter_transaction(fn, args, kwargs)
-    return wrapper
-
-
-#------------------------------------------------------------------------------
-class CPEDB(object):
+class CPEDB(BaseDB):
     """
     Translates between CPE 2.2 and CPE 2.3 names, and looks up user-friendly
     software names from CPE names and visceversa.
@@ -97,11 +86,61 @@ class CPEDB(object):
     original XML file mantained by NIST: https://nvd.nist.gov/cpe.cfm
     """
 
-    DB_FILE  = "official-cpe-dictionary_v2.3.db"
-    XML_FILE = "official-cpe-dictionary_v2.3.xml"
-    DOWNLOAD_URL = (
-        "http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/" + XML_FILE
-    )
+    DB_FILE      = "official-cpe-dictionary_v2.3.db"
+    CPE_XML_FILE = "official-cpe-dictionary_v2.3.xml"
+    CPE_URL_BASE = "http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/"
+
+    SCHEMA = \
+    """
+    PRAGMA foreign_keys = ON;
+    PRAGMA auto_vacuum = NONE;
+
+    ---------------------
+    -- File timestamps --
+    ---------------------
+
+    CREATE TABLE IF NOT EXISTS `files` (
+        `filename` STRING NOT NULL UNIQUE ON CONFLICT REPLACE,
+        `last_modified` INTEGER NOT NULL,
+        `last_modified_string` STRING NOT NULL
+    );
+
+    ---------
+    -- CPE --
+    ---------
+
+    CREATE TABLE IF NOT EXISTS `cpe` (
+        `rowid` INTEGER PRIMARY KEY,
+        `name23` STRING NOT NULL UNIQUE,
+        `name22` STRING NOT NULL,
+        `title` STRING,
+        `deprecated` INTEGER(1),
+        `part` STRING NOT NULL DEFAULT '*',
+        `vendor` STRING NOT NULL DEFAULT '*',
+        `product` STRING NOT NULL DEFAULT '*',
+        `version` STRING NOT NULL DEFAULT '*',
+        `update` STRING NOT NULL DEFAULT '*',
+        `edition` STRING NOT NULL DEFAULT '*',
+        `language` STRING NOT NULL DEFAULT '*',
+        `sw_edition` STRING NOT NULL DEFAULT '*',
+        `target_sw` STRING NOT NULL DEFAULT '*',
+        `target_hw` STRING NOT NULL DEFAULT '*',
+        `other` STRING NOT NULL DEFAULT '*'
+    );
+    CREATE INDEX IF NOT EXISTS `cpe_name22` ON `cpe`(`name22`);
+    CREATE INDEX IF NOT EXISTS `cpe_title` ON `cpe`(`title`);
+    CREATE INDEX IF NOT EXISTS `cpe_part` ON `cpe`(`part`);
+    CREATE INDEX IF NOT EXISTS `cpe_vendor` ON `cpe`(`vendor`);
+    CREATE INDEX IF NOT EXISTS `cpe_product` ON `cpe`(`product`);
+    CREATE INDEX IF NOT EXISTS `cpe_version` ON `cpe`(`version`);
+    CREATE INDEX IF NOT EXISTS `cpe_update` ON `cpe`(`update`);
+    CREATE INDEX IF NOT EXISTS `cpe_edition` ON `cpe`(`edition`);
+    CREATE INDEX IF NOT EXISTS `cpe_language` ON `cpe`(`language`);
+    CREATE INDEX IF NOT EXISTS `cpe_sw_edition` ON `cpe`(`sw_edition`);
+    CREATE INDEX IF NOT EXISTS `cpe_target_sw` ON `cpe`(`target_sw`);
+    CREATE INDEX IF NOT EXISTS `cpe_target_hw` ON `cpe`(`target_hw`);
+    CREATE INDEX IF NOT EXISTS `cpe_other` ON `cpe`(`other`);
+    """
 
 
     #--------------------------------------------------------------------------
@@ -118,20 +157,27 @@ class CPEDB(object):
 
         # Determine if the database existed.
         is_new = exists(db_file)
+        if is_new:
+            Logger.log(
+                "The first time GoLismero is run, the vulnerability database"
+                " must be initialized. This may take a while..."
+            )
 
         # Open the database file.
         self.__db = sqlite3.connect(db_file)
 
-        # Initialize the database if needed.
-        # On error close the database and raise an exception.
         try:
-            is_empty = self.__initialize()
-            if is_empty:
-                self.update(force = True)
+
+            # Create the database schema.
+            self.__create_schema()
+
+            # Populate the database on the first run.
+            if is_new:
+                self.update()
+
+        # On error delete the database and raise an exception.
         except:
             self.close()
-            if is_new:
-                unlink(db_file)
             raise
 
 
@@ -143,17 +189,6 @@ class CPEDB(object):
             self.__db     = None
             self.__cursor = None
             self.__lock   = None
-
-
-    #--------------------------------------------------------------------------
-    def __enter__(self):
-        return self
-
-    def __exit__(self, etype, value, tb):
-        try:
-            self.close()
-        except Exception:
-            pass
 
 
     #--------------------------------------------------------------------------
@@ -175,146 +210,41 @@ class CPEDB(object):
                 self.__cursor = None
                 self.__busy   = False
 
-    def _iter_transaction(self, fn, args, kwargs):
-        with self.__lock:
-            if self.__busy:
-                raise RuntimeError("The database is busy")
-            try:
-                self.__busy   = True
-                self.__cursor = self.__db.cursor()
-                try:
-                    for item in fn(self, *args, **kwargs):
-                        yield item
-                    self.__db.commit()
-                except:
-                    self.__db.rollback()
-                    raise
-            finally:
-                self.__cursor = None
-                self.__busy   = False
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def __create_schema(self):
+        self.__cursor.executescript(self.SCHEMA)
 
 
     #--------------------------------------------------------------------------
     @transactional
-    def __initialize(self):
-
-        # If the file already contains the schema, do nothing.
-        self.__cursor.execute(
-            "SELECT count(*) FROM sqlite_master"
-            " WHERE type = 'table' AND name = 'cpe';"
-        )
-        if self.__cursor.fetchone()[0]:
-            return False
-
-        # Create the database schema.
-        self.__cursor.executescript(
-            """
-            CREATE TABLE `cpe` (
-                `rowid` INTEGER PRIMARY KEY,
-                `name23` STRING UNIQUE NOT NULL,
-                `name22` STRING NOT NULL,
-                `title` STRING NOT NULL,
-                `deprecated` INTEGER(1) NOT NULL DEFAULT 0,
-                `part` STRING NOT NULL DEFAULT '*',
-                `vendor` STRING NOT NULL DEFAULT '*',
-                `product` STRING NOT NULL DEFAULT '*',
-                `version` STRING NOT NULL DEFAULT '*',
-                `update` STRING NOT NULL DEFAULT '*',
-                `edition` STRING NOT NULL DEFAULT '*',
-                `language` STRING NOT NULL DEFAULT '*',
-                `sw_edition` STRING NOT NULL DEFAULT '*',
-                `target_sw` STRING NOT NULL DEFAULT '*',
-                `target_hw` STRING NOT NULL DEFAULT '*',
-                `other` STRING NOT NULL DEFAULT '*'
-            );
-            CREATE INDEX `cpe_name22` ON `cpe`(`name22`);
-            CREATE INDEX `cpe_title` ON `cpe`(`title`);
-            CREATE INDEX `cpe_part` ON `cpe`(`part`);
-            CREATE INDEX `cpe_vendor` ON `cpe`(`vendor`);
-            CREATE INDEX `cpe_product` ON `cpe`(`product`);
-            CREATE INDEX `cpe_version` ON `cpe`(`version`);
-            CREATE INDEX `cpe_update` ON `cpe`(`update`);
-            CREATE INDEX `cpe_edition` ON `cpe`(`edition`);
-            CREATE INDEX `cpe_language` ON `cpe`(`language`);
-            CREATE INDEX `cpe_sw_edition` ON `cpe`(`sw_edition`);
-            CREATE INDEX `cpe_target_sw` ON `cpe`(`target_sw`);
-            CREATE INDEX `cpe_target_hw` ON `cpe`(`target_hw`);
-            CREATE INDEX `cpe_other` ON `cpe`(`other`);
-            """
-        )
-        return True
-
-
-    #--------------------------------------------------------------------------
-    @transactional
-    def update(self, force = False):
+    def update(self):
         """
         Update the database.
 
-        This downloads a newer XML file from NIST if available,
-        and recreates the database from it.
-
-        :param force: True to force the update, False to only
-            load the data from NIST if outdated.
-        :type force: bool
+        This automatically downloads up-to-date XML files from NIST when needed
+        and recreates the database from them.
         """
 
-        # If the XML file from NIST is missing, broken or older, download it.
-        msg = "Connecting to %s..." % parse_url(self.DOWNLOAD_URL).hostname
-        xml_file = join( get_user_settings_folder(), self.XML_FILE )
-        tree = None
-        if not exists(xml_file):
-            Logger.log_verbose(msg)
-            src = urlopen(self.DOWNLOAD_URL)
-        else:
-            try:
-                tree = etree.parse(xml_file)
-                src  = None
-            except Exception:
-                Logger.log_verbose(msg)
-                src = urlopen(self.DOWNLOAD_URL)
-            else:
-                try:
-                    ftm = getctime(xml_file)
-                    ftm -= 3600 # -1 minute to compensate timing errors
-                    ims = asctime(gmtime(ftm))
-                    req = Request(self.DOWNLOAD_URL, headers = {
-                        "If-Modified-Since": ims
-                    })
-                    Logger.log_verbose(msg)
-                    src = urlopen(req)
-                except HTTPError, e:
-                    if e.code != 304:
-                        raise
-                    Logger.log_verbose("Already up-to-date.")
-                    src = None
-        if src is not None:
-            force = True
-            Logger.log("Downloading NIST CPE dictionary...")
-            with open(xml_file, "wb") as dst:
-                shutil.copyfileobj(src, dst)
+        # Download and open the XML file.
+        xml_file   = self.CPE_XML_FILE
+        xml_parser = self.__download(self.CPE_URL_BASE, xml_file)
 
-        # Do we have to reload the data?
-        if force:
-            Logger.log("Updating the NIST CPE dictionary...")
-
-            # Open the XML file.
-            if tree is None:
-                tree = etree.parse(xml_file)
-            root = tree.getroot()
-
-            # Delete the old data.
-            self.__cursor.execute("DELETE FROM `cpe`;")
+        # Do we need to load new data?
+        if xml_parser:
+            Logger.log("Loading file: %s" % xml_file)
 
             # Parse the XML file and store the data into the database.
             prefix20 = "{http://cpe.mitre.org/dictionary/2.0}"
             prefix23 = "{http://scap.nist.gov/schema/cpe-extension/2.3}"
             prefixns = "{http://www.w3.org/XML/1998/namespace}"
-            gen = root.find(".//%sgenerator" % prefix20)
-            ##product_name = gen.find(".//%sproduct_name" % prefix20).text
-            product_version = gen.find(".//%sproduct_version" % prefix20).text
-            timestamp = gen.find(".//%stimestamp" % prefix20).text
-            for item in root.iter(prefix20 + "cpe-item"):
+            context  = iter(xml_parser)
+            _, root  = context.next()
+            main_tag = prefix20 + "cpe-item"
+            for event, item in context:
+                if event != "end" or item.tag != main_tag:
+                    continue
                 name22 = item.attrib["name"]
                 name23 = item.find(".//%scpe23-item" % prefix23).attrib["name"]
                 deprecated = int(
@@ -336,14 +266,93 @@ class CPEDB(object):
                 params = (name23, name22, title, deprecated)
                 params = params + tuple( parse_cpe(name23) )
                 self.__cursor.execute(
-                    "INSERT INTO `cpe` VALUES "
+                    "INSERT OR REPLACE INTO `cpe` VALUES "
                     "(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
                     params
                 )
 
-            # Tell the user we're done.
-            Logger.log("NIST CPE dictionary updated to: %s %s"
-                       % (product_version, timestamp))
+            # Delete the XML file.
+            unlink(xml_file)
+            Logger.log("Deleted file: %s" % xml_file)
+
+    # If the XML file is missing, broken or older, download it.
+    # This method assumes it's being called from within an open transaction.
+    def __download(self, base_url, xml_file):
+
+        # HTTP request to make.
+        req = Request(base_url + xml_file)
+
+        # Get the last modified time from the database if available.
+        self.__cursor.execute(
+            "SELECT `last_modified`, `last_modified_string` FROM `files`"
+            " WHERE `filename` = ? LIMIT 1;",
+            (xml_file,)
+        )
+        row = self.__cursor.fetchone()
+        if row:
+            db_time, db_time_str = row
+        else:
+            db_time = None
+            db_time_str = None
+
+        # Also try looking for the file locally.
+        # If found but can't be read, delete it.
+        if exists(xml_file):
+            try:
+                xml_parser = etree.iterparse(
+                    xml_file, events=("start", "end"))
+                local_time = getmtime(xml_file)
+            except Exception:
+                xml_parser = None
+                local_time = None
+                unlink(xml_file)
+        else:
+            xml_parser = None
+            local_time = None
+
+        # Use the local file if newer or not yet loaded in the database.
+        if local_time and (not db_time or local_time > db_time):
+            Logger.log("Found local file: %s" % xml_file)
+            self.__cursor.execute(
+                "INSERT INTO `files` VALUES (?, ?, ?);",
+                (xml_file, local_time, asctime(gmtime(local_time)))
+            )
+            return xml_parser
+
+        # Otherwise, download the file if newer or not yet loaded.
+        if db_time_str:
+            req.add_header("If-Modified-Since", db_time_str)
+        try:
+            src = urlopen(req)
+            downloaded = True
+            db_time_str = src.info().get("Last-Modified", None)
+        except HTTPError, e:
+            if not db_time or e.code != 304:
+                raise
+            downloaded = False
+            Logger.log("Already up-to-date: %s" % xml_file)
+        if downloaded:
+            Logger.log("Downloading from: %s" % req.get_full_url())
+            try:
+                with open(xml_file, "wb") as dst:
+                    copyfileobj(src, dst)
+            except:
+                unlink(xml_file)
+                raise
+            xml_parser = None # free memory before using more
+            xml_parser = etree.iterparse(
+                xml_file, events=("start", "end"))
+            if not db_time:
+                db_time = getmtime(xml_file)
+            if not db_time_str:
+                db_time_str = asctime(gmtime(db_time))
+            self.__cursor.execute(
+                "INSERT INTO `files` VALUES (?, ?, ?);",
+                (xml_file, db_time, db_time_str)
+            )
+
+            # Return the open XML file.
+            return xml_parser
 
 
     #--------------------------------------------------------------------------
@@ -366,17 +375,15 @@ class CPEDB(object):
         ver = get_cpe_version(cpe).replace(".", "")
         parsed = parse_cpe(cpe)
 
-        params = [x for x in parsed if x != "*"]
+        params = [x for x in parsed if x and x != "*"]
         if not params:
             return set([cpe])
         params.insert(0, cpe)
 
-        columns = ["part", "vendor", "product", "version", "update"]
-        if ver == "23":
-            columns.extend([
-                "edition", "language", "sw_edition",
-                "target_sw", "target_hw", "other"
-            ])
+        columns = [
+            "part", "vendor", "product", "version", "update", "edition"
+            "language", "sw_edition", "target_sw", "target_hw", "other"
+        ]
 
         query = "SELECT `name%s` FROM `cpe` WHERE " % ver
         if not include_deprecated:
@@ -385,7 +392,7 @@ class CPEDB(object):
         query += " OR (%s)" % " AND ".join(
             "`%s` = ?" % columns[i]
             for i in xrange(len(columns))
-            if parsed[i] != "*"
+            if parsed[i] and parsed[i] != "*"
         )
         query += ");"
 
