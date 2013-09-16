@@ -38,6 +38,7 @@ from golismero.api.net.scraper import extract_from_html, extract_from_text
 from golismero.api.plugin import TestingPlugin
 from golismero.api.net.web_utils import ParsedURL, download
 from golismero.api.text.wordlist import WordListLoader
+from traceback import format_exc
 
 from golismero.api.text.matching_analyzer import get_diff_ratio
 
@@ -209,15 +210,20 @@ class OSFingerprinting(TestingPlugin):
 
         # Get the main web page
         m_r = download(main_url, callback=self.check_download)
-        if not m_r:
+        if not m_r or not m_r.raw_data:
             return None
         discard_data(m_r)
 
         # Get the first link
-        if m_r.information_type == Information.INFORMATION_HTML:
-            m_links = extract_from_html(m_r.raw_data, main_url)
-        else:
-            m_links = extract_from_text(m_r.raw_data, main_url)
+        m_links = None
+        try:
+            if m_r.information_type == Information.INFORMATION_HTML:
+                m_links = extract_from_html(m_r.raw_data, main_url)
+            else:
+                m_links = extract_from_text(m_r.raw_data, main_url)
+        except TypeError,e:
+            Logger.log_error_more_verbose("Plugin error: %s" % format_exc())
+            return None
 
         if not m_links:
             return None
