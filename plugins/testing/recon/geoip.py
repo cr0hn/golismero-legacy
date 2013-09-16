@@ -86,6 +86,10 @@ class GeoIP(TestingPlugin):
         # FIXME: the service supports SSL, but we need up to date certificates.
         Logger.log_more_verbose("Querying freegeoip.net for: " + target)
         resp   = requests.get("http://freegeoip.net/json/" + target)
+
+        if not resp.content:
+            return
+
         kwargs = json_decode(resp.content)
 
         # Remove the IP address from the response.
