@@ -720,6 +720,7 @@ def main():
             if cmdParams.verbose:
                 Logger.log("Updating NIST CPE database...")
             t.orchestrator.cpedb.update()
+            t.orchestrator.cpedb.vacuum()
 
             # Done!
             Logger.log("Update complete.")

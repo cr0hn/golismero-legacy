@@ -213,6 +213,12 @@ class CPEDB(BaseDB):
 
     #--------------------------------------------------------------------------
     @transactional
+    def vacuum(self):
+        self.__cursor.execute("VACUUM;")
+
+
+    #--------------------------------------------------------------------------
+    @transactional
     def __create_schema(self):
         self.__cursor.executescript(self.SCHEMA)
 
