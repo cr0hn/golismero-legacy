@@ -126,7 +126,7 @@ class Spider(TestingPlugin):
                 p = parse_url(u)
                 if p.scheme == "mailto":
                     m_resource = Email(p.netloc)
-                else:
+                elif p.scheme in ("http", "https"):
                     m_resource = Url(url = u, referer = m_url)
             except Exception:
                 warn(format_exc(), RuntimeWarning)
