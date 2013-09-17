@@ -36,6 +36,9 @@ from golismero.api.net.web_utils import download, parse_url
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist import WordListLoader
 
+from traceback import format_exc
+from warnings import warn
+
 
 #----------------------------------------------------------------------
 class Spider(TestingPlugin):
@@ -95,8 +98,20 @@ class Spider(TestingPlugin):
 
         # Do not follow URLs out of scope
         m_out_of_scope_count = len(m_urls_allowed)
-        m_urls_allowed = [ url for url in m_urls_allowed if url in Config.audit_scope ]
-        m_out_of_scope_count -= len(m_urls_allowed)
+        m_urls_allowed = []
+        m_broken = []
+        for url in m_urls_allowed:
+            try:
+                if url in Config.audit_scope:
+                    m_urls_allowed.append(url)
+            except Exception:
+                m_broken.append(url)
+        if m_broken:
+            if len(m_broken) == 1:
+                Logger.log_more_verbose("Skipped uncrawlable URL: %s" % m_broken[0])
+            else:
+                Logger.log_more_verbose("Skipped uncrawlable URLs:\n    %s" % "\n    ".join(sorted(m_broken)))
+        m_out_of_scope_count = m_out_of_scope_count - len(m_urls_allowed) - len(m_broken)
         if m_out_of_scope_count:
             Logger.log_more_verbose("Skipped %d links out of scope." % m_out_of_scope_count)
 
@@ -107,7 +122,14 @@ class Spider(TestingPlugin):
 
         # Convert to Url data type
         for u in m_urls_allowed:
-            m_resource = Url(url = u, referer = m_url)
+            try:
+                p = parse_url(u)
+                if p.scheme == "mailto":
+                    m_resource = Email(p.netloc)
+                else:
+                    m_resource = Url(url = u, referer = m_url)
+            except Exception:
+                warn(format_exc(), RuntimeWarning)
             m_resource.add_resource(info)
             m_return.append(m_resource)
 
