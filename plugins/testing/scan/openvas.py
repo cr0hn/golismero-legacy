@@ -115,6 +115,8 @@ class OpenVASPlugin(TestingPlugin):
                 self.state.put("connection_down", True)
                 return
 
+            m_scan_id   = None
+            m_target_id = None
             try:
                 # Launch the scanner.
                 m_scan_id, m_target_id = m_scanner.launch_scan(
@@ -132,24 +134,33 @@ class OpenVASPlugin(TestingPlugin):
                 m_openvas_results = m_scanner.get_results(m_scan_id)
 
                 # Clear the info
-
                 m_scanner.delete_scan(m_scan_id)
                 m_scanner.delete_target(m_target_id)
 
-                # Convert the scan results to the GoLismero data model.
-                return self.parse_results(m_openvas_results, info)
             except Exception,e:
                 t = format_exc()
                 Logger.log_error_verbose(
                     "Error parsing OpenVAS results: %s" % str(e))
                 Logger.log_error_more_verbose(t)
+                return
+
             finally:
 
                 # Clean up.
-                try:
-                    m_scanner.delete_scan(m_scan_id)
-                except Exception:
-                    Logger.log_error_more_verbose("Error while deleting scan Id: %s" % str(m_scan_id if m_scan_id else "(No scan id)"))
+                if m_scan_id:
+                    try:
+                        m_scanner.delete_scan(m_scan_id)
+                    except Exception:
+                        Logger.log_error_more_verbose("Error while deleting scan ID: %s" % str(m_scan_id))
+                if m_target_id:
+                    try:
+                        m_scanner.delete_target(m_target_id)
+                    except Exception:
+                        Logger.log_error_more_verbose("Error while deleting target ID: %s" % str(m_target_id))
+
+        # Convert the scan results to the GoLismero data model.
+        return self.parse_results(m_openvas_results, info)
+
 
     #--------------------------------------------------------------------------
     @staticmethod
