@@ -31,7 +31,9 @@ from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.vulnerability import UncategorizedVulnerability
+from golismero.api.data.vulnerability.infrastructure.vulnerable_service import VulnerableService
 from golismero.api.logger import Logger
+from golismero.api.net.scraper import extract_from_text
 from golismero.api.plugin import TestingPlugin, ImportPlugin
 
 from threading import Event
@@ -220,10 +222,9 @@ class OpenVASPlugin(TestingPlugin):
 
                 # Get the metadata.
                 nvt = opv.nvt
-                ##references = nvt.xrefs
+                ##references = nvt.xrefs.split("\n")
                 ##cvss = nvt.cvss
                 ##cve = nvt.cve
-                ##vulnerability_type = nvt.category
 
                 # Get the vulnerability description.
                 description = opv.description
@@ -239,18 +240,21 @@ class OpenVASPlugin(TestingPlugin):
                         for note in opv.notes
                     )
 
+                # Get the reference URLs.
+                references = extract_from_text(description)
+
                 # Prepare the vulnerability properties.
                 kwargs = {
                     "level": OPV_LEVELS_TO_GLM_LEVELS[level.lower()],
                     "description": description,
+                    "references": references,
                     ##"cvss": cvss,
                     ##"cve": cve,
-                    ##"references": references.split("\n"),
+                    ##"references": references,
                 }
 
                 # Create the vulnerability instance.
                 vuln = UncategorizedVulnerability(**kwargs)
-                ##vuln.vulnerability_type = vulnerability_type
 
                 # Link the vulnerability to the resource.
                 if target is not None:
