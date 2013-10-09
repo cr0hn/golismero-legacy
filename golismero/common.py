@@ -89,6 +89,7 @@ except ImportError:
         from json import dumps as json_encode
 
 # Other imports.
+from netaddr import IPNetwork
 from ConfigParser import RawConfigParser
 from keyword import iskeyword
 from os import path
@@ -812,6 +813,27 @@ class AuditConfig (Configuration):
                 if x not in self._targets
             ]
             self._targets.extend(targets)
+
+            # Detect network ranges, like 30.30.30.0/24, and get all IPs on it.
+            new_targets = []
+            host_to_add      = []
+            for host in self._targets:
+                # Check if target is an IP or Networks
+                try:
+                    tmp_target = IPNetwork(host)
+                except:
+                    # Not an IP or Net
+                    new_targets.append(host)
+                    continue
+
+                # Check if are network or single IP
+                if tmp_target.size != 1:
+                    new_targets.extend([ str(x) for x in tmp_target.iter_hosts()])
+
+
+            # Replace targets with new info
+            self._targets = new_targets
+
 
 
     #--------------------------------------------------------------------------
