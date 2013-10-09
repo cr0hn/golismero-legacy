@@ -38,7 +38,6 @@ __all__ = [
 ]
 
 
-from ..config import Config
 from . import NetworkOutOfScope
 from ..data import LocalDataCache
 from ..text.text_utils import generate_random_string, split_first
@@ -208,6 +207,7 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True):
         raise NetworkOutOfScope("URL out of scope: %s" % url.url)
 
     # Autogenerate the HTTP request object.
+    from ..config import Config
     from ..data.information.http import HTTP_Request
     request = HTTP_Request( url         = url.url,
                             method      = url.method,
