@@ -89,6 +89,9 @@ class _HTTP(Singleton):
         if cookie:
             self.__session.cookies.set_cookie(cookie)
 
+        # Set User Agent
+        self.__user_agent = Config.audit_config.user_agent
+
 
     #--------------------------------------------------------------------------
     def _finalize(self):
@@ -136,7 +139,7 @@ class _HTTP(Singleton):
             redirection against another URL that's out of scope.
         :raises NetworkException: A network error occurred.
         """
-        request = HTTP_Request(url, method = method)
+        request = HTTP_Request(url, method = method, user_agent=self.__user_agent)
         LocalDataCache.on_autogeneration(request)
         return self.make_request(request, callback = callback,
                                  timeout = timeout, use_cache = use_cache,

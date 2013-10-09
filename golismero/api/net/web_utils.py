@@ -38,6 +38,7 @@ __all__ = [
 ]
 
 
+from ..config import Config
 from . import NetworkOutOfScope
 from ..data import LocalDataCache
 from ..text.text_utils import generate_random_string, split_first
@@ -208,10 +209,11 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True):
 
     # Autogenerate the HTTP request object.
     from ..data.information.http import HTTP_Request
-    request = HTTP_Request(      url = url.url,
-                              method = url.method,
-                           post_data = url.post_params,
-                             referer = url.referer )
+    request = HTTP_Request( url         = url.url,
+                            method      = url.method,
+                            post_data   = url.post_params,
+                            referer     = url.referer,
+                            user_agent  = Config.audit_config.user_agent)
     LocalDataCache.on_autogeneration(request)
 
     # Prepare the callback.

@@ -773,6 +773,9 @@ class AuditConfig (Configuration):
 
         # Cookie
         "cookie": Configuration.string,
+
+        # User Agent
+        "user_agent": Configuration.string,
     }
 
 
@@ -853,6 +856,21 @@ class AuditConfig (Configuration):
             audit_db = "sqlite://" + audit_db
         urlparse.urlparse(audit_db)  # check validity of URL syntax
         self._audit_db = audit_db
+
+
+    #--------------------------------------------------------------------------
+
+    @property
+    def user_agent(self):
+        return self._user_agent
+
+    @user_agent.setter
+    def user_agent(self, user_agent):
+        if user_agent:
+            self._user_agent = user_agent
+        else:
+            self._user_agent = None
+
 
 
     #--------------------------------------------------------------------------
