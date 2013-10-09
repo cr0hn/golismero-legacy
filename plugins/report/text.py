@@ -110,16 +110,17 @@ class TextReport(ReportPlugin):
 
     #--------------------------------------------------------------------------
     def __fix_table_width(self, table):
-        if hasattr(table, "_hline_string"):
-            table._hline_string = "" # workaround for bug in texttable
-        assert all(len(x) == 2 for x in table._rows), table._rows
-        w = max( len(x[0]) for x in table._rows )
-        if table._header:
-            assert len(table._header) == 2, len(table._header)
-            w = max( w, len(table._header[0]) )
-        m = w + 8
-        if self.__width > m:
-            table.set_cols_width((w, self.__width - m))
+        if self.__width > 0:
+            if hasattr(table, "_hline_string"):
+                table._hline_string = "" # workaround for bug in texttable
+            assert all(len(x) == 2 for x in table._rows), table._rows
+            w = max( len(x[0]) for x in table._rows )
+            if table._header:
+                assert len(table._header) == 2, len(table._header)
+                w = max( w, len(table._header[0]) )
+            m = w + 8
+            if self.__width > m:
+                table.set_cols_width((w, self.__width - m))
 
 
     #--------------------------------------------------------------------------

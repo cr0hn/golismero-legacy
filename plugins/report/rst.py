@@ -130,7 +130,8 @@ class RSTReport(ReportPlugin):
             try:
 
                 # Report the vulnerabilities.
-                self.__write_rst(f, datas, Data.TYPE_VULNERABILITY, "Vulnerabilities")
+                if datas:
+                    self.__write_rst(f, datas, Data.TYPE_VULNERABILITY, "Vulnerabilities")
 
                 # This dictionary tracks which data to show
                 # and which not to in brief report mode.
@@ -249,7 +250,7 @@ class RSTReport(ReportPlugin):
     def __collect_vulns(self, fp_filter):
         vulns = defaultdict(list)
         for vuln in self.__iterate_data(data_type=Data.TYPE_VULNERABILITY):
-            if vuln.false_positive == fp_filter:
+            if bool(vuln.false_positive) == fp_filter:
                 vulns[vuln.display_name].append(vuln.identity)
         for x in vulns.itervalues():
             x.sort()
