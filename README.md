@@ -137,6 +137,7 @@ Notice how the default "scan" command was ommitted but GoLismero figured it out 
 This is how you'd do it if you want to break it into multiple commands instead:
 
 ```
+python golismero.py scan 127.0.0.1/24 -e dns* -no
 python golismero.py import -db database.db -i nmap_output.xml
 python golismero.py scan -db database.db -e dns* -no
 python golismero.py report -db database.db -o report.rst -o report.html
