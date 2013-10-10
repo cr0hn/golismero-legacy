@@ -1,5 +1,5 @@
 [Documentation]
-Name        = Freegeoip.net connector
+Name        = IP Geolocator
 Description = Geolocates IP addresses using the Freegeoip.net service.
 Author      = GoLismero project team
 Version     = 0.1
