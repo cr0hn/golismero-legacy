@@ -169,41 +169,46 @@ def get_default_config_file():
 
 
 #------------------------------------------------------------------------------
-_wordlists_folder = None
+_install_folder = None
+def get_install_folder():
+    """
+    :returns: Pathname of the install folder.
+    :rtype: str
+    """
+    global _install_folder
+    if not _install_folder:
+        pathname = path.split(path.abspath(__file__))[0]
+        pathname = path.join(pathname, "..")
+        pathname = path.abspath(pathname)
+        _install_folder = pathname
+    return _install_folder
+
+
+#------------------------------------------------------------------------------
 def get_wordlists_folder():
     """
     :returns: Pathname of the wordlists folder.
     :rtype: str
     """
-    global _wordlists_folder
-    if not _wordlists_folder:
-        pathname = path.split(path.abspath(__file__))[0]
-        if pathname:
-            pathname = path.join(pathname, "..")
-        else:
-            pathname = get_user_settings_folder()
-        pathname = path.abspath(pathname)
-        _wordlists_folder = path.join(pathname, "wordlist")
-    return _wordlists_folder
+    return path.join(get_install_folder(), "wordlist")
 
 
 #------------------------------------------------------------------------------
-_profiles_folder = None
+def get_default_plugins_folder():
+    """
+    :returns: Default location for the plugins folder.
+    :rtype: str
+    """
+    return path.join(get_install_folder(), "plugins")
+
+
+#------------------------------------------------------------------------------
 def get_profiles_folder():
     """
     :returns: Pathname of the profiles folder.
     :rtype: str
     """
-    global _profiles_folder
-    if not _profiles_folder:
-        pathname = path.split(path.abspath(__file__))[0]
-        if pathname:
-            pathname = path.join(pathname, "..")
-        else:
-            pathname = get_user_settings_folder()
-        pathname = path.abspath(pathname)
-        _profiles_folder = path.join(pathname, "profiles")
-    return _profiles_folder
+    return path.join(get_install_folder(), "profiles")
 
 
 #------------------------------------------------------------------------------
@@ -257,17 +262,6 @@ def get_available_profiles():
 
 
 #------------------------------------------------------------------------------
-def get_default_plugins_folder():
-    """
-    :returns: Default location for the plugins folder.
-    :rtype: str
-    """
-    plugins_folder = path.join(path.split(__file__)[0], "..", "plugins")
-    plugins_folder = path.abspath(plugins_folder)
-    return plugins_folder
-
-
-#------------------------------------------------------------------------------
 class Singleton (object):
     """
     Implementation of the Singleton pattern.
@@ -305,7 +299,7 @@ def export_methods_as_functions(singleton, module):
     :type singleton: Singleton
 
     :param module: Target module name.
-        This would tipically be \\_\\_name\\_\\_.
+        This would typically be \\_\\_name\\_\\_.
     :type module: str
 
     :raises KeyError: No module with that name is loaded.
