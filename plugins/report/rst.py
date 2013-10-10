@@ -37,14 +37,12 @@ from shlex import split
 
 from golismero.api.audit import get_audit_times, parse_audit_times
 from golismero.api.config import Config
+from golismero.api.data import Data
 from golismero.api.data.db import Database
 from golismero.api.external import run_external_tool
 from golismero.api.logger import Logger
 from golismero.api.plugin import ReportPlugin
 from golismero.api.text.text_utils import hexdump
-
-# Data types
-from golismero.api.data import Data
 
 
 #------------------------------------------------------------------------------
@@ -258,7 +256,7 @@ class RSTReport(ReportPlugin):
 
 
     #--------------------------------------------------------------------------
-    def __write_rst(self, f, datas, data_type, header, fp_filter_mode = None):
+    def __write_rst(self, f, datas, data_type, header):
 
         # Get the titles.
         titles = datas.keys()

@@ -257,7 +257,8 @@ class AuditManager (object):
             # Send log messages to their target audit
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
                 if message.audit_name:
-                    return self.get_audit(message.audit_name).dispatch_msg(message)
+                    self.get_audit(message.audit_name).dispatch_msg(message)
+                    return True
 
             # TODO: pause and resume audits, start new audits
 
@@ -845,8 +846,8 @@ class Audit (object):
             database.append_log_text(
                 text, level, is_error, plugin_id, ack_id, timestamp)
 
-            # Tell the Orchestrator we dropped the message.
-            return False
+            # Tell the Orchestrator we processed the message.
+            return True
 
         # Is it data?
         if message.message_type == MessageType.MSG_TYPE_DATA:
