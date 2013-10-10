@@ -22,6 +22,12 @@ golismero_2/TODO.txt
 *.sqlite
 *-journal
 
+# Output file extensions
+*.html
+*.rst
+*.txt
+*.xml
+
 # Backup file extensions
 *.bak
 *.back
