@@ -717,12 +717,6 @@ def main():
             run_external_tool("git", ["pull"], cwd = here,
                 callback = Logger.log if cmdParams.verbose else lambda x: x)
 
-            # Update the NIST CPE database.
-            if cmdParams.verbose:
-                Logger.log("Updating NIST CPE database...")
-            t.orchestrator.cpedb.update()
-            t.orchestrator.cpedb.vacuum()
-
             # Done!
             Logger.log("Update complete.")
             exit(0)
