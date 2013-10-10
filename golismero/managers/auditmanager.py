@@ -232,10 +232,10 @@ class AuditManager (object):
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %r instead" % type(message))
 
-        # Send info messages to their target audit
+        # Send data messages to their target audit
         if message.message_type == MessageType.MSG_TYPE_DATA:
             if not message.audit_name:
-                raise ValueError("Info message with no target audit!")
+                raise ValueError("Data message with no target audit!")
             return self.get_audit(message.audit_name).dispatch_msg(message)
 
         # Process control messages
@@ -253,6 +253,11 @@ class AuditManager (object):
                     raise ValueError("I don't know which audit to stop...")
                 self.get_audit(message.audit_name).close()
                 self.remove_audit(message.audit_name)
+
+            # Send log messages to their target audit
+            elif message.message_code == MessageCode.MSG_CONTROL_LOG:
+                if message.audit_name:
+                    return self.get_audit(message.audit_name).dispatch_msg(message)
 
             # TODO: pause and resume audits, start new audits
 
@@ -821,6 +826,27 @@ class Audit (object):
         # Get the database and the plugin manager.
         database = self.database
         pluginManager = self.pluginManager
+
+        # Is it a log message?
+        if message.message_type == MessageType.MSG_TYPE_CONTROL and \
+           message.message_code == MessageCode.MSG_CONTROL_LOG:
+
+            # Get the log line.
+            (text, level, is_error) = message.message_info
+
+            # Get the plugin instance.
+            plugin_id = message.plugin_id
+            ack_id    = message.ack_identity
+
+            # Get the timestamp.
+            timestamp = message.timestamp
+
+            # Append the log line.
+            database.append_log_text(
+                text, level, is_error, plugin_id, ack_id, timestamp)
+
+            # Tell the Orchestrator we dropped the message.
+            return False
 
         # Is it data?
         if message.message_type == MessageType.MSG_TYPE_DATA:

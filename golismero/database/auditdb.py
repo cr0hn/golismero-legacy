@@ -323,6 +323,34 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
+    def append_log_text(self, text, level, is_error, plugin_id, ack_id,
+                        timestamp = None):
+        """
+        Append log text.
+
+        :param text: Log text.
+        :type text: str
+
+        :param level: Log level.
+        :type level: int
+
+        :param is_error: True if the message is an error, False otherwise.
+        :type is_error: bool
+
+        :param plugin_id: Plugin ID.
+        :type plugin_id: str
+
+        :param ack_id: Data ID.
+        :type ack_id: str
+
+        :param timestamp: Optional timestamp.
+            If missing the current time is used.
+        :type timestamp: float | int | None
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
     def add_data(self, data):
         """
         Add data to the database.
@@ -910,6 +938,12 @@ class AuditMemoryDB (BaseAuditDB):
     #--------------------------------------------------------------------------
     def save_audit_scope(self, audit_scope):
         self.__audit_scope = audit_scope
+
+
+    #--------------------------------------------------------------------------
+    def append_log_text(self, text, level, is_error, plugin_id, ack_id,
+                        timestamp = None):
+        pass
 
 
     #--------------------------------------------------------------------------
@@ -1541,6 +1575,17 @@ class AuditSQLiteDB (BaseAuditDB):
                 UNIQUE(identity) ON CONFLICT REPLACE
             );
 
+            CREATE TABLE log (
+                rowid INTEGER PRIMARY KEY,
+                plugin_id INTEGER,
+                identity STRING,
+                text STRING NOT NULL,
+                level INTEGER NOT NULL,
+                is_error BOOLEAN NOT NULL,
+                timestamp REAL NOT NULL,
+                FOREIGN KEY(plugin_id) REFERENCES plugin(rowid)
+            );
+
             ----------------------------------------------------------
             -- Tables to store the plugins shared data.
             ----------------------------------------------------------
@@ -1968,28 +2013,32 @@ class AuditSQLiteDB (BaseAuditDB):
             raise TypeError("Expected string, got %s" % type(plugin_id))
 
         # Fetch the plugin rowid, add it if missing.
+        plugin_rowid = self.__get_or_create_plugin_rowid(plugin_id)
+
+        # Mark the data as processed by this plugin.
+        self.__cursor.execute(
+            "INSERT INTO history VALUES (NULL, ?, ?);",
+            (plugin_rowid, identity))
+
+    def __get_or_create_plugin_rowid(self, plugin_id):
         self.__cursor.execute(
             "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
             (plugin_id,))
         rows = self.__cursor.fetchone()
         if rows:
-            plugin_id = rows[0]
+            plugin_rowid = rows[0]
         else:
             self.__cursor.execute(
                 "INSERT INTO plugin VALUES (NULL, ?);",
                 (plugin_id,))
-            plugin_id = self.__cursor.lastrowid
-            if plugin_id is None:
+            plugin_rowid = self.__cursor.lastrowid
+            if plugin_rowid is None:
                 self.__cursor.execute(
                     "SELECT rowid FROM plugin WHERE name = ? LIMIT 1;",
                     (plugin_id,))
                 rows = self.__cursor.fetchone()
-                plugin_id = rows[0]
-
-        # Mark the data as processed by this plugin.
-        self.__cursor.execute(
-            "INSERT INTO history VALUES (NULL, ?, ?);",
-            (plugin_id, identity))
+                plugin_rowid = rows[0]
+        return plugin_rowid
 
 
     #--------------------------------------------------------------------------
@@ -2063,6 +2112,35 @@ class AuditSQLiteDB (BaseAuditDB):
         if rows:
             return { str(x[0]) for x in rows }
         return set()
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def append_log_text(self, text, level, is_error, plugin_id, ack_id,
+                        timestamp = None):
+
+        # Sanitize the parameters.
+        if not timestamp:
+            timestamp = time.time()
+        else:
+            timestamp = float(timestamp)
+        level     = int(level)
+        is_error  = bool(is_error)
+        if plugin_id is not None and type(plugin_id) is not str:
+            raise TypeError("Expected string, got %s" % type(plugin_id))
+        if ack_id is not None and type(ack_id) is not str:
+            raise TypeError("Expected string, got %s" % type(ack_id))
+
+        # Fetch the plugin rowid, add it if missing.
+        if plugin_id is not None:
+            plugin_rowid = self.__get_or_create_plugin_rowid(plugin_id)
+        else:
+            plugin_rowid = None
+
+        # Append the log line.
+        self.__cursor.execute(
+            "INSERT INTO log VALUES (NULL, ?, ?, ?, ?, ?, ?);",
+            (plugin_rowid, ack_id, text, level, is_error, timestamp))
 
 
     #--------------------------------------------------------------------------
