@@ -823,6 +823,8 @@ class AuditConfig (Configuration):
                 # Check if are network or single IP
                 if tmp_target.size != 1:
                     new_targets.extend([ str(x) for x in tmp_target.iter_hosts()])
+                else:
+                    new_targets.append(str(tmp_target.ip))
 
 
             # Replace targets with new info
