@@ -406,7 +406,8 @@ class HTTP_Request (Information):
     #
 
 
-    DEFAULT_USER_AGENT = (("User-Agent", "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +https://github.com/golismero/golismero)"),)
+    # Default user agent string.
+    DEFAULT_USER_AGENT = "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +https://github.com/golismero/golismero)"
 
     # Default headers to use in HTTP requests.
     DEFAULT_HEADERS = (
@@ -459,13 +460,12 @@ class HTTP_Request (Information):
         self.__parsed_url = ParsedURL(url)
         self.__url = self.__parsed_url.url
 
-        # Customize User-Agent
+        # User-Agent header value.
         if user_agent:
             if user_agent.lower() == "random":
                 user_agent = generate_user_agent()
         else:
             user_agent = self.DEFAULT_USER_AGENT
-
 
         # HTTP headers.
         if headers is None:
