@@ -921,7 +921,7 @@ class Audit (object):
             for data in list(data_for_plugins):       # Can't iterate and modify!
                 links = set(data.links)               # Get the original links.
                 queue = list(data.discovered)         # Make sure it's a copy.
-                links = data.links.difference(links)  # Get the new links.
+                links = set(data.links).difference(links) # Get the new links.
                 while queue:
                     data = queue.pop(0)
                     if (data.identity not in visited and
