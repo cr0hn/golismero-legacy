@@ -314,7 +314,7 @@ def data_from_http_response(response):
 
     # Catch errors and throw warnings instead.
     except Exception, e:
-        raise # XXX DEBUG
+        ##raise # XXX DEBUG
         warn(str(e), RuntimeWarning)
 
     # Anything we don't know how to parse we treat as binary.
