@@ -47,8 +47,10 @@ __all__ = [
 ]
 
 from .web_utils import parse_url
+from ..logger import Logger
 
 from BeautifulSoup import BeautifulSoup
+from warnings import warn
 
 import re
 
@@ -147,10 +149,6 @@ def extract_from_text(text, base_url = None, only_links = True):
     if not isinstance(text, basestring):
         raise TypeError("Expected string, got %r instead" % type(text))
 
-    # Make sure the text is really ASCII text.
-    # We don't support Unicode yet.
-    text = str(text)    # XXX FIXME
-
     # Set where the URLs will be collected.
     result = set()
     add_result = result.add
@@ -163,6 +161,15 @@ def extract_from_text(text, base_url = None, only_links = True):
     for regex in (_re_url_rfc, _re_url_readable):
         for url in regex.findall(text):
             url = url[0]
+
+            # XXX FIXME
+            # Make sure the text is really ASCII text.
+            # We don't support Unicode yet.
+            try:
+                url = str(url)
+            except Exception:
+                warn("Unicode URLs not yet supported: %r" % url)
+                continue
 
             # If a base URL was given...
             if base_url:
@@ -272,10 +279,12 @@ def extract_from_html(raw_html, base_url, only_links = True):
             url = tag.get("href", None)
             if url is not None:
 
+                # XXX FIXME
                 # Unicode URLs are not supported.
                 try:
                     url = str(url)
                 except Exception:
+                    warn("Unicode URLs not yet supported: %r" % url)
                     continue
 
                 # Update the base URL.
@@ -287,10 +296,12 @@ def extract_from_html(raw_html, base_url, only_links = True):
         # If we found an URL in this tag...
         if url is not None:
 
+            # XXX FIXME
             # Unicode URLs are not supported.
             try:
                 url = str(url)
             except Exception:
+                warn("Unicode URLs not yet supported: %r" % url)
                 continue
 
             # Canonicalize the URL.
