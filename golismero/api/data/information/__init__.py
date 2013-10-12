@@ -56,7 +56,7 @@ class Information(Data):
     INFORMATION_PLAIN_TEXT       = 1002  # Text file
     INFORMATION_BINARY           = 1003  # Binary file of unknown type
     ##INFORMATION_EXECUTABLE       = 1004  # Executable file (various platforms)
-    ##INFORMATION_IMAGE            = 1005  # Image file
+    INFORMATION_IMAGE            = 1005  # Image file
     ##INFORMATION_VIDEO            = 1006  # Video file
     ##INFORMATION_PDF              = 1007  # PDF file
     ##INFORMATION_FLASH            = 1008  # Flash file

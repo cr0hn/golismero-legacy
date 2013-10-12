@@ -92,34 +92,34 @@ class Geolocation(Information):
             longitude = float(longitude)
         except Exception:
             raise TypeError("Expected float, got %r instead" % type(longitude))
-        if type(country_code) is not str:
+        if country_code is not None and type(country_code) is not str:
             raise TypeError("Expected string, got %r instead" % type(country_code))
-        if type(country_name) is not str:
+        if country_name is not None and type(country_name) is not str:
             raise TypeError("Expected string, got %r instead" % type(country_name))
-        if type(region_code) is not str:
+        if region_code is not None and type(region_code) is not str:
             raise TypeError("Expected string, got %r instead" % type(region_code))
-        if type(region_name) is not str:
+        if region_name is not None and type(region_name) is not str:
             raise TypeError("Expected string, got %r instead" % type(region_name))
-        if type(city) is not str:
+        if city is not None and type(city) is not str:
             raise TypeError("Expected string, got %r instead" % type(city))
-        if type(zipcode) is not str:
+        if zipcode is not None and type(zipcode) is not str:
             raise TypeError("Expected string, got %r instead" % type(zipcode))
-        if type(metro_code) is not str:
+        if metro_code is not None and type(metro_code) is not str:
             raise TypeError("Expected string, got %r instead" % type(metro_code))
-        if type(areacode) is not str:
+        if areacode is not None and type(areacode) is not str:
             raise TypeError("Expected string, got %r instead" % type(areacode))
 
         # Store the properties.
         self.__latitude     = latitude
         self.__longitude    = longitude
-        self.__country_code = country_code
-        self.__country_name = country_name
-        self.__region_code  = region_code
-        self.__region_name  = region_name
-        self.__city         = city
-        self.__zipcode      = zipcode
-        self.__metro_code   = metro_code
-        self.__areacode     = areacode
+        self.__country_code = country_code or None
+        self.__country_name = country_name or None
+        self.__region_code  = region_code or None
+        self.__region_name  = region_name or None
+        self.__city         = city or None
+        self.__zipcode      = zipcode or None
+        self.__metro_code   = metro_code or None
+        self.__areacode     = areacode or None
 
         # Parent constructor.
         super(Geolocation, self).__init__()

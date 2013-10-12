@@ -33,11 +33,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["Text"]
 
 from . import Information
-from .. import identity
+from .binary import Binary
 
 
 #------------------------------------------------------------------------------
-class Text(Information):
+class Text(Binary):
     """
     Plain text data.
     """
@@ -46,26 +46,5 @@ class Text(Information):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, data):
-        """
-        :param data: Plain text data.
-        :type data: str
-        """
-        if not isinstance(data, basestring):
-            raise TypeError("Expected string, got %r instead" % type(data))
-
-        # Text.
-        self.__raw_data = data
-
-        # Parent constructor.
-        super(Text, self).__init__()
-
-
-    #----------------------------------------------------------------------
-    @identity
-    def raw_data(self):
-        """
-        :return: Plain text data.
-        :rtype: str
-        """
-        return self.__raw_data
+    def __init__(self, data, content_type = "text/plain"):
+        super(Text, self).__init__(data, content_type)

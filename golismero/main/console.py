@@ -133,7 +133,7 @@ def colorize_substring(text, substring, level_or_color):
             m_suffix  = text[m_pos + len(substring):]
 
             # Patch the text to colorize the substring.
-            m_content = colorize(m_content, color)
+            m_content = colorize(m_content, level_or_color)
             text = "%s%s%s" % (m_prefix, m_content, m_suffix)
 
             # Update the current position and keep searching.

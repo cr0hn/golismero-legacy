@@ -918,8 +918,10 @@ class Audit (object):
             # Recursively process newly discovered data, if any.
             # Discovered data already in the database is ignored.
             visited = {data.identity for data in data_for_plugins}  # Skip original data.
-            for data in list(data_for_plugins):  # Can't iterate and modify!
-                queue = list(data.discovered)    # Make sure it's a copy.
+            for data in list(data_for_plugins):       # Can't iterate and modify!
+                links = set(data.links)               # Get the original links.
+                queue = list(data.discovered)         # Make sure it's a copy.
+                links = data.links.difference(links)  # Get the new links.
                 while queue:
                     data = queue.pop(0)
                     if (data.identity not in visited and
@@ -932,6 +934,8 @@ class Audit (object):
                             data_for_plugins.append(data)
                         else:                         # If not, mark as completed.
                             database.mark_stage_finished(data.identity, pluginManager.max_stage)
+                if links:                             # If we have new links...
+                    database.add_data(data)           # Refresh the data object.
 
             # If we have data to be sent...
             if data_for_plugins:

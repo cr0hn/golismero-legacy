@@ -40,26 +40,26 @@ from traceback import format_exc
 from warnings import warn
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class Spider(TestingPlugin):
     """
     This plugin is a web spider.
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def recv_info(self, info):
 
         m_return = []
 
         m_url = info.url
 
-        Logger.log_verbose("Spidering URL: %r" % m_url)
+        Logger.log_verbose("Spidering URL: %s" % m_url)
 
         # Check if need follow first redirect
         p = None
@@ -80,8 +80,10 @@ class Spider(TestingPlugin):
         # Get links
         if p.information_type == Information.INFORMATION_HTML:
             m_links = extract_from_html(p.raw_data, m_url)
-        else:
+        elif p.information_type == Information.INFORMATION_PLAIN_TEXT:
             m_links = extract_from_text(p.raw_data, m_url)
+        else:
+            return m_return
         try:
             m_links.remove(m_url)
         except Exception:
@@ -137,12 +139,12 @@ class Spider(TestingPlugin):
         return m_return
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def check_download(self, url, name, content_length, content_type):
 
         # Check the file type is text.
-        if not content_type or not content_type.strip().lower().startswith("text/"):
-            Logger.log_more_verbose("Skipping URL, binary content: %s" % url)
+        if not content_type:
+            Logger.log_more_verbose("Skipping URL, missing content type: %s" % url)
             return False
 
         # Is the content length present?
@@ -154,9 +156,14 @@ class Spider(TestingPlugin):
                 return False
 
             # Check the file is not too big.
-            if content_length > 100000:
-                Logger.log_more_verbose("Skipping URL, content too large (%d bytes): %s" % (content_length, url))
-                return False
+            if content_type.strip().lower().startswith("text/"):
+                if content_length > 100000:
+                    Logger.log_more_verbose("Skipping URL, content too large (%d bytes): %s" % (content_length, url))
+                    return False
+            else:
+                if content_length > 5000000:
+                    Logger.log_more_verbose("Skipping URL, content too large (%d bytes): %s" % (content_length, url))
+                    return False
 
             # Approved!
             return True
