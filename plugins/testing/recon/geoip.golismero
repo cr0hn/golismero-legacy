@@ -1,6 +1,7 @@
 [Documentation]
 Name        = IP Geolocator
-Description = Geolocates IP addresses using the Freegeoip.net service.
+Description = Geolocates IP addresses using online services.
+ This plugin requires a working Internet connection to work.
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

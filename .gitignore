@@ -25,7 +25,7 @@ golismero_2/TODO.txt
 # Output file extensions
 *.html
 *.rst
-*.txt
+##*.txt
 *.xml
 
 # Backup file extensions

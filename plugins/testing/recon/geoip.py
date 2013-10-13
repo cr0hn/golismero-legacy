@@ -41,6 +41,8 @@ import netaddr
 import requests
 import traceback
 
+from geopy import geocoders
+
 
 #----------------------------------------------------------------------
 class GeoIP(TestingPlugin):
@@ -85,7 +87,7 @@ class GeoIP(TestingPlugin):
         # Query the freegeoip.net service.
         # FIXME: the service supports SSL, but we need up to date certificates.
         Logger.log_more_verbose("Querying freegeoip.net for: " + target)
-        resp   = requests.get("http://freegeoip.net/json/" + target)
+        resp = requests.get("http://freegeoip.net/json/" + target)
         if not resp.content:
             raise RuntimeError(
                 "Freegeoip.net webservice is not available,"
@@ -95,6 +97,19 @@ class GeoIP(TestingPlugin):
 
         # Remove the IP address from the response.
         address = kwargs.pop("ip")
+
+        # Query the Google Geocoder.
+        coordinates = "%s, %s" % (kwargs["latitude"], kwargs["longitude"])
+        Logger.log_more_verbose("Querying Google Geocoder for: %s" % coordinates)
+        try:
+            g = geocoders.GoogleV3()
+            r = g.reverse(coordinates)
+            if r:
+                kwargs["street_addr"] = r[0][0].encode("UTF-8")
+        except Exception, e:
+            fmt = traceback.format_exc()
+            Logger.log_error_verbose("Error: %s" % str(e))
+            Logger.log_error_more_verbose(fmt)
 
         # Create a Geolocation object.
         geoip = Geolocation(**kwargs)

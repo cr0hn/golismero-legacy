@@ -50,7 +50,8 @@ class Geolocation(Information):
                  country_code = None, country_name = None,
                  region_code = None, region_name = None,
                  city = None, zipcode = None,
-                 metro_code = None, areacode = None):
+                 metro_code = None, areacode = None,
+                 street_addr = None):
         """
         :param latitude: Latitude.
         :type latitude: float
@@ -59,28 +60,31 @@ class Geolocation(Information):
         :type longitude: float
 
         :param country_code: Country code (for example: "ES" for Spain).
-        :type country_code: str
+        :type country_code: str | None
 
         :param country_name: Country name.
-        :type country_name: str
+        :type country_name: str | None
 
         :param region_code: Region code.
-        :type region_code: str
+        :type region_code: str | None
 
         :param region_name: Region name.
-        :type region_name: str
+        :type region_name: str | None
 
         :param city: City name.
-        :type city: str
+        :type city: str | None
 
         :param zipcode: Zipcode (postal code).
-        :type zipcode: str
+        :type zipcode: str | None
 
         :param metro_code: Metropolitan area code.
-        :type metro_code: str
+        :type metro_code: str | None
 
         :param areacode: Area code.
-        :type areacode: str
+        :type areacode: str | None
+
+        :param street_addr: Street address.
+        :type street_addr: str | None
         """
 
         # Validate the data types.
@@ -108,6 +112,8 @@ class Geolocation(Information):
             raise TypeError("Expected string, got %r instead" % type(metro_code))
         if areacode is not None and type(areacode) is not str:
             raise TypeError("Expected string, got %r instead" % type(areacode))
+        if street_addr is not None and type(street_addr) is not str:
+            raise TypeError("Expected string, got %r instead" % type(street_addr))
 
         # Store the properties.
         self.__latitude     = latitude
@@ -120,6 +126,7 @@ class Geolocation(Information):
         self.__zipcode      = zipcode or None
         self.__metro_code   = metro_code or None
         self.__areacode     = areacode or None
+        self.__street_addr  = street_addr or None
 
         # Parent constructor.
         super(Geolocation, self).__init__()
@@ -131,25 +138,28 @@ class Geolocation(Information):
         # Simplified view of the geographic location.
         coords = "(%f, %f)" % (self.latitude, self.longitude)
         where = ""
-        if self.country_name:
-            where = self.country_name
-        elif self.country_code:
-            where = self.country_code
-        if self.region_name:
-            if where:
-                where = "%s, %s" % (self.region_name, where)
-            else:
-                where = self.region_name
-        elif self.region_code:
-            if where:
-                where = "%s, %s" % (self.region_code, where)
-            else:
-                where = self.region_code
-        if self.city:
-            if where:
-                where = "%s, %s" % (self.city, where)
-            else:
-                where = self.city
+        if self.street_addr:
+            where = self.street_addr
+        else:
+            if self.country_name:
+                where = self.country_name
+            elif self.country_code:
+                where = self.country_code
+            if self.region_name:
+                if where:
+                    where = "%s, %s" % (self.region_name, where)
+                else:
+                    where = self.region_name
+            elif self.region_code:
+                if where:
+                    where = "%s, %s" % (self.region_code, where)
+                else:
+                    where = self.region_code
+            if self.city:
+                if where:
+                    where = "%s, %s" % (self.city, where)
+                else:
+                    where = self.city
         if where:
             where = "%s %s" % (where, coords)
         else:
@@ -197,7 +207,7 @@ class Geolocation(Information):
     def country_code(self):
         """
         :returns: Country code (for example: "ES" for Spain).
-        :rtype: str
+        :rtype: str | None
         """
         return self.__country_code
 
@@ -217,7 +227,7 @@ class Geolocation(Information):
     def country_name(self):
         """
         :returns: Country name.
-        :rtype: str
+        :rtype: str | None
         """
         return self.__country_name
 
@@ -237,7 +247,7 @@ class Geolocation(Information):
     def region_code(self):
         """
         :returns: Region code.
-        :rtype: str
+        :rtype: str | None
         """
         return self.__region_code
 
@@ -257,7 +267,7 @@ class Geolocation(Information):
     def region_name(self):
         """
         :returns: Region name.
-        :rtype: str
+        :rtype: str | None
         """
         return self.__region_name
 
@@ -277,7 +287,7 @@ class Geolocation(Information):
     def city(self):
         """
         :returns: City name.
-        :rtype: str
+        :rtype: str | None
         """
         return self.__city
 
@@ -297,7 +307,7 @@ class Geolocation(Information):
     def zipcode(self):
         """
         :returns: Zipcode (postal code).
-        :rtype: str
+        :rtype: str | None
         """
         return self.__zipcode
 
@@ -317,7 +327,7 @@ class Geolocation(Information):
     def metro_code(self):
         """
         :returns: Metropolitan area code.
-        :rtype: str
+        :rtype: str | None
         """
         return self.__metro_code
 
@@ -337,7 +347,7 @@ class Geolocation(Information):
     def areacode(self):
         """
         :returns: Area code.
-        :rtype: str
+        :rtype: str | None
         """
         return self.__areacode
 
@@ -350,3 +360,23 @@ class Geolocation(Information):
         :type areacode: str
         """
         self.__areacode = areacode
+
+
+    #----------------------------------------------------------------------
+    @merge
+    def street_addr(self):
+        """
+        :returns: Street address.
+        :rtype: str | None
+        """
+        return self.__street_addr
+
+
+    #----------------------------------------------------------------------
+    @street_addr.setter
+    def street_addr(self, street_addr):
+        """
+        :param street_addr: Street address.
+        :type street_addr: str
+        """
+        self.__street_addr = street_addr
