@@ -70,14 +70,14 @@ class GeoIP(TestingPlugin):
         # (For example: image metadata)
         if info.is_instance(Geolocation):
             if not info.street_addr:
-                coordinates = "%s, %s" % (info.latitude, info.longitude)
-                street_addr = self.query_google(coordinates)
+                street_addr = self.query_google(info.latitude, info.longitude)
                 if street_addr:
                     info.street_addr = street_addr
                     #
                     # TODO: parse the street address
                     #
-                    Logger.log("(%s) is in %s" % (coordinates, street_addr))
+                    Logger.log("(%s, %s) is in %s" % \
+                               (info.latitude, info.longitude, street_addr))
             return
 
         # Get the IP address or domain name.
@@ -99,22 +99,14 @@ class GeoIP(TestingPlugin):
             assert False, type(info)
 
         # Query the freegeoip.net service.
-        # FIXME: the service supports SSL, but we need up to date certificates.
-        Logger.log_more_verbose("Querying freegeoip.net for: " + target)
-        resp = requests.get("http://freegeoip.net/json/" + target)
-        if not resp.content:
-            raise RuntimeError(
-                "Freegeoip.net webservice is not available,"
-                " possible network error?"
-            )
-        kwargs = json_decode(resp.content)
+        kwargs = self.query_freegeoip(target)
 
         # Remove the IP address from the response.
         address = kwargs.pop("ip")
 
         # Query the Google Geocoder.
-        coordinates = "%s, %s" % (kwargs["latitude"], kwargs["longitude"])
-        street_addr = self.query_google(coordinates)
+        street_addr = self.query_google(
+            kwargs["latitude"], kwargs["longitude"])
         if street_addr:
             kwargs["street_addr"] = street_addr
 
@@ -143,7 +135,23 @@ class GeoIP(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def query_google(self, coordinates):
+    @staticmethod
+    def query_freegeoip(target):
+        # FIXME: the service supports SSL, but we need up to date certificates.
+        Logger.log_more_verbose("Querying freegeoip.net for: " + target)
+        resp = requests.get("http://freegeoip.net/json/" + target)
+        if not resp.content:
+            raise RuntimeError(
+                "Freegeoip.net webservice is not available,"
+                " possible network error?"
+            )
+        return json_decode(resp.content)
+
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def query_google(latitude, longitude):
+        coordinates = "%s, %s" % (latitude, longitude)
         Logger.log_more_verbose(
             "Querying Google Geocoder for: %s" % coordinates)
         try:
