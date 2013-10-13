@@ -44,7 +44,7 @@ import traceback
 from geopy import geocoders
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class GeoIP(TestingPlugin):
     """
     This plugin tries to geolocate all IP addresses and domain names.
@@ -55,20 +55,34 @@ class GeoIP(TestingPlugin):
     # https://github.com/ioerror/blockfinder
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Domain, IP]
+        return [Domain, IP, Geolocation]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def recv_info(self, info):
 
         # This is where we'll collect the data we'll return.
         results = []
 
+        # Augment geolocation data obtained through other means.
+        # (For example: image metadata)
+        if info.is_instance(Geolocation):
+            if not info.street_addr:
+                coordinates = "%s, %s" % (info.latitude, info.longitude)
+                street_addr = self.query_google(coordinates)
+                if street_addr:
+                    info.street_addr = street_addr
+                    #
+                    # TODO: parse the street address
+                    #
+                    Logger.log("(%s) is in %s" % (coordinates, street_addr))
+            return
+
         # Get the IP address or domain name.
         # Skip unsupported targets.
-        if info.data_subtype == IP.data_subtype:
+        if info.is_instance(IP):
             if info.version != 4:
                 return
             target = info.address
@@ -77,7 +91,7 @@ class GeoIP(TestingPlugin):
                parsed.is_private()  or \
                parsed.is_link_local():
                 return
-        elif info.data_subtype == Domain.data_subtype:
+        elif info.is_instance(Domain):
             target = info.hostname
             if "." not in target:
                 return
@@ -100,16 +114,9 @@ class GeoIP(TestingPlugin):
 
         # Query the Google Geocoder.
         coordinates = "%s, %s" % (kwargs["latitude"], kwargs["longitude"])
-        Logger.log_more_verbose("Querying Google Geocoder for: %s" % coordinates)
-        try:
-            g = geocoders.GoogleV3()
-            r = g.reverse(coordinates)
-            if r:
-                kwargs["street_addr"] = r[0][0].encode("UTF-8")
-        except Exception, e:
-            fmt = traceback.format_exc()
-            Logger.log_error_verbose("Error: %s" % str(e))
-            Logger.log_error_more_verbose(fmt)
+        street_addr = self.query_google(coordinates)
+        if street_addr:
+            kwargs["street_addr"] = street_addr
 
         # Create a Geolocation object.
         geoip = Geolocation(**kwargs)
@@ -133,3 +140,18 @@ class GeoIP(TestingPlugin):
 
         # Return the results.
         return results
+
+
+    #--------------------------------------------------------------------------
+    def query_google(self, coordinates):
+        Logger.log_more_verbose(
+            "Querying Google Geocoder for: %s" % coordinates)
+        try:
+            g = geocoders.GoogleV3()
+            r = g.reverse(coordinates)
+            if r:
+                return r[0][0].encode("UTF-8")
+        except Exception, e:
+            fmt = traceback.format_exc()
+            Logger.log_error_verbose("Error: %s" % str(e))
+            Logger.log_error_more_verbose(fmt)
