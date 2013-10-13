@@ -137,7 +137,6 @@ class GeoIP(TestingPlugin):
     #--------------------------------------------------------------------------
     @staticmethod
     def query_freegeoip(target):
-        # FIXME: the service supports SSL, but we need up to date certificates.
         Logger.log_more_verbose("Querying freegeoip.net for: " + target)
         resp = requests.get("http://freegeoip.net/json/" + target)
         if not resp.content:

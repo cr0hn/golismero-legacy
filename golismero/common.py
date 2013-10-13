@@ -38,7 +38,8 @@ __all__ = [
     # Helper functions.
     "get_user_settings_folder", "get_default_config_file",
     "get_profiles_folder", "get_profile", "get_available_profiles",
-    "get_default_plugins_folder",
+    "get_default_plugins_folder", "get_data_folder", "get_wordlists_folder",
+    "get_install_folder",
 
     # Helper classes and decorators.
     "Singleton", "decorator", "export_methods_as_functions",
@@ -191,6 +192,15 @@ def get_wordlists_folder():
     :rtype: str
     """
     return path.join(get_install_folder(), "wordlist")
+
+
+#------------------------------------------------------------------------------
+def get_data_folder():
+    """
+    :returns: Pathname of the data folder.
+    :rtype: str
+    """
+    return path.join(get_install_folder(), "data")
 
 
 #------------------------------------------------------------------------------
