@@ -61,7 +61,7 @@ enable_plugins = all
 # Plugin blacklist, comma separated. Use "all" to disable all plugins.
 # By default it's best to disable plugins that require special configuration,
 # like a dedicated server or an API key.
-disable_plugins = openvas
+disable_plugins = openvas, nikto
 
 # Plugin settings overrides follow.
 # The format is the same as in the main config file.
