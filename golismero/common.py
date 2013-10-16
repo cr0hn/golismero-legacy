@@ -38,7 +38,8 @@ __all__ = [
     # Helper functions.
     "get_user_settings_folder", "get_default_config_file",
     "get_profiles_folder", "get_profile", "get_available_profiles",
-    "get_default_plugins_folder",
+    "get_default_plugins_folder", "get_data_folder", "get_wordlists_folder",
+    "get_install_folder",
 
     # Helper classes and decorators.
     "Singleton", "decorator", "export_methods_as_functions",
@@ -89,6 +90,7 @@ except ImportError:
         from json import dumps as json_encode
 
 # Other imports.
+from netaddr import IPNetwork
 from ConfigParser import RawConfigParser
 from keyword import iskeyword
 from os import path
@@ -168,41 +170,55 @@ def get_default_config_file():
 
 
 #------------------------------------------------------------------------------
-_wordlists_folder = None
+_install_folder = None
+def get_install_folder():
+    """
+    :returns: Pathname of the install folder.
+    :rtype: str
+    """
+    global _install_folder
+    if not _install_folder:
+        pathname = path.split(path.abspath(__file__))[0]
+        pathname = path.join(pathname, "..")
+        pathname = path.abspath(pathname)
+        _install_folder = pathname
+    return _install_folder
+
+
+#------------------------------------------------------------------------------
 def get_wordlists_folder():
     """
     :returns: Pathname of the wordlists folder.
     :rtype: str
     """
-    global _wordlists_folder
-    if not _wordlists_folder:
-        pathname = path.split(path.abspath(__file__))[0]
-        if pathname:
-            pathname = path.join(pathname, "..")
-        else:
-            pathname = get_user_settings_folder()
-        pathname = path.abspath(pathname)
-        _wordlists_folder = path.join(pathname, "wordlist")
-    return _wordlists_folder
+    return path.join(get_install_folder(), "wordlist")
 
 
 #------------------------------------------------------------------------------
-_profiles_folder = None
+def get_data_folder():
+    """
+    :returns: Pathname of the data folder.
+    :rtype: str
+    """
+    return path.join(get_install_folder(), "data")
+
+
+#------------------------------------------------------------------------------
+def get_default_plugins_folder():
+    """
+    :returns: Default location for the plugins folder.
+    :rtype: str
+    """
+    return path.join(get_install_folder(), "plugins")
+
+
+#------------------------------------------------------------------------------
 def get_profiles_folder():
     """
     :returns: Pathname of the profiles folder.
     :rtype: str
     """
-    global _profiles_folder
-    if not _profiles_folder:
-        pathname = path.split(path.abspath(__file__))[0]
-        if pathname:
-            pathname = path.join(pathname, "..")
-        else:
-            pathname = get_user_settings_folder()
-        pathname = path.abspath(pathname)
-        _profiles_folder = path.join(pathname, "profiles")
-    return _profiles_folder
+    return path.join(get_install_folder(), "profiles")
 
 
 #------------------------------------------------------------------------------
@@ -256,17 +272,6 @@ def get_available_profiles():
 
 
 #------------------------------------------------------------------------------
-def get_default_plugins_folder():
-    """
-    :returns: Default location for the plugins folder.
-    :rtype: str
-    """
-    plugins_folder = path.join(path.split(__file__)[0], "..", "plugins")
-    plugins_folder = path.abspath(plugins_folder)
-    return plugins_folder
-
-
-#------------------------------------------------------------------------------
 class Singleton (object):
     """
     Implementation of the Singleton pattern.
@@ -304,7 +309,7 @@ def export_methods_as_functions(singleton, module):
     :type singleton: Singleton
 
     :param module: Target module name.
-        This would tipically be \\_\\_name\\_\\_.
+        This would typically be \\_\\_name\\_\\_.
     :type module: str
 
     :raises KeyError: No module with that name is loaded.
@@ -773,6 +778,9 @@ class AuditConfig (Configuration):
 
         # Cookie
         "cookie": Configuration.string,
+
+        # User Agent
+        "user_agent": Configuration.string,
     }
 
 
@@ -809,6 +817,29 @@ class AuditConfig (Configuration):
                 if x not in self._targets
             ]
             self._targets.extend(targets)
+
+            # Detect network ranges, like 30.30.30.0/24, and get all IPs on it.
+            new_targets = []
+            host_to_add      = []
+            for host in self._targets:
+                # Check if target is an IP or Networks
+                try:
+                    tmp_target = IPNetwork(host)
+                except:
+                    # Not an IP or Net
+                    new_targets.append(host)
+                    continue
+
+                # Check if are network or single IP
+                if tmp_target.size != 1:
+                    new_targets.extend([ str(x) for x in tmp_target.iter_hosts()])
+                else:
+                    new_targets.append(str(tmp_target.ip))
+
+
+            # Replace targets with new info
+            self._targets = new_targets
+
 
 
     #--------------------------------------------------------------------------
@@ -853,6 +884,21 @@ class AuditConfig (Configuration):
             audit_db = "sqlite://" + audit_db
         urlparse.urlparse(audit_db)  # check validity of URL syntax
         self._audit_db = audit_db
+
+
+    #--------------------------------------------------------------------------
+
+    @property
+    def user_agent(self):
+        return self._user_agent
+
+    @user_agent.setter
+    def user_agent(self, user_agent):
+        if user_agent:
+            self._user_agent = user_agent
+        else:
+            self._user_agent = None
+
 
 
     #--------------------------------------------------------------------------

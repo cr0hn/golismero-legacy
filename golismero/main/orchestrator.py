@@ -40,7 +40,6 @@ from .scope import DummyScope
 from ..api.config import Config
 from ..api.logger import Logger
 from ..database.cachedb import PersistentNetworkCache, VolatileNetworkCache
-from ..database.cpedb import CPEDB
 from ..managers.auditmanager import AuditManager
 from ..managers.pluginmanager import PluginManager
 from ..managers.uimanager import UIManager
@@ -153,9 +152,6 @@ class Orchestrator (object):
             for plugin_id in failure:
                 Logger.log_error_verbose("\t%s" % plugin_id)
 
-        # This is where the NIST CPE database will be loaded on demand.
-        self.__cpedb = None
-
 
     #----------------------------------------------------------------------
     # Context support.
@@ -232,16 +228,6 @@ class Orchestrator (object):
         :rtype: UIManager
         """
         return self.__ui
-
-    @property
-    def cpedb(self):
-        """
-        :returns: NIST CPE database.
-        :rtype: CPEDB
-        """
-        if self.__cpedb is None:
-            self.__cpedb = CPEDB()
-        return self.__cpedb
 
 
     #----------------------------------------------------------------------
@@ -438,9 +424,6 @@ class Orchestrator (object):
         """
 
         try:
-
-            # Open the NIST CPE database.
-            ##self.cpedb   # disabled until we actually use it...
 
             # Start the UI.
             self.uiManager.start()

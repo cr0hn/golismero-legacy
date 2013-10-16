@@ -35,7 +35,7 @@ __all__ = ["HTTP_Request", "HTTP_Response"]
 from . import Information
 from .. import identity, keep_newer
 from ...config import Config
-from ...net.web_utils import ParsedURL
+from ...net.web_utils import ParsedURL, generate_user_agent
 
 import re
 import httplib
@@ -406,9 +406,11 @@ class HTTP_Request (Information):
     #
 
 
+    # Default user agent string.
+    DEFAULT_USER_AGENT = "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +https://github.com/golismero/golismero)"
+
     # Default headers to use in HTTP requests.
     DEFAULT_HEADERS = (
-        ("User-Agent", "Mozilla/5.0 (compatible, GoLismero/2.0 The Web Knife; +https://github.com/golismero/golismero)"),
         ("Accept-Language", "en-US"),
         ("Accept", "*/*"),
         ("Cache-Control", "no-store"),
@@ -418,7 +420,7 @@ class HTTP_Request (Information):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, url, headers = None, post_data = None, method = None, protocol = "HTTP", version = "1.1", referer = None):
+    def __init__(self, url, headers = None, post_data = None, method = None, protocol = "HTTP", version = "1.1", referer = None, user_agent = None):
         """
         :param url: Absolute URL to connect to.
         :type url: str
@@ -458,6 +460,13 @@ class HTTP_Request (Information):
         self.__parsed_url = ParsedURL(url)
         self.__url = self.__parsed_url.url
 
+        # User-Agent header value.
+        if user_agent:
+            if user_agent.lower() == "random":
+                user_agent = generate_user_agent()
+        else:
+            user_agent = self.DEFAULT_USER_AGENT
+
         # HTTP headers.
         if headers is None:
             headers = self.DEFAULT_HEADERS
@@ -474,6 +483,8 @@ class HTTP_Request (Information):
                 headers = headers + (("Cookie", cookie),)
             if referer:
                 headers = headers + (("Referer", referer),)
+            if user_agent:
+                headers = headers + (("User-Agent", user_agent),)
             headers = HTTP_Headers.from_items(headers)
         elif not isinstance(headers, HTTP_Headers):
             if type(headers) == unicode:
@@ -486,6 +497,8 @@ class HTTP_Request (Information):
                 headers = HTTP_Headers.from_items(sorted(headers))
             if referer:
                 headers["Referer"] = referer
+            if user_agent:
+                headers["User-Agent"] = user_agent
         self.__headers = headers
 
         # Call the parent constructor.
@@ -603,6 +616,17 @@ class HTTP_Request (Information):
         :rtype: str | None
         """
         return self.__headers.get('User-Agent')
+
+    @user_agent.setter
+    def user_agent(self, user_agent):
+        """
+        Set 'User-Agent' HTTP header.
+
+        :param user_agent: String with the user agent
+        :type user_agent: str
+        """
+        self.__headers['User-Agent'] = user_agent
+
 
     @property
     def accept_language(self):

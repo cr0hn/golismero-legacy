@@ -1,5 +1,5 @@
 [Documentation]
-Name        = Suspicious URL
+Name        = Suspicious URL Finder
 Description = Flags suspicious words in URLs.
 Author      = GoLismero project team
 Version     = 0.1

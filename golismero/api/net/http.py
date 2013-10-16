@@ -39,9 +39,11 @@ from ..config import Config
 from ..data import LocalDataCache, discard_data
 from ..data.information.http import HTTP_Request, HTTP_Response, HTTP_Raw_Request
 from ..data.resource.url import Url
-from ...common import Singleton
+from ...common import Singleton, get_data_folder
 
 from hashlib import md5
+from os import environ
+from os.path import join
 from requests import Session
 from requests.exceptions import RequestException
 from socket import socket, error, getaddrinfo, SOCK_STREAM
@@ -68,6 +70,10 @@ class _HTTP(Singleton):
         .. warning: Called automatically by GoLismero. Do not call!
         """
 
+        # Initialize the CA bundle.
+        if not environ.get("CURL_CA_BUNDLE"):
+            environ["CURL_CA_BUNDLE"] = join(get_data_folder(), "cacert.pem")
+
         # Start a new session.
         self.__session = Session()
 
@@ -88,6 +94,9 @@ class _HTTP(Singleton):
         cookie = Config.audit_config.cookie
         if cookie:
             self.__session.cookies.set_cookie(cookie)
+
+        # Set User Agent
+        self.__user_agent = Config.audit_config.user_agent
 
 
     #--------------------------------------------------------------------------
@@ -136,7 +145,7 @@ class _HTTP(Singleton):
             redirection against another URL that's out of scope.
         :raises NetworkException: A network error occurred.
         """
-        request = HTTP_Request(url, method = method)
+        request = HTTP_Request(url, method = method, user_agent=self.__user_agent)
         LocalDataCache.on_autogeneration(request)
         return self.make_request(request, callback = callback,
                                  timeout = timeout, use_cache = use_cache,

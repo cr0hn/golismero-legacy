@@ -37,14 +37,12 @@ from shlex import split
 
 from golismero.api.audit import get_audit_times, parse_audit_times
 from golismero.api.config import Config
+from golismero.api.data import Data
 from golismero.api.data.db import Database
 from golismero.api.external import run_external_tool
 from golismero.api.logger import Logger
 from golismero.api.plugin import ReportPlugin
 from golismero.api.text.text_utils import hexdump
-
-# Data types
-from golismero.api.data import Data
 
 
 #------------------------------------------------------------------------------
@@ -130,7 +128,8 @@ class RSTReport(ReportPlugin):
             try:
 
                 # Report the vulnerabilities.
-                self.__write_rst(f, datas, Data.TYPE_VULNERABILITY, "Vulnerabilities")
+                if datas:
+                    self.__write_rst(f, datas, Data.TYPE_VULNERABILITY, "Vulnerabilities")
 
                 # This dictionary tracks which data to show
                 # and which not to in brief report mode.
@@ -249,7 +248,7 @@ class RSTReport(ReportPlugin):
     def __collect_vulns(self, fp_filter):
         vulns = defaultdict(list)
         for vuln in self.__iterate_data(data_type=Data.TYPE_VULNERABILITY):
-            if vuln.false_positive == fp_filter:
+            if bool(vuln.false_positive) == fp_filter:
                 vulns[vuln.display_name].append(vuln.identity)
         for x in vulns.itervalues():
             x.sort()
@@ -257,7 +256,7 @@ class RSTReport(ReportPlugin):
 
 
     #--------------------------------------------------------------------------
-    def __write_rst(self, f, datas, data_type, header, fp_filter_mode = None):
+    def __write_rst(self, f, datas, data_type, header):
 
         # Get the titles.
         titles = datas.keys()

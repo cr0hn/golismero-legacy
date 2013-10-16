@@ -279,11 +279,6 @@ class MessageCode(MessageConstants):
     MSG_RPC_SHARED_HEAP_ADD        = 54
     MSG_RPC_SHARED_HEAP_REMOVE     = 55
 
-    # NIST CPE database API
-    MSG_RPC_CPE_GET_TITLE          = 60
-    MSG_RPC_CPE_RESOLVE            = 61
-    MSG_RPC_CPE_SEARCH             = 62
-
 
     #--------------------------------------------------------------------------
     # Status message codes

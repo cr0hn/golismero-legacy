@@ -207,11 +207,13 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True):
         raise NetworkOutOfScope("URL out of scope: %s" % url.url)
 
     # Autogenerate the HTTP request object.
+    from ..config import Config
     from ..data.information.http import HTTP_Request
-    request = HTTP_Request(      url = url.url,
-                              method = url.method,
-                           post_data = url.post_params,
-                             referer = url.referer )
+    request = HTTP_Request( url         = url.url,
+                            method      = url.method,
+                            post_data   = url.post_params,
+                            referer     = url.referer,
+                            user_agent  = Config.audit_config.user_agent)
     LocalDataCache.on_autogeneration(request)
 
     # Prepare the callback.
@@ -287,22 +289,38 @@ def data_from_http_response(response):
         content_type = content_type[:content_type.find(";")]
 
     # Sanitize the content type.
-    content_type = content_type.lower().strip()
+    content_type = content_type.strip().lower()
+    if "/" not in content_type:
+        return None
 
-    # HTML pages.
-    if content_type == "text/html":
-        from ..data.information.html import HTML
-        data = HTML(response.data)
+    # Parse the data.
+    data = None
+    try:
 
-    # Plain text data.
-    elif content_type.startswith("text/"):
-        from ..data.information.text import Text
-        data = Text(response.data)
+        # HTML pages.
+        if content_type == "text/html":
+            from ..data.information.html import HTML
+            data = HTML(response.data)
+
+        # Plain text data.
+        elif content_type.startswith("text/"):
+            from ..data.information.text import Text
+            data = Text(response.data, response.content_type)
+
+        # Image files.
+        elif content_type.startswith("image/"):
+            from ..data.information.image import Image
+            data = Image(response.data, response.content_type)
+
+    # Catch errors and throw warnings instead.
+    except Exception, e:
+        ##raise # XXX DEBUG
+        warn(str(e), RuntimeWarning)
 
     # Anything we don't know how to parse we treat as binary.
-    else:
+    if data is None:
         from ..data.information.binary import Binary
-        data = Binary(response.data)
+        data = Binary(response.data, response.content_type)
 
     # Associate the data to the response.
     data.add_information(response)

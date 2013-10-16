@@ -761,6 +761,73 @@ class Data(object):
 
 
     #--------------------------------------------------------------------------
+    def to_dict(self):
+        """
+        Plugins may call this method to convert the Data object into a Python
+        dictionary. This dictionary may in turn, for example, be converted to
+        a JSON string.
+
+        The return value is a dictionary mapping the property names to their
+        values. The property names are always strings, but the values may be
+        anything. There is no guarantee that the values will be serializable.
+
+        :returns: Dictionary mapping property names to values.
+        :rtype: dict(str -> *)
+        """
+
+        # This is the dictionary we'll build and return.
+        properties = {}
+
+        # Enumerate properties and filter them using different criteria.
+        for name in dir(self):
+
+            # Ignore private and protected symbols.
+            if name.startswith("_"):
+                continue
+
+            # Whitelisted property names.
+            if name not in (
+                "identity", "plugin_id", "depth", "links",
+                "data_type", "data_subtype",
+            ):
+
+                # Ignore most of the properties defined in Data.
+                if hasattr(Data, name):
+                    continue
+
+                # For properties defined in subclasses of Data,
+                # ignore if it's not an identity or mergeable property.
+                propdef = getattr(self.__class__, name)
+                if not identity.is_identity_property(propdef) and \
+                   not merge.is_mergeable_property(propdef):
+                    continue
+
+            # Add the property name and value to the dictionary.
+            properties[name] = getattr(self, name)
+
+        # Return the dictionary.
+        return properties
+
+
+    #--------------------------------------------------------------------------
+    @classmethod
+    def from_dict(cls, properties):
+        """
+        This is the reverse operation of the to_dict() method.
+
+        :param properties: Dictionary mapping property names to values.
+        :type properties: dict(str -> *)
+
+        :returns: Data object.
+        :rtype: Data
+        """
+        #
+        # TODO
+        #
+        raise NotImplementedError()
+
+
+    #--------------------------------------------------------------------------
     @property
     def identity(self):
         """
@@ -1377,6 +1444,30 @@ class Data(object):
         """
         # TODO: maybe we should compare all properties, not just identity.
         return self.identity == obj.identity
+
+
+    #--------------------------------------------------------------------------
+    def is_instance(self, clazz):
+        """
+        Checks if this Data object belongs to the given class.
+
+        :param clazz: Data subclass to check.
+        :type clazz: class
+
+        :returns: True if the data object belongs to the class,
+            False otherwise.
+        :rtype: bool
+
+        :raises TypeError: Not a Data subclass.
+        """
+        try:
+            data_type    = clazz.data_type
+            data_subtype = clazz.data_subtype
+        except AttributeError:
+            raise TypeError(
+                "Expected Data subclass, got %r instead" % type(clazz))
+        return self.data_type    == data_type    and \
+               self.data_subtype == data_subtype
 
 
 #------------------------------------------------------------------------------

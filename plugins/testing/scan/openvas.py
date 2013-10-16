@@ -31,7 +31,9 @@ from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.vulnerability import UncategorizedVulnerability
+from golismero.api.data.vulnerability.infrastructure.vulnerable_service import VulnerableService
 from golismero.api.logger import Logger
+from golismero.api.net.scraper import extract_from_text
 from golismero.api.plugin import TestingPlugin, ImportPlugin
 
 from threading import Event
@@ -115,6 +117,8 @@ class OpenVASPlugin(TestingPlugin):
                 self.state.put("connection_down", True)
                 return
 
+            m_scan_id   = None
+            m_target_id = None
             try:
                 # Launch the scanner.
                 m_scan_id, m_target_id = m_scanner.launch_scan(
@@ -132,24 +136,33 @@ class OpenVASPlugin(TestingPlugin):
                 m_openvas_results = m_scanner.get_results(m_scan_id)
 
                 # Clear the info
-
                 m_scanner.delete_scan(m_scan_id)
                 m_scanner.delete_target(m_target_id)
 
-                # Convert the scan results to the GoLismero data model.
-                return self.parse_results(m_openvas_results, info)
             except Exception,e:
                 t = format_exc()
                 Logger.log_error_verbose(
                     "Error parsing OpenVAS results: %s" % str(e))
                 Logger.log_error_more_verbose(t)
+                return
+
             finally:
 
                 # Clean up.
-                try:
-                    m_scanner.delete_scan(m_scan_id)
-                except Exception:
-                    Logger.log_error_more_verbose("Error while deleting scan Id: %s" % str(m_scan_id if m_scan_id else "(No scan id)"))
+                if m_scan_id:
+                    try:
+                        m_scanner.delete_scan(m_scan_id)
+                    except Exception:
+                        Logger.log_error_more_verbose("Error while deleting scan ID: %s" % str(m_scan_id))
+                if m_target_id:
+                    try:
+                        m_scanner.delete_target(m_target_id)
+                    except Exception:
+                        Logger.log_error_more_verbose("Error while deleting target ID: %s" % str(m_target_id))
+
+        # Convert the scan results to the GoLismero data model.
+        return self.parse_results(m_openvas_results, info)
+
 
     #--------------------------------------------------------------------------
     @staticmethod
@@ -209,10 +222,9 @@ class OpenVASPlugin(TestingPlugin):
 
                 # Get the metadata.
                 nvt = opv.nvt
-                ##references = nvt.xrefs
+                ##references = nvt.xrefs.split("\n")
                 ##cvss = nvt.cvss
                 ##cve = nvt.cve
-                ##vulnerability_type = nvt.category
 
                 # Get the vulnerability description.
                 description = opv.description
@@ -228,18 +240,21 @@ class OpenVASPlugin(TestingPlugin):
                         for note in opv.notes
                     )
 
+                # Get the reference URLs.
+                references = extract_from_text(description)
+
                 # Prepare the vulnerability properties.
                 kwargs = {
                     "level": OPV_LEVELS_TO_GLM_LEVELS[level.lower()],
                     "description": description,
+                    "references": references,
                     ##"cvss": cvss,
                     ##"cve": cve,
-                    ##"references": references.split("\n"),
+                    ##"references": references,
                 }
 
                 # Create the vulnerability instance.
                 vuln = UncategorizedVulnerability(**kwargs)
-                ##vuln.vulnerability_type = vulnerability_type
 
                 # Link the vulnerability to the resource.
                 if target is not None:

@@ -294,6 +294,7 @@ def cmdline_parser():
     gr_net.add_argument("-pp","--proxy-pass", metavar="PASS", help="HTTP proxy password")
     gr_net.add_argument("-pa","--proxy-addr", metavar="ADDRESS:PORT", help="HTTP proxy address in format: address:port")
     gr_net.add_argument("--cookie", metavar="COOKIE", help="set cookie for requests")
+    gr_net.add_argument("--user-agent", metavar="USER_AGENT", help="set a custom user agent or 'random' value")
     cmd = gr_net.add_argument("--cookie-file", metavar="FILE", action=ReadValueFromFileAction, dest="cookie", help="load a cookie from file")
     if autocomplete_enabled:
         cmd.completer = FilesCompleter(directories=False)
@@ -715,12 +716,6 @@ def main():
                 Logger.log("Updating GoLismero...")
             run_external_tool("git", ["pull"], cwd = here,
                 callback = Logger.log if cmdParams.verbose else lambda x: x)
-
-            # Update the NIST CPE database.
-            if cmdParams.verbose:
-                Logger.log("Updating NIST CPE database...")
-            t.orchestrator.cpedb.update()
-            t.orchestrator.cpedb.vacuum()
 
             # Done!
             Logger.log("Update complete.")
