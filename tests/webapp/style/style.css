@@ -8,7 +8,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 13px;
   line-height: 23px;
-  background: #fff8dc;
+  background: #d6d0d0;
   color: black;
 }
 a {
@@ -164,7 +164,7 @@ br {
   border-left: 0px !important;
   border-right: 0px !important;
   border: none !important;
-  background: #66442e;
+  background: #404040;
 }
 .navbar .btn {
   font-size: 13px !important;
@@ -237,14 +237,14 @@ br {
 }
 /* Sidebar */
 #sidebar {
-  background: #fff8dc;
+  background: #d6d0d0;
   color: #eee;
   width: 230px;
   height: 100%;
   position: fixed;
 }
 #sidebar .content-sidebar {
-  background: #66442e;
+  background: #404040;
   border-radius: 0px 0px 20px 0px !important;
   -webkit-border-radius: 0px 0px 20px 0px !important;
   padding-bottom: 20px;
@@ -338,13 +338,13 @@ br {
   text-decoration: none;
   color: #e2a014;
   border-bottom: 1px solid #000;
-  background-color: #66442e;
-  background: -webkit-gradient(linear, left top, left bottom, from(#8b634a), to(#66442e));
-  background: -webkit-linear-gradient(top, #8b634a, #66442e);
-  background: -moz-linear-gradient(top, #8b634a, #66442e);
-  background: -ms-linear-gradient(top, #8b634a, #66442e);
-  background: -o-linear-gradient(top, #8b634a, #66442e);
-  background: linear-gradient(top, #8b634a, #66442e);
+  background-color: #404040;
+  background: -webkit-gradient(linear, left top, left bottom, from(#606060), to(#404040));
+  background: -webkit-linear-gradient(top, #606060, #404040);
+  background: -moz-linear-gradient(top, #606060, #404040);
+  background: -ms-linear-gradient(top, #606060, #404040);
+  background: -o-linear-gradient(top, #606060, #404040);
+  background: linear-gradient(top, #606060, #404040);
 }
 #sidebar #nav > li > a > i {
   font-size: 17pt;
@@ -352,14 +352,14 @@ br {
 #sidebar #nav > li > a:hover,
 #sidebar #nav > li > a.subdrop,
 #sidebar #nav > li.active > a {
-  border-top: 1px solid #8b634a;
-  background-color: #8b634a;
-  background: -webkit-gradient(linear, left top, left bottom, from(#66442e), to(#8b634a));
-  background: -webkit-linear-gradient(top, #66442e, #8b634a);
-  background: -moz-linear-gradient(top, #66442e, #8b634a);
-  background: -ms-linear-gradient(top, #66442e, #8b634a);
-  background: -o-linear-gradient(top, #66442e, #8b634a);
-  background: linear-gradient(top, #66442e, #8b634a);
+  border-top: 1px solid #606060;
+  background-color: #606060;
+  background: -webkit-gradient(linear, left top, left bottom, from(#404040), to(#606060));
+  background: -webkit-linear-gradient(top, #404040, #606060);
+  background: -moz-linear-gradient(top, #404040, #606060);
+  background: -ms-linear-gradient(top, #404040, #606060);
+  background: -o-linear-gradient(top, #404040, #606060);
+  background: linear-gradient(top, #404040, #606060);
   color: #f5cd2f;
   font-weight: bold;
 }
@@ -394,10 +394,10 @@ br {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
-  background: #66442e;
+  background: #404040;
 }
 .mainbar #principal {
-  background: #fff8dc;
+  background: #d6d0d0;
   border-radius: 20px 0px 0px 0px !important;
   min-height: 540px;
   padding: 20px;
@@ -529,6 +529,14 @@ footer {
   padding-bottom: 10px;
   height: 30px;
 }
+/*formularios*/
+.marginTop10px {
+  margin-top: 10px;
+}
+/*tablas*/
+.bbGrid-container .bbGrid-row {
+  background: #ffffff;
+}
 @media only screen and (max-width: 979px) {
   body {
     padding: 0;
@@ -537,7 +545,7 @@ footer {
 /*tablets*/
 @media only screen and (max-width: 1024px) {
   #sidebar {
-    background: #fff8dc;
+    background: #d6d0d0;
     width: 80px;
     height: 100%;
     position: fixed;

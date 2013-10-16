@@ -11,8 +11,8 @@ User = Backbone.Model.extend({
 });
 
 Users = Backbone.Collection.extend({
-	url: "/test/usuarios.json",
-    model: User,
+	url: "/test/usuariosBig.json",
+    model: User,	
 	parse : function(response){
 		return response;  
    }    

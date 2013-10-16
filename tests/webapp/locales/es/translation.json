@@ -21,6 +21,7 @@
   "user": {
 	"title":"Usuarios",
 	"new":"Nuevo",
+	"edit":"Editar",
 	"table":{
 		"id":"Identificador",
 		"username":"Nombre de usuario",

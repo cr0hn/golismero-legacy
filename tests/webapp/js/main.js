@@ -26,22 +26,32 @@ var AppRouter = Backbone.Router.extend({
         this.sidebarView.selectMenuItem('home-menu');
     },
 	users: function (id) {	
-        if (!this.usersView) {
-			var userList = new Users();
+        //if (!this.usersView) {
+			
+			if(!this.userList ){
+				this.userList = new Users();
+			}
+			var userList = this.userList;
 			var _contextRooter = this;
-			userList.fetch({success: function(){
+			var data = {
+				startAt : 2,
+				count : 10 
+			};
+			_contextRooter.usersView = new UsersView({model:userList});
+			$('#principal').html(_contextRooter.usersView.el);
+			/*userList.fetch({data:data, success: function(){
 				_contextRooter.usersView = new UsersView({model:userList});
 				$('#principal').html(_contextRooter.usersView.el);
 				
 			},error:function(p, error){
 				alert("Error " + p);
 				}
-			});
+			});*/
             		
-        }else{
+        /*}else{
 			$('#principal').html(this.usersView.el);
 			this.usersView.activateEvents();
-		}
+		}*/
         this.sidebarView.selectMenuItem('users-menu');
     },
 	scans: function (id) {	
@@ -66,8 +76,9 @@ var AppRouter = Backbone.Router.extend({
 
 utils.loadTemplate(['SidebarView', 'HomeView', 'UsersView', 'ScansView'], function() {
 	i18n.init(function(t) {
-		$("body").i18n();	 
+		$("body").i18n();	
+		window.app = new AppRouter();
+		Backbone.history.start();		
 	});
-    window.app = new AppRouter();
-    Backbone.history.start();	 
+    	 
 });

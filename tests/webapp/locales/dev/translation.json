@@ -20,6 +20,7 @@
   },
   "user": {
 	"new":"Nuevo",
+	"edit":"Editar",
 	"title":"Usuarios",
 	"table":{
 		"id":"Identificador",
