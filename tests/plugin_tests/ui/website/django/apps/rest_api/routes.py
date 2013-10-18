@@ -78,6 +78,12 @@ class AuditsRouters(ParameterizedRouter):
               name      = '{basename}-state',
               initkwargs= {}),
 
+        # Results as summary
+        Route(url       = r'^{prefix}/results/summary/{lookup}$',
+              mapping   = {'get' : 'results_summary'},
+              name      = '{basename}-results-summary',
+              initkwargs= {}),
+
         # Results as format
         Route(url       = r'^{prefix}/results/{lookup}$',
               mapping   = {'get' : 'results'},
@@ -86,12 +92,6 @@ class AuditsRouters(ParameterizedRouter):
         Route(url       = r'^{prefix}/results/{lookup}/{text}',
               mapping   = {'get' : 'results_formated'},
               name      = '{basename}-results-formated',
-              initkwargs= {}),
-
-        # Results as summary
-        Route(url       = r'^{prefix}/results/summary/{lookup}$',
-              mapping   = {'get' : 'results_summary'},
-              name      = '{basename}-results-summary',
               initkwargs= {}),
 
         # Details

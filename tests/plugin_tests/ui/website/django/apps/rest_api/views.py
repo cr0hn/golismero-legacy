@@ -292,16 +292,82 @@ class AuditViewSet(ViewSet):
 	#----------------------------------------------------------------------
 	def results_summary(self, request, *args, **kwargs):
 		"""
+		This method summary an audit, using their ID
 
+		:param pk: audit ID
+		:type pk: str
 		"""
-		return Response({'results_summary':'aaaa'})
+
+		# Search
+		pk     = str(kwargs.get("pk", ""))
+		res    = [v for v in self.unified_audits if v['id'] == pk]
+
+		m_return = {}
+		if res:
+			m_return                            = {}
+			m_return['status']                  = 'ok'
+			m_return['vulns_number']            = '12'
+			m_return['discovered_hosts']        = '3'
+			m_return['total_hosts']             = '4'
+			m_return['vulns_by_level']          = {
+				'info'     : '5',
+				'low'      : '2',
+				'medium'   : '2',
+				'high'     : '2',
+				'critical' : '1',
+			}
+			return Response(m_return)
+
+
+		m_return['status']      = "error"
+		m_return['error_code']  = 0
+		m_return['error']       = ["Provided audit ID not exits"]
+
+		return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 	#----------------------------------------------------------------------
 	def details(self, request, *args, **kwargs):
 		"""
 
 		"""
-		return Response({'details':'aaaa'})
+		# Search
+		pk     = str(kwargs.get("pk", ""))
+		res    = [v for v in self.unified_audits if v['id'] == pk]
+
+		m_return = {}
+		if res:
+			m_return['status']           = "ok"
+			m_return['start_date']       = "2013-10-18 16:03:32"
+			m_return['end_date']         = "2013-10-14 10:23:32"
+			m_return['user']             = "user1"
+			m_return['config']           = {
+			    "targets"               : ["www.target1.com", "target2.com"],
+			    "only_vulns"            : "False",
+			    "audit_name"            : "audit1",
+			    "imports"               : [""],
+			    "enable_plugins"        : ["spider", "sqlmap", "openvas"],
+			    "disable_plugins"       : [""],
+			    "include_subdomains"    : "True",
+			    "subdomain_regex"       : "",
+			    "depth"                 : "0",
+			    "max_links"             : "0",
+			    "follow_redirects"      : "True",
+			    "follow_first_redirect" : "True",
+			    "proxy_addr"            : "",
+			    "proxy_user"            : "",
+			    "proxy_pass"            : "",
+			    "cookie"                : "",
+			    "user_agent"            : "random",
+			}
+
+			return Response(m_return)
+
+
+		m_return['status']      = "error"
+		m_return['error_code']  = 0
+		m_return['error']       = ["Provided audit ID not exits"]
+
+		return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 	#----------------------------------------------------------------------
 	def pause(self, request, *args, **kwargs):
