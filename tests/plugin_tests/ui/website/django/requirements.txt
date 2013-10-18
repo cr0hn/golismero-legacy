@@ -1,0 +1,5 @@
+djangorestframework
+markdown
+django-filter
+pygments
+django-cors-headers
