@@ -103,11 +103,13 @@ def _run(options, *audits):
                 if auditParams.proxy_user:
                     if not check_auth(auditParams.proxy_addr, auditParams.proxy_user, auditParams.proxy_pass):
                         Console.display_error("[!] Authentication failed for proxy: '%s'." % auditParams.proxy_addr)
+                        Console.display_error_more_verbose(traceback.format_exc())
                         return 1
                 else:
                     auth, _ = detect_auth_method(auditParams.proxy_addr)
                     if auth:
                         Console.display_error("[!] Authentication required for proxy: '%s'. Use '--proxy-user' and '--proxy-pass' to set the username and password." % auditParams.proxy_addr)
+                        Console.display_error_more_verbose(traceback.format_exc())
                         return 1
 
         # Instance the Orchestrator.
@@ -118,6 +120,7 @@ def _run(options, *audits):
                 orchestrator.uiManager.check_params(*audits)
             except Exception, e:
                 Console.display_error("[!] Configuration error: %s" % str(e))
+                Console.display_error_more_verbose(traceback.format_exc())
                 return 1
 
             # Run the Orchestrator.

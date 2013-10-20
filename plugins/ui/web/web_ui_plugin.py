@@ -34,13 +34,11 @@ from golismero.api.config import Config, get_orchestrator_config
 from golismero.api.logger import Logger
 from golismero.api.plugin import UIPlugin, get_plugin_info, get_plugin_ids
 from golismero.common import AuditConfig
-from golismero.messaging.message import Message
 from golismero.messaging.codes import MessageType, MessageCode, \
      MessagePriority
 
 import collections
-import multiprocessing
-import time
+import functools
 import threading
 import warnings
 
@@ -49,7 +47,7 @@ from imp import load_source
 from os.path import abspath, join, split
 django_bridge = load_source(
     "django_bridge",
-    abspath(join(split(__file__)[0], "django_bridge.py")))
+    abspath(join(split(__file__)[0], "django_bridge.py"))
 )
 
 
@@ -58,6 +56,9 @@ class WebUIPlugin(UIPlugin):
     """
     Web UI plugin.
     """
+
+    # This is where the Bridge will be stored on instances.
+    bridge = None
 
 
     #--------------------------------------------------------------------------
@@ -116,28 +117,38 @@ class WebUIPlugin(UIPlugin):
                 plugin_name = self.get_plugin_name(message)
                 (text, level, is_error) = message.message_info
                 if is_error:
-                    self.notify_error(message.audit_name, plugin_name, text, level)
+                    self.notify_error(
+                        message.audit_name, plugin_name, text, level)
                 else:
-                    self.notify_log(message.audit_name, plugin_name, text, level)
+                    self.notify_log(
+                        message.audit_name, plugin_name, text, level)
 
             # A plugin has sent an error message.
             elif message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 plugin_name = self.get_plugin_name(message)
                 (description, traceback) = message.message_info
                 text = "Error: " + description
-                self.notify_error(message.audit_name, plugin_name, text, Logger.STANDARD)
+                self.notify_error(
+                    message.audit_name, plugin_name, text, Logger.STANDARD)
                 text = "Exception raised: %s\n%s" % (description, traceback)
-                self.notify_error(message.audit_name, plugin_name, text, Logger.MORE_VERBOSE)
+                self.notify_error(
+                    message.audit_name, plugin_name, text,
+                    Logger.MORE_VERBOSE)
 
             # A plugin has sent a warning message.
             elif message.message_code == MessageCode.MSG_CONTROL_WARNING:
                 plugin_name = self.get_plugin_name(message)
                 for w in message.message_info:
-                    formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
+                    formatted = warnings.formatwarning(
+                        w.message, w.category, w.filename, w.lineno, w.line)
                     text = "Warning: " + w.message
-                    self.notify_warning(message.audit_name, plugin_name, text, Logger.STANDARD)
+                    self.notify_warning(
+                        message.audit_name, plugin_name, text,
+                        Logger.STANDARD)
                     text = "Warning details: " + formatted
-                    self.notify_warning(message.audit_name, plugin_name, text, Logger.MORE_VERBOSE)
+                    self.notify_warning(
+                        message.audit_name, plugin_name, text,
+                        Logger.MORE_VERBOSE)
 
         # Status messages.
         elif message.message_type == MessageType.MSG_TYPE_STATUS:
@@ -145,17 +156,23 @@ class WebUIPlugin(UIPlugin):
             # A plugin has started processing a Data object.
             if message.message_type == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
                 plugin_name = self.get_plugin_name(message)
-                self.notify_progress(message.audit_name, plugin_name, message.ack_identity, 0.0)
+                self.notify_progress(
+                    message.audit_name, plugin_name,
+                    message.ack_identity, 0.0)
 
             # A plugin has finished processing a Data object.
             elif message.message_type == MessageCode.MSG_STATUS_PLUGIN_END:
                 plugin_name = self.get_plugin_name(message)
-                self.notify_progress(message.audit_name, plugin_name, message.ack_identity, 100.0)
+                self.notify_progress(
+                    message.audit_name, plugin_name,
+                    message.ack_identity, 100.0)
 
             # A plugin is currently processing a Data object.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
                 plugin_name = self.get_plugin_name(message)
-                self.notify_progress(message.audit_name, plugin_name, message.ack_identity, message.message_info)
+                self.notify_progress(
+                    message.audit_name, plugin_name,
+                    message.ack_identity, message.message_info)
 
             # An audit has switched to another execution stage.
             elif message.message_code == MessageCode.MSG_STATUS_STAGE_UPDATE:
@@ -194,7 +211,7 @@ class WebUIPlugin(UIPlugin):
         self.state_lock   = threading.RLock()
         self.audit_state  = {}  # audit -> stage
         self.plugin_state = collections.defaultdict(
-            collections.defaultdict(dict)
+            functools.partial(collections.defaultdict, dict)
         )  # audit -> (plugin, identity) -> progress
 
         # Create the consumer thread object.
@@ -211,7 +228,8 @@ class WebUIPlugin(UIPlugin):
         plugin_extra_config = Config.plugin_extra_config
 
         # Launch the Django web application.
-        self.bridge = django_bridge.launch_django()
+        self.bridge = django_bridge.launch_django(
+            orchestrator_config, plugin_config, plugin_extra_config)
 
         # Start the consumer thread.
         self.thread.start()
@@ -229,13 +247,15 @@ class WebUIPlugin(UIPlugin):
 
         # Tell the Django application to stop.
         try:
-            self.bridge.send( ("stop",) )
+            if self.bridge:
+                self.bridge.send( ("stop",) )
         except:
             pass
 
         # Shut down the communication pipe.
         # This should wake up the consumer thread.
-        self.bridge.close()
+        if self.bridge:
+            self.bridge.close()
 
         # Wait for the consumer thread to stop.
         if self.thread.isAlive():
