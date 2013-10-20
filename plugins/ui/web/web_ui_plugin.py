@@ -303,10 +303,7 @@ class WebUIPlugin(UIPlugin):
             while self.thread_continue:
 
                 # Read the next packet from the pipe.
-                try:
-                    packet = self.parent_conn.recv()
-                except Exception:
-                    continue
+                packet = self.bridge.recv()
 
                 # Success responses start with "ok",
                 # failure responses start with "fail".
@@ -330,24 +327,26 @@ class WebUIPlugin(UIPlugin):
 
                     # Parse the command to get the method name.
                     # The command is the path to the webservice.
-                    while "//" in command:
-                        command = command.replace("//", "/")
-                    if command.startswith("/"):
-                        command = command[1:]
-                    if command.endswith("/"):
-                        command = command[:-1]
-                    command = "do_" + command.replace("/", "_")
+                    method_name = command
+                    while "//" in method_name:
+                        method_name = method_name.replace("//", "/")
+                    if method_name.startswith("/"):
+                        method_name = method_name[1:]
+                    if method_name.endswith("/"):
+                        method_name = method_name[:-1]
+                    method_name = "do_" + method_name.replace("/", "_")
 
                     # Get the method that implements the command.
                     # Fail if it doesn't exist.
                     try:
-                        method = getattr(self, command)
+                        method = getattr(self, method_name)
                     except AttributeError:
-                        raise NotImplementedError()
+                        raise NotImplementedError(
+                            "Command not implemented: %s" % command)
 
                     # Run the command and get the response.
                     retval = method( *arguments )
-                    if retval:
+                    if retval is not None:
                         if type(retval) is tuple:
                             response = response + retval
                         else:
@@ -363,7 +362,7 @@ class WebUIPlugin(UIPlugin):
 
         # This catch prevents exceptions from being shown in stderr.
         except:
-            ##raise # XXX DEBUG
+            raise # XXX DEBUG
             pass
 
 

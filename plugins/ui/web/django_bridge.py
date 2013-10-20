@@ -196,16 +196,19 @@ def run_xmlrpc_server(bridge):
         rpc_paths = ('/RPC2',)
 
     # Create server
-    server = SimpleXMLRPCServer(("localhost", 8000),
-                                requestHandler=RequestHandler)
+    server = SimpleXMLRPCServer(addr = ("localhost", 8000),
+                                requestHandler = RequestHandler,
+                                allow_none = True)
     server.register_introspection_functions()
 
     # Create the state machine.
     fsm = GoLismeroStateMachine(bridge)
 
-    # Register an instance; all the methods of the instance are
-    # published as XML-RPC methods (in this case, just 'div').
-    server.register_instance(fsm)
+    # Register a function.
+    server.register_function(fsm.call, 'call')
+
+    # Start the state machine.
+    fsm.start()
 
     # Run the server's main loop
     server.serve_forever()
@@ -365,13 +368,23 @@ class GoLismeroStateMachine (threading.Thread):
         # Wait for the reply.
         consume.wait()
 
-        # Get the reply.
-        reply = self.__reply
+        # Get the reply packet.
+        packet = self.__reply
 
         # Signal we're done.
         done.set()
 
-        # Return the reply.
+        # If it's a failure packet, raise the exception.
+        if len(packet) > 1:
+            reply = packet[1]
+        else:
+            reply = None
+        if packet[0] != "ok":
+            if isinstance(reply, basestring):
+                raise Exception(reply)
+            raise reply
+
+        # If it's a success packet, return the reply.
         return reply
 
 
@@ -391,7 +404,7 @@ class GoLismeroStateMachine (threading.Thread):
 
                 # Extract the command and the arguments.
                 command = packet[0]
-                args = packet[1:]
+                args    = packet[1:]
 
                 # If it's the special command to stop...
                 if command == "stop":
@@ -405,20 +418,14 @@ class GoLismeroStateMachine (threading.Thread):
                 # If it's a reply...
                 if command in ("ok", "fail"):
 
-                    # Get the reply value.
-                    try:
-                        reply = args[0]
-                    except IndexError:
-                        reply = None
-
                     # Use the mutex.
                     with self.__mutex:
 
                         # Get the next reply target.
                         consume, done = self.__queries.pop(0)
 
-                        # Store the reply value.
-                        self.__reply = reply
+                        # Store the reply packet.
+                        self.__reply = packet
 
                         # Tell the consumer to read it.
                         consume.set()
