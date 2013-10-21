@@ -5,9 +5,9 @@ var AppRouter = Backbone.Router.extend({
 		"home"					: "home",
 		"users"					: "users",
         "users/:userid"			: "users",
-		"scans"					: "scans"/*,
+		"scans"					: "scans",
         "profiles"	        	: "profiles",
-        "profiles/:profileid" 	: "profiles"*/
+        "profiles/:profileid" 	: "profiles"
     },
 
     initialize: function () {
@@ -55,26 +55,40 @@ var AppRouter = Backbone.Router.extend({
         this.sidebarView.selectMenuItem('users-menu');
     },
 	scans: function (id) {	
-        if (!this.scansView) {
-			var scanList = new Scans();
-			var _contextRooter = this;
-			scanList.fetch({success: function(){
+        //if (!this.scansView) {
+			if(!this.scanList){
+				this.scanList = new Scans();
+			}
+			var scanList = this.scanList;
+			this.scansView = new ScansView({model:scanList});
+			/*scanList.fetch({success: function(){
 				_contextRooter.scansView = new ScansView({model:scanList});
 				$('#principal').html(_contextRooter.scansView.el);
 				
 			},error:function(p, error){
 				alert("Error " + p);
 				}
-			});
+			});*/
             		
-        }else{
+        //}else{
 			$('#principal').html(this.scansView.el);
-		}
+		//}
         this.sidebarView.selectMenuItem('scans-menu');
-    }
+    },
+	
+	profiles: function (id){
+		if(!this.profileList ){
+			this.profileList = new Profiles();
+		}
+		var profileList = this.profileList;
+		this.profilesView = new ProfilesView({model:profileList});
+		$('#principal').html(this.profilesView.el);
+			
+        this.sidebarView.selectMenuItem('profiles-menu');
+	}
 });
 
-utils.loadTemplate(['SidebarView', 'HomeView', 'UsersView', 'ScansView'], function() {
+utils.loadTemplate(['SidebarView', 'HomeView', 'UsersView', 'ScansView', 'ProfilesView'], function() {
 	i18n.init(function(t) {
 		$("body").i18n();	
 		window.app = new AppRouter();

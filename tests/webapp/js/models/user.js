@@ -3,7 +3,6 @@ User = Backbone.Model.extend({
     defaults: {
         username: '',
         name: '',
-		surname:'',
 		rol:1,
 		creationDate: new Date()
     }
@@ -11,7 +10,7 @@ User = Backbone.Model.extend({
 });
 
 Users = Backbone.Collection.extend({
-	url: "/test/usuariosBig.json",
+	url: "/test/usuarios.json",
     model: User,	
 	parse : function(response){
 		return response;  

@@ -3,6 +3,7 @@ Scan = Backbone.Model.extend({
     defaults: {
         targets: [],
         name: '',
+		profile: new Profile(),
 		progress:'',
 		status:'',
 		creationDate: new Date()
