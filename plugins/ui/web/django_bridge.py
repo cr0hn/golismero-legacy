@@ -39,7 +39,6 @@ import sys
 import thread
 import threading
 import traceback
-from golismero.api.logger import *
 
 #------------------------------------------------------------------------------
 def launch_django(orchestrator_config, plugin_config, plugin_extra_config):
@@ -141,18 +140,27 @@ def _launch_django(input_conn, output_conn,
                 bridge = Bridge(input_conn, output_conn)
 
                 # XXX HACK we'll launch an XMLRPC server for now.
-                run_xmlrpc_server(bridge)
+                #run_xmlrpc_server(bridge)
 
                 # Load the Django settings.
                 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "golismero_webapp.core.settings")
 
                 from django.core.management import call_command
                 from django.conf import settings
+                #from web.golismero_webapp.core import settings as default_config
 
-                settings["GOLISMERO_BRIDGE"]              = bridge
-                settings["GOLISMERO_MAIN_CONFIG"]         = orchestrator_config
-                settings["GOLISMERO_PLUGIN_CONFIG"]       = plugin_config
-                settings["GOLISMERO_PLUGIN_EXTRA_CONFIG"] = plugin_extra_config
+                #settings["GOLISMERO_BRIDGE"]              = bridge
+                #settings["GOLISMERO_MAIN_CONFIG"]         = orchestrator_config
+                #settings["GOLISMERO_PLUGIN_CONFIG"]       = plugin_config
+                #settings["GOLISMERO_PLUGIN_EXTRA_CONFIG"] = plugin_extra_config
+
+                settings.configure(
+                    GOLISMERO_BRIDGE                = bridge,
+                    GOLISMERO_MAIN_CONFIG           = orchestrator_config,
+                    GOLISMERO_PLUGIN_CONFIG         = plugin_config,
+                    GOLISMERO_PLUGIN_EXTRA_CONFIG   = plugin_extra_config)
+
+                print settings
 
                 # Load the Django webapp data model.
                 # XXX FIXME this code is bogus! @cr0hn: put your stuff here :)
