@@ -79,7 +79,7 @@ class ObtainExpiringAuthToken(ObtainAuthToken):
         error_code           = 0
         if "non_field_errors" in serializer.errors:
             error_code = 0
-            error_descriptions.append(serializer.error["non_field_errors"])
+            error_descriptions.append(serializer.errors["non_field_errors"].pop())
         elif "password" in serializer.errors:
             error_code = 1
             error_descriptions.append("password: %s" % serializer.errors["password"].pop())
