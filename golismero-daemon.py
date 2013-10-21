@@ -106,8 +106,6 @@ def main():
 
     # Load the Orchestrator options.
     orchestrator_config = OrchestratorConfig()
-    orchestrator_config.ui_mode = "web"
-    orchestrator_config.color = False
     orchestrator_config.config_file = config_file
     orchestrator_config.from_config_file(orchestrator_config.config_file, allow_profile = True)
     if orchestrator_config.profile:
@@ -133,8 +131,10 @@ def main():
                 raise RuntimeError("Default plugins folder not found, aborting!")
         orchestrator_config.plugins_folder = plugins_folder
 
-    # Check if all options are correct.
-    orchestrator_config.check_params()
+    # Force the Web UI.
+    orchestrator_config.ui_mode = "web"
+    orchestrator_config.color   = False
+    orchestrator_config.verbose = 4
 
     # Launch GoLismero.
     launcher.run(orchestrator_config)
@@ -144,5 +144,6 @@ def main():
 # Run as daemon.
 
 if __name__ == '__main__':
-    with daemon.DaemonContext():
-        main()
+    #with daemon.DaemonContext():
+    #    main()
+    main()

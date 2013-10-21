@@ -74,7 +74,7 @@ def launch_django(orchestrator_config, plugin_config, plugin_extra_config):
 
         # Launch the new process where Django will run.
         args = (
-            in_child_conn, out_child_conn,
+            in_child, out_child,
             orchestrator_config, plugin_config, plugin_extra_config
         )
         process = multiprocessing.Process(target=_launch_django, args=args)
@@ -91,7 +91,7 @@ def launch_django(orchestrator_config, plugin_config, plugin_extra_config):
                 "Django initialization failed, reason: %s" % status[1])
 
         # Return the bridge from GoLismero to Django.
-        return Bridge(in_parent_conn, out_parent_conn)
+        return Bridge(in_parent, out_parent)
 
     # Clean up on error.
     except:
@@ -131,27 +131,30 @@ def _launch_django(input_conn, output_conn,
             try:
 
                 # Get the Django command to run.
-                command = [x.strip() for x in plugin_config["call_command"].split(" ")]
+                ##command = [x.strip() for x in plugin_config["call_command"].split(" ")]
+
+                # Update the module search path to include our web app.
+                modpath = os.path.abspath(os.path.split(__file__)[0])
+                sys.path.insert(0, modpath)
 
                 # Instance the bridge object to talk to GoLismero.
                 bridge = Bridge(input_conn, output_conn)
 
-                # Update the module search path to include our web app.
-                modpath = os.path.abspath(os.path.split(__file__)[0]))
-                sys.path.insert(0, modpath)
+                # XXX HACK we'll launch an XMLRPC server for now.
+                run_xmlrpc_server(bridge)
 
                 # Load the Django settings.
                 # XXX FIXME this code is bogus! @cr0hn: put your stuff here :)
-                from django.core.management import call_command
-                from django.conf import settings
-                settings["GOLISMERO_BRIDGE"]              = bridge
-                settings["GOLISMERO_MAIN_CONFIG"]         = orchestrator_config
-                settings["GOLISMERO_PLUGIN_CONFIG"]       = plugin_config
-                settings["GOLISMERO_PLUGIN_EXTRA_CONFIG"] = plugin_extra_config
+                ##from django.core.management import call_command
+                ##from django.conf import settings
+                ##settings["GOLISMERO_BRIDGE"]              = bridge
+                ##settings["GOLISMERO_MAIN_CONFIG"]         = orchestrator_config
+                ##settings["GOLISMERO_PLUGIN_CONFIG"]       = plugin_config
+                ##settings["GOLISMERO_PLUGIN_EXTRA_CONFIG"] = plugin_extra_config
 
                 # Load the Django webapp data model.
                 # XXX FIXME this code is bogus! @cr0hn: put your stuff here :)
-                from golismero_webapp.data.models import *
+                ##from golismero_webapp.data.models import *
 
                 # Start the web application in the background.
                 # XXX FIXME this code is bogus! @cr0hn: put your stuff here :)
@@ -159,7 +162,7 @@ def _launch_django(input_conn, output_conn,
                 # the web application has shut down and we're quitting.
                 # You MUST instance GoLismeroStateMachine() by passing it
                 # the Bridge instance and (optionally) your event callback.
-                call_command(*command)
+                ##call_command(*command)
 
             # On error tell GoLismero we failed to initialize.
             except Exception, e:
@@ -180,6 +183,35 @@ def _launch_django(input_conn, output_conn,
     # Silently catch all runaway exceptions.
     except:
         pass
+
+
+#------------------------------------------------------------------------------
+def run_xmlrpc_server(bridge):
+
+    from SimpleXMLRPCServer import SimpleXMLRPCServer
+    from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
+
+    # Restrict to a particular path.
+    class RequestHandler(SimpleXMLRPCRequestHandler):
+        rpc_paths = ('/RPC2',)
+
+    # Create server
+    server = SimpleXMLRPCServer(addr = ("localhost", 8000),
+                                requestHandler = RequestHandler,
+                                allow_none = True)
+    server.register_introspection_functions()
+
+    # Create the state machine.
+    fsm = GoLismeroStateMachine(bridge)
+
+    # Register a function.
+    server.register_function(fsm.call, 'call')
+
+    # Start the state machine.
+    fsm.start()
+
+    # Run the server's main loop
+    server.serve_forever()
 
 
 #------------------------------------------------------------------------------
@@ -336,13 +368,23 @@ class GoLismeroStateMachine (threading.Thread):
         # Wait for the reply.
         consume.wait()
 
-        # Get the reply.
-        reply = self.__reply
+        # Get the reply packet.
+        packet = self.__reply
 
         # Signal we're done.
         done.set()
 
-        # Return the reply.
+        # If it's a failure packet, raise the exception.
+        if len(packet) > 1:
+            reply = packet[1]
+        else:
+            reply = None
+        if packet[0] != "ok":
+            if isinstance(reply, basestring):
+                raise Exception(reply)
+            raise reply
+
+        # If it's a success packet, return the reply.
         return reply
 
 
@@ -362,7 +404,7 @@ class GoLismeroStateMachine (threading.Thread):
 
                 # Extract the command and the arguments.
                 command = packet[0]
-                args = packet[1:]
+                args    = packet[1:]
 
                 # If it's the special command to stop...
                 if command == "stop":
@@ -376,20 +418,14 @@ class GoLismeroStateMachine (threading.Thread):
                 # If it's a reply...
                 if command in ("ok", "fail"):
 
-                    # Get the reply value.
-                    try:
-                        reply = args[0]
-                    except IndexError:
-                        reply = None
-
                     # Use the mutex.
                     with self.__mutex:
 
                         # Get the next reply target.
                         consume, done = self.__queries.pop(0)
 
-                        # Store the reply value.
-                        self.__reply = reply
+                        # Store the reply packet.
+                        self.__reply = packet
 
                         # Tell the consumer to read it.
                         consume.set()
@@ -412,5 +448,5 @@ class GoLismeroStateMachine (threading.Thread):
             except:
                 continue
 
-    # Kill the current process.
-    sys.exit(0)
+        # Kill the current process.
+        sys.exit(0)

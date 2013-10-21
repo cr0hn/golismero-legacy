@@ -64,7 +64,7 @@ def rpc_audit_get_names(orchestrator, audit_name):
     return orchestrator.auditManager.get_audit_names()
 
 @implementor(MessageCode.MSG_RPC_AUDIT_CONFIG)
-def rpc_audit_get_config(orchestrator, audit_name):
+def rpc_audit_get_config(orchestrator, current_audit_name, audit_name):
     if audit_name:
         return orchestrator.auditManager.get_audit(audit_name).config
     return orchestrator.config

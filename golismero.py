@@ -98,10 +98,8 @@ from golismero.api.external import run_external_tool
 from golismero.api.logger import Logger
 from golismero.common import OrchestratorConfig, AuditConfig, get_profile, \
      get_available_profiles, get_default_plugins_folder
-from golismero.database.auditdb import AuditDB
 from golismero.main import launcher
 from golismero.main.console import get_terminal_size, colorize, Console
-from golismero.main.orchestrator import Orchestrator
 from golismero.main.testing import PluginTester
 from golismero.managers.pluginmanager import PluginManager
 from golismero.managers.processmanager import PluginContext
@@ -147,7 +145,7 @@ class LoadListFromFileAction(argparse.Action):
                     if not line or line[0] == "#":
                         continue
                     tokens.append(tokens)
-        except Exception, e:
+        except Exception:
             parser.error("Error reading file: %s" % values)
         setattr(namespace, self.dest, tokens)
 
@@ -586,7 +584,10 @@ def main():
                                                  orchestrator_tid = get_ident(),
                                                       plugin_info = m_plugin_info,
                                                         msg_queue = None )
-                m_plugin_obj = manager.load_plugin_by_id(m_plugin_info.plugin_id)
+                try:
+                    manager.load_plugin_by_id(m_plugin_info.plugin_id)
+                except Exception:
+                    pass
                 m_root = cmdParams.plugins_folder
                 m_root = path.abspath(m_root)
                 if not m_root.endswith(path.sep):

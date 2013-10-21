@@ -116,7 +116,7 @@ class RPCManager (object):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, orchestrator):
         """
         :param orchestrator: Orchestrator instance.
@@ -137,7 +137,7 @@ class RPCManager (object):
             raise SyntaxError(msg)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def orchestrator(self):
         """
@@ -147,7 +147,7 @@ class RPCManager (object):
         return self.__orchestrator
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def execute_rpc(self, audit_name, rpc_code, response_queue, args, kwargs):
         """
         Honor a remote procedure call request from a plugin.
@@ -205,8 +205,9 @@ class RPCManager (object):
                     exit(1)
 
 
-    #----------------------------------------------------------------------
-    def execute_rpc_implementor(self, audit_name, target, response_queue, args, kwargs):
+    #--------------------------------------------------------------------------
+    def execute_rpc_implementor(self, audit_name, target, response_queue,
+                                args, kwargs):
         """
         Honor a remote procedure call request from a plugin.
 
@@ -245,7 +246,7 @@ class RPCManager (object):
                 exit(1)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @staticmethod
     def prepare_exception(exc_type, exc_value, exc_traceback):
         """

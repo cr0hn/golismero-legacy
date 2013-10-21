@@ -126,7 +126,8 @@ def _launcher(queue, max_concurrent, refresh_after_tasks):
             try:
                 item = queue.get()
             except:
-                # If we reached this point we can assume the parent process is dead.
+                # If we reached this point we can assume
+                # the parent process is dead.
                 wait = False
                 exit(1)
 
@@ -144,7 +145,8 @@ def _launcher(queue, max_concurrent, refresh_after_tasks):
         try:
             pool.stop(wait)
         except:
-            # If we reached this point we can assume the parent process is dead.
+            # If we reached this point we can assume
+            # the parent process is dead.
             exit(1)
 
 # Serializable bootstrap function to run plugins in subprocesses.
@@ -176,7 +178,8 @@ def _bootstrap(context, func, args, kwargs):
                             except KeyError:
                                 input_data = args[0]
 
-                            # Abort if the data is out of scope for the current audit.
+                            # Abort if the data is out of scope
+                            # for the current audit.
                             if not input_data.is_in_scope():
                                 return
 
@@ -186,10 +189,13 @@ def _bootstrap(context, func, args, kwargs):
 
                                 # Check we didn't exceed the maximum depth.
                                 max_depth = context.audit_config.depth
-                                if max_depth is not None and context._depth > max_depth:
+                                if (
+                                    max_depth is not None and
+                                    context._depth > max_depth
+                                ):
                                     return
 
-                        # TODO: hook stdout and stderr to catch print statements
+                        # TODO: hook stdout and stderr to catch prints.
 
                         # Initialize the private file API.
                         LocalFile._update_plugin_path()
@@ -206,7 +212,8 @@ def _bootstrap(context, func, args, kwargs):
                             LocalDataCache.on_create(input_data)
 
                         # Try to get the plugin from the cache.
-                        cache_key = (context.plugin_module, context.plugin_class)
+                        cache_key = (context.plugin_module,
+                                     context.plugin_class)
                         try:
                             cls = plugin_class_cache[cache_key]
 
@@ -215,7 +222,8 @@ def _bootstrap(context, func, args, kwargs):
 
                             # Load the plugin module.
                             mod = load_source(
-                                "_plugin_tmp_" + context.plugin_class.replace(".", "_"),
+                                "_plugin_tmp_" + \
+                                context.plugin_class.replace(".", "_"),
                                 context.plugin_module)
 
                             # Get the plugin class.
@@ -227,7 +235,7 @@ def _bootstrap(context, func, args, kwargs):
                         # Instance the plugin.
                         instance = cls()
 
-                        # Notify the Orchestrator of the plugin execution start.
+                        # Notify the Orchestrator of the plugin start.
                         context.send_msg(
                             message_type = MessageType.MSG_TYPE_STATUS,
                             message_code = MessageCode.MSG_STATUS_PLUGIN_BEGIN,
@@ -244,7 +252,8 @@ def _bootstrap(context, func, args, kwargs):
                             if func == "recv_info":
 
                                 # Validate and sanitize the result data.
-                                result = LocalDataCache.on_finish(result, input_data)
+                                result = LocalDataCache.on_finish(
+                                    result, input_data)
 
                                 # Send the result data to the Orchestrator.
                                 if result:
@@ -299,7 +308,8 @@ def _bootstrap(context, func, args, kwargs):
             # Reset the current crawling depth.
             context._depth = -1
 
-    # On keyboard interrupt or fatal error, tell the Orchestrator we need to stop.
+    # On keyboard interrupt or fatal error,
+    # tell the Orchestrator we need to stop.
     except:
 
         # Send a message to the Orchestrator to stop.
@@ -340,19 +350,24 @@ class PluginContext (object):
             This argument is mandatory.
         :type msg_queue: Queue
 
-        :param ack_identity: Identity hash of the current input data, or None if not running a plugin.
+        :param ack_identity: Identity hash of the current input data,
+            or None if not running a plugin.
         :type ack_identity: str | None
 
-        :param plugin_info: Plugin information, or None if not running a plugin.
+        :param plugin_info: Plugin information,
+            or None if not running a plugin.
         :type plugin_info: PluginInfo | None
 
-        :param audit_name: Name of the audit, or None if not running an audit.
+        :param audit_name: Name of the audit,
+            or None if not running an audit.
         :type audit_name: str | None
 
-        :param audit_config: Parameters of the audit, or None if not running an audit.
+        :param audit_config: Parameters of the audit,
+            or None if not running an audit.
         :type audit_config: AuditConfig | None
 
-        :param audit_scope: Scope of the audit, or None if not running an audit.
+        :param audit_scope: Scope of the audit,
+            or None if not running an audit.
         :type audit_scope: AuditScope | None
 
         :param orchestrator_pid: Process ID of the Orchestrator.
@@ -405,7 +420,8 @@ class PluginContext (object):
     @property
     def ack_identity(self):
         """"
-        :returns: Identity hash of the current input data, or None if not running a plugin.
+        :returns: Identity hash of the current input data,
+            or None if not running a plugin.
         :rtype: str | None
         """
         return self.__ack_identity
@@ -430,7 +446,8 @@ class PluginContext (object):
     @property
     def plugin_module(self):
         """"
-        :returns: Module where the plugin is to be loaded from, or None if not running a plugin.
+        :returns: Module where the plugin is to be loaded from,
+            or None if not running a plugin.
         :rtype: str | None
         """
         if self.__plugin_info:
@@ -483,7 +500,7 @@ class PluginContext (object):
         return self.__orchestrator_tid
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def is_local(self):
         """
         :returns: True if we're running inside the Orchestrator's
@@ -496,7 +513,7 @@ class PluginContext (object):
         )
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def send_ack(self, do_notify_end):
         """
         Send ACK messages from the plugins to the Orchestrator.
@@ -511,7 +528,7 @@ class PluginContext (object):
                           priority = MessagePriority.MSG_PRIORITY_LOW)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def send_status(self, progress = None):
         """
         Send status updates from the plugins to the Orchestrator.
@@ -529,7 +546,8 @@ class PluginContext (object):
             if type(progress) in (int, long):
                 progress = float(progress)
             elif type(progress) is not float:
-                raise TypeError("Expected float, got %r instead", type(progress))
+                raise TypeError(
+                    "Expected float, got %r instead", type(progress))
             if progress < 0.0:
                 progress = 0.0
             elif progress > 100.0:
@@ -542,7 +560,7 @@ class PluginContext (object):
                           priority = MessagePriority.MSG_PRIORITY_MEDIUM)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def send_msg(self, message_type = 0,
                        message_code = 0,
                        message_info = None,
@@ -550,16 +568,20 @@ class PluginContext (object):
         """
         Send messages from the plugins to the Orchestrator.
 
-        :param message_type: Message type. Must be one of the constants from MessageType.
+        :param message_type: Message type.
+            Must be one of the constants from MessageType.
         :type mesage_type: int
 
-        :param message_code: Message code. Must be one of the constants from MessageCode.
+        :param message_code: Message code.
+            Must be one of the constants from MessageCode.
         :type message_code: int
 
-        :param message_info: The payload of the message. Its type depends on the message type and code.
+        :param message_info: The payload of the message.
+            Its type depends on the message type and code.
         :type message_info: \\*
 
-        :param priority: Priority level. Must be one of the constants from MessagePriority.
+        :param priority: Priority level.
+            Must be one of the constants from MessagePriority.
         :type priority: int
         """
 
@@ -584,7 +606,7 @@ class PluginContext (object):
         self.send_raw_msg(message)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def send_raw_msg(self, message):
         """
         Send raw messages from the plugins to the Orchestrator.
@@ -610,7 +632,7 @@ class PluginContext (object):
             exit(1)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def remote_call(self, rpc_code, *args, **kwargs):
         """
         Make synchronous remote procedure calls on the Orchestrator.
@@ -649,15 +671,17 @@ class PluginContext (object):
         if not success:
             exc_type, exc_value, tb_list = response
             try:
-                sys.stderr.writelines( format_exception_only(exc_type, exc_value) )
-                sys.stderr.writelines( format_list(tb_list) )
+                sys.stderr.writelines(
+                    format_exception_only(exc_type, exc_value) )
+                sys.stderr.writelines(
+                    format_list(tb_list) )
             except Exception:
                 pass
             raise response[0], response[1]
         return response
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def async_remote_call(self, rpc_code, *args, **kwargs):
         """
         Make asynchronous remote procedure calls on the Orchestrator.
@@ -674,13 +698,14 @@ class PluginContext (object):
                           priority = MessagePriority.MSG_PRIORITY_HIGH)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def bulk_remote_call(self, rpc_code, *arguments):
         """
         Make synchronous bulk remote procedure calls on the Orchestrator.
 
         The interface and behavior mimics that of the built-in map() function.
-        For more details see: http://docs.python.org/2/library/functions.html#map
+        For more details see:
+        http://docs.python.org/2/library/functions.html#map
 
         :param rpc_code: RPC code.
         :type rpc_code: int
@@ -696,13 +721,14 @@ class PluginContext (object):
         return self.remote_call(MessageCode.MSG_RPC_BULK, rpc_code, *arguments)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def async_bulk_remote_call(self, rpc_code, *arguments):
         """
         Make asynchronous bulk remote procedure calls on the Orchestrator.
 
         The interface and behavior mimics that of the built-in map() function.
-        For more details see: http://docs.python.org/2/library/functions.html#map
+        For more details see:
+        http://docs.python.org/2/library/functions.html#map
 
         There's no return value, since we're not waiting for a response.
 
@@ -724,13 +750,15 @@ class PluginPoolManager (object):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, max_process, refresh_after_tasks):
         """
         :param max_process: Maximum number of processes to create.
         :type max_process: int
 
-        :param refresh_after_tasks: Maximum number of function calls to make before refreshing a subprocess.
+        :param refresh_after_tasks:
+            Maximum number of function calls to make
+            before refreshing a subprocess.
         :type refresh_after_tasks: int
         """
         self.__max_processes       = max_process
@@ -739,7 +767,7 @@ class PluginPoolManager (object):
         self.__pool = None
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def run_plugin(self, context, func, args, kwargs):
         """
         Run a plugin in a pooled process.
@@ -771,7 +799,7 @@ class PluginPoolManager (object):
             Config._context = old_context
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def start(self):
         """
         Start the process manager.
@@ -798,12 +826,13 @@ class PluginPoolManager (object):
                 self.__pool = None
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def stop(self, wait = True):
         """
         Stop the process manager.
 
-        :param wait: True to wait for the subprocesses to finish, False to kill them.
+        :param wait: True to wait for the subprocesses to finish,
+            False to kill them.
         :type wait: bool
         """
 
@@ -831,13 +860,15 @@ class PluginLauncher (object):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, max_process, refresh_after_tasks):
         """
         :param max_process: Maximum number of processes to create.
         :type max_process: int
 
-        :param refresh_after_tasks: Maximum number of function calls to make before refreshing a subprocess.
+        :param refresh_after_tasks:
+                Maximum number of function calls to make
+                before refreshing a subprocess.
         :type refresh_after_tasks: int
         """
 
@@ -857,7 +888,7 @@ class PluginLauncher (object):
         self.__alive = True
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def run_plugin(self, context, func, args, kwargs):
         """
         Run a plugin in a pooled process.
@@ -892,7 +923,7 @@ class PluginLauncher (object):
             exit(1)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def start(self):
         """
         Start the plugin launcher.
@@ -906,12 +937,13 @@ class PluginLauncher (object):
         self.__process.start()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def stop(self, wait = True):
         """
         Stop the plugin launcher.
 
-        :param wait: True to wait for the subprocesses to finish, False to kill them.
+        :param wait: True to wait for the subprocesses to finish,
+            False to kill them.
         :type wait: bool
         """
 
@@ -952,7 +984,7 @@ class ProcessManager (object):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, orchestrator):
         """
         :param orchestrator: Orchestrator to send messages to.
@@ -963,14 +995,16 @@ class ProcessManager (object):
 
         config = orchestrator.config
 
-        # Maximum number of processes to create
-        self.__max_processes       = getattr(config, "max_concurrent",      None)
+        # Maximum number of processes to create.
+        self.__max_processes = getattr(config, "max_concurrent", None)
 
-        # Maximum number of function calls to make before refreshing a subprocess
-        self.__refresh_after_tasks = getattr(config, "refresh_after_tasks", None)
+        # Maximum number of function calls to make
+        # before refreshing a subprocess.
+        self.__refresh_after_tasks = getattr(
+            config, "refresh_after_tasks", None)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def run_plugin(self, context, func, args, kwargs):
         """
         Run a plugin in a pooled process.
@@ -1000,7 +1034,7 @@ class ProcessManager (object):
             Config._context = old_context
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def start(self):
         """
         Start the process manager.
@@ -1028,12 +1062,13 @@ class ProcessManager (object):
                 self.__launcher = None
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def stop(self, wait = True):
         """
         Stop the process manager.
 
-        :param wait: True to wait for the subprocesses to finish, False to kill them.
+        :param wait: True to wait for the subprocesses to finish,
+            False to kill them.
         :type wait: bool
         """
 

@@ -1,6 +1,6 @@
 [Core]
 Name   = Web interface
-Module = web/web.py
+Module = web/web_ui_plugin.py
 
 [Documentation]
 Description = Web user interface.
@@ -13,3 +13,4 @@ License     = GNU Public License
 [Configuration]
 #call_command = runserver 127.0.0.1:80
 call_command = run_gunicorn 127.0.0.1:80
+
