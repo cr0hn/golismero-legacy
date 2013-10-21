@@ -39,7 +39,7 @@ import sys
 import thread
 import threading
 import traceback
-
+from golismero.api.logger import *
 
 #------------------------------------------------------------------------------
 def launch_django(orchestrator_config, plugin_config, plugin_extra_config):
@@ -78,7 +78,7 @@ def launch_django(orchestrator_config, plugin_config, plugin_extra_config):
             orchestrator_config, plugin_config, plugin_extra_config
         )
         process = multiprocessing.Process(target=_launch_django, args=args)
-        process.daemon = True  # switch to False if Django fails to run
+        #process.daemon = True  # switch to False if Django fails to run
         process.start()
 
         # Get the initialization status packet.
@@ -131,7 +131,7 @@ def _launch_django(input_conn, output_conn,
             try:
 
                 # Get the Django command to run.
-                ##command = [x.strip() for x in plugin_config["call_command"].split(" ")]
+                command = [x.strip() for x in plugin_config["call_command"].split(" ")]
 
                 # Update the module search path to include our web app.
                 modpath = os.path.abspath(os.path.split(__file__)[0])
@@ -144,17 +144,22 @@ def _launch_django(input_conn, output_conn,
                 run_xmlrpc_server(bridge)
 
                 # Load the Django settings.
-                # XXX FIXME this code is bogus! @cr0hn: put your stuff here :)
-                ##from django.core.management import call_command
-                ##from django.conf import settings
-                ##settings["GOLISMERO_BRIDGE"]              = bridge
-                ##settings["GOLISMERO_MAIN_CONFIG"]         = orchestrator_config
-                ##settings["GOLISMERO_PLUGIN_CONFIG"]       = plugin_config
-                ##settings["GOLISMERO_PLUGIN_EXTRA_CONFIG"] = plugin_extra_config
+                os.environ.setdefault("DJANGO_SETTINGS_MODULE", "golismero_webapp.core.settings")
+
+                from django.core.management import call_command
+                from django.conf import settings
+
+                settings["GOLISMERO_BRIDGE"]              = bridge
+                settings["GOLISMERO_MAIN_CONFIG"]         = orchestrator_config
+                settings["GOLISMERO_PLUGIN_CONFIG"]       = plugin_config
+                settings["GOLISMERO_PLUGIN_EXTRA_CONFIG"] = plugin_extra_config
 
                 # Load the Django webapp data model.
                 # XXX FIXME this code is bogus! @cr0hn: put your stuff here :)
                 ##from golismero_webapp.data.models import *
+
+                # First create the DDBB
+                #call_command("syncdb")
 
                 # Start the web application in the background.
                 # XXX FIXME this code is bogus! @cr0hn: put your stuff here :)
@@ -162,7 +167,7 @@ def _launch_django(input_conn, output_conn,
                 # the web application has shut down and we're quitting.
                 # You MUST instance GoLismeroStateMachine() by passing it
                 # the Bridge instance and (optionally) your event callback.
-                ##call_command(*command)
+                call_command(*command)
 
             # On error tell GoLismero we failed to initialize.
             except Exception, e:
