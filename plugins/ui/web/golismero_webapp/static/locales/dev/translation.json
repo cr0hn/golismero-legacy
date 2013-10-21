@@ -1,6 +1,9 @@
 {
   "validate":{
-	"require":"El campo #{field} es obligatorio."
+	"require":"El campo #{field} es obligatorio.",
+	"tooShort": "El campo #{field} debe tener al menos #{min} caracteres.",
+	"tooLong": "El campo #{field} no puede tener más de #{max} caracteres.",
+	"passwordNotEqual": "Las passwords no coinciden"
   },
   "error":{
 	"loginIncorrect":"El nombre de usuario o contraseña no son correctos"
@@ -39,12 +42,12 @@
 	"form":{
 		"createUser":"Crear usuario",
 		"editUser":"Editar usuario",
-		"username":"Nombre de usuario",
-		"password":"Contraseña",
-		"repeatpassword":"Repita contraseña",
-		"rol":"Rol",
-		"email": "Email",
-		"nameandsurname":"Nombre y apellidos",
+		"username":"Nombre de usuario*",
+		"password":"Contraseña*",
+		"repeatpassword":"Repita contraseña*",
+		"rol":"Rol*",
+		"email": "Email*",
+		"nameandsurname":"Nombre y apellidos*",
 		
 		"roles":{
 			"administrator":"Administrador"

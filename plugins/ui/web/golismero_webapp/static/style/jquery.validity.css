@@ -3,15 +3,15 @@
  * Applied to the error labels that get positioned after an input.
  */
 label.error { 
-    color:#fff; 
-    margin-left:2px;     
-    background-image:url('arrow.gif');
-    background-position:left center;
-    background-repeat:no-repeat;
-    padding:2px;
-    padding-left:18px;
-    border-radius:4px;
-    -webkit-border-radius: 4px;
+	color: #ff0000;
+	margin-left: 0px;
+	background-image: url('arrow.gif');
+	background-position: left center;
+	background-repeat: no-repeat;
+	padding: 2px;
+	padding-left: 0px;
+	border-radius: 4px;
+	-webkit-border-radius: 4px;
 }
 
 

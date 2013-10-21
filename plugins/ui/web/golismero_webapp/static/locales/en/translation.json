@@ -1,6 +1,9 @@
 {
   "validate":{
-	"require":"The field #{field} is required."
+	"require":"The field #{field} is required.",
+	"tooShort": "#{field} cannot be shorter than #{min} characters.",
+	"tooLong": "#{field} cannot be longer than #{max} characters.",
+	"passwordNotEqual": "Passwords do not match."
   },
   "error":{
 	"loginIncorrect":"Username or password incorrect"
@@ -39,12 +42,12 @@
 	"form":{
 		"createUser":"Create user",
 		"editUser":"Edit user",
-		"username":"Username",
-		"password":"Password",
-		"repeatpassword":"Repeat password",
-		"rol":"Rol",
-		"email": "Email",
-		"nameandsurname":"Name and surname",
+		"username":"Username*",
+		"password":"Password*",
+		"repeatpassword":"Repeat password*",
+		"rol":"Rol*",
+		"email": "Email*",
+		"nameandsurname":"Name and surname*",
 		
 		"roles":{
 			"administrator":"Administrator"

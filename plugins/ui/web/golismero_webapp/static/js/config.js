@@ -1,4 +1,5 @@
 function loadConfigGeneral(){
+	$.validity.setup({ outputMode:"label" });
 	$.extend($.validity.messages, {
 		require: i18n.t("validate.require"),
 
@@ -24,8 +25,8 @@ function loadConfigGeneral(){
 		range:"#{field} must be between #{min} and #{max}.",
 
 		// Value length messages:
-		tooLong:"#{field} cannot be longer than #{max} characters.",
-		tooShort:"#{field} cannot be shorter than #{min} characters.}",
+		tooLong:i18n.t("validate.tooLong"),
+		tooShort:i18n.t("validate.tooShort"),
 
 		// Aggregate validator messages:
 		equal:"Values don't match.",
