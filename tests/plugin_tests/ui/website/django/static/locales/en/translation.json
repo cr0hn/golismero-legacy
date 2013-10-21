@@ -1,4 +1,10 @@
 {
+  "validate":{
+	"require":"The field #{field} is required."
+  },
+  "error":{
+	"loginIncorrect":"Username or password incorrect"
+  },
   "home": {
     "myaccount": "My account <b class='caret'>"
   },

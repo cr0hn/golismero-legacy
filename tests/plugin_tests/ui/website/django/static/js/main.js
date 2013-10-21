@@ -88,12 +88,40 @@ var AppRouter = Backbone.Router.extend({
 	}
 });
 
-utils.loadTemplate(['SidebarView', 'HomeView', 'UsersView', 'ScansView', 'ProfilesView'], function() {
-	var option = { resGetPath: '/static/locales/__lng__/__ns__.json' };
-	i18n.init(option, function(t) {
-		$("body").i18n();	
-		window.app = new AppRouter();
-		Backbone.history.start();		
+/*var sync = Backbone.sync;
+Backbone.sync = function(method, model, options) {
+  options.beforeSend = function (xhr) {
+    xhr.setRequestHeader('token',  $.localStorage.get("token"));    
+  };
+
+  // Update other options here.
+
+  sync(method, model, options);
+};*/
+//necesario para las peticiones que necesitan autenticacion
+$.ajaxSetup({
+    headers: {
+        'Authorization':"Token " +$.localStorage.get("token")
+    }
+});
+
+
+function logout(){
+	$.localStorage.removeAll();
+	window.location="/login.html";
+}
+$(document).ready(function(){
+	if($.localStorage.get("token")==null){
+		window.location="/login.html";
+	}
+	utils.loadTemplate(['SidebarView', 'HomeView', 'UsersView', 'ScansView', 'ProfilesView'], function() {
+		var option = { resGetPath: '/static/locales/__lng__/__ns__.json' };
+		i18n.init(option, function(t) {
+			$("body").i18n();	
+			$("#logout").click(function(){logout()});
+			window.app = new AppRouter();
+			Backbone.history.start();		
+		});
+			 
 	});
-    	 
 });

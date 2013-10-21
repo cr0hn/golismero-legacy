@@ -1,4 +1,10 @@
 {
+  "validate":{
+	"require":"El campo #{field} es obligatorio."
+  },
+  "error":{
+	"loginIncorrect":"El nombre de usuario o contraseña no son correctos"
+  },
   "home": {
     "myaccount": "Mi cuenta <b class='caret'>"
   },

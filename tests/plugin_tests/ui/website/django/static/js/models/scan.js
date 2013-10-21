@@ -12,7 +12,7 @@ Scan = Backbone.Model.extend({
 });
 
 Scans = Backbone.Collection.extend({
-	url: "/static/test/escaneos.json",
+	url: "/static/test/escaneos.json?prueba",
     model: Scan,
 	parse : function(response){
 		return response;  
