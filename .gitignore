@@ -21,6 +21,7 @@ golismero_2/TODO.txt
 *.dbm
 *.sql
 *.sqlite
+*.sqlite3
 *-journal
 
 # Output file extensions
