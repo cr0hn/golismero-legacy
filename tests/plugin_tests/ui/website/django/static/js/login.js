@@ -1,6 +1,6 @@
 function validate(){
 	//$.validity.setup({ outputMode:"label" });
-	$.validity.start()
+	$.validity.start();
 	$("#username").require();
 	$("#password").require();
 	var result = $.validity.end()
