@@ -125,7 +125,7 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable the admin:
      #'django.contrib.admin',
     #'apps.home',
-    #'backend',
+    'backend',
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',

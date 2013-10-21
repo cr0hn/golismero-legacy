@@ -7,8 +7,11 @@ from rest_framework.decorators import link
 from rest_framework.renderers import StaticHTMLRenderer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
-from backend.rest_api.authentication import ExpiringTokenAuthentication
 from rest_framework.decorators import permission_classes
+from backend.rest_api.authentication import ExpiringTokenAuthentication
+from backend.rest_api.serializers import AuditSerializer
+
+
 
 #
 # This file defines the actions for the API-REST
@@ -193,7 +196,25 @@ class AuditViewSet(ViewSet):
 		"""
 
 		"""
-		return Response({'create':'aaaa'})
+
+		m_return = {}
+		audit    = AuditSerializer(data=request.DATA)
+
+		if audit.is_valid():
+
+			audit.save()
+
+			m_return['status']        = "ok"
+			m_return['audit_id']      = audit.data['id']
+			return Response(m_return)
+
+
+		m_return['status']      = "error"
+		m_return['error_code']  = 0
+		m_return['error']       = ["%s: %s" %(x, y.pop()) for x, y in audit.errors.iteritems()]
+
+		return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
 
 	#----------------------------------------------------------------------
 	def delete(self, request, *args, **kwargs):
