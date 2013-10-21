@@ -117,6 +117,7 @@ $(document).ready(function(){
 	utils.loadTemplate(['SidebarView', 'HomeView', 'UsersView', 'ScansView', 'ProfilesView'], function() {
 		var option = { resGetPath: '/static/locales/__lng__/__ns__.json' };
 		i18n.init(option, function(t) {
+			loadConfigGeneral();
 			$("body").i18n();	
 			$("#logout").click(function(){logout()});
 			window.app = new AppRouter();
