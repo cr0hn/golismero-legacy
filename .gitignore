@@ -24,7 +24,7 @@ golismero_2/TODO.txt
 *-journal
 
 # Output file extensions
-*.html
+#*.html
 *.rst
 ##*.txt
 *.xml
