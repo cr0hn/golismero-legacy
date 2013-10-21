@@ -54,8 +54,21 @@ window.UsersView = Backbone.View.extend({
 	},
 	
 	saveUser: function(){
-		alert("guardado");
-		this.closePanel();
+		
+		//validamos
+		$.validity.start();
+		$("#username").maxLength( 100).minLength(8);
+		$("#password").maxLength( 100).minLength(8);
+		$("#repeat-password").maxLength( 100).minLength(8);
+		$("#name").maxLength( 100).require();
+		$("#email").maxLength( 100).match("email");
+		$("input[type='password']").equal("Passwords do not match.");
+		var result = $.validity.end()
+		if(result.errors ==0){
+			alert("guardado");
+			this.closePanel();
+		}
+		
 	},
 	//resetea, obtiene los datos(si es una edicion) y muestra el formulario
 	resetAndShowForm: function(model)
