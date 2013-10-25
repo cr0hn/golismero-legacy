@@ -1,5 +1,5 @@
 [Documentation]
-Name        = Default Error Page Finder
+Name        = Default error page finder
 Description = Identifies default error pages for most commonly used web servers.
 Author      = GoLismero project team
 Version     = 0.1

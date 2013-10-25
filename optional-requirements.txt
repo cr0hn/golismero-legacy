@@ -1,2 +1,9 @@
 argcomplete
 python-daemon
+django
+djangorestframework
+markdown
+django-filter
+pygments
+django-cors-headers
+netaddr

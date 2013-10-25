@@ -1,5 +1,5 @@
 [Documentation]
-Name        = Web Server Fingerprinter
+Name        = Web Server fingerprinting plugin
 Description = Fingerprinter of web servers.
 Author      = GoLismero project team
 Version     = 0.1

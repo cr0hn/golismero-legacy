@@ -1,5 +1,5 @@
 [Documentation]
-Name        = OS Fingerprinter
+Name        = OS fingerprinting plugin
 Description = Fingerprinter of server operating systems.
 Author      = GoLismero project team
 Version     = 0.1

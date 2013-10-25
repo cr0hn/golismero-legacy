@@ -91,7 +91,7 @@ class ObtainExpiringAuthToken(ObtainAuthToken):
         errors               = {}
         errors["status"]     = "error"
         errors["error_code"] = error_code
-        errors["errors"]     = error_descriptions
+        errors["error"]     = error_descriptions
 
         return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 

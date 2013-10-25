@@ -41,10 +41,8 @@ import netaddr
 import requests
 import traceback
 
-from geopy import geocoders
 
-
-#------------------------------------------------------------------------------
+#----------------------------------------------------------------------
 class GeoIP(TestingPlugin):
     """
     This plugin tries to geolocate all IP addresses and domain names.
@@ -55,34 +53,20 @@ class GeoIP(TestingPlugin):
     # https://github.com/ioerror/blockfinder
 
 
-    #--------------------------------------------------------------------------
+    #----------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Domain, IP, Geolocation]
+        return [Domain, IP]
 
 
-    #--------------------------------------------------------------------------
+    #----------------------------------------------------------------------
     def recv_info(self, info):
 
         # This is where we'll collect the data we'll return.
         results = []
 
-        # Augment geolocation data obtained through other means.
-        # (For example: image metadata)
-        if info.is_instance(Geolocation):
-            if not info.street_addr:
-                street_addr = self.query_google(info.latitude, info.longitude)
-                if street_addr:
-                    info.street_addr = street_addr
-                    #
-                    # TODO: parse the street address
-                    #
-                    Logger.log("(%s, %s) is in %s" % \
-                               (info.latitude, info.longitude, street_addr))
-            return
-
         # Get the IP address or domain name.
         # Skip unsupported targets.
-        if info.is_instance(IP):
+        if info.data_subtype == IP.data_subtype:
             if info.version != 4:
                 return
             target = info.address
@@ -91,7 +75,7 @@ class GeoIP(TestingPlugin):
                parsed.is_private()  or \
                parsed.is_link_local():
                 return
-        elif info.is_instance(Domain):
+        elif info.data_subtype == Domain.data_subtype:
             target = info.hostname
             if "." not in target:
                 return
@@ -99,16 +83,18 @@ class GeoIP(TestingPlugin):
             assert False, type(info)
 
         # Query the freegeoip.net service.
-        kwargs = self.query_freegeoip(target)
+        # FIXME: the service supports SSL, but we need up to date certificates.
+        Logger.log_more_verbose("Querying freegeoip.net for: " + target)
+        resp   = requests.get("http://freegeoip.net/json/" + target)
+        if not resp.content:
+            raise RuntimeError(
+                "Freegeoip.net webservice is not available,"
+                " possible network error?"
+            )
+        kwargs = json_decode(resp.content)
 
         # Remove the IP address from the response.
         address = kwargs.pop("ip")
-
-        # Query the Google Geocoder.
-        street_addr = self.query_google(
-            kwargs["latitude"], kwargs["longitude"])
-        if street_addr:
-            kwargs["street_addr"] = street_addr
 
         # Create a Geolocation object.
         geoip = Geolocation(**kwargs)
@@ -132,33 +118,3 @@ class GeoIP(TestingPlugin):
 
         # Return the results.
         return results
-
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def query_freegeoip(target):
-        Logger.log_more_verbose("Querying freegeoip.net for: " + target)
-        resp = requests.get("http://freegeoip.net/json/" + target)
-        if not resp.content:
-            raise RuntimeError(
-                "Freegeoip.net webservice is not available,"
-                " possible network error?"
-            )
-        return json_decode(resp.content)
-
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def query_google(latitude, longitude):
-        coordinates = "%s, %s" % (latitude, longitude)
-        Logger.log_more_verbose(
-            "Querying Google Geocoder for: %s" % coordinates)
-        try:
-            g = geocoders.GoogleV3()
-            r = g.reverse(coordinates)
-            if r:
-                return r[0][0].encode("UTF-8")
-        except Exception, e:
-            fmt = traceback.format_exc()
-            Logger.log_error_verbose("Error: %s" % str(e))
-            Logger.log_error_more_verbose(fmt)
