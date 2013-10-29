@@ -302,9 +302,6 @@ class Orchestrator (object):
 
         :param message: Incoming message.
         :type message: Message
-
-        :returns: True if the message was sent, False if it was dropped.
-        :rtype: bool
         """
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %r instead" % type(message))
@@ -319,32 +316,24 @@ class Orchestrator (object):
                                               message.message_code,
                                               * message.message_info)
 
-                # The method now must return True because the message was sent.
-                return True
-
             # If it's a stop audit message, dispatch it first to the UI,
             # then to the audit manager (the opposite to the normal order).
-            if (message.message_type == MessageType.MSG_TYPE_CONTROL and \
+            elif (
+                message.message_type == MessageType.MSG_TYPE_CONTROL and
                 message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT
             ):
                 self.uiManager.dispatch_msg(message)
                 self.auditManager.dispatch_msg(message)
                 Logger.log_verbose("Audit finished: %s" % message.audit_name)
 
-                # The method now must return True because the message was sent.
-                return True
+            # For all other messages...
+            else:
 
-            # If it's a control or info message, dispatch it to the audits.
-            if self.auditManager.dispatch_msg(message):
+                # Dispatch it to the audits.
+                self.auditManager.dispatch_msg(message)
 
-                # If it wasn't dropped, send it to the UI plugins.
+                # Dispatch it to the UI plugins.
                 self.uiManager.dispatch_msg(message)
-
-                # The method now must return True because the message was sent.
-                return True
-
-            # The method now must return False because the message was dropped.
-            return False
 
         finally:
 
@@ -352,11 +341,11 @@ class Orchestrator (object):
             if  message.message_type == MessageType.MSG_TYPE_CONTROL and \
                 message.message_code == MessageCode.MSG_CONTROL_STOP:
 
-                # Stop the program execution
+                # Stop the program execution.
                 if message.message_info:
-                    exit(0)                   # Planned shutdown
+                    exit(0)                   # Planned shutdown.
                 else:
-                    raise KeyboardInterrupt() # User cancel
+                    raise KeyboardInterrupt() # User cancel.
 
 
     #----------------------------------------------------------------------

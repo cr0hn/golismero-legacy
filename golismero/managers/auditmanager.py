@@ -47,6 +47,7 @@ from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 from ..messaging.notifier import AuditNotifier
 
+from collections import defaultdict
 from warnings import catch_warnings, warn
 from time import time
 from traceback import format_exc
@@ -225,9 +226,6 @@ class AuditManager (object):
 
         :param message: Incoming message.
         :type message: Message
-
-        :returns: True if the message was sent, False if it was dropped.
-        :rtype: bool
         """
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %r instead" % type(message))
@@ -236,7 +234,7 @@ class AuditManager (object):
         if message.message_type == MessageType.MSG_TYPE_DATA:
             if not message.audit_name:
                 raise ValueError("Data message with no target audit!")
-            return self.get_audit(message.audit_name).dispatch_msg(message)
+            self.get_audit(message.audit_name).dispatch_msg(message)
 
         # Process control messages
         elif message.message_type == MessageType.MSG_TYPE_CONTROL:
@@ -258,11 +256,8 @@ class AuditManager (object):
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
                 if message.audit_name:
                     self.get_audit(message.audit_name).dispatch_msg(message)
-                    return True
 
             # TODO: pause and resume audits, start new audits
-
-        return True
 
 
     #--------------------------------------------------------------------------
@@ -319,6 +314,11 @@ class Audit (object):
 
         # Number of unacknowledged messages.
         self.__expecting_ack = 0
+
+        # Counters used to collect runtime statistics.
+        self.__stage_cycles = defaultdict(int) # stage -> counter
+        self.__processed_count = 0
+        self.__total_count = 0
 
         # Initialize the managers to None.
         self.__notifier = None
@@ -421,7 +421,7 @@ class Audit (object):
     def current_stage(self):
         """
         :returns: Current execution stage.
-        :rtype: str
+        :rtype: int
         """
         return self.__current_stage
 
@@ -432,6 +432,20 @@ class Audit (object):
         :rtype: bool
         """
         return self.__is_report_started
+
+
+    #--------------------------------------------------------------------------
+    def get_runtime_stats(self):
+        """
+        :returns: Dictionary with runtime statistics.
+        :rtype: dict(str -> *)
+        """
+        return {
+            "current_stage":     self.__current_stage,
+            "total_count":       self.__total_count,
+            "processed_count":   self.__processed_count,
+            "stage_cycles":      dict(self.__stage_cycles),
+        }
 
 
     #--------------------------------------------------------------------------
@@ -621,20 +635,8 @@ class Audit (object):
 
 
     #--------------------------------------------------------------------------
-    def send_info(self, data):
-        """
-        Send data to the Orchestrator.
-
-        :param data: Data to send.
-        :type data: Data
-        """
-        return self.send_msg(message_type = MessageType.MSG_TYPE_DATA,
-                             message_info = [data])
-
-
-    #--------------------------------------------------------------------------
     def send_msg(self, message_type = MessageType.MSG_TYPE_DATA,
-                       message_code = MessageCode.MSG_DATA,
+                       message_code = MessageCode.MSG_DATA_REQUEST,
                        message_info = None,
                        priority = MessagePriority.MSG_PRIORITY_MEDIUM):
         """
@@ -758,6 +760,11 @@ class Audit (object):
                         # Skip to the next stage.
                         continue
 
+                    # Update the stage statistics.
+                    self.__stage_cycles[self.__current_stage] += 1
+                    self.__processed_count = 0
+                    self.__total_count = len(pending)
+
                     # We're going to run testing plugins,
                     # so we need to update the audit stop time.
                     self.__must_update_stop_time = True
@@ -773,7 +780,7 @@ class Audit (object):
                     # Send the pending data to the Orchestrator.
                     self.send_msg(
                         message_type = MessageType.MSG_TYPE_DATA,
-                        message_code = MessageCode.MSG_DATA,
+                        message_code = MessageCode.MSG_DATA_REQUEST,
                         message_info = datalist,
                     )
 
@@ -793,9 +800,6 @@ class Audit (object):
 
         :param message: The message to send.
         :type message: Message
-
-        :returns: True if the message was sent, False if it was dropped.
-        :rtype: bool
         """
         if not isinstance(message, Message):
             raise TypeError("Expected Message, got %r instead" % type(message))
@@ -815,7 +819,7 @@ class Audit (object):
                                             orchestrator_tid = old_context._orchestrator_tid)
 
             # Dispatch the message.
-            return self.__dispatch_msg(message)
+            self.__dispatch_msg(message)
 
         finally:
 
@@ -846,102 +850,18 @@ class Audit (object):
             database.append_log_text(
                 text, level, is_error, plugin_id, ack_id, timestamp)
 
-            # Tell the Orchestrator we processed the message.
-            return True
+            # We're done.
+            return
 
         # Is it data?
         if message.message_type == MessageType.MSG_TYPE_DATA:
 
-            # Here we'll store the data to be resent to the plugins.
-            data_for_plugins = []
-
-            # For each data object sent...
+            # Sanitize the message, the info should always be a list.
             if isinstance(message.message_info, Data):
                 message.message_info = [message.message_info]
-            for data in message.message_info:
 
-                # Check the type.
-                if not isinstance(data, Data):
-                    warn(
-                        "TypeError: Expected Data, got %r instead"
-                        % type(data), RuntimeWarning, stacklevel=3)
-                    continue
-
-                # Is the data new?
-                if not database.has_data_key(data.identity):
-
-                    # Increase the number of links followed.
-                    if data.data_type == Data.TYPE_RESOURCE and data.resource_type == Resource.RESOURCE_URL:
-                        self.__followed_links += 1
-
-                        # Maximum number of links reached?
-                        if self.config.max_links > 0 and self.__followed_links >= self.config.max_links:
-
-                            # Show a warning, but only once.
-                            if self.__show_max_links_warning:
-                                self.__show_max_links_warning = False
-                                w = "Maximum number of links (%d) reached! Audit: %s"
-                                w = w % (self.config.max_links, self.name)
-                                with catch_warnings(record=True) as wlist:
-                                    warn(w, RuntimeWarning)
-                                self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                              message_code = MessageCode.MSG_CONTROL_WARNING,
-                                              message_info = wlist,
-                                              priority = MessagePriority.MSG_PRIORITY_HIGH)
-
-                            # Skip this data object.
-                            continue
-
-                # Add the data to the database.
-                # This automatically merges the data if it already exists.
-                database.add_data(data)
-
-                # If the data is in scope...
-                if data.is_in_scope():
-
-                    # If the plugin is not recursive, mark the data as already processed by it.
-                    plugin_id = message.plugin_id
-                    if plugin_id:
-                        plugin_info = pluginManager.get_plugin_by_id(plugin_id)
-                        if not plugin_info.recursive:
-                            database.mark_plugin_finished(data.identity, plugin_id)
-
-                    # The data will be sent to the plugins.
-                    data_for_plugins.append(data)
-
-                # If the data is NOT in scope...
-                else:
-
-                    # Mark the data as having completed all stages.
-                    database.mark_stage_finished(data.identity, pluginManager.max_stage)
-
-            # Recursively process newly discovered data, if any.
-            # Discovered data already in the database is ignored.
-            visited = {data.identity for data in data_for_plugins}  # Skip original data.
-            for data in list(data_for_plugins):       # Can't iterate and modify!
-                links = set(data.links)               # Get the original links.
-                queue = list(data.discovered)         # Make sure it's a copy.
-                links = set(data.links).difference(links) # Get the new links.
-                while queue:
-                    data = queue.pop(0)
-                    if (data.identity not in visited and
-                        not database.has_data_key(data.identity)
-                    ):
-                        database.add_data(data)       # No merging because it's new.
-                        visited.add(data.identity)    # Prevents infinite loop.
-                        queue.extend(data.discovered) # Recursive.
-                        if data.is_in_scope():        # If in scope, send it to plugins.
-                            data_for_plugins.append(data)
-                        else:                         # If not, mark as completed.
-                            database.mark_stage_finished(data.identity, pluginManager.max_stage)
-                if links:                             # If we have new links...
-                    database.add_data(data)           # Refresh the data object.
-
-            # If we have data to be sent...
-            if data_for_plugins:
-
-                # Modify the message in-place with the filtered list of data objects.
-                message._update_data(data_for_plugins)
+            # Is it data meant to be sent to the plugins?
+            if message.message_code == MessageCode.MSG_DATA_REQUEST:
 
                 # Send the message to the plugins, and track the expected ACKs.
                 launched = self.__notifier.notify(message)
@@ -953,11 +873,109 @@ class Audit (object):
                                   message_code = MessageCode.MSG_CONTROL_ACK,
                                       priority = MessagePriority.MSG_PRIORITY_LOW)
 
-                # Tell the Orchestrator we sent the message.
-                return True
+                # Increment the count of processed objects.
+                self.__processed_count += len(message.message_info)
 
-        # Tell the Orchestrator we dropped the message.
-        return False
+                # We're done.
+                return
+
+            # Is it data received from the plugins?
+            elif message.message_code == MessageCode.MSG_DATA_RESPONSE:
+
+                # Here we'll store the data to be resent to the plugins.
+                data_for_plugins = []
+
+                # For each data object sent...
+                for data in message.message_info:
+
+                    # Check the type.
+                    if not isinstance(data, Data):
+                        warn(
+                            "TypeError: Expected Data, got %r instead"
+                            % type(data), RuntimeWarning, stacklevel=3)
+                        continue
+
+                    # Is the data new?
+                    if not database.has_data_key(data.identity):
+
+                        # Increase the number of links followed.
+                        if data.data_type == Data.TYPE_RESOURCE and data.resource_type == Resource.RESOURCE_URL:
+                            self.__followed_links += 1
+
+                            # Maximum number of links reached?
+                            if self.config.max_links > 0 and self.__followed_links >= self.config.max_links:
+
+                                # Show a warning, but only once.
+                                if self.__show_max_links_warning:
+                                    self.__show_max_links_warning = False
+                                    w = "Maximum number of links (%d) reached! Audit: %s"
+                                    w = w % (self.config.max_links, self.name)
+                                    with catch_warnings(record=True) as wlist:
+                                        warn(w, RuntimeWarning)
+                                    self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
+                                                  message_code = MessageCode.MSG_CONTROL_WARNING,
+                                                  message_info = wlist,
+                                                  priority = MessagePriority.MSG_PRIORITY_HIGH)
+
+                                # Skip this data object.
+                                continue
+
+                    # Add the data to the database.
+                    # This automatically merges the data if it already exists.
+                    database.add_data(data)
+
+                    # If the data is in scope...
+                    if data.is_in_scope():
+
+                        # If the plugin is not recursive, mark the data as already processed by it.
+                        plugin_id = message.plugin_id
+                        if plugin_id:
+                            plugin_info = pluginManager.get_plugin_by_id(plugin_id)
+                            if not plugin_info.recursive:
+                                database.mark_plugin_finished(data.identity, plugin_id)
+
+                        # The data will be sent to the plugins.
+                        data_for_plugins.append(data)
+
+                    # If the data is NOT in scope...
+                    else:
+
+                        # Mark the data as having completed all stages.
+                        database.mark_stage_finished(data.identity, pluginManager.max_stage)
+
+                # Recursively process newly discovered data, if any.
+                # Discovered data already in the database is ignored.
+                visited = {data.identity for data in data_for_plugins}  # Skip original data.
+                for data in list(data_for_plugins):       # Can't iterate and modify!
+                    links = set(data.links)               # Get the original links.
+                    queue = list(data.discovered)         # Make sure it's a copy.
+                    links = set(data.links).difference(links) # Get the new links.
+                    while queue:
+                        data = queue.pop(0)
+                        if (data.identity not in visited and
+                            not database.has_data_key(data.identity)
+                        ):
+                            database.add_data(data)       # No merging because it's new.
+                            visited.add(data.identity)    # Prevents infinite loop.
+                            queue.extend(data.discovered) # Recursive.
+                            if data.is_in_scope():        # If in scope, send it to plugins.
+                                data_for_plugins.append(data)
+                            else:                         # If not, mark as completed.
+                                database.mark_stage_finished(data.identity, pluginManager.max_stage)
+                    if links:                             # If we have new links...
+                        database.add_data(data)           # Refresh the data object.
+
+                # If we have data to be sent and we're in the first stage...
+                if data_for_plugins and self.current_stage == self.pluginManager.min_stage:
+
+                    # Increment the total data count for this stage.
+                    self.__total_count += len(data_for_plugins)
+
+                    # Send a data request message to the Orchestrator.
+                    # This optimization saves on database accesses.
+                    self.send_msg(message_type = MessageType.MSG_TYPE_DATA,
+                                  message_code = MessageCode.MSG_DATA_REQUEST,
+                                  message_info = data_for_plugins)
 
 
     #--------------------------------------------------------------------------
