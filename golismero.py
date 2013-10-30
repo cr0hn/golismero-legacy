@@ -265,7 +265,7 @@ def cmdline_parser():
     gr_audit.add_argument("-nd", "--no-db", dest="audit_db", action="store_const", const="memory://", help="do not store the results in a database")
     cmd = gr_audit.add_argument("-i", "--input", dest="imports", metavar="FILENAME", action="append", help="read results from external tools right before the audit")
     if autocomplete_enabled:
-        cmd.completer = FilesCompleter(allowednames=(".csv", ".xml"), directories=False)
+        cmd.completer = FilesCompleter(allowednames=(".csv", ".xml", ".nessus"), directories=False)
     gr_audit.add_argument("-ni", "--no-input", dest="disable_importing", action="store_true", default=False, help="do not read results from external tools")
     gr_report = parser.add_argument_group("report options")
     cmd = gr_report.add_argument("-o", "--output", dest="reports", metavar="FILENAME", action="append", help="write the results of the audit to this file (use - for stdout)")

@@ -231,7 +231,8 @@ class Plugin (object):
         :type progress: float | None
         """
         ##Config._context.send_status(progress)
-        if progress:
+
+        if progress is not None:
             self.progress.set_percent(progress)
 
 
