@@ -40,26 +40,26 @@ from traceback import format_exc
 from warnings import warn
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class Spider(TestingPlugin):
     """
     This plugin is a web spider.
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def recv_info(self, info):
 
         m_return = []
 
         m_url = info.url
 
-        Logger.log_verbose("Spidering URL: %r" % m_url)
+        Logger.log_verbose("Spidering URL: %s" % m_url)
 
         # Check if need follow first redirect
         p = None
@@ -80,8 +80,11 @@ class Spider(TestingPlugin):
         # Get links
         if p.information_type == Information.INFORMATION_HTML:
             m_links = extract_from_html(p.raw_data, m_url)
-        else:
+            m_links.update( extract_from_text(p.raw_data, m_url) )
+        elif p.information_type == Information.INFORMATION_PLAIN_TEXT:
             m_links = extract_from_text(p.raw_data, m_url)
+        else:
+            return m_return
         try:
             m_links.remove(m_url)
         except Exception:
@@ -97,13 +100,12 @@ class Spider(TestingPlugin):
             Logger.log_more_verbose("Skipped forbidden URLs:\n    %s" % "\n    ".join(sorted(m_urls_not_allowed)))
 
         # Do not follow URLs out of scope
-        m_out_of_scope_count = len(m_urls_allowed)
-        m_urls_allowed = []
+        m_urls_in_scope = []
         m_broken = []
         for url in m_urls_allowed:
             try:
                 if url in Config.audit_scope:
-                    m_urls_allowed.append(url)
+                    m_urls_in_scope.append(url)
             except Exception:
                 m_broken.append(url)
         if m_broken:
@@ -111,17 +113,17 @@ class Spider(TestingPlugin):
                 Logger.log_more_verbose("Skipped uncrawlable URL: %s" % m_broken[0])
             else:
                 Logger.log_more_verbose("Skipped uncrawlable URLs:\n    %s" % "\n    ".join(sorted(m_broken)))
-        m_out_of_scope_count = m_out_of_scope_count - len(m_urls_allowed) - len(m_broken)
+        m_out_of_scope_count = len(m_urls_allowed) - len(m_urls_in_scope) - len(m_broken)
         if m_out_of_scope_count:
             Logger.log_more_verbose("Skipped %d links out of scope." % m_out_of_scope_count)
 
-        if m_urls_allowed:
+        if m_urls_in_scope:
             Logger.log_verbose("Found %d links in URL: %s" % (len(m_urls_allowed), m_url))
         else:
             Logger.log_verbose("No links found in URL: %s" % m_url)
 
         # Convert to Url data type
-        for u in m_urls_allowed:
+        for u in m_urls_in_scope:
             try:
                 p = parse_url(u)
                 if p.scheme == "mailto":
@@ -137,12 +139,12 @@ class Spider(TestingPlugin):
         return m_return
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def check_download(self, url, name, content_length, content_type):
 
         # Check the file type is text.
-        if not content_type or not content_type.strip().lower().startswith("text/"):
-            Logger.log_more_verbose("Skipping URL, binary content: %s" % url)
+        if not content_type:
+            Logger.log_more_verbose("Skipping URL, missing content type: %s" % url)
             return False
 
         # Is the content length present?
@@ -154,9 +156,14 @@ class Spider(TestingPlugin):
                 return False
 
             # Check the file is not too big.
-            if content_length > 100000:
-                Logger.log_more_verbose("Skipping URL, content too large (%d bytes): %s" % (content_length, url))
-                return False
+            if content_type.strip().lower().startswith("text/"):
+                if content_length > 100000:
+                    Logger.log_more_verbose("Skipping URL, content too large (%d bytes): %s" % (content_length, url))
+                    return False
+            else:
+                if content_length > 5000000:
+                    Logger.log_more_verbose("Skipping URL, content too large (%d bytes): %s" % (content_length, url))
+                    return False
 
             # Approved!
             return True
