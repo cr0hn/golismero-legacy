@@ -44,7 +44,7 @@ from ..common import Singleton
 #
 # Data messages:
 #   message_type = MessageType.MSG_TYPE_DATA
-#   message_code = MessageCode.MSG_DATA
+#   message_code = MessageCode.MSG_DATA_*
 #   message_info = List of Data objects returned by a plugin
 #   plugin_id    = ID of the plugin that returned them
 #   priority     = MessagePriority.MSG_PRIORITY_MEDIUM
@@ -179,8 +179,6 @@ class MessageCode(MessageConstants):
         """
         if type(message_type) != int:
             raise TypeError("Expected int, got %r instead" % type(message_type))
-        if message_type == MessageType.MSG_TYPE_DATA:
-            return "MSG_DATA" if value == MessageCode.MSG_DATA else None
         try:
             prefix = cls.__prefix_for_type[message_type]
         except KeyError:
@@ -193,7 +191,8 @@ class MessageCode(MessageConstants):
     #--------------------------------------------------------------------------
 
     # All data messages use the same code
-    MSG_DATA                       = 0
+    MSG_DATA_REQUEST               = 0  # Orchestrator -> Plugins
+    MSG_DATA_RESPONSE              = 1  # Plugins -> Orchestrator
 
 
     #--------------------------------------------------------------------------
@@ -300,7 +299,7 @@ MSG_PRIORITIES = MessagePriority.get_values()
 MSG_TYPES = MessageType.get_values()
 MSG_CODES = MessageCode.get_values()
 
-MSG_DATA_CODES    = {MessageCode.MSG_DATA}
+MSG_DATA_CODES    = {getattr(MessageCode, x) for x in MessageCode.get_names() if x.startswith("MSG_DATA_")}
 MSG_CONTROL_CODES = {getattr(MessageCode, x) for x in MessageCode.get_names() if x.startswith("MSG_CONTROL_")}
 MSG_RPC_CODES     = {getattr(MessageCode, x) for x in MessageCode.get_names() if x.startswith("MSG_RPC_")}
 MSG_STATUS_CODES  = {getattr(MessageCode, x) for x in MessageCode.get_names() if x.startswith("MSG_STATUS_")}

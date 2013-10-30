@@ -174,8 +174,11 @@ class AbstractNotifier (object):
 
         try:
 
-            # Info messages are sent to the send_info() method.
-            if message.message_type == MessageType.MSG_TYPE_DATA:
+            # Data request messages are sent to the recv_info() plugin method.
+            if (
+                message.message_type == MessageType.MSG_TYPE_DATA and
+                message.message_code == MessageCode.MSG_DATA_REQUEST
+            ):
                 audit_name = message.audit_name
                 for data in message.message_info:
 
@@ -188,7 +191,7 @@ class AbstractNotifier (object):
                         self.dispatch_info(plugin, audit_name, data)
                         count += 1
 
-            # Control messages are sent to the send_msg() method.
+            # All other messages are sent to the recv_msg() plugin method.
             else:
                 for plugin in self._notification_msg_list:
                     self.dispatch_msg(plugin, message)

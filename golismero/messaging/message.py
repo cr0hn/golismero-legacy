@@ -209,13 +209,3 @@ class Message (object):
         s %= (self.timestamp, self.message_type, self.message_code,
               self.audit_name, self.plugin_id, self.message_info)
         return s
-
-
-    #----------------------------------------------------------------------
-    def _update_data(self, datalist):
-        """
-        .. warning: Called internally during message processing. Do not use!
-        """
-        if not self.message_type == MessageType.MSG_TYPE_DATA:
-            raise TypeError("Cannot update data of non-data message!")
-        self.__message_info = datalist

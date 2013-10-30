@@ -260,7 +260,7 @@ def _bootstrap(context, func, args, kwargs):
                                     try:
                                         context.send_msg(
                                             message_type = MessageType.MSG_TYPE_DATA,
-                                            message_code = MessageCode.MSG_DATA,
+                                            message_code = MessageCode.MSG_DATA_RESPONSE,
                                             message_info = result,
                                         )
                                     except Exception, e:
