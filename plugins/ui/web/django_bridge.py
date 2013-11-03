@@ -139,35 +139,33 @@ def _launch_django(input_conn, output_conn,
                 # Instance the bridge object to talk to GoLismero.
                 bridge = Bridge(input_conn, output_conn)
 
+                # Create the state machine.
+                fsm = GoLismeroStateMachine(bridge)
+
                 # XXX HACK we'll launch an XMLRPC server for now.
-                #run_xmlrpc_server(bridge)
+                run_xmlrpc_server(fsm)
 
                 # Load the Django settings.
-                os.environ.setdefault("DJANGO_SETTINGS_MODULE", "golismero_webapp.core.settings")
+                ##os.environ.setdefault("DJANGO_SETTINGS_MODULE", "golismero_webapp.core.settings")
 
-                from django.core.management import call_command
-                from django.conf import settings
-                #from web.golismero_webapp.core import settings as default_config
+                ##from django.core.management import call_command
+                ##from django.conf import settings
+                ##from web.golismero_webapp.core import settings as default_config
 
-                #settings["GOLISMERO_BRIDGE"]              = bridge
-                #settings["GOLISMERO_MAIN_CONFIG"]         = orchestrator_config
-                #settings["GOLISMERO_PLUGIN_CONFIG"]       = plugin_config
-                #settings["GOLISMERO_PLUGIN_EXTRA_CONFIG"] = plugin_extra_config
-
-                settings.configure(
-                    GOLISMERO_BRIDGE                = bridge,
-                    GOLISMERO_MAIN_CONFIG           = orchestrator_config,
-                    GOLISMERO_PLUGIN_CONFIG         = plugin_config,
-                    GOLISMERO_PLUGIN_EXTRA_CONFIG   = plugin_extra_config)
-
-                print settings
+                ##settings.configure(
+                ##    GOLISMERO_CHANNEL               = fsm,
+                ##    GOLISMERO_MAIN_CONFIG           = orchestrator_config,
+                ##    GOLISMERO_PLUGIN_CONFIG         = plugin_config,
+                ##    GOLISMERO_PLUGIN_EXTRA_CONFIG   = plugin_extra_config)
+                ##
+                ##print settings
 
                 # Load the Django webapp data model.
                 # XXX FIXME this code is bogus! @cr0hn: put your stuff here :)
                 ##from golismero_webapp.data.models import *
 
                 # First create the DDBB
-                #call_command("syncdb")
+                ##call_command("syncdb")
 
                 # Start the web application in the background.
                 # XXX FIXME this code is bogus! @cr0hn: put your stuff here :)
@@ -175,7 +173,7 @@ def _launch_django(input_conn, output_conn,
                 # the web application has shut down and we're quitting.
                 # You MUST instance GoLismeroStateMachine() by passing it
                 # the Bridge instance and (optionally) your event callback.
-                call_command(*command)
+                ##call_command(*command)
 
             # On error tell GoLismero we failed to initialize.
             except Exception, e:
@@ -199,7 +197,7 @@ def _launch_django(input_conn, output_conn,
 
 
 #------------------------------------------------------------------------------
-def run_xmlrpc_server(bridge):
+def run_xmlrpc_server(fsm):
 
     from SimpleXMLRPCServer import SimpleXMLRPCServer
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
@@ -213,9 +211,6 @@ def run_xmlrpc_server(bridge):
                                 requestHandler = RequestHandler,
                                 allow_none = True)
     server.register_introspection_functions()
-
-    # Create the state machine.
-    fsm = GoLismeroStateMachine(bridge)
 
     # Register a function.
     server.register_function(fsm.call, 'call')
