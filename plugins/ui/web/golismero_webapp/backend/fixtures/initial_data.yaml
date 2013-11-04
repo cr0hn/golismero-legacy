@@ -1,0 +1,27 @@
+- model: auth.user
+  pk: 5
+  fields:
+    username: admin
+    password: admin
+
+
+- model: backend.target
+  pk: 2
+  fields:
+    target_name: 127.0.0.1
+
+- model: backend.target
+  pk: 3
+  fields:
+    target_name: 127.0.0.2
+
+
+- model: backend.audits
+  pk: 2
+  fields:
+    audit_name: prueba
+    user: 5
+    targets: [
+     1,
+     3
+    ]
