@@ -89,7 +89,7 @@ from os import path
 # GoLismero modules.
 
 from golismero.api.config import Config
-from golismero.logger import Logger
+from golismero.api.logger import Logger
 from golismero.common import OrchestratorConfig, AuditConfig, \
      get_profile, get_default_config_file
 from golismero.main import launcher
