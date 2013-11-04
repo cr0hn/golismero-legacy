@@ -130,7 +130,7 @@ def _launch_django(input_conn, output_conn,
             try:
 
                 # Get the Django command to run.
-                command = [x.strip() for x in plugin_config["call_command"].split(" ")]
+                #command = [x.strip() for x in plugin_config["call_command"].split(" ")]
 
                 # Update the module search path to include our web app.
                 modpath = os.path.abspath(os.path.split(__file__)[0])
@@ -140,13 +140,13 @@ def _launch_django(input_conn, output_conn,
                 bridge = Bridge(input_conn, output_conn)
 
                 # XXX HACK we'll launch an XMLRPC server for now.
-                #run_xmlrpc_server(bridge)
+                run_xmlrpc_server(bridge)
 
                 # Load the Django settings.
-                os.environ.setdefault("DJANGO_SETTINGS_MODULE", "golismero_webapp.core.settings")
+                #os.environ.setdefault("DJANGO_SETTINGS_MODULE", "golismero_webapp.core.settings")
 
-                from django.core.management import call_command
-                from django.conf import settings
+                #from django.core.management import call_command
+                #from django.conf import settings
                 #from web.golismero_webapp.core import settings as default_config
 
                 #settings["GOLISMERO_BRIDGE"]              = bridge
@@ -154,13 +154,13 @@ def _launch_django(input_conn, output_conn,
                 #settings["GOLISMERO_PLUGIN_CONFIG"]       = plugin_config
                 #settings["GOLISMERO_PLUGIN_EXTRA_CONFIG"] = plugin_extra_config
 
-                settings.configure(
-                    GOLISMERO_BRIDGE                = bridge,
-                    GOLISMERO_MAIN_CONFIG           = orchestrator_config,
-                    GOLISMERO_PLUGIN_CONFIG         = plugin_config,
-                    GOLISMERO_PLUGIN_EXTRA_CONFIG   = plugin_extra_config)
+                #settings.configure(
+                    #GOLISMERO_BRIDGE                = bridge,
+                    #GOLISMERO_MAIN_CONFIG           = orchestrator_config,
+                    #GOLISMERO_PLUGIN_CONFIG         = plugin_config,
+                    #GOLISMERO_PLUGIN_EXTRA_CONFIG   = plugin_extra_config)
 
-                print settings
+                #print settings
 
                 # Load the Django webapp data model.
                 # XXX FIXME this code is bogus! @cr0hn: put your stuff here :)
@@ -175,7 +175,7 @@ def _launch_django(input_conn, output_conn,
                 # the web application has shut down and we're quitting.
                 # You MUST instance GoLismeroStateMachine() by passing it
                 # the Bridge instance and (optionally) your event callback.
-                call_command(*command)
+                #call_command(*command)
 
             # On error tell GoLismero we failed to initialize.
             except Exception, e:
@@ -209,7 +209,7 @@ def run_xmlrpc_server(bridge):
         rpc_paths = ('/RPC2',)
 
     # Create server
-    server = SimpleXMLRPCServer(addr = ("localhost", 8000),
+    server = SimpleXMLRPCServer(addr = ("localhost", 9000),
                                 requestHandler = RequestHandler,
                                 allow_none = True)
     server.register_introspection_functions()

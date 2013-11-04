@@ -51,7 +51,7 @@ class AuditsRouters(ParameterizedRouter):
 
         # Create
         Route(url       = r'^{prefix}/create{trailing_slash}$',
-              mapping   = {'get' : 'create'},
+              mapping   = {'post' : 'create'},
               name      = '{basename}-create',
               initkwargs= {}),
 
@@ -76,6 +76,12 @@ class AuditsRouters(ParameterizedRouter):
         Route(url       = r'^{prefix}/state/{lookup}$',
               mapping   = {'get' : 'state'},
               name      = '{basename}-state',
+              initkwargs= {}),
+
+        # Progress
+        Route(url       = r'^{prefix}/progress/{lookup}$',
+              mapping   = {'get' : 'progress'},
+              name      = '{basename}-progress',
               initkwargs= {}),
 
         # Results as summary

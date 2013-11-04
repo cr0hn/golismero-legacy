@@ -30,9 +30,33 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from rest_framework import serializers
 from backend.models import *
 
+#------------------------------------------------------------------------------
+class PluginsSerializer(serializers.ModelSerializer):
+    """"""
+
+    #------------------------------------------------------------------------------
+    class Meta:
+        model = Plugins
 
 #------------------------------------------------------------------------------
-#class AuditSerializer(serializers.ModelSerializer):
+class PluginsParametersSerializer(serializers.ModelSerializer):
+    """"""
+
+    #------------------------------------------------------------------------------
+    class Meta:
+        model  = PluginParameters
+        fields = ['param_name', 'param_value']
+#------------------------------------------------------------------------------
+class TargetSerializer(serializers.ModelSerializer):
+    """"""
+
+    #------------------------------------------------------------------------------
+    class Meta:
+        model   = Target
+        exclude = ["id"]
+
+
+#------------------------------------------------------------------------------
 class AuditSerializer(serializers.ModelSerializer):
     """
     This class serialize and deserializer Audit information
@@ -41,4 +65,5 @@ class AuditSerializer(serializers.ModelSerializer):
     #------------------------------------------------------------------------------
     class Meta:
         """"""
-        model  = Audits
+        model   = Audits
+        exclude = ["id", "user", "enabled_plugins", "targets"]

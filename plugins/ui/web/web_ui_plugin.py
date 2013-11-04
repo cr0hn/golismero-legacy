@@ -505,9 +505,12 @@ class WebUIPlugin(UIPlugin):
     #
     #--------------------------------------------------------------------------
 
-
-    #--------------------------------------------------------------------------
-    def do_scan_create(self, audit_config):
+	#----------------------------------------------------------------------
+	#
+	# Audit methods
+	#
+	#----------------------------------------------------------------------
+    def do_audit_create(self, audit_config):
         """
         Implementation of: /scan/create
 
@@ -524,7 +527,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_scan_cancel(self, audit_name):
+    def do_audit_cancel(self, audit_name):
         """
         Implementation of: /scan/cancel
 
@@ -537,7 +540,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_scan_list(self):
+    def do_audit_list(self):
         """
         Implementation of: /scan/list
 
@@ -552,7 +555,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_scan_state(self, audit_name):
+    def do_audit_state(self, audit_name):
         """
         Implementation of: /scan/state
 
@@ -576,7 +579,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_scan_results(self, data_type = "all"):
+    def do_audit_results(self, data_type = "all"):
         """
         Implementation of: /scan/results
 
@@ -603,7 +606,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_scan_details(self, id_list):
+    def do_audit_details(self, id_list):
         """
         Implementation of: /scan/details
 
@@ -613,7 +616,12 @@ class WebUIPlugin(UIPlugin):
         return Database.get_many(id_list)
 
 
-    #--------------------------------------------------------------------------
+
+	#----------------------------------------------------------------------
+	#
+	# Plugin methods
+	#
+	#----------------------------------------------------------------------
     def do_plugin_list(self):
         """
         Implementation of: /plugin/list
@@ -638,7 +646,12 @@ class WebUIPlugin(UIPlugin):
         return get_plugin_info(plugin_id)    # XXX TODO encode as JSON
 
 
-    #--------------------------------------------------------------------------
+
+	#----------------------------------------------------------------------
+	#
+	# Management methods
+	#
+	#----------------------------------------------------------------------
     def do_admin_service_stop(self):
         """
         Implementation of: /admin/service/stop

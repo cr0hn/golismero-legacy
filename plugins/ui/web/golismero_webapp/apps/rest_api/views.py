@@ -8,10 +8,12 @@ from rest_framework.renderers import StaticHTMLRenderer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.decorators import permission_classes
+
 from backend.rest_api.authentication import ExpiringTokenAuthentication
-from backend.rest_api.serializers import AuditSerializer
+from backend.rest_api.serializers import *
 
-
+from backend.managers.golismero_facade import *
+from backend.managers import GoLismeroAuditData
 
 #
 # This file defines the actions for the API-REST
@@ -115,7 +117,7 @@ class AuditViewSet(ViewSet):
 	#----------------------------------------------------------------------
 	def list(self, request, *args, **kwargs):
 		"""
-		Get audit list.
+		Get audit list returning a maximun of 100 audits
 
 		States availables:
 		- running
@@ -136,16 +138,16 @@ class AuditViewSet(ViewSet):
 
 		"""
 
-		m_return = {}
-		m_return['status']  = "ok"
-		m_return["results"] = self.unified_audits
+		m_return = {
+	        'results' : self.__audit2json(Audits.objects.all()[:100])
+	    }
 
 		return Response(m_return)
 
 	#----------------------------------------------------------------------
 	def list_parameterized(self, request, *args, **kwargs):
 		"""
-		Get audit list in the state as parameter "text"
+		Get audit list in the state as parameter "text", returning a maximun of 100 results.
 
 		States availables:
 		- running
@@ -177,43 +179,138 @@ class AuditViewSet(ViewSet):
 				m_return['status']  = "ok"
 
 				if m_state == "all":
-					m_return["results"] = self.unified_audits
+					m_return["results"] = self.__audit2json(Audits.objects.all()[:100])
 				else:
-					m_return["results"] = self.audits[m_state]
+					m_return["results"] = self.__audit2json(Audits.objects.filter(audit_state=m_state).all()[:100])
 
 				return Response(m_return)
 
 
-
+		#
+		# If errors...
+		#
 		m_return['status']      = "error"
 		m_return['error_code']  = 0
 		m_return['error']       = ["Unknown state"]
 
 		return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+
+	#----------------------------------------------------------------------
+	#
+	# CRUD methods
+	#
 	#----------------------------------------------------------------------
 	def create(self, request, *args, **kwargs):
 		"""
 
 		"""
 
+
+
 		m_return = {}
+		m_info   = None
+
+
+		#
+		# AUDIT INFO
+		#
 		audit    = AuditSerializer(data=request.DATA)
+		# Audit is valid?
+		if not audit.is_valid():
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["%s: %s" %(x, y.pop()) for x, y in audit.errors.iteritems()]
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-		if audit.is_valid():
+		# Store into global info
+		m_info = { k : str(v) for k, v in audit.data.iteritems()}
+		if m_info.get("disable_plugins", None):
+			m_info["disable_plugins"] = [x.strip() for x in m_info["disable_plugins"].split(",")]
 
-			audit.save()
+		#
+		# TARGETS
+		#
+		# :: Targets available?
+		m_targets_in = request.DATA.get("targets", None)
+		if not m_targets_in:
+			m_return['status']      = "error"
+			m_return['error_code']  = 2
+			m_return['error']       = ["Targets are missing."]
 
-			m_return['status']        = "ok"
-			m_return['audit_id']      = audit.data['id']
-			return Response(m_return)
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		# :: Recover targets
+		m_targets = [] # Target lists
+		for t in m_targets_in:
+			l_target = TargetSerializer(data=t)
+			if not l_target.is_valid():
+				m_return['status']      = "error"
+				m_return['error_code']  = 1
+				m_return['error']       = ["Target parameter '%s' are invalid." % l_target.target_name]
+				return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+			# Add to target list
+			m_targets.append({ k : str(v) for k, v in l_target.data.iteritems()})
+
+		# Append to global info
+		m_info['targets'] = m_targets
 
 
-		m_return['status']      = "error"
-		m_return['error_code']  = 0
-		m_return['error']       = ["%s: %s" %(x, y.pop()) for x, y in audit.errors.iteritems()]
+		#
+		# PLUGINS
+		#
+		m_plugins_in = request.DATA.get("enabled_plugins", [])
+		m_plugins    = [] # Plugins lists
+		for p in m_plugins_in:
 
-		return Response(m_return, status.HTTP_400_BAD_REQUEST)
+			l_plugin = PluginsSerializer(data=p)
+			if not l_plugin.is_valid():
+				m_return['status']      = "error"
+				m_return['error_code']  = 1
+				m_return['error']       = ["Plugin '%s' are invalid." % l_plugin]
+				return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+			# Store info
+			l_plugin = { k : str(v) for k, v in l_plugin.data.iteritems()}
+
+
+			pp = p['params']
+			if pp:
+				l_plugin_results = []
+				for plug_p in pp:
+					l_p = PluginsParametersSerializer(data=plug_p)
+
+					if not l_p.is_valid():
+						m_return['status']      = "error"
+						m_return['error_code']  = 1
+						m_return['error']       = ["Param '%s' for '%s' plugin are invalid." % (l_p, l_plugin['plugin_name'])]
+						return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+					l_plugin_results.append({ k : str(v) for k, v in l_p.data.iteritems()})
+
+				# Add to plugin
+				l_plugin['params'] = l_plugin_results
+
+			# Add to plugins store
+			m_plugins.append(l_plugin)
+
+		# Add to global info
+		m_info['enabled_plugins'] = m_plugins
+
+
+		#
+		# Request for new audit
+		#
+		m_audit_id = GoLismeroFacadeAudit.create(m_info)
+
+		m_return['status']        = "ok"
+		m_return['audit_id']      = m_audit_id
+
+		return Response(m_return)
+
+
+
 
 
 	#----------------------------------------------------------------------
@@ -226,128 +323,24 @@ class AuditViewSet(ViewSet):
 		"""
 
 		# Search
-		pk     = str(kwargs.get("pk", ""))
-		res    = [v for v in self.unified_audits if v['id'] == pk]
+		pk      = str(kwargs.get("pk", None))
 
-		m_return = {}
-		if res:
-			m_return['status']      = "ok"
-			return Response(m_return)
+		# Checks if audit exits
+		m_audit = self.__get_audit(pk)
+		if not m_audit:
+			m_return                = {}
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Provided audit ID not found"]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 
-		m_return['status']      = "error"
-		m_return['error_code']  = 0
-		m_return['error']       = ["Provided audit ID not found"]
+		return Response({'status' : 'ok'})
 
-		return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 	#----------------------------------------------------------------------
-	def start(self, request, *args, **kwargs):
-		"""
-		This method starts an audit, using their ID
-
-		:param pk: audit ID
-		:type pk: str
-		"""
-		# Search
-		pk     = str(kwargs.get("pk", ""))
-		res    = [v for v in self.unified_audits if v['id'] == pk]
-
-		m_return = {}
-		if res:
-			m_return['status']      = "ok"
-			return Response(m_return)
-
-
-		m_return['status']      = "error"
-		m_return['error_code']  = 0
-		m_return['error']       = ["Provided audit ID not found"]
-
-		return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-	#----------------------------------------------------------------------
-	def stop(self, request, *args, **kwargs):
-		"""
-		This method stops an audit, using their ID
-
-		:param pk: audit ID
-		:type pk: str
-		"""
-		# Search
-		pk     = str(kwargs.get("pk", ""))
-		res    = [v for v in self.unified_audits if v['id'] == pk]
-
-		m_return = {}
-		if res:
-			m_return['status']      = "ok"
-			return Response(m_return)
-
-
-		m_return['status']      = "error"
-		m_return['error_code']  = 0
-		m_return['error']       = ["Provided audit ID not exits"]
-
-		return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-	#----------------------------------------------------------------------
-	def state(self, request, *args, **kwargs):
-		"""
-
-		"""
-		return Response({'state':'aaaa'})
-
-	#----------------------------------------------------------------------
-	def results(self, request, *args, **kwargs):
-		"""
-
-		"""
-		return Response({'results':'aaaa'})
-
-	#----------------------------------------------------------------------
-	def results_formated(self, request, *args, **kwargs):
-		"""
-
-		"""
-		return Response({'results_formated':'aaaa'})
-
-	#----------------------------------------------------------------------
-	def results_summary(self, request, *args, **kwargs):
-		"""
-		This method summary an audit, using their ID
-
-		:param pk: audit ID
-		:type pk: str
-		"""
-
-		# Search
-		pk     = str(kwargs.get("pk", ""))
-		res    = [v for v in self.unified_audits if v['id'] == pk]
-
-		m_return = {}
-		if res:
-			m_return                            = {}
-			m_return['status']                  = 'ok'
-			m_return['vulns_number']            = '12'
-			m_return['discovered_hosts']        = '3'
-			m_return['total_hosts']             = '4'
-			m_return['vulns_by_level']          = {
-				'info'     : '5',
-				'low'      : '2',
-				'medium'   : '2',
-				'high'     : '2',
-				'critical' : '1',
-			}
-			return Response(m_return)
-
-
-		m_return['status']      = "error"
-		m_return['error_code']  = 0
-		m_return['error']       = ["Provided audit ID not exits"]
-
-		return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-	#----------------------------------------------------------------------
-	def details(self, request, *args, **kwargs):
+	def details(self, request, *args, **kwargs): ##
 		"""
 
 		"""
@@ -390,8 +383,155 @@ class AuditViewSet(ViewSet):
 
 		return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+
 	#----------------------------------------------------------------------
-	def pause(self, request, *args, **kwargs):
+	#
+	# Management
+	#
+	#----------------------------------------------------------------------
+	def start(self, request, *args, **kwargs): ##
+		"""
+		This method starts an audit, using their ID
+
+		:param pk: audit ID
+		:type pk: str
+		"""
+		# Search
+		pk     = str(kwargs.get("pk", ""))
+		res    = [v for v in self.unified_audits if v['id'] == pk]
+
+		m_return = {}
+		if res:
+			m_return['status']      = "ok"
+			return Response(m_return)
+
+
+		m_return['status']      = "error"
+		m_return['error_code']  = 0
+		m_return['error']       = ["Provided audit ID not found"]
+
+		return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+	#----------------------------------------------------------------------
+	def stop(self, request, *args, **kwargs): ##
+		"""
+		This method stops an audit, using their ID
+
+		:param pk: audit ID
+		:type pk: str
+		"""
+		# Search
+		pk     = str(kwargs.get("pk", ""))
+		res    = [v for v in self.unified_audits if v['id'] == pk]
+
+		m_return = {}
+		if res:
+			m_return['status']      = "ok"
+			return Response(m_return)
+
+
+		m_return['status']      = "error"
+		m_return['error_code']  = 0
+		m_return['error']       = ["Provided audit ID not exits"]
+
+		return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+	#----------------------------------------------------------------------
+	def state(self, request, *args, **kwargs):
+		"""
+		Get audit state as format:
+
+		{
+		   'state' : str
+		}
+
+		:return: dict with state
+		:rtype: dict(str)
+		"""
+		# Info
+		m_audit_id  = str(kwargs.get("pk", None))
+		m_return    = {}
+
+		m_info = None
+		try:
+			m_info = GoLismeroFacadeAudit.get_state(m_audit_id)
+
+			#
+			# Returns info
+			#
+			m_return['status']      = "ok"
+			m_return['state']       = m_info
+
+			return Response(m_return)
+
+		# Audit not exits
+		except GoLismeroFacadeAuditNotFoundException, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Provided audit ID not found"]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		# Unknown exception
+		except Exception, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Unknown error: %s" % str(e)]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+	#----------------------------------------------------------------------
+	def progress(self, request, *args, **kwargs):
+		"""
+		Get audit progress as format:
+
+		:return: return the progress in format:
+		{
+		  'current_stage' : str,
+		  'steps'         : int,
+		  'tests_remain'  : int,
+		  'test_done'     : int
+		}
+		:rtype: dict(str)
+		"""
+		# Info
+		m_audit_id  = str(kwargs.get("pk", None))
+		m_return    = {}
+
+		m_info = None
+		try:
+			m_info = GoLismeroFacadeAudit.get_progress(m_audit_id)
+			m_info = m_info.to_json()
+
+			#
+			# Returns info
+			#
+			m_return['status']      = "ok"
+			m_return.update(m_info)
+
+			return Response(m_return)
+
+		# Audit not exits
+		except GoLismeroFacadeAuditNotFoundException, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Provided audit ID not found"]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		# Unknown exception
+		except Exception, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Unknown error: %s" % str(e)]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+
+
+
+	#----------------------------------------------------------------------
+	def pause(self, request, *args, **kwargs): ##
 		"""
 		This method pauses an audit, using their ID
 
@@ -414,8 +554,9 @@ class AuditViewSet(ViewSet):
 
 		return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+
 	#----------------------------------------------------------------------
-	def resume(self, request, *args, **kwargs):
+	def resume(self, request, *args, **kwargs): ##
 		"""
 		This method resumes an audit, using their ID
 
@@ -438,8 +579,10 @@ class AuditViewSet(ViewSet):
 
 		return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+
+
 	#----------------------------------------------------------------------
-	def log(self, request, *args, **kwargs):
+	def log(self, request, *args, **kwargs): ##
 		"""
 		This method return audit logs, using their ID
 
@@ -462,6 +605,67 @@ class AuditViewSet(ViewSet):
 		m_return['error']       = ["Provided audit ID not exits"]
 
 		return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+
+
+
+	#----------------------------------------------------------------------
+	#
+	# Results
+	#
+	#----------------------------------------------------------------------
+	def results(self, request, *args, **kwargs): ##
+		"""
+
+		"""
+		return Response({'results':'aaaa'})
+
+	#----------------------------------------------------------------------
+	def results_formated(self, request, *args, **kwargs): ##
+		"""
+
+		"""
+		return Response({'results_formated':'aaaa'})
+
+	#----------------------------------------------------------------------
+	def results_summary(self, request, *args, **kwargs): ##
+		"""
+		This method summary an audit, using their ID
+
+		:param pk: audit ID
+		:type pk: str
+		"""
+
+		# Search
+		pk     = str(kwargs.get("pk", ""))
+		res    = [v for v in self.unified_audits if v['id'] == pk]
+
+		m_return = {}
+		if res:
+			m_return                            = {}
+			m_return['status']                  = 'ok'
+			m_return['vulns_number']            = '12'
+			m_return['discovered_hosts']        = '3'
+			m_return['total_hosts']             = '4'
+			m_return['vulns_by_level']          = {
+				'info'     : '5',
+				'low'      : '2',
+				'medium'   : '2',
+				'high'     : '2',
+				'critical' : '1',
+			}
+			return Response(m_return)
+
+
+		m_return['status']      = "error"
+		m_return['error_code']  = 0
+		m_return['error']       = ["Provided audit ID not exits"]
+
+		return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+
+
+
 
 
 
