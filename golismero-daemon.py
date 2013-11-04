@@ -89,6 +89,7 @@ from os import path
 # GoLismero modules.
 
 from golismero.api.config import Config
+from golismero.logger import Logger
 from golismero.common import OrchestratorConfig, AuditConfig, \
      get_profile, get_default_config_file
 from golismero.main import launcher
@@ -106,6 +107,7 @@ def main():
 
     # Load the Orchestrator options.
     orchestrator_config = OrchestratorConfig()
+    orchestrator_config.verbose     = Logger.MORE_VERBOSE
     orchestrator_config.config_file = config_file
     orchestrator_config.from_config_file(orchestrator_config.config_file, allow_profile = True)
     if orchestrator_config.profile:
@@ -133,8 +135,9 @@ def main():
 
     # Force the Web UI.
     orchestrator_config.ui_mode = "web"
-    orchestrator_config.color   = False
-    orchestrator_config.verbose = 4
+
+    # Force disable colored output.
+    orchestrator_config.color = False
 
     # Launch GoLismero.
     launcher.run(orchestrator_config)
