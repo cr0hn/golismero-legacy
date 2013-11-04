@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Daemon for GoLismero.
+Run GoLismero as a Unix daemon.
 """
 
 __license__="""
@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Python version check.
 # We must do it now before trying to import any more modules.
 #
@@ -47,8 +47,8 @@ if __name__ == "__main__":
         exit(1)
 
 
-#----------------------------------------------------------------------
-# Fix the module load path when running as a portable script and during installation.
+#------------------------------------------------------------------------------
+# Fix the module load path.
 
 import os
 from os import path
@@ -78,23 +78,30 @@ except NameError:
     _FIXED_PATH_ = True
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Check we're not running on Windows.
+
+if path.sep == "\\":
+    print "[!] This script does not run on Windows."
+    exit(1)
+
+
+#------------------------------------------------------------------------------
 # Imported modules.
 
 import daemon
-from os import path
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # GoLismero modules.
 
-from golismero.api.config import Config
-from golismero.common import OrchestratorConfig, AuditConfig, \
-     get_profile, get_default_config_file
+from golismero.api.logger import Logger
+from golismero.common import OrchestratorConfig, get_profile, \
+    get_default_config_file
 from golismero.main import launcher
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Start of program.
 
 def main():
@@ -106,12 +113,16 @@ def main():
 
     # Load the Orchestrator options.
     orchestrator_config = OrchestratorConfig()
+    orchestrator_config.verbose     = Logger.MORE_VERBOSE
     orchestrator_config.config_file = config_file
-    orchestrator_config.from_config_file(orchestrator_config.config_file, allow_profile = True)
+    orchestrator_config.from_config_file(orchestrator_config.config_file,
+                                         allow_profile = True)
     if orchestrator_config.profile:
-        orchestrator_config.profile_file = get_profile(orchestrator_config.profile)
+        orchestrator_config.profile_file = get_profile(
+                                            orchestrator_config.profile)
         if orchestrator_config.profile_file:
-            orchestrator_config.from_config_file(orchestrator_config.profile_file)
+            orchestrator_config.from_config_file(
+                                            orchestrator_config.profile_file)
         else:
             raise RuntimeError("Could not find profile, aborting!")
 
@@ -128,22 +139,23 @@ def main():
             plugins_folder = path.dirname(plugins_folder)
             plugins_folder = path.join(plugins_folder, "plugins")
             if not path.isdir(plugins_folder):
-                raise RuntimeError("Default plugins folder not found, aborting!")
+                raise RuntimeError(
+                    "Default plugins folder not found, aborting!")
         orchestrator_config.plugins_folder = plugins_folder
 
     # Force the Web UI.
     orchestrator_config.ui_mode = "web"
-    orchestrator_config.color   = False
-    orchestrator_config.verbose = 4
+
+    # Force disable colored output.
+    orchestrator_config.color = False
 
     # Launch GoLismero.
     launcher.run(orchestrator_config)
 
 
-#------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Run as daemon.
 
 if __name__ == '__main__':
-    #with daemon.DaemonContext():
-    #    main()
-    main()
+    with daemon.DaemonContext():
+        main()
