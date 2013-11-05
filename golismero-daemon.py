@@ -151,5 +151,5 @@ def main():
 # Run as daemon.
 
 if __name__ == '__main__':
-    with daemon.DaemonContext():
-        main()
+    #with daemon.DaemonContext():
+    main()
