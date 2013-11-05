@@ -32,6 +32,30 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #------------------------------------------------------------------------------
+# Fix the module load path.
+
+import sys
+from os import path
+
+script = __file__
+if path.islink(script):
+    script = path.realpath(script)
+here = path.split(path.abspath(script))[0]
+assert here
+thirdparty_libs = path.join(here, "thirdparty_libs")
+assert path.exists(thirdparty_libs)
+has_here = here in sys.path
+has_thirdparty_libs = thirdparty_libs in sys.path
+if not (has_here and has_thirdparty_libs):
+    if has_here:
+        sys.path.remove(here)
+    if has_thirdparty_libs:
+        sys.path.remove(thirdparty_libs)
+    sys.path.insert(0, thirdparty_libs)
+    sys.path.insert(0, here)
+
+
+#------------------------------------------------------------------------------
 # Python version check.
 # We must do it now before trying to import any more modules.
 #
@@ -39,43 +63,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #       separately you can try removing this check and seeing
 #       what happens (we haven't tested it!).
 
-import sys
+from golismero import show_banner
 from sys import version_info, exit
 if __name__ == "__main__":
     if version_info < (2, 7) or version_info >= (3, 0):
+        show_banner()
         print "[!] You must use Python version 2.7"
         exit(1)
-
-
-#------------------------------------------------------------------------------
-# Fix the module load path.
-
-import os
-from os import path
-try:
-    _FIXED_PATH_
-except NameError:
-    here = path.split(path.abspath(__file__))[0]
-    if not here:  # if it fails use cwd instead
-        here = path.abspath(os.getcwd())
-    thirdparty_libs = path.join(here, "thirdparty_libs")
-    if path.exists(thirdparty_libs):
-        has_here = here in sys.path
-        has_thirdparty_libs = thirdparty_libs in sys.path
-        if not (has_here and has_thirdparty_libs):
-            if has_here:
-                sys.path.remove(here)
-            if has_thirdparty_libs:
-                sys.path.remove(thirdparty_libs)
-            if __name__ == "__main__":
-                # As a portable script: use our versions always.
-                sys.path.insert(0, thirdparty_libs)
-                sys.path.insert(0, here)
-            else:
-                # When installing: prefer system version to ours.
-                sys.path.insert(0, here)
-                sys.path.append(thirdparty_libs)
-    _FIXED_PATH_ = True
 
 
 #------------------------------------------------------------------------------
