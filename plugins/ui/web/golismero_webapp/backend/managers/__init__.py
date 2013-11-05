@@ -33,7 +33,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # Data structures
 #
 #----------------------------------------------------------------------
-class AuditProgress(object):
+
+from backend.models import *
+
+class GoLismeroAuditProgress(object):
 	"""
 
 	Get the audit state. This class acts as java POJO, having these attributes:
@@ -56,7 +59,7 @@ class AuditProgress(object):
 		  'current_stage' : str,
 		  'steps'         : int,
 		  'tests_remain'  : int,
-		  'tests_done'     : str
+		  'tests_done'     : int
 		}
 
 		:param data: dict with info.
@@ -65,7 +68,7 @@ class AuditProgress(object):
 		if not isinstance(data, dict):
 			raise TypeError("Expected dict, got '%s' instead" % type(data))
 
-		for p in AuditProgress.PROPERTIES:
+		for p in GoLismeroAuditProgress.PROPERTIES:
 			try:
 				setattr(self, p, data[p])
 			except KeyError:
@@ -75,6 +78,7 @@ class AuditProgress(object):
 		self.__json             = data
 
 	#----------------------------------------------------------------------
+	@property
 	def to_json(self):
 		"""
 		Return the JSON object
@@ -108,17 +112,44 @@ class GoLismeroAuditData(object):
 	    "results_type",
 	    "results_location",
 	    "user",
+	    "disable_plugins"
 	]
 
 
 	#----------------------------------------------------------------------
 	def __init__(self):
-		for v in GoLismeroAudit.PROPERTIES:
+		for v in GoLismeroAuditData.PROPERTIES:
 			setattr(self, v, None)
 
 		# Set list properties
 		self.targets         = []
-		self.enabled_plugins = []
+		self.enable_plugins  = []
+
+		# store path
+		self.__store_path    = None
+
+	#----------------------------------------------------------------------
+	@property
+	def store_path(self):
+		"""
+		:return: Folder path to store audit info
+		:rtype: str
+		"""
+		return self.__store_path
+
+	#----------------------------------------------------------------------
+	@store_path.setter
+	def store_path(self, val):
+		"""
+		:param val: Folder path to store audit info
+		:type val: str
+		"""
+		if not isinstance(val, basestring):
+			raise TypeError("Expected , got '%s'" % type(val))
+
+		self.__store_path = val
+
+
 
 
 	#----------------------------------------------------------------------
@@ -132,6 +163,8 @@ class GoLismeroAuditData(object):
 
 		:retrun: GoLismeroAuditData instance
 		:rtype: GoLismeroAuditData
+
+		:raises: TypeError
 		"""
 		if not isinstance(data, dict):
 			raise TypeError("Expected basestring, got '%s' instead" % type(data))
@@ -143,10 +176,55 @@ class GoLismeroAuditData(object):
 
 		return c
 
+	#----------------------------------------------------------------------
+	@classmethod
+	def from_django(cls, data):
+		"""
+		Loads object form Audits django object.
 
+		:param data: Audits instance
+		:type data: Audits
 
+		:raises: TypeError
+		"""
+		if not isinstance(data, Audit):
+			raise TypeError("Expected Audits, got '%s' instead" % type(data))
+
+		c = cls()
+
+		for d in GoLismeroAuditData.PROPERTIES:
+			setattr(c, d, str(getattr(data, d)))
+
+		#
+		# Set relations
+		#
+		# Targets
+		c.targets = []
+		for d in data.targets.all():
+			c.targets.append(d.target_name)
+
+		# Plugins
+		c.enable_plugins = []
+		for d in data.enable_plugins.all():
+			l_plugin = {}
+			l_plugin['plugin_name'] = str(d.plugin_name)
+			l_plugin['params'] = []
+
+			for p in d.plugin_params.all():
+				l_param = {}
+				l_param['param_name']  = str(p.param_name)
+				l_param['param_value'] = str(p.param_value)
+				l_plugin['params'].append(l_param)
+
+			c.enable_plugins.append(l_plugin)
+
+		# Users
+		c.user = str(data.user.username)
+
+		return c
 
 	#----------------------------------------------------------------------
+	@property
 	def to_json(self):
 		"""
 		Returns a JSON with all info.
@@ -156,15 +234,18 @@ class GoLismeroAuditData(object):
 		return { k : v for k, v in self.__dict__.iteritems() }
 
 	#----------------------------------------------------------------------
+	@property
 	def to_json_brief(self):
 		"""
 		Returns only a json with:
-		- audit name
+		- id
+		- name
 		- user
 		- state
 		"""
 		return {
-		    'audit_name'   : self.audit_name,
+		    'id'     : self.id,
+		    'name'   : self.audit_name,
 		    'user'         : self.user,
 		    'state'        : self.audit_state
 		}

@@ -32,6 +32,7 @@ __all__ = ["AuditBridge", "ExceptionAuditNotFound", "ExceptionAudit"]
 __doc__ = """This file has data structures and method to access to GoLismero engine."""
 
 from django.conf import settings as BRIDGE
+from backend.managers import *
 
 
 
@@ -63,6 +64,7 @@ class AuditBridge(object):
 	# Unidirectional methods
 	#
 	#----------------------------------------------------------------------
+
 	@staticmethod
 	def new_audit(data): #
 		"""
@@ -91,6 +93,21 @@ class AuditBridge(object):
 		"""
 		pass
 
+
+
+	#----------------------------------------------------------------------
+	@staticmethod
+	def resume(audit_id): #
+		"""
+		Resumes and audit.
+
+		:param audit_id: string with audit ID.
+		:type audit_id: str
+
+		:raises: ExceptionAuditNotFound
+		"""
+		pass
+
 	#----------------------------------------------------------------------
 	#
 	# Getters methods
@@ -101,6 +118,10 @@ class AuditBridge(object):
 		"""
 		Get log for and audit as format:
 
+		:param audit_id: string with audit ID.
+		:type audit_id: str
+
+		:return: a list with info, as format:
 		[
 		  {
 		     'plugin_id'     : str,
@@ -110,27 +131,51 @@ class AuditBridge(object):
 			 'timestamp'     : float
 		  }
 		]
-
-		:param audit_id: string with audit ID.
-		:type audit_id: str
+		:rtype: list(dict)
 
 		:raises: ExceptionAuditNotFound
 		"""
 		return [
 		    {
-		       'plugin_id'     : 'spider',
-		       'text'          : 'spider demo',
-		       'verbosity'     : 1,
-		       'is_error'      : False,
-		       'timestamp'     : 1383390392.95667
+		        'plugin_id' : '',
+		        'text' : 'Added 4 new targets to the database.',
+		        'verbosity' : '2',
+		        'is_error' : '0',
+		        'timestamp' : '1383390392.95667'
+		    },
+		    {
+		        'plugin_id' : '',
+		        'text' : '''Audit scope:
+
+		    IP addresses:
+		        208.84.244.10
+
+		    Domains:
+		        *.terra.es
+		        terra.es
+		        www.terra.es
+
+		    Web pages:
+		        http://www.terra.es/
+		    ''',
+		        'verbosity' : '3',
+		        'is_error' : '0',
+		        'timestamp' : '1383390392.95934'
+		    },
+		    {
+		        'plugin_id' : '1',
+		        'text' : 'Spidering URL: "http://www.terra.es/"',
+		        'verbosity' : '2',
+		        'is_error' : '0',
+		        'timestamp' : '1383390393.02968'
 		    }
 		]
 
 	#----------------------------------------------------------------------
 	@staticmethod
-	def get_results(audit_id): #
+	def get_results(audit_info): #
 		"""
-
+		Get audit results
 
 		:param audit_id: string with audit ID.
 		:type audit_id: str
@@ -181,7 +226,7 @@ class AuditBridge(object):
 		:raises: ExceptionAuditNotFound
 		"""
 		try:
-			return Audits.objects.get(pk)
+			return Audit.objects.get(pk)
 		except ObjectDoesNotExist:
 			return None
 
@@ -200,7 +245,7 @@ class AuditBridge(object):
 
 		:raises: ExceptionAuditNotFound
 		"""
-		return "new"
+		return "running"
 
 
 	#----------------------------------------------------------------------
@@ -212,12 +257,18 @@ class AuditBridge(object):
 		:param audit_id: string with audit ID.
 		:type audit_id: str
 
-		:return: a string with audit state.
-		:type: str
+        :return: GoLismeroAuditProgress object
+        :rtype: GoLismeroAuditProgress
 
 		:raises: ExceptionAuditNotFound
 		"""
-		return "new"
+		a = {
+		  'current_stage' : "recom",
+		  'steps'         : 1,
+		  'tests_remain'  : 21,
+		  'tests_done'     : 5
+		}
+		return GoLismeroAuditProgress(a)
 
 
 

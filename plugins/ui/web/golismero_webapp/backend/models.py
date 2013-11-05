@@ -13,7 +13,7 @@ def generate_random_string(length = 30):
     return "".join(choice(m_available_chars) for _ in xrange(length))
 
 
-__all__ = ["Audits", "Target", "Plugins", "PluginParameters"]
+__all__ = ["Audit", "Target", "Plugins", "PluginParameters"]
 
 #------------------------------------------------------------------------------
 class Target(models.Model):
@@ -41,11 +41,11 @@ class PluginParameters(models.Model):
     param_restriction = models.CharField(max_length=255, default="")
 
     # Relations
-    plugin_params = models.ForeignKey(Plugins)
+    plugin_params     = models.OneToOneField(Plugins)
 
 
 #------------------------------------------------------------------------------
-class Audits(models.Model):
+class Audit(models.Model):
     """
     Audit configuration
     """
@@ -64,7 +64,7 @@ class Audits(models.Model):
     cookie                  = models.CharField(max_length=200, blank=True)
     user_agent              = models.CharField(max_length=200, blank=True)
     start_date              = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
-    end_date                = models.DateField(null=True, blank=True)
+    end_date                = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
     # Comma separated disabled plugins
     disable_plugins         = models.CharField(max_length=1000, blank=True)
 
@@ -76,80 +76,5 @@ class Audits(models.Model):
 
     # Relations
     targets                 = models.ManyToManyField(Target)
-    enabled_plugins         = models.ManyToManyField(Plugins)
-    user                    = models.OneToOneField(User)
-
-    #----------------------------------------------------------------------
-    #def clean_disabled_plugins(self):
-        #"""Checks if disabled plugins ir a comma separated list."""
-        #p = self.cleaned_data.get("disabled_plugins", None)
-
-        #if p:
-
-
-
-
-    #----------------------------------------------------------------------
-    #def to_json(self):
-        #"""
-        #returns a JSON object as format:
-
-        #{
-          #'id'                      : str,
-          #'follow_redirects'        : str,
-          #'plugins'                 : str,
-          #'audit_name'              : str,
-          #'user_id'                 : str,
-          #'proxy_pass'              : str,
-          #'audit_state'             : str,
-          #'proxy_addr'              : str,
-          #'only_vulns'              : str,
-          #'start_date'              : str,
-          #'subdomain_regex'         : str,
-          #'results_type'            : str,
-          #'end_date'                : str,
-          #'cookie'                  : str,
-          #'user'                    : str,
-          #'proxy_user'              : str,
-          #'include_subdomains'      : str,
-          #'max_links'               : str,
-          #'depth'                   : str,
-          #'user_agent'              : str,
-          #'results_location'        : str,
-          #'follow_first_redirect'   : str,
-          #'users'                   : str,
-          #'plugins'                 : [
-             #{
-                #'plugin_id'   : str,
-                #'plugin_name' : str
-             #},
-             #{
-                #'plugin_id'   : str,
-                #'plugin_name' : str
-             #}
-           #]
-          #'targets'                 :[
-             #{
-                #'target_id'   : str,
-                #'target_name' : str
-             #},
-             #{
-                #'target_id'   : str,
-                #'target_name' : str
-             #}
-           #]
-        #}
-
-        #"""
-
-        #EXCLUDED = ["targets", "enabled_plugins", "user"]
-
-        ## Set common info
-        #m_info = { k : str(v) for k, v in self.__dict__.iteritems() if k not in EXCLUDED and not k.startswith("_") }
-
-        ## Set relations
-        #m_info['user']    = getattr(self.user, "username", "")
-        #m_info['plugins'] = [ { 'plugins_id' : p.id, 'plugin_name' : p.plugin_name } for p in self.enabled_plugins.all()]
-        #m_info['targets'] = [ { 'target_id' : t.id, 'target_name' : t.target} for t in audit.targets.all()]
-
-        #return m_info
+    enable_plugins          = models.ManyToManyField(Plugins)
+    user                    = models.ForeignKey(User)

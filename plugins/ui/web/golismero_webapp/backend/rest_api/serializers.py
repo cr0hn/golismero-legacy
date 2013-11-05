@@ -65,5 +65,5 @@ class AuditSerializer(serializers.ModelSerializer):
     #------------------------------------------------------------------------------
     class Meta:
         """"""
-        model   = Audits
-        exclude = ["id", "user", "enabled_plugins", "targets"]
+        model   = Audit
+        exclude = ["id", "user", "enable_plugins", "targets"]

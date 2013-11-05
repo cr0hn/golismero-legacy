@@ -139,7 +139,8 @@ class AuditViewSet(ViewSet):
 		"""
 
 		m_return = {
-	        'results' : self.__audit2json(Audits.objects.all()[:100])
+		    'status'  : 'ok',
+	        'results' : [x.to_json_brief for x in GoLismeroFacadeAudit.list_audits()]
 	    }
 
 		return Response(m_return)
@@ -172,28 +173,26 @@ class AuditViewSet(ViewSet):
 
 
 		m_return = {}
-		m_state  = str(kwargs.get("text", None))
+		m_state  = str(kwargs.get("text", "all"))
 
 		if m_state:
-			if m_state in self.AUDIT_STATES:
-				m_return['status']  = "ok"
+			if m_state not in self.AUDIT_STATES:
 
-				if m_state == "all":
-					m_return["results"] = self.__audit2json(Audits.objects.all()[:100])
-				else:
-					m_return["results"] = self.__audit2json(Audits.objects.filter(audit_state=m_state).all()[:100])
+				#
+				# If errors...
+				#
+				m_return['status']      = "error"
+				m_return['error_code']  = 0
+				m_return['error']       = ["Unknown state"]
 
-				return Response(m_return)
+				return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		m_return['status']  = "ok"
+		m_return['results'] = [x.to_json_brief for x in GoLismeroFacadeAudit.list_audits(m_state)]
+
+		return Response(m_return)
 
 
-		#
-		# If errors...
-		#
-		m_return['status']      = "error"
-		m_return['error_code']  = 0
-		m_return['error']       = ["Unknown state"]
-
-		return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 
 	#----------------------------------------------------------------------
@@ -203,7 +202,41 @@ class AuditViewSet(ViewSet):
 	#----------------------------------------------------------------------
 	def create(self, request, *args, **kwargs):
 		"""
+		Create an audit.
 
+		POST data must have this format:
+
+		{
+		  "audit_name": "asdfasdf",
+		  "targets": [
+			{
+			  "target_name": "127.0.0.1"
+			},
+			{
+			  "target_name": "mysite.com"
+			}
+		  ],
+		  "enabled_plugins": [
+			{
+			  "plugin_name": "openvas",
+			  "params": [
+				{
+				  "param_name": "profile",
+				  "param_value": "Full and fast"
+				},
+				{
+				  "param_name": "user",
+				  "param_value": "admin"
+				},
+				{
+				  "param_name": "password",
+				  "param_value": "admin"
+				}
+			  ]
+			}
+		  ],
+		  "disabled_plugins": "spider,nikto"
+		}
 		"""
 
 
@@ -260,7 +293,7 @@ class AuditViewSet(ViewSet):
 		#
 		# PLUGINS
 		#
-		m_plugins_in = request.DATA.get("enabled_plugins", [])
+		m_plugins_in = request.DATA.get("enable_plugins", [])
 		m_plugins    = [] # Plugins lists
 		for p in m_plugins_in:
 
@@ -296,13 +329,25 @@ class AuditViewSet(ViewSet):
 			m_plugins.append(l_plugin)
 
 		# Add to global info
-		m_info['enabled_plugins'] = m_plugins
+		m_info['enable_plugins'] = m_plugins
 
 
 		#
 		# Request for new audit
 		#
-		m_audit_id = GoLismeroFacadeAudit.create(m_info)
+		m_audit_id = None
+		try:
+			m_audit_id = GoLismeroFacadeAudit.create(m_info)
+		except GoLismeroFacadeAuditUnknownException,e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 1
+			m_return['error']       = [str(e)]
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+		except ValueError,e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 1
+			m_return['error']       = [str(e)]
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 		m_return['status']        = "ok"
 		m_return['audit_id']      = m_audit_id
@@ -322,66 +367,70 @@ class AuditViewSet(ViewSet):
 		:type pk: str
 		"""
 
-		# Search
-		pk      = str(kwargs.get("pk", None))
+		m_audit_id     = str(kwargs.get("pk", ""))
+		m_return       = {}
 
-		# Checks if audit exits
-		m_audit = self.__get_audit(pk)
-		if not m_audit:
-			m_return                = {}
+		try:
+			GoLismeroFacadeAudit.delete(m_audit_id)
+			m_return['status']       = "ok"
+
+			return Response(m_return)
+
+		except GoLismeroFacadeAuditRunningException, e:
 			m_return['status']      = "error"
-			m_return['error_code']  = 0
-			m_return['error']       = ["Provided audit ID not found"]
+			m_return['error_code']  = 2
+			m_return['error']       = [str(e)]
 
 			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 
-		return Response({'status' : 'ok'})
+		except GoLismeroFacadeAuditNotFoundException:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Provided audit ID not exits"]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		# Unknown exception
+		except Exception, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Unknown error: %s" % str(e)]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 
 	#----------------------------------------------------------------------
-	def details(self, request, *args, **kwargs): ##
+	def details(self, request, *args, **kwargs):
 		"""
-
+		Get Audit defails.
 		"""
 		# Search
-		pk     = str(kwargs.get("pk", ""))
-		res    = [v for v in self.unified_audits if v['id'] == pk]
+		m_audit_id     = str(kwargs.get("pk", ""))
+		m_return       = {}
 
-		m_return = {}
-		if res:
-			m_return['status']           = "ok"
-			m_return['start_date']       = "2013-10-18 16:03:32"
-			m_return['end_date']         = "2013-10-14 10:23:32"
-			m_return['user']             = "user1"
-			m_return['config']           = {
-			    "targets"               : ["www.target1.com", "target2.com"],
-			    "only_vulns"            : "False",
-			    "audit_name"            : "audit1",
-			    "imports"               : [""],
-			    "enable_plugins"        : ["spider", "sqlmap", "openvas"],
-			    "disable_plugins"       : [""],
-			    "include_subdomains"    : "True",
-			    "subdomain_regex"       : "",
-			    "depth"                 : "0",
-			    "max_links"             : "0",
-			    "follow_redirects"      : "True",
-			    "follow_first_redirect" : "True",
-			    "proxy_addr"            : "",
-			    "proxy_user"            : "",
-			    "proxy_pass"            : "",
-			    "cookie"                : "",
-			    "user_agent"            : "random",
-			}
+		try:
+			r                        = GoLismeroFacadeAudit.get_audit(m_audit_id)
+			m_return['status']       = "ok"
+			m_return.update(r.to_json)
 
 			return Response(m_return)
 
+		except GoLismeroFacadeAuditNotFoundException:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Provided audit ID not exits"]
 
-		m_return['status']      = "error"
-		m_return['error_code']  = 0
-		m_return['error']       = ["Provided audit ID not exits"]
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-		return Response(m_return, status.HTTP_400_BAD_REQUEST)
+		# Unknown exception
+		except Exception, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Unknown error: %s" % str(e)]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
 
 
 	#----------------------------------------------------------------------
@@ -389,52 +438,85 @@ class AuditViewSet(ViewSet):
 	# Management
 	#
 	#----------------------------------------------------------------------
-	def start(self, request, *args, **kwargs): ##
+	def start(self, request, *args, **kwargs):
 		"""
 		This method starts an audit, using their ID
 
 		:param pk: audit ID
 		:type pk: str
 		"""
-		# Search
-		pk     = str(kwargs.get("pk", ""))
-		res    = [v for v in self.unified_audits if v['id'] == pk]
+		m_audit_id     = str(kwargs.get("pk", ""))
+		m_return       = {}
 
-		m_return = {}
-		if res:
-			m_return['status']      = "ok"
+		try:
+			GoLismeroFacadeAudit.start(m_audit_id)
+			m_return['status']       = "ok"
+
 			return Response(m_return)
 
+		except GoLismeroFacadeAuditStateException, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 1
+			m_return['error']       = [str(e)]
 
-		m_return['status']      = "error"
-		m_return['error_code']  = 0
-		m_return['error']       = ["Provided audit ID not found"]
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-		return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		except GoLismeroFacadeAuditNotFoundException:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Provided audit ID not exits"]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		# Unknown exception
+		except Exception, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Unknown error: %s" % str(e)]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
 
 	#----------------------------------------------------------------------
-	def stop(self, request, *args, **kwargs): ##
+	def stop(self, request, *args, **kwargs):
 		"""
 		This method stops an audit, using their ID
 
 		:param pk: audit ID
 		:type pk: str
 		"""
-		# Search
-		pk     = str(kwargs.get("pk", ""))
-		res    = [v for v in self.unified_audits if v['id'] == pk]
+		m_audit_id     = str(kwargs.get("pk", ""))
+		m_return       = {}
 
-		m_return = {}
-		if res:
-			m_return['status']      = "ok"
+		try:
+			GoLismeroFacadeAudit.stop(m_audit_id)
+			m_return['status']       = "ok"
+
 			return Response(m_return)
 
+		except GoLismeroFacadeAuditStateException, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 1
+			m_return['error']       = [str(e)]
 
-		m_return['status']      = "error"
-		m_return['error_code']  = 0
-		m_return['error']       = ["Provided audit ID not exits"]
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-		return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		except GoLismeroFacadeAuditNotFoundException:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Provided audit ID not exits"]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		# Unknown exception
+		except Exception, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Unknown error: %s" % str(e)]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 	#----------------------------------------------------------------------
 	def state(self, request, *args, **kwargs):
@@ -500,8 +582,7 @@ class AuditViewSet(ViewSet):
 
 		m_info = None
 		try:
-			m_info = GoLismeroFacadeAudit.get_progress(m_audit_id)
-			m_info = m_info.to_json()
+			m_info = GoLismeroFacadeAudit.get_progress(m_audit_id).to_json
 
 			#
 			# Returns info
@@ -510,6 +591,14 @@ class AuditViewSet(ViewSet):
 			m_return.update(m_info)
 
 			return Response(m_return)
+
+		except GoLismeroFacadeAuditStateException, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 1
+			m_return['error']       = [str(e)]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
 
 		# Audit not exits
 		except GoLismeroFacadeAuditNotFoundException, e:
@@ -531,82 +620,129 @@ class AuditViewSet(ViewSet):
 
 
 	#----------------------------------------------------------------------
-	def pause(self, request, *args, **kwargs): ##
+	def pause(self, request, *args, **kwargs):
 		"""
 		This method pauses an audit, using their ID
 
 		:param pk: audit ID
 		:type pk: str
 		"""
-		# Search
-		pk     = str(kwargs.get("pk", ""))
-		res    = [v for v in self.unified_audits if v['id'] == pk]
+		m_audit_id     = str(kwargs.get("pk", ""))
+		m_return       = {}
 
-		m_return = {}
-		if res:
-			m_return['status']      = "ok"
+		try:
+			GoLismeroFacadeAudit.pause(m_audit_id)
+			m_return['status']       = "ok"
+
 			return Response(m_return)
 
+		except GoLismeroFacadeAuditStateException, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 1
+			m_return['error']       = [str(e)]
 
-		m_return['status']      = "error"
-		m_return['error_code']  = 0
-		m_return['error']       = ["Provided audit ID not exits"]
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-		return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+		except GoLismeroFacadeAuditNotFoundException:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Provided audit ID not exits"]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		# Unknown exception
+		except Exception, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Unknown error: %s" % str(e)]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 	#----------------------------------------------------------------------
-	def resume(self, request, *args, **kwargs): ##
+	def resume(self, request, *args, **kwargs):
 		"""
 		This method resumes an audit, using their ID
 
 		:param pk: audit ID
 		:type pk: str
 		"""
-		# Search
-		pk     = str(kwargs.get("pk", ""))
-		res    = [v for v in self.unified_audits if v['id'] == pk]
+		m_audit_id     = str(kwargs.get("pk", ""))
+		m_return       = {}
 
-		m_return = {}
-		if res:
-			m_return['status']      = "ok"
+		try:
+			GoLismeroFacadeAudit.resume(m_audit_id)
+			m_return['status']       = "ok"
+
 			return Response(m_return)
 
+		except GoLismeroFacadeAuditStateException, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 1
+			m_return['error']       = [str(e)]
 
-		m_return['status']      = "error"
-		m_return['error_code']  = 0
-		m_return['error']       = ["Provided audit ID not exits"]
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-		return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		except GoLismeroFacadeAuditNotFoundException:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Provided audit ID not exits"]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		# Unknown exception
+		except Exception, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Unknown error: %s" % str(e)]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 
 
 	#----------------------------------------------------------------------
-	def log(self, request, *args, **kwargs): ##
+	def log(self, request, *args, **kwargs):
 		"""
-		This method return audit logs, using their ID
+		This method pauses an audit, using their ID
 
 		:param pk: audit ID
 		:type pk: str
-		"""
-		# Search
-		pk     = str(kwargs.get("pk", ""))
-		res    = [v for v in self.unified_audits if v['id'] == pk]
 
-		m_return = {}
-		if res:
-			m_return['status']      = "ok"
-			m_return['log']         = "Log dummy info"
+		:return: a string with the log.
+		:rtype: str
+		"""
+		m_audit_id     = str(kwargs.get("pk", ""))
+		m_return       = {}
+
+		try:
+			m_return['log']       = GoLismeroFacadeAudit.get_log(m_audit_id)
+			m_return['status']    = "ok"
+
 			return Response(m_return)
 
+		except GoLismeroFacadeAuditStateException, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 1
+			m_return['error']       = [str(e)]
 
-		m_return['status']      = "error"
-		m_return['error_code']  = 0
-		m_return['error']       = ["Provided audit ID not exits"]
-
-		return Response(m_return, status.HTTP_400_BAD_REQUEST)
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 
+		except GoLismeroFacadeAuditNotFoundException:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Provided audit ID not exits"]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		# Unknown exception
+		except Exception, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Unknown error: %s" % str(e)]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 
 	#----------------------------------------------------------------------
