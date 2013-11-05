@@ -100,6 +100,8 @@ class GeoIP(TestingPlugin):
 
         # Query the freegeoip.net service.
         kwargs = self.query_freegeoip(target)
+        if not kwargs:
+            return
 
         # Remove the IP address from the response.
         address = kwargs.pop("ip")
@@ -138,13 +140,18 @@ class GeoIP(TestingPlugin):
     @staticmethod
     def query_freegeoip(target):
         Logger.log_more_verbose("Querying freegeoip.net for: " + target)
-        resp = requests.get("http://freegeoip.net/json/" + target)
-        if not resp.content:
+        try:
+            resp = requests.get("http://freegeoip.net/json/" + target)
+            if resp.status_code == 200:
+                return json_decode(resp.content)
+            Logger.log_more_verbose(
+                "Response from freegeoip.net for %s: %s" %
+                    (target, resp.content))
+        except Exception:
             raise RuntimeError(
                 "Freegeoip.net webservice is not available,"
                 " possible network error?"
             )
-        return json_decode(resp.content)
 
 
     #--------------------------------------------------------------------------
