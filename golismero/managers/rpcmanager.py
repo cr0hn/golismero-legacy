@@ -201,8 +201,10 @@ class RPCManager (object):
                 error = self.prepare_exception(*sys.exc_info())
                 try:
                     response_queue.put_nowait( (False, error) )
-                except:
-                    exit(1)
+                except IOError:
+                    ##import warnings
+                    ##warnings.warn("RPC caller died!")
+                    pass
 
 
     #--------------------------------------------------------------------------
@@ -240,10 +242,7 @@ class RPCManager (object):
 
         # If the call was synchronous, send the response/error back to the plugin.
         if response_queue:
-            try:
-                response_queue.put_nowait( (success, response) )
-            except:
-                exit(1)
+            response_queue.put_nowait( (success, response) )
 
 
     #--------------------------------------------------------------------------
