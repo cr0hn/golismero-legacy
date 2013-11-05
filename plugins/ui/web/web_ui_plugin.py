@@ -111,7 +111,7 @@ class WebUIPlugin(UIPlugin):
             # An audit has finished.
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
                 self.notify_stage(message.audit_name,
-                    "finish" if message.message_info else "cancel")
+                                  "finish" if message.message_info else "cancel")
 
             # A plugin has sent a log message.
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
@@ -213,7 +213,7 @@ class WebUIPlugin(UIPlugin):
         self.audit_state  = {}  # audit -> stage
         self.plugin_state = collections.defaultdict(
             functools.partial(collections.defaultdict, dict)
-        )  # audit -> (plugin, identity) -> progress
+            )  # audit -> (plugin, identity) -> progress
 
         # Create the consumer thread object.
         self.thread_continue = True
@@ -506,11 +506,11 @@ class WebUIPlugin(UIPlugin):
     #
     #--------------------------------------------------------------------------
 
-	#----------------------------------------------------------------------
-	#
-	# Audit methods
-	#
-	#----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        #
+        # Audit methods
+        #
+        #----------------------------------------------------------------------
     def do_audit_create(self, audit_config):
         """
         Implementation of: /scan/create
@@ -518,6 +518,7 @@ class WebUIPlugin(UIPlugin):
         :param audit_config: Audit configuration.
         :type audit_config: dict(str -> \\*)
         """
+
 
         # Load the audit configuration from the dictionary.
         o_audit_config = AuditConfig()
@@ -598,11 +599,11 @@ class WebUIPlugin(UIPlugin):
         :raises KeyError: Data type unknown.
         """
         i_data_type = {
-                      "all": None,
-              "information": Data.TYPE_INFORMATION,
-                 "resource": Data.TYPE_RESOURCE,
+            "all": None,
+            "information": Data.TYPE_INFORMATION,
+            "resource": Data.TYPE_RESOURCE,
             "vulnerability": Data.TYPE_VULNERABILITY,
-        }[data_type.strip().lower()]
+            }[data_type.strip().lower()]
         return sorted( Database.keys(i_data_type) )
 
 
@@ -618,11 +619,11 @@ class WebUIPlugin(UIPlugin):
 
 
 
-	#----------------------------------------------------------------------
-	#
-	# Plugin methods
-	#
-	#----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        #
+        # Plugin methods
+        #
+        #----------------------------------------------------------------------
     def do_plugin_list(self):
         """
         Implementation of: /plugin/list
@@ -648,11 +649,11 @@ class WebUIPlugin(UIPlugin):
 
 
 
-	#----------------------------------------------------------------------
-	#
-	# Management methods
-	#
-	#----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        #
+        # Management methods
+        #
+        #----------------------------------------------------------------------
     def do_admin_service_stop(self):
         """
         Implementation of: /admin/service/stop
@@ -661,7 +662,7 @@ class WebUIPlugin(UIPlugin):
             message_type = MessageType.MSG_TYPE_CONTROL,
             message_code = MessageCode.MSG_CONTROL_STOP,
             message_info = False,    # True for finished, False for user cancel
-                priority = MessagePriority.MSG_PRIORITY_LOW
+            priority = MessagePriority.MSG_PRIORITY_LOW
         )
 
 
