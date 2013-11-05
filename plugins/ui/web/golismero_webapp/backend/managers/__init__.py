@@ -115,6 +115,7 @@ class GoLismeroAuditData(object):
 	    "disable_plugins"
 	]
 
+	COMPLEX_PROPERTIES = ["enable_plugins", "user"]
 
 	#----------------------------------------------------------------------
 	def __init__(self):
@@ -126,30 +127,7 @@ class GoLismeroAuditData(object):
 		self.enable_plugins  = []
 
 		# store path
-		self.__store_path    = None
-
-	#----------------------------------------------------------------------
-	@property
-	def store_path(self):
-		"""
-		:return: Folder path to store audit info
-		:rtype: str
-		"""
-		return self.__store_path
-
-	#----------------------------------------------------------------------
-	@store_path.setter
-	def store_path(self, val):
-		"""
-		:param val: Folder path to store audit info
-		:type val: str
-		"""
-		if not isinstance(val, basestring):
-			raise TypeError("Expected , got '%s'" % type(val))
-
-		self.__store_path = val
-
-
+		self.store_path      = None
 
 
 	#----------------------------------------------------------------------
@@ -227,7 +205,38 @@ class GoLismeroAuditData(object):
 	@property
 	def to_json(self):
 		"""
-		Returns a JSON with all info.
+		Returns a JSON with all info in format:
+
+		{
+		  "audit_name": "asdfasdf",
+		  "targets": [
+			{
+			  "target_name": "127.0.0.1"
+			},
+			{
+			  "target_name": "mysite.com"
+			}
+		  ],
+		  "enabled_plugins": [
+			{
+			  "plugin_name": "openvas",
+			  "params": [
+				{
+				  "param_name": "profile",
+				  "param_value": "Full and fast"
+				},
+				{
+				  "param_name": "user",
+				  "param_value": "admin"
+				},
+				{
+				  "param_name": "password",
+				  "param_value": "admin"
+				}
+			  ]
+			}
+		  ],
+		  "disabled_plugins": ["spider","nikto"]
 
 		:return: JSON with info.
 		"""
@@ -237,15 +246,48 @@ class GoLismeroAuditData(object):
 	@property
 	def to_json_brief(self):
 		"""
-		Returns only a json with:
-		- id
-		- name
-		- user
-		- state
+		Returns only a json in format:
+
+		{
+		   'id'    : int,
+		   'name'  : str,
+		   'user'  : str,
+		   'state' : str
+		}
+
+		:return: dict
+		:rtype: dict
 		"""
 		return {
 		    'id'     : self.id,
 		    'name'   : self.audit_name,
-		    'user'         : self.user,
-		    'state'        : self.audit_state
+		    'user'   : self.user,
+		    'state'  : self.audit_state
 		}
+
+	#----------------------------------------------------------------------
+	@property
+	def to_json_console(self):
+		"""
+		:return: return a JSON formated for GoLismero console:
+		{
+		  "audit_name": "asdfasdf_1",
+		  "targets": ["127.0.0.1", "mysite.com" ],
+		  "enabled_plugins": ["openvas"]
+		  "disabled_plugins": ["spider","nikto"]
+
+		}
+		:rtype: dict
+		"""
+		# Add simple config
+		m_config                    = { k : str(v) for k, v in self.__dict__.iteritems() if k not in GoLismeroAuditData.COMPLEX_PROPERTIES}
+
+		# Fix audit name
+		m_config['audit_name']      = "%s_%s" % (self.audit_name, str(self.id))
+
+		# Add plugins enabled
+		m_config['enable_plugins']  = [ p['plugin_name'].strip() for p in self.enable_plugins]
+		if len(m_config['enable_plugins']) == 0:
+			m_config['enable_plugins'] = ["all"]
+
+		return m_config
