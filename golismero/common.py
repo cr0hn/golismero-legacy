@@ -808,6 +808,27 @@ class AuditConfig (Configuration):
 
 
     #--------------------------------------------------------------------------
+    # Security note: do not copy config_file or profile_file!
+
+    def from_dictionary(self, args):
+        super(AuditConfig, self).from_dictionary(args)
+        if "profile" in args:
+            self.profile = args["profile"]
+            self.profile_file = get_profile(self.profile)
+        if "plugin_args" in args:
+            self.plugin_args = args["plugin_args"]
+        if "command" in args:
+            self.command = args["command"]
+
+    def to_dictionary(self):
+        result = super(AuditConfig, self).to_dictionary()
+        result["profile"]     = self.profile
+        result["plugin_args"] = self.plugin_args
+        result["command"]     = self.command
+        return result
+
+
+    #--------------------------------------------------------------------------
 
     @property
     def targets(self):
