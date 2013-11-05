@@ -10,6 +10,9 @@ body {
   color: black;
   padding-top: 80px;
 }
+.navbar-inverse {
+  background-color: #404040;
+}
 .navbar-inverse .logo {
   padding: 5px;
 }
