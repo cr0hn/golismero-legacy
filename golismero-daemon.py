@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Daemon for GoLismero.
+Run GoLismero as a Unix daemon.
 """
 
 __license__="""
@@ -31,7 +31,31 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Fix the module load path.
+
+import sys
+from os import path
+
+script = __file__
+if path.islink(script):
+    script = path.realpath(script)
+here = path.split(path.abspath(script))[0]
+assert here
+thirdparty_libs = path.join(here, "thirdparty_libs")
+assert path.exists(thirdparty_libs)
+has_here = here in sys.path
+has_thirdparty_libs = thirdparty_libs in sys.path
+if not (has_here and has_thirdparty_libs):
+    if has_here:
+        sys.path.remove(here)
+    if has_thirdparty_libs:
+        sys.path.remove(thirdparty_libs)
+    sys.path.insert(0, thirdparty_libs)
+    sys.path.insert(0, here)
+
+
+#------------------------------------------------------------------------------
 # Python version check.
 # We must do it now before trying to import any more modules.
 #
@@ -39,62 +63,39 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #       separately you can try removing this check and seeing
 #       what happens (we haven't tested it!).
 
-import sys
+from golismero import show_banner
 from sys import version_info, exit
 if __name__ == "__main__":
     if version_info < (2, 7) or version_info >= (3, 0):
+        show_banner()
         print "[!] You must use Python version 2.7"
         exit(1)
 
 
-#----------------------------------------------------------------------
-# Fix the module load path when running as a portable script and during installation.
+#------------------------------------------------------------------------------
+# Check we're not running on Windows.
 
-import os
-from os import path
-try:
-    _FIXED_PATH_
-except NameError:
-    here = path.split(path.abspath(__file__))[0]
-    if not here:  # if it fails use cwd instead
-        here = path.abspath(os.getcwd())
-    thirdparty_libs = path.join(here, "thirdparty_libs")
-    if path.exists(thirdparty_libs):
-        has_here = here in sys.path
-        has_thirdparty_libs = thirdparty_libs in sys.path
-        if not (has_here and has_thirdparty_libs):
-            if has_here:
-                sys.path.remove(here)
-            if has_thirdparty_libs:
-                sys.path.remove(thirdparty_libs)
-            if __name__ == "__main__":
-                # As a portable script: use our versions always.
-                sys.path.insert(0, thirdparty_libs)
-                sys.path.insert(0, here)
-            else:
-                # When installing: prefer system version to ours.
-                sys.path.insert(0, here)
-                sys.path.append(thirdparty_libs)
-    _FIXED_PATH_ = True
+if path.sep == "\\":
+    print "[!] This script does not run on Windows."
+    exit(1)
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Imported modules.
 
 import daemon
-from os import path
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # GoLismero modules.
 
-from golismero.api.config import Config
-from golismero.common import OrchestratorConfig, AuditConfig, \
-     get_profile, get_default_config_file
+from golismero.api.logger import Logger
+from golismero.common import OrchestratorConfig, get_profile, \
+    get_default_config_file
 from golismero.main import launcher
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Start of program.
 
 def main():
@@ -106,12 +107,16 @@ def main():
 
     # Load the Orchestrator options.
     orchestrator_config = OrchestratorConfig()
+    orchestrator_config.verbose     = Logger.MORE_VERBOSE
     orchestrator_config.config_file = config_file
-    orchestrator_config.from_config_file(orchestrator_config.config_file, allow_profile = True)
+    orchestrator_config.from_config_file(orchestrator_config.config_file,
+                                         allow_profile = True)
     if orchestrator_config.profile:
-        orchestrator_config.profile_file = get_profile(orchestrator_config.profile)
+        orchestrator_config.profile_file = get_profile(
+                                            orchestrator_config.profile)
         if orchestrator_config.profile_file:
-            orchestrator_config.from_config_file(orchestrator_config.profile_file)
+            orchestrator_config.from_config_file(
+                                            orchestrator_config.profile_file)
         else:
             raise RuntimeError("Could not find profile, aborting!")
 
@@ -128,22 +133,23 @@ def main():
             plugins_folder = path.dirname(plugins_folder)
             plugins_folder = path.join(plugins_folder, "plugins")
             if not path.isdir(plugins_folder):
-                raise RuntimeError("Default plugins folder not found, aborting!")
+                raise RuntimeError(
+                    "Default plugins folder not found, aborting!")
         orchestrator_config.plugins_folder = plugins_folder
 
     # Force the Web UI.
     orchestrator_config.ui_mode = "web"
-    orchestrator_config.color   = False
-    orchestrator_config.verbose = 4
+
+    # Force disable colored output.
+    orchestrator_config.color = False
 
     # Launch GoLismero.
     launcher.run(orchestrator_config)
 
 
-#------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Run as daemon.
 
 if __name__ == '__main__':
-    #with daemon.DaemonContext():
-    #    main()
-    main()
+    with daemon.DaemonContext():
+        main()

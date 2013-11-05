@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>GoLismero Report</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="./css/report.css">
+		<link rel="stylesheet" type="text/css" href="./css/jquery.jqplot.min.css">
+	</head>
+	<body>	
+		<div class="navbar navbar-fixed-top navbar-inverse" role="navigation">
+	      <div class="container">
+	        <div class="navbar-header">
+	          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	          </button>
+	          <div class="pull-left logo">
+	          <a href="quickInfo" class="anchor"><img height="60px"src="data:image/png;base64,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"/></a></div>
+	          <div class="navbar-brand">GoLismero report</div>
+	        </div>
+	        <div class="collapse navbar-collapse">
+	          <ul class="nav navbar-nav">
+				<li class="dropdown">
+	              <a href="overview" class="dropdown-toggle anchor" data-toggle="dropdown">Overview<b class="caret"></b></a>
+	              <ul class="dropdown-menu">
+	                <li><a href="overview" class="anchor">Overview</a></li>
+	                <li><a href="vulnerabilitiesTable" class="anchor">Vulnerabilities</a></li>
+	              </ul>
+	            </li>
+	            <li><a href="technicalReportTable" class="anchor">Technical report</a></li>
+	          </ul>
+	        </div><!-- /.nav-collapse -->
+	      </div><!-- /.container -->
+	    </div>
+		<div class="container">
+			<div class="alert alert-dismissable alert-info">
+			  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+			  <span class="bold">Info!</span> If you want the ability to generate a custom report purchase the professional version. <a href="https://buguroo.com/productos/bugblast/" class="alert-link" target="_blank">More info</a>
+			</div>
+			<div class="row" data-anchor="quickInfo">
+				<div class="col-sm-4 ">
+					<div class="well quickInfo">
+						<span class="glyphicon glyphicon-record"></span>
+						<div class="text-right info-links">
+							<p class="title">Targets</p>
+							<ul>
+								<li><span class="glyphicon glyphicon-play"></span>http://terra.es</li>
+								<li><span class="glyphicon glyphicon-play"></span>8.8.8.8</li>
+								<li><span class="glyphicon glyphicon-play"></span>http://terra.es/login.aspx</li>
+								<li><span class="glyphicon glyphicon-play"></span>http://google.com</li>
+								<li><span class="glyphicon glyphicon-play"></span>192.168.1.1</li>
+								<li><span class="glyphicon glyphicon-play"></span>http://google.com</li>
+								<li><span class="glyphicon glyphicon-play"></span>http://golismero-project.com</li>
+								
+							</ul>
+						</div>
+					</div>					
+				</div>
+				<div class="col-sm-4 " >
+					<div class="well quickInfo">
+						<span class="glyphicon glyphicon-time hidden-xs hidden-sm"></span>
+						<div class="text-right">
+							<p class="title">Time</p>
+							<p class="info"><span class="bold">Start:</span> Aug. 30, 2013, 6:01 p.m.</p>
+							<p class="info"><span class="bold">End:</span> Aug. 30, 2013, 6:24 p.m</p>
+							<p class="info"><span class="bold">Total:</span> 0 days 0:23:30</p>
+						</div>
+
+					</div>
+				</div>
+				<div class="col-sm-4">
+					<div class="well quickInfo">
+						<span class="glyphicon glyphicon-exclamation-sign"></span>
+						<div class="text-right info-links">
+							<p class="title">Vulnerabilities</p>
+							<p class="info"><span class="bold">Total:</span> 125</p>
+							<ul>
+								<li><span class="criticalVulnerability bold">Critical:</span>1</li>
+								<li><span class="highVulnerability bold">High:</span>10</li>
+								<li><span class="middleVulnerability bold">Middle</span>:10</li>
+								<li><span class="lowVulnerability bold">Low</span>:10</li>
+								<li><span class="infoVulnerability bold">Informational</span>:10</li>
+							</ul>
+						</div>
+					</div>					
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-12" >
+					<div class="well">
+						<h3 data-anchor="overview">Overview</h3>
+						<div id="chartVulnerabilities"></div>
+						Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed id fringilla mauris, eget vehicula justo. Quisque vitae risus sed lorem accumsan mollis sit amet quis diam. Quisque sagittis purus ac orci malesuada venenatis at nec magna. Duis posuere lorem risus, id molestie mauris fringilla ac. Donec blandit, nulla non tristique pretium, sapien arcu elementum purus, sed hendrerit risus velit a lacus. Duis ut gravida massa, vitae adipiscing erat. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Integer ligula lectus, pretium a pretium a, convallis non libero. In mattis suscipit est ut tempus. Phasellus eget nisl malesuada, tincidunt neque in, pretium nunc. Vestibulum quis sodales nunc, lacinia tristique ipsum. Praesent interdum eget erat eget varius. In erat lacus, ultrices ut nulla id, rhoncus fringilla lacus.
+
+						Curabitur nec ultrices arcu. Aliquam iaculis tellus enim, vel aliquam enim aliquam nec. Donec vitae commodo nisi, ut aliquet leo. Donec vitae sodales tortor. Vivamus porta tortor eu felis fermentum, at dapibus tortor volutpat. Ut aliquam turpis in odio laoreet, in sollicitudin tortor suscipit. Maecenas cursus, ante in hendrerit tincidunt, sem nulla ornare metus, id pretium eros magna eget leo.
+
+						Quisque leo dui, viverra et velit non, faucibus vestibulum eros. Nunc dictum nunc eu lorem fringilla tristique vitae in tortor. Suspendisse potenti. Etiam rhoncus felis eros, vel luctus mauris iaculis eu. Nam suscipit euismod bibendum. Donec a justo dignissim, porttitor leo eu, sodales urna. Integer placerat risus sit amet ornare ornare. Cras vulputate ligula at dolor accumsan, non convallis elit gravida. Maecenas mollis dui lacus, at malesuada diam gravida scelerisque. Sed arcu eros, mattis non est eu, luctus aliquet nisi. Nunc dapibus, orci a feugiat pulvinar, dolor urna hendrerit leo, et ultrices libero ipsum non ligula.
+	
+						Quisque pretium mattis consequat. Etiam mi diam, aliquam id enim in, mollis rutrum lorem. Etiam sollicitudin eros vitae diam vehicula congue. Suspendisse convallis risus adipiscing felis volutpat hendrerit. Donec faucibus tellus ut nisi vulputate tempor. Pellentesque erat tellus, dapibus ac laoreet vitae, condimentum ut quam. Praesent velit tellus, pulvinar quis velit et, adipiscing sollicitudin sem. In interdum urna ac rhoncus ullamcorper. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed cursus cursus metus imperdiet lobortis. Nulla nulla lectus, elementum non turpis vel, elementum fermentum elit. Nullam rhoncus eros at euismod mollis. Sed commodo fermentum lorem, a ornare ligula mollis non. Nam mollis dui sit amet semper pretium.
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="table-responsive well">
+						<h3 data-anchor="vulnerabilitiesTable">Vulnerabilities</h3>
+					  	<table class="table table-bordered" id="tableVulnerabilities">
+						    <thead>
+					          <tr>
+					            <th style="width:15%">ID</th>
+					            <th style="width:25%">Target</th>
+					            <th style="width:50%">Vulnerability</th>
+					            <th style="width:10%">Criticality</th>
+					          </tr>
+					          <tr class="filter">
+									<th></th>
+									<th>
+										<select id="targetFilterTable" name="targetFilterTable">
+
+										</select>
+									</th>
+									<th>
+										<select id="vulnerabilityFilterTable" name="vulnerabilityFilterTable">
+
+										</select>
+									</th>
+									<th>
+										<select id="criticalityFilterTable" name="vulnerabilityFilterTable">
+											<option value="">All</option>
+											<option value="1">Informational</option>
+											<option value="2">Low</option>
+											<option value="3">Medium</option>
+											<option value="4">High</option>
+											<option value="5">Critical</option>
+										</select>
+									</th>
+					        	</tr>
+					        </thead>
+					        <tbody>					        	
+					        </tbody>
+					  	</table>
+					  	<a href="#" id="showMoreVulnerabilities">Show more </a><div class="pull-right">(Show: <span id="showTableVulnerabilities"></span>, Total <span id="totalTableVulnerabilities"></span>)</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="table-responsive well">
+						<h3 data-anchor="technicalReportTable">Technical report</h3>
+					  	<table class="table table-bordered" id="tableTechnicalReport">
+						   
+					  	</table>					  	
+					</div>
+				</div>
+			</div>
+		</div>
+		<span class="totop"><a href="#"><i class="glyphicon glyphicon-chevron-up"></i></a></span> 
+
+
+
+
+		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+	    <script type="text/javascript" src="js/jquery.js"></script>
+	    <!-- Include all compiled plugins (below), or include individual files as needed -->
+	    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+	    <script type="text/javascript" src="js/jquery.jqplot.min.js"></script>
+	    <script type="text/javascript" src="js/jqplot.pieRenderer.min.js"></script>
+	    <script type="text/javascript" src="js/jquery.tmpl.min.js"></script>
+	    <script type="text/javascript" src="js/jsonDataExample.js"></script>
+	    <script type="text/javascript" src="js/taffy-min.js"></script>
+	    <script type="text/javascript" src="js/dataaccess.js"></script>
+	    <!--plantillas para la generacion de codigo html-->
+	    <script type="text/template" id="rowVulnerabilityTemplate">
+			<tr>
+				<td>${id}</td>
+				<td>${target}</td>
+				<td>${vulnerability}</td>
+				<td><span class="bold ${obtainCriticality(criticality)}">${criticality}-${obtainNameCriticality(criticality)}</span></td>
+			</tr>
+		</script>
+	    <script type="text/javascript">
+
+	    	function initChart(){
+				var data = [
+				    ['Critical', 2],['High', 12],['Medium', 9], ['Low', 14], 
+				    ['Informational', 16]
+				  ];
+				  var plot1 = jQuery.jqplot ('chartVulnerabilities', [data], 
+				    {
+			            seriesDefaults: {
+			              // Make this a pie chart.
+			              renderer: jQuery.jqplot.PieRenderer,
+			              rendererOptions: {
+			                // Put data labels on the pie slices.
+			                // By default, labels show the percentage of the slice.
+			                showDataLabels: true,
+			                dataLabelPositionFactor: 1.15,
+			              }
+			            },
+			            legend: { show:true, location: 'e' },
+			            seriesColors : ['#B40A9D','#b00700','#d7ac00', '#019127', '#0080FF'],
+			            grid: {drawBorder:false, shadow: false}
+			          }
+				  );
+	    	}
+	    	function initAnchor(){
+				//clic en un enlace de la lista
+				$('.anchor').on('click',function(e){
+					e.preventDefault();
+					var strAnchor=$(this).attr('href');
+					$('body,html').stop(true,true).animate({
+						scrollTop: $("[data-anchor='"+strAnchor+"']").first().offset().top -90
+					},1000);
+				});
+
+	    	}
+	    	function updateTable(){
+	    		$("#tableVulnerabilities tbody").empty();
+	    		indexVulnerabilities=0;
+	    		$( "#showMoreVulnerabilities" ).trigger( "click" );
+	    	}
+	    	function initVulnerabilitiesTable(){
+	    		//vulnerabilities
+	    		$('#vulnerabilityFilterTable').append('<option value="">All</option>');
+	    		$(dataAccess.getTypeVulnerabilities()).each(function(index,v){
+	    			$('#vulnerabilityFilterTable').append('<option value="'+v+'">'+v+'</option>');
+	    		});
+	    		//targets
+	    		$('#targetFilterTable').append('<option value="">All</option>');
+	    		$(dataAccess.getTargets()).each(function(index,t){
+	    			$('#targetFilterTable').append('<option value="'+t+'">'+t+'</option>');
+	    		});
+	    		$('#targetFilterTable').change(function(e){
+	    			updateTable();
+	    		});
+	    		$('#vulnerabilityFilterTable').change(function(e){
+	    			updateTable();
+	    		});
+	    		$('#criticalityFilterTable').change(function(e){
+	    			updateTable();
+	    		});
+
+	    		$("#showMoreVulnerabilities").click(function(e){
+	    			e.preventDefault();
+	    			var vulnerabilityFilter = $('#vulnerabilityFilterTable').val();
+	    			var targetFilter = $('#targetFilterTable').val();
+	    			var criticalityFilter = $('#criticalityFilterTable').val();
+	    			var data = dataAccess.getVulnerabilities(indexVulnerabilities,10, targetFilter, vulnerabilityFilter,criticalityFilter);
+	    			if(indexVulnerabilities == 0){
+	    				$("#tableVulnerabilities tbody").append($.tmpl( "rowVulnerabilityTemplate", data ));
+	    				//cargo el count
+	    				$("#totalTableVulnerabilities").html(dataAccess.getVulnerabilitiesCount(targetFilter,vulnerabilityFilter,criticalityFilter));
+	    			}else{
+	    				$.tmpl( "rowVulnerabilityTemplate", data ).insertAfter($('tr:last', $("#tableVulnerabilities tbody")));
+	    			}
+	    			//actualizeo el numero de mostradas
+	    			$("#showTableVulnerabilities").html(indexVulnerabilities*10+data.length);
+	    			if(parseInt($("#totalTableVulnerabilities").html())== indexVulnerabilities*10+data.length){
+	    				//ya no aparce showMore
+	    				$("#showMoreVulnerabilities").css("visibility", "hidden");
+	    			}else{
+	    				$("#showMoreVulnerabilities").css("visibility", "");
+	    			}
+	    			//$('tr:last', $("#tableVulnerabilities")).append()
+	    			indexVulnerabilities++;
+	    		});
+	    		$( "#showMoreVulnerabilities" ).trigger( "click" );
+	    	}
+	    	function initTemplates(){
+	    		$.template( "rowVulnerabilityTemplate", $("#rowVulnerabilityTemplate") );
+	    	}
+	    	function obtainCriticality(c){
+	    			switch (c){
+	    			case 1:return "infoVulnerability";
+	    			break;
+	    			case 2: return "lowVulnerability";
+	    			break;
+	    			case 3: return "middleVulnerability";
+	    			break;
+	    			case 4: return "highVulnerability";
+	    			break;
+	    			case 5: return "criticalVulnerability";
+	    			break;
+	    		}
+	    		
+	    	}
+	    	function obtainNameCriticality(c){
+	    			switch (c){
+	    			case 1:return "Informational";
+	    			break;
+	    			case 2: return "Low";
+	    			break;
+	    			case 3: return "Middle";
+	    			break;
+	    			case 4: return "High";
+	    			break;
+	    			case 5: return "Critical";
+	    			break;
+	    		}	    		
+	    	}
+	    	function initToTop(){
+	    		$(".totop").hide();
+
+				$(function(){
+					$(window).scroll(function(){
+						if ($(this).scrollTop()>600)
+						{
+							$('.totop').slideDown();
+						} 
+						else
+						{
+							$('.totop').slideUp();
+						}
+						});
+
+						$('.totop a').click(function (e) {
+						e.preventDefault();
+						$('body,html').animate({scrollTop: 0}, 500);
+					});
+
+				});
+	    	}
+	    	var dataAccess;
+	    	var indexVulnerabilities = 0;
+	    	$(document).ready(function(){
+	    		dataAccess = new DataAccess();
+	    		initToTop();
+				initChart();
+				initAnchor();
+				initTemplates();
+				initVulnerabilitiesTable();
+				
+			});
+	    </script>
+	</body>
+</html>
