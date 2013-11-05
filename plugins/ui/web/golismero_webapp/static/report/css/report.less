@@ -141,3 +141,22 @@ h3{
 		font-weight: bold;
 	}
 }
+
+
+tr.targetRow, tr.resourceRow, tr.vulnerabilityRow,{
+	cursor: pointer;
+	font-weight: bold;
+	span.glyphicon{
+		margin-right: 10px;
+	}
+}
+.table-hover>tbody>tr.openResourceRow>td{
+	background-color: fade(@lightYellow, 30%);
+	&:hover{
+		background-color: fade(@lightYellow, 30%);
+	}
+}
+/*.table-hover>tbody>tr:hover>td, 
+.table-hover>tbody>tr:hover>th{
+	background-color: lighten(@lightYellow, 10%);
+}*/

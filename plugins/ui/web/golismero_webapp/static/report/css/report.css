@@ -118,3 +118,25 @@ h3 {
 h3.bold {
   font-weight: bold;
 }
+tr.targetRow,
+tr.resourceRow,
+tr.vulnerabilityRow {
+  cursor: pointer;
+  font-weight: bold;
+}
+tr.targetRow span.glyphicon,
+tr.resourceRow span.glyphicon,
+tr.vulnerabilityRow span.glyphicon {
+  margin-right: 10px;
+}
+.table-hover > tbody > tr.openResourceRow > td {
+  background-color: rgba(245, 205, 47, 0.3);
+}
+.table-hover > tbody > tr.openResourceRow > td:hover {
+  background-color: rgba(245, 205, 47, 0.3);
+}
+/*.table-hover>tbody>tr:hover>td, 
+.table-hover>tbody>tr:hover>th{
+	background-color: lighten(@lightYellow, 10%);
+}*/
+
