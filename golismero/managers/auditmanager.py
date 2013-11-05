@@ -601,17 +601,21 @@ class Audit (object):
             # XXX FIXME what about links?
             existing = self.database.get_data_keys()
             stack = list(existing)
+            visited = set()
             while stack:
                 identity = stack.pop()
-                data = self.database.get_data(identity)
-                if data.is_in_scope(): # just in case...
-                    for data in data.discovered:
-                        identity = data.identity
-                        if identity not in existing and data.is_in_scope():
-                            self.database.add_data(data)
-                            existing.add(identity)
-                            stack.append(identity)
+                if identity not in visited:
+                    visited.add(identity)
+                    data = self.database.get_data(identity)
+                    if data.is_in_scope(): # just in case...
+                        for data in data.discovered:
+                            identity = data.identity
+                            if identity not in existing and data.is_in_scope():
+                                self.database.add_data(data)
+                                existing.add(identity)
+                                stack.append(identity)
             del existing
+            del visited
 
         finally:
 
@@ -670,6 +674,7 @@ class Audit (object):
         :param message: The message with the ACK.
         :type message: Message
         """
+
         try:
 
             # Decrease the expected ACK count.
