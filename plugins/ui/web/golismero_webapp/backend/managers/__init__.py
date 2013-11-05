@@ -286,7 +286,25 @@ class GoLismeroAuditData(object):
 		m_config['audit_name']      = "%s_%s" % (self.audit_name, str(self.id))
 
 		# Add plugins enabled
-		m_config['enable_plugins']  = [ p['plugin_name'].strip() for p in self.enable_plugins]
+		m_config['enable_plugins']  = []
+
+		m_tmp_plugin_args           = []
+
+		# Add plugins config
+		for p in self.enable_plugins:
+			l_plugin_name = p["plugin_name"]
+
+			m_config['enable_plugins'].appen(l_plugin_name)
+
+			# Plugins params
+			for pp in p.get("params", []):
+				m_tmp_plugin_args.append([l_plugin_name, pp["plugin_name"], pp["plugin_value"]])
+
+		# Add plugin args?
+		if m_tmp_plugin_args:
+			m_config['plugin_args'] = m_tmp_plugin_args
+
+		# No plugins?
 		if len(m_config['enable_plugins']) == 0:
 			m_config['enable_plugins'] = ["all"]
 
