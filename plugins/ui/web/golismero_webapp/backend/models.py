@@ -53,7 +53,7 @@ class Audit(models.Model):
     only_vulns              = models.BooleanField(blank=True)
     #imports                 = serializers.ChoiceField()
     include_subdomains      = models.BooleanField(blank=True)
-    subdomain_regex         = models.CharField(max_length=200, default="*")
+    subdomain_regex         = models.CharField(max_length=200, blank=True)
     depth                   = models.IntegerField(max_length=3, default=0)
     max_links               = models.IntegerField(max_length=6, default=0)
     follow_redirects        = models.BooleanField(blank=True)
