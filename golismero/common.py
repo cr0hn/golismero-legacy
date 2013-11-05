@@ -385,9 +385,13 @@ class Configuration (object):
 
     @staticmethod
     def integer_or_none(x):
-        if x is None or (hasattr(x, "lower") and x in ("", "none", "inf", "infinite")):
+        if x is None or (hasattr(x, "lower") and x.lower() in ("", "none", "inf", "infinite")):
             return None
         return Configuration.integer(x)
+
+    @staticmethod
+    def float(x):
+        return float(x) if x else 0.0
 
     @staticmethod
     def comma_separated_list(x):
@@ -741,7 +745,7 @@ class AuditConfig (Configuration):
         "imports": (Configuration.comma_separated_list, []),
 
         #
-        # Plugins options
+        # Plugin options
         #
 
         # Enabled plugins
@@ -750,8 +754,11 @@ class AuditConfig (Configuration):
         # Disabled plugins
         "disable_plugins": (Configuration.comma_separated_list, []),
 
+        # Plugin execution timeout
+        "plugin_timeout": (Configuration.float, 60.0),
+
         #
-        # Networks options
+        # Network options
         #
 
         # Include subdomains?
@@ -762,6 +769,7 @@ class AuditConfig (Configuration):
 
         # Depth level for spider
         "depth": (Configuration.integer_or_none, 0),
+
         # Limits
         "max_links" : (Configuration.integer, 0), # 0 -> infinite
 
