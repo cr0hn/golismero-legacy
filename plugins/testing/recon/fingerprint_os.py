@@ -36,6 +36,7 @@ from golismero.api.data import discard_data
 from golismero.api.net.http import HTTP
 from golismero.api.net.scraper import extract_from_html, extract_from_text
 from golismero.api.plugin import TestingPlugin
+from golismero.api.net import NetworkOutOfScope
 from golismero.api.net.web_utils import ParsedURL, download
 from golismero.api.text.wordlist import WordListLoader
 from traceback import format_exc
@@ -209,7 +210,10 @@ class OSFingerprinting(TestingPlugin):
         )
 
         # Get the main web page
-        m_r = download(main_url, callback=self.check_download)
+        try:
+            m_r = download(main_url, callback=self.check_download)
+        except NetworkOutOfScope:
+            return None
         if not m_r or not m_r.raw_data:
             return None
         discard_data(m_r)
