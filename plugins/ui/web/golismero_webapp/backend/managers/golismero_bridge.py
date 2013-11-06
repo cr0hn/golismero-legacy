@@ -66,7 +66,7 @@ class AuditBridge(object):
 	#----------------------------------------------------------------------
 
 	@staticmethod
-	def new_audit(data): #
+	def new_audit(data):
 		"""
 		Creates and start a new audit.
 
@@ -77,6 +77,13 @@ class AuditBridge(object):
 		"""
 		if not isinstance(data, GoLismeroAuditData):
 			raise TypeError("Expected GoLismeroAuditData, got '%s' instead" % type(data))
+
+		config = data.to_json_console
+
+		# Set command
+		config["command"] = "scan"
+
+		print BRIDGE.RPC.call("audit/create", config)
 
 
 
@@ -91,7 +98,7 @@ class AuditBridge(object):
 
 		:raises: ExceptionAuditNotFound
 		"""
-		pass
+		BRIDGE.RPC.call("audit/cancel", audit_id)
 
 
 
@@ -207,7 +214,7 @@ class AuditBridge(object):
 
 		:raises: ExceptionAuditNotFound
 		"""
-		return "new"
+		BRIDGE.RPC.call("audit/state", audit_id)
 
 
 
@@ -287,7 +294,7 @@ class AuditBridge(object):
 		:raises: ExceptionAuditNotFound
 		"""
 		try:
-			return BRIDGE.RCP.call("do_audit_det")
+			return BRIDGE.RPC.call("audit/details")
 		except ObjectDoesNotExist:
 			return None
 
