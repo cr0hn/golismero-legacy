@@ -36,6 +36,7 @@ from . import Resource
 from .domain import Domain
 from .. import identity
 from ...config import Config
+from ...text.text_utils import to_utf8
 
 
 #------------------------------------------------------------------------------
@@ -58,6 +59,8 @@ class Email(Resource):
         """
 
         # Check the data types.
+        address = to_utf8(address)
+        name    = to_utf8(name)
         if not isinstance(address, str):
             raise TypeError("Expected string, got %r instead", type(address))
         if name is not None and not isinstance(name, str):

@@ -40,7 +40,7 @@ __all__ = [
 
 from . import NetworkOutOfScope
 from ..data import LocalDataCache
-from ..text.text_utils import generate_random_string, split_first
+from ..text.text_utils import generate_random_string, split_first, to_utf8
 from ...common import json_decode, json_encode
 
 from BeautifulSoup import BeautifulSoup
@@ -58,7 +58,7 @@ from warnings import warn
 import re
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Url class from urllib3 renamed as Urllib3_Url to avoid confusion.
 
 try:
@@ -67,7 +67,7 @@ except ImportError:
     from urllib3.util import Url as Urllib3_Url
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 __user_agents = (
     "Opera/9.80 (Windows NT 6.1; U; zh-tw) Presto/2.5.22 Version/10.50",
     "Mozilla/6.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:2.0.0.0) Gecko/20061028 Firefox/3.0",
@@ -103,7 +103,7 @@ def generate_user_agent():
     return __user_agents[randint(0, len(__user_agents) - 1)]
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def download(url, callback = None, timeout = 10.0, allow_redirects = True):
     """
     Download the file pointed to by the given URL.
@@ -265,7 +265,7 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True):
         return data
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def data_from_http_response(response):
     """
     Extracts data from an HTTP response.
@@ -329,7 +329,7 @@ def data_from_http_response(response):
     return data
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def fix_url(url, base_url=None):
     """
     Parse a URL input from a user and convert it to a canonical URL.
@@ -356,6 +356,10 @@ def fix_url(url, base_url=None):
     :return: Canonical URL.
     :rtype: str
     """
+
+    url      = to_utf8(url)
+    base_url = to_utf8(base_url)
+
     parsed = ParsedURL(url)
     if not parsed.scheme:
         parsed.scheme = 'http://'
@@ -369,7 +373,7 @@ def fix_url(url, base_url=None):
         return parsed.url
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def check_auth(url, user, password):
     """
     Check the auth for and specified url.
@@ -390,33 +394,36 @@ def check_auth(url, user, password):
     :rtype: bool
     """
 
-    # Check trivial case
+    # Check trivial case.
     if not url:
         return False
 
-    # Get authentication method
+    # Sanitize URL string.
+    url = to_utf8(url)
+
+    # Get authentication method.
     auth, _ = detect_auth_method(url)
 
     # Is authentication required?
     if auth:
 
-        # Get authentication object
+        # Get authentication object.
         m_auth_obj = get_auth_obj(auth, user, password)
 
-        # Try the request
+        # Try the request.
         req = Request(url = url, auth = m_auth_obj)
         p = req.prepare()
         s = Session()
         r = s.send(p)
 
-        # Check if authentication was successful
+        # Check if authentication was successful.
         return r.status_code == codes.ok
 
-    # No authentication is required
+    # No authentication is required.
     return True
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def get_auth_obj(method, user, password):
     """
     Generates an authentication code object depending of method as parameter:
@@ -467,6 +474,7 @@ def detect_auth_method(url):
 
     :return: (scheme, realm) if auth required. None otherwise.
     """
+    url = to_utf8(url)
     req = Request(url=url)
     p = req.prepare()
 
@@ -485,7 +493,7 @@ def detect_auth_method(url):
     return scheme, realm
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def split_hostname(hostname):
     """
     Splits a hostname into its subdomain, domain and TLD parts.
@@ -509,11 +517,11 @@ def split_hostname(hostname):
     :rtype: tuple(str, str, str)
     """
     extract = TLDExtract(fetch = False)
-    result  = extract(hostname)
+    result  = extract( to_utf8(hostname) )
     return result.subdomain, result.domain, result.suffix
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def generate_error_page_url(url):
     """
     Takes an URL to an existing document and generates a random URL
@@ -536,7 +544,7 @@ def generate_error_page_url(url):
     return m_parsed_url.url
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def parse_url(url, base_url = None):
     """
     Parse an URL and return a mutable object with all its parts.
@@ -555,7 +563,7 @@ def parse_url(url, base_url = None):
     return ParsedURL(url, base_url)
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class ParsedURL (object):
     """
     Parse an URL and return a mutable object with all its parts.
@@ -679,16 +687,24 @@ class ParsedURL (object):
         :type base_url: str
         """
 
+        url      = to_utf8(url)
+        base_url = to_utf8(base_url)
+
+        if not isinstance(url, str):
+            raise TypeError("Expected string, got %r instead" % type(url))
+        if base_url is not None and not isinstance(base_url, str):
+            raise TypeError("Expected string, got %r instead" % type(base_url))
+
         original_url = url
 
         self.__query_char = '?'
 
-        scheme = ''
-        auth = ''
-        host = ''
-        port = None
-        path = ''
-        query = ''
+        scheme   = ''
+        auth     = ''
+        host     = ''
+        port     = None
+        path     = ''
+        query    = ''
         fragment = ''
 
         if base_url:
@@ -1060,7 +1076,7 @@ class ParsedURL (object):
     @scheme.setter
     def scheme(self, scheme):
         if scheme:
-            scheme = scheme.strip().lower()
+            scheme = to_utf8( scheme.strip().lower() )
             if scheme.endswith('://'):
                 scheme = scheme[:-3].strip()
             if scheme and scheme not in self.default_ports:
@@ -1077,6 +1093,8 @@ class ParsedURL (object):
     def username(self, username):
         if not username:
             username = ''
+        else:
+            username = to_utf8(username)
         self.__username = username
 
     @property
@@ -1087,6 +1105,8 @@ class ParsedURL (object):
     def password(self, password):
         if not password:
             password = ''
+        else:
+            password = to_utf8(password)
         self.__password = password
 
     @property
@@ -1097,10 +1117,12 @@ class ParsedURL (object):
     def host(self, host):
         if not host:
             host = ''
-        elif host.startswith('[') and host.endswith(']'):
-            host = host.upper()
         else:
-            host = host.strip().lower()
+            host = to_utf8(host)
+            if host.startswith('[') and host.endswith(']'):
+                host = host.upper()
+            else:
+                host = host.strip().lower()
         self.__host = host
 
     @property
@@ -1126,6 +1148,8 @@ class ParsedURL (object):
     def path(self, path):
         if not path:
             path = '/'
+        else:
+            path = to_utf8(path)
         if not path.startswith('/'):
             path = '/' + path
         if path == '/' and self.__scheme == 'mailto':
@@ -1140,9 +1164,11 @@ class ParsedURL (object):
     def fragment(self, fragment):
         if not fragment:
             fragment = ''
-        elif fragment.startswith('#'):
-            warn("You don't need to use a leading '#' when setting the"
-                 " fragment, this may be an error!", stacklevel=3)
+        else:
+            fragment = to_utf8(fragment)
+            if fragment.startswith('#'):
+                warn("You don't need to use a leading '#' when setting the"
+                     " fragment, this may be an error!", stacklevel=3)
         self.__fragment = fragment
 
     @property
@@ -1153,8 +1179,11 @@ class ParsedURL (object):
     def query_char(self, query_char):
         if not query_char:
             query_char = '?'
-        elif query_char not in ('?', '/'):
-            raise ValueError("Invalid query separator character: %r" % query_char)
+        else:
+            query_char = to_utf8(query_char)
+            if query_char not in ('?', '/'):
+                raise ValueError(
+                    "Invalid query separator character: %r" % query_char)
         self.__query_char = query_char
 
     @property
@@ -1180,7 +1209,7 @@ class ParsedURL (object):
         else:
             try:
                 # much faster than parse_qsl()
-                query_params = dict(( map(unquote_plus, (token + '=').split('=', 2)[:2])
+                query_params = dict(( map(unquote_plus, (to_utf8(token) + '=').split('=', 2)[:2])
                                       for token in query.split('&') ))
                 if len(query_params) == 1 and not query_params.values()[0]:
                     query_params = {}
@@ -1417,9 +1446,12 @@ class HTMLElement (object):
         :param content: Raw HTML.
         :type content: str
         """
-        self.__tag_name = tag_name
-        self.__attrs = attrs
-        self.__content = content
+        self.__tag_name = to_utf8(tag_name)
+        self.__content  = to_utf8(content)
+        self.__attrs = {
+            to_utf8(k): to_utf8(v)
+            for k,v in attrs.iteritems()
+        }
 
 
     #--------------------------------------------------------------------------
@@ -1508,10 +1540,10 @@ class HTMLParser(object):
         """
 
         # Raw HTML content
-        self.__raw_data = data
+        self.__raw_data = to_utf8(data)
 
         # Init parser
-        self.__html_parser = BeautifulSoup(data)
+        self.__html_parser = BeautifulSoup(self.__raw_data)
 
         #
         # Parsed HTML elementes

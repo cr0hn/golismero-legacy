@@ -37,6 +37,7 @@ from ..api.data.resource.ip import IP
 from ..api.data.resource.url import Url
 from ..api.net.dns import DNS
 from ..api.net.web_utils import ParsedURL, split_hostname
+from ..api.text.text_utils import to_utf8
 
 from netaddr import IPAddress, IPNetwork
 from warnings import warn
@@ -212,6 +213,7 @@ class AuditScope (AbstractScope):
 
         # For each user-supplied target string...
         for target in audit_config.targets:
+            target = to_utf8(target)
 
             # If it's an IP address...
             try:
@@ -222,6 +224,7 @@ class AuditScope (AbstractScope):
                     IPAddress(target)
                     address = target
             except Exception:
+                ##raise  # XXX DEBUG
                 address = None
             if address is not None:
 
@@ -233,6 +236,7 @@ class AuditScope (AbstractScope):
                 try:
                     network = IPNetwork(target)
                 except Exception:
+                    ##raise  # XXX DEBUG
                     network = None
                 if network is not None:
 
@@ -262,6 +266,7 @@ class AuditScope (AbstractScope):
                         parsed_url = ParsedURL(target)
                         url = parsed_url.url
                     except Exception:
+                        ##raise  # XXX DEBUG
                         url = None
                     if url is not None:
 
@@ -278,6 +283,7 @@ class AuditScope (AbstractScope):
                                 IPAddress(host)
                             self.__addresses.add(host)
                         except Exception:
+                            ##raise  # XXX DEBUG
                             host = host.lower()
                             if host not in self.__domains:
                                 self.__domains.add(host)

@@ -34,6 +34,7 @@ __all__ = ["Geolocation"]
 
 from . import Information
 from .. import identity, merge
+from ...text.text_utils import to_utf8
 
 
 #------------------------------------------------------------------------------
@@ -96,6 +97,15 @@ class Geolocation(Information):
             longitude = float(longitude)
         except Exception:
             raise TypeError("Expected float, got %r instead" % type(longitude))
+        country_code = to_utf8(country_code)
+        country_name = to_utf8(country_name)
+        region_code  = to_utf8(region_code)
+        region_name  = to_utf8(region_name)
+        city         = to_utf8(city)
+        zipcode      = to_utf8(zipcode)
+        metro_code   = to_utf8(metro_code)
+        areacode     = to_utf8(areacode)
+        street_addr  = to_utf8(street_addr)
         if country_code is not None and type(country_code) is not str:
             raise TypeError("Expected string, got %r instead" % type(country_code))
         if country_name is not None and type(country_name) is not str:

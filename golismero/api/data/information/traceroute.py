@@ -37,6 +37,7 @@ from .. import identity
 from ..resource.ip import IP
 from ..resource.domain import Domain
 from ...config import Config
+from ...text.text_utils import to_utf8
 
 from time import time
 
@@ -60,6 +61,8 @@ class Hop (object):
         :param hostname: Hostname for this IP address. Optional.
         :type hostname: str | None
         """
+        address  = to_utf8(address)
+        hostname = to_utf8(hostname)
         if type(address) is not str:
             raise TypeError("Expected string, got %r instead" % type(address))
         if hostname is not None and type(hostname) is not str:

@@ -59,7 +59,7 @@ class Form(Information):
         :type parameters: iterable(str)
         """
 
-        if not isinstance(url, basestring):
+        if not isinstance(url, str):
             raise TypeError("Expected string, got %r instead" % type(url))
         url = str(url)
 
@@ -67,7 +67,7 @@ class Form(Information):
             raise TypeError("Expected string, got %r instead" % type(method))
 
         if isinstance(parameters, basestring):
-            raise TypeError("Expected tuple, got %r instead" % type(parameters))
+            raise TypeError("Expected tuple, got string instead")
         for name in parameters:
             if not isinstance(name, str):
                 raise TypeError("Expected string, got %r instead" % type(name))
