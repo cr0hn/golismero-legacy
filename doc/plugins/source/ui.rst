@@ -6,10 +6,15 @@ User Interface plugins control the way in which the user interacts with GoLismer
 Console UI (*console*)
 ======================
 
-Console user interface.
+Console user interface. This is the default.
 
 NO UI (*disabled*)
 ==================
 
-Empty user interface.
+Empty user interface. Used when running in daemon mode.
+
+Web UI (*web*)
+==============
+
+Web user interface.
 

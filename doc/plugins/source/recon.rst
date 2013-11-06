@@ -3,7 +3,7 @@ Reconnaisance
 
 Reconnaisance plugins perform passive, non-invasive information gathering tests on the targets.
 
-Default error page finder (*default_error_page*)
+Default Error Page Finder (*default_error_page*)
 ================================================
 
 Identifies default error pages for most commonly used web servers.
@@ -11,22 +11,24 @@ Identifies default error pages for most commonly used web servers.
 DNS Resolver (*dns*)
 ====================
 
-DNS resolver plugin. Without it, GoLismero can't resolve domain names to IP addresses.
+DNS resolver plugin.
+Without it, GoLismero can't resolve domain names to IP addresses.
 
-OS fingerprinting plugin (*fingerprint_os*)
-===========================================
+OS Fingerprinter (*fingerprint_os*)
+===================================
 
 Fingerprinter of server operating systems.
 
-Web Server fingerprinting plugin (*fingerprint_web*)
-====================================================
+Web Server Fingerprinter (*fingerprint_web*)
+============================================
 
 Fingerprinter of web servers.
 
-Freegeoip.net connector (*geoip*)
-=================================
+IP Geolocator (*geoip*)
+=======================
 
-Geolocates IP addresses using the Freegeoip.net service.
+Geolocates IP addresses using online services.
+This plugin requires a working Internet connection to work.
 
 Robots.txt Analyzer (*robots*)
 ==============================
@@ -36,15 +38,16 @@ Analyzes robots.txt files and extracts their links.
 Web Spider (*spider*)
 =====================
 
-Web spider plugin. Without it, GoLismero can't crawl web sites.
+Web spider plugin.
+Without it, GoLismero can't crawl web sites.
 
-Suspicious URL (*suspicious_url*)
-=================================
+Suspicious URL Finder (*suspicious_url*)
+========================================
 
 Flags suspicious words in URLs.
 
 theHarvester (*theharvester*)
 =============================
 
-Integration with theHarvester (https://code.google.com/p/theharvester/).
+Integration with theHarvester: https://code.google.com/p/theharvester/
 
