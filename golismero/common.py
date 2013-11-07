@@ -803,6 +803,9 @@ class AuditConfig (Configuration):
     # Plugin arguments.
     plugin_args  = None   # list of (plugin_id, key, value)
 
+    # Plugin load overrides.
+    plugin_load_overrides = None
+
     # Command to run.
     command = "SCAN"
 
