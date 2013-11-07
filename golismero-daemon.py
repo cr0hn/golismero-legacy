@@ -163,7 +163,7 @@ if __name__ == '__main__':
     with daemon.DaemonContext(
         working_directory = working_directory,
         detach_process = False,
-        stdout = open(stdout, "w+"),
-        stderr = open(stderr, "w+"),
+        stdout = open(stdout, "a"),
+        stderr = open(stderr, "a"),
     ):
         main()
