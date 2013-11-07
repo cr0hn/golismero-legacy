@@ -124,9 +124,13 @@ def main():
     # If no plugins folder is given, use the default.
     plugins_folder = orchestrator_config.plugins_folder
     if not plugins_folder:
+        print __file__
         plugins_folder = path.abspath(__file__)
+        print plugins_folder
         plugins_folder = path.dirname(plugins_folder)
+        print plugins_folder
         plugins_folder = path.join(plugins_folder, "plugins")
+        print plugins_folder
         if not path.isdir(plugins_folder):
             from golismero import common
             plugins_folder = path.abspath(common.__file__)
@@ -151,5 +155,15 @@ def main():
 # Run as daemon.
 
 if __name__ == '__main__':
-    #with daemon.DaemonContext():
-    main()
+    working_directory = path.dirname( path.abspath(__file__) )
+    stdout = path.join(working_directory, "golismero-out.log")
+    stderr = path.join(working_directory, "golismero-err.log")
+    #stdout = "/var/log/golismero-out.log"
+    #stderr = "/var/log/golismero-err.log"
+    with daemon.DaemonContext(
+        working_directory = working_directory,
+        detach_process = False,
+        stdout = open(stdout, "w+"),
+        stderr = open(stderr, "w+"),
+    ):
+        main()
