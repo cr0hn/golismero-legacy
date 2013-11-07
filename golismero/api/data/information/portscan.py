@@ -75,8 +75,8 @@ class Portscan(Information):
             sane    = set()
             visited = set()
             for state, protocol, port in ports:
-                state    = state.upper()
-                protocol = protocol.upper()
+                state    = str( state.upper() )
+                protocol = str( protocol.upper() )
                 port     = int(port)
                 assert state in ("OPEN", "CLOSED", "FILTERED"), state
                 assert protocol in ("TCP", "UDP"), state

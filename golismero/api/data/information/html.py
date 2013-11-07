@@ -35,6 +35,7 @@ __all__ = ["HTML"]
 from . import Information
 from .. import identity
 from ...net.web_utils import HTMLParser
+from ...text.text_utils import to_utf8
 
 
 #------------------------------------------------------------------------------
@@ -107,7 +108,7 @@ class HTML(Information):
         """
 
         # Raw HTML content
-        self.__raw_data = data
+        self.__raw_data = to_utf8(data)
 
         # Parent constructor
         super(HTML, self).__init__()

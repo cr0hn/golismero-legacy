@@ -34,6 +34,7 @@ __all__ = ["Text"]
 
 from . import Information
 from .binary import Binary
+from ...text.text_utils import to_utf8
 
 
 #------------------------------------------------------------------------------
@@ -47,4 +48,4 @@ class Text(Binary):
 
     #----------------------------------------------------------------------
     def __init__(self, data, content_type = "text/plain"):
-        super(Text, self).__init__(data, content_type)
+        super(Text, self).__init__(to_utf8(data), content_type)

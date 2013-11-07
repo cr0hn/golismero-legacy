@@ -34,6 +34,7 @@ __all__ = ["WebServerFingerprint"]
 
 from . import Information
 from .. import identity
+from ...text.text_utils import to_utf8
 
 
 #------------------------------------------------------------------------------
@@ -64,12 +65,18 @@ class WebServerFingerprint(Information):
         :param canonical_name: Web server name, at lowcase. The name will be one of the the file: 'wordlist/fingerprint/webservers_keywords.txt'. Example: "Apache"
         :type canonical_name: str
 
-        :param related: dict with related webservers.
-        :type related: dict
+        :param related: Related webservers.
+        :type related: set(str)
 
         :param others: Map of other possible web servers by name and their probabilities of being correct [0.0 ~ 1.0].
         :type others: dict( str -> float )
         """
+
+        # Sanitize the strings.
+        name           = to_utf8(name)
+        version        = to_utf8(version)
+        banner         = to_utf8(banner)
+        canonical_name = to_utf8(canonical_name)
 
         # Check the data types.
         if not isinstance(name, str):
@@ -82,8 +89,9 @@ class WebServerFingerprint(Information):
             raise TypeError("Expected str, got %r instead" % type(canonical_name))
 
         if related is not None:
-            if not isinstance(others, dict):
-                raise TypeError("Expected dict, got %r instead" % type(others))
+            if not isinstance(related, set):
+                raise TypeError("Expected set, got %r instead" % type(related))
+            related = { to_utf8(v) for v in related }
             for v in related:
                 if not isinstance(v, str):
                     raise TypeError("Expected str, got %r instead" % type(v))
@@ -91,11 +99,13 @@ class WebServerFingerprint(Information):
         if others is not None:
             if not isinstance(others, dict):
                 raise TypeError("Expected dict, got %r instead" % type(others))
+            others = {
+                to_utf8(k): float(v)
+                for k,v in others.iteritems()
+            }
             for k, v in others.iteritems():
                 if not isinstance(k, str):
                     raise TypeError("Expected str, got %r instead" % type(k))
-                if not isinstance(v, float):
-                    raise TypeError("Expected float, got %r instead" % type(v))
 
         # Web server name.
         self.__name           = name

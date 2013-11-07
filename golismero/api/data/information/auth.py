@@ -34,6 +34,7 @@ __all__ = ["Username", "Password"]
 
 from . import Information
 from .. import identity
+from ...text.text_utils import to_utf8
 
 
 #------------------------------------------------------------------------------
@@ -45,7 +46,7 @@ class Username(Information):
     information_type = Information.INFORMATION_USERNAME
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, name):
         """
         :param name: Username.
@@ -53,11 +54,11 @@ class Username(Information):
         """
         if not isinstance(name, basestring):
             raise TypeError("Expected string, got %r instead" % type(name))
-        self.__name = name
+        self.__name = to_utf8(name)
         super(Username, self).__init__()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @identity
     def name(self):
         """
@@ -76,7 +77,7 @@ class Password(Information):
     information_type = Information.INFORMATION_PASSWORD
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, password):
         """
         :param password: Password.
@@ -84,11 +85,11 @@ class Password(Information):
         """
         if not isinstance(password, basestring):
             raise TypeError("Expected string, got %r instead" % type(password))
-        self.__password = password
+        self.__password = to_utf8(password)
         super(Password, self).__init__()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @identity
     def password(self):
         """

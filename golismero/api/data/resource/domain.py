@@ -36,6 +36,7 @@ from . import Resource
 from .. import identity
 from ...config import Config
 from ...net.web_utils import split_hostname
+from ...text.text_utils import to_utf8
 
 from netaddr import IPAddress
 
@@ -58,9 +59,9 @@ class Domain(Resource):
         :type hostname: str
         """
 
-        if not isinstance(hostname, basestring):
+        hostname = to_utf8(hostname)
+        if not isinstance(hostname, str):
             raise TypeError("Expected string, got %r instead" % type(hostname))
-        hostname = str(hostname)
 
         # Check we've not confused an IP address for a hostname.
         try:

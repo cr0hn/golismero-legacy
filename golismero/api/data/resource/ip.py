@@ -35,6 +35,7 @@ __all__ = ["IP"]
 from . import Resource
 from .. import identity
 from .. import Config
+from ...text.text_utils import to_utf8
 
 from netaddr import IPAddress
 
@@ -55,6 +56,7 @@ class IP(Resource):
         :type address: str
         """
 
+        address = to_utf8(address)
         if not isinstance(address, str):
             raise TypeError("Expected str, got %r instead" % type(address))
 

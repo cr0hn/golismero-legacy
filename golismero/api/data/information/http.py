@@ -35,6 +35,7 @@ __all__ = ["HTTP_Request", "HTTP_Response"]
 from . import Information
 from .. import identity, keep_newer
 from ...config import Config
+from ...text.text_utils import to_utf8
 from ...net.web_utils import ParsedURL, generate_user_agent
 
 import re
@@ -57,17 +58,17 @@ class HTTP_Headers (object):
     # Also see: https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, raw_headers):
         """
         :param raw_headers: Raw headers to parse.
         :type raw_headers: str
         """
-        self.__raw_headers = raw_headers
+        self.__raw_headers = to_utf8(raw_headers)
         self.__headers, self.__cache = self.parse_headers(raw_headers)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @staticmethod
     def from_items(items):
         """
@@ -82,8 +83,10 @@ class HTTP_Headers (object):
 
         # Reconstruct the raw headers the best we can.
         reconstructed = [
-            "%s: %s" % (name,
-                        (value if value.endswith("\r\n") else value + "\r\n")
+            "%s: %s" % (to_utf8(name),
+                        (to_utf8(value)
+                         if value.endswith("\r\n")
+                         else value + "\r\n")
                         )
             for name, value in items
         ]
@@ -94,7 +97,7 @@ class HTTP_Headers (object):
         return HTTP_Headers(raw_headers)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @staticmethod
     def parse_headers(raw_headers):
         """
@@ -132,7 +135,7 @@ class HTTP_Headers (object):
         original = []
         parsed = {}
         last_name = None
-        for line in raw_headers.split("\r\n"):
+        for line in to_utf8(raw_headers).split("\r\n"):
 
             # If we find an empty line, stop processing.
             if not line:
@@ -178,17 +181,17 @@ class HTTP_Headers (object):
         return tuple(original), parsed
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __str__(self):
         return self.__raw_headers
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __repr__(self):
         return "<%s headers=%r>" % (self.__class__.__name__, self.__headers)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def to_tuple(self):
         """
         Convert the headers to Python tuples of strings.
@@ -201,7 +204,7 @@ class HTTP_Headers (object):
         return self.__headers
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def to_dict(self):
         """
         Convert the headers to a Python dictionary.
@@ -215,7 +218,7 @@ class HTTP_Headers (object):
         return self.__cache.copy()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __iter__(self):
         """
         When iterated, whole header lines are returned.
@@ -228,7 +231,7 @@ class HTTP_Headers (object):
         return ("%s: %s\r\n" % item for item in self.__headers)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def iteritems(self):
         """
         When iterating, the original case and order of the headers
@@ -240,7 +243,7 @@ class HTTP_Headers (object):
         return self.__headers.__iter__()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def iterkeys(self):
         """
         When iterating, the original case and order of the headers
@@ -252,7 +255,7 @@ class HTTP_Headers (object):
         return (name for name, _ in self.__headers)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def itervalues(self):
         """
         When iterating, the original case and order of the headers
@@ -264,7 +267,7 @@ class HTTP_Headers (object):
         return (value for _, value in self.__headers)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __getitem__(self, key):
         """
         The [] operator works both for index lookups and key lookups.
@@ -290,7 +293,7 @@ class HTTP_Headers (object):
         return self.__cache[key]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get(self, name, default = None):
         """
         Get a header by name.
@@ -305,7 +308,10 @@ class HTTP_Headers (object):
         :rtype: str
         """
         try:
-            name = name.lower()
+            name = to_utf8(name)
+            if ":" in name:
+                name = name.split(":", 1)[0]
+            name = name.strip().lower()
         except AttributeError:
             raise TypeError("Expected str, got %s" % type(name))
         try:
@@ -314,7 +320,7 @@ class HTTP_Headers (object):
             return default
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __getslice__(self, start = None, end = None):
         """
         When sliced, whole header lines are returned in a single string.
@@ -328,10 +334,13 @@ class HTTP_Headers (object):
         :returns: The requested header lines merged into a single string.
         :rtype: str
         """
-        return "".join("%s: %s\r\n" % item for item in self.__headers[start:end])
+        return "".join(
+            "%s: %s\r\n" % item
+            for item in self.__headers[start:end]
+        )
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def has_key(self, name):
         """
         Test the presence of a header.
@@ -344,7 +353,10 @@ class HTTP_Headers (object):
         :rtype: bool
         """
         try:
-            name = name.lower()
+            name = to_utf8(name)
+            if ":" in name:
+                name = name.split(":", 1)[0]
+            name = name.strip().lower()
         except AttributeError:
             raise TypeError("Expected str, got %s" % type(name))
         return name in self.__cache
@@ -353,7 +365,7 @@ class HTTP_Headers (object):
     __contains__ = has_key
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def items(self):
         """
         The original case and order of the headers is preserved.
@@ -365,7 +377,7 @@ class HTTP_Headers (object):
         return list(self.iteritems())
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def keys(self):
         """
         The original case and order of the headers is preserved.
@@ -377,7 +389,7 @@ class HTTP_Headers (object):
         return list(self.iterkeys())
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def values(self):
         """
         The original case and order of the headers is preserved.
@@ -419,19 +431,21 @@ class HTTP_Request (Information):
     )
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, url, headers = None, post_data = None, method = None, protocol = "HTTP", version = "1.1", referer = None, user_agent = None):
         """
         :param url: Absolute URL to connect to.
         :type url: str
 
-        :param headers: HTTP headers, in raw or parsed form. Defaults to DEFAULT_HEADERS.
+        :param headers: HTTP headers, in raw or parsed form.
+            Defaults to DEFAULT_HEADERS.
         :type headers: HTTP_Headers | dict(str -> str) | tuple( tuple(str, str) ) | str
 
         :param post_data: POST data.
         :type post_data: str | None
 
-        :param method: HTTP method. Defaults to POST if post_data is used, or to GET if no post_data is used.
+        :param method: HTTP method.
+            Defaults to POST if post_data is used, or to GET if no post_data is used.
         :type method: str
 
         :param protocol: Protocol name.
@@ -449,9 +463,9 @@ class HTTP_Request (Information):
             method = "POST" if post_data else "GET"
 
         # HTTP method, protocol and version.
-        self.__method    = method.upper()      # Not sure about upper() here...
-        self.__protocol  = protocol.upper()    # Not sure about upper() here...
-        self.__version   = version
+        self.__method   = to_utf8(method.upper())      # Not sure about upper() here...
+        self.__protocol = to_utf8(protocol.upper())    # Not sure about upper() here...
+        self.__version  = to_utf8(version)
 
         # POST data.
         self.__post_data = post_data
@@ -464,8 +478,16 @@ class HTTP_Request (Information):
         if user_agent:
             if user_agent.lower() == "random":
                 user_agent = generate_user_agent()
+            else:
+                user_agent = to_utf8(user_agent)
         else:
             user_agent = self.DEFAULT_USER_AGENT
+
+        # Referer header value.
+        if referer:
+            referer = to_utf8(referer)
+        else:
+            referer = None
 
         # HTTP headers.
         if headers is None:
@@ -505,7 +527,7 @@ class HTTP_Request (Information):
         super(HTTP_Request, self).__init__()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @staticmethod
     def from_form(form, data):
         """
@@ -527,12 +549,12 @@ class HTTP_Request (Information):
                             post_data = data)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def is_in_scope(self):
         return self.url in Config.audit_scope
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     @identity
     def method(self):
@@ -583,7 +605,7 @@ class HTTP_Request (Information):
         return self.__post_data
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     @property
     def parsed_url(self):
@@ -689,17 +711,17 @@ class HTTP_Raw_Request (Information):
     information_type = Information.INFORMATION_HTTP_RAW_REQUEST
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, raw_request):
         """
         :param raw_request: Raw HTTP request.
         :type raw_request: str
         """
-        self.__raw_request = raw_request
+        self.__raw_request = to_utf8(raw_request)
         super(HTTP_Raw_Request, self).__init__()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @identity
     def raw_request(self):
         return self.__raw_request
@@ -718,7 +740,7 @@ class HTTP_Response (Information):
     min_informations = 1
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, request, **kwargs):
         """
         All optional arguments must be passed as keywords.
@@ -772,10 +794,10 @@ class HTTP_Response (Information):
             self.__parse_raw_response(request)
 
         # Status line.
-        self.__status   = kwargs.get("status",   self.__status)
-        self.__reason   = kwargs.get("reason",   self.__reason)
-        self.__protocol = kwargs.get("protocol", self.__protocol)
-        self.__version  = kwargs.get("version",  self.__version)
+        self.__status   = to_utf8( kwargs.get("status",   self.__status)   )
+        self.__reason   = to_utf8( kwargs.get("reason",   self.__reason)   )
+        self.__protocol = to_utf8( kwargs.get("protocol", self.__protocol) )
+        self.__version  = to_utf8( kwargs.get("version",  self.__version)  )
         if self.__status and not self.__reason:
             try:
                 self.__reason = httplib.responses[self.__status]
@@ -792,7 +814,7 @@ class HTTP_Response (Information):
             self.__reason = "OK"
 
         # HTTP headers.
-        self.__raw_headers = kwargs.get("raw_headers", self.__raw_headers)
+        self.__raw_headers = to_utf8( kwargs.get("raw_headers", self.__raw_headers) )
         self.__headers = kwargs.get("headers", self.__headers)
         if self.__headers:
             if not isinstance(self.__headers, HTTP_Headers):
@@ -806,7 +828,7 @@ class HTTP_Response (Information):
             self.__parse_raw_headers()
 
         # Data.
-        self.__data = kwargs.get("data",  self.__data)
+        self.__data = to_utf8( kwargs.get("data", self.__data) )
 
         # Reconstruct the raw response if needed.
         if not self.__raw_response:
@@ -822,7 +844,7 @@ class HTTP_Response (Information):
         self.add_link(request)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def is_cacheable(self):
         """
         Determines if this response should be cached by default.
@@ -836,7 +858,7 @@ class HTTP_Response (Information):
         return True
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     @keep_newer  # TODO: maybe the times should be collected and/or averaged instead?
     def elapsed(self):
@@ -857,7 +879,7 @@ class HTTP_Response (Information):
         self.__elapsed = float(elapsed) if elapsed is not None else None
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     @identity
     def raw_response(self):
@@ -868,7 +890,7 @@ class HTTP_Response (Information):
         return self.__raw_response
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     @property
     def status(self):
@@ -984,7 +1006,7 @@ class HTTP_Response (Information):
             return self.__headers.get('Server')
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __parse_raw_response(self, request):
 
         # Special case: if parsing HTTP/0.9, everything is data.
@@ -1040,7 +1062,7 @@ class HTTP_Response (Information):
         self.__parse_raw_headers()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __reconstruct_raw_response(self):
 
         # Special case: if parsing HTTP/0.9, everything is data.
@@ -1087,11 +1109,11 @@ class HTTP_Response (Information):
         self.__raw_response = "%s%s%s" % (status_line, raw_headers, data)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __parse_raw_headers(self):
         self.__headers = HTTP_Headers(self.__raw_headers)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __reconstruct_raw_headers(self):
         self.__raw_headers = str(self.__headers)

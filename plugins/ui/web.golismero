@@ -1,8 +1,8 @@
 [Core]
-Name   = Web interface
 Module = web/web_ui_plugin.py
 
 [Documentation]
+Name        = Web UI
 Description = Web user interface.
 Author      = GoLismero Project
 Version     = 0.1

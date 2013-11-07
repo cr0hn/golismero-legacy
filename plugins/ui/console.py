@@ -29,7 +29,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.audit import get_audit_count
 from golismero.api.config import Config
 from golismero.api.data import Data
-from golismero.api.plugin import UIPlugin, get_plugin_info
+from golismero.api.plugin import UIPlugin, get_plugin_info, \
+    get_stage_display_name
 from golismero.main.console import Console, colorize
 from golismero.messaging.codes import MessageType, MessageCode, MessagePriority
 
@@ -142,7 +143,7 @@ class ConsoleUIPlugin(UIPlugin):
             # A plugin has advanced.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
 
-                # Don't show this event in quiet mode.
+                # Show this event in verbose mode.
                 if Console.level >= Console.VERBOSE:
 
                     # Get the plugin name.
@@ -162,6 +163,19 @@ class ConsoleUIPlugin(UIPlugin):
                     # Show it to the user.
                     m_text = "[*] %s: %s" % (m_plugin_name, m_progress_txt)
                     Console.display(m_text)
+
+            # The audit has moved to another execution stage.
+            elif message.message_code == MessageCode.MSG_STATUS_STAGE_UPDATE:
+
+                # Show this event in verbose mode.
+                if Console.level >= Console.VERBOSE:
+
+                    # Show the new stage name.
+                    m_stage = get_stage_display_name(message.message_info)
+                    m_stage = colorize(m_stage, "high")
+                    m_plugin_name = colorize("GoLismero", "informational")
+                    m_text = "[*] %s: Current stage: %s"
+                    Console.display(m_text % (m_plugin_name, m_stage))
 
         # Process control messages.
         elif message.message_type == MessageType.MSG_TYPE_CONTROL:

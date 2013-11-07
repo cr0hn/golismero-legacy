@@ -53,7 +53,7 @@ www.site.com/index.php -> www.site.com/index2.php
 Nikto (*nikto*)
 ===============
 
-Run the Nikto scanner and import the results.
+Integration with Nikto: https://www.cirt.net/nikto2
 
 ================= =================
 **Argument name** **Default value**
@@ -68,18 +68,18 @@ exec
 Nmap (*nmap*)
 =============
 
-Run nmap and import the results.
+Integration with Nmap: http://nmap.org/
 
 ================= =================
 **Argument name** **Default value**
 ----------------- -----------------
-args              -v -P0 -sT       
+args              -vv -A -P0       
 ================= =================
 
 OpenVAS (*openvas*)
 ===================
 
-Run the OpenVAS scanner and import the results
+Integration with OpenVAS: http://www.openvas.org/
 
 ================= ================================
 **Argument name** **Default value**               

@@ -11,10 +11,10 @@ Import the results of a Nikto scan in CSV format.
 Nmap XML Importer (*xml_nmap*)
 ==============================
 
-Import the results of an Nmap scan.
+Import the results of an Nmap scan in XML format.
 
 OpenVAS XML Importer (*xml_openvas*)
 ====================================
 
-Import the results of an OpenVAS scan.
+Import the results of an OpenVAS scan in XML format.
 

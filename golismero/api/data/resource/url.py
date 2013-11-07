@@ -38,6 +38,7 @@ from .ip import IP
 from .. import identity
 from ...config import Config
 from ...net.web_utils import ParsedURL
+from ...text.text_utils import to_utf8
 
 
 #------------------------------------------------------------------------------
@@ -58,10 +59,6 @@ class _AbstractUrl(Resource):
 
         :raises ValueError: Relative URLs are not allowed.
         """
-
-        if not isinstance(url, basestring):
-            raise TypeError("Expected string, got %r instead" % type(url))
-        url = str(url)
 
         # Parse, verify and canonicalize the URL.
         # TODO: if relative, make it absolute using the referer when available.
@@ -194,17 +191,31 @@ class Url(_AbstractUrl):
         :raises ValueError: Currently, relative URLs are not allowed.
         """
 
-        # Validate the argument types.
+        # Validate the arguments.
+        if method:
+            method = to_utf8(method)
+        else:
+            method = "GET"
+        if referer:
+            referer = to_utf8(referer)
+        else:
+            referer = None
         if not isinstance(method, str):
             raise TypeError("Expected string, got %r instead" % type(method))
         if post_params is not None and not isinstance(post_params, dict):
             raise TypeError("Expected dict, got %r instead" % type(post_params))
         if referer is not None and not isinstance(referer, str):
             raise TypeError("Expected string, got %r instead" % type(referer))
+        if post_params:
+            post_params = {
+                to_utf8(k): to_utf8(v) for k,v in post_params.iteritems()
+            }
+        else:
+            post_params = {}
 
         # Save the properties.
-        self.__method      = method if method else "GET"
-        self.__post_params = post_params if post_params else {}
+        self.__method      = method
+        self.__post_params = post_params
         self.__referer     = referer
 
         # Call the parent constructor.
@@ -325,11 +336,6 @@ class BaseUrl(_AbstractUrl):
         :raises ValueError: Only absolute URLs must be used.
         """
 
-        # Validate the argument types.
-        if not isinstance(url, basestring):
-            raise TypeError("Expected string, got %r instead" % type(url))
-        url = str(url)
-
         # Parse, verify and canonicalize the URL.
         parsed = ParsedURL(url)
         if not parsed.host or not parsed.scheme:
@@ -405,10 +411,6 @@ class FolderUrl(_AbstractUrl):
 
         :raises ValueError: The URL wasn't absolute or didn't point to a folder.
         """
-
-        if not isinstance(url, basestring):
-            raise TypeError("Expected string, got %r instead" % type(url))
-        url = str(url)
 
         # Parse, verify and canonicalize the URL.
         parsed = ParsedURL(url)

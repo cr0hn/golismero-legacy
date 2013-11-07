@@ -40,7 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = [
     "UIPlugin", "ImportPlugin", "TestingPlugin", "ReportPlugin",
     "get_plugin_info", "get_plugin_ids", "get_plugin_name",
-    "PluginState",
+    "get_stage_display_name", "PluginState",
 ]
 
 from .config import Config
@@ -101,6 +101,31 @@ def get_plugin_name(plugin_id = None):
     if plugin_id == "GoLismero":
         return "GoLismero"
     return get_plugin_info(plugin_id).display_name
+
+
+#------------------------------------------------------------------------------
+_STAGE_DISPLAY_NAMES = {
+    "import"  : "Importing",
+    "recon"   : "Reconaissance",
+    "scan"    : "Scanning (non-intrusive)",
+    "attack"  : "Exploitation (intrusive)",
+    "intrude" : "Post-exploitation",
+    "cleanup" : "Cleanup",
+    "report"  : "Reporting",
+}
+def get_stage_display_name(stage):
+    """
+    Get a user friendly display name for the given stage.
+
+    :param stage: Stage.
+    :type stage: str
+
+    :returns: Display name for the stage.
+    :rtype: str
+
+    :raises KeyError: The given stage does not exist.
+    """
+    return _STAGE_DISPLAY_NAMES[ stage.strip().lower() ]
 
 
 #------------------------------------------------------------------------------
