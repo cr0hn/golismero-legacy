@@ -1009,19 +1009,22 @@ class Audit (object):
             if self.__must_update_stop_time:
                 self.database.set_audit_stop_time( time() )
 
-            # Show a log message.
+            # Are any report plugins active?
+            launched = 0
             if self.__report_manager.plugin_count > 0:
-                Logger.log_verbose("Generating reports...")
 
-            # Tell the UI we've started generating the reports.
-            self.send_msg(
-                message_type = MessageType.MSG_TYPE_STATUS,
-                message_code = MessageCode.MSG_STATUS_STAGE_UPDATE,
-                message_info = "report",
-            )
+                # Tell the UI we've started generating the reports.
+                self.send_msg(
+                    message_type = MessageType.MSG_TYPE_STATUS,
+                    message_code = MessageCode.MSG_STATUS_STAGE_UPDATE,
+                    message_info = "report",
+                )
 
-            # Start the report generation.
-            launched = self.__report_manager.generate_reports(self.__notifier)
+                # Start the report generation.
+                launched = self.__report_manager.generate_reports(
+                    self.__notifier)
+
+            # Handle the ACK messages.
             if launched:
                 self.__expecting_ack += launched
             else:

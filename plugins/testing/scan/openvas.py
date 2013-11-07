@@ -66,18 +66,35 @@ class OpenVASPlugin(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def check_params(self):
+
+        # Check the parameters.
         try:
-            assert Config.plugin_args["user"], "Missing username"
-            assert Config.plugin_args["password"], "Missing password"
-            assert Config.plugin_args["host"], "Missing hostname"
-            assert 0 < int(Config.plugin_args["port"]) < 65536, \
-                "Missing or wrong port number"
-            timeout = Config.plugin_args["timeout"]
-            if timeout.lower().strip() not in ("inf", "infinite", "none"):
-                assert int(timeout) > 0, "Wrong timeout value"
-            assert Config.plugin_args["profile"], "Missing scan profile"
+            m_user      = Config.plugin_args["user"]
+            m_password  = Config.plugin_args["password"]
+            m_host      = Config.plugin_args["host"]
+            m_port      = int( Config.plugin_args["port"] )
+            m_timeout   = Config.plugin_args["timeout"]
+            m_profile   = Config.plugin_args["profile"]
+
+            assert m_host,     "Missing username"
+            assert m_password, "Missing password"
+            assert m_host,     "Missing hostname"
+            assert m_profile,  "Missing scan profile"
+            assert 0 < m_port < 65536, "Missing or wrong port number"
+            if m_timeout.lower().strip() in ("inf", "infinite", "none"):
+                m_timeout = None
+            else:
+                m_timeout = int(m_timeout)
+                assert m_timeout > 0, "Wrong timeout value"
+
         except Exception, e:
             raise ValueError(str(e))
+
+        # Connect to the scanner.
+        try:
+            VulnscanManager(m_host, m_user, m_password, m_port, m_timeout)
+        except VulnscanException, e:
+            raise RuntimeError(str(e))
 
 
     #--------------------------------------------------------------------------
