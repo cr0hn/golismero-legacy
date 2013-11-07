@@ -84,6 +84,7 @@ if path.sep == "\\":
 # Imported modules.
 
 import daemon
+import os
 
 
 #------------------------------------------------------------------------------
@@ -166,4 +167,5 @@ if __name__ == '__main__':
         stdout = open(stdout, "w+"),
         stderr = open(stderr, "w+"),
     ):
+        os.chdir(working_directory)
         main()
