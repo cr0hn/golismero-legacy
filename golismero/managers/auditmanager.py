@@ -473,15 +473,18 @@ class Audit (object):
             self.__audit_scope = DummyScope()
 
             # Update the execution context for this audit.
-            Config._context = PluginContext(       msg_queue = old_context.msg_queue,
-                                                  audit_name = self.name,
-                                                audit_config = self.config,
-                                                 audit_scope = self.scope,
-                                            orchestrator_pid = old_context._orchestrator_pid,
-                                            orchestrator_tid = old_context._orchestrator_tid)
+            Config._context = PluginContext(
+                       msg_queue = old_context.msg_queue,
+                      audit_name = self.name,
+                    audit_config = self.config,
+                     audit_scope = self.scope,
+                orchestrator_pid = old_context._orchestrator_pid,
+                orchestrator_tid = old_context._orchestrator_tid)
 
             # Create the plugin manager for this audit.
-            self.__plugin_manager = self.orchestrator.pluginManager.get_plugin_manager_for_audit(self)
+            self.__plugin_manager = \
+                self.orchestrator.pluginManager.get_plugin_manager_for_audit(
+                    self)
 
             # Load the testing plugins.
             testing_plugins = self.pluginManager.load_plugins("testing")
@@ -530,12 +533,14 @@ class Audit (object):
             target_data = self.scope.get_targets()
             targets_added_count = 0
             for data in target_data:
-                if not self.database.has_data_key(data.identity, data.data_type):
+                if not self.database.has_data_key(data.identity,
+                                                  data.data_type):
                     self.database.add_data(data)
                     targets_added_count += 1
             if targets_added_count:
                 Logger.log_verbose(
-                    "Added %d new targets to the database." % targets_added_count)
+                    "Added %d new targets to the database." %
+                    targets_added_count)
 
             # Mark all data as having completed no stages.
             # This is needed because the plugin list may have changed.
@@ -654,16 +659,20 @@ class Audit (object):
         """
         Send messages to the Orchestrator.
 
-        :param message_type: Message type. Must be one of the constants from MessageType.
+        :param message_type: Message type.
+            Must be one of the constants from MessageType.
         :type mesage_type: int
 
-        :param message_code: Message code. Must be one of the constants from MessageCode.
+        :param message_code: Message code.
+            Must be one of the constants from MessageCode.
         :type message_code: int
 
-        :param message_info: The payload of the message. Its type depends on the message type and code.
+        :param message_info: The payload of the message.
+            Its type depends on the message type and code.
         :type message_info: *
 
-        :param priority: Priority level. Must be one of the constants from MessagePriority.
+        :param priority: Priority level.
+            Must be one of the constants from MessagePriority.
         :type priority: int
         """
         m = Message(message_type = message_type,
@@ -746,59 +755,62 @@ class Audit (object):
             for stage in xrange(pluginManager.min_stage, pluginManager.max_stage + 1):
                 self.__current_stage = stage
                 pending = database.get_pending_data(stage)
-                if pending:
+                if not pending:
+                    continue
 
-                    # If the stage is empty...
-                    if not pluginManager.stages[stage]:
+                # If the stage is empty...
+                if not pluginManager.stages[stage]:
 
-                        # Mark all data as having finished this stage.
-                        for identity in pending:
-                            database.mark_stage_finished(identity, stage)
+                    # Mark all data as having finished this stage.
+                    for identity in pending:
+                        database.mark_stage_finished(identity, stage)
 
-                        # Skip to the next stage.
-                        continue
+                    # Skip to the next stage.
+                    continue
 
-                    # Get the pending data.
-                    # XXX FIXME possible performance problem here!
-                    # Maybe we should fetch the types only...
-                    datalist = database.get_many_data(pending)
+                # Get the pending data.
+                # XXX FIXME possible performance problem here!
+                # Maybe we should fetch the types only...
+                datalist = database.get_many_data(pending)
+                if not datalist:
+                    continue
 
-                    # If we don't have any suitable plugins...
-                    if not self.__notifier.is_runnable_stage(datalist, stage):
+                # If we don't have any suitable plugins...
+                if not self.__notifier.is_runnable_stage(datalist, stage):
 
-                        # Mark all data as having finished this stage.
-                        for identity in pending:
-                            database.mark_stage_finished(identity, stage)
+                    # Mark all data as having finished this stage.
+                    for identity in pending:
+                        database.mark_stage_finished(identity, stage)
 
-                        # Skip to the next stage.
-                        continue
+                    # Skip to the next stage.
+                    continue
 
-                    # Update the stage statistics.
-                    self.__stage_cycles[self.__current_stage] += 1
-                    self.__processed_count = 0
-                    self.__total_count = len(pending)
+                # Update the stage statistics.
+                self.__stage_cycles[self.__current_stage] += 1
+                self.__processed_count = 0
+                self.__total_count = len(pending)
 
-                    # We're going to run testing plugins,
-                    # so we need to update the audit stop time.
-                    self.__must_update_stop_time = True
+                # We're going to run testing plugins,
+                # so we need to update the audit stop time.
+                self.__must_update_stop_time = True
 
-                    # Tell the Orchestrator we just moved to another stage.
-                    stage_name = pluginManager.get_stage_name_from_value(stage)
-                    self.send_msg(
-                        message_type = MessageType.MSG_TYPE_STATUS,
-                        message_code = MessageCode.MSG_STATUS_STAGE_UPDATE,
-                        message_info = stage_name,
-                    )
+                # Tell the Orchestrator we just moved to another stage.
+                stage_name = pluginManager.get_stage_name_from_value(stage)
+                self.send_msg(
+                    message_type = MessageType.MSG_TYPE_STATUS,
+                    message_code = MessageCode.MSG_STATUS_STAGE_UPDATE,
+                    message_info = stage_name,
+                )
 
-                    # Send the pending data to the Orchestrator.
-                    self.send_msg(
-                        message_type = MessageType.MSG_TYPE_DATA,
-                        message_code = MessageCode.MSG_DATA_REQUEST,
-                        message_info = datalist,
-                    )
+                # Send the pending data to the Orchestrator.
+                self.send_msg(
+                    message_type = MessageType.MSG_TYPE_DATA,
+                    message_code = MessageCode.MSG_DATA_REQUEST,
+                    message_info = datalist,
+                )
 
-                    # We're done, return.
-                    return
+                # We're done, return.
+                return
 
             # If we reached this point, we finished the last stage.
             # Launch the report generation.
