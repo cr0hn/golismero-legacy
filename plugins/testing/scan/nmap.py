@@ -32,7 +32,7 @@ from golismero.api.data.information.portscan import Portscan
 from golismero.api.data.information.traceroute import Traceroute, Hop
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
-from golismero.api.external import run_external_tool, tempfile
+from golismero.api.external import run_external_tool, tempfile, find_binary_in_path
 from golismero.api.logger import Logger
 from golismero.api.plugin import ImportPlugin, TestingPlugin
 
@@ -74,6 +74,13 @@ class NmapImportPlugin(ImportPlugin):
 
 #------------------------------------------------------------------------------
 class NmapScanPlugin(TestingPlugin):
+
+
+    #--------------------------------------------------------------------------
+    def check_params(self):
+        if not find_binary_in_path("nmap"):
+            raise RuntimeError(
+                "Nmap not found in the PATH environment variable")
 
 
     #--------------------------------------------------------------------------

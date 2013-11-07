@@ -99,7 +99,7 @@ class Orchestrator (object):
         PluginContext._orchestrator = self
 
         # Load the plugin manager.
-        self.__pluginManager = PluginManager()
+        self.__pluginManager = PluginManager(self)
 
         # Set the console configuration.
         Console.level = self.config.verbose

@@ -65,6 +65,22 @@ class OpenVASPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
+    def check_params(self):
+        try:
+            assert Config.plugin_args["user"], "Missing username"
+            assert Config.plugin_args["password"], "Missing password"
+            assert Config.plugin_args["host"], "Missing hostname"
+            assert 0 < int(Config.plugin_args["port"]) < 65536, \
+                "Missing or wrong port number"
+            timeout = Config.plugin_args["timeout"]
+            if timeout.lower().strip() not in ("inf", "infinite", "none"):
+                assert int(timeout) > 0, "Wrong timeout value"
+            assert Config.plugin_args["profile"], "Missing scan profile"
+        except Exception, e:
+            raise ValueError(str(e))
+
+
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [IP]
 
@@ -72,9 +88,7 @@ class OpenVASPlugin(TestingPlugin):
     #--------------------------------------------------------------------------
     def recv_info(self, info):
 
-
-
-        # Checks if connection was not setted as down
+        # Checks if connection was not set as down
         if not self.state.check("connection_down"):
 
             # Synchronization object to wait for completion.
@@ -113,7 +127,7 @@ class OpenVASPlugin(TestingPlugin):
                 #Logger.log_error_verbose(str(e))
                 Logger.log_error_more_verbose(t)
 
-                # Set the openvas connection down and remember it.
+                # Set the openvas connection as down and remember it.
                 self.state.put("connection_down", True)
                 return
 

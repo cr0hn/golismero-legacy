@@ -539,48 +539,52 @@ class Audit (object):
             # cause the same data to be processed again by the same plugin.
             self.database.clear_all_stage_marks()
 
-            # Tell the UI we're about to run the import plugins.
-            self.send_msg(
-                message_type = MessageType.MSG_TYPE_STATUS,
-                message_code = MessageCode.MSG_STATUS_STAGE_UPDATE,
-                message_info = "import",
-                    priority = MessagePriority.MSG_PRIORITY_HIGH,
-            )
+            # Do we have any active importers?
+            imported_count = 0
+            if self.importManager.is_enabled:
 
-            # Import external results.
-            # This is done after storing the targets, so the importers
-            # can overwrite the targets with new information if available.
-            # If we had no scope, build one based on the imported data.
-            if not target_data:
-                target_types = (
-                    Resource.RESOURCE_BASE_URL,
-                    Resource.RESOURCE_FOLDER_URL,
-                    Resource.RESOURCE_URL,
-                    Resource.RESOURCE_IP,
-                    Resource.RESOURCE_DOMAIN,
+                # Tell the UI we're about to run the import plugins.
+                self.send_msg(
+                    message_type = MessageType.MSG_TYPE_STATUS,
+                    message_code = MessageCode.MSG_STATUS_STAGE_UPDATE,
+                    message_info = "import",
+                        priority = MessagePriority.MSG_PRIORITY_HIGH,
                 )
-                old_data = set()
-                for data_subtype in target_types:
-                    old_data.update(
-                        self.database.get_data_keys(
-                            Data.TYPE_RESOURCE, data_subtype) )
-            imported_count = self.importManager.import_results()
-            if not target_data:
-                new_data = set()
-                for data_subtype in target_types:
-                    new_data.update(
-                        self.database.get_data_keys(
-                            Data.TYPE_RESOURCE, data_subtype) )
-                new_data.difference_update(old_data)
-                old_data.clear()
-                self.config.targets = [
-                    str( self.database.get_data(identity) )
-                    for identity in new_data
-                ]
-                new_data.clear()
-                self.__audit_scope = AuditScope(self.config) # does DNS queries
-                self.database.save_audit_scope(self.scope)
-                Config._context = PluginContext(
+
+                # Import external results.
+                # This is done after storing the targets, so the importers
+                # can overwrite the targets with new information if available.
+                # If we had no scope, build one based on the imported data.
+                if not target_data:
+                    target_types = (
+                        Resource.RESOURCE_BASE_URL,
+                        Resource.RESOURCE_FOLDER_URL,
+                        Resource.RESOURCE_URL,
+                        Resource.RESOURCE_IP,
+                        Resource.RESOURCE_DOMAIN,
+                    )
+                    old_data = set()
+                    for data_subtype in target_types:
+                        old_data.update(
+                            self.database.get_data_keys(
+                                Data.TYPE_RESOURCE, data_subtype) )
+                imported_count = self.importManager.import_results()
+                if not target_data:
+                    new_data = set()
+                    for data_subtype in target_types:
+                        new_data.update(
+                            self.database.get_data_keys(
+                                Data.TYPE_RESOURCE, data_subtype) )
+                    new_data.difference_update(old_data)
+                    old_data.clear()
+                    self.config.targets = [
+                        str( self.database.get_data(identity) )
+                        for identity in new_data
+                    ]
+                    new_data.clear()
+                    self.__audit_scope = AuditScope(self.config) # uses DNS
+                    self.database.save_audit_scope(self.scope)
+                    Config._context = PluginContext(
                                     msg_queue = old_context.msg_queue,
                                    audit_name = self.name,
                                  audit_config = self.config,

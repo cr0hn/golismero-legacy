@@ -194,9 +194,6 @@ class Plugin (object):
     PLUGIN_TYPE_TESTING  = 3
     PLUGIN_TYPE_REPORT   = 4
 
-    PLUGIN_TYPE_FIRST = PLUGIN_TYPE_TESTING
-    PLUGIN_TYPE_LAST  = PLUGIN_TYPE_REPORT
-
     PLUGIN_TYPE = PLUGIN_TYPE_ABSTRACT
 
 
@@ -269,6 +266,25 @@ class _InformationPlugin (Plugin):
 
     .. warning: This is an abstract class, do not use it!
     """
+
+
+    #--------------------------------------------------------------------------
+    def check_params(self):
+        """
+        Callback method to verify the plugin configuration and arguments.
+        This allows plugins with mandatory arguments to disable themselves
+        if said arguments are missing.
+
+        There is no return value, but if an exception is raised the plugin
+        will be disabled.
+
+        :raises AttributeError: A critical configuration option is missing.
+        :raises ValueError: A configuration option has an incorrect value.
+        :raises TypeError: A configuration option has a value of a wrong type.
+        :raises RuntimeError: A problem was found in the runtime environment.
+        :raises Exception: An error occurred while validating the settings.
+        """
+        pass
 
 
     #--------------------------------------------------------------------------
