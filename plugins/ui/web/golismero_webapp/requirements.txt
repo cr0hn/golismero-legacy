@@ -5,3 +5,4 @@ django-filter
 pygments
 django-cors-headers
 pyyaml
+gunicorn
