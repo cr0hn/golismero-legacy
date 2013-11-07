@@ -129,6 +129,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'gunicorn',
 )
 
 # Cross domain configuration
