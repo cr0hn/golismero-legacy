@@ -52,6 +52,11 @@ class NiktoPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
+    def check_params(self):
+        self.get_nikto()
+
+
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [BaseUrl]
 
@@ -59,47 +64,8 @@ class NiktoPlugin(TestingPlugin):
     #--------------------------------------------------------------------------
     def recv_info(self, info):
 
-        # Get the path to the Nikto scanner.
-        nikto_script = Config.plugin_args["exec"]
-        if nikto_script and exists(nikto_script):
-            nikto_dir = split(nikto_script)[0]
-            nikto_dir = abspath(nikto_dir)
-        else:
-            nikto_dir = split(__file__)[0]
-            nikto_dir = join(nikto_dir, "nikto")
-            nikto_dir = abspath(nikto_dir)
-            nikto_script = join(nikto_dir, "nikto.pl")
-            if not nikto_script or not exists(nikto_script):
-                nikto_script = "/usr/bin/nikto"
-                if not exists(nikto_script):
-                    nikto_script = Config.plugin_args["exec"]
-                    if nikto_script:
-                        Logger.log_error(
-                            "Nikto not found! File: %s" % nikto_script)
-                    else:
-                        Logger.log_error("Nikto not found!")
-                    return
-
-        # Get the path to the configuration file.
-        config = Config.plugin_args["config"]
-        if config:
-            config = join(nikto_dir, config)
-            config = abspath(config)
-            if not exists(config):
-                config = "/etc/nikto.conf"
-                if not exists(config):
-                    config = Config.plugin_args["config"]
-                    if config and exists(config):
-                        config = abspath(config)
-                    else:
-                        if config:
-                            Logger.log_error(
-                                "Nikto config file not found! File: %s"
-                                % config
-                            )
-                        else:
-                            Logger.log_error("Nikto config file not found!")
-                        return
+        # Get the path to the Nikto scanner and the configuration file.
+        nikto_script, config = self.get_nikto()
 
         # Build the command line arguments.
         # The -output argument will be filled by run_nikto.
@@ -128,6 +94,59 @@ class NiktoPlugin(TestingPlugin):
 
             # Run Nikto and parse the output.
             return self.run_nikto(info, output, nikto_script, args)
+
+
+    #--------------------------------------------------------------------------
+    def get_nikto(self):
+        """
+        Get the path to the Nikto scanner and the configuration file.
+
+        :returns: Nikto scanner and configuration file paths.
+        :rtype: tuple(str, str)
+
+        :raises RuntimeError: Nikto scanner of config file not found.
+        """
+
+        # Get the path to the Nikto scanner.
+        nikto_script = Config.plugin_args["exec"]
+        if nikto_script and exists(nikto_script):
+            nikto_dir = split(nikto_script)[0]
+            nikto_dir = abspath(nikto_dir)
+        else:
+            nikto_dir = split(__file__)[0]
+            nikto_dir = join(nikto_dir, "nikto")
+            nikto_dir = abspath(nikto_dir)
+            nikto_script = join(nikto_dir, "nikto.pl")
+            if not nikto_script or not exists(nikto_script):
+                nikto_script = "/usr/bin/nikto"
+                if not exists(nikto_script):
+                    nikto_script = Config.plugin_args["exec"]
+                    msg = "Nikto not found in the PATH environment variable"
+                    if nikto_script:
+                        msg += ". File: %s" % nikto_script
+                    Logger.log_error(msg)
+                    raise RuntimeError(msg)
+
+        # Get the path to the configuration file.
+        config = Config.plugin_args["config"]
+        if config:
+            config = join(nikto_dir, config)
+            config = abspath(config)
+            if not exists(config):
+                config = "/etc/nikto.conf"
+                if not exists(config):
+                    config = Config.plugin_args["config"]
+                    if config and exists(config):
+                        config = abspath(config)
+                    else:
+                        msg = "Nikto config file not found"
+                        if config:
+                            msg += ". File: %s" % config
+                        Logger.log_error(msg)
+                        raise RuntimeError(msg)
+
+        # Return the paths.
+        return nikto_script, config
 
 
     #--------------------------------------------------------------------------

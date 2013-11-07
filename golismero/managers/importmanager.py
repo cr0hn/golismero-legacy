@@ -83,6 +83,13 @@ class ImportManager (object):
 
 
     #----------------------------------------------------------------------
+    @property
+    def is_enabled(self):
+        """
+        :returns: True if there are active importers, False otherwise.
+        :rtype: bool
+        """
+        return bool(self.__importers)
 
     @property
     def config(self):

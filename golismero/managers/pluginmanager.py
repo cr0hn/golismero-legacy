@@ -33,6 +33,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["PluginManager", "PluginInfo"]
 
 from .rpcmanager import implementor
+from ..api.config import Config
+from ..api.logger import Logger
 from ..api.plugin import UIPlugin, ImportPlugin, TestingPlugin, ReportPlugin
 from ..common import Configuration, OrchestratorConfig, AuditConfig, get_default_plugins_folder
 from ..messaging.codes import MessageCode
@@ -45,16 +47,17 @@ from os import path, walk
 import re
 import fnmatch
 import imp
+import traceback
 import warnings
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Helpers for instance creation without calling __init__().
 class _EmptyNewStyleClass (object):
     pass
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # RPC implementors for the plugin manager API.
 
 @implementor(MessageCode.MSG_RPC_PLUGIN_GET_IDS)
@@ -78,7 +81,7 @@ def rpc_plugin_get_info(orchestrator, audit_name, *args, **kwargs):
     return orchestrator.pluginManager.get_plugin_by_id(*args, **kwargs)
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class PluginInfo (object):
     """
     Plugin descriptor object.
@@ -247,7 +250,7 @@ class PluginInfo (object):
         return self.__website
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, plugin_id, descriptor_file, global_config):
         """
         Load a plugin descriptor file.
@@ -426,12 +429,12 @@ class PluginInfo (object):
         self.__read_config_file(global_config.profile_file)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __copy__(self):
         raise NotImplementedError("Only deep copies, please!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __deepcopy__(self):
 
         # Create a new empty object.
@@ -464,7 +467,7 @@ class PluginInfo (object):
         return instance
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def customize_for_audit(self, audit_config):
         """
         Return a new PluginInfo instance with its configuration overriden
@@ -488,7 +491,7 @@ class PluginInfo (object):
         return new_instance
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __read_config_file(self, config_file):
         """
         Private method to override plugin settings from a config file.
@@ -554,7 +557,7 @@ class PluginInfo (object):
             target.update( config_parser.items(section) )
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def _fix_classname(self, plugin_class):
         """
         Protected method to update the class name if found during plugin load.
@@ -569,7 +572,7 @@ class PluginInfo (object):
         self.__plugin_class = plugin_class
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class PluginManager (object):
     """
     Plugin Manager.
@@ -599,8 +602,15 @@ class PluginManager (object):
     assert sorted(STAGES.itervalues()) == range(min_stage, max_stage + 1)
 
 
-    #----------------------------------------------------------------------
-    def __init__(self):
+    #--------------------------------------------------------------------------
+    def __init__(self, orchestrator = None):
+        """
+        :param orchestrator: Orchestrator instance.
+        :type orchestrator: Orchestrator
+        """
+
+        # Orchestrator instance.
+        self.__orchestrator = orchestrator
 
         # Dictionary to collect the info for each plugin found
         self.__plugins = {}    # plugin ID -> plugin info
@@ -609,7 +619,17 @@ class PluginManager (object):
         self.__cache = {}
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    @property
+    def orchestrator(self):
+        """
+        :returns: Orchestrator instance.
+        :rtype: Orchestrator
+        """
+        return self.__orchestrator
+
+
+    #--------------------------------------------------------------------------
     @classmethod
     def get_stage_name_from_value(cls, value):
         """
@@ -627,7 +647,7 @@ class PluginManager (object):
         raise KeyError("Stage value not found: %r" % value)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def find_plugins(self, config):
         """
         Find plugins in the given folder.
@@ -729,7 +749,7 @@ class PluginManager (object):
         return success, failure
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_plugins(self, category = "all"):
         """
         Get info on the available plugins, optionally filtering by category.
@@ -769,7 +789,7 @@ class PluginManager (object):
         raise KeyError("Unknown plugin category or stage: %r" % category)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_plugin_ids(self, category = "all"):
         """
         Get the names of the available plugins, optionally filtering by category.
@@ -787,7 +807,7 @@ class PluginManager (object):
         return set(self.get_plugins(category).iterkeys())
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_plugin_by_id(self, plugin_id):
         """
         Get info on the requested plugin.
@@ -809,7 +829,7 @@ class PluginManager (object):
     __getitem__ = get_plugin_by_id
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def guess_plugin_by_id(self, plugin_id):
         """
         Get info on the requested plugin.
@@ -837,7 +857,7 @@ class PluginManager (object):
             return found.popitem()[1]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def search_plugins_by_id(self, search_string):
         """
         Try to match the search string against plugin IDs.
@@ -855,7 +875,7 @@ class PluginManager (object):
         }
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def search_plugins_by_mask(self, glob_mask):
         """
         Try to match the glob mask against plugin IDs.
@@ -889,7 +909,7 @@ class PluginManager (object):
         return matches
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def search_plugins(self, search_string):
         """
         Try to match the search string against plugin IDs.
@@ -906,7 +926,7 @@ class PluginManager (object):
         return self.search_plugins_by_id(search_string)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def load_plugins(self, category = "all"):
         """
         Get info on the available plugins, optionally filtering by category.
@@ -928,7 +948,7 @@ class PluginManager (object):
         }
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def load_plugin_by_id(self, name):
         """
         Load the requested plugin by name.
@@ -1020,7 +1040,7 @@ class PluginManager (object):
         return instance
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_plugin_info_from_instance(self, instance):
         """
         Get a plugin's name and information from its already loaded instance.
@@ -1041,7 +1061,7 @@ class PluginManager (object):
         raise KeyError("Plugin instance not found: " + r)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def parse_plugin_args(self, plugin_args):
         """
         Parse a list of tuples with plugin arguments as a dictionary of
@@ -1073,7 +1093,7 @@ class PluginManager (object):
         return parsed
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def set_plugin_args(self, plugin_id, plugin_args):
         """
         Set the user-defined values for the given plugin arguments.
@@ -1103,7 +1123,7 @@ class PluginManager (object):
         return status
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_plugin_manager_for_audit(self, audit):
         """
         Instance an audit-specific plugin manager.
@@ -1126,22 +1146,24 @@ class PluginManager (object):
         """
         Release all resources held by this manager.
         """
-        self.__plugins = None
-        self.__cache   = None
+        self.__orchestrator = None
+        self.__plugins      = None
+        self.__cache        = None
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class AuditPluginManager (PluginManager):
     """
     Plugin manager for audits.
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, pluginManager, orchestratorConfig, auditConfig):
 
         # Superclass constructor.
-        super(AuditPluginManager, self).__init__()
+        super(AuditPluginManager, self).__init__(
+            pluginManager.orchestrator)
 
         # Keep a reference to the plugin manager of the orchestrator.
         self.__pluginManager = pluginManager
@@ -1158,11 +1180,14 @@ class AuditPluginManager (PluginManager):
             for plugin_id, plugin_args in auditConfig.plugin_args.iteritems():
                 self.set_plugin_args(plugin_id, plugin_args)
 
+        # Check the plugin parameters.
+        self.__check_plugin_params()
+
         # Calculate the dependencies.
         self.__calculate_dependencies()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     @property
     def pluginManager(self):
@@ -1191,7 +1216,7 @@ class AuditPluginManager (PluginManager):
         return self.__stages
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __apply_config(self, auditConfig):
         """
         Apply the black and white lists.
@@ -1317,7 +1342,7 @@ class AuditPluginManager (PluginManager):
         }
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __expand_plugin_list(self, plugin_list, list_name):
         """
         Expand aliases in a plugin black/white list.
@@ -1382,7 +1407,7 @@ class AuditPluginManager (PluginManager):
         return plugin_list
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __calculate_dependencies(self):
         """
         Generate a dependency graph for all plugins found, and calculate
@@ -1449,7 +1474,36 @@ class AuditPluginManager (PluginManager):
         self.__stages  = stages
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
+    def __check_plugin_params(self):
+        """
+        Check the plugin parameters.
+        Plugins that fail this check are automatically disabled.
+        """
+        orchestrator = self.orchestrator
+        plugins = self.get_plugins("testing")
+        for plugin_id, plugin_info in plugins.iteritems():
+            plugin = self.load_plugin_by_id(plugin_id)
+            new_ctx = orchestrator.build_plugin_context(None, plugin, None)
+            old_ctx = Config._context
+            try:
+                Config._context = new_ctx
+                try:
+                    plugin.check_params()
+                except Exception, e:
+                    del self._PluginManager__plugins[plugin_id]
+                    try:
+                        t = traceback.format_exc()
+                        msg = "Plugin disabled, reason: %s" % str(e)
+                        Logger.log_error_verbose(msg)
+                        Logger.log_error_more_verbose(t)
+                    except Exception:
+                        pass
+            finally:
+                Config._context = old_ctx
+
+
+    #--------------------------------------------------------------------------
     def next_concurrent_plugins(self, candidate_plugins):
         """
         Based on the previously executed plugins, get the next plugins
@@ -1469,7 +1523,7 @@ class AuditPluginManager (PluginManager):
         return set()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def find_plugins(self, plugins_folder = None):
         """
         .. warning: This method is not available for audits.
@@ -1477,7 +1531,7 @@ class AuditPluginManager (PluginManager):
         raise NotImplementedError("Not available for audits!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_plugin_manager_for_audit(self, audit):
         """
         .. warning: This method is not available for audits.
@@ -1485,7 +1539,7 @@ class AuditPluginManager (PluginManager):
         raise NotImplementedError("Not available for audits!")
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def load_plugin_by_id(self, plugin_id):
 
         # Get the plugin info. Fails if the plugin is disabled.
@@ -1501,7 +1555,7 @@ class AuditPluginManager (PluginManager):
         return instance
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_plugin_info_from_instance(self, instance):
 
         # Cached by the global plugin manager.

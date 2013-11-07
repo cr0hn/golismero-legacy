@@ -65,6 +65,39 @@ class OpenVASPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
+    def check_params(self):
+
+        # Check the parameters.
+        try:
+            m_user      = Config.plugin_args["user"]
+            m_password  = Config.plugin_args["password"]
+            m_host      = Config.plugin_args["host"]
+            m_port      = int( Config.plugin_args["port"] )
+            m_timeout   = Config.plugin_args["timeout"]
+            m_profile   = Config.plugin_args["profile"]
+
+            assert m_host,     "Missing username"
+            assert m_password, "Missing password"
+            assert m_host,     "Missing hostname"
+            assert m_profile,  "Missing scan profile"
+            assert 0 < m_port < 65536, "Missing or wrong port number"
+            if m_timeout.lower().strip() in ("inf", "infinite", "none"):
+                m_timeout = None
+            else:
+                m_timeout = int(m_timeout)
+                assert m_timeout > 0, "Wrong timeout value"
+
+        except Exception, e:
+            raise ValueError(str(e))
+
+        # Connect to the scanner.
+        try:
+            VulnscanManager(m_host, m_user, m_password, m_port, m_timeout)
+        except VulnscanException, e:
+            raise RuntimeError(str(e))
+
+
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [IP]
 
@@ -72,9 +105,7 @@ class OpenVASPlugin(TestingPlugin):
     #--------------------------------------------------------------------------
     def recv_info(self, info):
 
-
-
-        # Checks if connection was not setted as down
+        # Checks if connection was not set as down
         if not self.state.check("connection_down"):
 
             # Synchronization object to wait for completion.
@@ -113,7 +144,7 @@ class OpenVASPlugin(TestingPlugin):
                 #Logger.log_error_verbose(str(e))
                 Logger.log_error_more_verbose(t)
 
-                # Set the openvas connection down and remember it.
+                # Set the openvas connection as down and remember it.
                 self.state.put("connection_down", True)
                 return
 
