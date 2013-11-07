@@ -115,7 +115,7 @@ class GoLismeroAuditData(object):
 	    "disable_plugins"
 	]
 
-	COMPLEX_PROPERTIES = ["enable_plugins", "user"]
+	COMPLEX_PROPERTIES = ["enable_plugins", "user", "targets"]
 
 	#----------------------------------------------------------------------
 	def __init__(self):
@@ -280,10 +280,13 @@ class GoLismeroAuditData(object):
 		:rtype: dict
 		"""
 		# Add simple config
-		m_config                    = { k : str(v) for k, v in self.__dict__.iteritems() if k not in GoLismeroAuditData.COMPLEX_PROPERTIES}
+		m_config                    = { k : str(v) for k, v in self.__dict__.iteritems() if k not in GoLismeroAuditData.COMPLEX_PROPERTIES and not isinstance(v, list) and not isinstance(v, dict)}
 
 		# Fix audit name
 		m_config['audit_name']      = "%s_%s" % (self.audit_name, str(self.id))
+
+		# Add targets
+		m_config['targets']         = self.__dict__["targets"]
 
 		# Add plugins enabled
 		m_config['enable_plugins']  = []
