@@ -375,7 +375,11 @@ class Configuration (object):
 
     @staticmethod
     def string(x):
-        return str(x) if x is not None else None
+        if x is None:
+            return None
+        if isinstance(x, unicode):
+            return x.encode("UTF-8")
+        return str(x)
 
     @staticmethod
     def integer(x):
@@ -400,7 +404,7 @@ class Configuration (object):
         if isinstance(x, str):
             return [t.strip() for t in x.split(",")]
         if isinstance(x, unicode):
-            return [t.strip() for t in x.split(u",")]
+            return [t.strip().encode("UTF-8") for t in x.split(u",")]
         return list(x)
 
     @staticmethod
@@ -522,8 +526,6 @@ class Configuration (object):
         :type args: dict(str -> \\*)
         """
         for name, value in args.iteritems():
-            if isinstance(value, unicode):
-                value = value.encode("UTF-8")
             if name in self._settings_:
                 setattr(self, name, value)
 
@@ -863,6 +865,11 @@ class AuditConfig (Configuration):
                 for x in targets
                 if x not in self._targets
             ]
+            targets = [
+                x.encode("UTF-8") if isinstance(x, unicode) else str(x)
+                for x in targets
+                if x not in self._targets
+            ]
             self._targets.extend(targets)
 
             # Detect network ranges, like 30.30.30.0/24, and get all IPs on it.
@@ -929,6 +936,7 @@ class AuditConfig (Configuration):
             audit_db = "memory://"
         elif not "://" in audit_db:
             audit_db = "sqlite://" + audit_db
+        audit_db = str(audit_db)
         urlparse.urlparse(audit_db)  # check validity of URL syntax
         self._audit_db = audit_db
 
@@ -942,6 +950,8 @@ class AuditConfig (Configuration):
     @user_agent.setter
     def user_agent(self, user_agent):
         if user_agent:
+            if isinstance(audit_db, unicode):
+                audit_db = audit_db.encode("UTF-8")
             self._user_agent = user_agent
         else:
             self._user_agent = None
@@ -959,14 +969,16 @@ class AuditConfig (Configuration):
         if cookie:
             # Parse the cookies argument.
             try:
+                if isinstance(cookie, unicode):
+                    cookie = cookie.encode("UTF-8")
                 # Prepare cookie.
-                m_cookie = cookie.replace(" ", "").replace("=", ":")
+                cookie = cookie.replace(" ", "").replace("=", ":")
                 # Remove 'Cookie:' start, if exits.
-                m_cookie = m_cookie[len("Cookie:"):] if m_cookie.startswith("Cookie:") else m_cookie
+                cookie = cookie[len("Cookie:"):] if cookie.startswith("Cookie:") else cookie
                 # Split.
-                m_cookie = m_cookie.split(";")
+                cookie = cookie.split(";")
                 # Parse.
-                self.cookie = { c.split(":")[0]:c.split(":")[1] for c in m_cookie}
+                cookie = { c.split(":")[0]:c.split(":")[1] for c in cookie}
             except ValueError:
                 raise ValueError("Invalid cookie format specified. Use this format: 'Key=value; key=value'.")
         else:
