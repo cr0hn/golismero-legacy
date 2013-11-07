@@ -1,11 +1,18 @@
 BeautifulSoup < 4.0.0
 colorizer
 decorator
-django >= 1.5
+django-cors-headers
+django-filter
+django<1.6
+djangorestframework
 dnspython
+gunicorn
+markdown
 netaddr
 nltk
+pygments
 python_cjson
+pyyaml
 requests
 requests_ntlm
 texttable
