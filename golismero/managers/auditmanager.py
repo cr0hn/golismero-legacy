@@ -245,6 +245,10 @@ class AuditManager (object):
                     audit = self.get_audit(message.audit_name)
                     audit.acknowledge(message)
 
+            # Start an audit if requested
+            elif message.message_code == MessageCode.MSG_CONTROL_START_AUDIT:
+                self.new_audit(message.message_info)
+
             # Stop an audit if requested
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
                 if not message.audit_name:

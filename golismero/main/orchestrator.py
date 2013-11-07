@@ -284,17 +284,6 @@ class Orchestrator (object):
 
 
     #----------------------------------------------------------------------
-    def add_audit(self, params):
-        """
-        Start a new audit.
-
-        :param params: Audit settings
-        :type params: AuditConfig
-        """
-        self.auditManager.new_audit(params)
-
-
-    #----------------------------------------------------------------------
     def dispatch_msg(self, message):
         """
         Process messages from audits or from the message queue, and send them
@@ -422,7 +411,13 @@ class Orchestrator (object):
 
             # If we have initial audits, start them.
             for audit_config in audits:
-                self.add_audit(audit_config)
+                message = Message(
+                    message_type = MessageType.MSG_TYPE_CONTROL,
+                    message_code = MessageCode.MSG_CONTROL_START_AUDIT,
+                    message_info = audit_config,
+                        priority = MessagePriority.MSG_PRIORITY_HIGH,
+                )
+                self.enqueue_msg(message)
 
             # Signal handler to catch Ctrl-C.
             self.__old_signal_action = signal(
