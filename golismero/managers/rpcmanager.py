@@ -240,7 +240,8 @@ class RPCManager (object):
                 success  = False
                 response = self.prepare_exception(*sys.exc_info())
 
-        # If the call was synchronous, send the response/error back to the plugin.
+        # If the call was synchronous,
+        # send the response/error back to the plugin.
         if response_queue:
             response_queue.put_nowait( (success, response) )
 

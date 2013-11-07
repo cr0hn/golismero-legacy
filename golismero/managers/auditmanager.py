@@ -53,7 +53,7 @@ from time import time
 from traceback import format_exc
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # RPC implementors for the audit manager API.
 
 @implementor(MessageCode.MSG_RPC_AUDIT_COUNT)
@@ -75,7 +75,7 @@ def rpc_audit_get_times(orchestrator, audit_name):
     return orchestrator.auditManager.get_audit(audit_name).database.get_audit_times()
 
 
-#--------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class AuditManager (object):
     """
     Manage and control audits.
@@ -117,7 +117,8 @@ class AuditManager (object):
         :rtype: Audit
         """
         if not isinstance(audit_config, AuditConfig):
-            raise TypeError("Expected AuditConfig, got %r instead" % type(audit_config))
+            raise TypeError(
+                "Expected AuditConfig, got %r instead" % type(audit_config))
 
         # Check the audit config.
         self.orchestrator.uiManager.check_params(audit_config)
@@ -228,7 +229,8 @@ class AuditManager (object):
         :type message: Message
         """
         if not isinstance(message, Message):
-            raise TypeError("Expected Message, got %r instead" % type(message))
+            raise TypeError(
+                "Expected Message, got %r instead" % type(message))
 
         # Send data messages to their target audit
         if message.message_type == MessageType.MSG_TYPE_DATA:
@@ -277,10 +279,11 @@ class AuditManager (object):
                 pass
 
 
-#--------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class Audit (object):
     """
-    Instance of an audit, with its custom parameters, scope, target, plugins, etc.
+    Instance of an audit, with its custom parameters,
+    scope, target, plugins, etc.
     """
 
 
@@ -290,12 +293,14 @@ class Audit (object):
         :param audit_config: Audit configuration.
         :type audit_config: AuditConfig
 
-        :param orchestrator: Orchestrator instance that will receive messages sent by this audit.
+        :param orchestrator: Orchestrator instance that will receive messages
+            sent by this audit.
         :type orchestrator: Orchestrator
         """
 
         if not isinstance(audit_config, AuditConfig):
-            raise TypeError("Expected AuditConfig, got %r instead" % type(audit_config))
+            raise TypeError(
+                "Expected AuditConfig, got %r instead" % type(audit_config))
 
         # Keep the audit settings.
         self.__audit_config = audit_config
@@ -357,7 +362,8 @@ class Audit (object):
     @property
     def orchestrator(self):
         """
-        :returns: Orchestrator instance that will receive messages sent by this audit.
+        :returns: Orchestrator instance that will receive messages
+            sent by this audit.
         :rtype: Orchestrator
         """
         return self.__orchestrator
@@ -741,18 +747,21 @@ class Audit (object):
             # Note that for output text files the text report plugin is
             # run again normally.
             #
-            self.__report_manager.generate_screen_report(self.orchestrator.uiManager.notifier)
+            self.__report_manager.generate_screen_report(
+                self.orchestrator.uiManager.notifier)
 
             # Send the audit end message.
             self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                           message_code = MessageCode.MSG_CONTROL_STOP_AUDIT,
-                          message_info = True)   # True for finished, False for user cancel
+                          message_info = True)   # True for finished,
+                                                 # False for user cancel
 
         # If the reports are not yet launched...
         else:
 
             # Look for the earliest stage with pending data.
-            for stage in xrange(pluginManager.min_stage, pluginManager.max_stage + 1):
+            for stage in xrange(pluginManager.min_stage,
+                                pluginManager.max_stage + 1):
                 self.__current_stage = stage
                 pending = database.get_pending_data(stage)
                 if not pending:
@@ -835,13 +844,14 @@ class Audit (object):
         try:
 
             # Update the execution context for this audit.
-            Config._context = PluginContext(       msg_queue = old_context.msg_queue,
-                                                  audit_name = self.name,
-                                                audit_config = self.config,
-                                                 audit_scope = self.scope,
-                                                ack_identity = message.ack_identity,
-                                            orchestrator_pid = old_context._orchestrator_pid,
-                                            orchestrator_tid = old_context._orchestrator_tid)
+            Config._context = PluginContext(
+                       msg_queue = old_context.msg_queue,
+                      audit_name = self.name,
+                    audit_config = self.config,
+                     audit_scope = self.scope,
+                    ack_identity = message.ack_identity,
+                orchestrator_pid = old_context._orchestrator_pid,
+                orchestrator_tid = old_context._orchestrator_tid)
 
             # Dispatch the message.
             self.__dispatch_msg(message)
@@ -894,9 +904,10 @@ class Audit (object):
                     self.__expecting_ack += launched
                 else:
                     self.__expecting_ack += 1
-                    self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                  message_code = MessageCode.MSG_CONTROL_ACK,
-                                      priority = MessagePriority.MSG_PRIORITY_LOW)
+                    self.send_msg(
+                        message_type = MessageType.MSG_TYPE_CONTROL,
+                        message_code = MessageCode.MSG_CONTROL_ACK,
+                            priority = MessagePriority.MSG_PRIORITY_LOW)
 
                 # Increment the count of processed objects.
                 self.__processed_count += len(message.message_info)
@@ -924,11 +935,17 @@ class Audit (object):
                     if not database.has_data_key(data.identity):
 
                         # Increase the number of links followed.
-                        if data.data_type == Data.TYPE_RESOURCE and data.resource_type == Resource.RESOURCE_URL:
+                        if (
+                            data.data_type == Data.TYPE_RESOURCE and
+                            data.resource_type == Resource.RESOURCE_URL
+                        ):
                             self.__followed_links += 1
 
                             # Maximum number of links reached?
-                            if self.config.max_links > 0 and self.__followed_links >= self.config.max_links:
+                            if (
+                                self.config.max_links > 0 and
+                                self.__followed_links >= self.config.max_links
+                            ):
 
                                 # Show a warning, but only once.
                                 if self.__show_max_links_warning:
@@ -937,10 +954,11 @@ class Audit (object):
                                     w = w % (self.config.max_links, self.name)
                                     with catch_warnings(record=True) as wlist:
                                         warn(w, RuntimeWarning)
-                                    self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
-                                                  message_code = MessageCode.MSG_CONTROL_WARNING,
-                                                  message_info = wlist,
-                                                  priority = MessagePriority.MSG_PRIORITY_HIGH)
+                                    self.send_msg(
+                                        message_type = MessageType.MSG_TYPE_CONTROL,
+                                        message_code = MessageCode.MSG_CONTROL_WARNING,
+                                        message_info = wlist,
+                                        priority = MessagePriority.MSG_PRIORITY_HIGH)
 
                                 # Skip this data object.
                                 continue
@@ -952,12 +970,15 @@ class Audit (object):
                     # If the data is in scope...
                     if data.is_in_scope():
 
-                        # If the plugin is not recursive, mark the data as already processed by it.
+                        # If the plugin is not recursive,
+                        # mark the data as already processed by it.
                         plugin_id = message.plugin_id
                         if plugin_id:
-                            plugin_info = pluginManager.get_plugin_by_id(plugin_id)
+                            plugin_info = pluginManager.get_plugin_by_id(
+                                                                    plugin_id)
                             if not plugin_info.recursive:
-                                database.mark_plugin_finished(data.identity, plugin_id)
+                                database.mark_plugin_finished(data.identity,
+                                                              plugin_id)
 
                         # The data will be sent to the plugins.
                         data_for_plugins.append(data)
@@ -966,7 +987,8 @@ class Audit (object):
                     else:
 
                         # Mark the data as having completed all stages.
-                        database.mark_stage_finished(data.identity, pluginManager.max_stage)
+                        database.mark_stage_finished(data.identity,
+                                                     pluginManager.max_stage)
 
                 # Recursively process newly discovered data, if any.
                 # Discovered data already in the database is ignored.
@@ -986,12 +1008,16 @@ class Audit (object):
                             if data.is_in_scope():        # If in scope, send it to plugins.
                                 data_for_plugins.append(data)
                             else:                         # If not, mark as completed.
-                                database.mark_stage_finished(data.identity, pluginManager.max_stage)
+                                database.mark_stage_finished(data.identity,
+                                                    pluginManager.max_stage)
                     if links:                             # If we have new links...
                         database.add_data(data)           # Refresh the data object.
 
                 # If we have data to be sent and we're in the first stage...
-                if data_for_plugins and self.current_stage == self.pluginManager.min_stage:
+                if (
+                    data_for_plugins and
+                    self.current_stage == self.pluginManager.min_stage
+                ):
 
                     # Increment the total data count for this stage.
                     self.__total_count += len(data_for_plugins)
@@ -1073,13 +1099,17 @@ class Audit (object):
                                 finally:
                                     self.database.close()
                         finally:
-                            if self.__notifier is not None: self.__notifier.close()
+                            if self.__notifier is not None:
+                                self.__notifier.close()
                     finally:
-                        if self.__plugin_manager is not None: self.__plugin_manager.close()
+                        if self.__plugin_manager is not None:
+                            self.__plugin_manager.close()
                 finally:
-                    if self.__import_manager is not None: self.__import_manager.close()
+                    if self.__import_manager is not None:
+                        self.__import_manager.close()
             finally:
-                if self.__report_manager is not None: self.__report_manager.close()
+                if self.__report_manager is not None:
+                    self.__report_manager.close()
         finally:
             self.__database       = None
             self.__orchestrator   = None

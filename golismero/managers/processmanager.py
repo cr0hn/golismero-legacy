@@ -737,7 +737,8 @@ class PluginContext (object):
         :rtype: list
         """
 
-        # Convert all the iterables to tuples to make sure they're serializable.
+        # Convert all the iterables to tuples
+        # to make sure they're serializable.
         arguments = tuple( tuple(x) for x in arguments )
 
         # Send the MSG_RPC_BULK call and return the response.
@@ -759,7 +760,8 @@ class PluginContext (object):
         :type rpc_code: int
         """
 
-        # Convert all the iterables to tuples to make sure they're serializable.
+        # Convert all the iterables to tuples
+        # to make sure they're serializable.
         arguments = tuple( tuple(x) for x in arguments )
 
         # Send the MSG_RPC_BULK call.
