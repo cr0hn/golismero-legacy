@@ -522,6 +522,8 @@ class Configuration (object):
         :type args: dict(str -> \\*)
         """
         for name, value in args.iteritems():
+            if isinstance(value, unicode):
+                value = value.encode("UTF-8")
             if name in self._settings_:
                 setattr(self, name, value)
 
@@ -817,11 +819,24 @@ class AuditConfig (Configuration):
         super(AuditConfig, self).from_dictionary(args)
         if "profile" in args:
             self.profile = args["profile"]
+            if isinstance(self.profile, unicode):
+                self.profile = self.profile.encode("UTF-8")
             self.profile_file = get_profile(self.profile)
         if "plugin_args" in args:
-            self.plugin_args = args["plugin_args"]
+            plugin_args = []
+            for (plugin_id, key, value) in args["plugin_args"]:
+                if isinstance(plugin_id, unicode):
+                    plugin_id = plugin_id.encode("UTF-8")
+                if isinstance(key, unicode):
+                    key = key.encode("UTF-8")
+                if isinstance(value, unicode):
+                    value = value.encode("UTF-8")
+                plugin_args.append( (plugin_id, key, value) )
+            self.plugin_args = plugin_args
         if "command" in args:
             self.command = args["command"]
+            if isinstance(self.command, unicode):
+                self.command = self.command.encode("UTF-8")
 
     def to_dictionary(self):
         result = super(AuditConfig, self).to_dictionary()
