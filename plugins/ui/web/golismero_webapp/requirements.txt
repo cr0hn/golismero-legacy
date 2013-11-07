@@ -1,6 +1,7 @@
-django
+'django<1.6'
 djangorestframework
 markdown
 django-filter
 pygments
 django-cors-headers
+pyyaml
