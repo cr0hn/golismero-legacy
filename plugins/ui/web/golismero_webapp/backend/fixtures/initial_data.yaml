@@ -17,7 +17,7 @@
 
 
 - model: backend.audit
-  pk: 3
+  pk: 1
   fields:
     audit_name: prueba
     user: 5
