@@ -96,7 +96,7 @@ class AuditsRouters(ParameterizedRouter):
               name      = '{basename}-results',
               initkwargs= {}),
         Route(url       = r'^{prefix}/results/{lookup}/{text}',
-              mapping   = {'get' : 'results_formated'},
+              mapping   = {'get' : 'results'},
               name      = '{basename}-results-formated',
               initkwargs= {}),
 
