@@ -5,6 +5,7 @@ import os
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+SIMULATE = True # Expose API methods, but not call to golismero core.
 
 ADMINS = (
     ('GoLismero Team', 'golismero.project@gmail.com'),
