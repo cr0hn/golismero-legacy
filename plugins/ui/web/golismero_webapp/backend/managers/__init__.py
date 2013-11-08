@@ -111,8 +111,6 @@ class GoLismeroAuditData(object):
 	    "start_date",
 	    "end_date",
 	    "audit_state",
-	    "results_type",
-	    "results_location",
 	    "user",
 	    "disable_plugins"
 	]
