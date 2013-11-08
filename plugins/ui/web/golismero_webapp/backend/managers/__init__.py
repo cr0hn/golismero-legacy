@@ -35,6 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #----------------------------------------------------------------------
 
 from backend.models import *
+from os.path import join
 
 class GoLismeroAuditProgress(object):
 	"""
@@ -48,7 +49,8 @@ class GoLismeroAuditProgress(object):
 
 	"""
 
-	PROPERTIES = ["current_stage", "steps", "tests_remain", "tests_done"]
+	PROPERTIES     = ["current_stage", "steps", "tests_remain", "tests_done"]
+	REPORT_FORMATS = ["html", "text", "rst", "xml"]
 
 	#----------------------------------------------------------------------
 	def __init__(self, data):
@@ -209,14 +211,7 @@ class GoLismeroAuditData(object):
 
 		{
 		  "audit_name": "asdfasdf",
-		  "targets": [
-			{
-			  "target_name": "127.0.0.1"
-			},
-			{
-			  "target_name": "mysite.com"
-			}
-		  ],
+		  "targets": [ "127.0.0.1", "mysite.com" ],
 		  "enabled_plugins": [
 			{
 			  "plugin_name": "openvas",
@@ -291,8 +286,19 @@ class GoLismeroAuditData(object):
 		# Add plugins enabled
 		m_config['enable_plugins']  = []
 
-		m_tmp_plugin_args           = []
 
+		#
+		# FIXME in next version:
+		#
+		# For this version, golismero will generate reports in all possible formats.
+		# After, core will choice what to serve.
+		#
+		m_config['reports']         = [join(self.store_path, "report.%s" % x) for x in GoLismeroAuditProgress.REPORT_FORMATS]
+
+		#
+		# Plugins
+		#
+		m_tmp_plugin_args           = []
 		# Add plugins config
 		for p in self.enable_plugins:
 			l_plugin_name = p["plugin_name"]
