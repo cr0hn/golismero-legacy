@@ -36,7 +36,8 @@ from .rpcmanager import implementor
 from ..api.config import Config
 from ..api.logger import Logger
 from ..api.plugin import UIPlugin, ImportPlugin, TestingPlugin, ReportPlugin
-from ..common import Configuration, OrchestratorConfig, AuditConfig, get_default_plugins_folder
+from ..common import Configuration, OrchestratorConfig, AuditConfig, \
+    get_default_plugins_folder
 from ..messaging.codes import MessageCode
 
 from collections import defaultdict
@@ -244,7 +245,8 @@ class PluginInfo (object):
     @property
     def website(self):
         """
-        :returns: Web site where you can download the latest version of this plugin.
+        :returns: Web site where you can download
+            the latest version of this plugin.
         :rtype: str
         """
         return self.__website
@@ -282,7 +284,8 @@ class PluginInfo (object):
         try:
             plugin_module       = parser.get("Core", "Module")
         except Exception:
-            plugin_module       = path.splitext(path.basename(descriptor_file))[0]
+            plugin_module       = path.splitext(
+                                    path.basename(descriptor_file))[0]
         try:
             plugin_class        = parser.get("Core", "Class")
         except Exception:
@@ -338,15 +341,22 @@ class PluginInfo (object):
         if not plugins_root.endswith(path.sep):
             plugins_root += path.sep
         if not plugin_module.startswith(plugins_root):
-            msg = "Error parsing %r: plugin module (%s) is located outside the plugins folder (%s)"
-            raise ValueError(msg % (descriptor_file, plugin_module, plugins_root))
+            msg = (
+                "Error parsing %r:"
+                " plugin module (%s) is located"
+                " outside the plugins folder (%s)"
+            ) % (descriptor_file, plugin_module, plugins_root)
+            raise ValueError(msg)
 
         # Sanitize the plugin classname.
         if plugin_class is not None:
             plugin_class = re.sub(r"\W|^(?=\d)", "_", plugin_class.strip())
             if iskeyword(plugin_class):
-                msg = "Error parsing %r: plugin class (%s) is a Python reserved keyword"
-                raise ValueError(msg % (plugin_class, descriptor_file))
+                msg = (
+                    "Error parsing %r:"
+                    " plugin class (%s) is a Python reserved keyword"
+                ) % (plugin_class, descriptor_file)
+                raise ValueError(msg)
 
         # Store the plugin module and class.
         self.__plugin_module = plugin_module
@@ -356,7 +366,9 @@ class PluginInfo (object):
         if not dependencies:
             self.__dependencies = ()
         else:
-            self.__dependencies = tuple(sorted( {x.strip() for x in dependencies.split(",")} ))
+            self.__dependencies = tuple(sorted(
+                {x.strip() for x in dependencies.split(",")}
+            ))
 
         # Parse the recursive flag.
         try:
@@ -421,7 +433,9 @@ class PluginInfo (object):
         self.__plugin_extra_config = dict()
         for section in parser.sections():
             if section not in ("Core", "Documentation", "Configuration"):
-                options = dict( (k.lower(), v) for (k, v) in parser.items(section) )
+                options = dict(
+                    (k.lower(), v) for (k, v) in parser.items(section)
+                )
                 self.__plugin_extra_config[section] = options
 
         # Override the plugin configuration from the global config file(s).
@@ -482,7 +496,8 @@ class PluginInfo (object):
 
         # Check the argument type.
         if not isinstance(audit_config, AuditConfig):
-            raise TypeError("Expected AuditConfig, got %r instead" % type(audit_config))
+            raise TypeError(
+                "Expected AuditConfig, got %r instead" % type(audit_config))
 
         # Make a customized copy and return it.
         new_instance = self.__deepcopy__()
@@ -662,7 +677,8 @@ class PluginManager (object):
         :param config: Orchestrator or Audit settings.
         :type config: OrchestratorConfig | AuditConfig
 
-        :returns: A list of plugins loaded, and a list of plugins that failed to load.
+        :returns: A list of plugins loaded,
+            and a list of plugins that failed to load.
         :rtype: tuple(list(str), list(str))
         """
 
@@ -672,7 +688,8 @@ class PluginManager (object):
 
         # Check the argument type.
         if not isinstance(config, OrchestratorConfig):
-            raise TypeError("Expected OrchestratorConfig, got %r instead" % type(config))
+            raise TypeError(
+                "Expected OrchestratorConfig, got %r instead" % type(config))
 
         # Get the plugins folder. Must be an absolute path.
         plugins_folder = config.plugins_folder
@@ -681,7 +698,8 @@ class PluginManager (object):
         else:
             plugins_folder = get_default_plugins_folder()
 
-        # Raise an exception if the plugins folder doesn't exist or isn't a folder.
+        # Raise an exception if the plugins folder doesn't exist
+        # or isn't a folder.
         if not path.isdir(plugins_folder):
             raise ValueError("Invalid plugins folder: %s" % plugins_folder)
 
@@ -703,7 +721,8 @@ class PluginManager (object):
 
             # Skip missing folders.
             if not path.isdir(category_folder):
-                warnings.warn("Missing plugin category folder: %s" % category_folder)
+                warnings.warn(
+                    "Missing plugin category folder: %s" % category_folder)
                 continue
 
             # The following levels belong to the plugins.
@@ -714,11 +733,13 @@ class PluginManager (object):
                     if not fname.endswith(".golismero"):
                         continue
 
-                    # Convert the plugin descriptor filename to an absolute path.
+                    # Convert the plugin descriptor filename
+                    # to an absolute path.
                     fname = path.abspath(path.join(dirpath, fname))
 
-                    # The plugin ID is the relative path + filename without extension,
-                    # where the path separator is always "/" regardless of the current OS.
+                    # The plugin ID is the relative path + filename without
+                    # extension, where the path separator is always "/"
+                    # regardless of the current OS.
                     plugin_id = path.splitext(fname)[0][len(plugins_folder):]
                     if plugin_id[0] == path.sep:
                         plugin_id = plugin_id[1:]
@@ -792,7 +813,8 @@ class PluginManager (object):
     #--------------------------------------------------------------------------
     def get_plugin_ids(self, category = "all"):
         """
-        Get the names of the available plugins, optionally filtering by category.
+        Get the names of the available plugins,
+        optionally filtering by category.
 
         :param category: Category or stage.
             Use "all" to get plugins from all categories.
@@ -988,7 +1010,9 @@ class PluginManager (object):
             try:
                 clazz = getattr(module, classname)
             except Exception:
-                raise ImportError("Plugin class %s not found in file: %s" % (classname, source))
+                raise ImportError(
+                    "Plugin class %s not found in file: %s" %
+                    (classname, source))
 
         # If we don't know the plugin classname, we need to find it.
         else:
@@ -997,12 +1021,19 @@ class PluginManager (object):
             base_class = self.CATEGORIES[ name[ : name.find("/") ] ]
 
             # Get all public symbols from the module.
-            public_symbols = [getattr(module, symbol) for symbol in getattr(module, "__all__", [])]
+            public_symbols = [
+                getattr(module, symbol)
+                for symbol in getattr(module, "__all__", [])
+            ]
             if not public_symbols:
-                public_symbols = [value for (symbol, value) in module.__dict__.iteritems()
-                                        if not symbol.startswith("_")]
+                public_symbols = [
+                    value
+                    for (symbol, value) in module.__dict__.iteritems()
+                    if not symbol.startswith("_")
+                ]
                 if not public_symbols:
-                    raise ImportError("Plugin class not found in file: %s" % source)
+                    raise ImportError(
+                        "Plugin class not found in file: %s" % source)
 
             # Find all public classes that derive from the base class.
             # NOTE: it'd be faster to stop on the first match,
@@ -1018,10 +1049,13 @@ class PluginManager (object):
 
             # There should be only one candidate, if not raise an exception.
             if not candidates:
-                raise ImportError("Plugin class not found in file: %s" % source)
+                raise ImportError(
+                    "Plugin class not found in file: %s" % source)
             if len(candidates) > 1:
-                msg = "Error loading %r: can't decide which plugin class to load: %s"
-                msg = msg % (source, ", ".join(c.__name__ for c in candidates))
+                msg = (
+                    "Error loading %r:"
+                    " can't decide which plugin class to load: %s"
+                ) % (source, ", ".join(c.__name__ for c in candidates))
                 raise ImportError(msg)
 
             # Get the plugin class.
@@ -1235,7 +1269,8 @@ class AuditPluginManager (PluginManager):
 
         # Check the argument type.
         if not isinstance(auditConfig, AuditConfig):
-            raise TypeError("Expected AuditConfig, got %r instead" % type(auditConfig))
+            raise TypeError(
+                "Expected AuditConfig, got %r instead" % type(auditConfig))
 
         # Get the black and white lists and the plugin load overrides.
         enable_plugins        = auditConfig.enable_plugins
@@ -1243,7 +1278,11 @@ class AuditPluginManager (PluginManager):
         plugin_load_overrides = auditConfig.plugin_load_overrides
 
         # Dumb check.
-        if not enable_plugins and not disable_plugins and not plugin_load_overrides:
+        if (
+            not enable_plugins and
+            not disable_plugins and
+            not plugin_load_overrides
+        ):
             raise ValueError("No plugins selected for audit!")
 
         # Get all the plugin IDs.
@@ -1265,27 +1304,36 @@ class AuditPluginManager (PluginManager):
         conflicting_entries = enable_plugins.intersection(disable_plugins)
         if conflicting_entries:
             if len(conflicting_entries) > 1:
-                msg = "The same entries are present in both black and white lists: %s"
-                msg %= ", ".join(conflicting_entries)
+                msg = (
+                    "The same entries are present"
+                    " in both black and white lists: %s"
+                ) % ", ".join(conflicting_entries)
             else:
-                msg = "The same entry (%s) is present in both black and white lists"
-                msg %= conflicting_entries.pop()
+                msg = (
+                    "The same entry (%s) is present"
+                    " in both black and white lists"
+                ) % conflicting_entries.pop()
             raise ValueError(msg)
 
         # Expand the black and white lists.
-        disable_plugins = self.__expand_plugin_list(disable_plugins, "blacklist")
-        enable_plugins  = self.__expand_plugin_list(enable_plugins,  "whitelist")
+        disable_plugins = self.__expand_plugin_list(
+            disable_plugins, "blacklist")
+        enable_plugins  = self.__expand_plugin_list(
+            enable_plugins,  "whitelist")
 
         # Apply the black and white lists.
         if blacklist_approach:
-            plugins = all_plugins.intersection(enable_plugins) # use only enabled plugins
+            # Use only enabled plugins.
+            plugins = all_plugins.intersection(enable_plugins)
         else:
-            plugins = all_plugins.difference(disable_plugins)  # use all but disabled plugins
+            # Use all but disabled plugins.
+            plugins = all_plugins.difference(disable_plugins)
 
-        # Process the plugin load overrides. They only apply to testing plugins.
-        # First, find out if there are only enables but no disables.
-        # If so, insert a disable command for all testing plugins before the first enable.
-        # For all commands, symbolic plugin IDs are replaced with sets of full IDs.
+        # Process the plugin load overrides. They only apply to testing
+        # plugins. First, find out if there are only enables but no disables.
+        # If so, insert a disable command for all testing plugins before the
+        # first enable. For all commands, symbolic plugin IDs are replaced
+        # with sets of full IDs.
         if plugin_load_overrides:
             only_enables = all(x[0] for x in plugin_load_overrides)
             overrides = []
@@ -1306,23 +1354,29 @@ class AuditPluginManager (PluginManager):
                     overrides.append( (flag, (token,)) )
                 else:
                     if any(c in token for c in "?*["):
-                        matching_plugins = self.pluginManager.search_plugins_by_mask(token)
+                        matching_plugins = self.pluginManager.\
+                                                search_plugins_by_mask(token)
                         for name, info in matching_plugins.iteritems():
                             if info.category != "testing":
-                                raise ValueError("Not a testing plugin: %s" % token)
+                                raise ValueError(
+                                    "Not a testing plugin: %s" % token)
                             overrides.append( (flag, (name,)) )
                     else:
-                        matching_plugins = self.pluginManager.search_plugins_by_id(token)
+                        matching_plugins = self.pluginManager.\
+                                                search_plugins_by_id(token)
                         if not matching_plugins:
                             raise ValueError("Unknown plugin: %s" % token)
                         if len(matching_plugins) > 1:
-                            msg = ("Ambiguous plugin ID %r"
-                                   " may refer to any of the following plugins: %s")
-                            msg %= (token, ", ".join(sorted(matching_plugins.iterkeys())))
+                            msg = (
+                                "Ambiguous plugin ID %r may refer to any"
+                                " of the following plugins: %s"
+                            ) % (token,
+                              ", ".join(sorted(matching_plugins.iterkeys())))
                             raise ValueError(msg)
                         name, info = matching_plugins.items()[0]
                         if info.category != "testing":
-                            raise ValueError("Not a testing plugin: %s" % token)
+                            raise ValueError(
+                                "Not a testing plugin: %s" % token)
                         overrides.append( (flag, (name,)) )
 
             # Apply the processed plugin load overrides.
@@ -1369,13 +1423,15 @@ class AuditPluginManager (PluginManager):
             for category in self.CATEGORIES:
                 if category in plugin_list:
                     plugin_list.remove(category)
-                    plugin_list.update(self.pluginManager.get_plugin_ids(category))
+                    plugin_list.update(
+                        self.pluginManager.get_plugin_ids(category))
 
             # Convert stages to plugin IDs.
             for stage in self.STAGES:
                 if stage in plugin_list:
                     plugin_list.remove(stage)
-                    plugin_list.update(self.pluginManager.get_plugin_ids(stage))
+                    plugin_list.update(
+                        self.pluginManager.get_plugin_ids(stage))
 
         # Guess partial plugin IDs in the list.
         # Also make sure all the plugins in the list exist.
@@ -1383,14 +1439,16 @@ class AuditPluginManager (PluginManager):
         all_plugins = self.pluginManager.get_plugin_ids()
         for plugin_id in sorted(plugin_list):
             if plugin_id not in all_plugins:
-                matching_plugins = set(self.pluginManager.search_plugins(plugin_id).keys())
+                matching_plugins = set(
+                    self.pluginManager.search_plugins(plugin_id).keys())
                 if not matching_plugins:
                     missing_plugins.add(plugin_id)
                     continue
                 if len(matching_plugins) > 1:
                     msg = ("Ambiguous entry in %s (%r)"
                            " may refer to any of the following plugins: %s")
-                    msg %= (list_name, plugin_id, ", ".join(sorted(matching_plugins)))
+                    msg %= (list_name,
+                            plugin_id, ", ".join(sorted(matching_plugins)))
                     raise ValueError(msg)
                 plugin_list.remove(plugin_id)
                 plugin_list.update(matching_plugins)
@@ -1432,7 +1490,8 @@ class AuditPluginManager (PluginManager):
             deps = set(info.dependencies)
             if not deps.issubset(all_plugins):
                 msg = "Plugin %s depends on missing plugin(s): %s"
-                msg %= (plugin_id, ", ".join(sorted(deps.difference(all_plugins))))
+                msg %= (plugin_id,
+                        ", ".join(sorted(deps.difference(all_plugins))))
                 raise ValueError(msg)
             graph[plugin_id] = deps
 
@@ -1453,12 +1512,20 @@ class AuditPluginManager (PluginManager):
         # Raise an exception for circular dependencies.
         batches = []
         while graph:
-            ready = {plugin_id for plugin_id, deps in graph.iteritems() if not deps}
+            ready = {
+                plugin_id
+                for plugin_id, deps in graph.iteritems()
+                if not deps
+            }
             if not ready:
                 # TODO: find each circle in the graph and show it,
                 #       instead of dumping the remaining graph
                 msg = "Circular dependencies found in plugins: "
-                keys = [ k for k in graph.iterkeys() if not k.startswith("*") ]
+                keys = [
+                    k
+                    for k in graph.iterkeys()
+                    if not k.startswith("*")
+                ]
                 keys.sort()
                 raise ValueError(msg + ", ".join(keys))
             for plugin_id in ready:
