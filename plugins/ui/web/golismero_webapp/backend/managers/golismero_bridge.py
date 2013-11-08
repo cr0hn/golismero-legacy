@@ -83,7 +83,8 @@ class AuditBridge(object):
 		# Set command
 		config["command"] = "scan"
 
-		print BRIDGE.RPC.call("audit/create", config)
+		if not BRIDGE.SIMULATE:
+			BRIDGE.RPC.call("audit/create", config)
 
 
 
@@ -98,7 +99,8 @@ class AuditBridge(object):
 
 		:raises: ExceptionAuditNotFound
 		"""
-		BRIDGE.RPC.call("audit/cancel", audit_id)
+		if not BRIDGE.SIMULATE:
+			BRIDGE.RPC.call("audit/cancel", audit_id)
 
 
 
@@ -214,7 +216,8 @@ class AuditBridge(object):
 
 		:raises: ExceptionAuditNotFound
 		"""
-		BRIDGE.RPC.call("audit/state", audit_id)
+		if not BRIDGE.SIMULATE:
+			BRIDGE.RPC.call("audit/state", audit_id)
 
 
 
@@ -294,7 +297,8 @@ class AuditBridge(object):
 		:raises: ExceptionAuditNotFound
 		"""
 		try:
-			return BRIDGE.RPC.call("audit/details")
+			if not BRIDGE.SIMULATE:
+				return BRIDGE.RPC.call("audit/details")
 		except ObjectDoesNotExist:
 			return None
 
