@@ -70,10 +70,6 @@ class Audit(models.Model):
 
     audit_state             = models.CharField(max_length=50, default="new")
 
-    # String with type of results: csv, html, xml...
-    results_type            = models.CharField(max_length=50, default="html")
-    results_location        = models.CharField(max_length=255, blank=True)
-
     # Relations
     targets                 = models.ManyToManyField(Target)
     enable_plugins          = models.ManyToManyField(Plugins)
