@@ -45,7 +45,14 @@ Scheme of process is:
 
 """
 
-__all__ = ["GoLismeroFacadeAudit", "GoLismeroFacadeAuditNotFoundException", "GoLismeroFacadeAuditStoppedException", "GoLismeroFacadeAuditRunningException", "GoLismeroFacadeAuditStateException", "GoLismeroFacadeAuditUnknownException"]
+__all__ = ["GoLismeroFacadeAudit",
+           "GoLismeroFacadeAuditNotFoundException",
+           "GoLismeroFacadeAuditStoppedException",
+           "GoLismeroFacadeAuditRunningException",
+           "GoLismeroFacadeAuditStateException",
+           "GoLismeroFacadeAuditUnknownException",
+           "GoLismeroFacadeReportUnknownFormatException",
+           "GoLismeroFacadeReportNotAvailableException"]
 
 import os
 import os.path as path
@@ -68,26 +75,27 @@ from django.db.models import ObjectDoesNotExist
 #----------------------------------------------------------------------
 class GoLismeroFacadeAuditNotFoundException(Exception):
     """Audit not found"""
-
 class GoLismeroFacadeAuditStoppedException(Exception):
     """Audit is stopped"""
-
 class GoLismeroFacadeAuditRunningException(Exception):
     """Audit is currently running."""
-
-
-
-
 class GoLismeroFacadeAuditStateException(Exception):
-    pass
+    """Audit state general exception"""
 class GoLismeroFacadeAuditUnknownException(Exception):
-    pass
+    """Audit unknown exception"""
+class GoLismeroFacadeReportUnknownFormatException(Exception):
+    """Unknown format of report requested"""
+class GoLismeroFacadeReportNotAvailableException(Exception):
+    """Unknown format of report requested"""
+
 #------------------------------------------------------------------------------
 class GoLismeroFacadeAudit(object):
     """
     This class acts as Facade between REST API and GoLismero Backend.
     """
 
+
+    AVAILABLE_REPORT_FORMATS = ["rst", "html", "text", "xml"]
 
     #----------------------------------------------------------------------
     #
@@ -151,7 +159,7 @@ class GoLismeroFacadeAudit(object):
                 m_new_state = AuditBridge.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
             except ExceptionAuditNotFound:
                 # Audit not working
-                m_new_state = "stopped"
+                m_new_state = "finished"
 
             #  Update audit state into BBDD
             if m_audit.audit_state != m_new_state:
@@ -230,8 +238,53 @@ class GoLismeroFacadeAudit(object):
 
     #----------------------------------------------------------------------
     @staticmethod
-    def get_results(audit_id): #
-        """"""
+    def get_results(audit_id, report_format="html"):
+        """
+        Get results by format.
+
+        :param audit_id: audit ID.
+        :type audit_id: str
+
+        :param report_format: report format. Availables: rst, xml, html, text
+        :type report_format: str
+
+        :return: return file handler ready to read report.
+        :rtype: file
+
+        :raises: GoLismeroFacadeReportUnknownFormatException, GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeReportNotAvailableException
+        """
+        EXTENSIONS_BY_FORMAT = {
+            'xml'    : 'xml',
+            'html'   : 'html',
+            'rst'    : 'rst',
+            'text'   : 'txt'
+        }
+        try:
+            # Check report format
+            if report_format not in GoLismeroFacadeAudit.AVAILABLE_REPORT_FORMATS:
+                raise GoLismeroFacadeReportUnknownFormatException("Unknown report format '%s'." % report_format)
+
+            m_audit = Audit.objects.get(pk=audit_id)
+
+            # Update state
+            #GoLismeroFacadeAudit.get_state(m_audit.id)
+
+            if m_audit.audit_state != "finished":
+                raise GoLismeroFacadeReportNotAvailableException("Not finished audit. Report is not available.")
+
+            # Get path of audit info
+            l_path = path.join(get_user_settings_folder(), str(m_audit.id))
+
+            # Each folder has one file for each type of report called "report.FORMAT"
+            if not path.exists(l_path):
+                raise GoLismeroFacadeReportNotAvailableException("Requested report is not available")
+
+            # Get report
+
+            return file(path.join(l_path, "report.%s" % EXTENSIONS_BY_FORMAT[report_format]), "rU")
+
+        except ObjectDoesNotExist:
+            raise GoLismeroFacadeAuditNotFoundException()
 
 
     #----------------------------------------------------------------------
@@ -277,14 +330,7 @@ class GoLismeroFacadeAudit(object):
 
 		{
 		  "audit_name": "asdfasdf",
-		  "targets": [
-			{
-			  "target_name": "127.0.0.1"
-			},
-			{
-			  "target_name": "mysite.com"
-			}
-		  ],
+		  "targets": ["127.0.0.2", "mysite.com"],
 		  "enabled_plugins": [
 			{
 			  "plugin_name": "openvas",
@@ -325,8 +371,7 @@ class GoLismeroFacadeAudit(object):
 
             m_targets_stored = []
             for t in m_targets:
-                l_target             = Target()
-                l_target.target_name = t['target_name']
+                l_target         = Target(target_name=t)
                 l_target.save()
 
                 # Add to global
