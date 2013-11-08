@@ -208,14 +208,7 @@ class AuditViewSet(ViewSet):
 
 		{
 		  "audit_name": "asdfasdf",
-		  "targets": [
-			{
-			  "target_name": "127.0.0.1"
-			},
-			{
-			  "target_name": "mysite.com"
-			}
-		  ],
+		  "targets": [ "127.0.0.1", "mysite.com"],
 		  "enabled_plugins": [
 			{
 			  "plugin_name": "openvas",
@@ -238,9 +231,6 @@ class AuditViewSet(ViewSet):
 		  "disabled_plugins": "spider,nikto"
 		}
 		"""
-
-
-
 		m_return = {}
 		m_info   = None
 
@@ -264,31 +254,13 @@ class AuditViewSet(ViewSet):
 		#
 		# TARGETS
 		#
-		# :: Targets available?
-		m_targets_in = request.DATA.get("targets", None)
-		if not m_targets_in:
+		m_info['targets'] = request.DATA.get("targets", None)
+		if not m_info['targets']:
 			m_return['status']      = "error"
 			m_return['error_code']  = 2
 			m_return['error']       = ["Targets are missing."]
 
 			return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-		# :: Recover targets
-		m_targets = [] # Target lists
-		for t in m_targets_in:
-			l_target = TargetSerializer(data=t)
-			if not l_target.is_valid():
-				m_return['status']      = "error"
-				m_return['error_code']  = 1
-				m_return['error']       = ["Target parameter '%s' are invalid." % l_target.target_name]
-				return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-			# Add to target list
-			m_targets.append({ k : str(v) for k, v in l_target.data.iteritems()})
-
-		# Append to global info
-		m_info['targets'] = m_targets
-
 
 		#
 		# PLUGINS
@@ -394,7 +366,7 @@ class AuditViewSet(ViewSet):
 		# Unknown exception
 		except Exception, e:
 			m_return['status']      = "error"
-			m_return['error_code']  = 0
+			m_return['error_code']  = -1
 			m_return['error']       = ["Unknown error: %s" % str(e)]
 
 			return Response(m_return, status.HTTP_400_BAD_REQUEST)
@@ -426,7 +398,7 @@ class AuditViewSet(ViewSet):
 		# Unknown exception
 		except Exception, e:
 			m_return['status']      = "error"
-			m_return['error_code']  = 0
+			m_return['error_code']  = -1
 			m_return['error']       = ["Unknown error: %s" % str(e)]
 
 			return Response(m_return, status.HTTP_400_BAD_REQUEST)
@@ -472,7 +444,7 @@ class AuditViewSet(ViewSet):
 		# Unknown exception
 		except Exception, e:
 			m_return['status']      = "error"
-			m_return['error_code']  = 0
+			m_return['error_code']  = -1
 			m_return['error']       = ["Unknown error: %s" % str(e)]
 
 			return Response(m_return, status.HTTP_400_BAD_REQUEST)
@@ -513,7 +485,7 @@ class AuditViewSet(ViewSet):
 		# Unknown exception
 		except Exception, e:
 			m_return['status']      = "error"
-			m_return['error_code']  = 0
+			m_return['error_code']  = -1
 			m_return['error']       = ["Unknown error: %s" % str(e)]
 
 			return Response(m_return, status.HTTP_400_BAD_REQUEST)
@@ -557,7 +529,7 @@ class AuditViewSet(ViewSet):
 		# Unknown exception
 		except Exception, e:
 			m_return['status']      = "error"
-			m_return['error_code']  = 0
+			m_return['error_code']  = -1
 			m_return['error']       = ["Unknown error: %s" % str(e)]
 
 			return Response(m_return, status.HTTP_400_BAD_REQUEST)
@@ -611,7 +583,7 @@ class AuditViewSet(ViewSet):
 		# Unknown exception
 		except Exception, e:
 			m_return['status']      = "error"
-			m_return['error_code']  = 0
+			m_return['error_code']  = -1
 			m_return['error']       = ["Unknown error: %s" % str(e)]
 
 			return Response(m_return, status.HTTP_400_BAD_REQUEST)
@@ -654,7 +626,7 @@ class AuditViewSet(ViewSet):
 		# Unknown exception
 		except Exception, e:
 			m_return['status']      = "error"
-			m_return['error_code']  = 0
+			m_return['error_code']  = -1
 			m_return['error']       = ["Unknown error: %s" % str(e)]
 
 			return Response(m_return, status.HTTP_400_BAD_REQUEST)
@@ -694,7 +666,7 @@ class AuditViewSet(ViewSet):
 		# Unknown exception
 		except Exception, e:
 			m_return['status']      = "error"
-			m_return['error_code']  = 0
+			m_return['error_code']  = -1
 			m_return['error']       = ["Unknown error: %s" % str(e)]
 
 			return Response(m_return, status.HTTP_400_BAD_REQUEST)
@@ -739,7 +711,7 @@ class AuditViewSet(ViewSet):
 		# Unknown exception
 		except Exception, e:
 			m_return['status']      = "error"
-			m_return['error_code']  = 0
+			m_return['error_code']  = -1
 			m_return['error']       = ["Unknown error: %s" % str(e)]
 
 			return Response(m_return, status.HTTP_400_BAD_REQUEST)
@@ -750,18 +722,65 @@ class AuditViewSet(ViewSet):
 	# Results
 	#
 	#----------------------------------------------------------------------
-	def results(self, request, *args, **kwargs): ##
+	def results(self, request, *args, **kwargs):
+		"""
+		Get results as specified format, or in HTML by default.
+
+		:param pk: audit ID
+		:type pk: str
+
+		:param text: text with format.
+		:type text: str
+
+		:return: a format file depending of format requested.
 		"""
 
-		"""
-		return Response({'results':'aaaa'})
+		CONTENT_TYPES_BY_FORMAT = {
+		    'xml'    : 'application/xml',
+		    'html'   : 'text/html',
+		    'rst'    : 'text/html',
+		    'text'   : 'text/plain'
+		}
 
-	#----------------------------------------------------------------------
-	def results_formated(self, request, *args, **kwargs): ##
-		"""
+		m_audit_id     = str(kwargs.get("pk", ""))
+		m_format       = str(kwargs.get("text", "text"))
+		m_return       = {}
 
-		"""
-		return Response({'results_formated':'aaaa'})
+		try:
+			f = GoLismeroFacadeAudit.get_results(m_audit_id, m_format)
+
+			return Response(f.read(), content_type=CONTENT_TYPES_BY_FORMAT[m_format])
+
+		except GoLismeroFacadeReportNotAvailableException, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 2
+			m_return['error']       = [str(e)]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+
+		except GoLismeroFacadeReportUnknownFormatException, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = 1
+			m_return['error']       = [str(e)]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+
+		except GoLismeroFacadeAuditNotFoundException:
+			m_return['status']      = "error"
+			m_return['error_code']  = 0
+			m_return['error']       = ["Provided audit ID not exits"]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		# Unknown exception
+		except Exception, e:
+			m_return['status']      = "error"
+			m_return['error_code']  = -1
+			m_return['error']       = ["Unknown error: %s" % str(e)]
+
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 	#----------------------------------------------------------------------
 	def results_summary(self, request, *args, **kwargs): ##
