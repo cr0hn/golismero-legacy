@@ -27,7 +27,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["AuditBridge", "ExceptionAuditNotFound", "ExceptionAudit"]
+__all__ = ["AuditBridge", "ExceptionAuditNotFound", "ExceptionAudit", "ExceptionAuditUnknown"]
 
 __doc__ = """This file has data structures and method to access to GoLismero engine."""
 
@@ -43,6 +43,10 @@ from backend.managers import *
 #----------------------------------------------------------------------
 class ExceptionAuditNotFound(Exception):
 	"""Audit not found."""
+	pass
+
+
+class ExceptionAuditUnknown(Exception):
 	pass
 
 
@@ -113,7 +117,7 @@ class AuditBridge(object):
 		:param audit_id: string with audit ID.
 		:type audit_id: str
 
-		:raises: ExceptionAuditNotFound
+		:raises: ExceptionAuditNotFound, ExceptionAuditUnknown
 		"""
 		pass
 

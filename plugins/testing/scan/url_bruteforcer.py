@@ -110,7 +110,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
                 w = Config.plugin_extra_config["common"]
                 m_wordlist_update([l_w for l_w in w.itervalues()])
             except KeyError:
-                pass
+                Logger.log_error("Can't load wordlists")
 
 
             # Wordlist of server name
@@ -118,7 +118,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
                 w = Config.plugin_extra_config["%s_predictables" % m_server_canonical_name]
                 m_wordlist_update([l_w for l_w in w.itervalues()])
             except KeyError:
-                pass
+                Logger.log_error("Can't load wordlists")
 
             # Wordlist of related with the server found
             try:
@@ -126,7 +126,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
                     w = Config.plugin_extra_config["%s_predictables" % m_server_canonical_name]
                     m_wordlist_update([l_w for l_w in w.itervalues()])
             except KeyError:
-                pass
+                Logger.log_error("Can't load wordlists")
 
         else:
 
@@ -135,7 +135,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
                 w = Config.plugin_extra_config["common"]
                 m_wordlist.update([l_w for l_w in w.itervalues()])
             except KeyError:
-                pass
+                Logger.log_error("Can't load wordlists")
 
 
         # Load content of wordlists

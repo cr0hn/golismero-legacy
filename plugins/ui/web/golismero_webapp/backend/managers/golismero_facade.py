@@ -600,7 +600,12 @@ class GoLismeroFacadeAudit(object):
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is '%s'. Only paused audits can be resumed." % (str(m_audit.id), m_audit.audit_state))
 
             # Send to GoLismero core
-            AuditBridge.resume(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+            try:
+                AuditBridge.resume(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+            except ExceptionAuditUnknown:
+                m_audit.audit_state = "error"
+                m_audit.save()
+                raise GoLismeroFacadeAuditStateException("Error while try to resume the audit '%s'." % m_audit.id)
 
             # Change the state
             m_audit.audit_state = "running"
