@@ -56,6 +56,7 @@ Testing CA with 2 samples - CA-1990-01 and CA-2004-01. This should NOT match: CA
 Testing CAPEC with 2 samples: CAPEC-3 and CAPEC: 1.
 Testing CVE with CVE-1234-4321 and CVE-1234-12345, the new format.
 Testing CWE with CWE-123.
+Testing NESSUS with NESSUS-23649 and NESSUS: 23650.
 Testing OSVDB: using 4 examples. The first being OSVDB: 1 and the second being OSVDB-5. The third is: OSVDB:2
   and the fourth is OSVDB ID: 3.
 Testing SA: with 6 IDs, namely: SA-0, SA:1, SA: 2, SECUNIA-3, SECUNIA:4 and SECUNIA: 5.
@@ -68,6 +69,9 @@ Now let's try breaking the parser with newlines! :)
 
 BID:
 890
+
+NESSUS:
+12345
 
 OSVDB:
 1234
@@ -98,6 +102,7 @@ _test_case_extract_solution = {
     "capec": ["CAPEC-1", "CAPEC-3"],
     "cve": ["CVE-1234-12345", "CVE-1234-4321"],
     "cwe": ["CWE-123"],
+    "nessus": ["NESSUS-23649", "NESSUS-23650"],
     "osvdb": ["OSVDB-1", "OSVDB-2", "OSVDB-3", "OSVDB-5"],
     "sa": ["SA-0", "SA-1", "SA-2", "SA-3", "SA-4", "SA-5"],
     "sectrack": ["SECTRACK-0", "SECTRACK-1", "SECTRACK-2", "SECTRACK-3"],
