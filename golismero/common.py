@@ -858,42 +858,57 @@ class AuditConfig (Configuration):
     def targets(self, targets):
         # Always append, never overwrite.
         # Fix target URLs if the scheme part is missing.
+
+        # Make sure self._targets contains a list.
         self._targets = getattr(self, "_targets", [])
-        if targets:
-            targets = [
-                x.strip()
-                for x in targets
-                if x not in self._targets
-            ]
-            targets = [
-                x.encode("UTF-8") if isinstance(x, unicode) else str(x)
-                for x in targets
-                if x not in self._targets
-            ]
-            self._targets.extend(targets)
 
-            # Detect network ranges, like 30.30.30.0/24, and get all IPs on it.
-            new_targets = []
-            host_to_add      = []
-            for host in self._targets:
-                # Check if target is an IP or Networks
-                try:
-                    tmp_target = IPNetwork(host)
-                except:
-                    # Not an IP or Net
-                    new_targets.append(host)
-                    continue
+        # Ignore the trivial case.
+        if not targets:
+            return
 
-                # Check if are network or single IP
-                if tmp_target.size != 1:
-                    new_targets.extend([ str(x) for x in tmp_target.iter_hosts()])
-                else:
-                    new_targets.append(str(tmp_target.ip))
+        # Strip whitespace.
+        targets = [
+            x.strip()
+            for x in targets
+            if x not in self._targets
+        ]
 
+        # Remove duplicates.
+        targets = [
+            x
+            for x in set(targets)
+            if x not in self._targets
+        ]
 
-            # Replace targets with new info
-            self._targets = new_targets
+        # Encode all Unicode strings as UTF-8.
+        targets = [
+            x.encode("UTF-8") if isinstance(x, unicode) else str(x)
+            for x in targets
+            if x not in self._targets
+        ]
 
+        # Detect network ranges, like 30.30.30.0/24, and get all IPs on it.
+        parsed_targets = []
+        for host in targets:
+
+            # Try to parse the address as a network range.
+            try:
+                tmp_target = IPNetwork(host)
+            except:
+                parsed_targets.append(host)
+                continue
+
+            # If it's a range, iterate it and get all IP addresses.
+            # If it's a single IP address, just add it.
+            if tmp_target.size != 1:
+                parsed_targets.extend(
+                    str(x) for x in tmp_target.iter_hosts()
+                )
+            else:
+                parsed_targets.append( str(tmp_target.ip) )
+
+        # Add the new targets.
+        self._targets.extend(parsed_targets)
 
 
     #--------------------------------------------------------------------------
@@ -950,8 +965,8 @@ class AuditConfig (Configuration):
     @user_agent.setter
     def user_agent(self, user_agent):
         if user_agent:
-            if isinstance(audit_db, unicode):
-                audit_db = audit_db.encode("UTF-8")
+            if isinstance(user_agent, unicode):
+                user_agent = user_agent.encode("UTF-8")
             self._user_agent = user_agent
         else:
             self._user_agent = None

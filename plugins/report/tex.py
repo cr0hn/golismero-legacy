@@ -49,7 +49,6 @@ with warnings.catch_warnings(record=True):
 
 from StringIO import StringIO
 
-from golismero.api.config import Config
 from golismero.api.logger import Logger
 
 

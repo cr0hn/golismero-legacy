@@ -35,6 +35,7 @@ __all__ = ["Form"]
 from . import Information
 from .. import identity
 from ..resource.url import Url
+from ...config import Config
 
 
 #------------------------------------------------------------------------------
@@ -115,5 +116,5 @@ class Form(Information):
     @property
     def discovered(self):
         if self.url in Config.audit_scope:
-            return [Url(self.url)]
+            return [Url(self.url, method = self.method)]
         return []

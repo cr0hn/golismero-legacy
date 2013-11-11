@@ -158,6 +158,7 @@ class MessageType(MessageConstants):
 class MessageCode(MessageConstants):
 
     __prefix_for_type = {
+        MessageType.MSG_TYPE_DATA:    "MSG_DATA_",
         MessageType.MSG_TYPE_CONTROL: "MSG_CONTROL_",
         MessageType.MSG_TYPE_RPC:     "MSG_RPC_",
         MessageType.MSG_TYPE_STATUS:  "MSG_STATUS_",

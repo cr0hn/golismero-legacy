@@ -47,7 +47,6 @@ __all__ = [
 ]
 
 from .web_utils import parse_url
-from ..logger import Logger
 
 from BeautifulSoup import BeautifulSoup
 from warnings import warn
