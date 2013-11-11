@@ -64,100 +64,8 @@ class RSTReport(ReportPlugin):
         # Open the output file.
         with open(output_file, "w") as f:
 
-            # Print the main header.
-            print >>f, "GoLismero Report"
-            print >>f, "================"
-            print >>f, ""
-            print >>f, ".. title:: %s - GoLismero" % self.__format_rst(Config.audit_name)
-            print >>f, ""
-            print >>f, ".. footer:: Report generation date: %s" % datetime.now()
-            print >>f, ""
-            print >>f, ".. contents:: Table of Contents"
-            print >>f, "   :depth: 3"
-            print >>f, "   :backlinks: top"
-            print >>f, ""
-
-            # Print the summary.
-            start_time, stop_time, run_time = parse_audit_times( *get_audit_times() )
-            print >>f, "Summary"
-            print >>f, "-------"
-            print >>f, ""
-            print >>f, "- Audit name: " + self.__format_rst(Config.audit_name)
-            print >>f, "- Start date: " + start_time
-            print >>f, "- End date: " + stop_time
-            print >>f, "- Execution time: " + run_time
-            print >>f, ""
-
-            # Print the audit scope.
-            print >>f, "Audit Scope"
-            print >>f, "-----------"
-            print >>f, ""
-            print >>f, "- IP Addresses: "
-            for address in Config.audit_scope.addresses:
-                print >>f, "  + " + self.__format_rst(address)
-            print >>f, "- Domains:"
-            scope_domains = ["*." + r for r in Config.audit_scope.roots]
-            scope_domains.extend(Config.audit_scope.domains)
-            for domain in scope_domains:
-                print >>f, "  + " + self.__format_rst(domain)
-            print >>f, "- Web Pages:"
-            for url in Config.audit_scope.web_pages:
-                print >>f, "  + " + self.__format_rst(url)
-            print >>f, ""
-
-            # Determine the report type.
-            self.__full_report = not Config.audit_config.only_vulns
-
-            # Collect the vulnerabilities that are not false positives.
-            datas = self.__collect_vulns(False)
-
-            # If it's a brief report and we have no vulnerabilities,
-            # write a message and stop.
-            if not datas and not self.__full_report:
-                print >>f, "No vulnerabilities found."
-                print >>f, ""
-                return
-
-            # Collect the false positives.
-            # In brief mode, this is used to eliminate the references to them.
-            fp = self.__collect_vulns(True)
-            self.__fp = set()
-            for ids in fp.itervalues():
-                self.__fp.update(ids)
-
-            try:
-
-                # Report the vulnerabilities.
-                if datas:
-                    self.__write_rst(f, datas, Data.TYPE_VULNERABILITY, "Vulnerabilities")
-
-                # This dictionary tracks which data to show
-                # and which not to in brief report mode.
-                self.__vulnerable = set()
-
-                try:
-
-                    # Show the resources in the report.
-                    datas = self.__collect_data(Data.TYPE_RESOURCE)
-                    if datas:
-                        self.__write_rst(f, datas, Data.TYPE_RESOURCE,
-                                "Resources" if self.__full_report else "Assets")
-
-                    # Show the informations in the report.
-                    datas = self.__collect_data(Data.TYPE_INFORMATION)
-                    if datas:
-                        self.__write_rst(f, datas, Data.TYPE_INFORMATION,
-                                "Informations" if self.__full_report else "Evidences")
-
-                finally:
-                    self.__vulnerable.clear()
-
-            finally:
-                self.__fp.clear()
-
-            # Show the false positives in the full report.
-            if self.__full_report and fp:
-                self.__write_rst(f, fp, Data.TYPE_VULNERABILITY, "False Positives")
+            # Write the report.
+            self.write_report_to_open_file(f)
 
         # Launch the build command, if any.
         command = Config.plugin_config.get("command", "")
@@ -175,6 +83,111 @@ class RSTReport(ReportPlugin):
             cwd = os.path.split(output_file)[0]
             log = lambda x: Logger.log_verbose(x[:-1] if x.endswith("\n") else x)
             run_external_tool(args[0], args[1:], cwd=cwd, callback=log)
+
+
+    #--------------------------------------------------------------------------
+    def write_report_to_open_file(self, f):
+        """
+        Write the report into the given open file.
+
+        :param f: Open file.
+        :type f: file
+        """
+
+        # Print the main header.
+        print >>f, "GoLismero Report"
+        print >>f, "================"
+        print >>f, ""
+        print >>f, ".. title:: %s - GoLismero" % self.__format_rst(Config.audit_name)
+        print >>f, ""
+        print >>f, ".. footer:: Report generation date: %s" % datetime.now()
+        print >>f, ""
+        print >>f, ".. contents:: Table of Contents"
+        print >>f, "   :depth: 3"
+        print >>f, "   :backlinks: top"
+        print >>f, ""
+
+        # Print the summary.
+        start_time, stop_time, run_time = parse_audit_times( *get_audit_times() )
+        print >>f, "Summary"
+        print >>f, "-------"
+        print >>f, ""
+        print >>f, "- Audit name: " + self.__format_rst(Config.audit_name)
+        print >>f, "- Start date: " + start_time
+        print >>f, "- End date: " + stop_time
+        print >>f, "- Execution time: " + run_time
+        print >>f, ""
+
+        # Print the audit scope.
+        print >>f, "Audit Scope"
+        print >>f, "-----------"
+        print >>f, ""
+        print >>f, "- IP Addresses: "
+        for address in Config.audit_scope.addresses:
+            print >>f, "  + " + self.__format_rst(address)
+        print >>f, "- Domains:"
+        scope_domains = ["*." + r for r in Config.audit_scope.roots]
+        scope_domains.extend(Config.audit_scope.domains)
+        for domain in scope_domains:
+            print >>f, "  + " + self.__format_rst(domain)
+        print >>f, "- Web Pages:"
+        for url in Config.audit_scope.web_pages:
+            print >>f, "  + " + self.__format_rst(url)
+        print >>f, ""
+
+        # Determine the report type.
+        self.__full_report = not Config.audit_config.only_vulns
+
+        # Collect the vulnerabilities that are not false positives.
+        datas = self.__collect_vulns(False)
+
+        # If it's a brief report and we have no vulnerabilities,
+        # write a message and stop.
+        if not datas and not self.__full_report:
+            print >>f, "No vulnerabilities found."
+            print >>f, ""
+            return
+
+        # Collect the false positives.
+        # In brief mode, this is used to eliminate the references to them.
+        fp = self.__collect_vulns(True)
+        self.__fp = set()
+        for ids in fp.itervalues():
+            self.__fp.update(ids)
+
+        try:
+
+            # Report the vulnerabilities.
+            if datas:
+                self.__write_rst(f, datas, Data.TYPE_VULNERABILITY, "Vulnerabilities")
+
+            # This dictionary tracks which data to show
+            # and which not to in brief report mode.
+            self.__vulnerable = set()
+
+            try:
+
+                # Show the resources in the report.
+                datas = self.__collect_data(Data.TYPE_RESOURCE)
+                if datas:
+                    self.__write_rst(f, datas, Data.TYPE_RESOURCE,
+                            "Resources" if self.__full_report else "Assets")
+
+                # Show the informations in the report.
+                datas = self.__collect_data(Data.TYPE_INFORMATION)
+                if datas:
+                    self.__write_rst(f, datas, Data.TYPE_INFORMATION,
+                            "Informations" if self.__full_report else "Evidences")
+
+            finally:
+                self.__vulnerable.clear()
+
+        finally:
+            self.__fp.clear()
+
+        # Show the false positives in the full report.
+        if self.__full_report and fp:
+            self.__write_rst(f, fp, Data.TYPE_VULNERABILITY, "False Positives")
 
 
     #--------------------------------------------------------------------------
