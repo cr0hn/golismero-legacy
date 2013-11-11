@@ -277,7 +277,7 @@ class AuditBridge(object):
 		:raises: ExceptionAuditNotFound
 		"""
 		a = {
-		  'current_stage' : "recom",
+		  'current_stage' : "recon",
 		  'steps'         : 1,
 		  'tests_remain'  : 21,
 		  'tests_done'     : 5
