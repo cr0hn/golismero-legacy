@@ -217,10 +217,12 @@ class AuditScope (AbstractScope):
 
             # If it's an IP address...
             try:
+                # For IPv6 address
                 if target.startswith("[") and target.endswith("]"):
                     IPAddress(target[1:-1], version=6)
                     address = target[1:-1]
                 else:
+                    # IPv4
                     IPAddress(target)
                     address = target
             except Exception:
