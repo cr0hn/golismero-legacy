@@ -146,7 +146,7 @@ class Traceroute(Information):
             self.__protocol = protocol
             hops = tuple(hops)
             for hop in hops:
-                assert isinstance(hop, Hop), type(hop)
+                assert hop is None or isinstance(hop, Hop), type(hop)
             self.__hops = hops
         except Exception:
             ##raise # XXX DEBUG
@@ -219,9 +219,15 @@ class Traceroute(Information):
             s = "No route to %s (%s %s)."
         s %= (self.address, self.protocol, self.port)
         if self.hops:
-            f = "%%%dd %%15s %%4.2f %%s" % len(str(len(self.hops)))
+            w = len(str(len(self.hops)))
+            f = "%%%dd %%15s %%4.2f %%s" % w
+            m = "%%%dd             ***     *** ***" % w
             s += "\n".join(
-                f % (i, h.address, h.rtt, h.hostname)
+                (
+                    f % (i, h.address, h.rtt, h.hostname)
+                    if h is not None
+                    else m % i
+                )
                 for i, h in enumerate(self.hops)
             )
         return s
@@ -232,8 +238,9 @@ class Traceroute(Information):
     def discovered(self):
         result = []
         for hop in self.hops:
-            if hop.address in Config.audit_scope:
-                result.append( IP(hop.address) )
-            if hop.hostname and hop.hostname in Config.audit_scope:
-                result.append( Domain(hop.hostname) )
+            if hop is not None:
+                if hop.address in Config.audit_scope:
+                    result.append( IP(hop.address) )
+                if hop.hostname and hop.hostname in Config.audit_scope:
+                    result.append( Domain(hop.hostname) )
         return result
