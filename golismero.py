@@ -64,7 +64,6 @@ if not (has_here and has_thirdparty_libs):
 
 from golismero import show_banner
 from sys import version_info, exit
-import platform
 if __name__ == "__main__":
     if version_info < (2, 7) or version_info >= (3, 0):
         show_banner()
@@ -72,9 +71,16 @@ if __name__ == "__main__":
         exit(1)
 
     # In OS X, python versions lower than 2.7.6 fails
-    if platform.system() == "Darwin" and (version_info < (2,7,6) or version_info >= (3,0)):
+    import platform
+    if (
+        platform.system() == "Darwin" and
+        (version_info < (2,7,6) or version_info >= (3,0))
+    ):
         show_banner()
-        print "[!] In OS X you must use Python version greater than 2.7.6: http://www.python.org/download/releases/2.7.6/"
+        print (
+            "[!] In OS X you must use Python version greater than 2.7.6:"
+            " http://www.python.org/download/releases/2.7.6/"
+        )
         exit(1)
 
 

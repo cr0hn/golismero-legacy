@@ -58,10 +58,6 @@ if not (has_here and has_thirdparty_libs):
 #------------------------------------------------------------------------------
 # Python version check.
 # We must do it now before trying to import any more modules.
-#
-# Note: this is mostly because of argparse, if you install it
-#       separately you can try removing this check and seeing
-#       what happens (we haven't tested it!).
 
 from golismero import show_banner
 from sys import version_info, exit
@@ -69,6 +65,17 @@ if __name__ == "__main__":
     if version_info < (2, 7) or version_info >= (3, 0):
         show_banner()
         print "[!] You must use Python version 2.7"
+        exit(1)
+    import platform
+    if (
+        platform.system() == "Darwin" and
+        (version_info < (2,7,6) or version_info >= (3,0))
+    ):
+        show_banner()
+        print (
+            "[!] In OS X you must use Python version greater than 2.7.6:"
+            " http://www.python.org/download/releases/2.7.6/"
+        )
         exit(1)
 
 

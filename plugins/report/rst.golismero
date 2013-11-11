@@ -12,4 +12,5 @@ License     = GNU Public License
 # Command to launch after generating the report.
 # The string "$1" will be replaced by the report filename.
 # This allows you to invoke a document generator to parse the RST file.
-command =
+# For example, to generate .odt (OpenOffice document) files:
+#command = rst2odt.py $1 $1.odt
