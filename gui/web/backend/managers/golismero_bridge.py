@@ -85,7 +85,9 @@ class AuditBridge(object):
 		config = data.to_json_console
 
 		# Set command
-		config["command"] = "scan"
+		config["command"]     = "scan"
+		# Set BBDD store location
+		config["db_location"] = data.store_path
 
 		if not BRIDGE.SIMULATE:
 			BRIDGE.RPC.call("audit/create", config)
@@ -94,7 +96,7 @@ class AuditBridge(object):
 
 	#----------------------------------------------------------------------
 	@staticmethod
-	def stop(audit_id): #
+	def stop(audit_id):
 		"""
 		Stops and audit.
 
@@ -127,7 +129,7 @@ class AuditBridge(object):
 	#
 	#----------------------------------------------------------------------
 	@staticmethod
-	def get_log(audit_id): #
+	def get_log(audit_id):
 		"""
 		Get log for and audit as format:
 
@@ -148,51 +150,31 @@ class AuditBridge(object):
 
 		:raises: ExceptionAuditNotFound
 		"""
-		return [
-		    {
-		        'plugin_id' : '',
-		        'text' : 'Added 4 new targets to the database.',
-		        'verbosity' : '2',
-		        'is_error' : '0',
-		        'timestamp' : '1383390392.95667'
-		    },
-		    {
-		        'plugin_id' : '',
-		        'text' : '''Audit scope:
 
-		    IP addresses:
-		        208.84.244.10
+		if not BRIDGE.SIMULATE:
+			rpc_response = BRIDGE.RPC.call("audit/log", audit_id)
 
-		    Domains:
-		        *.terra.es
-		        terra.es
-		        www.terra.es
+			return [
+			          {
+			              'plugin_id'     : r[0],
+			              'text'          : r[1],
+			              'verbosity'     : r[2],
+			              'is_error'      : r[3],
+			              'timestamp'     : r[4]
+			          }
 
-		    Web pages:
-		        http://www.terra.es/
-		    ''',
-		        'verbosity' : '3',
-		        'is_error' : '0',
-		        'timestamp' : '1383390392.95934'
-		    },
-		    {
-		        'plugin_id' : '1',
-		        'text' : 'Spidering URL: "http://www.terra.es/"',
-		        'verbosity' : '2',
-		        'is_error' : '0',
-		        'timestamp' : '1383390393.02968'
-		    }
-		]
+			          for r in rpc_response
+			]
 
 	#----------------------------------------------------------------------
-	@staticmethod
-	def get_results(audit_info): #
-		"""
-		Get audit results
+	#@staticmethod
+	#def get_results(audit_info): #
+		#"""
+		#Get audit results
 
-		:param audit_id: string with audit ID.
-		:type audit_id: str
-		"""
+		#:param audit_id: string with audit ID.
+		#:type audit_id: str
+		#"""
 
 	#----------------------------------------------------------------------
 	def get_summary(audit_id): #
@@ -208,7 +190,7 @@ class AuditBridge(object):
 
 	#----------------------------------------------------------------------
 	@staticmethod
-	def get_state(audit_id): #
+	def get_state(audit_id):
 		"""
 		Call to GoLismero core and returns the state, as a string.
 
@@ -221,7 +203,14 @@ class AuditBridge(object):
 		:raises: ExceptionAuditNotFound
 		"""
 		if not BRIDGE.SIMULATE:
-			BRIDGE.RPC.call("audit/state", audit_id)
+			rpc_response = BRIDGE.RPC.call("audit/state", audit_id)
+
+			if not rpc_response:
+				return "finished"
+
+			return rpc_response[0][1]
+
+
 
 
 
@@ -245,26 +234,10 @@ class AuditBridge(object):
 			return None
 
 
-	#----------------------------------------------------------------------
-	@staticmethod
-	def get_state(audit_id): #
-		"""
-		Call to GoLismero core and returns the state, as a string.
-
-		:param audit_id: string with audit ID.
-		:type audit_id: str
-
-		:return: a string with audit state.
-		:type: str
-
-		:raises: ExceptionAuditNotFound
-		"""
-		return "running"
-
 
 	#----------------------------------------------------------------------
 	@staticmethod
-	def get_progress(audit_id): #
+	def get_progress(audit_id):
 		"""
 		Call to GoLismero core and returns the state, as a string.
 
@@ -276,13 +249,42 @@ class AuditBridge(object):
 
 		:raises: ExceptionAuditNotFound
 		"""
-		a = {
-		  'current_stage' : "recon",
-		  'steps'         : 1,
-		  'tests_remain'  : 21,
-		  'tests_done'     : 5
-		}
-		return GoLismeroAuditProgress(a)
+		m_return = None
+
+		if not BRIDGE.SIMULATE:
+			rpc_response = BRIDGE.RPC.call("audit/state", audit_id)
+
+			if not rpc_response:
+				return "finished"
+
+			steps         = rpc_response[0][0]
+			current_state = rpc_response[0][1]
+			tests_remain  = 0
+			tests_done    = 0
+			for t in rpc_response[2]:
+				l_progress = t[2] # Value between 0.0 - 100.0
+
+				if l_progress == 100.0:
+					tests_done   += 1
+				else:
+					tests_remain +=1
+
+			m_return = {
+		      'current_stage' : current_state,
+		      'steps'         : int(steps),
+		      'tests_remain'  : tests_remain,
+		      'tests_done'    : tests_done
+		    }
+
+		else:
+
+			m_return = {
+			  'current_stage' : "recon",
+			  'steps'         : 1,
+			  'tests_remain'  : 21,
+			  'tests_done'     : 5
+			}
+		return GoLismeroAuditProgress(m_return)
 
 
 
