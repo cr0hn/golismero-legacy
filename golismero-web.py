@@ -99,6 +99,7 @@ Listen in loopback IPv6 at port 8000:
     parser = argparse.ArgumentParser(usage=usage, description='run GoLismero web UI')
     parser.add_argument('-l', dest="IP_LISTEN", help="IP address where to listen to (default: 127.0.0.1)", default="127.0.0.1")
     parser.add_argument('-p', dest="PORT", type=int, help="port where to listen to (default 8000)", default=8000)
+    parser.add_argument('--debug', dest="DEBUG_MODE", action="store_false", help="runs debug web server instead a gunicorn (default )", default=True)
 
     gr1 = parser.add_argument_group("GoLismero server settings")
     gr1.add_argument('-sp', dest="SERVER_ADDR", help="GoLismero server address [default 127.0.0.1]", default="127.0.0.1")
@@ -175,4 +176,11 @@ Listen in loopback IPv6 at port 8000:
 
     # Run django
     listen_addr = "%s:%s" % (m_ip, args.PORT)
-    call_command("runserver", listen_addr)
+
+    # Create database
+    call_command("syncdb", noinput=True)
+
+    if not args.DEBUG_MODE:
+        call_command("runserver", listen_addr)
+    else:
+        call_command("run_gunicorn", listen_addr)
