@@ -33,17 +33,17 @@ import xmlrpclib
 import argparse
 import netaddr
 
-cwd = os.path.abspath(os.path.split(__file__)[0])
-cwd = os.path.join(cwd, "gui")
-cwd = os.path.join(cwd, "web")
+cwd = os.path.split(os.path.abspath(__file__))[0]
+cwd = os.path.join(cwd, "gui", "web")
 sys.path.insert(0, cwd)
+
 
 #----------------------------------------------------------------------
 def check_port(port):
     """
-    Checks a port
+    Checks a port number.
 
-    :param port: integer with the port
+    :param port: Port number.
     :type port: int
 
     :raises: ValueError, TypeError
@@ -58,9 +58,9 @@ def check_port(port):
 #----------------------------------------------------------------------
 def check_ip(ip):
     """
-    Checks an IP address
+    Checks an IP address.
 
-    :param ip: string with IP address
+    :param ip: IP address.
     :type ip: str
 
     :raises: ValueError, TypeError
@@ -87,28 +87,29 @@ if __name__ == "__main__":
     usage = """
 Run web server UI for GoLismero 2.0.
 
-** Ensure you're running golismer-daemon.py
+** Make sure you're running golismer-daemon.py
 
-Listen in all address at port 9000:
+Listen in all network interfaces at port 9000:
 %(prog)s -l 0.0.0.0 -p 9000
 
 Listen in loopback IPv6 at port 8000:
 %(prog)s -l ::1
 """
 
-    parser = argparse.ArgumentParser(usage=usage, description='run GoLismero web UI.')
-    parser.add_argument('-l', dest="IP_LISTEN", help="IP where listen to (default: 127.0.0.1).", default="127.0.0.1")
-    parser.add_argument('-p', dest="PORT", type=int, help="port where listen to (default 8000).", default=8000)
+    parser = argparse.ArgumentParser(usage=usage, description='run GoLismero web UI')
+    parser.add_argument('-l', dest="IP_LISTEN", help="IP address where to listen to (default: 127.0.0.1)", default="127.0.0.1")
+    parser.add_argument('-p', dest="PORT", type=int, help="port where to listen to (default 8000)", default=8000)
 
     gr1 = parser.add_argument_group("GoLismero server settings")
-    gr1.add_argument('-sp', dest="SERVER_ADDR", help="golismero server address (default 127.0.0.1)", default="127.0.0.1")
-    gr1.add_argument('-sa', dest="SERVER_PORT", type=int, help="golismero server port to connect (default 9000)", default=9000)
+    gr1.add_argument('-sp', dest="SERVER_ADDR", help="GoLismero server address [default 127.0.0.1]", default="127.0.0.1")
+    gr1.add_argument('-sa', dest="SERVER_PORT", type=int, help="GoLismero server port [default 9000]", default=9000)
 
     args = parser.parse_args()
 
     #
     # Listen params
     #
+
     # Check port
     if args.PORT:
         try:
@@ -119,6 +120,7 @@ Listen in loopback IPv6 at port 8000:
         except TypeError, e:
             print "\n[!] %s\n" % str(e)
             sys.exit(1)
+
     # Check for IP
     if args.IP_LISTEN:
         try:
@@ -130,10 +132,10 @@ Listen in loopback IPv6 at port 8000:
             print "\n[!] %s\n" % str(e)
             sys.exit(1)
 
-
     #
     # GoLismero server params
     #
+
     # Check port
     if args.SERVER_PORT:
         try:
@@ -144,6 +146,7 @@ Listen in loopback IPv6 at port 8000:
         except TypeError, e:
             print "\n[!] %s\n" % str(e)
             sys.exit(1)
+
     # Check for IP
     if args.SERVER_ADDR:
         try:
