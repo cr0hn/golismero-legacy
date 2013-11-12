@@ -882,7 +882,7 @@ class Audit (object):
             timestamp = message.timestamp
 
             # Append the log line.
-            database.append_log_text(
+            database.append_log_line(
                 text, level, is_error, plugin_id, ack_id, timestamp)
 
             # We're done.

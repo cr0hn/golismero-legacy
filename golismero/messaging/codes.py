@@ -215,8 +215,6 @@ class MessageCode(MessageConstants):
     # Audit control
     MSG_CONTROL_START_AUDIT        = 10
     MSG_CONTROL_STOP_AUDIT         = 11
-    ##MSG_CONTROL_PAUSE_AUDIT        = 12
-    ##MSG_CONTROL_CONTINUE_AUDIT     = 13
 
     # UI subsystem
     MSG_CONTROL_START_UI           = 20
@@ -259,6 +257,7 @@ class MessageCode(MessageConstants):
     MSG_RPC_AUDIT_NAMES            = 31
     MSG_RPC_AUDIT_CONFIG           = 32
     MSG_RPC_AUDIT_TIMES            = 33
+    MSG_RPC_AUDIT_LOG              = 34
 
     # Shared map API
     MSG_RPC_SHARED_MAP_GET         = 40
