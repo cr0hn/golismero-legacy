@@ -40,7 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = [
     "UIPlugin", "ImportPlugin", "TestingPlugin", "ReportPlugin",
     "get_plugin_info", "get_plugin_ids", "get_plugin_name",
-    "get_stage_display_name", "PluginState",
+    "get_stage_name", "get_stage_display_name", "PluginState",
 ]
 
 from .config import Config
@@ -104,6 +104,25 @@ def get_plugin_name(plugin_id = None):
 
 
 #------------------------------------------------------------------------------
+_STAGE_NAMES = [
+    "import",
+    "recon", "scan", "attack", "intrude", "cleanup",
+    "report",
+]
+def get_stage_name(stage_number):
+    """
+    Given a number starting from zero, get the stage name.
+    This allows you to get the stage names in the proper order.
+    Returns None if there is no stage with that number.
+    """
+    if stage_number >= 0:
+        try:
+            return _STAGE_NAMES[stage_number]
+        except IndexError:
+            pass
+
+
+#------------------------------------------------------------------------------
 _STAGE_DISPLAY_NAMES = {
     "import"  : "Importing",
     "recon"   : "Reconaissance",
@@ -113,6 +132,7 @@ _STAGE_DISPLAY_NAMES = {
     "cleanup" : "Cleanup",
     "report"  : "Reporting",
 }
+assert sorted(_STAGE_DISPLAY_NAMES.keys()) == sorted(_STAGE_NAMES)
 def get_stage_display_name(stage):
     """
     Get a user friendly display name for the given stage.
