@@ -1323,9 +1323,13 @@ class AuditSQLiteDB (BaseAuditDB):
                 )
                 filename = filename + ".db"
 
+            if audit_config.db_location:
+                self.__filename =path.join(audit_config.db_location, filename)
+            else:
+                self.__filename = filename
+
             # Create the database file.
-            self.__filename = filename
-            self.__db = sqlite3.connect(filename)
+            self.__db = sqlite3.connect(self.__filename)
 
         # Update the database connection string.
         audit_config.audit_db = self.connection_url
