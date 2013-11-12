@@ -3,6 +3,8 @@ cd ../golismero
 find `pwd` -name "*.py" > ../_tmp.txt
 cd ../plugins
 find `pwd` -name "*.py" >> ../_tmp.txt
+cd ../gui
+find `pwd` -name "*.py" >> ../_tmp.txt
 cd ../tests/plugin_tests
 find `pwd` -name "*.py" >> ../_tmp.txt
 cd ../..

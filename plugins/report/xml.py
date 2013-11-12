@@ -26,13 +26,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import re
 import os.path
 
-from collections import defaultdict
 from datetime import datetime
-from pprint import pformat
-from textwrap import wrap
 from shlex import split
 
 try:
@@ -52,7 +48,6 @@ from golismero.api.data.db import Database
 from golismero.api.external import run_external_tool
 from golismero.api.logger import Logger
 from golismero.api.plugin import ReportPlugin
-from golismero.api.text.text_utils import hexdump
 
 
 #------------------------------------------------------------------------------

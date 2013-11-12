@@ -38,11 +38,11 @@ __all__ = [
     # Query functions.
     "get_audit_count", "get_audit_names",
     "get_audit_config", "get_audit_times",
-    "parse_audit_times",
+    "parse_audit_times", "get_audit_stats",
+    "get_audit_log_lines",
 
     # Control functions.
     "start_audit", "stop_audit",
-    ##pause_audit, resume_audit,
 ]
 
 from .config import Config
@@ -146,6 +146,59 @@ def parse_audit_times(start_time, stop_time):
 
 
 #------------------------------------------------------------------------------
+def get_audit_stats():
+    """
+    Get the audit runtime statistics.
+
+    :returns: Dictionary with runtime statistics.
+    :rtype: dict(str -> *)
+    """
+    return Config._context.remote_call(MessageCode.MSG_RPC_AUDIT_STATS)
+
+
+#------------------------------------------------------------------------------
+def get_audit_log_lines(from_timestamp = None, to_timestamp = None,
+                        filter_by_plugin = None, filter_by_data = None,
+                        page_num = None, per_page = None):
+    """
+    Retrieve past log lines.
+
+    :param from_timestamp: (Optional) Start timestamp.
+    :type from_timestamp: float | None
+
+    :param to_timestamp: (Optional) End timestamp.
+    :type to_timestamp: float | None
+
+    :param filter_by_plugin: (Optional) Filter log lines by plugin ID.
+    :type filter_by_plugin: str
+
+    :param filter_by_data: (Optional) Filter log lines by data ID.
+    :type filter_by_data: str
+
+    :param page_num: (Optional) Page number.
+        Ignored unless per_page is used too.
+    :type page_num: int
+
+    :param per_page: (Optional) Amount of results per page.
+        Ignored unless page_num is used too.
+    :type per_page: int
+
+    :returns: List of tuples.
+        Each tuple contains the following elements:
+         - Plugin ID.
+         - Data object ID (plugin instance).
+         - Log line text. May contain newline characters.
+         - Log level.
+         - True if the message is an error, False otherwise.
+         - Timestamp.
+    :rtype: list( tuple(str, str, str, int, bool, float) )
+    """
+    return Config._context.remote_call(MessageCode.MSG_RPC_AUDIT_LOG,
+        from_timestamp, to_timestamp, filter_by_plugin, filter_by_data,
+        page_num, per_page)
+
+
+#------------------------------------------------------------------------------
 def start_audit(audit_config):
     """
     Starts a new audit.
@@ -185,45 +238,3 @@ def stop_audit(audit_name = None):
             priority = MessagePriority.MSG_PRIORITY_HIGH,
     )
     Config._context.send_raw_msg(msg)
-
-
-#------------------------------------------------------------------------------
-##def pause_audit(audit_name = None):
-##    """
-##    Pause an audit.
-##
-##    :param audit_name: Name of the audit to pause.
-##        Use None for the current audit.
-##    :type audit_name: str | None
-##    """
-##    if not audit_name:
-##        audit_name = Config.audit_name
-##    msg = Message(
-##        message_type = MessageType.MSG_TYPE_CONTROL,
-##        message_code = MessageCode.MSG_CONTROL_PAUSE_AUDIT,
-##          audit_name = audit_name,
-##           plugin_id = Config.plugin_id,
-##            priority = MessagePriority.MSG_PRIORITY_HIGH,
-##    )
-##    Config._context.send_raw_msg(msg)
-
-
-#------------------------------------------------------------------------------
-##def resume_audit(audit_name = None):
-##    """
-##    Resume an audit.
-##
-##    :param audit_name: Name of the audit to resume.
-##        Use None for the current audit.
-##    :type audit_name: str | None
-##    """
-##    if not audit_name:
-##        audit_name = Config.audit_name
-##    msg = Message(
-##        message_type = MessageType.MSG_TYPE_CONTROL,
-##        message_code = MessageCode.MSG_CONTROL_RESUME_AUDIT,
-##          audit_name = audit_name,
-##           plugin_id = Config.plugin_id,
-##            priority = MessagePriority.MSG_PRIORITY_HIGH,
-##    )
-##    Config._context.send_raw_msg(msg)

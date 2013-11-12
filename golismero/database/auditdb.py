@@ -159,6 +159,10 @@ def rpc_shared_heap_add(orchestrator, audit_name, *args, **kwargs):
 def rpc_shared_heap_remove(orchestrator, audit_name, *args, **kwargs):
     return orchestrator.auditManager.get_audit(audit_name).database.remove_shared_values(*args, **kwargs)
 
+@implementor(MessageCode.MSG_RPC_AUDIT_LOG)
+def rpc_get_log_lines(orchestrator, audit_name, *args, **kwargs):
+    return orchestrator.auditManager.get_audit(audit_name).database.get_log_lines(*args, **kwargs)
+
 
 #------------------------------------------------------------------------------
 class BaseAuditDB (BaseDB):
@@ -323,12 +327,12 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
-    def append_log_text(self, text, level, is_error, plugin_id, ack_id,
+    def append_log_line(self, text, level, is_error, plugin_id, ack_id,
                         timestamp = None):
         """
-        Append log text.
+        Append a log line.
 
-        :param text: Log text.
+        :param text: Log line text.
         :type text: str
 
         :param level: Log level.
@@ -346,6 +350,46 @@ class BaseAuditDB (BaseDB):
         :param timestamp: Optional timestamp.
             If missing the current time is used.
         :type timestamp: float | int | None
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def get_log_lines(self, from_timestamp = None, to_timestamp = None,
+                      filter_by_plugin = None, filter_by_data = None,
+                      page_num = None, per_page = None):
+        """
+        Retrieve past log lines.
+
+        :param from_timestamp: (Optional) Start timestamp.
+        :type from_timestamp: float | None
+
+        :param to_timestamp: (Optional) End timestamp.
+        :type to_timestamp: float | None
+
+        :param filter_by_plugin: (Optional) Filter log lines by plugin ID.
+        :type filter_by_plugin: str
+
+        :param filter_by_data: (Optional) Filter log lines by data ID.
+        :type filter_by_data: str
+
+        :param page_num: (Optional) Page number.
+            Ignored unless per_page is used too.
+        :type page_num: int
+
+        :param per_page: (Optional) Amount of results per page.
+            Ignored unless page_num is used too.
+        :type per_page: int
+
+        :returns: List of tuples.
+            Each tuple contains the following elements:
+             - Plugin ID.
+             - Data object ID (plugin instance).
+             - Log line text. May contain newline characters.
+             - Log level.
+             - True if the message is an error, False otherwise.
+             - Timestamp.
+        :rtype: list( tuple(str, str, str, int, bool, float) )
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -941,9 +985,16 @@ class AuditMemoryDB (BaseAuditDB):
 
 
     #--------------------------------------------------------------------------
-    def append_log_text(self, text, level, is_error, plugin_id, ack_id,
+    def append_log_line(self, text, level, is_error, plugin_id, ack_id,
                         timestamp = None):
         pass
+
+
+    #--------------------------------------------------------------------------
+    def get_log_lines(self, from_timestamp = None, to_timestamp = None,
+                      filter_by_plugin = None, filter_by_data = None,
+                      page_num = None, per_page = None):
+        return []
 
 
     #--------------------------------------------------------------------------
@@ -2116,7 +2167,7 @@ class AuditSQLiteDB (BaseAuditDB):
 
     #--------------------------------------------------------------------------
     @transactional
-    def append_log_text(self, text, level, is_error, plugin_id, ack_id,
+    def append_log_line(self, text, level, is_error, plugin_id, ack_id,
                         timestamp = None):
 
         # Sanitize the parameters.
@@ -2141,6 +2192,46 @@ class AuditSQLiteDB (BaseAuditDB):
         self.__cursor.execute(
             "INSERT INTO log VALUES (NULL, ?, ?, ?, ?, ?, ?);",
             (plugin_rowid, ack_id, text, level, is_error, timestamp))
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def get_log_lines(self, from_timestamp = None, to_timestamp = None,
+                      filter_by_plugin = None, filter_by_data = None,
+                      page_num = None, per_page = None):
+
+        # Build the query.
+        query = (
+            "SELECT plugin.name, log.ack_id,"
+            "       log.text, log.level, log.is_error, log.timestamp"
+            " FROM plugin, log"
+            " WHERE plugin.rowid = log.plugin_rowid")
+        params = []
+        if filter_by_plugin:
+            plugin_rowid = self.__get_or_create_plugin_rowid(filter_by_plugin)
+            query += " AND plugin.rowid = ?"
+            params.append(plugin_rowid)
+        if from_timestamp:
+            query += " AND log.timestamp >= ?"
+            params.append(from_timestamp)
+        if to_timestamp:
+            query += " AND log.timestamp <= ?"
+            params.append(to_timestamp)
+        if filter_by_data:
+            query += " AND log.ack_id = ?"
+            params.append(filter_by_data)
+        if (
+            page_num is not None and page_num >= 0 and
+            per_page is not None and per_page > 0
+        ):
+            query += " OFFSET %d LIMIT %d" % (page_num + per_page, per_page)
+        query += " ORDER BY log.timestamp;"
+
+        # Run the query.
+        self.__cursor.execute(query, tuple(params))
+
+        # Return the results.
+        return self.__cursor.fetchall()
 
 
     #--------------------------------------------------------------------------

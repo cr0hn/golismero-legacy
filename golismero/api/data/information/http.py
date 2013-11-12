@@ -517,10 +517,13 @@ class HTTP_Request (Information):
                 headers = HTTP_Headers.from_items(sorted(headers.items()))
             else:                                # dictionary items
                 headers = HTTP_Headers.from_items(sorted(headers))
-            if referer:
-                headers["Referer"] = referer
-            if user_agent:
-                headers["User-Agent"] = user_agent
+            if referer or user_agent:
+                headers = headers.to_dict()
+                if referer:
+                    headers["Referer"] = referer
+                if user_agent:
+                    headers["User-Agent"] = user_agent
+                headers = HTTP_Headers.from_items(sorted(headers.items()))
         self.__headers = headers
 
         # Call the parent constructor.

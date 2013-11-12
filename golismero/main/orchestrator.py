@@ -56,7 +56,7 @@ from signal import signal, SIGINT, SIG_DFL
 from multiprocessing import Manager
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class Orchestrator (object):
     """
     Orchestrator, the manager of everything, core of GoLismero.
@@ -67,7 +67,7 @@ class Orchestrator (object):
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, config):
         """
         Start the Orchestrator.
@@ -156,7 +156,7 @@ class Orchestrator (object):
         ##        Logger.log_error_verbose("\t%s" % plugin_id)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Context support.
 
     def __enter__(self):
@@ -165,7 +165,7 @@ class Orchestrator (object):
         self.close()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     # Getters (mostly used by RPC implementors).
 
     @property
@@ -233,7 +233,7 @@ class Orchestrator (object):
         return self.__ui
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __control_c_handler(self, signum, frame):
         """
         Signal handler to catch Control-C interrupts.
@@ -260,7 +260,7 @@ class Orchestrator (object):
             signal(SIGINT, self.__panic_control_c_handler)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __panic_control_c_handler(self, signum, frame):
         """
         Emergency signal handler to catch Control-C interrupts.
@@ -277,13 +277,14 @@ class Orchestrator (object):
 
             # Only do this once, the next time raise KeyboardInterrupt.
             try:
-                action, self.__old_signal_action = self.__old_signal_action, SIG_DFL
+                action, self.__old_signal_action = \
+                    self.__old_signal_action, SIG_DFL
             except AttributeError:
                 action = SIG_DFL
             signal(SIGINT, action)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def dispatch_msg(self, message):
         """
         Process messages from audits or from the message queue, and send them
@@ -293,7 +294,8 @@ class Orchestrator (object):
         :type message: Message
         """
         if not isinstance(message, Message):
-            raise TypeError("Expected Message, got %r instead" % type(message))
+            raise TypeError(
+                "Expected Message, got %r instead" % type(message))
 
         try:
 
@@ -337,7 +339,7 @@ class Orchestrator (object):
                     raise KeyboardInterrupt() # User cancel.
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def enqueue_msg(self, message):
         """
         Put messages into the message queue.
@@ -346,14 +348,21 @@ class Orchestrator (object):
         :type message: Message
         """
         if not isinstance(message, Message):
-            raise TypeError("Expected Message, got %r instead" % type(message))
-        try:
-            self.__queue.put_nowait(message)
-        except Exception:
-            exit(1)
+            raise TypeError(
+                "Expected Message, got %r instead" % type(message))
+        if (
+            message.priority == MessagePriority.MSG_PRIORITY_HIGH and
+            Config._has_context and getpid() == Config._context._orchestrator_pid
+        ):
+            self.dispatch_msg(message)
+        else:
+            try:
+                self.__queue.put_nowait(message)
+            except Exception:
+                exit(1)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def build_plugin_context(self, audit_name, plugin, ack_identity):
         """
         Prepare a PluginContext object to pass to the plugins.
@@ -386,17 +395,19 @@ class Orchestrator (object):
         info = pluginManager.get_plugin_info_from_instance(plugin)[1]
 
         # Return the context instance.
-        return PluginContext(orchestrator_pid = self.__context._orchestrator_pid,
-                             orchestrator_tid = self.__context._orchestrator_tid,
-                                    msg_queue = self.__queue,
-                                 ack_identity = ack_identity,
-                                  plugin_info = info,
-                                   audit_name = audit_name,
-                                 audit_config = audit_config,
-                                  audit_scope = audit_scope)
+        return PluginContext(
+            orchestrator_pid = self.__context._orchestrator_pid,
+            orchestrator_tid = self.__context._orchestrator_tid,
+                   msg_queue = self.__queue,
+                ack_identity = ack_identity,
+                 plugin_info = info,
+                  audit_name = audit_name,
+                audit_config = audit_config,
+                 audit_scope = audit_scope,
+        )
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def run(self, *audits):
         """
         Message loop.
@@ -454,7 +465,7 @@ class Orchestrator (object):
                 print_exc()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def close(self):
         """
         Release all resources held by the Orchestrator.

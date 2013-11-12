@@ -1549,8 +1549,8 @@ class AuditPluginManager (PluginManager):
         """
         orchestrator = self.orchestrator
         plugins = self.get_plugins("testing")
-        for plugin_id, plugin_info in plugins.iteritems():
-            plugin = self.load_plugin_by_id(plugin_id)
+        for plugin_id in plugins:
+            plugin  = self.load_plugin_by_id(plugin_id)
             new_ctx = orchestrator.build_plugin_context(None, plugin, None)
             old_ctx = Config._context
             try:

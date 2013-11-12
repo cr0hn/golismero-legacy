@@ -4,6 +4,8 @@ cd ..\golismero
 dir /b /s *.py > ..\_tmp.txt
 cd ..\plugins
 dir /b /s *.py >> ..\_tmp.txt
+cd ..\gui
+dir /b /s *.py >> ..\_tmp.txt
 cd ..\tests\plugin_tests
 dir /b /s *.py >> ..\_tmp.txt
 cd ..\..

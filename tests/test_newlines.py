@@ -30,6 +30,9 @@ import sys
 import os
 from os import path
 
+AUTO_FIX = False
+##AUTO_FIX = True
+
 def test_newlines_and_tabs():
     print "Testing the source code format..."
 
@@ -62,6 +65,10 @@ def test_newlines_and_tabs():
             with open(filename, "rb") as fd:
                 data = fd.read()
 
+            # Skip 0 byte files.
+            if not data:
+                continue
+
             # If tab characters are present, warn about it.
             if "\t" in data:
                 print "+ found tabs in file: %s" % relative
@@ -69,14 +76,24 @@ def test_newlines_and_tabs():
             # If newline characters are not in Linux format, warn about it.
             if "\r\n" in data:
                 print "+ found Windows newlines in file: %s" % relative
-                ##data = data.replace("\r\n", "\n")
-                ##with open(filename, "wb") as fd:
-                ##    fd.write(data)
+                if AUTO_FIX:
+                    data = data.replace("\r\n", "\n")
+                    with open(filename, "wb") as fd:
+                        fd.write(data)
             elif "\r" in data:
                 print "+ found Mac newlines in file: %s" % relative
-                ##data = data.replace("\r", "\n")
-                ##with open(filename, "wb") as fd:
-                ##    fd.write(data)
+                if AUTO_FIX:
+                    data = data.replace("\r", "\n")
+                    with open(filename, "wb") as fd:
+                        fd.write(data)
+
+            # If the file doesn't end with a newline character, warn about it.
+            if not data.endswith("\n") and not data.endswith("\r"):
+                print "+ found file with no terminating newline: %s" % relative
+                if AUTO_FIX:
+                    data += "\n"
+                    with open(filename, "wb") as fd:
+                        fd.write(data)
 
     # Done!
     print "...done!"
