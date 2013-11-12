@@ -150,8 +150,14 @@ def get_audit_stats():
     """
     Get the audit runtime statistics.
 
-    :returns: Dictionary with runtime statistics.
-    :rtype: dict(str -> *)
+    :returns: Dictionary with runtime statistics as format:
+        {
+            "current_stage":     str,
+            "total_count":       int,
+            "processed_count":   int,
+            "stage_cycles":      dict( 'STAGE_NAME' : int),
+        }
+    :rtype: dict()
     """
     return Config._context.remote_call(MessageCode.MSG_RPC_AUDIT_STATS)
 
