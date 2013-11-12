@@ -28,7 +28,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.audit import start_audit, stop_audit, \
-     get_audit_names, get_audit_config
+     get_audit_names, get_audit_count, get_audit_config, \
+     get_audit_stats, get_audit_log_lines
+
 from golismero.api.data import Data
 from golismero.api.data.db import Database
 from golismero.api.config import Config, get_orchestrator_config
@@ -211,6 +213,7 @@ class WebUIPlugin(UIPlugin):
 
         # Initialize the audit and plugin state caches.
         self.state_lock   = threading.RLock()
+        self.steps        = collections.Counter() # Count number of stage "recon" was reached
         self.audit_state  = {}  # audit -> stage
         self.plugin_state = collections.defaultdict(
             functools.partial(collections.defaultdict, dict)
@@ -493,6 +496,10 @@ class WebUIPlugin(UIPlugin):
         # Save the audit state.
         self.audit_state[audit_name] = stage
 
+        # Increase steps if recon stage was reached
+        if stage == "recon":
+            self.steps[audit_name] += 1
+
         # Send the audit state.
         packet = ("stage", audit_name, stage)
         self.bridge.send(packet)
@@ -566,6 +573,16 @@ class WebUIPlugin(UIPlugin):
         """
         Implementation of: /scan/state
 
+        Return tuple as format:
+
+        (
+          'STEPS' # Count number that "recon" stage was reached
+          'STAGE_NAME',
+          (
+            (PLUGIN_NAME::str, IDENTITY::int, PROGRESS::float(0.0-100.0)),
+          )
+        )
+
         :param audit_name: Name of the audit to query.
         :type audit_name: str
 
@@ -575,14 +592,22 @@ class WebUIPlugin(UIPlugin):
         """
 
         # Return the current stage and the status of every plugin.
-        return (
-            self.audit_state[audit_name],
-            tuple(
-                (plugin_name, identity, progress)
-                for ((plugin_name, identity), progress)
-                in self.plugin_state[audit_name].iteritems()
+        r = None
+        try:
+            r = (
+                self.steps[audit_name],
+                self.audit_state[audit_name],
+                tuple(
+                    (plugin_name, identity, progress)
+                    for ((plugin_name, identity), progress)
+                    in self.plugin_state[audit_name].iteritems()
+                )
             )
-        )
+        except Exception,e:
+            pass
+
+        return r
+
 
 
     #--------------------------------------------------------------------------
@@ -621,6 +646,33 @@ class WebUIPlugin(UIPlugin):
         :type id_list: list(str)
         """
         return Database.get_many(id_list)
+
+    #----------------------------------------------------------------------
+    def do_audit_resume(self):
+        """"""
+
+    #----------------------------------------------------------------------
+    def do_audit_log(self, audit_name):
+        """
+
+        :param audit_name: Audit name.
+        :type audit_name: str
+
+        :returns: List of tuples.
+            Each tuple contains the following elements:
+             - Plugin ID.
+             - Data object ID (plugin instance).
+             - Log line text. May contain newline characters.
+             - Log level.
+             - True if the message is an error, False otherwise.
+             - Timestamp.
+        :rtype: list( tuple(str, str, str, int, bool, float) )
+        """
+        return get_audit_config(audit_name)
+
+
+
+
 
 
     #--------------------------------------------------------------------------
