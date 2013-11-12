@@ -451,7 +451,13 @@ class Audit (object):
     #--------------------------------------------------------------------------
     def get_runtime_stats(self):
         """
-        :returns: Dictionary with runtime statistics.
+        :returns: Dictionary with runtime statistics as format:
+        {
+            "current_stage":     str,
+            "total_count":       int,
+            "processed_count":   int,
+            "stage_cycles":      dict( 'STAGE_NAME' : int),
+        }
         :rtype: dict(str -> *)
         """
         return {
