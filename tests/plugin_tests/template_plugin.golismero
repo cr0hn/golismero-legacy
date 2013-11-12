@@ -5,27 +5,37 @@
 # them with any section and key/value pairs. Keys may be repeated across
 # sections, but never within a section.
 
-# Core settings.
-#  Name: (Mandatory) User-friendly name for the plugin.
-#  Module: (Optional) Python file with the plugin code. Path must be
-#           relative to this file. Defaults to the same name as this
-#           file but .py extension.
-#  Class: (Optional) Python class that implements the plugin.
-#          Autodetected when not specified.
-[Core]
-Name = Template for plugin development
+###############################################################################
 
 # Documentation for this plugin.
 # This section is optional, but recommended.
+
 [Documentation]
+
+Name        = Template for plugin development
 Description = [DESCRIPTION OF PLUGIN]
-Author = [AUTHOR OF PLUGIN]
-Version = [VERSION]
-Website = [AUTHOR WEB SITE]
-Copyright = Copyright (C) [AUTHOR OF PLUGIN]
-License = GNU Public License
+Author      = [AUTHOR OF PLUGIN]
+Version     = [VERSION]
+Website     = [AUTHOR WEB SITE]
+Copyright   = Copyright (C) [AUTHOR OF PLUGIN]
+License     = GNU Public License
+
+###############################################################################
+
+# Core settings.
+# This section is optional, should only be used in very specific cases.
+
+[Core]
+
+# Python file with the plugin code. Path must be relative to this file.
+# Defaults to the same name as this file but .py extension.
+#Module = template_plugin
+
+# Python class that implements the plugin. Autodetected when not specified.
+#Class = TemplatePlugin
 
 # Optionally override the plugin execution stage.
+# Normally the stage is inferred by the plugin directory.
 #Stage = Recon
 
 # Plugin data dependencies, as a comma-separated list of plugins.
@@ -33,9 +43,20 @@ License = GNU Public License
 # has been processed before by the plugins specified here.
 #Dependencies = testing/recon/spider, testing/recon/default_error_page
 
+###############################################################################
+
+# Arguments for this plugin.
+# Passwords are marked with an asterisk (*) in front of the name.
+
+[Arguments]
+username = default_username
+*password = default_password
+
+###############################################################################
 
 # Simple way to specify the plugin's configuration.
 # These key/value pairs go to a dictionary at "Config.plugin_config".
+
 [Configuration]
 write_your_own = You can write your own key/value pairs here.
 
@@ -43,5 +64,6 @@ write_your_own = You can write your own key/value pairs here.
 # sections with their own key/value pairs too. They're loaded
 # as a dictionary of dictionaries at "Config.plugin_extra_config".
 # Note that these settings cannot be overriden by profiles.
+
 [Arbitrary_Section_Names_May_Go_Here_Too]
 key = value

@@ -1,8 +1,8 @@
 [Core]
-Name      = Directory listing
 Recursive = yes
 
 [Documentation]
+Name        = Directory listing
 Description = Searches for directory listing enabled folders.
 Author      = GoLismero Project
 Version     = 0.1
