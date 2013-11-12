@@ -183,4 +183,5 @@ Listen in loopback IPv6 at port 8000:
     if not args.DEBUG_MODE:
         call_command("runserver", listen_addr)
     else:
+        sys.argv = ["run_gunicorn", listen_addr]
         call_command("run_gunicorn", listen_addr)
