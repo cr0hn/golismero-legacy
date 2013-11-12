@@ -257,7 +257,8 @@ class MessageCode(MessageConstants):
     MSG_RPC_AUDIT_NAMES            = 31
     MSG_RPC_AUDIT_CONFIG           = 32
     MSG_RPC_AUDIT_TIMES            = 33
-    MSG_RPC_AUDIT_LOG              = 34
+    MSG_RPC_AUDIT_STATS            = 34
+    MSG_RPC_AUDIT_LOG              = 35
 
     # Shared map API
     MSG_RPC_SHARED_MAP_GET         = 40

@@ -38,7 +38,8 @@ __all__ = [
     # Query functions.
     "get_audit_count", "get_audit_names",
     "get_audit_config", "get_audit_times",
-    "parse_audit_times", "get_audit_log_lines",
+    "parse_audit_times", "get_audit_stats",
+    "get_audit_log_lines",
 
     # Control functions.
     "start_audit", "stop_audit",
@@ -142,6 +143,17 @@ def parse_audit_times(start_time, stop_time):
         else:
             stop_time  = "Interrupted"
     return (start_time, stop_time, run_time)
+
+
+#------------------------------------------------------------------------------
+def get_audit_stats():
+    """
+    Get the audit runtime statistics.
+
+    :returns: Dictionary with runtime statistics.
+    :rtype: dict(str -> *)
+    """
+    return Config._context.remote_call(MessageCode.MSG_RPC_AUDIT_STATS)
 
 
 #------------------------------------------------------------------------------

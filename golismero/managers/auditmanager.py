@@ -74,6 +74,10 @@ def rpc_audit_get_config(orchestrator, current_audit_name, audit_name):
 def rpc_audit_get_times(orchestrator, audit_name):
     return orchestrator.auditManager.get_audit(audit_name).database.get_audit_times()
 
+@implementor(MessageCode.MSG_RPC_AUDIT_STATS)
+def rpc_audit_get_stats(orchestrator, audit_name):
+    return orchestrator.auditManager.get_audit(audit_name).get_runtime_stats()
+
 
 #------------------------------------------------------------------------------
 class AuditManager (object):
