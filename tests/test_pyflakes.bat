@@ -5,6 +5,8 @@ cd ..\golismero
 dir /b /s *.py > ..\_tmp.txt
 cd ..\plugins
 dir /b /s *.py >> ..\_tmp.txt
+cd ..\gui
+dir /b /s *.py >> ..\_tmp.txt
 cd ..
 del /s *.pyc > nul 2> nul
 del /s *.pyo > nul 2> nul
