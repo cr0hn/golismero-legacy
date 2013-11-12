@@ -17,3 +17,4 @@ requests
 requests_ntlm
 texttable
 tldextract
+docutils
