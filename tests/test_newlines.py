@@ -65,6 +65,10 @@ def test_newlines_and_tabs():
             with open(filename, "rb") as fd:
                 data = fd.read()
 
+            # Skip 0 byte files.
+            if not data:
+                continue
+
             # If tab characters are present, warn about it.
             if "\t" in data:
                 print "+ found tabs in file: %s" % relative
