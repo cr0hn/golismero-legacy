@@ -150,7 +150,7 @@ class GoLismeroAuditData(object):
 		# Set PK
 		c = cls()
 		for k, v in data.iteritems():
-			setattr(c, k, v, None)
+			setattr(c, k, v)
 
 		return c
 
