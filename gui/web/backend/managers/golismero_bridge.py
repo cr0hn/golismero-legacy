@@ -196,7 +196,7 @@ class AuditBridge(object):
 			return GoLismeroAuditSummary(rpc_response)
 
 		else:
-			return GoLismeroAuditSummary(		{
+			return GoLismeroAuditSummary({
 		   'vulns_number'            : 10,
 		   'discovered_hosts'        : 4,
 		   'total_hosts'             : 6,
@@ -206,6 +206,7 @@ class AuditBridge(object):
 			  'medium'   : 2,
 			  'high'     : 1,
 			  'critical' : 1,
+			}
 		})
 
 	#----------------------------------------------------------------------
