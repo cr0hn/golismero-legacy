@@ -181,7 +181,15 @@ Listen in loopback IPv6 at port 8000:
     call_command("syncdb", noinput=True)
 
     if not args.DEBUG_MODE:
+        # Set debug mode
+        settings.SIMULATE = True
+        settings.DEBUG    = True
+
         call_command("runserver", listen_addr)
     else:
+        # Unset debug mode
+        settings.SIMULATE = False
+        settings.DEBUG    = False
+
         sys.argv = ["run_gunicorn", listen_addr]
         call_command("run_gunicorn", listen_addr)
