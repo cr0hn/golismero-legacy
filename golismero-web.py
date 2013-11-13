@@ -87,7 +87,7 @@ if __name__ == "__main__":
     usage = """
 Run web server UI for GoLismero 2.0.
 
-** Make sure you're running golismer-daemon.py
+** Make sure you're running golismero-daemon.py
 
 Listen in all network interfaces at port 9000:
 %(prog)s -l 0.0.0.0 -p 9000
