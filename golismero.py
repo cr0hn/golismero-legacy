@@ -265,7 +265,7 @@ def cmdline_parser():
 
     gr_audit = parser.add_argument_group("audit options")
     gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
-    gr_audit.add_argument("--db-store", metavar="STORE_LOCATION", dest="db_location", help="database store location. Only available for sqlite.")
+    gr_audit.add_argument("--db-store", metavar="STORE_LOCATION", dest="db_location", help="default location for databases. Only available for sqlite.")
     cmd = gr_audit.add_argument("-db", "--audit-db", metavar="DATABASE", dest="audit_db", help="specify a database connection string")
     if autocomplete_enabled:
         cmd.completer = FilesCompleter(allowednames=(".db",), directories=False)

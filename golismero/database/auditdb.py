@@ -44,7 +44,7 @@ from ..api.text.text_utils import generate_random_string
 from ..messaging.codes import MessageCode
 from ..managers.rpcmanager import implementor
 
-from os import path
+from os import path, makedirs
 
 import collections
 import md5
@@ -1324,9 +1324,21 @@ class AuditSQLiteDB (BaseAuditDB):
                 filename = filename + ".db"
 
             if audit_config.db_location:
-                self.__filename =path.join(audit_config.db_location, filename)
+                self.__filename = path.join(audit_config.db_location, filename)
             else:
                 self.__filename = filename
+
+            # Make sure the directory exists.
+            directory = path.split(filename)[0]
+            if not path.exists(directory):
+                try:
+                    makedirs(directory)
+                except Exception, e:
+                    warnings.warn(
+                        "Error creating directory %r: %s" %
+                        (directory, str(e)),
+                        RuntimeWarning
+                    )
 
             # Create the database file.
             self.__db = sqlite3.connect(self.__filename)
