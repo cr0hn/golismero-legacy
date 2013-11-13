@@ -183,8 +183,21 @@ class AuditViewSet(ViewSet):
 			m_return['status']      = "error"
 			m_return['error_code']  = 2
 			m_return['error']       = ["Targets are missing."]
-
 			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		if not isinstance(m_info['targets'], list):
+			m_return['status']      = "error"
+			m_return['error_code']  = 1
+			m_return['error']       = ["Targets: parameter error. Targets must be a list of strings."]
+			return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+		for t in m_info['targets']:
+			if not isinstance(t, basestring):
+				m_return['status']      = "error"
+				m_return['error_code']  = 1
+				m_return['error']       = ["Targets: parameter error. Targets must be a list of strings."]
+				return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
 
 		#
 		# PLUGINS
@@ -204,8 +217,7 @@ class AuditViewSet(ViewSet):
 			# Store info
 			l_plugin = { k : str(v) for k, v in l_plugin.data.iteritems()}
 
-
-			pp = p['params']
+			pp = p.get('params', None)
 			if pp:
 				l_plugin_results = []
 				for plug_p in pp:
