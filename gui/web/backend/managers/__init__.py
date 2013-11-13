@@ -87,6 +87,64 @@ class GoLismeroAuditProgress(object):
 		"""
 		return self.__json
 
+class GoLismeroAuditSummary(object):
+	"""
+
+	Get the audit state. This class acts as java POJO, having these attributes:
+
+	- vulns_number        :: int
+	- discovered_hosts    :: int   # Hosts discovered into de scan process
+	- total_hosts         :: int   # Hosts discovered + initial targets
+	- vulns_by_level      :: dict( # Total summary of vulns by level
+	   'info'     : int,
+	   'low'      : int,
+	   'medium'   : int,
+	   'high'     : int,
+	   'critical' : int)
+	"""
+
+	PROPERTIES     = ["vulns_number", "discovered_hosts", "total_hosts", "vulns_by_level"]
+	REPORT_FORMATS = ["html", "text", "rst", "xml"]
+
+	#----------------------------------------------------------------------
+	def __init__(self, data):
+		"""
+		Load data from JSON, in format:
+
+		{
+		   'vulns_number'            = int
+		   'discovered_hosts'        = int
+		   'total_hosts'             = int
+		   'vulns_by_level'          = {
+		      'info'     : int,
+			  'low'      : int,
+			  'medium'   : int,
+			  'high'     : int,
+			  'critical' : int,
+		}
+
+		:param data: dict with info.
+		:type data: dict
+		"""
+		if not isinstance(data, dict):
+			raise TypeError("Expected dict, got '%s' instead" % type(data))
+
+		for p in GoLismeroAuditProgress.PROPERTIES:
+			try:
+				setattr(self, p, data[p])
+			except KeyError:
+				raise ValueError("Invalid JSON format.")
+
+		# Store original json
+		self.__json             = data
+
+	#----------------------------------------------------------------------
+	@property
+	def to_json(self):
+		"""
+		Return the JSON object
+		"""
+		return self.__json
 
 
 
@@ -231,7 +289,7 @@ class GoLismeroAuditData(object):
 		  ],
 		  "disabled_plugins": ["spider","nikto"]
 
-		:return: JSON with info.
+		:returns: JSON with info.
 		"""
 		return { k : v for k, v in self.__dict__.iteritems() }
 
@@ -248,7 +306,7 @@ class GoLismeroAuditData(object):
 		   'state' : str
 		}
 
-		:return: dict
+		:returns: dict
 		:rtype: dict
 		"""
 		return {
@@ -262,7 +320,7 @@ class GoLismeroAuditData(object):
 	@property
 	def to_json_console(self):
 		"""
-		:return: return a JSON formated for GoLismero console:
+		:returns: return a JSON formated for GoLismero console:
 		{
 		  "audit_name": "asdfasdf_1",
 		  "targets": ["127.0.0.1", "mysite.com" ],
