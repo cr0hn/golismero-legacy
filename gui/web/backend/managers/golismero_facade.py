@@ -428,6 +428,7 @@ class GoLismeroFacadeAudit(object):
                 raise ValueError("Wrong format: Targets not found.")
 
             # Checks for local host hosts
+
             t_h = [t for t in m_targets if t.startswith("127")]
             if len(t_h) > 0:
                 raise GoLismeroFacadeAuditNotAllowedHostException("Host '%s' not allowed" % ",".join(t_h))
@@ -439,8 +440,6 @@ class GoLismeroFacadeAudit(object):
 
                 # Add to global
                 m_targets_stored.append(l_target)
-
-
 
             #
             # PLUGINS
@@ -455,9 +454,9 @@ class GoLismeroFacadeAudit(object):
             # Transform "all" plugins in GoLismero format. For GoLismero, an empty list means
             # all plugins selected.
             if len(m_enable_plugins) == 1:
-                if m_enable_plugins[1].strip().lower() == "all":
-                    m_enable_plugins = []
-
+                if isinstance(m_enable_plugins, basestring):
+                    if m_enable_plugins[0].strip().lower() == "all":
+                        m_enable_plugins = []
 
             m_enable_plugins_stored = []
             for p in m_enable_plugins:
