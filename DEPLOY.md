@@ -62,6 +62,16 @@ First you must download git repositories and generate a deploy folder. To do tha
 
 - DESTINATION_FOLDER: ABSOLUTE path of destination repo.
 
+Create the virtualenv
+---------------------
+
+For create the virtualenv, you must run:
+
+```fab -t 1000 -T 1000 -H myremotehost.com start:DESTINATION_FOLDER```
+
+- DESTINATION_FOLDER: ABSOLUTE path of destination repo.
+
+
 Updating
 --------
 
