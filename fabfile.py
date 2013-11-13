@@ -223,7 +223,7 @@ def update(install_dir=None):
         __git_update(m_path_golismero)
 
     if not install_dir:
-        return
+        install_dir = GOLISMERO_DEFAULT_PRODUCTION
 
     if not exists(install_dir):
         abort("'%s' installation dire doesn't exists." % install_dir)
@@ -246,6 +246,47 @@ def update(install_dir=None):
     # Update virtualenv dependences
     __virtual_env_update(install_dir)
 
+def partial_update(install_dir=None):
+    """
+    Updates a golismero folder in installation, instead all virtualenv.
+
+    :param install_dir: golismero installation path.
+    :type install_dir: str
+    """
+    m_golismero_src        = GOLISMERO_HOME
+
+    # Update git repos
+    for url, repo_name in REPOSITORIES.iteritems():
+
+        # Path
+        m_path_golismero = os.path.join(m_golismero_src, repo_name)
+
+        if not exists(m_path_golismero):
+            abort("Directory %s not exists. You should run 'init' first." % m_path_golismero)
+
+        # Update repositories
+        __git_update(m_path_golismero)
+
+    if not install_dir:
+        install_dir = GOLISMERO_DEFAULT_PRODUCTION
+
+    if not exists(install_dir):
+        abort("'%s' installation dire doesn't exists." % install_dir)
+
+    # Backuping virtual-env
+    m_golismero_env = os.path.join(install_dir, "golismero")
+    m_backup_path   = os.path.join(install_dir, "backups")
+    if not exists(m_backup_path):
+        print "Creating backup folder: %s" % m_backup_path
+        run("mkdir %s" % m_backup_path)
+    __backup(m_golismero_env, m_backup_path)
+
+    # Removing old source code
+    run("rm -rf %s" % m_golismero_env)
+    run("mkdir %s" % m_golismero_env)
+
+    # Copy files to new virtualenv
+    __copy(GOLISMERO_HOME, m_golismero_env)
 
 
 #----------------------------------------------------------------------
