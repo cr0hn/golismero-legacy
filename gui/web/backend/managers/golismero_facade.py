@@ -46,7 +46,9 @@ Scheme of process is:
 """
 
 __all__ = ["GoLismeroFacadeAudit",
+           "GoLismeroFacadeAuditNotAllowedHostException",
            "GoLismeroFacadeAuditNotFoundException",
+           "GoLismeroFacadeAuditNotPluginsException",
            "GoLismeroFacadeAuditFinishedException",
            "GoLismeroFacadeAuditStoppedException",
            "GoLismeroFacadeAuditRunningException",
@@ -74,6 +76,10 @@ from django.db.models import ObjectDoesNotExist
 # Exceptions
 #
 #----------------------------------------------------------------------
+class GoLismeroFacadeAuditNotAllowedHostException(Exception):
+    """Hosts nos allowed"""
+class GoLismeroFacadeAuditNotPluginsException(Exception):
+    """Not plugins selected"""
 class GoLismeroFacadeAuditNotFoundException(Exception):
     """Audit not found"""
 class GoLismeroFacadeAuditFinishedException(Exception):
@@ -113,7 +119,7 @@ class GoLismeroFacadeAudit(object):
         :param audit_id: string with audit ID.
         :type audit_id: str
 
-        :return: GoLismeroAuditData instance, if Audit exits. None otherwise.
+        :returns: GoLismeroAuditData instance, if Audit exits. None otherwise.
         :type: GoLismeroAuditData | None
 
         :raises: GoLismeroFacadeAuditNotFoundException, TypeError
@@ -140,7 +146,7 @@ class GoLismeroFacadeAudit(object):
         :param audit_id: audit ID.
         :type audit_id: str
 
-        :return: an string with the state
+        :returns: an string with the state
         :rtype: str
 
         :raises: GoLismeroFacadeAuditNotFoundException, TypeError
@@ -182,7 +188,7 @@ class GoLismeroFacadeAudit(object):
         :param audit_id: audit ID.
         :type audit_id: str
 
-        :return: GoLismeroAuditProgress object
+        :returns: GoLismeroAuditProgress object
         :rtype: GoLismeroAuditProgress
 
         :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditRunningException, TypeError, GoLismeroFacadeAuditFinishedException
@@ -219,7 +225,7 @@ class GoLismeroFacadeAudit(object):
         :param audit_id: audit ID.
         :type audit_id: str
 
-        :return: an string with the log
+        :returns: an string with the log
         :rtype: str
 
         :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException, TypeError
@@ -254,7 +260,7 @@ class GoLismeroFacadeAudit(object):
         :param report_format: report format. Availables: rst, xml, html, text
         :type report_format: str
 
-        :return: return file handler ready to read report.
+        :returns: return file handler ready to read report.
         :rtype: file
 
         :raises: GoLismeroFacadeReportUnknownFormatException, GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeReportNotAvailableException
@@ -297,50 +303,41 @@ class GoLismeroFacadeAudit(object):
 
     #----------------------------------------------------------------------
     @staticmethod
-    def get_results_summary(audit_id, report_format="html"):
+    def get_results_summary(audit_id):
         """
         Get results by format.
 
         :param audit_id: audit ID.
         :type audit_id: str
 
-        :param report_format: report format. Availables: rst, xml, html, text
-        :type report_format: str
+		:returns: return a dic as format:
+		{
+		   'vulns_number'            = int
+		   'discovered_hosts'        = int # Host discovered into de scan process
+		   'total_hosts'             = int
+		   'vulns_by_level'          = {
+		      'info'     : int,
+			  'low'      : int,
+			  'medium'   : int,
+			  'high'     : int,
+			  'critical' : int,
+		}
 
-        :return: return file handler ready to read report.
-        :rtype: file
-
-        :raises: GoLismeroFacadeReportUnknownFormatException, GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeReportNotAvailableException
+        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException
         """
-        EXTENSIONS_BY_FORMAT = {
-            'xml'    : 'xml',
-            'html'   : 'html',
-            'rst'    : 'rst',
-            'text'   : 'txt'
-        }
-        try:
-            # Check report format
-            if report_format not in GoLismeroFacadeAudit.AVAILABLE_REPORT_FORMATS:
-                raise GoLismeroFacadeReportUnknownFormatException("Unknown report format '%s'." % report_format)
 
+        try:
             m_audit = Audit.objects.get(pk=audit_id)
 
-            # Update state
-            #GoLismeroFacadeAudit.get_state(m_audit.id)
 
-            if m_audit.audit_state != "finished":
-                raise GoLismeroFacadeReportNotAvailableException("Not finished audit. Report is not available.")
+            if m_audit.audit_state != "running":
+                raise GoLismeroFacadeAuditStateException("Audit not running. Only can get summary from running audits.")
 
-            # Get path of audit info
-            l_path = path.join(get_user_settings_folder(), str(m_audit.id))
-
-            # Each folder has one file for each type of report called "report.FORMAT"
-            if not path.exists(l_path):
-                raise GoLismeroFacadeReportNotAvailableException("Requested report is not available")
-
-            # Get report
-
-            return file(path.join(l_path, "report.%s" % EXTENSIONS_BY_FORMAT[report_format]), "rU")
+            # Get summary
+            try:
+                GoLismeroFacadeAudit.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+            except ExceptionAuditNotFound,e:
+                raise GoLismeroFacadeAuditStateException("Audit not running. Only can get summary from running audits.")
 
         except ObjectDoesNotExist:
             raise GoLismeroFacadeAuditNotFoundException()
@@ -361,7 +358,7 @@ class GoLismeroFacadeAudit(object):
         :param state: audit state. All by default.
         :type state: str
 
-        :return: A list of GoLismeroAuditData objects.
+        :returns: A list of GoLismeroAuditData objects.
         :type: list(GoLismeroAuditData)
         """
 
@@ -430,6 +427,11 @@ class GoLismeroFacadeAudit(object):
             if not m_targets:
                 raise ValueError("Wrong format: Targets not found.")
 
+            # Checks for local host hosts
+            t_h = [t for t in m_targets if t.startswith("127")]
+            if len(t_h) > 0:
+                raise GoLismeroFacadeAuditNotAllowedHostException("Host '%s' not allowed" % ",".join(t_h))
+
             m_targets_stored = []
             for t in m_targets:
                 l_target         = Target(target_name=t)
@@ -444,6 +446,19 @@ class GoLismeroFacadeAudit(object):
             # PLUGINS
             #
             m_enable_plugins        = data.get('enable_plugins', [])
+
+            # Not plugins selected
+            if len(m_enable_plugins) == 0:
+                raise GoLismeroFacadeAuditNotPluginsException("Not plugins selected.")
+
+
+            # Transform "all" plugins in GoLismero format. For GoLismero, an empty list means
+            # all plugins selected.
+            if len(m_enable_plugins) == 1:
+                if m_enable_plugins[1].strip().lower() == "all":
+                    m_enable_plugins = []
+
+
             m_enable_plugins_stored = []
             for p in m_enable_plugins:
 
@@ -693,7 +708,7 @@ class GoLismeroFacadeAudit(object):
         :param audit_name: string with name of audit.
         :type audit_name: str
 
-        :return: string with unique audit ID.
+        :returns: string with unique audit ID.
         :rtype: str
         """
         if not isinstance(audit_id, basestring) and not isinstance(audit_id, int):
