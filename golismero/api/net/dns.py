@@ -509,7 +509,7 @@ class _DNS(Singleton):
         for ns_srv in ns_records:
             if self.check_tcp_dns(ns_srv):
                 try:
-                    zone = self._from_wire(dns.query.xfr(ns_srv, domain))
+                    zone = self._from_wire(dns.query.xfr(where=ns_srv, zone=domain, timeout=10))
 
                     # Store the ns used to the zone transfer
                     if ns_allowed_zone_transfer:
