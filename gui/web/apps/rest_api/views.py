@@ -158,7 +158,6 @@ class AuditViewSet(ViewSet):
 		m_return = {}
 		m_info   = None
 
-
 		#
 		# AUDIT INFO
 		#
@@ -203,33 +202,40 @@ class AuditViewSet(ViewSet):
 		# PLUGINS
 		#
 		m_plugins_in = request.DATA.get("enable_plugins", [])
-
 		m_plugins    = [] # Plugins lists
 		for p in m_plugins_in:
 
-			l_plugin = PluginsSerializer(data=p)
-			if not l_plugin.is_valid():
+			l_plugin                = {}
+			l_plugin['plugin_name'] = p.get("plugin_name", None)
+
+			if not l_plugin['plugin_name']:
 				m_return['status']      = "error"
 				m_return['error_code']  = 1
-				m_return['error']       = ["Plugin '%s' are invalid." % l_plugin]
+				m_return['error']       = ["A plugin name can be provided."]
 				return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-			# Store info
-			l_plugin = { k : str(v) for k, v in l_plugin.data.iteritems()}
 
 			pp = p.get('params', None)
 			if pp:
 				l_plugin_results = []
 				for plug_p in pp:
-					l_p = PluginsParametersSerializer(data=plug_p)
 
-					if not l_p.is_valid():
+					l_p                = {}
+					l_p['param_name']  = plug_p.get("param_name", None)
+					l_p['param_value'] = plug_p.get("param_value", None)
+
+					if not l_p['param_name']:
 						m_return['status']      = "error"
 						m_return['error_code']  = 1
-						m_return['error']       = ["Param '%s' for '%s' plugin are invalid." % (l_p, l_plugin['plugin_name'])]
+						m_return['error']       = ["If you specify keywork 'params' in plugin '%s', you must provide a 'param_name' value." % l_plugin['plugin_name']]
 						return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-					l_plugin_results.append({ k : str(v) for k, v in l_p.data.iteritems()})
+					if not l_p['param_value']:
+						m_return['status']      = "error"
+						m_return['error_code']  = 1
+						m_return['error']       = ["Parameter '%s' must have a 'param_value' value." % l_p['param_name']]
+						return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+					l_plugin_results.append(l_p)
 
 				# Add to plugin
 				l_plugin['params'] = l_plugin_results
