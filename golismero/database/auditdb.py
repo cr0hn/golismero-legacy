@@ -1369,7 +1369,10 @@ class AuditSQLiteDB (BaseAuditDB):
         parsed = urlparse.urlparse(audit_db)
 
         # Extract the filename.
-        filename = posixpath.join(parsed.netloc, parsed.path)
+        filename = parsed.path
+        if filename.startswith(posixpath.sep):
+            filename = filename[len(posixpath.sep):]
+        filename = posixpath.join(parsed.netloc, filename)
         if filename.endswith(posixpath.sep):
             filename = filename[:-len(posixpath.sep)]
         if path.sep != posixpath.sep:
