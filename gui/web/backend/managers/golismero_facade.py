@@ -47,6 +47,7 @@ Scheme of process is:
 
 __all__ = ["GoLismeroFacadeAudit",
            "GoLismeroFacadeAuditNotFoundException",
+           "GoLismeroFacadeAuditFinishedException",
            "GoLismeroFacadeAuditStoppedException",
            "GoLismeroFacadeAuditRunningException",
            "GoLismeroFacadeAuditStateException",
@@ -75,6 +76,8 @@ from django.db.models import ObjectDoesNotExist
 #----------------------------------------------------------------------
 class GoLismeroFacadeAuditNotFoundException(Exception):
     """Audit not found"""
+class GoLismeroFacadeAuditFinishedException(Exception):
+    """Audit is finished"""
 class GoLismeroFacadeAuditStoppedException(Exception):
     """Audit is stopped"""
 class GoLismeroFacadeAuditRunningException(Exception):
@@ -182,7 +185,7 @@ class GoLismeroFacadeAudit(object):
         :return: GoLismeroAuditProgress object
         :rtype: GoLismeroAuditProgress
 
-        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditRunningException, TypeError
+        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditRunningException, TypeError, GoLismeroFacadeAuditFinishedException
         """
         if not isinstance(audit_id, basestring):
             raise TypeError("Expected basestring, got '%s' instead" % type(audit_id))
@@ -196,7 +199,10 @@ class GoLismeroFacadeAudit(object):
             if m_audit.audit_state != "running":
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is not running. Can't obtain progress from not running audits." % str(audit_id))
 
-            return AuditBridge.get_progress(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+            try:
+                return AuditBridge.get_progress(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+            except ExceptionAuditNotFound:
+                raise GoLismeroFacadeAuditFinishedException()
 
         except ObjectDoesNotExist:
             raise GoLismeroFacadeAuditNotFoundException()
@@ -285,6 +291,61 @@ class GoLismeroFacadeAudit(object):
 
         except ObjectDoesNotExist:
             raise GoLismeroFacadeAuditNotFoundException()
+
+
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def get_results_summary(audit_id, report_format="html"):
+        """
+        Get results by format.
+
+        :param audit_id: audit ID.
+        :type audit_id: str
+
+        :param report_format: report format. Availables: rst, xml, html, text
+        :type report_format: str
+
+        :return: return file handler ready to read report.
+        :rtype: file
+
+        :raises: GoLismeroFacadeReportUnknownFormatException, GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeReportNotAvailableException
+        """
+        EXTENSIONS_BY_FORMAT = {
+            'xml'    : 'xml',
+            'html'   : 'html',
+            'rst'    : 'rst',
+            'text'   : 'txt'
+        }
+        try:
+            # Check report format
+            if report_format not in GoLismeroFacadeAudit.AVAILABLE_REPORT_FORMATS:
+                raise GoLismeroFacadeReportUnknownFormatException("Unknown report format '%s'." % report_format)
+
+            m_audit = Audit.objects.get(pk=audit_id)
+
+            # Update state
+            #GoLismeroFacadeAudit.get_state(m_audit.id)
+
+            if m_audit.audit_state != "finished":
+                raise GoLismeroFacadeReportNotAvailableException("Not finished audit. Report is not available.")
+
+            # Get path of audit info
+            l_path = path.join(get_user_settings_folder(), str(m_audit.id))
+
+            # Each folder has one file for each type of report called "report.FORMAT"
+            if not path.exists(l_path):
+                raise GoLismeroFacadeReportNotAvailableException("Requested report is not available")
+
+            # Get report
+
+            return file(path.join(l_path, "report.%s" % EXTENSIONS_BY_FORMAT[report_format]), "rU")
+
+        except ObjectDoesNotExist:
+            raise GoLismeroFacadeAuditNotFoundException()
+
+
 
 
     #----------------------------------------------------------------------

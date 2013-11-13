@@ -207,29 +207,9 @@ class AuditBridge(object):
 				return "finished"
 
 			return rpc_response[0][1]
+		return "running"
 
 
-
-
-
-	#----------------------------------------------------------------------
-	@staticmethod
-	def get_details(audit_id): #
-		"""
-		Checks if audit details
-
-		:param audit_id: string with audit ID.
-		:type audit_id: str
-
-		:return: Audits instance, if Audit exits. None otherwise.
-		:type: Audits | None
-
-		:raises: ExceptionAuditNotFound
-		"""
-		try:
-			return Audit.objects.get(pk)
-		except ObjectDoesNotExist:
-			return None
 
 
 
@@ -253,7 +233,7 @@ class AuditBridge(object):
 			rpc_response = BRIDGE.RPC.call("audit/state", audit_id)
 
 			if not rpc_response:
-				return "finished"
+				raise ExceptionAuditNotFound()
 
 			steps         = rpc_response[0][0]
 			current_state = rpc_response[0][1]
@@ -284,27 +264,6 @@ class AuditBridge(object):
 			}
 		return GoLismeroAuditProgress(m_return)
 
-
-
-	#----------------------------------------------------------------------
-	@staticmethod
-	def get_details(audit_id): #
-		"""
-		Get audit details.
-
-		:param audit_id: string with audit ID.
-		:type audit_id: str
-
-		:return: GoLismeroAuditData instance, if Audit exits. None otherwise.
-		:type: GoLismeroAuditData | None
-
-		:raises: ExceptionAuditNotFound
-		"""
-		try:
-			if not BRIDGE.SIMULATE:
-				return BRIDGE.RPC.call("audit/details")
-		except ObjectDoesNotExist:
-			return None
 
 
 
