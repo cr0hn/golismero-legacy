@@ -128,7 +128,6 @@ def _launch_django(input_conn, output_conn,
     try:
         try:
             try:
-
                 # Get the Django command to run.
                 command = [x.strip() for x in plugin_config["call_command"].split(" ")]
 
@@ -143,7 +142,7 @@ def _launch_django(input_conn, output_conn,
                 fsm = GoLismeroStateMachine(bridge)
 
                 # XXX HACK we'll launch an XMLRPC server for now.
-                run_xmlrpc_server(fsm)
+                run_xmlrpc_server(fsm, orchestrator_config['listen_address'], orchestrator_config['listen_port'])
 
                 # Load the Django settings.
                 ##os.environ.setdefault("DJANGO_SETTINGS_MODULE", "golismero_webapp.core.settings")
@@ -197,7 +196,7 @@ def _launch_django(input_conn, output_conn,
 
 
 #------------------------------------------------------------------------------
-def run_xmlrpc_server(fsm):
+def run_xmlrpc_server(fsm, listen_addr="127.0.0.1", listen_port=9000):
 
     from SimpleXMLRPCServer import SimpleXMLRPCServer
     from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
@@ -207,7 +206,7 @@ def run_xmlrpc_server(fsm):
         rpc_paths = ('/RPC2',)
 
     # Create server
-    server = SimpleXMLRPCServer(addr = ("localhost", 9000),
+    server = SimpleXMLRPCServer(addr = (listen_addr, listen_port),
                                 requestHandler = RequestHandler,
                                 allow_none = True)
     server.register_introspection_functions()
