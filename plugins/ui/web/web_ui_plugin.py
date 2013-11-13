@@ -32,6 +32,7 @@ from golismero.api.audit import start_audit, stop_audit, \
      get_audit_stats, get_audit_log_lines
 
 from golismero.api.data import Data
+from golismero.api.data.resource import Resource
 from golismero.api.data.db import Database
 from golismero.api.config import Config, get_orchestrator_config
 from golismero.api.logger import Logger
@@ -648,8 +649,58 @@ class WebUIPlugin(UIPlugin):
         return Database.get_many(id_list)
 
     #----------------------------------------------------------------------
-    def do_audit_resume(self):
-        """"""
+    def do_audit_summary(self, audit_name):
+        """
+        Get results summary for an audit.
+
+        :param audit_name: Audit name string.
+        :type audit_name: str
+
+        :returns: return dict as format:
+        {
+		   'vulns_number'            : int,
+		   'discovered_hosts'        : int,
+		   'total_hosts'             : int,
+		   'vulns_by_level'          : {
+		      'info'     : int,
+			  'low'      : int,
+			  'medium'   : int,
+			  'high'     : int,
+			  'critical' : int,
+		}
+        :rtype: dict
+        """
+
+        # Get vulns
+        tmp_vulns = Database.keys(data_type=Data.TYPE_VULNERABILITY)
+
+        # Get each type of vuln level
+        vulns_counter = collections.Counter()
+        for l_vuln in tmp_vulns:
+            vulns_counter[l_vuln.level] += 1
+
+        # Get discovered host
+        discovered_hosts = 0
+        discovered_hosts += len(Database.keys(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_DOMAIN))
+        discovered_hosts += len(Database.keys(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_IP))
+
+        # Get audit targets number
+        total_hosts       = len(AuditConfig.targets)
+
+        #
+        # Make the response
+        return {
+		   'vulns_number'            : len(tmp_vulns),
+		   'discovered_hosts'        : discovered_hosts,
+		   'total_hosts'             : total_hosts,
+		   'vulns_by_level'          : {
+		      'info'     : vulns_counter['info'],
+			  'low'      : vulns_counter['low'],
+			  'medium'   : vulns_counter['medium'],
+			  'high'     : vulns_counter['high'],
+			  'critical' : vulns_counter['critical']
+            }
+		}
 
     #----------------------------------------------------------------------
     def do_audit_log(self, audit_name):
