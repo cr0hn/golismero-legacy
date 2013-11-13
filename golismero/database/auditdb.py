@@ -1323,11 +1323,6 @@ class AuditSQLiteDB (BaseAuditDB):
                 )
                 filename = filename + ".db"
 
-            if audit_config.db_location:
-                self.__filename = path.join(audit_config.db_location, filename)
-            else:
-                self.__filename = filename
-
             # Make sure the directory exists.
             directory = path.split(filename)[0]
             if not path.exists(directory):

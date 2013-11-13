@@ -745,9 +745,6 @@ class AuditConfig (Configuration):
         # Audit database
         "audit_db": (None, "memory://"),
 
-        # Database location
-        "db_location" : Configuration.string,
-
         # Input files
         "imports": (Configuration.comma_separated_list, []),
 
