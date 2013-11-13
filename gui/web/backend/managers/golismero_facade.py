@@ -459,10 +459,10 @@ class GoLismeroFacadeAudit(object):
                         m_enable_plugins = []
 
             m_enable_plugins_stored = []
-            for p in m_enable_plugins:
 
+            for p in m_enable_plugins:
                 l_plugin             = Plugins()
-                l_plugin.plugin_name = p['plugin_name']
+                l_plugin.plugin_name = p.get("plugin_name")
                 l_plugin.save()
 
                 # Plugins params
@@ -472,7 +472,6 @@ class GoLismeroFacadeAudit(object):
                     l_param.param_value   = pp['param_value']
                     l_param.plugin_params = l_plugin
                     l_param.save()
-
                 # Add to total
                 m_enable_plugins_stored.append(l_plugin)
 
@@ -493,8 +492,8 @@ class GoLismeroFacadeAudit(object):
             for t in m_targets_stored:
                 m_audit.targets.add(t)
 
-            for p in m_enable_plugins_stored:
-                m_audit.enable_plugins.add(p)
+            for kk in m_enable_plugins_stored:
+                m_audit.enable_plugins.add(kk)
 
             # Store
             m_audit.save()
