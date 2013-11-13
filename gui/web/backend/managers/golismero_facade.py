@@ -563,18 +563,17 @@ class GoLismeroFacadeAudit(object):
 
             # Create folder: home folder + audit id
             l_path = path.join(get_user_settings_folder(), str(m_audit.id))
-            if path.exists(l_path):
-                raise GoLismeroFacadeAuditUnknownException("Storage folder for audit already exits: '%s'" % l_path)
+            #if path.exists(l_path):
+                #raise GoLismeroFacadeAuditUnknownException("Storage folder for audit already exits: '%s'" % l_path)
 
-            try:
-                os.mkdir(l_path)
-            except Exception,e:
-                raise GoLismeroFacadeAuditUnknownException("Can't create audit files in: '%s'" % l_path)
+            #try:
+                #os.mkdir(l_path)
+            #except Exception,e:
+                #raise GoLismeroFacadeAuditUnknownException("Can't create audit files in: '%s'" % l_path)
 
             # Configuration
             audit_config            = GoLismeroAuditData.from_django(m_audit)
             audit_config.store_path = l_path
-
 
             # Send to GoLismero core
             AuditBridge.new_audit(audit_config)

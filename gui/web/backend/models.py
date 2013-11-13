@@ -41,7 +41,7 @@ class PluginParameters(models.Model):
     param_restriction = models.CharField(max_length=255, default="")
 
     # Relations
-    plugin_params     = models.OneToOneField(Plugins)
+    plugin_params     = models.ForeignKey(Plugins)
 
 
 #------------------------------------------------------------------------------

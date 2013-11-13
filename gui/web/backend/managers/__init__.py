@@ -246,7 +246,7 @@ class GoLismeroAuditData(object):
 			l_plugin['plugin_name'] = str(d.plugin_name)
 			l_plugin['params'] = []
 
-			for p in d.plugin_params.all():
+			for p in d.pluginparameters_set.all():
 				l_param = {}
 				l_param['param_name']  = str(p.param_name)
 				l_param['param_value'] = str(p.param_value)
@@ -359,11 +359,11 @@ class GoLismeroAuditData(object):
 		for p in self.enable_plugins:
 			l_plugin_name = p["plugin_name"]
 
-			m_config['enable_plugins'].appen(l_plugin_name)
+			m_config['enable_plugins'].append(l_plugin_name)
 
 			# Plugins params
 			for pp in p.get("params", []):
-				m_tmp_plugin_args.append([l_plugin_name, pp["plugin_name"], pp["plugin_value"]])
+				m_tmp_plugin_args.append([l_plugin_name, pp["param_name"], pp["param_value"]])
 
 		# Add plugin args?
 		if m_tmp_plugin_args:
