@@ -41,7 +41,8 @@ REPOSITORIES     = {
     "https://github.com/cr0hn/golismero"                     : "golismero_free",
 }
 
-GOLISMERO_HOME = "~/.golismero_deployer"
+GOLISMERO_HOME               = "~/.golismero_deployer"
+GOLISMERO_DEFAULT_PRODUCTION = "~/golismero_production"
 VERBOSE=False
 
 
@@ -248,15 +249,19 @@ def update(install_dir=None):
 
 
 #----------------------------------------------------------------------
-def init(base_dir):
+def init(base_dir=None):
     """
     FIRST EXECUTION: Creates an initial files and folders for golismero.
 
     :param base_dir: golismero path installation
     :type base_dir: str
     """
-    #if exists(base_dir):
-        #abort("'%s' already exists." % base_dir)
+    if not base_dir:
+        base_dir = GOLISMERO_DEFAULT_PRODUCTION
+
+    if exists(base_dir):
+        abort("'%s' already exists." % base_dir)
+
 
     # create repo into thir base_dir
     run("mkdir %s" % base_dir, warn_only=True, quiet=VERBOSE)
@@ -274,13 +279,17 @@ def init(base_dir):
     __copy(m_home_folder, base_dir)
 
 #----------------------------------------------------------------------
-def start(path):
+def start(path=None):
     """
     Deploy golismero, using virtualenv, in selected path.
 
     :param path: path location.
     :type path: str
     """
+
+    if not path:
+        path = GOLISMERO_DEFAULT_PRODUCTION
+
     m_home_folder = GOLISMERO_HOME
 
     if not exists(m_home_folder):
@@ -291,7 +300,7 @@ def start(path):
 
 
 #----------------------------------------------------------------------
-def run_devel(path, listen="0.0.0.0", port="9000"):
+def run_devel(path=None, listen="0.0.0.0", port="9000"):
     """
     Run devel version of golismero as web server mode.
 
@@ -307,10 +316,15 @@ def run_devel(path, listen="0.0.0.0", port="9000"):
     if not exists(GOLISMERO_HOME):
         abort("'%s' not found. You must run 'init' command first." % m_home_folder)
 
+    if not path:
+        path = GOLISMERO_DEFAULT_PRODUCTION
+
     if not exists(path):
         abort("'%s' not found.")
 
+
     m_source_path = os.path.join(path, "golismero")
+    print m_source_path
     with cd(m_source_path):
-        run("source ../bin/activate; screen -S golismero_daemon -d -m -L python golismero-daemon.py") # start screen with daemon
-        run("source ../bin/activate; screen -S golismer_server -d -m -L python golismero-web.py ") # start screen with web server
+        run("source ../bin/activate && nohup python golismero-daemon.py &") # start screen with daemon
+        run("source ../bin/activate && nohup python golismero-web.py &") # start screen with web server
