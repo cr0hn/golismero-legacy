@@ -50,7 +50,7 @@ class GoLismeroAuditProgress(object):
 	"""
 
 	PROPERTIES     = ["current_stage", "steps", "tests_remain", "tests_done"]
-	REPORT_FORMATS = ["html", "txt", "rst", "xml"]
+	REPORT_FORMATS = ["html", "txt", "rst"]
 
 	#----------------------------------------------------------------------
 	def __init__(self, data):
@@ -350,7 +350,7 @@ class GoLismeroAuditData(object):
 		# For this version, golismero will generate reports in all possible formats.
 		# After, core will choice what to serve.
 		#
-		m_config['reports']         = [join(self.store_path, "report.%s" % x) for x in GoLismeroAuditProgress.REPORT_FORMATS]
+		m_config['reports']         = ','.join([join(self.store_path, "report.%s" % x) for x in GoLismeroAuditProgress.REPORT_FORMATS])
 
 		#
 		# Plugins
