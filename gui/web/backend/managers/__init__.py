@@ -50,7 +50,7 @@ class GoLismeroAuditProgress(object):
 	"""
 
 	PROPERTIES     = ["current_stage", "steps", "tests_remain", "tests_done"]
-	REPORT_FORMATS = ["html", "text", "rst", "xml"]
+	REPORT_FORMATS = ["html", "txt", "rst", "xml"]
 
 	#----------------------------------------------------------------------
 	def __init__(self, data):
@@ -145,6 +145,7 @@ class GoLismeroAuditSummary(object):
 		Return the JSON object
 		"""
 		return self.__json
+
 
 
 
@@ -363,7 +364,13 @@ class GoLismeroAuditData(object):
 
 			# Plugins params
 			for pp in p.get("params", []):
-				m_tmp_plugin_args.append([l_plugin_name, pp["param_name"], pp["param_value"]])
+				l_plugin_param_name  = pp["param_name"]
+				l_plugin_param_value = pp["param_value"]
+				m_tmp_plugin_args.append((l_plugin_name, l_plugin_param_name, l_plugin_param_value))
+
+		# Configure to golismero format
+		if m_config['enable_plugins']:
+			m_config['enable_plugins'] = ','.join(m_config['enable_plugins'])
 
 		# Add plugin args?
 		if m_tmp_plugin_args:
