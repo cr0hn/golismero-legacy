@@ -129,10 +129,10 @@ class GoLismeroAuditSummary(object):
 		if not isinstance(data, dict):
 			raise TypeError("Expected dict, got '%s' instead" % type(data))
 
-		for p in GoLismeroAuditProgress.PROPERTIES:
+		for p in self.PROPERTIES:
 			try:
 				setattr(self, p, data[p])
-			except KeyError:
+			except KeyError,e:
 				raise ValueError("Invalid JSON format.")
 
 		# Store original json
