@@ -60,7 +60,7 @@ class ExceptionAudit(Exception):
 #----------------------------------------------------------------------
 class AuditBridge(object):
 	"""
-	Audit bridge between GoLismero <-> Django
+	Audit bridge between GoLismero <-> GUI
 	"""
 
 	#----------------------------------------------------------------------
@@ -134,7 +134,7 @@ class AuditBridge(object):
 		:param audit_id: string with audit ID.
 		:type audit_id: str
 
-		:return: a list with info, as format:
+		:returns: a list with info, as format:
 		[
 		  {
 		     'plugin_id'     : str,
@@ -164,27 +164,41 @@ class AuditBridge(object):
 			          for r in rpc_response
 			]
 
-	#----------------------------------------------------------------------
-	#@staticmethod
-	#def get_results(audit_info): #
-		#"""
-		#Get audit results
 
-		#:param audit_id: string with audit ID.
-		#:type audit_id: str
-		#"""
 
 	#----------------------------------------------------------------------
-	def get_summary(audit_id): #
+	@staticmethod
+	def get_summary(audit_id):
 		"""
 		Get results summary for an audit.
 
-		:param audit_id: string with audit ID.
-		:type audit_id: str
+		:param audit_id: GoLismeroAuditSummary object
+		:type audit_id: GoLismeroAuditSummary
 
 		:raises: ExceptionAuditNotFound
 		"""
-		pass
+		if not BRIDGE.SIMULATE:
+			rpc_response = BRIDGE.RPC.call("audit/summary", audit_id)
+
+			# If info not found -> audit not found
+			if not rpc_response:
+				raise ExceptionAuditNotFound()
+
+			return GoLismeroAuditSummary(rpc_response)
+
+		else:
+			return GoLismeroAuditSummary({
+		   'vulns_number'            : '10',
+		   'discovered_hosts'        : '4',
+		   'total_hosts'             : '6',
+		   'vulns_by_level'          : {
+		      'info'     : '4',
+			  'low'      : '2',
+			  'medium'   : '2',
+			  'high'     : '1',
+			  'critical' : '1',
+			}
+		})
 
 	#----------------------------------------------------------------------
 	@staticmethod
@@ -195,7 +209,7 @@ class AuditBridge(object):
 		:param audit_id: string with audit ID.
 		:type audit_id: str
 
-		:return: a string with audit state.
+		:returns: a string with audit state.
 		:type: str
 
 		:raises: ExceptionAuditNotFound
@@ -222,7 +236,7 @@ class AuditBridge(object):
 		:param audit_id: string with audit ID.
 		:type audit_id: str
 
-        :return: GoLismeroAuditProgress object
+        :returns: GoLismeroAuditProgress object
         :rtype: GoLismeroAuditProgress
 
 		:raises: ExceptionAuditNotFound

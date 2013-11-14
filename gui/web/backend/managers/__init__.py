@@ -50,7 +50,7 @@ class GoLismeroAuditProgress(object):
 	"""
 
 	PROPERTIES     = ["current_stage", "steps", "tests_remain", "tests_done"]
-	REPORT_FORMATS = ["html", "text", "rst", "xml"]
+	REPORT_FORMATS = ["html", "txt", "rst", "xml"]
 
 	#----------------------------------------------------------------------
 	def __init__(self, data):
@@ -74,6 +74,65 @@ class GoLismeroAuditProgress(object):
 			try:
 				setattr(self, p, data[p])
 			except KeyError:
+				raise ValueError("Invalid JSON format.")
+
+		# Store original json
+		self.__json             = data
+
+	#----------------------------------------------------------------------
+	@property
+	def to_json(self):
+		"""
+		Return the JSON object
+		"""
+		return self.__json
+
+class GoLismeroAuditSummary(object):
+	"""
+
+	Get the audit state. This class acts as java POJO, having these attributes:
+
+	- vulns_number        :: int
+	- discovered_hosts    :: int   # Hosts discovered into de scan process
+	- total_hosts         :: int   # Hosts discovered + initial targets
+	- vulns_by_level      :: dict( # Total summary of vulns by level
+	   'info'     : int,
+	   'low'      : int,
+	   'medium'   : int,
+	   'high'     : int,
+	   'critical' : int)
+	"""
+
+	PROPERTIES     = ["vulns_number", "discovered_hosts", "total_hosts", "vulns_by_level"]
+	REPORT_FORMATS = ["html", "text", "rst", "xml"]
+
+	#----------------------------------------------------------------------
+	def __init__(self, data):
+		"""
+		Load data from JSON, in format:
+
+		{
+		   'vulns_number'            = int
+		   'discovered_hosts'        = int
+		   'total_hosts'             = int
+		   'vulns_by_level'          = {
+		      'info'     : int,
+			  'low'      : int,
+			  'medium'   : int,
+			  'high'     : int,
+			  'critical' : int,
+		}
+
+		:param data: dict with info.
+		:type data: dict
+		"""
+		if not isinstance(data, dict):
+			raise TypeError("Expected dict, got '%s' instead" % type(data))
+
+		for p in self.PROPERTIES:
+			try:
+				setattr(self, p, data[p])
+			except KeyError,e:
 				raise ValueError("Invalid JSON format.")
 
 		# Store original json
@@ -188,7 +247,7 @@ class GoLismeroAuditData(object):
 			l_plugin['plugin_name'] = str(d.plugin_name)
 			l_plugin['params'] = []
 
-			for p in d.plugin_params.all():
+			for p in d.pluginparameters_set.all():
 				l_param = {}
 				l_param['param_name']  = str(p.param_name)
 				l_param['param_value'] = str(p.param_value)
@@ -231,7 +290,7 @@ class GoLismeroAuditData(object):
 		  ],
 		  "disabled_plugins": ["spider","nikto"]
 
-		:return: JSON with info.
+		:returns: JSON with info.
 		"""
 		return { k : v for k, v in self.__dict__.iteritems() }
 
@@ -248,7 +307,7 @@ class GoLismeroAuditData(object):
 		   'state' : str
 		}
 
-		:return: dict
+		:returns: dict
 		:rtype: dict
 		"""
 		return {
@@ -262,7 +321,7 @@ class GoLismeroAuditData(object):
 	@property
 	def to_json_console(self):
 		"""
-		:return: return a JSON formated for GoLismero console:
+		:returns: return a JSON formated for GoLismero console:
 		{
 		  "audit_name": "asdfasdf_1",
 		  "targets": ["127.0.0.1", "mysite.com" ],
@@ -301,11 +360,17 @@ class GoLismeroAuditData(object):
 		for p in self.enable_plugins:
 			l_plugin_name = p["plugin_name"]
 
-			m_config['enable_plugins'].appen(l_plugin_name)
+			m_config['enable_plugins'].append(l_plugin_name)
 
 			# Plugins params
 			for pp in p.get("params", []):
-				m_tmp_plugin_args.append([l_plugin_name, pp["plugin_name"], pp["plugin_value"]])
+				l_plugin_param_name  = pp["param_name"]
+				l_plugin_param_value = pp["param_value"]
+				m_tmp_plugin_args.append((l_plugin_name, l_plugin_param_name, l_plugin_param_value))
+
+		# Configure to golismero format
+		if m_config['enable_plugins']:
+			m_config['enable_plugins'] = ','.join(m_config['enable_plugins'])
 
 		# Add plugin args?
 		if m_tmp_plugin_args:

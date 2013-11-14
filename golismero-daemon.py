@@ -100,12 +100,62 @@ from golismero.api.logger import Logger
 from golismero.common import OrchestratorConfig, get_profile, \
     get_default_config_file
 from golismero.main import launcher
+import netaddr
+import argparse
+
+
+#----------------------------------------------------------------------
+#
+# Aux functions
+#
+#----------------------------------------------------------------------
+def check_port(port):
+    """
+    Checks a port number.
+
+    :param port: Port number.
+    :type port: int
+
+    :raises: ValueError, TypeError
+    """
+    if not isinstance(port, int):
+        raise TypeError("Expected int, got '%s' instead" % type(port))
+
+    if port < 1 or port > 65535:
+        raise ValueError("Port range must be between 1-65535")
+
+
+#----------------------------------------------------------------------
+def check_ip(ip):
+    """
+    Checks an IP address.
+
+    :param ip: IP address.
+    :type ip: str
+
+    :raises: ValueError, TypeError
+    """
+    if not isinstance(ip, basestring):
+        raise TypeError("Expected basestring, got '%s' instead" % type(ipo))
+
+    try:
+        netaddr.IPAddress(ip)
+    except:
+        try:
+            m_listen = None
+            if ip.startswith("[") and ip.endswith("]"):
+                m_listen = ip[1:-1]
+            else:
+                m_listen =  ip
+            netaddr.IPAddress(m_listen, version=6)
+        except:
+            raise ValueError("'%s' IP is not a valid IPv4 or IPv6 address" % str(ip))
 
 
 #------------------------------------------------------------------------------
 # Start of program.
 
-def main():
+def main(listen_address="127.0.0.1", listen_port=9000):
 
     # Get the config file name.
     config_file = get_default_config_file()
@@ -116,6 +166,11 @@ def main():
     orchestrator_config = OrchestratorConfig()
     orchestrator_config.verbose     = Logger.MORE_VERBOSE
     orchestrator_config.config_file = config_file
+
+    # Config service bind
+    orchestrator_config.listen_address = listen_address
+    orchestrator_config.listen_port    = listen_port
+
     orchestrator_config.from_config_file(orchestrator_config.config_file,
                                          allow_profile = True)
     if orchestrator_config.profile:
@@ -162,15 +217,71 @@ def main():
 # Run as daemon.
 
 if __name__ == '__main__':
+
+    usage = """
+Daemon for GoLismero 2.0
+
+Listen in all network interfaces at port 9000:
+%(prog)s -l 0.0.0.0 -p 9000
+
+Listen in loopback IPv6 at port 8000:
+%(prog)s -l ::1
+"""
+
+    parser = argparse.ArgumentParser(usage=usage, description='run GoLismero web UI')
+    parser.add_argument('-l', dest="IP_LISTEN", help="IP address where to listen to (default: 127.0.0.1).", default="127.0.0.1")
+    parser.add_argument('-p', dest="PORT", type=int, help="port where to listen to (default 9000).", default=9000)
+    parser.add_argument('--verbose', dest="VERBOSE", action="store_true", help="display debug info into console instead of file.", default=False)
+    args = parser.parse_args()
+
+    #
+    # Listen params
+    #
+
+    # Check port
+    if args.PORT:
+        try:
+            check_port(args.PORT)
+        except ValueError,e:
+            print "\n[!] %s\n" % str(e)
+            sys.exit(1)
+        except TypeError, e:
+            print "\n[!] %s\n" % str(e)
+            sys.exit(1)
+
+    # Check for IP
+    if args.IP_LISTEN:
+        try:
+            check_ip(args.IP_LISTEN)
+        except ValueError,e:
+            print "\n[!] %s\n" % str(e)
+            sys.exit(1)
+        except TypeError, e:
+            print "\n[!] %s\n" % str(e)
+            sys.exit(1)
+
+    #
+    # Run daemon
+    #
+
     working_directory = path.dirname( path.abspath(__file__) )
-    stdout = path.join(working_directory, "golismero-out.log")
-    stderr = path.join(working_directory, "golismero-err.log")
+
+    # If not verbose mode
+    fout = None
+    fin  = None
+    if not args.VERBOSE:
+        fout = open(path.join(working_directory, "golismero-out.log"), "a")
+        fin  = open(path.join(working_directory, "golismero-err.log"), "a")
+    else:
+        fout = sys.stdout
+        fin  = sys.stderr
     #stdout = "/var/log/golismero-out.log"
     #stderr = "/var/log/golismero-err.log"
+
     with daemon.DaemonContext(
         working_directory = working_directory,
         detach_process = False,
-        stdout = open(stdout, "a"),
-        stderr = open(stderr, "a"),
+        stdout = fout,
+        stderr = fin
     ):
-        main()
+        main(args.IP_LISTEN, args.PORT)

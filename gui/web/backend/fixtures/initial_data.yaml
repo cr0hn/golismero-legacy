@@ -2,7 +2,7 @@
   pk: 5
   fields:
     username: admin
-    password: admin
+    password: pbkdf2_sha256$10000$NHgVKSd53x1j$+E/IOvnUUbQK/tPJhHN81Yd8I60692681A2DwrLocuE=
 
 
 - model: backend.target

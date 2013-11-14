@@ -51,25 +51,26 @@ These params specifies an high timeout connection.
 
 Also you should indicate remote host in command line:
 
-```fab -t 1000 -T 1000 -H myremotehost.com ...```
+```fab -t 1000 -T 1000 -H user@myremotehost.com ...```
+
+* All commands has an optional parameters for specifing the installation path:*
+
+```fab command:INSTALLATION_FOLDER=PATH```
 
 Create initial repo
 -------------------
 
 First you must download git repositories and generate a deploy folder. To do that, run:
 
-```fab -t 1000 -T 1000 -H myremotehost.com init:DESTINATION_FOLDER```
+```fab user@myremotehost.com myremotehost.com init```
 
-- DESTINATION_FOLDER: ABSOLUTE path of destination repo.
 
 Create the virtualenv
 ---------------------
 
 For create the virtualenv, you must run:
 
-```fab -t 1000 -T 1000 -H myremotehost.com start:DESTINATION_FOLDER```
-
-- DESTINATION_FOLDER: ABSOLUTE path of destination repo.
+```fab user@myremotehost.com myremotehost.com start```
 
 
 Updating
@@ -77,7 +78,7 @@ Updating
 
 If you want update an existent installation, you must write:
 
-```fab -t 1000 -T 1000 -H myremotehost.com update:INSTALLATION_FOLDER```
+```fab -H user@myremotehost.com update```
 
 
 Running debug web server
@@ -85,7 +86,7 @@ Running debug web server
 
 If you want to run a debug web server, in port 9000, you can write:
 
-```fab -H myremotehost.com run_devel:INSTALLATION_FOLDER```
+```fab -H myremotehost.com run_devel```
 
 If you want to run other instance in other port:
 
