@@ -202,13 +202,27 @@ class AuditViewSet(ViewSet):
 		# PLUGINS
 		#
 		m_plugins_in = request.DATA.get("enable_plugins", [])
+
+		# Clean keys
+		if m_plugins_in:
+			tmp = []
+			for ll in m_plugins_in:
+				l_dict = {}
+				for dk, dv in ll.iteritems():
+					l_dict[str(dk.strip())] = dv
+
+				tmp.append(l_dict)
+			m_plugins_in = tmp
+
 		m_plugins    = [] # Plugins lists
+
 		for p in m_plugins_in:
 
 			l_plugin                = {}
 			l_plugin['plugin_name'] = p.get("plugin_name", None)
 
 			if not l_plugin['plugin_name']:
+				#print p
 				m_return['status']      = "error"
 				m_return['error_code']  = 1
 				m_return['error']       = ["A plugin name can be provided."]
