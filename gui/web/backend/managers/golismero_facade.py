@@ -104,7 +104,7 @@ class GoLismeroFacadeAudit(object):
     """
 
 
-    AVAILABLE_REPORT_FORMATS = ["rst", "html", "text", "xml"]
+    AVAILABLE_REPORT_FORMATS = ["rst", "html", "txt", "xml"]
 
     #----------------------------------------------------------------------
     #
@@ -428,7 +428,6 @@ class GoLismeroFacadeAudit(object):
                 raise ValueError("Wrong format: Targets not found.")
 
             # Checks for local host hosts
-
             t_h = [t for t in m_targets if t.startswith("127")]
             if len(t_h) > 0:
                 raise GoLismeroFacadeAuditNotAllowedHostException("Host '%s' not allowed" % ",".join(t_h))
