@@ -88,6 +88,7 @@ class AuditBridge(object):
 		config["command"]     = "scan"
 		# Set BBDD store location
 		config["audit_db"] = "%s.db" % join(data.store_path,config['audit_name'])
+
 		if not BRIDGE.SIMULATE:
 			BRIDGE.RPC.call("audit/create", config)
 
@@ -216,12 +217,15 @@ class AuditBridge(object):
 		:raises: ExceptionAuditNotFound
 		"""
 		if not BRIDGE.SIMULATE:
-			rpc_response = BRIDGE.RPC.call("audit/state", audit_id)
+			#rpc_response, a , b = BRIDGE.RPC.call("audit/state", audit_id)
+			print BRIDGE.RPC.call("audit/state", audit_id)
+			#print rpc_response
 
-			if not rpc_response:
-				return "finished"
+			#print rpc_response
+			#if not rpc_response:
+				#return "finished"
 
-			return rpc_response[0][1]
+			#return rpc_response[0][1]
 		return "running"
 
 
