@@ -160,7 +160,9 @@ def rpc_shared_heap_remove(orchestrator, audit_name, *args, **kwargs):
     return orchestrator.auditManager.get_audit(audit_name).database.remove_shared_values(*args, **kwargs)
 
 @implementor(MessageCode.MSG_RPC_AUDIT_LOG)
-def rpc_get_log_lines(orchestrator, audit_name, *args, **kwargs):
+def rpc_get_log_lines(orchestrator, current_audit_name, audit_name, *args, **kwargs):
+    if not audit_name:
+        audit_name = current_audit_name
     return orchestrator.auditManager.get_audit(audit_name).database.get_log_lines(*args, **kwargs)
 
 
@@ -1322,10 +1324,6 @@ class AuditSQLiteDB (BaseAuditDB):
                     for c in self.audit_name
                 )
                 filename = filename + ".db"
-            if audit_config.db_location:
-                self.__filename = path.join(audit_config.db_location, filename)
-            else:
-                self.__filename = filename
 
             # Make sure the directory exists.
             directory = path.split(filename)[0]
@@ -1338,6 +1336,9 @@ class AuditSQLiteDB (BaseAuditDB):
                         (directory, str(e)),
                         RuntimeWarning
                     )
+
+            # Set filename
+            self.__filename = filename
 
             # Create the database file.
             self.__db = sqlite3.connect(self.__filename)

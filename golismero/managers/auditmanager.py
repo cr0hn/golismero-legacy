@@ -57,25 +57,29 @@ from traceback import format_exc
 # RPC implementors for the audit manager API.
 
 @implementor(MessageCode.MSG_RPC_AUDIT_COUNT)
-def rpc_audit_get_count(orchestrator, audit_name):
+def rpc_audit_get_count(orchestrator, current_audit_name):
     return orchestrator.auditManager.get_audit_count()
 
 @implementor(MessageCode.MSG_RPC_AUDIT_NAMES)
-def rpc_audit_get_names(orchestrator, audit_name):
+def rpc_audit_get_names(orchestrator, current_audit_name):
     return orchestrator.auditManager.get_audit_names()
 
 @implementor(MessageCode.MSG_RPC_AUDIT_CONFIG)
-def rpc_audit_get_config(orchestrator, current_audit_name, audit_name):
+def rpc_audit_get_config(orchestrator, current_audit_name, audit_name = None):
     if audit_name:
         return orchestrator.auditManager.get_audit(audit_name).config
     return orchestrator.config
 
 @implementor(MessageCode.MSG_RPC_AUDIT_TIMES)
-def rpc_audit_get_times(orchestrator, audit_name):
+def rpc_audit_get_times(orchestrator, current_audit_name, audit_name = None):
+    if not audit_name:
+        audit_name = current_audit_name
     return orchestrator.auditManager.get_audit(audit_name).database.get_audit_times()
 
 @implementor(MessageCode.MSG_RPC_AUDIT_STATS)
-def rpc_audit_get_stats(orchestrator, audit_name):
+def rpc_audit_get_stats(orchestrator, current_audit_name, audit_name = None):
+    if not audit_name:
+        audit_name = current_audit_name
     return orchestrator.auditManager.get_audit(audit_name).get_runtime_stats()
 
 

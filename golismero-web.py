@@ -182,7 +182,7 @@ Listen in loopback IPv6 at port 8000:
 
     if args.DEBUG_MODE:
         # Set debug mode
-        settings.SIMULATE = True
+        settings.SIMULATE = False
         settings.DEBUG    = True
 
         call_command("runserver", listen_addr)

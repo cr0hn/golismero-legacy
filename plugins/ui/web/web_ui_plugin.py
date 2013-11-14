@@ -146,7 +146,7 @@ class WebUIPlugin(UIPlugin):
                 for w in message.message_info:
                     formatted = warnings.formatwarning(
                         w.message, w.category, w.filename, w.lineno, w.line)
-                    text = "Warning: " + w.message
+                    text = "Warning: " + str(w.message)
                     self.notify_warning(
                         message.audit_name, plugin_name, text,
                         Logger.STANDARD)
