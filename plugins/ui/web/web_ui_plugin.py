@@ -670,7 +670,6 @@ class WebUIPlugin(UIPlugin):
 		}
         :rtype: dict
         """
-
         # Get vulns
         tmp_vulns = Database.keys(data_type=Data.TYPE_VULNERABILITY)
 
@@ -719,9 +718,7 @@ class WebUIPlugin(UIPlugin):
              - Timestamp.
         :rtype: list( tuple(str, str, str, int, bool, float) )
         """
-        return get_audit_config(audit_name)
-
-
+        return get_audit_log_lines(audit_name)
 
 
 
