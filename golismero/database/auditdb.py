@@ -1337,6 +1337,9 @@ class AuditSQLiteDB (BaseAuditDB):
                         RuntimeWarning
                     )
 
+            # Set filename
+            self.__filename = filename
+
             # Create the database file.
             self.__db = sqlite3.connect(self.__filename)
 
@@ -1367,8 +1370,8 @@ class AuditSQLiteDB (BaseAuditDB):
 
         # Extract the filename.
         filename = parsed.path
-        if filename.startswith(posixpath.sep):
-            filename = filename[len(posixpath.sep):]
+        #if filename.startswith(posixpath.sep):
+            #filename = filename[len(posixpath.sep):]
         filename = posixpath.join(parsed.netloc, filename)
         if filename.endswith(posixpath.sep):
             filename = filename[:-len(posixpath.sep)]

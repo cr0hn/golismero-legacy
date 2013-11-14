@@ -33,7 +33,7 @@ __doc__ = """This file has data structures and method to access to GoLismero eng
 
 from django.conf import settings as BRIDGE
 from backend.managers import *
-
+from os.path import join
 
 
 #----------------------------------------------------------------------
@@ -85,8 +85,9 @@ class AuditBridge(object):
 		config = data.to_json_console
 
 		# Set command
-		config["command"] = "scan"
-
+		config["command"]     = "scan"
+		# Set BBDD store location
+		config["audit_db"] = "%s.db" % join(data.store_path,config['audit_name'])
 		if not BRIDGE.SIMULATE:
 			BRIDGE.RPC.call("audit/create", config)
 
