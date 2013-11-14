@@ -9,9 +9,9 @@ description = Default user profile for GoLismero.
 #audit_name = MyAudit
 
 # Audit database.
-# Use "memory://" for in-memory database,
-# or "sqlite://file.db" for a SQLite database file.
-#audit_db = sqlite://
+# Use ":memory:" for in-memory database, or a filename for a database file.
+# Use ":auto:" to create a new database file based on the audit name.
+#audit_db = :auto:
 
 #------------------------------------------------------------------------------
 # Report options
