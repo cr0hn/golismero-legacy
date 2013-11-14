@@ -88,7 +88,7 @@ def get_audit_config(audit_name = None):
 
 
 #------------------------------------------------------------------------------
-def get_audit_times():
+def get_audit_times(audit_name = None):
     """
     Get the audit start and stop times.
 
@@ -97,7 +97,8 @@ def get_audit_times():
         Times are returned as POSIX timestamps.
     :rtype: tuple(float|None, float|None)
     """
-    return Config._context.remote_call(MessageCode.MSG_RPC_AUDIT_TIMES)
+    return Config._context.remote_call(
+        MessageCode.MSG_RPC_AUDIT_TIMES, audit_name)
 
 
 #------------------------------------------------------------------------------
@@ -146,27 +147,41 @@ def parse_audit_times(start_time, stop_time):
 
 
 #------------------------------------------------------------------------------
-def get_audit_stats():
+def get_audit_stats(audit_name = None):
     """
     Get the audit runtime statistics.
 
-    :returns: Dictionary with runtime statistics with at least the following keys:
-     - "current_stage": [int] Current stage number.
-     - "total_count": [int] Total number of data objects to process in this stage.
-     - "processed_count": [int] Number of data objects already processed in this stage.
-     - "stage_cycles": [dict(int -> int)] Map of stage numbers and times each stage ran.
+    :param audit_name: Name of the audit to query.
+        Use None for the current audit.
+    :type audit_name: str | None
+
+    :returns: Dictionary with runtime statistics
+        with at least the following keys:
+         - "current_stage": [int] Current stage number.
+         - "total_count": [int] Total number of data objects
+           to process in this stage.
+         - "processed_count": [int] Number of data objects already
+           processed in this stage.
+         - "stage_cycles": [dict(int -> int)] Map of stage numbers
+           and times each stage ran.
     Future versions of GoLismero may include more keys.
     :rtype: dict(str -> *)
     """
-    return Config._context.remote_call(MessageCode.MSG_RPC_AUDIT_STATS)
+    return Config._context.remote_call(
+        MessageCode.MSG_RPC_AUDIT_STATS, audit_name)
 
 
 #------------------------------------------------------------------------------
-def get_audit_log_lines(from_timestamp = None, to_timestamp = None,
+def get_audit_log_lines(audit_name = None,
+                        from_timestamp = None, to_timestamp = None,
                         filter_by_plugin = None, filter_by_data = None,
                         page_num = None, per_page = None):
     """
     Retrieve past log lines.
+
+    :param audit_name: Name of the audit to query.
+        Use None for the current audit.
+    :type audit_name: str | None
 
     :param from_timestamp: (Optional) Start timestamp.
     :type from_timestamp: float | None
@@ -199,8 +214,8 @@ def get_audit_log_lines(from_timestamp = None, to_timestamp = None,
     :rtype: list( tuple(str, str, str, int, bool, float) )
     """
     return Config._context.remote_call(MessageCode.MSG_RPC_AUDIT_LOG,
-        from_timestamp, to_timestamp, filter_by_plugin, filter_by_data,
-        page_num, per_page)
+        audit_name, from_timestamp, to_timestamp, filter_by_plugin,
+        filter_by_data, page_num, per_page)
 
 
 #------------------------------------------------------------------------------
