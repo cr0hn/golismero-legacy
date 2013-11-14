@@ -1322,7 +1322,6 @@ class AuditSQLiteDB (BaseAuditDB):
                     for c in self.audit_name
                 )
                 filename = filename + ".db"
-
             if audit_config.db_location:
                 self.__filename = path.join(audit_config.db_location, filename)
             else:
@@ -1370,8 +1369,8 @@ class AuditSQLiteDB (BaseAuditDB):
 
         # Extract the filename.
         filename = parsed.path
-        if filename.startswith(posixpath.sep):
-            filename = filename[len(posixpath.sep):]
+        #if filename.startswith(posixpath.sep):
+            #filename = filename[len(posixpath.sep):]
         filename = posixpath.join(parsed.netloc, filename)
         if filename.endswith(posixpath.sep):
             filename = filename[:-len(posixpath.sep)]
