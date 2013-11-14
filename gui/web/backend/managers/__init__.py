@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # Data structures
 #
 #----------------------------------------------------------------------
-
+from collections import defaultdict
 from backend.models import *
 from os.path import join
 
@@ -252,7 +252,7 @@ class GoLismeroAuditData(object):
 			l_plugin['plugin_name'] = str(d.plugin_name)
 			l_plugin['params'] = []
 
-			for p in d.pluginparameters_set.all():
+			for p in d.pluginparameters_set.filter(audit__id=data.id).all():
 				l_param = {}
 				l_param['param_name']  = str(p.param_name)
 				l_param['param_value'] = str(p.param_value)
@@ -374,6 +374,7 @@ class GoLismeroAuditData(object):
 				l_plugin_param_value = pp["param_value"]
 				m_tmp_plugin_args.append((l_plugin_name, l_plugin_param_name, l_plugin_param_value))
 
+		m_config['plugin_args'] = m_tmp_plugin_args
 
 		# Configure to golismero format
 		if m_config['plugin_load_overrides']:
@@ -381,12 +382,8 @@ class GoLismeroAuditData(object):
 			m_config['enable_plugins'] += ','
 			m_config['enable_plugins'] += ','.join(REPORT_FORMATS.keys()) # Report plugins
 
-		# Add plugin args?
-		if m_tmp_plugin_args:
-			m_config['plugin_args'] = m_tmp_plugin_args
-
 		# No plugins?
-		#if len(m_config['plugin_load_overrides']) == 0:
-			#m_config['plugin_load_overrides'] = ["all"]
+		if len(m_config['plugin_load_overrides']) == 0:
+			m_config['plugin_load_overrides'] = ["all"]
 
 		return m_config
