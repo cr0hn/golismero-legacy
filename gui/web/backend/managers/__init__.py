@@ -37,6 +37,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from backend.models import *
 from os.path import join
 
+REPORT_FORMATS = {
+    "html" : "html",
+    "text" : "txt",
+    "rst"  : "rst"
+}
+
 class GoLismeroAuditProgress(object):
 	"""
 
@@ -50,7 +56,7 @@ class GoLismeroAuditProgress(object):
 	"""
 
 	PROPERTIES     = ["current_stage", "steps", "tests_remain", "tests_done"]
-	REPORT_FORMATS = ["html", "txt", "rst"]
+
 
 	#----------------------------------------------------------------------
 	def __init__(self, data):
@@ -104,7 +110,6 @@ class GoLismeroAuditSummary(object):
 	"""
 
 	PROPERTIES     = ["vulns_number", "discovered_hosts", "total_hosts", "vulns_by_level"]
-	REPORT_FORMATS = ["html", "text", "rst", "xml"]
 
 	#----------------------------------------------------------------------
 	def __init__(self, data):
@@ -341,8 +346,9 @@ class GoLismeroAuditData(object):
 		m_config['targets']         = self.__dict__["targets"]
 
 		# Add plugins enabled
-		m_config['enable_plugins']  = []
-
+		m_config['plugin_load_overrides']  = []
+		m_config['disable_plugins'] = ["all"]
+		m_config['enable_plugins'] = []
 
 		#
 		# FIXME in next version:
@@ -350,7 +356,7 @@ class GoLismeroAuditData(object):
 		# For this version, golismero will generate reports in all possible formats.
 		# After, core will choice what to serve.
 		#
-		m_config['reports']         = ','.join([join(self.store_path, "report.%s" % x) for x in GoLismeroAuditProgress.REPORT_FORMATS])
+		m_config['reports']         = ','.join([join(self.store_path, "report.%s" % x) for x in REPORT_FORMATS.values()])
 
 		#
 		# Plugins
@@ -360,7 +366,7 @@ class GoLismeroAuditData(object):
 		for p in self.enable_plugins:
 			l_plugin_name = p["plugin_name"]
 
-			m_config['enable_plugins'].append(l_plugin_name)
+			m_config['plugin_load_overrides'].append((True, l_plugin_name))
 
 			# Plugins params
 			for pp in p.get("params", []):
@@ -368,16 +374,19 @@ class GoLismeroAuditData(object):
 				l_plugin_param_value = pp["param_value"]
 				m_tmp_plugin_args.append((l_plugin_name, l_plugin_param_name, l_plugin_param_value))
 
+
 		# Configure to golismero format
-		if m_config['enable_plugins']:
-			m_config['enable_plugins'] = ','.join(m_config['enable_plugins'])
+		if m_config['plugin_load_overrides']:
+			m_config['enable_plugins'] = ','.join(x[1] for x in m_config['plugin_load_overrides'])
+			m_config['enable_plugins'] += ','
+			m_config['enable_plugins'] += ','.join(REPORT_FORMATS.keys()) # Report plugins
 
 		# Add plugin args?
 		if m_tmp_plugin_args:
 			m_config['plugin_args'] = m_tmp_plugin_args
 
 		# No plugins?
-		if len(m_config['enable_plugins']) == 0:
-			m_config['enable_plugins'] = ["all"]
+		#if len(m_config['plugin_load_overrides']) == 0:
+			#m_config['plugin_load_overrides'] = ["all"]
 
 		return m_config
