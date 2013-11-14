@@ -435,6 +435,21 @@ class GoLismeroFacadeAudit(object):
             raise TypeError("Expected dict, got '%s' instead" % type(data))
 
         try:
+
+            #
+            # AUDIT
+            #
+            # Simple values
+            m_audit = Audit()
+            for k, v in data.iteritems():
+                if not isinstance(v, dict) and not isinstance(v, list):
+                    setattr(m_audit, k, v)
+
+            # Set user
+            m_audit.user = User.objects.get(pk=5)
+            m_audit.save()
+
+
             #
             # TARGETS
             #
@@ -484,23 +499,12 @@ class GoLismeroFacadeAudit(object):
                     l_param = PluginParameters()
                     l_param.param_name    = pp['param_name']
                     l_param.param_value   = pp['param_value']
-                    l_param.plugin_params = l_plugin
+                    l_param.plugin        = l_plugin
+                    l_param.audit         = m_audit
                     l_param.save()
                 # Add to total
                 m_enable_plugins_stored.append(l_plugin)
 
-            #
-            # AUDIT
-            #
-            # Simple values
-            m_audit = Audit()
-            for k, v in data.iteritems():
-                if not isinstance(v, dict) and not isinstance(v, list):
-                    setattr(m_audit, k, v)
-
-            # Set user
-            m_audit.user = User.objects.get(pk=5)
-            m_audit.save()
 
             # Relations
             for t in m_targets_stored:
