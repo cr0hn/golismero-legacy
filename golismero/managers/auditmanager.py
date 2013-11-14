@@ -82,6 +82,12 @@ def rpc_audit_get_stats(orchestrator, current_audit_name, audit_name = None):
         audit_name = current_audit_name
     return orchestrator.auditManager.get_audit(audit_name).get_runtime_stats()
 
+@implementor(MessageCode.MSG_RPC_AUDIT_SCOPE)
+def rpc_audit_get_scope(orchestrator, current_audit_name, audit_name = None):
+    if audit_name:
+        return orchestrator.auditManager.get_audit(audit_name).scope
+    return DummyScope()
+
 
 #------------------------------------------------------------------------------
 class AuditManager (object):

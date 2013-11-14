@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.audit import start_audit, stop_audit, \
      get_audit_names, get_audit_count, get_audit_config, \
-     get_audit_stats, get_audit_log_lines
+     get_audit_stats, get_audit_log_lines, get_audit_scope
 
 from golismero.api.data import Data
 from golismero.api.data.resource import Resource
@@ -53,6 +53,32 @@ django_bridge = load_source(
     "django_bridge",
     abspath(join(split(__file__)[0], "django_bridge.py"))
 )
+
+
+#------------------------------------------------------------------------------
+class SwitchToAudit(object):
+
+    def __init__(self, audit_name):
+        self.audit_name = audit_name
+
+    def __enter__(self):
+
+        # Keep the original execution context.
+        self.old_context = Config._context
+
+        # Update the execution context for this audit.
+        Config._context = PluginContext(
+                   msg_queue = old_context.msg_queue,
+                  audit_name = audit_name,
+                audit_config = get_audit_config(audit_name),
+                 audit_scope = get_audit_scope(audit_name),
+            orchestrator_pid = old_context._orchestrator_pid,
+            orchestrator_tid = old_context._orchestrator_tid)
+
+    def __exit__(self, *args, **kwargs):
+
+        # Restore the original execution context.
+        Config._context = old_context
 
 
 #------------------------------------------------------------------------------
@@ -574,15 +600,14 @@ class WebUIPlugin(UIPlugin):
         """
         Implementation of: /scan/state
 
-        Return tuple as format:
-
-        (
-          'STEPS' # Count number that "recon" stage was reached
-          'STAGE_NAME',
+        Returns a tuple with the following format::
           (
-            (PLUGIN_NAME::str, IDENTITY::int, PROGRESS::float(0.0-100.0)),
+            'STEPS' # Count number that "recon" stage was reached
+            'STAGE_NAME',
+            (
+              (PLUGIN_NAME::str, IDENTITY::int, PROGRESS::float(0.0-100.0)),
+            )
           )
-        )
 
         :param audit_name: Name of the audit to query.
         :type audit_name: str
@@ -610,11 +635,13 @@ class WebUIPlugin(UIPlugin):
         return r
 
 
-
     #--------------------------------------------------------------------------
-    def do_audit_results(self, data_type = "all"):
+    def do_audit_results(self, audit_name, data_type = "all"):
         """
         Implementation of: /scan/results
+
+        :param audit_name: Name of the audit to query.
+        :type audit_name: str
 
         :param data_type: Data type to request. Case insensitive.
             Must be one of the following values:
@@ -629,31 +656,37 @@ class WebUIPlugin(UIPlugin):
 
         :raises KeyError: Data type unknown.
         """
-        i_data_type = {
-            "all": None,
-            "information": Data.TYPE_INFORMATION,
-            "resource": Data.TYPE_RESOURCE,
-            "vulnerability": Data.TYPE_VULNERABILITY,
-            }[data_type.strip().lower()]
-        return sorted( Database.keys(i_data_type) )
+        with SwitchToAudit(audit_name):
+            i_data_type = {
+                "all": None,
+                "information": Data.TYPE_INFORMATION,
+                "resource": Data.TYPE_RESOURCE,
+                "vulnerability": Data.TYPE_VULNERABILITY,
+                }[data_type.strip().lower()]
+            return sorted( Database.keys(i_data_type) )
 
 
     #--------------------------------------------------------------------------
-    def do_audit_details(self, id_list):
+    def do_audit_details(self, audit_name, id_list):
         """
         Implementation of: /scan/details
+
+        :param audit_name: Name of the audit to query.
+        :type audit_name: str
 
         :param id_list: List of result IDs.
         :type id_list: list(str)
         """
-        return Database.get_many(id_list)
+        with SwitchToAudit(audit_name):
+            return Database.get_many(id_list)
+
 
     #----------------------------------------------------------------------
     def do_audit_summary(self, audit_name):
         """
         Get results summary for an audit.
 
-        :param audit_name: Audit name string.
+        :param audit_name: Name of the audit to query.
         :type audit_name: str
 
         :returns: return dict as format:
@@ -670,42 +703,45 @@ class WebUIPlugin(UIPlugin):
 		}
         :rtype: dict
         """
-        # Get vulns
-        tmp_vulns = Database.keys(data_type=Data.TYPE_VULNERABILITY)
+        with SwitchToAudit(audit_name):
 
-        # Get each type of vuln level
-        vulns_counter = collections.Counter()
-        for l_vuln in tmp_vulns:
-            vulns_counter[l_vuln.level] += 1
+            # Get vulns
+            tmp_vulns = Database.keys(data_type=Data.TYPE_VULNERABILITY)
 
-        # Get discovered host
-        discovered_hosts = 0
-        discovered_hosts += len(Database.keys(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_DOMAIN))
-        discovered_hosts += len(Database.keys(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_IP))
+            # Get each type of vuln level
+            vulns_counter = collections.Counter()
+            for l_vuln in tmp_vulns:
+                vulns_counter[l_vuln.level] += 1
 
-        # Get audit targets number
-        total_hosts       = len(AuditConfig.targets)
+            # Get discovered host
+            discovered_hosts = 0
+            discovered_hosts += len(Database.keys(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_DOMAIN))
+            discovered_hosts += len(Database.keys(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_IP))
 
-        #
-        # Make the response
-        return {
-		   'vulns_number'            : len(tmp_vulns),
-		   'discovered_hosts'        : discovered_hosts,
-		   'total_hosts'             : total_hosts,
-		   'vulns_by_level'          : {
-		      'info'     : vulns_counter['info'],
-			  'low'      : vulns_counter['low'],
-			  'medium'   : vulns_counter['medium'],
-			  'high'     : vulns_counter['high'],
-			  'critical' : vulns_counter['critical']
-            }
-		}
+            # Get audit targets number
+            total_hosts       = len(AuditConfig.targets)
+
+            #
+            # Make the response
+            return {
+                       'vulns_number'            : len(tmp_vulns),
+                       'discovered_hosts'        : discovered_hosts,
+                       'total_hosts'             : total_hosts,
+                       'vulns_by_level'          : {
+                          'info'     : vulns_counter['info'],
+                              'low'      : vulns_counter['low'],
+                              'medium'   : vulns_counter['medium'],
+                              'high'     : vulns_counter['high'],
+                              'critical' : vulns_counter['critical']
+                       }
+                    }
+
 
     #----------------------------------------------------------------------
     def do_audit_log(self, audit_name):
         """
 
-        :param audit_name: Audit name.
+        :param audit_name: Name of the audit to query.
         :type audit_name: str
 
         :returns: List of tuples.
@@ -719,8 +755,6 @@ class WebUIPlugin(UIPlugin):
         :rtype: list( tuple(str, str, str, int, bool, float) )
         """
         return get_audit_log_lines(audit_name)
-
-
 
 
     #--------------------------------------------------------------------------

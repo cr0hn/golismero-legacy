@@ -219,6 +219,22 @@ def get_audit_log_lines(audit_name = None,
 
 
 #------------------------------------------------------------------------------
+def get_audit_scope(audit_name):
+    """
+    :param audit_name: Name of the audit to query.
+        Use None for the current audit.
+    :type audit_name: str | None
+
+    :returns: Audit scope.
+    :rtype: AuditScope
+    """
+    if not audit_name:
+        return Config.audit_scope
+    return Config._context.remote_call(
+        MessageCode.MSG_RPC_AUDIT_SCOPE, audit_name)
+
+
+#------------------------------------------------------------------------------
 def start_audit(audit_config):
     """
     Starts a new audit.
