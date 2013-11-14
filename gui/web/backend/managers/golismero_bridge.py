@@ -87,8 +87,7 @@ class AuditBridge(object):
 		# Set command
 		config["command"]     = "scan"
 		# Set BBDD store location
-		config["db_location"] = data.store_path
-
+		config["db"] = data.store_path
 		if not BRIDGE.SIMULATE:
 			BRIDGE.RPC.call("audit/create", config)
 
@@ -166,17 +165,10 @@ class AuditBridge(object):
 			          for r in rpc_response
 			]
 
-	#----------------------------------------------------------------------
-	#@staticmethod
-	#def get_results(audit_info): #
-		#"""
-		#Get audit results
 
-		#:param audit_id: string with audit ID.
-		#:type audit_id: str
-		#"""
 
 	#----------------------------------------------------------------------
+	@staticmethod
 	def get_summary(audit_id):
 		"""
 		Get results summary for an audit.
@@ -187,7 +179,7 @@ class AuditBridge(object):
 		:raises: ExceptionAuditNotFound
 		"""
 		if not BRIDGE.SIMULATE:
-			rpc_response = BRIDGE.RPC.call("audit/summary")
+			rpc_response = BRIDGE.RPC.call("audit/summary", audit_id)
 
 			# If info not found -> audit not found
 			if not rpc_response:
@@ -197,15 +189,15 @@ class AuditBridge(object):
 
 		else:
 			return GoLismeroAuditSummary({
-		   'vulns_number'            : 10,
-		   'discovered_hosts'        : 4,
-		   'total_hosts'             : 6,
+		   'vulns_number'            : '10',
+		   'discovered_hosts'        : '4',
+		   'total_hosts'             : '6',
 		   'vulns_by_level'          : {
-		      'info'     : 4,
-			  'low'      : 2,
-			  'medium'   : 2,
-			  'high'     : 1,
-			  'critical' : 1,
+		      'info'     : '4',
+			  'low'      : '2',
+			  'medium'   : '2',
+			  'high'     : '1',
+			  'critical' : '1',
 			}
 		})
 
