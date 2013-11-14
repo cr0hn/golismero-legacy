@@ -57,6 +57,25 @@ django_bridge = load_source(
 
 #------------------------------------------------------------------------------
 class SwitchToAudit(object):
+    """
+    Context manager that allows UI plugins to run API calls as if they came
+    from within an audit. This is useful, for example, to have access to the
+    audit database APIs.
+
+    Example::
+        >>> from golismero.api.data.db import Database
+        >>> with SwitchToAudit("my_audit"):
+        ...     data_ids = Database.keys()
+        ...     print "Ok!"
+        ...
+        Ok!
+        >>> try:
+        ...     Database.keys()
+        ... except Exception:
+        ...     print "Error!"
+        ...
+        Error!
+    """
 
     def __init__(self, audit_name):
         self.audit_name = audit_name
