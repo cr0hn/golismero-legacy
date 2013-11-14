@@ -151,7 +151,7 @@ class GoLismeroFacadeAudit(object):
 
         :raises: GoLismeroFacadeAuditNotFoundException, TypeError
         """
-        if not isinstance(audit_id, basestring):
+        if not isinstance(audit_id, basestring) and not isinstance(audit_id, int):
             raise TypeError("Expected basestring, got '%s' instead" % type(audit_id))
 
         # Call to GoLismero
@@ -164,11 +164,27 @@ class GoLismeroFacadeAudit(object):
                 return "new"
 
             m_new_state = None
-            try:
-                m_new_state = AuditBridge.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
-            except ExceptionAuditNotFound:
-                # Audit not working
+            m_total = 1
+            for f in GoLismeroFacadeAudit.AVAILABLE_REPORT_FORMATS:
+                l_folder =  get_user_settings_folder()
+                l_id     = str(m_audit.id)
+                l_format = f
+                l_path   = "%s%s/report.%s" % (l_folder, l_id, f)
+
+                #print path
+                if os.path.exists(l_path):
+                    m_total +=1
+
+            if m_total == len(GoLismeroFacadeAudit.AVAILABLE_REPORT_FORMATS):
                 m_new_state = "finished"
+            else:
+                m_new_state = "running"
+
+            #try:
+                #m_new_state = AuditBridge.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+            #except ExceptionAuditNotFound:
+                ## Audit not working
+                #m_new_state = "finished"
 
             #  Update audit state into BBDD
             if m_audit.audit_state != m_new_state:
@@ -279,7 +295,7 @@ class GoLismeroFacadeAudit(object):
             m_audit = Audit.objects.get(pk=audit_id)
 
             # Update state
-            #GoLismeroFacadeAudit.get_state(m_audit.id)
+            GoLismeroFacadeAudit.get_state(m_audit.id)
 
             if m_audit.audit_state != "finished":
                 raise GoLismeroFacadeReportNotAvailableException("Not finished audit. Report is not available.")
