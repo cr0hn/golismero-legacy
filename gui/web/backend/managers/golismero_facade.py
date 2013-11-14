@@ -329,13 +329,12 @@ class GoLismeroFacadeAudit(object):
         try:
             m_audit = Audit.objects.get(pk=audit_id)
 
-
             if m_audit.audit_state != "running":
                 raise GoLismeroFacadeAuditStateException("Audit not running. Only can get summary from running audits.")
 
             # Get summary
             try:
-                GoLismeroFacadeAudit.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+                return AuditBridge.get_summary(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name)).to_json
             except ExceptionAuditNotFound,e:
                 raise GoLismeroFacadeAuditStateException("Audit not running. Only can get summary from running audits.")
 
@@ -710,10 +709,9 @@ class GoLismeroFacadeAudit(object):
         if not isinstance(audit_id, basestring) and not isinstance(audit_id, int):
             raise TypeError("Expected basestring, got '%s' instead" % type(audit_id))
 
-        if not audit_name:
+        if audit_name:
             if not isinstance(audit_name, basestring):
                 raise TypeError("Expected basestring, got '%s' instead" % type(audit_name))
-
             return "%s_%s" % (audit_name, str(audit_id))
 
         # Get audit name
