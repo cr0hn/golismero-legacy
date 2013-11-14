@@ -265,10 +265,10 @@ def cmdline_parser():
 
     gr_audit = parser.add_argument_group("audit options")
     gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
-    cmd = gr_audit.add_argument("-db", "--audit-db", metavar="DATABASE", dest="audit_db", help="specify a database connection string")
+    cmd = gr_audit.add_argument("-db", "--audit-db", metavar="DATABASE", dest="audit_db", help="specify a database filename")
     if autocomplete_enabled:
         cmd.completer = FilesCompleter(allowednames=(".db",), directories=False)
-    gr_audit.add_argument("-nd", "--no-db", dest="audit_db", action="store_const", const="memory://", help="do not store the results in a database")
+    gr_audit.add_argument("-nd", "--no-db", dest="audit_db", action="store_const", const=":memory:", help="do not store the results in a database")
     cmd = gr_audit.add_argument("-i", "--input", dest="imports", metavar="FILENAME", action="append", help="read results from external tools right before the audit")
     if autocomplete_enabled:
         cmd.completer = FilesCompleter(allowednames=(".csv", ".xml", ".nessus"), directories=False)

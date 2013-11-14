@@ -1327,7 +1327,7 @@ class AuditSQLiteDB (BaseAuditDB):
 
             # Make sure the directory exists.
             directory = path.split(filename)[0]
-            if not path.exists(directory):
+            if directory and not path.exists(directory):
                 try:
                     makedirs(directory)
                 except Exception, e:
@@ -1355,43 +1355,30 @@ class AuditSQLiteDB (BaseAuditDB):
     @staticmethod
     def __parse_connection_string(audit_db, audit_name = None):
         """
-        :param audit_db: Connection string.
-        :type audit_db: str
+        :param audit_db: Optional, database filename.
+        :type audit_db: str | None
 
         :param audit_name: Optional, audit name.
         :type audit_name: str | None
 
-        :returns: Database filename.
-        :rtype: str
+        :returns: Database filename, or None on error.
+        :rtype: str | None
         """
 
-        # Parse the connection URL.
-        parsed = urlparse.urlparse(audit_db)
-
-        # Extract the filename.
-        filename = parsed.path
-        if filename.startswith(posixpath.sep):
-            filename = filename[len(posixpath.sep):]
-        filename = posixpath.join(parsed.netloc, filename)
-        if filename.endswith(posixpath.sep):
-            filename = filename[:-len(posixpath.sep)]
-        if path.sep != posixpath.sep:
-            filename.replace(posixpath.sep, path.sep)
-        if "%" in filename:
-            filename = urlparse.unquote(filename)
-
         # If we don't have a filename but we have an audit name...
-        if not filename and audit_name:
+        if not audit_db or audit_db == ":auto:":
+            audit_db = None
+            if audit_name:
 
-            # Generate the filename from the audit name.
-            filename = "".join(
-                (c if c in "-_~" or c.isalnum() else "_")
-                for c in audit_name
-            )
-            filename = filename + ".db"
+                # Generate the filename from the audit name.
+                audit_db = "".join(
+                    (c if c in "-_~" or c.isalnum() else "_")
+                    for c in audit_name
+                )
+                audit_db = audit_db + ".db"
 
         # Return the filename.
-        return filename
+        return audit_db
 
 
     #--------------------------------------------------------------------------
@@ -2518,14 +2505,8 @@ class AuditDB (BaseAuditDB):
     """
     Stores Data objects in a database.
 
-    The database type is chosen automatically based on the connection string.
+    The database type is chosen automatically based on the filename.
     """
-
-    # Map of URL schemes to AuditDB classes.
-    __classmap = {
-        "memory": AuditMemoryDB,
-        "sqlite": AuditSQLiteDB,
-    }
 
 
     #--------------------------------------------------------------------------
@@ -2534,22 +2515,16 @@ class AuditDB (BaseAuditDB):
         :param audit_config: Audit configuration.
         :type audit_config: AuditConfig
         """
-        parsed = urlparse.urlparse(audit_config.audit_db)
-        scheme = parsed.scheme.lower()
-        try:
-            clazz = cls.__classmap[scheme]
-        except KeyError:
-            raise ValueError("Unsupported database type: %r" % scheme)
-        return clazz(audit_config)
+        if audit_config.audit_db == ":memory:":
+                return AuditMemoryDB(audit_config)
+        return AuditSQLiteDB(audit_config)
 
 
     #--------------------------------------------------------------------------
     @classmethod
     def get_config_from_closed_database(cls, audit_db, audit_name = None):
-        parsed = urlparse.urlparse(audit_db)
-        scheme = parsed.scheme.lower()
-        try:
-            clazz = cls.__classmap[scheme]
-        except KeyError:
-            raise ValueError("Unsupported database type: %r" % scheme)
-        return clazz.get_config_from_closed_database(audit_db, audit_name)
+        if audit_config.audit_db == ":memory":
+            raise ValueError(
+                "Operation not supported for in-memory database!")
+        return AuditSQLiteDB.get_config_from_closed_database(
+            audit_db, audit_name)

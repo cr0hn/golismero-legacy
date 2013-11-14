@@ -350,7 +350,7 @@ class Audit (object):
         self.__report_manager = None
 
         # Create or open the database.
-        force_print_name = not audit_config.audit_name
+        force_print_name = not audit_config.audit_name or audit_config.audit_db == ":auto:"
         self.__database = AuditDB(audit_config)
 
         # Set the audit name.

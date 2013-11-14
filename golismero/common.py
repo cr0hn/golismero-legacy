@@ -747,7 +747,7 @@ class AuditConfig (Configuration):
         "audit_name": Configuration.string,
 
         # Audit database
-        "audit_db": (None, "memory://"),
+        "audit_db": (None, ":memory:"),
 
         # Input files
         "imports": (Configuration.comma_separated_list, []),
@@ -951,12 +951,13 @@ class AuditConfig (Configuration):
 
     @audit_db.setter
     def audit_db(self, audit_db):
-        if not audit_db:
-            audit_db = "memory://"
-        elif not "://" in audit_db:
-            audit_db = "sqlite://" + audit_db
-        audit_db = str(audit_db)
-        urlparse.urlparse(audit_db)  # check validity of URL syntax
+        if (
+            not audit_db or not audit_db.strip() or
+            audit_db.strip().lower() == ":auto:"
+        ):
+            audit_db = ":auto:"
+        elif audit_db.strip().lower() == ":memory:":
+            audit_db = ":memory:"
         self._audit_db = audit_db
 
 
@@ -1038,19 +1039,19 @@ class AuditConfig (Configuration):
         """
 
         # Memory databases are always new audits.
-        if not self.audit_db or self.audit_db.lower().startswith("memory://"):
+        if (
+            not self.audit_db or not self.audit_db.strip() or
+            self.audit_db.strip().lower() == ":memory:"
+        ):
+            self.audit_db = ":memory:"
             return True
 
         # SQLite databases are new audits if the file doesn't exist.
         # If we have no filename, use the audit name.
         # If we don't have that either it's a new audit.
-        if self.audit_db.lower().startswith("sqlite://"):
-            filename = self.audit_db[9:]
+        filename = self.audit_db
+        if not filename:
+            filename = self.audit_name + ".db"
             if not filename:
-                filename = self.audit_name
-                if not filename:
-                    return True
-            return not path.exists(filename)
-
-        # We don't know how to parse this database connection string.
-        raise ValueError("Unsupported connection string: %s" % self.audit_db)
+                return True
+        return not path.exists(filename)
