@@ -829,7 +829,8 @@ class AuditConfig (Configuration):
                 self.profile = self.profile.encode("UTF-8")
             self.profile_file = get_profile(self.profile)
         if "plugin_args" in args:
-            plugin_args = []
+            #plugin_args = []
+            plugin_args = {}
             for (plugin_id, key, value) in args["plugin_args"]:
                 if isinstance(plugin_id, unicode):
                     plugin_id = plugin_id.encode("UTF-8")
@@ -837,7 +838,8 @@ class AuditConfig (Configuration):
                     key = key.encode("UTF-8")
                 if isinstance(value, unicode):
                     value = value.encode("UTF-8")
-                plugin_args.append( (plugin_id, key, value) )
+                #plugin_args.append( (plugin_id, key, value) )
+                plugin_args[plugin_id] = (key, value)
             self.plugin_args = plugin_args
         if "command" in args:
             self.command = args["command"]
