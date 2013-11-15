@@ -124,6 +124,7 @@ def get_stage_name(stage_number):
 
 #------------------------------------------------------------------------------
 _STAGE_DISPLAY_NAMES = {
+    "start"   : "Starting",
     "import"  : "Importing",
     "recon"   : "Reconaissance",
     "scan"    : "Scanning (non-intrusive)",
@@ -131,8 +132,9 @@ _STAGE_DISPLAY_NAMES = {
     "intrude" : "Post-exploitation",
     "cleanup" : "Cleanup",
     "report"  : "Reporting",
+    "finish"  : "Finished",
+    "cancel"  : "Cancelled",
 }
-assert sorted(_STAGE_DISPLAY_NAMES.keys()) == sorted(_STAGE_NAMES)
 def get_stage_display_name(stage):
     """
     Get a user friendly display name for the given stage.

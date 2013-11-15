@@ -90,7 +90,9 @@ if path.sep == "\\":
 #------------------------------------------------------------------------------
 # Imported modules.
 
+import argparse
 import daemon
+import netaddr
 
 
 #------------------------------------------------------------------------------
@@ -100,8 +102,6 @@ from golismero.api.logger import Logger
 from golismero.common import OrchestratorConfig, get_profile, \
     get_default_config_file
 from golismero.main import launcher
-import netaddr
-import argparse
 
 
 #----------------------------------------------------------------------
@@ -244,8 +244,8 @@ def daemon_main(listen_address, listen_port):
                     "Default plugins folder not found, aborting!")
         orchestrator_config.plugins_folder = plugins_folder
 
-    # Force the Web UI.
-    orchestrator_config.ui_mode = "web"
+    # Force the Daemon UI.
+    orchestrator_config.ui_mode = "daemon"
 
     # Force disable colored output.
     orchestrator_config.color = False

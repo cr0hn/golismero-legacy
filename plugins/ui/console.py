@@ -187,6 +187,10 @@ class ConsoleUIPlugin(UIPlugin):
                     del self.already_seen_info[Config.audit_name]
                 except KeyError:
                     pass # may happen when only generating reports
+                try:
+                    del self.current_plugins[Config.audit_name]
+                except KeyError:
+                    pass
                 if get_audit_count() == 1:  # this is the last one
                     Config._context.send_msg(  # XXX FIXME hide this from plugins!
                         message_type = MessageType.MSG_TYPE_CONTROL,

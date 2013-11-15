@@ -55,7 +55,7 @@ class ParameterizedRouter(SimpleRouter):
     class SearchViewSet(ViewSet):
         def search(self, request, *args, **kwargs):
             s = kwargs['text']
-		    return Response({'search' : s})
+    return Response({'search' : s})
     """
 
     def get_text_regex(self, viewset):
@@ -103,5 +103,4 @@ class ParameterizedRouter(SimpleRouter):
                 urls.append(url(regex, view, name=name))
 
         return urls
-
 

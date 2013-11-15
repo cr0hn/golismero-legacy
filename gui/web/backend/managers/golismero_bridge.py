@@ -42,16 +42,16 @@ from os.path import join
 #
 #----------------------------------------------------------------------
 class ExceptionAuditNotFound(Exception):
-	"""Audit not found."""
-	pass
+    """Audit not found."""
+    pass
 
 
 class ExceptionAuditUnknown(Exception):
-	pass
+    pass
 
 
 class ExceptionAudit(Exception):
-	pass
+    pass
 
 #----------------------------------------------------------------------
 #
@@ -59,230 +59,229 @@ class ExceptionAudit(Exception):
 #
 #----------------------------------------------------------------------
 class AuditBridge(object):
-	"""
-	Audit bridge between GoLismero <-> GUI
-	"""
+    """
+    Audit bridge between GoLismero <-> GUI
+    """
 
-	#----------------------------------------------------------------------
-	#
-	# Unidirectional methods
-	#
-	#----------------------------------------------------------------------
+    #----------------------------------------------------------------------
+    #
+    # Unidirectional methods
+    #
+    #----------------------------------------------------------------------
 
-	@staticmethod
-	def new_audit(data):
-		"""
-		Creates and start a new audit.
+    @staticmethod
+    def new_audit(data):
+        """
+        Creates and start a new audit.
 
-		:param data: GoLismeroAuditData with audit info.
-		:type data: GoLismeroAuditData
+        :param data: GoLismeroAuditData with audit info.
+        :type data: GoLismeroAuditData
 
-		:raises: ExceptionAudit
-		"""
-		if not isinstance(data, GoLismeroAuditData):
-			raise TypeError("Expected GoLismeroAuditData, got '%s' instead" % type(data))
+        :raises: ExceptionAudit
+        """
+        if not isinstance(data, GoLismeroAuditData):
+            raise TypeError("Expected GoLismeroAuditData, got '%s' instead" % type(data))
 
-		config = data.to_json_console
+        config = data.to_json_console
 
-		# Set command
-		config["command"]     = "scan"
-		# Set BBDD store location
-		config["audit_db"] = "%s.db" % join(data.store_path,config['audit_name'])
+        # Set command
+        config["command"]     = "scan"
+        # Set BBDD store location
+        config["audit_db"] = "%s.db" % join(data.store_path,config['audit_name'])
 
-		if not BRIDGE.SIMULATE:
-			BRIDGE.RPC.call("audit/create", config)
-
-
-
-	#----------------------------------------------------------------------
-	@staticmethod
-	def stop(audit_id):
-		"""
-		Stops and audit.
-
-		:param audit_id: string with audit ID.
-		:type audit_id: str
-
-		:raises: ExceptionAuditNotFound
-		"""
-		if not BRIDGE.SIMULATE:
-			BRIDGE.RPC.call("audit/cancel", audit_id)
+        if not BRIDGE.SIMULATE:
+            BRIDGE.RPC.call("audit/create", config)
 
 
 
-	#----------------------------------------------------------------------
-	@staticmethod
-	def resume(audit_id): #
-		"""
-		Resumes and audit.
+    #----------------------------------------------------------------------
+    @staticmethod
+    def stop(audit_id):
+        """
+        Stops and audit.
 
-		:param audit_id: string with audit ID.
-		:type audit_id: str
+        :param audit_id: string with audit ID.
+        :type audit_id: str
 
-		:raises: ExceptionAuditNotFound, ExceptionAuditUnknown
-		"""
-		pass
-
-	#----------------------------------------------------------------------
-	#
-	# Getters methods
-	#
-	#----------------------------------------------------------------------
-	@staticmethod
-	def get_log(audit_id):
-		"""
-		Get log for and audit as format:
-
-		:param audit_id: string with audit ID.
-		:type audit_id: str
-
-		:returns: a list with info, as format:
-		[
-		  {
-		     'plugin_id'     : str,
-			 'text'          : str,
-			 'verbosity'     : int,
-			 'is_error'      : bool,
-			 'timestamp'     : float
-		  }
-		]
-		:rtype: list(dict)
-
-		:raises: ExceptionAuditNotFound
-		"""
-
-		if not BRIDGE.SIMULATE:
-			rpc_response = BRIDGE.RPC.call("audit/log", audit_id)
-
-			return [
-			          {
-			              'plugin_id'     : r[0],
-			              'text'          : r[1],
-			              'verbosity'     : r[2],
-			              'is_error'      : r[3],
-			              'timestamp'     : r[4]
-			          }
-
-			          for r in rpc_response
-			]
+        :raises: ExceptionAuditNotFound
+        """
+        if not BRIDGE.SIMULATE:
+            BRIDGE.RPC.call("audit/cancel", audit_id)
 
 
 
-	#----------------------------------------------------------------------
-	@staticmethod
-	def get_summary(audit_id):
-		"""
-		Get results summary for an audit.
+    #----------------------------------------------------------------------
+    @staticmethod
+    def resume(audit_id): #
+        """
+        Resumes and audit.
 
-		:param audit_id: GoLismeroAuditSummary object
-		:type audit_id: GoLismeroAuditSummary
+        :param audit_id: string with audit ID.
+        :type audit_id: str
 
-		:raises: ExceptionAuditNotFound
-		"""
-		if not BRIDGE.SIMULATE:
-			rpc_response = BRIDGE.RPC.call("audit/summary", audit_id)
+        :raises: ExceptionAuditNotFound, ExceptionAuditUnknown
+        """
+        pass
 
-			# If info not found -> audit not found
-			if not rpc_response:
-				raise ExceptionAuditNotFound()
+    #----------------------------------------------------------------------
+    #
+    # Getters methods
+    #
+    #----------------------------------------------------------------------
+    @staticmethod
+    def get_log(audit_id):
+        """
+        Get log for and audit as format:
 
-			return GoLismeroAuditSummary(rpc_response)
+        :param audit_id: string with audit ID.
+        :type audit_id: str
 
-		else:
-			return GoLismeroAuditSummary({
-		   'vulns_number'            : '10',
-		   'discovered_hosts'        : '4',
-		   'total_hosts'             : '6',
-		   'vulns_by_level'          : {
-		      'info'     : '4',
-			  'low'      : '2',
-			  'medium'   : '2',
-			  'high'     : '1',
-			  'critical' : '1',
-			}
-		})
+        :returns: a list with info, as format:
+        [
+          {
+             'plugin_id'     : str,
+        	 'text'          : str,
+        	 'verbosity'     : int,
+        	 'is_error'      : bool,
+        	 'timestamp'     : float
+          }
+        ]
+        :rtype: list(dict)
 
-	#----------------------------------------------------------------------
-	@staticmethod
-	def get_state(audit_id):
-		"""
-		Call to GoLismero core and returns the state, as a string.
+        :raises: ExceptionAuditNotFound
+        """
 
-		:param audit_id: string with audit ID.
-		:type audit_id: str
+        if not BRIDGE.SIMULATE:
+            rpc_response = BRIDGE.RPC.call("audit/log", audit_id)
 
-		:returns: a string with audit state.
-		:type: str
+            return [
+                {
+                    'plugin_id'     : r[0],
+                    'text'          : r[1],
+                    'verbosity'     : r[2],
+                    'is_error'      : r[3],
+                    'timestamp'     : r[4]
+                }
 
-		:raises: ExceptionAuditNotFound
-		"""
-		if not BRIDGE.SIMULATE:
-			#rpc_response, a , b = BRIDGE.RPC.call("audit/state", audit_id)
-			print BRIDGE.RPC.call("audit/state", audit_id)
-			#print rpc_response
-
-			#print rpc_response
-			#if not rpc_response:
-				#return "finished"
-
-			#return rpc_response[0][1]
-		return "running"
+                for r in rpc_response
+            ]
 
 
 
+    #----------------------------------------------------------------------
+    @staticmethod
+    def get_summary(audit_id):
+        """
+        Get results summary for an audit.
+
+        :param audit_id: GoLismeroAuditSummary object
+        :type audit_id: GoLismeroAuditSummary
+
+        :raises: ExceptionAuditNotFound
+        """
+        if not BRIDGE.SIMULATE:
+            rpc_response = BRIDGE.RPC.call("audit/summary", audit_id)
+
+            # If info not found -> audit not found
+            if not rpc_response:
+                raise ExceptionAuditNotFound()
+
+            return GoLismeroAuditSummary(rpc_response)
+
+        else:
+            return GoLismeroAuditSummary({
+                'vulns_number'            : '10',
+                'discovered_hosts'        : '4',
+                'total_hosts'             : '6',
+                'vulns_by_level'          : {
+                    'info'     : '4',
+                    'low'      : '2',
+                    'medium'   : '2',
+                    'high'     : '1',
+                    'critical' : '1',
+                }
+            })
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def get_state(audit_id):
+        """
+        Call to GoLismero core and returns the state, as a string.
+
+        :param audit_id: string with audit ID.
+        :type audit_id: str
+
+        :returns: a string with audit state.
+        :type: str
+
+        :raises: ExceptionAuditNotFound
+        """
+        if not BRIDGE.SIMULATE:
+            #rpc_response, a , b = BRIDGE.RPC.call("audit/state", audit_id)
+            print BRIDGE.RPC.call("audit/state", audit_id)
+            #print rpc_response
+
+            #print rpc_response
+            #if not rpc_response:
+                #return "finished"
+
+            #return rpc_response[0][1]
+        return "running"
 
 
-	#----------------------------------------------------------------------
-	@staticmethod
-	def get_progress(audit_id):
-		"""
-		Call to GoLismero core and returns the state, as a string.
 
-		:param audit_id: string with audit ID.
-		:type audit_id: str
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def get_progress(audit_id):
+        """
+        Call to GoLismero core and returns the state, as a string.
+
+        :param audit_id: string with audit ID.
+        :type audit_id: str
 
         :returns: GoLismeroAuditProgress object
         :rtype: GoLismeroAuditProgress
 
-		:raises: ExceptionAuditNotFound
-		"""
-		m_return = None
+        :raises: ExceptionAuditNotFound
+        """
+        m_return = None
 
-		if not BRIDGE.SIMULATE:
-			rpc_response = BRIDGE.RPC.call("audit/state", audit_id)
+        if not BRIDGE.SIMULATE:
+            rpc_response = BRIDGE.RPC.call("audit/state", audit_id)
 
-			if not rpc_response:
-				raise ExceptionAuditNotFound()
+            if not rpc_response:
+                raise ExceptionAuditNotFound()
 
-			steps         = rpc_response[0][0]
-			current_state = rpc_response[0][1]
-			tests_remain  = 0
-			tests_done    = 0
-			for t in rpc_response[2]:
-				l_progress = t[2] # Value between 0.0 - 100.0
+            steps         = rpc_response[0][0]
+            current_state = rpc_response[0][1]
+            tests_remain  = 0
+            tests_done    = 0
+            for t in rpc_response[2]:
+                l_progress = t[2] # Value between 0.0 - 100.0
 
-				if l_progress == 100.0:
-					tests_done   += 1
-				else:
-					tests_remain +=1
+                if l_progress == 100.0:
+                    tests_done   += 1
+                else:
+                    tests_remain +=1
 
-			m_return = {
-		      'current_stage' : current_state,
-		      'steps'         : int(steps),
-		      'tests_remain'  : tests_remain,
-		      'tests_done'    : tests_done
-		    }
+            m_return = {
+                'current_stage' : current_state,
+                'steps'         : int(steps),
+                'tests_remain'  : tests_remain,
+                'tests_done'    : tests_done
+            }
 
-		else:
+        else:
 
-			m_return = {
-			  'current_stage' : "recon",
-			  'steps'         : 1,
-			  'tests_remain'  : 21,
-			  'tests_done'     : 5
-			}
-		return GoLismeroAuditProgress(m_return)
-
+            m_return = {
+                'current_stage' : "recon",
+                'steps'         : 1,
+                'tests_remain'  : 21,
+                'tests_done'     : 5
+            }
+        return GoLismeroAuditProgress(m_return)
 
 
 

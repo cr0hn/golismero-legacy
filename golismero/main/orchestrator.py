@@ -297,6 +297,9 @@ class Orchestrator (object):
             raise TypeError(
                 "Expected Message, got %r instead" % type(message))
 
+        ### XXX DEBUG
+        ##print message
+
         try:
 
             # If it's an RPC message...

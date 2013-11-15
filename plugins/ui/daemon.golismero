@@ -1,9 +1,9 @@
 [Core]
-Module = web/web_ui_plugin.py
+Module = daemon/server_plugin.py
 
 [Documentation]
-Name        = Web UI
-Description = Web user interface.
+Name        = XML-RPC UI
+Description = XML-RPC user interface.
 Author      = GoLismero Project
 Version     = 0.1
 Website     = https://github.com/golismero
