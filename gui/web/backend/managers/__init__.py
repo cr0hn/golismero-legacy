@@ -37,11 +37,9 @@ from collections import defaultdict
 from backend.models import *
 from os.path import join
 
-REPORT_FORMATS = {
-    "html" : "html",
-    "text" : "txt",
-    "rst"  : "rst"
-}
+REPORT_FORMATS = ["html", "txt", "csv"]
+REPORT_PLUGINS = ["html", "text", "rst"]
+
 
 class GoLismeroAuditProgress(object):
 	"""
@@ -356,12 +354,14 @@ class GoLismeroAuditData(object):
 		# For this version, golismero will generate reports in all possible formats.
 		# After, core will choice what to serve.
 		#
-		m_config['reports']         = ','.join([join(self.store_path, "report.%s" % x) for x in REPORT_FORMATS.values()])
+		m_config['reports']         = ','.join([join(self.store_path, "report.%s" % x) for x in REPORT_FORMATS])
+		#m_config['reports'] += "," + join(self.store_path, "report.csv")
 
 		#
 		# Plugins
 		#
-		m_tmp_plugin_args           = []
+		#m_tmp_plugin_args           = []
+		m_tmp_plugin_args = {}
 		# Add plugins config
 		for p in self.enable_plugins:
 			l_plugin_name = p["plugin_name"]
@@ -372,15 +372,16 @@ class GoLismeroAuditData(object):
 			for pp in p.get("params", []):
 				l_plugin_param_name  = pp["param_name"]
 				l_plugin_param_value = pp["param_value"]
-				m_tmp_plugin_args.append((l_plugin_name, l_plugin_param_name, l_plugin_param_value))
+				#m_tmp_plugin_args.append((l_plugin_name, l_plugin_param_name, l_plugin_param_value))
+				m_tmp_plugin_args[l_plugin_name] = (l_plugin_param_name, l_plugin_param_value)
 
 		m_config['plugin_args'] = m_tmp_plugin_args
 
 		# Configure to golismero format
 		if m_config['plugin_load_overrides']:
-			m_config['enable_plugins'] = ','.join(x[1] for x in m_config['plugin_load_overrides'])
+			m_config['enable_plugins'] =  ','.join(x[1] for x in m_config['plugin_load_overrides'])
 			m_config['enable_plugins'] += ','
-			m_config['enable_plugins'] += ','.join(REPORT_FORMATS.keys()) # Report plugins
+			m_config['enable_plugins'] += ','.join(REPORT_PLUGINS) # Report plugins
 
 		# No plugins?
 		if len(m_config['plugin_load_overrides']) == 0:
