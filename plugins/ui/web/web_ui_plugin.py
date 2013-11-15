@@ -396,12 +396,8 @@ class WebUIPlugin(UIPlugin):
                             "Command not implemented: %s" % command)
 
                     # Run the command and get the response.
-                    retval = method( *arguments )
-                    if retval is not None:
-                        if type(retval) is tuple:
-                            response = response + retval
-                        else:
-                            response = response + (retval,)
+                    retval   = method( *arguments )
+                    response = ("ok", retval)
 
                 # On error send an failure response.
                 except Exception, e:
