@@ -38,6 +38,7 @@ from golismero.api.logger import Logger
 from golismero.api.plugin import UIPlugin, get_plugin_info, get_plugin_ids, \
      get_stage_display_name
 from golismero.common import AuditConfig
+from golismero.managers.processmanager import PluginContext
 from golismero.messaging.codes import MessageType, MessageCode, \
      MessagePriority
 

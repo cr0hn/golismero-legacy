@@ -98,7 +98,6 @@ from os import path
 import os
 import random
 import sys
-import urlparse
 
 
 #------------------------------------------------------------------------------
