@@ -592,12 +592,13 @@ class GoLismeroFacadeAudit(object):
             #
             # Create dir to store audit info
             #
-            if path.exists(l_path):
-                raise GoLismeroFacadeAuditUnknownException("Storage folder for audit already exits: '%s'" % l_path)
+            ##if path.exists(l_path):
+            ##    raise GoLismeroFacadeAuditUnknownException("Storage folder for audit already exists: '%s'" % l_path)
             try:
                 os.mkdir(l_path)
             except Exception,e:
-                raise GoLismeroFacadeAuditUnknownException("Can't create audit files in: '%s'" % l_path)
+                ##raise GoLismeroFacadeAuditUnknownException("Can't create audit files in: '%s'" % l_path)
+                pass
 
             # Change the state
             m_audit.audit_state = "running"
