@@ -88,7 +88,7 @@ def test_auditdb_consistency():
     print "Testing consistency of in-memory database..."
     helper_test_auditdb_consistency_setup("fake_mem_audit", "memory://")
     print "Testing consistency of disk database..."
-    helper_test_auditdb_consistency_setup(None, "sqlite://")
+    helper_test_auditdb_consistency_setup(None, "")
 
 def helper_test_auditdb_consistency_setup(audit_name, audit_db):
     main_config = OrchestratorConfig()
@@ -441,7 +441,7 @@ def helper_auditdb_stress(n):
     main_config.ui_mode = "disabled"
     audit_config = AuditConfig()
     audit_config.targets = ["www.example.com"]
-    audit_config.audit_db = "sqlite://"
+    audit_config.audit_db = ""
     with PluginTester(main_config, audit_config) as t:
         disk = t.audit.database
         assert type(disk) is AuditSQLiteDB
@@ -509,7 +509,7 @@ def test_auditdb_dump():
     main_config.ui_mode = "disabled"
     audit_config = AuditConfig()
     audit_config.targets = ["www.example.com"]
-    audit_config.audit_db = "sqlite://test_auditdb.db"
+    audit_config.audit_db = "test_auditdb.db"
     with PluginTester(main_config, audit_config) as t:
         disk = t.audit.database
         assert t.audit.name == "test_auditdb"

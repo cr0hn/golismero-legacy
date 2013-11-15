@@ -71,7 +71,7 @@ def test():
     audit.from_dictionary({
         "targets": ["http://www.example.com/folder/subfolder/index.html",],
         "reports": ["-",],
-        "audit_db": "sqlite://",
+        "audit_db": "",
     })
     ##audit.plugin_load_overrides = [(True, "recon/test")]  # XXX DEBUG shorter run
 
