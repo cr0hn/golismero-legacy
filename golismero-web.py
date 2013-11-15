@@ -102,8 +102,8 @@ Listen in loopback IPv6 at port 8000:
     parser.add_argument('--debug', dest="DEBUG_MODE", action="store_true", help="runs debug web server instead a gunicorn (default)", default=False)
 
     gr1 = parser.add_argument_group("GoLismero server settings")
-    gr1.add_argument('-sp', dest="SERVER_ADDR", help="GoLismero server address [default 127.0.0.1]", default="127.0.0.1")
-    gr1.add_argument('-sa', dest="SERVER_PORT", type=int, help="GoLismero server port [default 9000]", default=9000)
+    gr1.add_argument('-sa', dest="SERVER_ADDR", help="GoLismero server address [default 127.0.0.1]", default="127.0.0.1")
+    gr1.add_argument('-sp', dest="SERVER_PORT", type=int, help="GoLismero server port [default 9000]", default=9000)
 
     args = parser.parse_args()
 
