@@ -576,6 +576,12 @@ class GoLismeroFacadeAudit(object):
             if m_audit.audit_state != "new":
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is '%s'. Only new audits can be started." % (str(m_audit.id), m_audit.audit_state))
 
+            try:
+                # Send to GoLismero core
+                AuditBridge.new_audit(audit_config)
+            except ExceptionAudit:
+                raise GoLismeroFacadeAuditStateException("Error starting audit")
+
             #
             # Create dir to store audit info
             #
@@ -593,9 +599,6 @@ class GoLismeroFacadeAudit(object):
             # Configuration
             audit_config            = GoLismeroAuditData.from_django(m_audit)
             audit_config.store_path = l_path
-
-            # Send to GoLismero core
-            AuditBridge.new_audit(audit_config)
 
             # Change the state
             m_audit.audit_state = "running"
