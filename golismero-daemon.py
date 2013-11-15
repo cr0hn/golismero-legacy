@@ -280,8 +280,8 @@ if __name__ == '__main__':
     with daemon.DaemonContext(
         working_directory = working_directory,
         detach_process = False,
-        stdout = fout,
-        stderr = fin
+        stdout = sys.stdout,
+        stderr = sys.stderr
     ):
         if args.AUTO_RESTART:
             while True:
