@@ -103,9 +103,6 @@ class GoLismeroFacadeAudit(object):
     This class acts as Facade between REST API and GoLismero Backend.
     """
 
-
-    AVAILABLE_REPORT_FORMATS = ["rst", "html", "txt", "xml"]
-
     #----------------------------------------------------------------------
     #
     # Getters
@@ -164,22 +161,24 @@ class GoLismeroFacadeAudit(object):
                 return "new"
 
             m_new_state = None
-            m_total = 1
-            for f in GoLismeroFacadeAudit.AVAILABLE_REPORT_FORMATS:
+            m_total = 0
+            for f in REPORT_FORMATS:
                 l_folder =  get_user_settings_folder()
                 l_id     = str(m_audit.id)
                 l_format = f
                 l_path   = "%s%s/report.%s" % (l_folder, l_id, f)
 
-                #print path
                 if os.path.exists(l_path):
                     m_total +=1
 
-            if m_total == len(GoLismeroFacadeAudit.AVAILABLE_REPORT_FORMATS):
+            if m_total == len(REPORT_FORMATS):
                 m_new_state = "finished"
             else:
                 m_new_state = "running"
 
+            #
+            # FIXME: When GoLismero core works, do that instead of above commands.
+            #
             #try:
                 #m_new_state = AuditBridge.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
             #except ExceptionAuditNotFound:
@@ -285,11 +284,13 @@ class GoLismeroFacadeAudit(object):
             'xml'    : 'xml',
             'html'   : 'html',
             'rst'    : 'rst',
-            'text'   : 'txt'
+            'text'   : 'txt',
+            'csv'    : 'csv'
         }
+
         try:
             # Check report format
-            if report_format not in GoLismeroFacadeAudit.AVAILABLE_REPORT_FORMATS:
+            if report_format not in REPORT_FORMATS:
                 raise GoLismeroFacadeReportUnknownFormatException("Unknown report format '%s'." % report_format)
 
             m_audit = Audit.objects.get(pk=audit_id)
