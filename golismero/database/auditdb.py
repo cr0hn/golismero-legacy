@@ -1366,6 +1366,9 @@ class AuditSQLiteDB (BaseAuditDB):
         """
 
         # If we don't have a filename but we have an audit name...
+        if audit_db.find("//") != -1:
+            audit_db = audit_db[audit_db.find("//") + 2:]
+
         if not audit_db or audit_db == ":auto:":
             audit_db = None
             if audit_name:
