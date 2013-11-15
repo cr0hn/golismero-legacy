@@ -40,6 +40,7 @@ from golismero.api.plugin import TestingPlugin, ImportPlugin
 from threading import Event
 from traceback import format_exc
 from functools import partial
+import yaml
 
 try:
     from xml.etree import cElementTree as etree
@@ -55,7 +56,7 @@ import sys
 cwd = os.path.abspath(os.path.split(__file__)[0])
 cwd1 = os.path.join(cwd, "openvas_plugin")
 sys.path.insert(0, cwd1)
-
+#11213 -> trace http method
 #------------------------------------------------------------------------------
 # TODO: maybe polish up this class and add it to the API, see #64
 class OpenVASProgress(object):
@@ -276,28 +277,12 @@ class OpenVASPlugin(TestingPlugin):
         }
 
         # Knonw categories
-        CATEGORIES = {
-            'Mandriva Local Security Checks'         : OutdatedPlatformMandrivaLocal,
-            'Windows : Microsoft Bulletins'          : OutdatedPlatformWindowsMicrosoftBulletins,
-            'Debian Local Security Checks'           : OutdatedPlatformDebianLocal,
-            'MacOS X Local Security Checks'          : OutdatedPlatformMacOSXLocal,
-            'VMware ESX Local Security Checks'       : OutdatedPlatformVMwareESXLocal,
-            'Ubuntu Local Security Checks'           : OutdatedPlatformUbuntuLocal,
-            'HP-UX Local Security Checks'            : OutdatedPlatformHPUXLocal,
-            'SuSE Local Security Checks'             : OutdatedPlatformSuSELocal,
-            'FreeBSD Local Security Checks'          : OutdatedPlatformFreeBSDLocal,
-            'Junos Local Security Checks'            : OutdatedPlatformJunosLocal,
-            'Scientific Linux Local Security Checks' : OutdatedPlatformScientificLinuxLocal,
-            'Slackware Local Security Checks'        : OutdatedPlatformSlackwareLocal,
-            'Solaris Local Security Checks'          : OutdatedPlatformSolarisLocal,
-            'Red Hat Local Security Checks'          : OutdatedPlatformRedHatLocal,
-            'Amazon Linux Local Security Checks'     : OutdatedPlatformAmazonLinuxLocal,
-            'AIX Local Security Checks'              : OutdatedPlatformAIXLocal,
-            'Gentoo Local Security Checks'           : OutdatedPlatformGentooLocal,
-            'CentOS Local Security Checks'           : OutdatedPlatformCentOSLocal,
-            'Oracle Linux Local Security Checks'     : OutdatedPlatformOracleLinuxLocal,
-            'Fedora Local Security Checks'           : OutdatedPlatformFedoraLocal
-        }
+        m_categories_file = os.path.join(os.path.join(os.path.split(os.path.abspath(__file__))[0], "openvas_plugin"), "categories.yaml")
+        CATEGORIES        = None
+        if os.path.exists(m_categories_file):
+            CATEGORIES = yaml.load(file(m_categories_file))
+        else:
+            CATEGORIES = {}
 
         # For each OpenVAS result...
         for opv in openvas_results:
@@ -373,12 +358,12 @@ class OpenVASPlugin(TestingPlugin):
                         try:
                             l_family     = Plugin.objects.get(plugin_id=l_plugin_ide).family_id
 
-                            if l_family.strip()in CATEGORIES:
-                                kwargs["plugin_id"]   = "nessus"
+                            if l_family.strip()in CATEGORIES or l_plugin_ide in CATEGORIES:
+                                kwargs["plugin_id"]   = "openvas"
                                 kwargs["title"]       = name
 
-                                # Concrete vuln
-                                vuln         = CATEGORIES[l_family](**kwargs)
+                                # Concrete vuln dinamically
+                                vuln         = globals()[CATEGORIES[l_family]](**kwargs)
 
                                 # Set plugin ID of the tool
                                 vuln.tool_id = str(l_plugin_ide)
