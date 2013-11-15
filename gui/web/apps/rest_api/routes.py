@@ -54,6 +54,10 @@ class AuditsRouters(ParameterizedRouter):
               mapping   = {'post' : 'create'},
               name      = '{basename}-create',
               initkwargs= {}),
+        Route(url       = r'^{prefix}/create$',
+              mapping   = {'post' : 'create'},
+              name      = '{basename}-create',
+              initkwargs= {}),
 
         # Delete
         Route(url       = r'^{prefix}/delete/{lookup}$',
