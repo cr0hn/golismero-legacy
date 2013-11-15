@@ -46,12 +46,12 @@ import functools
 import threading
 import warnings
 
-# Import the Django <-> GoLismero bridge.
+# Import the XML-RPC <-> GoLismero bridge.
 from imp import load_source
 from os.path import abspath, join, split
-django_bridge = load_source(
-    "django_bridge",
-    abspath(join(split(__file__)[0], "django_bridge.py"))
+server_bridge = load_source(
+    "server_bridge",
+    abspath(join(split(__file__)[0], "server_bridge.py"))
 )
 
 
@@ -254,7 +254,7 @@ class WebUIPlugin(UIPlugin):
         """
         This method is called when the UI start message arrives.
         It reads the plugin configuration, starts the consumer thread, and
-        launches the Django web application.
+        launches the XML-RPC server.
         """
 
         # Initialize the audit and plugin state caches.
@@ -278,8 +278,8 @@ class WebUIPlugin(UIPlugin):
         plugin_config       = Config.plugin_config
         plugin_extra_config = Config.plugin_extra_config
 
-        # Launch the Django web application.
-        self.bridge = django_bridge.launch_django(
+        # Launch the XML-RPC server.
+        self.bridge = server_bridge.launch_server(
             orchestrator_config, plugin_config, plugin_extra_config)
 
         # Start the consumer thread.
@@ -296,7 +296,7 @@ class WebUIPlugin(UIPlugin):
         # Tell the consumer thread to stop.
         self.thread_continue = False
 
-        # Tell the Django application to stop.
+        # Tell the server to stop.
         try:
             if self.bridge:
                 self.bridge.send( ("stop",) )
@@ -341,8 +341,8 @@ class WebUIPlugin(UIPlugin):
     def consumer_thread(self, context):
         """
         This method implements the consumer thread code: it reads data sent by
-        the Django application though a pipe, and sends the appropriate
-        messages to the Orchestrator.
+        the XML-RPC server though a pipe, and sends the appropriate messages to
+        the Orchestrator.
         """
 
         try:
@@ -367,7 +367,7 @@ class WebUIPlugin(UIPlugin):
                     command   = packet[0]
                     arguments = packet[1:]
 
-                    # Special command "fail" means the Django app died.
+                    # Special command "fail" means the server died.
                     if command == "fail":
 
                         # Stop GoLismero.
