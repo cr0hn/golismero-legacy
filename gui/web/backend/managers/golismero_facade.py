@@ -326,18 +326,18 @@ class GoLismeroFacadeAudit(object):
         :param audit_id: audit ID.
         :type audit_id: str
 
-		:returns: return a dic as format:
-		{
-		   'vulns_number'            = int
-		   'discovered_hosts'        = int # Host discovered into de scan process
-		   'total_hosts'             = int
-		   'vulns_by_level'          = {
-		      'info'     : int,
-			  'low'      : int,
-			  'medium'   : int,
-			  'high'     : int,
-			  'critical' : int,
-		}
+        :returns: return a dic as format:
+        {
+        'vulns_number'            = int
+        'discovered_hosts'        = int # Host discovered into de scan process
+        'total_hosts'             = int
+        'vulns_by_level'          = {
+        'info'     : int,
+        'low'      : int,
+        'medium'   : int,
+        'high'     : int,
+        'critical' : int,
+        }
 
         :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException
         """
@@ -401,30 +401,30 @@ class GoLismeroFacadeAudit(object):
         """
         Creates an audit instance into BBDD. Dara param must have this format:
 
-		{
-		  "audit_name": "asdfasdf",
-		  "targets": ["127.0.0.2", "mysite.com"],
-		  "enabled_plugins": [
-			{
-			  "plugin_name": "openvas",
-			  "params": [
-				{
-				  "param_name": "profile",
-				  "param_value": "Full and fast"
-				},
-				{
-				  "param_name": "user",
-				  "param_value": "admin"
-				},
-				{
-				  "param_name": "password",
-				  "param_value": "admin"
-				}
-			  ]
-			}
-		  ],
-		  "disabled_plugins": ["spider","nikto"]
-		}
+        {
+        "audit_name": "asdfasdf",
+        "targets": ["127.0.0.2", "mysite.com"],
+        "enabled_plugins": [
+        {
+        "plugin_name": "openvas",
+        "params": [
+        {
+        "param_name": "profile",
+        "param_value": "Full and fast"
+        },
+        {
+        "param_name": "user",
+        "param_value": "admin"
+        },
+        {
+        "param_name": "password",
+        "param_value": "admin"
+        }
+        ]
+        }
+        ],
+        "disabled_plugins": ["spider","nikto"]
+        }
 
         :param data: A JSON info.
         :type data: dict

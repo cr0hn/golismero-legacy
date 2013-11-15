@@ -88,10 +88,10 @@ class SwitchToAudit(object):
 
         # Update the execution context for this audit.
         Config._context = PluginContext(
-                   msg_queue = old_context.msg_queue,
-                  audit_name = audit_name,
-                audit_config = get_audit_config(audit_name),
-                 audit_scope = get_audit_scope(audit_name),
+            msg_queue = old_context.msg_queue,
+            audit_name = audit_name,
+            audit_config = get_audit_config(audit_name),
+            audit_scope = get_audit_scope(audit_name),
             orchestrator_pid = old_context._orchestrator_pid,
             orchestrator_tid = old_context._orchestrator_tid)
 
@@ -708,16 +708,16 @@ class WebUIPlugin(UIPlugin):
 
         :returns: return dict as format:
         {
-		   'vulns_number'            : int,
-		   'discovered_hosts'        : int,
-		   'total_hosts'             : int,
-		   'vulns_by_level'          : {
-		      'info'     : int,
-			  'low'      : int,
-			  'medium'   : int,
-			  'high'     : int,
-			  'critical' : int,
-		}
+        'vulns_number'            : int,
+        'discovered_hosts'        : int,
+        'total_hosts'             : int,
+        'vulns_by_level'          : {
+        'info'     : int,
+        'low'      : int,
+        'medium'   : int,
+        'high'     : int,
+        'critical' : int,
+        }
         :rtype: dict
         """
         with SwitchToAudit(audit_name):
@@ -741,17 +741,17 @@ class WebUIPlugin(UIPlugin):
             #
             # Make the response
             return {
-                       'vulns_number'            : len(tmp_vulns),
-                       'discovered_hosts'        : discovered_hosts,
-                       'total_hosts'             : total_hosts,
-                       'vulns_by_level'          : {
-                          'info'     : vulns_counter['info'],
-                              'low'      : vulns_counter['low'],
-                              'medium'   : vulns_counter['medium'],
-                              'high'     : vulns_counter['high'],
-                              'critical' : vulns_counter['critical']
-                       }
-                    }
+                'vulns_number'            : len(tmp_vulns),
+                'discovered_hosts'        : discovered_hosts,
+                'total_hosts'             : total_hosts,
+                'vulns_by_level'          : {
+                    'info'     : vulns_counter['info'],
+                    'low'      : vulns_counter['low'],
+                    'medium'   : vulns_counter['medium'],
+                    'high'     : vulns_counter['high'],
+                    'critical' : vulns_counter['critical']
+                }
+            }
 
 
     #----------------------------------------------------------------------
