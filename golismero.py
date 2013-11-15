@@ -389,6 +389,39 @@ def cmdline_parser():
     return parser
 
 
+#--------------------------------------------------------------------------
+def parse_plugin_args(manager, plugin_args):
+    """
+    Parse a list of tuples with plugin arguments as a dictionary of
+    dictionaries, with plugin IDs sanitized.
+
+    :param manager: Plugin manager.
+    :type manager: PluginManager
+
+    :param plugin_args: Arguments as specified in the command line.
+    :type plugin_args: list(tuple(str, str, str))
+
+    :returns: Sanitized plugin arguments. Dictionary mapping plugin
+        names to dictionaries mapping argument names and values.
+    :rtype: dict(str -> dict(str -> str))
+
+    :raises KeyError: Plugin or argument not found.
+    """
+    parsed = {}
+    for plugin_id, key, value in plugin_args:
+        plugin_info = manager.guess_plugin_by_id(plugin_id)
+        key = key.lower()
+        if key not in plugin_info.plugin_args:
+            raise KeyError(
+                "Argument not found: %s:%s" % (plugin_id, key))
+        try:
+            target = parsed[plugin_info.plugin_id]
+        except KeyError:
+            parsed[plugin_info.plugin_id] = target = {}
+        target[key] = value
+    return parsed
+
+
 #------------------------------------------------------------------------------
 # Start of program
 
@@ -761,7 +794,7 @@ def main():
         # Sanitize the plugin arguments.
         try:
             if P.plugin_args:
-                plugin_args = manager.parse_plugin_args(P.plugin_args)
+                plugin_args = parse_plugin_args(manager, P.plugin_args)
             else:
                 plugin_args = {}
         except KeyError, e:
