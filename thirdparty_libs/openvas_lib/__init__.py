@@ -579,15 +579,18 @@ class VulnscanManager(object):
                                                                     l_port,
                                                                     l_proto)
                     elif l_tag == "nvt":
-                        l_nvt_symbols = [x for x in dir(l_val) if not x.startswith("_")]
                         # The NVT Object
-                        l_nvt_object  = OpenVASNVT.make_empty_object()
+                        l_nvt_object     = OpenVASNVT.make_empty_object()
+                        l_nvt_object.oid = l_val.attrib['oid']
+                        l_nvt_symbols    = [x for x in dir(l_nvt_object) if not x.startswith("_")]
+
                         for l_nvt in l_val.getchildren():
                             l_nvt_tag = l_nvt.tag
-
                             if l_nvt_tag in l_nvt_symbols:
-                                setattr(l_nvt_object, l_nvt_tag, l_nvt.text)
-
+                                if l_nvt.text.startswith("NO"):
+                                    setattr(l_nvt_object, l_nvt_tag, "")
+                                else:
+                                    setattr(l_nvt_object, l_nvt_tag, l_nvt.text)
                         # Add to the NVT Object
                         l_partial_result.nvt = l_nvt_object
                     else:
