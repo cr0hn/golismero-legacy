@@ -44,6 +44,7 @@ from golismero.messaging.codes import MessageType, MessageCode, \
 import collections
 import functools
 import threading
+import traceback
 import warnings
 
 # Import the XML-RPC <-> GoLismero bridge.
@@ -401,7 +402,8 @@ class WebUIPlugin(UIPlugin):
 
                 # On error send an failure response.
                 except Exception, e:
-                    self.bridge.send( ("fail", str(e)) )
+                    msg = str(e) + "\n" + traceback.format_exc()
+                    self.bridge.send( ("fail", msg) )
                     continue
 
                 # On success send the response.
