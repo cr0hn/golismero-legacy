@@ -306,7 +306,7 @@ def cmdline_parser():
     gr_net.add_argument("--volatile-cache", action="store_false", dest="use_cache_db", help="use a volatile network cache")
 
     gr_plugins = parser.add_argument_group("plugin options")
-    cmd = gr_plugins.add_argument("-a", "--plugin-arg", metavar="PLUGIN:KEY=VALUE", action=SetPluginArgumentAction, dest="plugin_args", help="pass an argument to a plugin")
+    cmd = gr_plugins.add_argument("-a", "--plugin-arg", metavar="PLUGIN:KEY=VALUE", action=SetPluginArgumentAction, dest="raw_plugin_args", help="pass an argument to a plugin")
     if autocomplete_enabled:
         cmd.completer = plugins_completer
     cmd = gr_plugins.add_argument("-e", "--enable-plugin", metavar="PLUGIN", action=EnablePluginAction, default=[], dest="plugin_load_overrides", help="enable a plugin")
@@ -437,6 +437,7 @@ def main():
         if envcfg:
             args = parser.convert_arg_line_to_args(envcfg) + args
         P = parser.parse_args(args)
+        P.plugin_args = {}
         command = P.command.upper()
         if command in COMMANDS:
             P.command = command
@@ -497,7 +498,7 @@ def main():
     # Show exceptions as command line parsing errors.
     except Exception, e:
         ##raise    # XXX DEBUG
-        parser.error(str(e))
+        parser.error("arguments error: %s" % str(e))
 
     # Get the plugins folder from the parameters.
     # If no plugins folder is given, use the default.
@@ -775,13 +776,6 @@ def main():
     auditParams.targets.extend(guessed_urls)
 
     try:
-        cmdParams.check_params()
-        auditParams.check_params()
-    except Exception, e:
-        ##raise # XXX DEBUG
-        parser.error(str(e))
-
-    try:
 
         # Load the plugins.
         # XXX FIXME for this we'd need the plugin manager
@@ -793,17 +787,16 @@ def main():
 
         # Sanitize the plugin arguments.
         try:
-            if P.plugin_args:
-                plugin_args = parse_plugin_args(manager, P.plugin_args)
-            else:
-                plugin_args = {}
+            if P.raw_plugin_args:
+                P.plugin_args = parse_plugin_args(manager, P.raw_plugin_args)
         except KeyError, e:
-            parser.error(str(e))
+            ##raise # XXX DEBUG
+            parser.error("error parsing plugin arguments: %s" % str(e))
 
         # Prompt for passwords.
-        for plugin_id in plugin_args.keys():
+        for plugin_id in P.plugin_args.keys():
             plugin_info = manager.get_plugin_by_id(plugin_id)
-            target_args = plugin_args[plugin_id]
+            target_args = P.plugin_args[plugin_id]
             for key, value in target_args.items():
                 if not value and key in plugin_info.plugin_passwd_args:
                     if len(plugin_info.plugin_passwd_args) > 1:
@@ -815,8 +808,12 @@ def main():
                     target_args[key] = getpass(msg)
 
         # Save the plugin arguments for the Orchestrator and the Audit.
-        cmdParams.plugin_args   = plugin_args
-        auditParams.plugin_args = plugin_args
+        cmdParams.plugin_args   = P.plugin_args
+        auditParams.plugin_args = P.plugin_args
+
+        # Check the parameters.
+        cmdParams.check_params()
+        auditParams.check_params()
 
         # Set the plugin arguments before loading the UI plugin.
         for plugin_id, plugin_args in cmdParams.plugin_args.iteritems():
