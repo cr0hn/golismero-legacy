@@ -268,7 +268,7 @@ class OpenVASNVT(object):
         :param val: CVSS Base calculated
         :type val: int
         """
-        if not isinstance(val, int):
+        if not isinstance(val, basestring):
             raise TypeError("Expected int, got %r instead" % type(val))
 
         self.__cvss_base = val
@@ -291,7 +291,7 @@ class OpenVASNVT(object):
         :param val: the risk factor
         :type val: int
         """
-        if not isinstance(val, int):
+        if not isinstance(val, basestring):
             raise TypeError("Expected int, got %r instead" % type(val))
 
         self.__risk_factor = val
