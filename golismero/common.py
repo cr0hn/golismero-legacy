@@ -839,7 +839,7 @@ class AuditConfig (Configuration):
                 if isinstance(value, unicode):
                     value = value.encode("UTF-8")
                 #plugin_args.append( (plugin_id, key, value) )
-                plugin_args[plugin_id] = (key, value)
+                plugin_args[plugin_id] = {key : value}
             self.plugin_args = plugin_args
         if "command" in args:
             self.command = args["command"]
