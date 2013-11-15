@@ -103,9 +103,6 @@ class GoLismeroFacadeAudit(object):
     This class acts as Facade between REST API and GoLismero Backend.
     """
 
-
-    AVAILABLE_REPORT_FORMATS = ["rst", "html", "text", "xml"]
-
     #----------------------------------------------------------------------
     #
     # Getters
@@ -151,7 +148,7 @@ class GoLismeroFacadeAudit(object):
 
         :raises: GoLismeroFacadeAuditNotFoundException, TypeError
         """
-        if not isinstance(audit_id, basestring):
+        if not isinstance(audit_id, basestring) and not isinstance(audit_id, int):
             raise TypeError("Expected basestring, got '%s' instead" % type(audit_id))
 
         # Call to GoLismero
@@ -164,11 +161,29 @@ class GoLismeroFacadeAudit(object):
                 return "new"
 
             m_new_state = None
-            try:
-                m_new_state = AuditBridge.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
-            except ExceptionAuditNotFound:
-                # Audit not working
+            m_total = 0
+            for f in REPORT_FORMATS:
+                l_folder =  get_user_settings_folder()
+                l_id     = str(m_audit.id)
+                l_format = f
+                l_path   = "%s%s/report.%s" % (l_folder, l_id, f)
+
+                if os.path.exists(l_path):
+                    m_total +=1
+
+            if m_total == len(REPORT_FORMATS):
                 m_new_state = "finished"
+            else:
+                m_new_state = "running"
+
+            #
+            # FIXME: When GoLismero core works, do that instead of above commands.
+            #
+            #try:
+                #m_new_state = AuditBridge.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+            #except ExceptionAuditNotFound:
+                ## Audit not working
+                #m_new_state = "finished"
 
             #  Update audit state into BBDD
             if m_audit.audit_state != m_new_state:
@@ -269,17 +284,19 @@ class GoLismeroFacadeAudit(object):
             'xml'    : 'xml',
             'html'   : 'html',
             'rst'    : 'rst',
-            'text'   : 'txt'
+            'text'   : 'txt',
+            'csv'    : 'csv'
         }
+
         try:
             # Check report format
-            if report_format not in GoLismeroFacadeAudit.AVAILABLE_REPORT_FORMATS:
+            if report_format not in REPORT_FORMATS:
                 raise GoLismeroFacadeReportUnknownFormatException("Unknown report format '%s'." % report_format)
 
             m_audit = Audit.objects.get(pk=audit_id)
 
             # Update state
-            #GoLismeroFacadeAudit.get_state(m_audit.id)
+            GoLismeroFacadeAudit.get_state(m_audit.id)
 
             if m_audit.audit_state != "finished":
                 raise GoLismeroFacadeReportNotAvailableException("Not finished audit. Report is not available.")
@@ -310,18 +327,18 @@ class GoLismeroFacadeAudit(object):
         :param audit_id: audit ID.
         :type audit_id: str
 
-		:returns: return a dic as format:
-		{
-		   'vulns_number'            = int
-		   'discovered_hosts'        = int # Host discovered into de scan process
-		   'total_hosts'             = int
-		   'vulns_by_level'          = {
-		      'info'     : int,
-			  'low'      : int,
-			  'medium'   : int,
-			  'high'     : int,
-			  'critical' : int,
-		}
+        :returns: return a dic as format:
+        {
+        'vulns_number'            = int
+        'discovered_hosts'        = int # Host discovered into de scan process
+        'total_hosts'             = int
+        'vulns_by_level'          = {
+        'info'     : int,
+        'low'      : int,
+        'medium'   : int,
+        'high'     : int,
+        'critical' : int,
+        }
 
         :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException
         """
@@ -329,13 +346,12 @@ class GoLismeroFacadeAudit(object):
         try:
             m_audit = Audit.objects.get(pk=audit_id)
 
-
             if m_audit.audit_state != "running":
                 raise GoLismeroFacadeAuditStateException("Audit not running. Only can get summary from running audits.")
 
             # Get summary
             try:
-                GoLismeroFacadeAudit.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+                return AuditBridge.get_summary(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name)).to_json
             except ExceptionAuditNotFound,e:
                 raise GoLismeroFacadeAuditStateException("Audit not running. Only can get summary from running audits.")
 
@@ -386,30 +402,30 @@ class GoLismeroFacadeAudit(object):
         """
         Creates an audit instance into BBDD. Dara param must have this format:
 
-		{
-		  "audit_name": "asdfasdf",
-		  "targets": ["127.0.0.2", "mysite.com"],
-		  "enabled_plugins": [
-			{
-			  "plugin_name": "openvas",
-			  "params": [
-				{
-				  "param_name": "profile",
-				  "param_value": "Full and fast"
-				},
-				{
-				  "param_name": "user",
-				  "param_value": "admin"
-				},
-				{
-				  "param_name": "password",
-				  "param_value": "admin"
-				}
-			  ]
-			}
-		  ],
-		  "disabled_plugins": ["spider","nikto"]
-		}
+        {
+        "audit_name": "asdfasdf",
+        "targets": ["127.0.0.2", "mysite.com"],
+        "enabled_plugins": [
+        {
+        "plugin_name": "openvas",
+        "params": [
+        {
+        "param_name": "profile",
+        "param_value": "Full and fast"
+        },
+        {
+        "param_name": "user",
+        "param_value": "admin"
+        },
+        {
+        "param_name": "password",
+        "param_value": "admin"
+        }
+        ]
+        }
+        ],
+        "disabled_plugins": ["spider","nikto"]
+        }
 
         :param data: A JSON info.
         :type data: dict
@@ -420,6 +436,21 @@ class GoLismeroFacadeAudit(object):
             raise TypeError("Expected dict, got '%s' instead" % type(data))
 
         try:
+
+            #
+            # AUDIT
+            #
+            # Simple values
+            m_audit = Audit()
+            for k, v in data.iteritems():
+                if not isinstance(v, dict) and not isinstance(v, list):
+                    setattr(m_audit, k, v)
+
+            # Set user
+            m_audit.user = User.objects.get(pk=5)
+            m_audit.save()
+
+
             #
             # TARGETS
             #
@@ -428,7 +459,6 @@ class GoLismeroFacadeAudit(object):
                 raise ValueError("Wrong format: Targets not found.")
 
             # Checks for local host hosts
-
             t_h = [t for t in m_targets if t.startswith("127")]
             if len(t_h) > 0:
                 raise GoLismeroFacadeAuditNotAllowedHostException("Host '%s' not allowed" % ",".join(t_h))
@@ -470,23 +500,12 @@ class GoLismeroFacadeAudit(object):
                     l_param = PluginParameters()
                     l_param.param_name    = pp['param_name']
                     l_param.param_value   = pp['param_value']
-                    l_param.plugin_params = l_plugin
+                    l_param.plugin        = l_plugin
+                    l_param.audit         = m_audit
                     l_param.save()
                 # Add to total
                 m_enable_plugins_stored.append(l_plugin)
 
-            #
-            # AUDIT
-            #
-            # Simple values
-            m_audit = Audit()
-            for k, v in data.iteritems():
-                if not isinstance(v, dict) and not isinstance(v, list):
-                    setattr(m_audit, k, v)
-
-            # Set user
-            m_audit.user = User.objects.get(pk=5)
-            m_audit.save()
 
             # Relations
             for t in m_targets_stored:
@@ -557,27 +576,28 @@ class GoLismeroFacadeAudit(object):
             if m_audit.audit_state != "new":
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is '%s'. Only new audits can be started." % (str(m_audit.id), m_audit.audit_state))
 
-            #
-            # Create dir to store audit info
-            #
-
             # Create folder: home folder + audit id
             l_path = path.join(get_user_settings_folder(), str(m_audit.id))
-            if path.exists(l_path):
-                raise GoLismeroFacadeAuditUnknownException("Storage folder for audit already exits: '%s'" % l_path)
-
-            try:
-                os.mkdir(l_path)
-            except Exception,e:
-                raise GoLismeroFacadeAuditUnknownException("Can't create audit files in: '%s'" % l_path)
 
             # Configuration
             audit_config            = GoLismeroAuditData.from_django(m_audit)
             audit_config.store_path = l_path
 
+            try:
+                # Send to GoLismero core
+                AuditBridge.new_audit(audit_config)
+            except ExceptionAudit:
+                raise GoLismeroFacadeAuditStateException("Error starting audit")
 
-            # Send to GoLismero core
-            AuditBridge.new_audit(audit_config)
+            #
+            # Create dir to store audit info
+            #
+            if path.exists(l_path):
+                raise GoLismeroFacadeAuditUnknownException("Storage folder for audit already exits: '%s'" % l_path)
+            try:
+                os.mkdir(l_path)
+            except Exception,e:
+                raise GoLismeroFacadeAuditUnknownException("Can't create audit files in: '%s'" % l_path)
 
             # Change the state
             m_audit.audit_state = "running"
@@ -712,10 +732,9 @@ class GoLismeroFacadeAudit(object):
         if not isinstance(audit_id, basestring) and not isinstance(audit_id, int):
             raise TypeError("Expected basestring, got '%s' instead" % type(audit_id))
 
-        if not audit_name:
+        if audit_name:
             if not isinstance(audit_name, basestring):
                 raise TypeError("Expected basestring, got '%s' instead" % type(audit_name))
-
             return "%s_%s" % (audit_name, str(audit_id))
 
         # Get audit name

@@ -191,7 +191,7 @@ class Robots(TestingPlugin):
                     l_p = HTTP.get_url(l_url, callback=self.check_response)  # FIXME handle exceptions!
                     if l_p:
                         match[l_url] = l_p
-                        m_analyzer.append(l_p.data, url=l_url)
+                        m_analyzer.analyze(l_p.data, url=l_url)
 
             # Generate results
             for i in m_analyzer.unique_texts:

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-This module knows how to make the GoLismero Web UI
-plugin communicate with its Django web application.
+This module knows how to make the GoLismero Server UI
+plugin communicate with the XML-RPC server.
 """
 
 __license__ = """
@@ -31,7 +31,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["launch_django", "GoLismeroStateMachine"]
+__all__ = ["launch_server", "GoLismeroStateMachine"]
 
 import multiprocessing
 import os.path
@@ -41,9 +41,9 @@ import threading
 import traceback
 
 #------------------------------------------------------------------------------
-def launch_django(orchestrator_config, plugin_config, plugin_extra_config):
+def launch_server(orchestrator_config, plugin_config, plugin_extra_config):
     """
-    Launches the Django web application from the Web UI plugin.
+    Launches the XML-RPC server from the Web UI plugin.
 
     :param orchestrator_config: Orchestrator configuration.
     :type orchestrator_config: dict(str -> \\*)
@@ -54,8 +54,8 @@ def launch_django(orchestrator_config, plugin_config, plugin_extra_config):
     :param plugin_extra_config: Web UI plugin extra configuration.
     :type plugin_extra_config: dict(str -> dict(str -> \\*))
 
-    :returns: Bridge that allows the Web UI plugin to talk to Django.
-    :rtype: GoLismero2Django
+    :returns: Bridge that allows the Web UI plugin to talk to the server.
+    :rtype: Bridge
     """
 
     # Initialize the variables.
@@ -67,29 +67,29 @@ def launch_django(orchestrator_config, plugin_config, plugin_extra_config):
 
     try:
 
-        # Create the pipes to talk to the Django application.
+        # Create the pipes to talk to the server.
         in_parent, out_child  = multiprocessing.Pipe(duplex=False)
         in_child,  out_parent = multiprocessing.Pipe(duplex=False)
 
-        # Launch the new process where Django will run.
+        # Launch the new process where the server will run.
         args = (
             in_child, out_child,
             orchestrator_config, plugin_config, plugin_extra_config
         )
-        process = multiprocessing.Process(target=_launch_django, args=args)
-        #process.daemon = True  # switch to False if Django fails to run
+        process = multiprocessing.Process(target=_launch_server, args=args)
+        #process.daemon = True  # switch to False if the server fails to run
         process.start()
 
         # Get the initialization status packet.
         # On timeout or error kill the child process.
         if not in_parent.poll(10):
-            raise RuntimeError("Django initialization timed out!")
+            raise RuntimeError("XML-RPC server initialization timed out!")
         status = in_parent.recv()
         if status[0] == "fail":
             raise RuntimeError(
-                "Django initialization failed, reason: %s" % status[1])
+                "XML-RPC server initialization failed, reason: %s" % status[1])
 
-        # Return the bridge from GoLismero to Django.
+        # Return the bridge from GoLismero to the XML-RPC server.
         return Bridge(in_parent, out_parent)
 
     # Clean up on error.
@@ -101,10 +101,10 @@ def launch_django(orchestrator_config, plugin_config, plugin_extra_config):
         if out_child  is not None: out_child.close()
         raise
 
-def _launch_django(input_conn, output_conn,
+def _launch_server(input_conn, output_conn,
                    orchestrator_config, plugin_config, plugin_extra_config):
     """
-    Internally called function that bootstraps the Django application.
+    Internally called function that bootstraps the server.
 
     .. warning: Do not call it yourself!
 
@@ -128,10 +128,8 @@ def _launch_django(input_conn, output_conn,
     try:
         try:
             try:
-                # Get the Django command to run.
-                command = [x.strip() for x in plugin_config["call_command"].split(" ")]
 
-                # Update the module search path to include our web app.
+                # Update the module search path to include our own directory.
                 modpath = os.path.abspath(os.path.split(__file__)[0])
                 sys.path.insert(0, modpath)
 
@@ -141,38 +139,10 @@ def _launch_django(input_conn, output_conn,
                 # Create the state machine.
                 fsm = GoLismeroStateMachine(bridge)
 
-                # XXX HACK we'll launch an XMLRPC server for now.
-                run_xmlrpc_server(fsm, orchestrator_config['listen_address'], orchestrator_config['listen_port'])
-
-                # Load the Django settings.
-                ##os.environ.setdefault("DJANGO_SETTINGS_MODULE", "golismero_webapp.core.settings")
-
-                ##from django.core.management import call_command
-                ##from django.conf import settings
-                ##from web.golismero_webapp.core import settings as default_config
-
-                ##settings.configure(
-                ##    GOLISMERO_CHANNEL               = fsm,
-                ##    GOLISMERO_MAIN_CONFIG           = orchestrator_config,
-                ##    GOLISMERO_PLUGIN_CONFIG         = plugin_config,
-                ##    GOLISMERO_PLUGIN_EXTRA_CONFIG   = plugin_extra_config)
-                ##
-                ##print settings
-
-                # Load the Django webapp data model.
-                # XXX FIXME this code is bogus! @cr0hn: put your stuff here :)
-                ##from golismero_webapp.data.models import *
-
-                # First create the DDBB
-                ##call_command("syncdb")
-
-                # Start the web application in the background.
-                # XXX FIXME this code is bogus! @cr0hn: put your stuff here :)
-                # XXX this must be blocking, when we return that means
-                # the web application has shut down and we're quitting.
-                # You MUST instance GoLismeroStateMachine() by passing it
-                # the Bridge instance and (optionally) your event callback.
-                ##call_command(*command)
+                # Launch the XMLRPC server.
+                run_xmlrpc_server(fsm,
+                    orchestrator_config['listen_address'],
+                    orchestrator_config['listen_port'])
 
             # On error tell GoLismero we failed to initialize.
             except Exception, e:
@@ -224,7 +194,7 @@ def run_xmlrpc_server(fsm, listen_addr="127.0.0.1", listen_port=9000):
 #------------------------------------------------------------------------------
 class Bridge (object):
     """
-    Django <-> GoLismero bridge.
+    XML-RPC <-> GoLismero bridge.
     """
 
 
@@ -300,7 +270,7 @@ class GoLismeroStateMachine (threading.Thread):
     #--------------------------------------------------------------------------
     def __init__(self, bridge, event_callback = None):
         """
-        :param bridge: Django <-> GoLismero bridge.
+        :param bridge: XML-RPC <-> GoLismero bridge.
         :type bridge: Bridge
 
         :param event_callback: Optional callback to receive GoLismero events.

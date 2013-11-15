@@ -90,7 +90,9 @@ if path.sep == "\\":
 #------------------------------------------------------------------------------
 # Imported modules.
 
+import argparse
 import daemon
+import netaddr
 
 
 #------------------------------------------------------------------------------
@@ -100,8 +102,6 @@ from golismero.api.logger import Logger
 from golismero.common import OrchestratorConfig, get_profile, \
     get_default_config_file
 from golismero.main import launcher
-import netaddr
-import argparse
 
 
 #----------------------------------------------------------------------
@@ -153,9 +153,50 @@ def check_ip(ip):
 
 
 #------------------------------------------------------------------------------
+# Command line parser.
+
+def cmdline_parser():
+
+    # Usage help.
+    usage = """Daemon for GoLismero 2.0
+
+Listen in all network interfaces at port 9000:
+%(prog)s -l 0.0.0.0 -p 9000
+
+Listen in loopback IPv6 at port 8000:
+%(prog)s -l ::1
+"""
+
+    # Parse the command line arguments.
+    parser = argparse.ArgumentParser(usage=usage, description='run GoLismero web UI')
+    parser.add_argument('-l', dest="IP_LISTEN", help="IP address where to listen to (default: 127.0.0.1).", default="127.0.0.1")
+    parser.add_argument('-p', dest="PORT", type=int, help="port where to listen to (default 9000).", default=9000)
+    parser.add_argument('-v', '--verbose', dest="VERBOSE", action="store_true", help="display debug info into console instead of file.", default=False)
+    parser.add_argument('-r', '--auto-restart', dest="AUTO_RESTART", action="store_true", help="automatically restart the service when stopped.", default=False)
+    args = parser.parse_args()
+
+    # Check the port number.
+    if args.PORT:
+        try:
+            check_port(args.PORT)
+        except Exception, e:
+            parser.error(str(e))
+
+    # Check the listening IP address.
+    if args.IP_LISTEN:
+        try:
+            check_ip(args.IP_LISTEN)
+        except Exception, e:
+            parser.error(str(e))
+
+    # Return the parsed command line options.
+    return args
+
+
+#------------------------------------------------------------------------------
 # Start of program.
 
-def main(listen_address="127.0.0.1", listen_port=9000):
+def daemon_main(listen_address, listen_port):
 
     # Get the config file name.
     config_file = get_default_config_file()
@@ -203,8 +244,8 @@ def main(listen_address="127.0.0.1", listen_port=9000):
                     "Default plugins folder not found, aborting!")
         orchestrator_config.plugins_folder = plugins_folder
 
-    # Force the Web UI.
-    orchestrator_config.ui_mode = "web"
+    # Force the Daemon UI.
+    orchestrator_config.ui_mode = "daemon"
 
     # Force disable colored output.
     orchestrator_config.color = False
@@ -218,70 +259,35 @@ def main(listen_address="127.0.0.1", listen_port=9000):
 
 if __name__ == '__main__':
 
-    usage = """
-Daemon for GoLismero 2.0
+    # Parse the command line options.
+    args = cmdline_parser()
 
-Listen in all network interfaces at port 9000:
-%(prog)s -l 0.0.0.0 -p 9000
-
-Listen in loopback IPv6 at port 8000:
-%(prog)s -l ::1
-"""
-
-    parser = argparse.ArgumentParser(usage=usage, description='run GoLismero web UI')
-    parser.add_argument('-l', dest="IP_LISTEN", help="IP address where to listen to (default: 127.0.0.1).", default="127.0.0.1")
-    parser.add_argument('-p', dest="PORT", type=int, help="port where to listen to (default 9000).", default=9000)
-    parser.add_argument('--verbose', dest="VERBOSE", action="store_true", help="display debug info into console instead of file.", default=False)
-    args = parser.parse_args()
-
-    #
-    # Listen params
-    #
-
-    # Check port
-    if args.PORT:
-        try:
-            check_port(args.PORT)
-        except ValueError,e:
-            print "\n[!] %s\n" % str(e)
-            sys.exit(1)
-        except TypeError, e:
-            print "\n[!] %s\n" % str(e)
-            sys.exit(1)
-
-    # Check for IP
-    if args.IP_LISTEN:
-        try:
-            check_ip(args.IP_LISTEN)
-        except ValueError,e:
-            print "\n[!] %s\n" % str(e)
-            sys.exit(1)
-        except TypeError, e:
-            print "\n[!] %s\n" % str(e)
-            sys.exit(1)
-
-    #
-    # Run daemon
-    #
-
+    # Get the working directory.
     working_directory = path.dirname( path.abspath(__file__) )
 
-    # If not verbose mode
-    fout = None
-    fin  = None
-    if not args.VERBOSE:
-        fout = open(path.join(working_directory, "golismero-out.log"), "a")
-        fin  = open(path.join(working_directory, "golismero-err.log"), "a")
-    else:
-        fout = sys.stdout
-        fin  = sys.stderr
-    #stdout = "/var/log/golismero-out.log"
-    #stderr = "/var/log/golismero-err.log"
+    ## Save logs to file, unless we're in verbose mode.
+    #fout = None
+    #fin  = None
+    #if not args.VERBOSE:
+        #fout = open(path.join(working_directory, "golismero-out.log"), "a")
+        #fin  = open(path.join(working_directory, "golismero-err.log"), "a")
+        ###fout = open("/var/log/golismero-out.log", "a")
+        ###fin  = open("/var/log/golismero-err.log", "a")
+    #else:
+        #fout = sys.stdout
+        #fin  = sys.stderr
 
     with daemon.DaemonContext(
         working_directory = working_directory,
         detach_process = False,
-        stdout = fout,
-        stderr = fin
+        stdout = sys.stdout,
+        stderr = sys.stderr
     ):
-        main(args.IP_LISTEN, args.PORT)
+        if args.AUTO_RESTART:
+            while True:
+                try:
+                    daemon_main(args.IP_LISTEN, args.PORT)
+                except:
+                    pass
+        else:
+            daemon_main(args.IP_LISTEN, args.PORT)

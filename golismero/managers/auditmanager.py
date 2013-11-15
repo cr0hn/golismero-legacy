@@ -57,26 +57,36 @@ from traceback import format_exc
 # RPC implementors for the audit manager API.
 
 @implementor(MessageCode.MSG_RPC_AUDIT_COUNT)
-def rpc_audit_get_count(orchestrator, audit_name):
+def rpc_audit_get_count(orchestrator, current_audit_name):
     return orchestrator.auditManager.get_audit_count()
 
 @implementor(MessageCode.MSG_RPC_AUDIT_NAMES)
-def rpc_audit_get_names(orchestrator, audit_name):
+def rpc_audit_get_names(orchestrator, current_audit_name):
     return orchestrator.auditManager.get_audit_names()
 
 @implementor(MessageCode.MSG_RPC_AUDIT_CONFIG)
-def rpc_audit_get_config(orchestrator, current_audit_name, audit_name):
+def rpc_audit_get_config(orchestrator, current_audit_name, audit_name = None):
     if audit_name:
         return orchestrator.auditManager.get_audit(audit_name).config
     return orchestrator.config
 
 @implementor(MessageCode.MSG_RPC_AUDIT_TIMES)
-def rpc_audit_get_times(orchestrator, audit_name):
+def rpc_audit_get_times(orchestrator, current_audit_name, audit_name = None):
+    if not audit_name:
+        audit_name = current_audit_name
     return orchestrator.auditManager.get_audit(audit_name).database.get_audit_times()
 
 @implementor(MessageCode.MSG_RPC_AUDIT_STATS)
-def rpc_audit_get_stats(orchestrator, audit_name):
+def rpc_audit_get_stats(orchestrator, current_audit_name, audit_name = None):
+    if not audit_name:
+        audit_name = current_audit_name
     return orchestrator.auditManager.get_audit(audit_name).get_runtime_stats()
+
+@implementor(MessageCode.MSG_RPC_AUDIT_SCOPE)
+def rpc_audit_get_scope(orchestrator, current_audit_name, audit_name = None):
+    if audit_name:
+        return orchestrator.auditManager.get_audit(audit_name).scope
+    return DummyScope()
 
 
 #------------------------------------------------------------------------------
@@ -340,7 +350,7 @@ class Audit (object):
         self.__report_manager = None
 
         # Create or open the database.
-        force_print_name = not audit_config.audit_name
+        force_print_name = not audit_config.audit_name or audit_config.audit_db == ":auto:"
         self.__database = AuditDB(audit_config)
 
         # Set the audit name.
@@ -451,11 +461,15 @@ class Audit (object):
     #--------------------------------------------------------------------------
     def get_runtime_stats(self):
         """
-        :returns: Dictionary with runtime statistics with at least the following keys:
-         - "current_stage": [int] Current stage number.
-         - "total_count": [int] Total number of data objects to process in this stage.
-         - "processed_count": [int] Number of data objects already processed in this stage.
-         - "stage_cycles": [dict(int -> int)] Map of stage numbers and times each stage ran.
+        :returns: Dictionary with runtime statistics
+            with at least the following keys:
+             - "current_stage": [int] Current stage number.
+             - "total_count": [int] Total number of data objects to process
+               in this stage.
+             - "processed_count": [int] Number of data objects already
+               processed in this stage.
+             - "stage_cycles": [dict(int -> int)] Map of stage numbers and
+               times each stage ran.
         Future versions of GoLismero may include more keys.
         :rtype: dict(str -> *)
         """

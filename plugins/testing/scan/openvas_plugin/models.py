@@ -27,20 +27,18 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["Families", "Plugin"]
 
+from standalone import models
 
+#------------------------------------------------------------------------------
+class Families(models.StandaloneModel):
+    family_name      = models.CharField(max_length=250, primary_key=True)
 
+#------------------------------------------------------------------------------
+class Plugin(models.StandaloneModel):
+    #plugin_name      = models.CharField(max_length=250)
+    plugin_id        = models.BigIntegerField(max_length=250, primary_key=True)
+    plugin_file_name = models.CharField(max_length=255)
 
-import xmlrpclib
-
-#----------------------------------------------------------------------
-def main():
-    """"""
-    proxy = xmlrpclib.ServerProxy("http://127.0.0.1:9000")
-
-    a = proxy.call("prueba/hola")
-
-    print a
-
-if __name__=='__main__':
-    main()
+    family           = models.ForeignKey(Families)

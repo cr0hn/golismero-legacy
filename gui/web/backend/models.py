@@ -29,20 +29,6 @@ class Plugins(models.Model):
     """
     plugin_name   = models.CharField(max_length=255, primary_key=True)
 
-#------------------------------------------------------------------------------
-class PluginParameters(models.Model):
-    """
-    Plugins parameters. Each parameter only belongs to one plugin.
-    """
-    param_name        = models.CharField(max_length=200)
-    param_value       = models.CharField(max_length=200)
-    param_type        = models.CharField(max_length=50, default="string")
-    param_default     = models.CharField(max_length=50, default="")
-    param_restriction = models.CharField(max_length=255, default="")
-
-    # Relations
-    plugin_params     = models.OneToOneField(Plugins)
-
 
 #------------------------------------------------------------------------------
 class Audit(models.Model):
@@ -74,3 +60,20 @@ class Audit(models.Model):
     targets                 = models.ManyToManyField(Target)
     enable_plugins          = models.ManyToManyField(Plugins)
     user                    = models.ForeignKey(User)
+
+
+#------------------------------------------------------------------------------
+class PluginParameters(models.Model):
+    """
+    Plugins parameters. Each parameter only belongs to one plugin.
+    """
+    param_name        = models.CharField(max_length=200)
+    param_value       = models.CharField(max_length=200)
+    param_type        = models.CharField(max_length=50, default="string")
+    param_default     = models.CharField(max_length=50, default="")
+    param_restriction = models.CharField(max_length=255, default="")
+
+    # Relations
+    plugin     = models.ForeignKey(Plugins)
+    audit      = models.ForeignKey(Audit)
+

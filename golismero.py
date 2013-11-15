@@ -265,11 +265,10 @@ def cmdline_parser():
 
     gr_audit = parser.add_argument_group("audit options")
     gr_audit.add_argument("--audit-name", metavar="NAME", help="customize the audit name")
-    gr_audit.add_argument("--db-store", metavar="STORE_LOCATION", dest="db_location", help="default location for databases. Only available for sqlite.")
-    cmd = gr_audit.add_argument("-db", "--audit-db", metavar="DATABASE", dest="audit_db", help="specify a database connection string")
+    cmd = gr_audit.add_argument("-db", "--audit-db", metavar="DATABASE", dest="audit_db", help="specify a database filename")
     if autocomplete_enabled:
         cmd.completer = FilesCompleter(allowednames=(".db",), directories=False)
-    gr_audit.add_argument("-nd", "--no-db", dest="audit_db", action="store_const", const="memory://", help="do not store the results in a database")
+    gr_audit.add_argument("-nd", "--no-db", dest="audit_db", action="store_const", const=":memory:", help="do not store the results in a database")
     cmd = gr_audit.add_argument("-i", "--input", dest="imports", metavar="FILENAME", action="append", help="read results from external tools right before the audit")
     if autocomplete_enabled:
         cmd.completer = FilesCompleter(allowednames=(".csv", ".xml", ".nessus"), directories=False)
@@ -307,7 +306,7 @@ def cmdline_parser():
     gr_net.add_argument("--volatile-cache", action="store_false", dest="use_cache_db", help="use a volatile network cache")
 
     gr_plugins = parser.add_argument_group("plugin options")
-    cmd = gr_plugins.add_argument("-a", "--plugin-arg", metavar="PLUGIN:KEY=VALUE", action=SetPluginArgumentAction, dest="plugin_args", help="pass an argument to a plugin")
+    cmd = gr_plugins.add_argument("-a", "--plugin-arg", metavar="PLUGIN:KEY=VALUE", action=SetPluginArgumentAction, dest="raw_plugin_args", help="pass an argument to a plugin")
     if autocomplete_enabled:
         cmd.completer = plugins_completer
     cmd = gr_plugins.add_argument("-e", "--enable-plugin", metavar="PLUGIN", action=EnablePluginAction, default=[], dest="plugin_load_overrides", help="enable a plugin")
@@ -390,6 +389,39 @@ def cmdline_parser():
     return parser
 
 
+#--------------------------------------------------------------------------
+def parse_plugin_args(manager, plugin_args):
+    """
+    Parse a list of tuples with plugin arguments as a dictionary of
+    dictionaries, with plugin IDs sanitized.
+
+    :param manager: Plugin manager.
+    :type manager: PluginManager
+
+    :param plugin_args: Arguments as specified in the command line.
+    :type plugin_args: list(tuple(str, str, str))
+
+    :returns: Sanitized plugin arguments. Dictionary mapping plugin
+        names to dictionaries mapping argument names and values.
+    :rtype: dict(str -> dict(str -> str))
+
+    :raises KeyError: Plugin or argument not found.
+    """
+    parsed = {}
+    for plugin_id, key, value in plugin_args:
+        plugin_info = manager.guess_plugin_by_id(plugin_id)
+        key = key.lower()
+        if key not in plugin_info.plugin_args:
+            raise KeyError(
+                "Argument not found: %s:%s" % (plugin_id, key))
+        try:
+            target = parsed[plugin_info.plugin_id]
+        except KeyError:
+            parsed[plugin_info.plugin_id] = target = {}
+        target[key] = value
+    return parsed
+
+
 #------------------------------------------------------------------------------
 # Start of program
 
@@ -405,6 +437,7 @@ def main():
         if envcfg:
             args = parser.convert_arg_line_to_args(envcfg) + args
         P = parser.parse_args(args)
+        P.plugin_args = {}
         command = P.command.upper()
         if command in COMMANDS:
             P.command = command
@@ -465,7 +498,7 @@ def main():
     # Show exceptions as command line parsing errors.
     except Exception, e:
         ##raise    # XXX DEBUG
-        parser.error(str(e))
+        parser.error("arguments error: %s" % str(e))
 
     # Get the plugins folder from the parameters.
     # If no plugins folder is given, use the default.
@@ -743,13 +776,6 @@ def main():
     auditParams.targets.extend(guessed_urls)
 
     try:
-        cmdParams.check_params()
-        auditParams.check_params()
-    except Exception, e:
-        ##raise # XXX DEBUG
-        parser.error(str(e))
-
-    try:
 
         # Load the plugins.
         # XXX FIXME for this we'd need the plugin manager
@@ -761,17 +787,16 @@ def main():
 
         # Sanitize the plugin arguments.
         try:
-            if P.plugin_args:
-                plugin_args = manager.parse_plugin_args(P.plugin_args)
-            else:
-                plugin_args = {}
+            if P.raw_plugin_args:
+                P.plugin_args = parse_plugin_args(manager, P.raw_plugin_args)
         except KeyError, e:
-            parser.error(str(e))
+            ##raise # XXX DEBUG
+            parser.error("error parsing plugin arguments: %s" % str(e))
 
         # Prompt for passwords.
-        for plugin_id in plugin_args.keys():
+        for plugin_id in P.plugin_args.keys():
             plugin_info = manager.get_plugin_by_id(plugin_id)
-            target_args = plugin_args[plugin_id]
+            target_args = P.plugin_args[plugin_id]
             for key, value in target_args.items():
                 if not value and key in plugin_info.plugin_passwd_args:
                     if len(plugin_info.plugin_passwd_args) > 1:
@@ -783,8 +808,12 @@ def main():
                     target_args[key] = getpass(msg)
 
         # Save the plugin arguments for the Orchestrator and the Audit.
-        cmdParams.plugin_args   = plugin_args
-        auditParams.plugin_args = plugin_args
+        cmdParams.plugin_args   = P.plugin_args
+        auditParams.plugin_args = P.plugin_args
+
+        # Check the parameters.
+        cmdParams.check_params()
+        auditParams.check_params()
 
         # Set the plugin arguments before loading the UI plugin.
         for plugin_id, plugin_args in cmdParams.plugin_args.iteritems():

@@ -432,7 +432,8 @@ class PluginInfo (object):
         # All sections not parsed above will be included here.
         self.__plugin_extra_config = dict()
         for section in parser.sections():
-            if section not in ("Core", "Documentation", "Configuration"):
+            if section not in ("Core", "Documentation",
+                               "Configuration", "Arguments"):
                 options = dict(
                     (k.lower(), v) for (k, v) in parser.items(section)
                 )
@@ -1096,38 +1097,6 @@ class PluginManager (object):
 
 
     #--------------------------------------------------------------------------
-    def parse_plugin_args(self, plugin_args):
-        """
-        Parse a list of tuples with plugin arguments as a dictionary of
-        dictionaries, with plugin IDs sanitized.
-
-        Once sanitized, you can all set_plugin_args() to set them.
-
-        :param plugin_args: Arguments as specified in the command line.
-        :type plugin_args: list(tuple(str, str, str))
-
-        :returns: Sanitized plugin arguments. Dictionary mapping plugin
-            names to dictionaries mapping argument names and values.
-        :rtype: dict(str -> dict(str -> str))
-
-        :raises KeyError: Plugin or argument not found.
-        """
-        parsed = {}
-        for plugin_id, key, value in plugin_args:
-            plugin_info = self.guess_plugin_by_id(plugin_id)
-            key = key.lower()
-            if key not in plugin_info.plugin_args:
-                raise KeyError(
-                    "Argument not found: %s:%s" % (plugin_id, key))
-            try:
-                target = parsed[plugin_info.plugin_id]
-            except KeyError:
-                parsed[plugin_info.plugin_id] = target = {}
-            target[key] = value
-        return parsed
-
-
-    #--------------------------------------------------------------------------
     def set_plugin_args(self, plugin_id, plugin_args):
         """
         Set the user-defined values for the given plugin arguments.
@@ -1212,7 +1181,16 @@ class AuditPluginManager (PluginManager):
         # Set the plugin arguments.
         if auditConfig.plugin_args:
             for plugin_id, plugin_args in auditConfig.plugin_args.iteritems():
-                self.set_plugin_args(plugin_id, plugin_args)
+                status = self.set_plugin_args(plugin_id, plugin_args)
+                if status == 1:
+                    try:
+                        pluginManager.get_plugin_by_id(plugin_id)
+                    except KeyError:
+                        warnings.warn("Unknown plugin ID: %s" % plugin_id)
+                elif status == 2:
+                    warnings.warn(
+                        "Some arguments undefined for plugin ID: %s" %
+                        plugin_id)
 
         # Check the plugin parameters.
         self.__check_plugin_params()
