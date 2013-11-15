@@ -32,6 +32,7 @@ from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.vulnerability import UncategorizedVulnerability
 from golismero.api.data.vulnerability.infrastructure.vulnerable_service import VulnerableService
+from golismero.api.data.vulnerability.infrastructure.outdated_software import *
 from golismero.api.logger import Logger
 from golismero.api.net.scraper import extract_from_text
 from golismero.api.plugin import TestingPlugin, ImportPlugin
@@ -46,7 +47,14 @@ except ImportError:
     from xml.etree import ElementTree as etree
 
 from openvas_lib import VulnscanManager, VulnscanException
+from openvas_lib.data import OpenVASResult
 
+# Add openvas_plugin folder
+import os.path
+import sys
+cwd = os.path.abspath(os.path.split(__file__)[0])
+cwd1 = os.path.join(cwd, "openvas_plugin")
+sys.path.insert(0, cwd1)
 
 #------------------------------------------------------------------------------
 # TODO: maybe polish up this class and add it to the API, see #64
@@ -226,15 +234,84 @@ class OpenVASPlugin(TestingPlugin):
             'high'  : "high",
         }
 
+
+
+        #----------------------------------------------------------------------
+        #
+        # All data and imports
+        #
+        #----------------------------------------------------------------------
+
+        # Relative BBDD path
+        m_bbdd = os.path.join(os.path.join(os.path.split(os.path.abspath(__file__))[0], "openvas_plugin"), "openvas.sqlite3")
+
+        from standalone.conf import settings
+
+        settings = settings(
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.sqlite3',
+                    'NAME': '%s' % m_bbdd,
+                }
+            },
+        )
+
+        # Load plugin info
+        cwd = os.path.abspath(os.path.split(__file__)[0])
+        cwd = os.path.join(cwd, "openvas_plugin")
+        sys.path.insert(0, cwd)
+        try:
+            from models import Families, Plugin
+        finally:
+            sys.path.remove(cwd)
+        del cwd
+
+        # Map of OpenVAS levels to GoLismero levels.
+        OPV_LEVELS_TO_GLM_LEVELS = {
+            'debug' : 'informational',
+            'log'   : 'informational',
+            'low'   : "low",
+            'medium': 'middle',
+            'high'  : "high",
+        }
+
+        # Knonw categories
+        CATEGORIES = {
+            'Mandriva Local Security Checks'         : OutdatedPlatformMandrivaLocal,
+            'Windows : Microsoft Bulletins'          : OutdatedPlatformWindowsMicrosoftBulletins,
+            'Debian Local Security Checks'           : OutdatedPlatformDebianLocal,
+            'MacOS X Local Security Checks'          : OutdatedPlatformMacOSXLocal,
+            'VMware ESX Local Security Checks'       : OutdatedPlatformVMwareESXLocal,
+            'Ubuntu Local Security Checks'           : OutdatedPlatformUbuntuLocal,
+            'HP-UX Local Security Checks'            : OutdatedPlatformHPUXLocal,
+            'SuSE Local Security Checks'             : OutdatedPlatformSuSELocal,
+            'FreeBSD Local Security Checks'          : OutdatedPlatformFreeBSDLocal,
+            'Junos Local Security Checks'            : OutdatedPlatformJunosLocal,
+            'Scientific Linux Local Security Checks' : OutdatedPlatformScientificLinuxLocal,
+            'Slackware Local Security Checks'        : OutdatedPlatformSlackwareLocal,
+            'Solaris Local Security Checks'          : OutdatedPlatformSolarisLocal,
+            'Red Hat Local Security Checks'          : OutdatedPlatformRedHatLocal,
+            'Amazon Linux Local Security Checks'     : OutdatedPlatformAmazonLinuxLocal,
+            'AIX Local Security Checks'              : OutdatedPlatformAIXLocal,
+            'Gentoo Local Security Checks'           : OutdatedPlatformGentooLocal,
+            'CentOS Local Security Checks'           : OutdatedPlatformCentOSLocal,
+            'Oracle Linux Local Security Checks'     : OutdatedPlatformOracleLinuxLocal,
+            'Fedora Local Security Checks'           : OutdatedPlatformFedoraLocal
+        }
+
         # For each OpenVAS result...
         for opv in openvas_results:
-            try:
 
+            if not isinstance(opv, OpenVASResult):
+                continue
+
+            try:
                 # Get the host.
                 host = opv.host
 
                 # Get or create the vulnerable resource.
                 target = ip
+
                 if host in hosts_seen:
                     target = hosts_seen[host]
                 elif not ip or ip.address != host:
@@ -252,10 +329,12 @@ class OpenVASPlugin(TestingPlugin):
                     level = "informational"
 
                 # Get the metadata.
-                nvt = opv.nvt
+                nvt  = opv.nvt
                 ##references = nvt.xrefs.split("\n")
-                ##cvss = nvt.cvss
-                ##cve = nvt.cve
+                cvss = nvt.cvss_base
+                cve  = nvt.cve
+                oid  = nvt.oid
+                name = nvt.name
 
                 # Get the vulnerability description.
                 description = opv.description
@@ -276,20 +355,49 @@ class OpenVASPlugin(TestingPlugin):
 
                 # Prepare the vulnerability properties.
                 kwargs = {
-                    "level": OPV_LEVELS_TO_GLM_LEVELS[level.lower()],
-                    "description": description,
-                    "references": references,
-                    ##"cvss": cvss,
-                    ##"cve": cve,
+                    "level"       : OPV_LEVELS_TO_GLM_LEVELS[level.lower()],
+                    "description" : description,
+                    "references"  : references,
+                    "cvss_base"   : cvss,
+                    "cve"         : cve,
                     ##"references": references,
                 }
 
-                # Create the vulnerability instance.
-                vuln = UncategorizedVulnerability(**kwargs)
+
+                # Looking family in BBDD
+                vuln = None
+                if oid:
+                    oid_spt = oid.split(".")
+                    if len(oid_spt) > 0:
+                        l_plugin_ide = oid_spt[-1]
+                        try:
+                            l_family     = Plugin.objects.get(plugin_id=l_plugin_ide).family_id
+
+                            if l_family.strip()in CATEGORIES:
+                                kwargs["plugin_id"]   = "nessus"
+                                kwargs["title"]       = name
+
+                                # Concrete vuln
+                                vuln         = CATEGORIES[l_family](**kwargs)
+
+                                # Set plugin ID of the tool
+                                vuln.tool_id = str(l_plugin_ide)
+
+                        except Exception, e:
+                            print e
+                            Logger.log("Plugin '%s' not found." % l_family)
+
+                else:
+                    # Create the vulnerability instance.
+                    vuln = UncategorizedVulnerability(**kwargs)
 
                 # Link the vulnerability to the resource.
-                if target is not None:
-                    target.add_vulnerability(vuln)
+                if vuln:
+                    if target is not None:
+                        target.add_vulnerability(vuln)
+
+                        # Add the vulnerability.
+                        results.append(vuln)
 
             # Skip on error.
             except Exception, e:
@@ -299,8 +407,7 @@ class OpenVASPlugin(TestingPlugin):
                 Logger.log_error_more_verbose(t)
                 continue
 
-            # Add the vulnerability.
-            results.append(vuln)
+
 
         # Return the converted results.
         return results
