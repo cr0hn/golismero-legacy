@@ -90,7 +90,10 @@ class AuditBridge(object):
         config["audit_db"] = "%s.db" % join(data.store_path,config['audit_name'])
 
         if not BRIDGE.SIMULATE:
-            BRIDGE.RPC.call("audit/create", config)
+            try:
+                BRIDGE.RPC.call("audit/create", config)
+            except:
+                raise ExceptionAudit()
 
 
 
