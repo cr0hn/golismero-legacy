@@ -30,13 +30,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.audit import start_audit, stop_audit, \
      get_audit_names, get_audit_count, get_audit_config, \
      get_audit_stats, get_audit_log_lines, get_audit_scope
-
 from golismero.api.data import Data
 from golismero.api.data.resource import Resource
 from golismero.api.data.db import Database
 from golismero.api.config import Config, get_orchestrator_config
 from golismero.api.logger import Logger
-from golismero.api.plugin import UIPlugin, get_plugin_info, get_plugin_ids
+from golismero.api.plugin import UIPlugin, get_plugin_info, get_plugin_ids, \
+     get_stage_display_name
 from golismero.common import AuditConfig
 from golismero.messaging.codes import MessageType, MessageCode, \
      MessagePriority
@@ -112,13 +112,16 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
+    def __init__(self):
+
+        # audit_name -> plugin_name -> ack_identity -> simple_id
+        self.current_plugins = collections.defaultdict(
+            functools.partial(collections.defaultdict, dict) )
+
+
+    #--------------------------------------------------------------------------
     def check_params(self, options, *audits):
         pass
-        ##for audit in audits:
-        ##    if not audit.audit_db or audit.audit_db.startswith("memory:"):
-        ##        raise ValueError("Database use is mandatory for the Web UI.")
-        ##    if audit.audit_db.startswith("sqlite:"):
-        ##        raise ValueError("Web UI does not support SQLite databases.")
 
 
     #--------------------------------------------------------------------------
@@ -160,69 +163,88 @@ class WebUIPlugin(UIPlugin):
 
             # An audit has finished.
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
+                try:
+                    del self.current_plugins[Config.audit_name]
+                except KeyError:
+                    pass
                 self.notify_stage(message.audit_name,
-                                  "finish" if message.message_info else "cancel")
+                            "finish" if message.message_info else "cancel")
 
             # A plugin has sent a log message.
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
-                plugin_name = self.get_plugin_name(message)
                 (text, level, is_error) = message.message_info
                 if is_error:
                     self.notify_error(
-                        message.audit_name, plugin_name, text, level)
+                        message.audit_name, message.plugin_id,
+                        message.ack_identity, text, level)
                 else:
                     self.notify_log(
-                        message.audit_name, plugin_name, text, level)
+                        message.audit_name, message.plugin_id,
+                        message.ack_identity, text, level)
 
             # A plugin has sent an error message.
             elif message.message_code == MessageCode.MSG_CONTROL_ERROR:
-                plugin_name = self.get_plugin_name(message)
-                (description, traceback) = message.message_info
+                (description, tb) = message.message_info
                 text = "Error: " + description
                 self.notify_error(
-                    message.audit_name, plugin_name, text, Logger.STANDARD)
-                text = "Exception raised: %s\n%s" % (description, traceback)
+                    message.audit_name, message.plugin_id,
+                    message.ack_identity, text, Logger.STANDARD)
+                text = "Exception raised: %s\n%s" % (description, tb)
                 self.notify_error(
-                    message.audit_name, plugin_name, text,
+                    message.audit_name, message.plugin_id,
+                    message.ack_identity, text,
                     Logger.MORE_VERBOSE)
 
             # A plugin has sent a warning message.
             elif message.message_code == MessageCode.MSG_CONTROL_WARNING:
-                plugin_name = self.get_plugin_name(message)
                 for w in message.message_info:
                     formatted = warnings.formatwarning(
                         w.message, w.category, w.filename, w.lineno, w.line)
                     text = "Warning: " + str(w.message)
                     self.notify_warning(
-                        message.audit_name, plugin_name, text,
+                        message.audit_name, message.plugin_id,
+                        message.ack_identity, text,
                         Logger.STANDARD)
                     text = "Warning details: " + formatted
                     self.notify_warning(
-                        message.audit_name, plugin_name, text,
+                        message.audit_name, message.plugin_id,
+                        message.ack_identity, text,
                         Logger.MORE_VERBOSE)
 
         # Status messages.
         elif message.message_type == MessageType.MSG_TYPE_STATUS:
 
             # A plugin has started processing a Data object.
-            if message.message_type == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
-                plugin_name = self.get_plugin_name(message)
+            if message.message_code == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
+
+                # Create a simple ID for the plugin execution.
+                aud_dict  = self.current_plugins[message.audit_name]
+                id_dict   = aud_dict[message.plugin_id]
+                simple_id = len(id_dict)
+                id_dict[message.ack_identity] = simple_id
+
+                # Call the notification method.
                 self.notify_progress(
-                    message.audit_name, plugin_name,
+                    message.audit_name, message.plugin_id,
                     message.ack_identity, 0.0)
 
             # A plugin has finished processing a Data object.
-            elif message.message_type == MessageCode.MSG_STATUS_PLUGIN_END:
-                plugin_name = self.get_plugin_name(message)
+            elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_END:
+
+                # Call the notification method.
                 self.notify_progress(
-                    message.audit_name, plugin_name,
+                    message.audit_name, message.plugin_id,
                     message.ack_identity, 100.0)
+
+                # Free the simple ID for the plugin execution.
+                del self.current_plugins[message.audit_name]\
+                                        [message.plugin_id]\
+                                        [message.ack_identity]
 
             # A plugin is currently processing a Data object.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
-                plugin_name = self.get_plugin_name(message)
                 self.notify_progress(
-                    message.audit_name, plugin_name,
+                    message.audit_name, message.plugin_id,
                     message.ack_identity, message.message_info)
 
             # An audit has switched to another execution stage.
@@ -231,23 +253,43 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    @staticmethod
-    def get_plugin_name(message):
+    def get_plugin_name(self, audit_name, plugin_id, identity):
         """
         Helper method to get a user-friendly name
         for the plugin that sent a given message.
 
-        :param message: Message sent by a plugin.
-        :type message: Message
+        :param audit_name: Name of the audit.
+        :type audit_name: str | None
+
+        :param plugin_id: ID of the plugin.
+        :type plugin_id: str | None
+
+        :param identity: Identity hash of the Data object being processed.
+        :type identity: str | None
 
         :returns: User-friendly name for the plugin.
         :rtype: str
         """
-        if message.plugin_id:
-            plugin_info = get_plugin_info(message.plugin_id)
-            if plugin_info:
-                return plugin_info.display_name
-        return "GoLismero"
+
+        # If the message comes from the Orchestrator.
+        if not plugin_id:
+            return "GoLismero"
+
+        # If the message is for us, just return our name.
+        if plugin_id == Config.plugin_id:
+            return Config.plugin_info.display_name
+
+        # Get the plugin display name.
+        plugin_name = get_plugin_info(plugin_id).display_name
+
+        # Append the simple ID if it's greater than zero.
+        if identity:
+            simple_id = self.current_plugins[audit_name][plugin_id][identity]
+            if simple_id:
+                plugin_name = "%s (%d)" % (plugin_name, simple_id + 1)
+
+        # Return the display name.
+        return plugin_name
 
 
     #--------------------------------------------------------------------------
@@ -257,6 +299,9 @@ class WebUIPlugin(UIPlugin):
         It reads the plugin configuration, starts the consumer thread, and
         launches the XML-RPC server.
         """
+
+        # Log the event.
+        print "Starting XML-RPC server..."
 
         # Initialize the audit and plugin state caches.
         self.state_lock   = threading.RLock()
@@ -293,6 +338,9 @@ class WebUIPlugin(UIPlugin):
         This method is called when the UI stop message arrives.
         It shuts down the web UI.
         """
+
+        # Log the event.
+        print "Stopping XML-RPC server..."
 
         # Tell the consumer thread to stop.
         self.thread_continue = False
@@ -426,15 +474,18 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def notify_log(self, audit_name, plugin_name, text, level):
+    def notify_log(self, audit_name, plugin_id, identity, text, level):
         """
         This method is called when a plugin sends a log message.
 
         :param audit_name: Name of the audit.
-        :type audit_name: str
+        :type audit_name: str | None
 
-        :param plugin_name: Name of the plugin.
-        :type plugin_name: str
+        :param plugin_id: ID of the plugin.
+        :type plugin_id: str | None
+
+        :param identity: Identity hash of the Data object being processed.
+        :type identity: str | None
 
         :param text: Log text.
         :type text: str
@@ -442,20 +493,29 @@ class WebUIPlugin(UIPlugin):
         :param level: Log level (0 through 3).
         :type level: int
         """
-        packet = ("log", audit_name, plugin_name, text, level)
+
+        # Log the event.
+        plugin_name = self.get_plugin_name(audit_name, plugin_id, identity)
+        print "[%s - %s] %s" % (audit_name, plugin_name, text)
+
+        # Send the packet.
+        packet = ("log", audit_name, plugin_id, identity, text, level)
         self.bridge.send(packet)
 
 
     #--------------------------------------------------------------------------
-    def notify_error(self, audit_name, plugin_name, text, level):
+    def notify_error(self, audit_name, plugin_id, identity, text, level):
         """
         This method is called when a plugin sends an error message.
 
         :param audit_name: Name of the audit.
-        :type audit_name: str
+        :type audit_name: str | None
 
-        :param plugin_name: Name of the plugin.
-        :type plugin_name: str
+        :param plugin_id: ID of the plugin.
+        :type plugin_id: str | None
+
+        :param identity: Identity hash of the Data object being processed.
+        :type identity: str | None
 
         :param text: Log text.
         :type text: str
@@ -463,20 +523,29 @@ class WebUIPlugin(UIPlugin):
         :param level: Log level (0 through 3).
         :type level: int
         """
-        packet = ("error", audit_name, plugin_name, text, level)
+
+        # Log the event.
+        plugin_name = self.get_plugin_name(audit_name, plugin_id, identity)
+        print "[%s - %s] %s" % (audit_name, plugin_name, text)
+
+        # Send the packet.
+        packet = ("error", audit_name, plugin_id, identity, text, level)
         self.bridge.send(packet)
 
 
     #--------------------------------------------------------------------------
-    def notify_warning(self, audit_name, plugin_name, text, level):
+    def notify_warning(self, audit_name, plugin_id, identity, text, level):
         """
         This method is called when a plugin sends a warning message.
 
         :param audit_name: Name of the audit.
-        :type audit_name: str
+        :type audit_name: str | None
 
-        :param plugin_name: Name of the plugin.
-        :type plugin_name: str
+        :param plugin_id: ID of the plugin.
+        :type plugin_id: str | None
+
+        :param identity: Identity hash of the Data object being processed.
+        :type identity: str | None
 
         :param text: Log text.
         :type text: str
@@ -484,33 +553,49 @@ class WebUIPlugin(UIPlugin):
         :param level: Log level (0 through 3).
         :type level: int
         """
-        packet = ("warn", audit_name, plugin_name, text, level)
+
+        # Log the event.
+        plugin_name = self.get_plugin_name(audit_name, plugin_id, identity)
+        print "[%s - %s] %s" % (audit_name, plugin_name, text)
+
+        # Send the packet.
+        packet = ("warn", audit_name, plugin_id, identity, text, level)
         self.bridge.send(packet)
 
 
     #--------------------------------------------------------------------------
-    def notify_progress(self, audit_name, plugin_name, identity, progress):
+    def notify_progress(self, audit_name, plugin_id, identity, progress):
         """
         This method is called when a plugin sends a status update.
 
         :param audit_name: Name of the audit.
-        :type audit_name: str
+        :type audit_name: str | None
 
-        :param plugin_name: Name of the plugin.
-        :type plugin_name: str
+        :param plugin_id: ID of the plugin.
+        :type plugin_id: str | None
 
         :param identity: Identity hash of the Data object being processed.
-        :type identity: str
+        :type identity: str | None
 
         :param progress: Progress percentage (0.0 through 100.0).
         :type progress: float
         """
 
+        # Log the event.
+        plugin_name = self.get_plugin_name(audit_name, plugin_id, identity)
+        if progress is not None:
+            progress_h = int(progress)
+            progress_l = int((progress - float(progress_h)) * 100)
+            text = "%i.%.2i%% percent done..." % (progress_h, progress_l)
+        else:
+            text = "Working..."
+        print "[%s - %s] %s" % (audit_name, plugin_name, text)
+
         # Save the plugin state.
-        self.plugin_state[audit_name][(plugin_name, identity)] = progress
+        self.plugin_state[audit_name][(plugin_id, identity)] = progress
 
         # Send the plugin state.
-        packet = ("progress", audit_name, plugin_name, identity, progress)
+        packet = ("progress", audit_name, plugin_id, identity, progress)
         self.bridge.send(packet)
 
 
@@ -536,6 +621,10 @@ class WebUIPlugin(UIPlugin):
              - "cancel" - The audit has been canceled by the user.
         :type stage: str
         """
+
+        # Log the event.
+        print "[%s] Entering stage: %s" % (audit_name,
+                                           get_stage_display_name(stage))
 
         # Save the audit state.
         self.audit_state[audit_name] = stage
