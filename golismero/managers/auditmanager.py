@@ -461,11 +461,15 @@ class Audit (object):
     #--------------------------------------------------------------------------
     def get_runtime_stats(self):
         """
-        :returns: Dictionary with runtime statistics with at least the following keys:
-         - "current_stage": [int] Current stage number.
-         - "total_count": [int] Total number of data objects to process in this stage.
-         - "processed_count": [int] Number of data objects already processed in this stage.
-         - "stage_cycles": [dict(int -> int)] Map of stage numbers and times each stage ran.
+        :returns: Dictionary with runtime statistics
+            with at least the following keys:
+             - "current_stage": [int] Current stage number.
+             - "total_count": [int] Total number of data objects to process
+               in this stage.
+             - "processed_count": [int] Number of data objects already
+               processed in this stage.
+             - "stage_cycles": [dict(int -> int)] Map of stage numbers and
+               times each stage ran.
         Future versions of GoLismero may include more keys.
         :rtype: dict(str -> *)
         """

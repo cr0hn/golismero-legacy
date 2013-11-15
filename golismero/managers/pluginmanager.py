@@ -432,7 +432,8 @@ class PluginInfo (object):
         # All sections not parsed above will be included here.
         self.__plugin_extra_config = dict()
         for section in parser.sections():
-            if section not in ("Core", "Documentation", "Configuration"):
+            if section not in ("Core", "Documentation",
+                               "Configuration", "Arguments"):
                 options = dict(
                     (k.lower(), v) for (k, v) in parser.items(section)
                 )
@@ -1180,7 +1181,16 @@ class AuditPluginManager (PluginManager):
         # Set the plugin arguments.
         if auditConfig.plugin_args:
             for plugin_id, plugin_args in auditConfig.plugin_args.iteritems():
-                self.set_plugin_args(plugin_id, plugin_args)
+                status = self.set_plugin_args(plugin_id, plugin_args)
+                if status == 1:
+                    try:
+                        pluginManager.get_plugin_by_id(plugin_id)
+                    except KeyError:
+                        warnings.warn("Unknown plugin ID: %s" % plugin_id)
+                elif status == 2:
+                    warnings.warn(
+                        "Some arguments undefined for plugin ID: %s" %
+                        plugin_id)
 
         # Check the plugin parameters.
         self.__check_plugin_params()
