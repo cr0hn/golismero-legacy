@@ -90,7 +90,9 @@ if path.sep == "\\":
 #------------------------------------------------------------------------------
 # Imported modules.
 
+import argparse
 import daemon
+import netaddr
 
 
 #------------------------------------------------------------------------------
@@ -100,8 +102,6 @@ from golismero.api.logger import Logger
 from golismero.common import OrchestratorConfig, get_profile, \
     get_default_config_file
 from golismero.main import launcher
-import netaddr
-import argparse
 
 
 #----------------------------------------------------------------------
