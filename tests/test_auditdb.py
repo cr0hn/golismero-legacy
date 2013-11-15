@@ -515,7 +515,6 @@ def test_auditdb_dump():
         assert t.audit.name == "test_auditdb"
         assert type(disk) is AuditSQLiteDB
         assert disk.filename == "test_auditdb.db"
-        assert disk.connection_url == "sqlite://test_auditdb.db"
 
         print "Testing the audit database dump..."
         print "  -> Writing..."

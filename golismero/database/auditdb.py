@@ -218,16 +218,6 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
-    @property
-    def connection_url(self):
-        """
-        :returns: Connection URL for this database.
-        :rtype: str
-        """
-        raise NotImplementedError()
-
-
-    #--------------------------------------------------------------------------
     @staticmethod
     def generate_audit_name():
         """
@@ -931,12 +921,6 @@ class AuditMemoryDB (BaseAuditDB):
 
 
     #--------------------------------------------------------------------------
-    @property
-    def connection_url(self):
-        return "memory://"
-
-
-    #--------------------------------------------------------------------------
     def encode(self, data):
         return data
 
@@ -1343,8 +1327,8 @@ class AuditSQLiteDB (BaseAuditDB):
             # Create the database file.
             self.__db = sqlite3.connect(self.__filename)
 
-        # Update the database connection string.
-        audit_config.audit_db = self.connection_url
+        # Update the database filename.
+        audit_config.audit_db = self.__filename
 
         # Create or validate the database schema.
         # This raises an exception on error.
@@ -1366,9 +1350,6 @@ class AuditSQLiteDB (BaseAuditDB):
         """
 
         # If we don't have a filename but we have an audit name...
-        if audit_db.find("//") != -1:
-            audit_db = audit_db[audit_db.find("//") + 2:]
-
         if not audit_db or audit_db == ":auto:":
             audit_db = None
             if audit_name:
@@ -1462,12 +1443,6 @@ class AuditSQLiteDB (BaseAuditDB):
         :rtype: str
         """
         return self.__filename
-
-
-    #--------------------------------------------------------------------------
-    @property
-    def connection_url(self):
-        return "sqlite://" + self.filename
 
 
     #--------------------------------------------------------------------------
