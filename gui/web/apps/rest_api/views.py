@@ -722,7 +722,8 @@ class AuditViewSet(ViewSet):
 		    'xml'    : 'application/xml',
 		    'html'   : 'text/html',
 		    'rst'    : 'text/html',
-		    'text'   : 'text/plain'
+		    'text'   : 'text/plain',
+		    'csv'    : 'text/csv'
 		}
 
 		m_audit_id     = str(kwargs.get("pk", ""))
