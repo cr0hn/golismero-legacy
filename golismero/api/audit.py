@@ -109,8 +109,8 @@ def parse_audit_times(start_time, stop_time):
     :param start_time: Audit start time, as returned by get_audit_times().
     :type start_time: float | None
 
-    :param start_time: Audit stop time, as returned by get_audit_times().
-    :type start_time: float | None
+    :param stop_time: Audit stop time, as returned by get_audit_times().
+    :type stop_time: float | None
 
     :returns: Audit start and stop times, total execution time.
     :rtype: tuple(str, str, str)

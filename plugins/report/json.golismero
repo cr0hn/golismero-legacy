@@ -1,6 +1,6 @@
 [Documentation]
 Name        = JSON Report
-Description = Writes HTML reports.
+Description = Writes JSON reports.
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

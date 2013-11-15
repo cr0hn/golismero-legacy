@@ -1,6 +1,6 @@
 [Documentation]
 Name        = XML Output
-Description = Dumps the output in XML format.
+Description = Writes XML reports.
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero
