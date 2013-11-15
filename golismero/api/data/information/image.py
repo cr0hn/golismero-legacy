@@ -133,9 +133,10 @@ class Image(Binary):
             info = img.tag.tags
         except AttributeError:
             info = img._getexif()
-        for tag, value in info.items():
-            decoded = PIL_TAGS.get(tag, tag)
-            exif[decoded] = value
+        if info:
+            for tag, value in info.items():
+                decoded = PIL_TAGS.get(tag, tag)
+                exif[decoded] = value
 
         # Return the EXIF tags.
         return exif
