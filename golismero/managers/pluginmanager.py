@@ -483,6 +483,30 @@ class PluginInfo (object):
 
 
     #--------------------------------------------------------------------------
+    def __repr__(self):
+        return (
+            "<PluginInfo instance at %x: "
+            "id=%s, "
+            "stage=%s, "
+            "recursive=%s, "
+            "dependencies=%r, "
+            "args=%r, "
+            "config=%r, "
+            "extra=%r"
+            ">"
+        ) % (
+            id(self),
+            self.plugin_id,
+            self.stage,
+            self.recursive,
+            self.dependencies,
+            self.plugin_args,
+            self.plugin_config,
+            self.plugin_extra_config,
+        )
+
+
+    #--------------------------------------------------------------------------
     def customize_for_audit(self, audit_config):
         """
         Return a new PluginInfo instance with its configuration overriden
@@ -1603,8 +1627,16 @@ class AuditPluginManager (PluginManager):
     #--------------------------------------------------------------------------
     def get_plugin_info_from_instance(self, instance):
 
-        # Cached by the global plugin manager.
-        return self.pluginManager.get_plugin_info_from_instance(instance)
+        # Get the original PluginInfo from the global plugin manager.
+        plugin_id, info = self.pluginManager.get_plugin_info_from_instance(
+                                                                  instance)
+
+        # Try getting the customized PluginInfo object.
+        # If not found, return the original PluginInfo object.
+        try:
+            return plugin_id, self.get_plugin_by_id(plugin_id)
+        except KeyError:
+            return plugin_id, info
 
 
     #--------------------------------------------------------------------------
