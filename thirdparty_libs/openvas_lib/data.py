@@ -119,7 +119,7 @@ class OpenVASNVT(object):
         """
         :type oid: str
         :type name: str
-        :type cvss_base: int
+        :type cvss_base: str
         :type risk_factor: int
         :type summary: str
         :type description: str
@@ -137,8 +137,8 @@ class OpenVASNVT(object):
             raise TypeError("Expected string, got %r instead" % type(oid))
         if not isinstance(name, basestring):
             raise TypeError("Expected string, got %r instead" % type(name))
-        if not isinstance(cvss_base, int):
-            raise TypeError("Expected int, got %r instead" % type(cvss_base))
+        if not isinstance(cvss_base, str):
+            raise TypeError("Expected string, got %r instead" % type(cvss_base))
         if not isinstance(risk_factor, int):
             raise TypeError("Expected int, got %r instead" % type(risk_factor))
         if not isinstance(summary, basestring):
@@ -256,7 +256,7 @@ class OpenVASNVT(object):
     def cvss_base(self):
         """
         :return: CVSS Base calculated
-        :rtype: int
+        :rtype: str
         """
         return self.__cvss_base
 
@@ -266,10 +266,10 @@ class OpenVASNVT(object):
     def cvss_base(self, val):
         """
         :param val: CVSS Base calculated
-        :type val: int
+        :type val: str
         """
         if not isinstance(val, basestring):
-            raise TypeError("Expected int, got %r instead" % type(val))
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__cvss_base = val
 
