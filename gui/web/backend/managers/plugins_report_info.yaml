@@ -1,0 +1,10 @@
+formats:
+    - html
+    - txt
+    - csv
+
+
+plugins:
+    - html
+    - text
+    - rst
