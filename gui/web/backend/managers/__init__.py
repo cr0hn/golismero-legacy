@@ -40,8 +40,9 @@ from os import listdir
 import yaml
 
 
-REPORT_FORMATS = None
-REPORT_PLUGINS = None
+REPORT_FORMATS           = None
+REPORT_PLUGINS           = None
+CONTENT_TYPES_BY_FORMAT  = None
 #
 # Get plugin info from files
 #
@@ -54,12 +55,21 @@ for f in listdir(g_folder):
             info = yaml.load(file(l_file))
             REPORT_FORMATS = info.get("formats", None)
             REPORT_PLUGINS = info.get("plugins", None)
+            CONTENT_TYPES_BY_FORMAT = info.get("content_types", None)
 
 # Info can't be loaded
 if not REPORT_FORMATS:
     REPORT_FORMATS = ["html", "txt", "csv"]
 if not REPORT_PLUGINS:
     REPORT_PLUGINS = ["html", "text", "rst"]
+if not CONTENT_TYPES_BY_FORMAT:
+    CONTENT_TYPES_BY_FORMAT = {
+        'xml'    : 'application/xml',
+        'html'   : 'text/html',
+        'rst'    : 'text/html',
+        'text'   : 'text/plain',
+        'csv'    : 'text/csv'
+    }
 
 class GoLismeroAuditProgress(object):
     """
