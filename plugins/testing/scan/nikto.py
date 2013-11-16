@@ -38,13 +38,13 @@ from golismero.api.external import run_external_tool, \
      find_cygwin_binary_in_path, tempfile
 from golismero.api.logger import Logger
 from golismero.api.net.scraper import extract_from_text
+from golismero.api.net.web_utils import urljoin
 from golismero.api.plugin import ImportPlugin, TestingPlugin
 from golismero.api.data.vulnerability.vuln_utils import extract_vuln_ids
 
 from csv import reader
 from os.path import abspath, join, exists, sep, split
 from traceback import format_exc
-from urlparse import urljoin
 
 
 #------------------------------------------------------------------------------

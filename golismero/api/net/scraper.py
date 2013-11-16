@@ -46,31 +46,12 @@ __all__ = [
     "is_link",
 ]
 
-from .web_utils import parse_url
+from .web_utils import parse_url, urlparse, urldefrag, urljoin
 
 from BeautifulSoup import BeautifulSoup
 from warnings import warn
 
 import re
-
-
-#------------------------------------------------------------------------------
-# Emulate the standard URL parser with our own.
-
-def urlparse(url):
-    return parse_url(url)
-
-def urldefrag(url):
-    p = parse_url(url)
-    f = p.fragment
-    p.fragment = ""
-    return p.url, f
-
-def urljoin(base_url, url, allow_fragments = True):
-    if not allow_fragments:
-        url = urldefrag(url)
-        base_url = urldefrag(base_url)
-    return parse_url(url, base_url).url
 
 
 #------------------------------------------------------------------------------

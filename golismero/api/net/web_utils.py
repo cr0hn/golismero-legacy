@@ -34,7 +34,8 @@ __all__ = [
     "download", "data_from_http_response", "generate_user_agent",
     "fix_url", "check_auth", "get_auth_obj", "detect_auth_method",
     "split_hostname", "generate_error_page_url", "ParsedURL",
-    "parse_url", "json_decode", "json_encode",
+    "parse_url", "urlparse", "urldefrag", "urljoin", "json_decode",
+    "json_encode",
 ]
 
 
@@ -52,7 +53,6 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests_ntlm import HttpNtlmAuth
 from tldextract import TLDExtract
 from urllib import quote, quote_plus, unquote, unquote_plus
-from urlparse import urldefrag, urljoin
 from warnings import warn
 
 import re
@@ -561,6 +561,25 @@ def parse_url(url, base_url = None):
     :rtype: ParsedURL
     """
     return ParsedURL(url, base_url)
+
+
+#------------------------------------------------------------------------------
+# Emulate the standard URL parser with our own.
+
+def urlparse(url):
+    return parse_url(url)
+
+def urldefrag(url):
+    p = parse_url(url)
+    f = p.fragment
+    p.fragment = ""
+    return p.url, f
+
+def urljoin(base_url, url, allow_fragments = True):
+    if not allow_fragments:
+        url = urldefrag(url)
+        base_url = urldefrag(base_url)
+    return parse_url(url, base_url).url
 
 
 #------------------------------------------------------------------------------
