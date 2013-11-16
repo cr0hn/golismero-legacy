@@ -35,11 +35,31 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #----------------------------------------------------------------------
 from collections import defaultdict
 from backend.models import *
-from os.path import join
+from os.path import join, abspath, exists, split
+from os import listdir
+import yaml
 
-REPORT_FORMATS = ["html", "txt", "csv"]
-REPORT_PLUGINS = ["html", "text", "rst"]
 
+REPORT_FORMATS = None
+REPORT_PLUGINS = None
+#
+# Get plugin info from files
+#
+g_folder = (split("./")[0])
+for f in listdir(g_folder):
+    if f.endswith("yaml"):
+        l_file = join(g_folder, f)
+        if exists(l_file):
+            print l_file
+            info = yaml.load(file(l_file))
+            REPORT_FORMATS = info.get("formats", None)
+            REPORT_PLUGINS = info.get("plugins", None)
+
+# Info can't be loaded
+if not REPORT_FORMATS:
+    REPORT_FORMATS = ["html", "txt", "csv"]
+if not REPORT_PLUGINS:
+    REPORT_PLUGINS = ["html", "text", "rst"]
 
 class GoLismeroAuditProgress(object):
     """
