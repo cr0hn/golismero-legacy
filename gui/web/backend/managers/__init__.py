@@ -40,26 +40,27 @@ from os import listdir
 import yaml
 
 
-REPORT_FORMATS           = None
-REPORT_PLUGINS           = None
-CONTENT_TYPES_BY_FORMAT  = None
+REPORT_FORMATS           = []
+REPORT_PLUGINS           = []
+CONTENT_TYPES_BY_FORMAT  = {}
 #
 # Get plugin info from files
 #
-g_folder = (split("./")[0])
+g_folder = (split(__file__)[0])
+
 for f in listdir(g_folder):
     if f.endswith("yaml"):
         l_file = join(g_folder, f)
         if exists(l_file):
             print l_file
             info = yaml.load(file(l_file))
-            REPORT_FORMATS = info.get("formats", None)
-            REPORT_PLUGINS = info.get("plugins", None)
-            CONTENT_TYPES_BY_FORMAT = info.get("content_types", None)
+            REPORT_FORMATS.extend(info.get("formats", None))
+            REPORT_PLUGINS.extend(info.get("plugins", None))
+            CONTENT_TYPES_BY_FORMAT.update(info.get("content_types", None))
 
 # Info can't be loaded
 if not REPORT_FORMATS:
-    REPORT_FORMATS = ["html", "txt", "csv"]
+    REPORT_FORMATS = ["html", "txt", "rst"]
 if not REPORT_PLUGINS:
     REPORT_PLUGINS = ["html", "text", "rst"]
 if not CONTENT_TYPES_BY_FORMAT:
@@ -67,8 +68,7 @@ if not CONTENT_TYPES_BY_FORMAT:
         'xml'    : 'application/xml',
         'html'   : 'text/html',
         'rst'    : 'text/html',
-        'text'   : 'text/plain',
-        'csv'    : 'text/csv'
+        'text'   : 'text/plain'
     }
 
 class GoLismeroAuditProgress(object):
@@ -385,7 +385,6 @@ class GoLismeroAuditData(object):
         # After, core will choice what to serve.
         #
         m_config['reports'] = ','.join([join(self.store_path, "report.%s" % x) for x in REPORT_FORMATS])
-        #m_config['reports'] += "," + join(self.store_path, "report.csv")
 
         #
         # Plugins
