@@ -31,27 +31,27 @@ from golismero.api.data.resource.url import BaseUrl, Url
 from golismero.api.logger import Logger
 from golismero.api.net import NetworkException, NetworkOutOfScope
 from golismero.api.net.http import HTTP
-from golismero.api.net.web_utils import download, generate_error_page_url, fix_url
+from golismero.api.net.web_utils import download, generate_error_page_url, \
+                                        fix_url, urljoin
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.matching_analyzer import MatchingAnalyzer
 
 import codecs
-from urlparse import urljoin
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class Robots(TestingPlugin):
     """
     This plugin analyzes robots.txt files looking for private pages.
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [BaseUrl]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def check_download(self, url, name, content_length, content_type):
 
         # Returns True to continue or False to cancel.
@@ -65,7 +65,7 @@ class Robots(TestingPlugin):
         )
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def check_response(self, request, url, status_code, content_length, content_type):
 
         # Returns True to continue or False to cancel.
@@ -82,7 +82,7 @@ class Robots(TestingPlugin):
         )
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def recv_info(self, info):
         m_return = []
 
@@ -108,7 +108,6 @@ class Robots(TestingPlugin):
         if not p:
             Logger.log_more_verbose("No robots.txt found.")
             return
-
 
         u = Url(m_url_robots_txt, referer=m_url)
         p.add_resource(u)
@@ -167,7 +166,6 @@ class Robots(TestingPlugin):
                     m_discovered_urls_append( tmp_discovered )
             except Exception,e:
                 continue
-
 
         #
         # Filter results

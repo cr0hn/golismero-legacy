@@ -34,13 +34,12 @@ from golismero.api.data.resource.url import BaseUrl
 from golismero.api.logger import Logger
 from golismero.api.net import NetworkException
 from golismero.api.net.http import HTTP
-from golismero.api.net.web_utils import ParsedURL
+from golismero.api.net.web_utils import ParsedURL, urljoin
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist import WordListLoader
 
 from collections import Counter, OrderedDict, defaultdict
 from re import compile
-from urlparse import urljoin
 
 
 SERVER_PATTERN = compile(r"([\w\W\s\d]+)[\s\/]+([\d\w\.]+)")

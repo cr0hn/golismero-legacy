@@ -89,17 +89,17 @@ class SwitchToAudit(object):
 
         # Update the execution context for this audit.
         Config._context = PluginContext(
-            msg_queue = old_context.msg_queue,
-            audit_name = audit_name,
-            audit_config = get_audit_config(audit_name),
-            audit_scope = get_audit_scope(audit_name),
-            orchestrator_pid = old_context._orchestrator_pid,
-            orchestrator_tid = old_context._orchestrator_tid)
+                   msg_queue = self.old_context.msg_queue,
+                  audit_name = self.audit_name,
+                audit_config = get_audit_config(self.audit_name),
+                 audit_scope = get_audit_scope(self.audit_name),
+            orchestrator_pid = self.old_context._orchestrator_pid,
+            orchestrator_tid = self.old_context._orchestrator_tid)
 
     def __exit__(self, *args, **kwargs):
 
         # Restore the original execution context.
-        Config._context = old_context
+        Config._context = self.old_context
 
 
 #------------------------------------------------------------------------------

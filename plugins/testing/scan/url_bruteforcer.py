@@ -33,14 +33,13 @@ from golismero.api.data.resource.url import FolderUrl, Url
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.logger import Logger
 from golismero.api.net.http import HTTP
-from golismero.api.net.web_utils import ParsedURL
+from golismero.api.net.web_utils import ParsedURL, urljoin
 from golismero.api.text.matching_analyzer import MatchingAnalyzer, get_diff_ratio
 from golismero.api.text.wordlist import WordListLoader
 from golismero.api.text.text_utils import generate_random_string
 
 from golismero.api.plugin import TestingPlugin
 from functools import partial
-from urlparse import urljoin
 
 
 __doc__ = """

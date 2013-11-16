@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.config import Config
 from golismero.api.data.db import Database
+from golismero.api.data.information.os_fingerprint import OSFingerprint
 from golismero.api.data.information.portscan import Portscan
 from golismero.api.data.information.traceroute import Traceroute, Hop
 from golismero.api.data.resource.domain import Domain
@@ -41,6 +42,7 @@ import shlex
 from socket import getservbyname
 from traceback import format_exc
 from time import time
+from traceback import format_exc
 from warnings import warn
 
 try:
@@ -304,20 +306,59 @@ class NmapScanPlugin(TestingPlugin):
                 warn("Error parsing traceroute results: %s" %
                      format_exc(), RuntimeWarning)
 
+        # Get the fingerprint results.
+        fingerprints = set()
+        for node in host.findall(".//osmatch"):
+            try:
+                name = node.get("name", None)
+                for node in node.findall(".//osclass"):
+                    accuracy = float( node.get("accuracy") )
+                    os_type = node.get("type", None)
+                    vendor = node.get("vendor", None)
+                    family = node.get("osfamily", None)
+                    generation = node.get("osgen", None)
+                    cpe = node.find("cpe").text
+                    fingerprints.add( (
+                        cpe, accuracy,
+                        name, vendor, os_type, generation, family
+                    ) )
+            except Exception:
+                warn("Error parsing portscan results: %s" % format_exc(),
+                     RuntimeWarning)
+
         # This is where we'll gather all the results.
         results = ip_addresses + domain_names
 
         # Link the portscan results to the IP addresses.
         for ip in ip_addresses:
-            portscan = Portscan(ip, ports, timestamp)
+            try:
+                portscan = Portscan(ip, ports, timestamp)
+            except Exception:
+                warn(format_exc(), RuntimeWarning)
+                continue
             results.append(portscan)
 
         # Link the traceroute results to the IP addresses.
         for ip in ip_addresses:
             if ip.version == 4:
                 for trace in traces:
-                    traceroute = Traceroute(ip, *trace)
+                    try:
+                        traceroute = Traceroute(ip, *trace)
+                    except Exception:
+                        warn(format_exc(), RuntimeWarning)
+                        continue
                     results.append(traceroute)
+
+        # Link the fingerprint results to the IP addresses.
+        for ip in ip_addresses:
+            for args in fingerprints:
+                try:
+                    fingerprint = OSFingerprint(*args)
+                except Exception:
+                    warn(format_exc(), RuntimeWarning)
+                    continue
+                ip.add_information(fingerprint)
+                results.append(fingerprint)
 
         # Return the results.
         return results

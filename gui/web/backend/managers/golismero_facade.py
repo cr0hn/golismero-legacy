@@ -154,6 +154,17 @@ class GoLismeroFacadeAudit(object):
         # Call to GoLismero
         try:
 
+
+            #
+            # FIXME: When GoLismero core works, do that instead of above commands.
+            #
+            try:
+                m_new_state = AuditBridge.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+            except ExceptionAuditNotFound:
+                # Audit not working
+                m_new_state = "finished"
+
+
             m_audit = Audit.objects.get(pk=audit_id)
 
             # If audit is new, return state
@@ -176,14 +187,6 @@ class GoLismeroFacadeAudit(object):
             else:
                 m_new_state = "running"
 
-            #
-            # FIXME: When GoLismero core works, do that instead of above commands.
-            #
-            #try:
-                #m_new_state = AuditBridge.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
-            #except ExceptionAuditNotFound:
-                ## Audit not working
-                #m_new_state = "finished"
 
             #  Update audit state into BBDD
             if m_audit.audit_state != m_new_state:

@@ -30,10 +30,39 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["OSFingerprint"]
+__all__ = ["OSFingerprint", "get_os_fingerprint"]
 
 from . import Information
-from .. import identity
+from .. import identity, keep_newer, keep_greater
+from ...text.text_utils import to_utf8
+
+
+#------------------------------------------------------------------------------
+def get_os_fingerprint(data):
+    """
+    Get the most accurate OS fingerprint for the given Data object, if any.
+
+    :param data: Data object to query.
+    :type data: Data
+
+    :returns: Most accurate OS fingerprint.
+        If no fingerprint is found, returns None.
+    :rtype: OSFingerprint | None
+    """
+
+    # Get all OS fingerprints associated with the given Data object.
+    fingerprints = data.get_associated_informations_by_category(
+        Information.INFORMATION_OS_FINGERPRINT)
+
+    # If no fingerprints were found, return None.
+    if not fingerprints:
+        return None
+
+    # Sort them by accuracy.
+    accurate = sorted(fingerprints, key=(lambda x: x.accuracy))
+
+    # Return the last one, that is, the one with the greater accuracy value.
+    return accurate[-1]
 
 
 #------------------------------------------------------------------------------
@@ -45,123 +74,233 @@ class OSFingerprint(Information):
     information_type = Information.INFORMATION_OS_FINGERPRINT
 
 
-    #----------------------------------------------------------------------
-    def __init__(self, family, version=None, cpe=None, others = None):
+    #--------------------------------------------------------------------------
+    def __init__(self, cpe, accuracy,
+                 name = None, vendor = None,
+                 type = None, generation = None, family = None):
         """
-        :param family: OS name, at lowcase. The name will be one of the the file: 'wordlist/fingerprint/os_keywords.txt'. Example: "windows"
-        :type family: str
-
-        :param version: OS version. Example: "XP"
-        :type version: str
-
-        :param cpe: CPE (Common Platform Enumeration) of the OS. Example: "/o:microsoft:windows_xp"
+        :param cpe: CPE (Common Platform Enumeration).
+            Example: "/o:microsoft:windows_xp"
         :type cpe: str
 
-        :param others: Map of other possible OS by name and their probabilities of being correct [0.0 ~ 1.0].
-        :type others: dict( str -> float )
+        :param accuracy: Accuracy percentage (between 0.0 and 100.0).
+        :type accuracy: float
+
+        :param name: (Optional) OS name.
+        :type name: str | None
+
+        :param vendor: (Optional) Vendor name.
+        :type vendor: str | None
+
+        :param type: (Optional) OS type.
+        :type type: str | None
+
+        :param generation: (Optional) OS generation.
+        :type generation: str | None
+
+        :param family: (Optional) OS family.
+        :type family: str | None
         """
 
-        # Check the data types.
-        if not isinstance(family, str):
-            raise TypeError("Expected str, got %r instead" % type(family))
+        # Fix the naming problem.
+        os_type = type
+        type = __builtins__["type"]
 
-        if version:
-            if not isinstance(version, str):
-                raise TypeError("Expected str, got %r instead" % type(version))
-
-        if cpe is not None:
-            if not isinstance(cpe, basestring):
-                raise TypeError("Expected str, got '%s' instead" % type(cpe))
-
-        if others is not None:
-            if not isinstance(others, dict):
-                raise TypeError("Expected dict, got %r instead" % type(others))
-            for k, v in others.iteritems():
-                if not isinstance(k, str):
-                    raise TypeError("Expected str, got %r instead" % type(k))
-                if not isinstance(v, float):
-                    raise TypeError("Expected float, got %r instead" % type(v))
+        # Check the CPE parameter.
+        cpe = to_utf8(cpe)
+        if type(cpe) is not str:
+            raise TypeError("Expected string, got %r instead" % type(cpe))
+        if not cpe.startswith("cpe:"):
+            raise ValueError("Not a CPE name: %r" % cpe)
 
         # Convert CPE <2.3 (URI binding) to CPE 2.3 (formatted string binding).
-        if cpe is not None:
-            if not cpe.startswith("cpe:"):
-                raise ValueError("Not a CPE name: %r" % cpe)
-            if cpe.startswith("cpe:/"):
-                cpe_parts = cpe[5:].split(":")
-                if len(cpe_parts) < 11:
-                    cpe_parts.extend( "*" * (11 - len(cpe_parts)) )
-                cpe = "cpe:2.3:" + ":".join(cpe_parts)
+        if cpe.startswith("cpe:/"):
+            cpe_parts = cpe[5:].split(":")
+            if len(cpe_parts) < 11:
+                cpe_parts.extend( "*" * (11 - len(cpe_parts)) )
+            cpe = "cpe:2.3:" + ":".join(cpe_parts)
 
-        # OS name.
-        self.__family         = family
+        # Save the CPE.
+        self.__cpe = cpe
 
-        # OS version.
-        self.__version        = version
+        # Save the rest of the properties.
+        self.accuracy   = accuracy
+        self.name       = name
+        self.vendor     = vendor
+        self.type       = os_type
+        self.generation = generation
+        self.family     = family
 
-        # CPE name.
-        self.__cpe            = cpe
-
-        # Other possibilities for this OS.
-        self.__others         = others
+        # TODO: extract missing parameters from the CPE string.
 
         # Parent constructor.
         super(OSFingerprint, self).__init__()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __repr__(self):
-        return "<OSFingerprint server='%s-%s' cpe=%r>" % (
-            self.__family,
-            self.__version,
+        return "<OSFingerprint accuracy=%.2f%% cpe=%s>" % (
+            self.__accuracy,
             self.__cpe,
         )
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __str__(self):
-        s = self.__family
-        if self.__version:
-            s += " " + self.__version
-        if self.__cpe:
-            s += " (%s)" % self.__cpe
-        return s
+        return self.__name if self.__name else self.__cpe
 
 
-    #----------------------------------------------------------------------
-    @identity
-    def name(self):
-        """
-        :return: OS name.
-        :rtype: str
-        """
-        return self.__family
-
-
-    #----------------------------------------------------------------------
-    @identity
-    def version(self):
-        """
-        :return: OS version.
-        :rtype: str
-        """
-        return self.__version
-
-
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @identity
     def cpe(self):
         """
-        :return: CPE name.
+        :return: CPE (Common Platform Enumeration).
+            Example: "/o:microsoft:windows_xp"
         :rtype: str
         """
         return self.__cpe
 
 
-    #----------------------------------------------------------------------
-    @identity
-    def others(self):
+    #--------------------------------------------------------------------------
+    @keep_greater
+    def accuracy(self):
         """
-        :return: Map of other possible OS by name and their probabilities of being correct [0.0 ~ 1.0].
-        :rtype: dict( str -> float )
+        :return: Accuracy percentage (between 0.0 and 100.0).
+        :rtype: float
         """
-        return self.__others
+        return self.__accuracy
+
+
+    #--------------------------------------------------------------------------
+    @accuracy.setter
+    def accuracy(self, accuracy):
+        """
+        :param accuracy: Accuracy percentage (between 0.0 and 100.0).
+        :type accuracy: float
+        """
+        if type(accuracy) is not float:
+            accuracy = float(accuracy)
+        if accuracy < 0.0 or accuracy > 100.0:
+            raise ValueError(
+                "Accuracy must be between 0.0 and 100.0, got %r" % accuracy)
+        self.__accuracy = accuracy
+
+
+    #--------------------------------------------------------------------------
+    @keep_newer
+    def name(self):
+        """
+        :return: OS name.
+        :rtype: str | None
+        """
+        return self.__name
+
+
+    #--------------------------------------------------------------------------
+    @name.setter
+    def name(self, name):
+        """
+        :param name: OS name.
+        :type name: str
+        """
+        if name is not None:
+            name = to_utf8(name)
+            if type(name) is not str:
+                raise TypeError("Expected string, got %r instead" % type(name))
+        self.__name = name
+
+
+    #--------------------------------------------------------------------------
+    @keep_newer
+    def vendor(self):
+        """
+        :return: Vendor name.
+        :rtype: str | None
+        """
+        return self.__vendor
+
+
+    #--------------------------------------------------------------------------
+    @vendor.setter
+    def vendor(self, vendor):
+        """
+        :param vendor: Vendor name.
+        :type vendor: str
+        """
+        if vendor is not None:
+            vendor = to_utf8(vendor)
+            if type(vendor) is not str:
+                raise TypeError("Expected string, got %r instead" % type(vendor))
+        self.__vendor = vendor
+
+
+    #--------------------------------------------------------------------------
+    @keep_newer
+    def type(self):
+        """
+        :return: OS type.
+        :rtype: str | None
+        """
+        return self.__type
+
+
+    #--------------------------------------------------------------------------
+    @type.setter
+    def type(self, os_type):
+        """
+        :param os_type: OS type.
+        :type os_type: str
+        """
+        if os_type is not None:
+            os_type = to_utf8(os_type)
+            if type(os_type) is not str:
+                raise TypeError("Expected string, got %r instead" % type(os_type))
+        self.__type = os_type
+
+
+    #--------------------------------------------------------------------------
+    @keep_newer
+    def generation(self):
+        """
+        :return: OS generation.
+        :rtype: str | None
+        """
+        return self.__generation
+
+
+    #--------------------------------------------------------------------------
+    @generation.setter
+    def generation(self, generation):
+        """
+        :param generation: OS generation.
+        :type generation: str
+        """
+        if generation is not None:
+            generation = to_utf8(generation)
+            if type(generation) is not str:
+                raise TypeError("Expected string, got %r instead" % type(generation))
+        self.__generation = generation
+
+
+    #--------------------------------------------------------------------------
+    @keep_newer
+    def family(self):
+        """
+        :return: OS family.
+        :rtype: str | None
+        """
+        return self.__family
+
+
+    #--------------------------------------------------------------------------
+    @family.setter
+    def family(self, family):
+        """
+        :param family: OS family.
+        :type family: str
+        """
+        if family is not None:
+            family = to_utf8(family)
+            if type(family) is not str:
+                raise TypeError("Expected string, got %r instead" % type(family))
+        self.__family = family
