@@ -8,3 +8,10 @@ plugins:
     - html
     - text
     - rst
+
+
+content_types:
+    xml    : 'application/xml'
+    html   : 'text/html'
+    rst    : 'text/html'
+    text   : 'text/plain'
