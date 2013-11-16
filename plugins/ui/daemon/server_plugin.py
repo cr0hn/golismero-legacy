@@ -146,7 +146,7 @@ class WebUIPlugin(UIPlugin):
         :param message: Message received from the Orchestrator.
         :type message: Message
         """
-
+        print message
         # Control messages.
         if message.message_type == MessageType.MSG_TYPE_CONTROL:
 
