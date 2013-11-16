@@ -530,26 +530,26 @@ class HTTP_Request (Information):
         super(HTTP_Request, self).__init__()
 
 
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def from_form(form, data):
-        """
-        Get the HTTP request needed to send form data.
+    ##--------------------------------------------------------------------------
+    #@staticmethod
+    #def from_form(form, data):
+        #"""
+        #Get the HTTP request needed to send form data.
 
-        :param form: HTML form.
-        :type form: Form
+        #:param form: HTML form.
+        #:type form: Form
 
-        :param data: Mapping of key/value pairs.
-        :type data: dict(str -> str)
+        #:param data: Mapping of key/value pairs.
+        #:type data: dict(str -> str)
 
-        :returns: HTTP request ready to send the form data.
-        :rtype: HTTP_Request
-        """
-        if set(form.parameters) != set(data.keys()):
-            raise ValueError("Form data doesn't match form parameters")
-        return HTTP_Request(url       = form.url,
-                            method    = form.method,
-                            post_data = data)
+        #:returns: HTTP request ready to send the form data.
+        #:rtype: HTTP_Request
+        #"""
+        #if set(form.parameters) != set(data.keys()):
+            #raise ValueError("Form data doesn't match form parameters")
+        #return HTTP_Request(url       = form.url,
+                            #method    = form.method,
+                            #post_data = data)
 
 
     #--------------------------------------------------------------------------

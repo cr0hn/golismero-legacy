@@ -54,7 +54,7 @@ from warnings import warn
 import re
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Emulate the standard URL parser with our own.
 
 def urlparse(url):
@@ -73,19 +73,19 @@ def urljoin(base_url, url, allow_fragments = True):
     return parse_url(url, base_url).url
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # URL detection regex, by John Gruber.
 # http://daringfireball.net/2010/07/improved_regex_for_matching_urls
 _re_url_readable = re.compile(r"""(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))""", re.I)
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Wrappers for URIs in plain text
 # http://www.w3.org/Addressing/URL/url-spec.txt
 _re_url_rfc = re.compile(r"""\\<([^\\>]+\\:\\/\\/[^\\>]+)\\>""", re.I)
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def is_link(url, base_url):
     """
     Determines if an URL is a link to another resource.
@@ -93,10 +93,12 @@ def is_link(url, base_url):
     :param url: URL to test.
     :type url: str
 
-    :param base_url: Base URL for the current document. Must not contain a fragment.
+    :param base_url: Base URL for the current document.
+        Must not contain a fragment.
     :type base_url: str
 
-    :returns: True if the URL points to another page or resource, False otherwise.
+    :returns: True if the URL points to another page or resource,
+        False otherwise.
     :rtype: bool
     """
     try:
@@ -104,7 +106,8 @@ def is_link(url, base_url):
         # Parse the URL. If it can't be parsed, it's not a link.
         parsed = parse_url(url, base_url)
 
-        # URLs that point to the same page in a different fragment are not links.
+        # URLs that point to the same page
+        # in a different fragment are not links.
         parsed.fragment = ""
         if parsed.url == base_url:
             return False
@@ -117,7 +120,7 @@ def is_link(url, base_url):
         return False
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def extract_from_text(text, base_url = None, only_links = True):
     """
     Extract URLs from text.
@@ -133,7 +136,8 @@ def extract_from_text(text, base_url = None, only_links = True):
         If not specified, relative URLs are ignored.
     :type base_url: str
 
-    :param only_links: If True, only extract links to other resources. If False, extract all URLs.
+    :param only_links: If True, only extract links to other resources.
+        If False, extract all URLs.
     :type only_links: bool
 
     :returns: Extracted URLs.
@@ -203,7 +207,7 @@ def extract_from_text(text, base_url = None, only_links = True):
     return result
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def extract_from_html(raw_html, base_url, only_links = True):
     """
     Extract URLs from HTML.
@@ -224,7 +228,8 @@ def extract_from_html(raw_html, base_url, only_links = True):
     :param base_url: Base URL for the current document.
     :type base_url: str
 
-    :param only_links: If True, only extract links to other resources. If False, extract all URLs.
+    :param only_links: If True, only extract links to other resources.
+        If False, extract all URLs.
     :type only_links: bool
 
     :returns: Extracted URLs.
@@ -244,7 +249,7 @@ def extract_from_html(raw_html, base_url, only_links = True):
 
     # Some sets of tags and attributes to look for.
     href_tags = {"a", "link", "area"}
-    src_tags = {"form", "script", "img", "iframe", "frame", "embed", "source", "track"}
+    src_tags = {"script", "img", "iframe", "frame", "embed", "source", "track"}
     param_names = {"movie", "href", "link", "src", "url", "uri"}
 
     # Iterate once through all tags...
@@ -263,6 +268,8 @@ def extract_from_html(raw_html, base_url, only_links = True):
             name = tag.get("name", "").lower().strip()
             if name in param_names:
                 url = tag.get("value", None)
+        ##elif name == "form":
+        ##    url = tag.get("action", None)
         elif name == "object":
             url = tag.get("data", None)
         elif name == "applet":
@@ -288,7 +295,8 @@ def extract_from_html(raw_html, base_url, only_links = True):
 
                 # Update the base URL.
                 try:
-                    base_url = urljoin(base_url, url.strip(), allow_fragments = False)
+                    base_url = urljoin(base_url, url.strip(),
+                                       allow_fragments = False)
                 except Exception:
                     continue
 
@@ -319,7 +327,7 @@ def extract_from_html(raw_html, base_url, only_links = True):
     return result
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def extract(raw_data, content_type, base_url, only_links = True):
     """
     Extract URLs from raw data.
@@ -345,7 +353,8 @@ def extract(raw_data, content_type, base_url, only_links = True):
     :param base_url: Base URL for the current document.
     :type base_url: str
 
-    :param only_links: If True, only extract links to other resources. If False, extract all URLs.
+    :param only_links: If True, only extract links to other resources.
+        If False, extract all URLs.
     :type only_links: bool
 
     :returns: Extracted URLs.
