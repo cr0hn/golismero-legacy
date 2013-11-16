@@ -53,6 +53,7 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests_ntlm import HttpNtlmAuth
 from tldextract import TLDExtract
 from urllib import quote, quote_plus, unquote, unquote_plus
+from urlparse import urljoin as original_urljoin
 from warnings import warn
 
 import re
@@ -727,7 +728,7 @@ class ParsedURL (object):
         fragment = ''
 
         if base_url:
-            url = urljoin(base_url, url, allow_fragments=True)
+            url = original_urljoin(base_url, url, allow_fragments=True)
 
         # Scheme
         if ':' in url:
