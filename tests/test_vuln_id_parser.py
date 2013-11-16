@@ -57,6 +57,7 @@ Testing CAPEC with 2 samples: CAPEC-3 and CAPEC: 1.
 Testing CVE with CVE-1234-4321 and CVE-1234-12345, the new format.
 Testing CWE with CWE-123.
 Testing MS with MS01-023, MS04-011 and MS13-067.
+Testing MSKB with MSKB: 1, KB:2, MSKB-3 and KB-4. Should not match KB - 5.
 Testing NESSUS with NESSUS-23649 and NESSUS: 23650.
 Testing OSVDB: using 4 examples. The first being OSVDB: 1 and the second being OSVDB-5. The third is: OSVDB:2
   and the fourth is OSVDB ID: 3.
@@ -107,6 +108,7 @@ _test_case_extract_solution = {
     "cve": ["CVE-1234-12345", "CVE-1234-4321"],
     "cwe": ["CWE-123"],
     "ms": ["MS01-023", "MS04-011", "MS13-067"],
+    "mskb": ["MSKB-1", "MSKB-2", "MSKB-3", "MSKB-4"],
     "nessus": ["NESSUS-23649", "NESSUS-23650"],
     "osvdb": ["OSVDB-1", "OSVDB-2", "OSVDB-3", "OSVDB-5"],
     "sa": ["SA-1", "SA-2", "SA-3", "SA-4", "SA-5", "SA-7"],
@@ -153,6 +155,10 @@ https://microsoft.com/technet/security/bulletin/ms04-008.mspx
 http://technet.microsoft.com/en-us/security/bulletin/ms13-067
 https://technet.microsoft.com/en-us/security/bulletin/ms13-066
 
+http://support.microsoft.com/kb/321123/en-us
+http://support.microsoft.com/default.aspx?scid=kb;EN-US;823980
+https://support.microsoft.com/kb/319733
+
 http://www.tenable.com/plugins/index.php?view=single&id=23649
 http://www.tenable.com/plugins/index.php?id=23651&view=single
 http://tenable.com/plugins/index.php?view=single&id=23648
@@ -190,10 +196,12 @@ def test_vuln_id_parser():
     print "Testing the vulnerability ID parsers..."
     if DEBUG:
         print "-" * 79
+        print "-- test case solution"
         pprint(_test_case_extract_solution)
         print "-" * 79
     vulns = extract_vuln_ids(_test_case_extract)
     if DEBUG:
+        print "-- extracted vuln ids"
         pprint(vulns)
         print "-" * 79
     assert vulns == _test_case_extract_solution
@@ -202,14 +210,17 @@ def test_vuln_id_parser():
         all_vulns.extend(v)
     all_vulns.sort()
     if DEBUG:
+        print "-- only the ids"
         pprint(all_vulns)
         print "-" * 79
     refs = convert_vuln_ids_to_references(all_vulns)
     if DEBUG:
+        print "-- references"
         pprint(refs)
         print "-" * 79
     unrefs = convert_references_to_vuln_ids(refs)
     if DEBUG:
+        print "-- vuln ids back from references"
         pprint(unrefs)
         print "-" * 79
     assert unrefs == vulns
@@ -223,8 +234,10 @@ def test_vuln_id_parser():
     for vuln_ids in convert_references_to_vuln_ids(urls).itervalues():
         parsed.update(vuln_ids)
     if DEBUG:
+        print "-- test case"
         pprint(urls)
         print "-" * 79
+        print "-- extracted vuln ids"
         pprint(sorted(parsed))
         print "-" * 79
     assert len(urls) == len(parsed), "%d vs %d" % (len(urls), len(parsed))
