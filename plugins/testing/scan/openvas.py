@@ -57,6 +57,8 @@ cwd = os.path.abspath(os.path.split(__file__)[0])
 cwd1 = os.path.join(cwd, "openvas_plugin")
 sys.path.insert(0, cwd1)
 #11213 -> trace http method
+
+
 #------------------------------------------------------------------------------
 # TODO: maybe polish up this class and add it to the API, see #64
 class OpenVASProgress(object):
@@ -244,7 +246,7 @@ class OpenVASPlugin(TestingPlugin):
         #----------------------------------------------------------------------
 
         # Relative BBDD path
-        m_bbdd = os.path.join(os.path.join(os.path.split(os.path.abspath(__file__))[0], "openvas_plugin"), "openvas.sqlite3")
+        m_bbdd = os.path.join(os.path.split(os.path.abspath(__file__))[0], "openvas_plugin", "openvas.sqlite3")
 
         from standalone.conf import settings
 
@@ -277,7 +279,7 @@ class OpenVASPlugin(TestingPlugin):
         }
 
         # Knonw categories
-        m_categories_file = os.path.join(os.path.join(os.path.split(os.path.abspath(__file__))[0], "openvas_plugin"), "categories.yaml")
+        m_categories_file = os.path.join(os.path.split(os.path.abspath(__file__))[0], "openvas_plugin", "categories.yaml")
         CATEGORIES        = None
         if os.path.exists(m_categories_file):
             CATEGORIES = yaml.load(file(m_categories_file))
@@ -407,7 +409,12 @@ class OpenVASImportPlugin(ImportPlugin):
         if input_file and input_file.lower().endswith(".xml"):
             with open(input_file, "rU") as fd:
                 line = fd.readline()
-                return line.startswith('<report extension="xml" id="')
+                is_ours = line.startswith('<report extension="xml" id="')
+            if is_ours:
+                m_bbdd = os.path.join(os.path.split(os.path.abspath(__file__))[0], "openvas_plugin", "openvas.sqlite3")
+                if not os.path.exists(m_bbdd):
+                    raise RuntimeError("OpenVAS plugin not initialized, please run setup.py")
+                return True
         return False
 
 
