@@ -46,7 +46,7 @@ __all__ = [
     "is_link",
 ]
 
-from .web_utils import parse_url, urlparse, urldefrag, urljoin
+from .web_utils import parse_url, urldefrag, urljoin
 
 from BeautifulSoup import BeautifulSoup
 from warnings import warn
