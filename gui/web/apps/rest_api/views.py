@@ -13,7 +13,7 @@ from backend.rest_api.authentication import ExpiringTokenAuthentication
 from backend.rest_api.serializers import *
 
 from backend.managers.golismero_facade import *
-from backend.managers import GoLismeroAuditData
+from backend.managers import GoLismeroAuditData, CONTENT_TYPES_BY_FORMAT
 
 #
 # This file defines the actions for the API-REST
@@ -717,14 +717,6 @@ class AuditViewSet(ViewSet):
 
         :returns: a format file depending of format requested.
         """
-
-        CONTENT_TYPES_BY_FORMAT = {
-            'xml'    : 'application/xml',
-            'html'   : 'text/html',
-            'rst'    : 'text/html',
-            'text'   : 'text/plain'
-        }
-
         m_audit_id     = str(kwargs.get("pk", ""))
         m_format       = str(kwargs.get("text", "text"))
         m_return       = {}
