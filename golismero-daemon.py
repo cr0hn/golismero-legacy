@@ -203,7 +203,6 @@ def daemon_main(listen_address, listen_port):
 
     # Load the Orchestrator options.
     orchestrator_config = OrchestratorConfig()
-    orchestrator_config.verbose     = Logger.MORE_VERBOSE
     orchestrator_config.config_file = config_file
 
     # Config service bind
@@ -225,13 +224,9 @@ def daemon_main(listen_address, listen_port):
     # If no plugins folder is given, use the default.
     plugins_folder = orchestrator_config.plugins_folder
     if not plugins_folder:
-        print __file__
         plugins_folder = path.abspath(__file__)
-        print plugins_folder
         plugins_folder = path.dirname(plugins_folder)
-        print plugins_folder
         plugins_folder = path.join(plugins_folder, "plugins")
-        print plugins_folder
         if not path.isdir(plugins_folder):
             from golismero import common
             plugins_folder = path.abspath(common.__file__)
@@ -247,6 +242,9 @@ def daemon_main(listen_address, listen_port):
 
     # Force disable colored output.
     orchestrator_config.color = False
+
+    # Force maximum verbosity level.
+    orchestrator_config.verbose = Logger.MORE_VERBOSE
 
     # Launch GoLismero.
     launcher.run(orchestrator_config)
