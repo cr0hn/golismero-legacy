@@ -68,16 +68,17 @@ class TextReport(ReportPlugin):
         self.__show_data = not Config.audit_config.only_vulns
         if output_file and output_file.lower().endswith(".txt"):
             Logger.log_verbose("Writing text report to file: %s" % output_file)
-            self.__color = False
-            self.__width = 0
+            self.__console = False
+            self.__color   = False
+            self.__width   = int( Config.plugin_args.get("width", "0") )
             self.__console = False
             with open(output_file, mode='w') as self.__fd:
                 self.__write_report()
         else:
             self.__console = True
-            self.__color = Console.use_colors
-            self.__width = max(0, get_terminal_size()[0])
-            self.__fd = sys.stdout
+            self.__color   = Console.use_colors
+            self.__width   = max(0, get_terminal_size()[0])
+            self.__fd      = sys.stdout
             self.__write_report()
 
 
