@@ -715,7 +715,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #----------------------------------------------------------------------
-    def get_audit_state(self, audit_name):
+    def do_audit_state(self, audit_name):
         """
         Implementation of: /scan/state
 
@@ -884,7 +884,7 @@ class WebUIPlugin(UIPlugin):
                                                    Resource.RESOURCE_IP)
 
                 # Substract the ones that were passed as targets.
-                discovered_hosts = total_hosts - len(Config.scope.targets)
+                discovered_hosts = total_hosts - len(Config.audit_config.targets)
 
         else:
             # XXX TODO open the database manually here
