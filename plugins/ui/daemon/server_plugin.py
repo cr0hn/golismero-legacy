@@ -713,7 +713,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #----------------------------------------------------------------------
-    def get_audit_state(self, audit_name):
+    def do_audit_state(self, audit_name):
         """
         Implementation of: /scan/state
 
@@ -881,13 +881,14 @@ class WebUIPlugin(UIPlugin):
                     total_hosts += Database.count(Data.TYPE_RESOURCE,
                                                        Resource.RESOURCE_IP)
 
-                    # Substract the ones that were passed as targets.
-                    discovered_hosts = total_hosts - len(Config.scope.targets)
+                # Substract the ones that were passed as targets.
+                discovered_hosts = total_hosts - len(Config.audit_config.targets)
 
-            else:
-                # XXX TODO open the database manually here
-                raise NotImplementedError(
-                    "Querying finished audits is not implemented yet!")
+        else:
+            # XXX TODO open the database manually here
+            #raise NotImplementedError(
+                #"Querying finished audits is not implemented yet!")
+            return None
 
             # Return the data in the expected format.
             return {
@@ -903,8 +904,6 @@ class WebUIPlugin(UIPlugin):
                 },
             }
 
-        except Exception:
-            Logger.log_error(traceback.format_exc())
 
 
     #----------------------------------------------------------------------

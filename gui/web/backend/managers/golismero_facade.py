@@ -155,6 +155,10 @@ class GoLismeroFacadeAudit(object):
         try:
             m_audit = Audit.objects.get(pk=audit_id)
 
+            # If audit is new or finished return
+            if m_audit.audit_state != "running":
+                return m_audit.audit_state
+
             #
             # FIXME: When GoLismero core works, do that instead of above commands.
             #
@@ -163,10 +167,6 @@ class GoLismeroFacadeAudit(object):
             except ExceptionAuditNotFound:
                 # Audit not working
                 raise GoLismeroFacadeAuditNotFoundException()
-
-            # If audit is new, return state
-            if m_audit.audit_state == "new":
-                return "new"
 
             m_new_state = None
             m_total = 0
@@ -213,7 +213,6 @@ class GoLismeroFacadeAudit(object):
 
         # Call to GoLismero
         try:
-
             m_audit = Audit.objects.get(pk=audit_id)
 
             # If audit are not running return error.
@@ -222,6 +221,7 @@ class GoLismeroFacadeAudit(object):
 
             try:
                 r = AuditBridge.get_progress(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+
                 if r:
                     return r
                 else:
@@ -293,12 +293,13 @@ class GoLismeroFacadeAudit(object):
             'html'   : 'html',
             'rst'    : 'rst',
             'text'   : 'txt',
+            'txt'    : 'txt',
             'csv'    : 'csv'
         }
 
         try:
             # Check report format
-            if report_format not in REPORT_FORMATS:
+            if report_format not in REPORT_PLUGINS:
                 raise GoLismeroFacadeReportUnknownFormatException("Unknown report format '%s'." % report_format)
 
             m_audit = Audit.objects.get(pk=audit_id)

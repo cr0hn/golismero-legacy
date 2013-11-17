@@ -252,7 +252,7 @@ class AuditBridge(object):
         m_return = None
 
         if not BRIDGE.SIMULATE:
-            rpc_response = BRIDGE.RPC.call("audit/state", audit_id)
+            rpc_response = BRIDGE.RPC.call("audit/progress", audit_id)
 
             if not rpc_response:
                 raise ExceptionAuditNotFound()
@@ -262,6 +262,7 @@ class AuditBridge(object):
 
                 tests_remain  = 0
                 tests_done    = 0
+
                 for t in rpc_response[2]:
                     l_progress = t[2] # Value between 0.0 - 100.0
 
