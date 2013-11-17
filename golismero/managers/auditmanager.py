@@ -316,6 +316,10 @@ class Audit (object):
             raise TypeError(
                 "Expected AuditConfig, got %r instead" % type(audit_config))
 
+        # XXX DEBUG
+        ##from pprint import pprint
+        ##pprint(audit_config.to_dictionary())
+
         # Keep the audit settings.
         self.__audit_config = audit_config
 
