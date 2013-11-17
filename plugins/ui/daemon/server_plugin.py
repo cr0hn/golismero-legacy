@@ -681,10 +681,21 @@ class WebUIPlugin(UIPlugin):
 
         :param audit_name: Name of the audit to cancel.
         :type audit_name: str
-        """
 
-        # Stop the audit.
-        stop_audit(audit_name)
+        :return: True if oks. False otherwise.
+        :type: bool
+        """
+        if (
+            audit_name in self.audit_state and
+            self.audit_state[audit_name] != "finish"
+        ):
+            with SwitchToAudit(audit_name):
+                # Stop the audit.
+                stop_audit(audit_name)
+
+                return True
+
+        return False
 
 
     #--------------------------------------------------------------------------
@@ -702,10 +713,27 @@ class WebUIPlugin(UIPlugin):
         return result
 
 
-    #--------------------------------------------------------------------------
-    def do_audit_state(self, audit_name):
+
+    #----------------------------------------------------------------------
+    def get_audit_state(self, audit_name):
         """
         Implementation of: /scan/state
+
+        :param audit_name: string with audit ID.
+        :type audit_name: str
+
+        :returns: a string with audit state.
+        :type: str | None if not found
+        """
+        if audit_name in self.audit_state:
+            return self.audit_state[audit_name]
+        else:
+            return None
+
+    #--------------------------------------------------------------------------
+    def do_audit_progres(self, audit_name):
+        """
+        Implementation of: /scan/progress
 
         Returns the current stage and the status of every plugin
         in the following format::
@@ -833,7 +861,7 @@ class WebUIPlugin(UIPlugin):
                        'critical' : int,
                     },
                 }
-        :rtype: dict(str -> \\*)
+        :rtype: dict(str -> \\*) | None
         """
         if (
             audit_name in self.audit_state and
@@ -860,8 +888,9 @@ class WebUIPlugin(UIPlugin):
 
         else:
             # XXX TODO open the database manually here
-            raise NotImplementedError(
-                "Querying finished audits is not implemented yet!")
+            #raise NotImplementedError(
+                #"Querying finished audits is not implemented yet!")
+            return None
 
         # Return the data in the expected format.
         return {

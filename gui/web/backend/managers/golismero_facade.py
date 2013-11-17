@@ -158,12 +158,11 @@ class GoLismeroFacadeAudit(object):
             #
             # FIXME: When GoLismero core works, do that instead of above commands.
             #
-            #try:
-                #m_new_state = AuditBridge.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
-            #except ExceptionAuditNotFound:
-                ## Audit not working
-                #m_new_state = "finished"
-
+            try:
+                m_new_state = AuditBridge.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+            except ExceptionAuditNotFound:
+                # Audit not working
+                raise GoLismeroFacadeAuditNotFoundException()
 
             # If audit is new, return state
             if m_audit.audit_state == "new":
@@ -338,15 +337,16 @@ class GoLismeroFacadeAudit(object):
 
         :returns: return a dic as format:
         {
-        'vulns_number'            = int
-        'discovered_hosts'        = int # Host discovered into de scan process
-        'total_hosts'             = int
-        'vulns_by_level'          = {
-        'info'     : int,
-        'low'      : int,
-        'medium'   : int,
-        'high'     : int,
-        'critical' : int,
+           'vulns_number'            = int
+           'discovered_hosts'        = int # Host discovered into de scan process
+           'total_hosts'             = int
+           'vulns_by_level'          = {
+              'info'     : int,
+              'low'      : int,
+              'medium'   : int,
+              'high'     : int,
+              'critical' : int,
+            }
         }
 
         :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException
@@ -644,7 +644,10 @@ class GoLismeroFacadeAudit(object):
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is '%s'. Only running audits can be stopped." % (str(m_audit.id), m_audit.audit_state))
 
             # Send to GoLismero core
-            AuditBridge.stop(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+            r = AuditBridge.stop(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+
+            if r == False:
+                raise GoLismeroFacadeAuditStateException()
 
             # Change the state
             m_audit.audit_state = "stopped"
@@ -677,7 +680,11 @@ class GoLismeroFacadeAudit(object):
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is '%s'. Only running audits can be paused." % (str(m_audit.id), m_audit.audit_state))
 
             # Send to GoLismero core
-            AuditBridge.stop(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+            r = AuditBridge.stop(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+
+            if r == False:
+                raise GoLismeroFacadeAuditStateException()
+
 
             # Change the state
             m_audit.audit_state = "paused"

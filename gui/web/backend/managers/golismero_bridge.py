@@ -225,14 +225,13 @@ class AuditBridge(object):
         """
         if not BRIDGE.SIMULATE:
             #rpc_response, a , b = BRIDGE.RPC.call("audit/state", audit_id)
-            print BRIDGE.RPC.call("audit/state", audit_id)
-            #print rpc_response
+            r = BRIDGE.RPC.call("audit/state", audit_id)
 
-            #print rpc_response
-            #if not rpc_response:
-                #return "finished"
+            if not r:
+                raise ExceptionAuditNotFound("Audit not found")
+            else:
+                return r
 
-            #return rpc_response[0][1]
         return "running"
 
 
