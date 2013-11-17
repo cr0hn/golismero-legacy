@@ -472,6 +472,7 @@ class PluginInfo (object):
         instance.__license             = self.__license
         instance.__website             = self.__website
         instance.__plugin_args         = self.__plugin_args.copy()
+        instance.__plugin_passwd_args  = self.__plugin_passwd_args.copy()
         instance.__plugin_config       = self.__plugin_config.copy()
         instance.__plugin_extra_config = {
             k: v.copy()
@@ -504,6 +505,41 @@ class PluginInfo (object):
             self.plugin_config,
             self.plugin_extra_config,
         )
+
+
+    #--------------------------------------------------------------------------
+    def to_dict(self):
+        """
+        Convert this PluginInfo object into a dictionary.
+
+        :returns: Converted PluginInfo object.
+        :rtype: dict(str -> \\*)
+        """
+        return {
+            "plugin_id"           : self.plugin_id,
+            "descriptor_file"     : self.descriptor_file,
+            "category"            : self.category,
+            "stage"               : self.stage,
+            "stage_number"        : self.stage_number,
+            "dependencies"        : self.dependencies,
+            "recursive"           : self.recursive,
+            "plugin_module"       : self.plugin_module,
+            "plugin_class"        : self.plugin_class,
+            "display_name"        : self.display_name,
+            "description"         : self.description,
+            "version"             : self.version,
+            "author"              : self.author,
+            "copyright"           : self.copyright,
+            "license"             : self.license,
+            "website"             : self.website,
+            "plugin_args"         : self.plugin_args.copy(),
+            "plugin_passwd_args"  : self.plugin_passwd_args.copy(),
+            "plugin_config"       : self.plugin_config.copy(),
+            "plugin_extra_config" : {
+                k: v.copy()
+                for (k, v) in self.plugin_extra_config.iteritems()
+            }
+        }
 
 
     #--------------------------------------------------------------------------

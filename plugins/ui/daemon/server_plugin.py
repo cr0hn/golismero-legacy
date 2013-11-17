@@ -895,7 +895,15 @@ class WebUIPlugin(UIPlugin):
              - Timestamp.
         :rtype: list( tuple(str, str, str, int, bool, float) )
         """
-        return get_audit_log_lines(audit_name)
+        if (
+            audit_name in self.audit_state and
+            self.audit_state[audit_name] != "finish"
+        ):
+            return get_audit_log_lines(audit_name)
+        else:
+            # XXX TODO open the database manually here
+            raise NotImplementedError(
+                "Querying finished audits is not implemented yet!")
 
 
     #--------------------------------------------------------------------------
@@ -921,20 +929,46 @@ class WebUIPlugin(UIPlugin):
         """
         Implementation of: /plugin/details
 
+        Returns the full information for a plugin in the following format::
+            {
+                "plugin_id"           : str,
+                "descriptor_file"     : str,
+                "category"            : str,
+                "stage"               : str,
+                "stage_number"        : int,
+                "dependencies"        : tuple(str...),
+                "recursive"           : bool,
+                "plugin_module"       : str,
+                "plugin_class"        : str,
+                "display_name"        : str,
+                "description"         : str,
+                "version"             : str,
+                "author"              : str,
+                "copyright"           : str,
+                "license"             : str,
+                "website"             : str,
+                "plugin_args"         : dict(str -> str),
+                "plugin_passwd_args"  : set(str),
+                "plugin_config"       : dict(str -> str),
+                "plugin_extra_config" : dict(str -> dict(str -> str)),
+            }
+
         :param plugin_id: ID of the plugin to query.
         :type plugin_id: str
 
-        :returns: Plugin information.
-        :rtype: PluginInfo
+        :returns: Plugin information. Returns None if the plugin was not found.
+        :rtype: dict(str -> \\*) | None
         """
-        return get_plugin_info(plugin_id)    # XXX TODO encode as JSON
+        info = get_plugin_info(plugin_id)
+        if info:
+            return info.to_dict()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     #
     # Management methods
     #
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
 
     #--------------------------------------------------------------------------
