@@ -721,7 +721,7 @@ class WebUIPlugin(UIPlugin):
         :type audit_name: str
 
         :returns: Current stage for this audit.
-        :type: str | None
+        :type: str
         """
         return self.audit_stage.get(audit_name, "finish")
 
@@ -734,10 +734,10 @@ class WebUIPlugin(UIPlugin):
         Returns the current stage and the status of every plugin
         in the following format::
           (
-            'STEPS' # How many times the "recon" stage was reached
-            'STAGE_NAME',
-            (
-              (PLUGIN_NAME::str, IDENTITY::int, PROGRESS::float(0.0-100.0)),
+            STEPS::int, # How many times the "recon" stage was reached
+            STAGE::str, # Current stage
+            ( # For each plugin...
+              (PLUGIN_ID::str, DATA_ID::str, PROGRESS::float(0.0-100.0)),
             )
           )
 
