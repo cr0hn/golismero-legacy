@@ -306,8 +306,8 @@ class WebUIPlugin(UIPlugin):
 
         # Initialize the audit and plugin state caches.
         self.state_lock   = threading.RLock()
-        self.steps        = collections.Counter() # Count number of stage "recon" was reached
-        self.audit_state  = {}  # audit -> stage
+        self.steps        = collections.Counter() # How many times "recon" was reached
+        self.audit_stage  = {}  # audit -> stage
         self.plugin_state = collections.defaultdict(
             functools.partial(collections.defaultdict, dict)
             )  # audit -> (plugin, identity) -> progress
@@ -383,7 +383,7 @@ class WebUIPlugin(UIPlugin):
 
         # Clear the state cache.
         self.state_lock = threading.RLock()
-        self.audit_state.clear()
+        self.audit_stage.clear()
         self.plugin_state.clear()
 
 
@@ -627,14 +627,14 @@ class WebUIPlugin(UIPlugin):
         print "[%s] Entering stage: %s" % (audit_name,
                                            get_stage_display_name(stage))
 
-        # Save the audit state.
-        self.audit_state[audit_name] = stage
+        # Save the audit stage.
+        self.audit_stage[audit_name] = stage
 
-        # Increase steps if recon stage was reached
+        # Increase steps if recon stage was reached.
         if stage == "recon":
             self.steps[audit_name] += 1
 
-        # Send the audit state.
+        # Send the audit stage.
         packet = ("stage", audit_name, stage)
         self.bridge.send(packet)
 
@@ -665,7 +665,6 @@ class WebUIPlugin(UIPlugin):
         :type audit_config: dict(str -> \\*)
         """
 
-
         # Load the audit configuration from the dictionary.
         o_audit_config = AuditConfig()
         o_audit_config.from_dictionary(audit_config)
@@ -682,19 +681,19 @@ class WebUIPlugin(UIPlugin):
         :param audit_name: Name of the audit to cancel.
         :type audit_name: str
 
-        :return: True if oks. False otherwise.
+        :return: True on success, False otherwise.
         :type: bool
         """
         if (
-            audit_name in self.audit_state and
-            self.audit_state[audit_name] != "finish"
+            audit_name in self.audit_stage and
+            self.audit_stage[audit_name] != "finish"
         ):
-            with SwitchToAudit(audit_name):
-                # Stop the audit.
-                stop_audit(audit_name)
-
-                return True
-
+            try:
+                with SwitchToAudit(audit_name):
+                    stop_audit(audit_name)
+                    return True
+            except Exception:
+                Logger.log_error(traceback.format_exc())
         return False
 
 
@@ -713,35 +712,32 @@ class WebUIPlugin(UIPlugin):
         return result
 
 
-
     #----------------------------------------------------------------------
     def do_audit_state(self, audit_name):
         """
         Implementation of: /scan/state
 
-        :param audit_name: string with audit ID.
+        :param audit_name: Name of the audit to query.
         :type audit_name: str
 
-        :returns: a string with audit state.
-        :type: str | None if not found
+        :returns: Current stage for this audit.
+        :type: str
         """
-        if audit_name in self.audit_state:
-            return self.audit_state[audit_name]
-        else:
-            return None
+        return self.audit_stage.get(audit_name, "finish")
+
 
     #--------------------------------------------------------------------------
-    def do_audit_progres(self, audit_name):
+    def do_audit_progress(self, audit_name):
         """
         Implementation of: /scan/progress
 
         Returns the current stage and the status of every plugin
         in the following format::
           (
-            'STEPS' # Count number that "recon" stage was reached
-            'STAGE_NAME',
-            (
-              (PLUGIN_NAME::str, IDENTITY::int, PROGRESS::float(0.0-100.0)),
+            STEPS::int, # How many times the "recon" stage was reached
+            STAGE::str, # Current stage
+            ( # For each plugin...
+              (PLUGIN_ID::str, DATA_ID::str, PROGRESS::float(0.0-100.0)),
             )
           )
 
@@ -757,14 +753,14 @@ class WebUIPlugin(UIPlugin):
         r = None
 
         if (
-            audit_name in self.audit_state and
-            self.audit_state[audit_name] != "finish"
+            audit_name in self.audit_stage and
+            self.audit_stage[audit_name] != "finish"
         ):
             with SwitchToAudit(audit_name):
                 try:
                     r = (
                         self.steps[audit_name],
-                        self.audit_state[audit_name],
+                        self.audit_stage[audit_name],
                         tuple(
                             (plugin_name, identity, progress)
                             for ((plugin_name, identity), progress)
@@ -799,8 +795,8 @@ class WebUIPlugin(UIPlugin):
         :raises KeyError: Data type unknown.
         """
         if (
-            audit_name in self.audit_state and
-            self.audit_state[audit_name] != "finish"
+            audit_name in self.audit_stage and
+            self.audit_stage[audit_name] != "finish"
         ):
             with SwitchToAudit(audit_name):
                 i_data_type = {
@@ -828,8 +824,8 @@ class WebUIPlugin(UIPlugin):
         :type id_list: list(str)
         """
         if (
-            audit_name in self.audit_state and
-            self.audit_state[audit_name] != "finish"
+            audit_name in self.audit_stage and
+            self.audit_stage[audit_name] != "finish"
         ):
             with SwitchToAudit(audit_name):
                 return Database.get_many(id_list)
@@ -864,8 +860,8 @@ class WebUIPlugin(UIPlugin):
         :rtype: dict(str -> \\*) | None
         """
         if (
-            audit_name in self.audit_state and
-            self.audit_state[audit_name] != "finish"
+            audit_name in self.audit_stage and
+            self.audit_stage[audit_name] != "finish"
         ):
             with SwitchToAudit(audit_name):
 
@@ -925,8 +921,8 @@ class WebUIPlugin(UIPlugin):
         :rtype: list( tuple(str, str, str, int, bool, float) )
         """
         if (
-            audit_name in self.audit_state and
-            self.audit_state[audit_name] != "finish"
+            audit_name in self.audit_stage and
+            self.audit_stage[audit_name] != "finish"
         ):
             return get_audit_log_lines(audit_name)
         else:
