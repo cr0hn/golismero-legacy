@@ -370,6 +370,21 @@ class AuditNotifier(AbstractNotifier):
                 if self.__has_finished_stage(identity):
                     self.database.mark_stage_finished(identity, self.current_stage)
 
+        # Send the plugin end notification for report and import plugins.
+        elif (
+            plugin_id and
+            plugin_id.split("/", 1)[0] in ("import", "report")
+        ):
+            if message.message_info: # 'do_notify_end' flag
+                msg = Message(
+                    message_type = MessageType.MSG_TYPE_STATUS,
+                    message_code = MessageCode.MSG_STATUS_PLUGIN_END,
+                       plugin_id = plugin_id,
+                      audit_name = self.audit.name,
+                        priority = MessagePriority.MSG_PRIORITY_MEDIUM,
+                )
+                self.orchestrator.dispatch_msg(msg)
+
 
     #----------------------------------------------------------------------
     def __has_finished_stage(self, identity):
