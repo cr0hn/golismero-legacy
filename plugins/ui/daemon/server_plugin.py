@@ -882,7 +882,7 @@ class WebUIPlugin(UIPlugin):
                                                        Resource.RESOURCE_IP)
 
                 # Substract the ones that were passed as targets.
-                discovered_hosts = total_hosts - len(Config.audit_config.targets)
+                discovered_hosts = total_hosts - len(Config.audit_scope.targets)
 
                 # Return the data in the expected format.
                 return {
