@@ -5,6 +5,7 @@ django-cors-headers
 django-filter
 django<1.6
 djangorestframework
+django-standalone
 dnspython
 gunicorn
 markdown
