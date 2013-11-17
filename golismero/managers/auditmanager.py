@@ -134,7 +134,7 @@ class AuditManager (object):
             raise TypeError(
                 "Expected AuditConfig, got %r instead" % type(audit_config))
 
-        # Check the audit config.
+        # Check the audit config against the UI plugin.
         self.orchestrator.uiManager.check_params(audit_config)
 
         # Create the audit.

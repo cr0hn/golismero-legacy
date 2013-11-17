@@ -92,7 +92,7 @@ class OpenVASPlugin(TestingPlugin):
             m_timeout   = Config.plugin_args["timeout"]
             m_profile   = Config.plugin_args["profile"]
 
-            assert m_host,     "Missing username"
+            assert m_user,     "Missing username"
             assert m_password, "Missing password"
             assert m_host,     "Missing hostname"
             assert m_profile,  "Missing scan profile"
