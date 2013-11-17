@@ -898,16 +898,13 @@ class WebUIPlugin(UIPlugin):
                     },
                 }
 
-
             else:
                 # XXX TODO open the database manually here
-                #raise NotImplementedError(
-                    #"Querying finished audits is not implemented yet!")
-                return None
-        except:
-            return None
+                raise NotImplementedError(
+                    "Querying finished audits is not implemented yet!")
 
-
+        except Exception:
+            Logger.log_error(traceback.format_exc())
 
 
     #----------------------------------------------------------------------

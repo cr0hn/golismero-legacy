@@ -1,6 +1,6 @@
 [Documentation]
-Name        = reStructured Text Report
-Description = Writes reports in OpenOffice document format (.odt).
+Name        = LaTeX Report
+Description = Writes reports in LaTeX document format (.tex).
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

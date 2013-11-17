@@ -1,5 +1,5 @@
 [Documentation]
-Name        = reStructured Text Report
+Name        = OpenOffice Document Report
 Description = Writes reports in OpenOffice document format (.odt).
 Author      = GoLismero project team
 Version     = 0.1

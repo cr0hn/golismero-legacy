@@ -19,5 +19,4 @@ requests_ntlm
 texttable
 tldextract
 docutils
-
 simplejson
