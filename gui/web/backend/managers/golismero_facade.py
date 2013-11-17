@@ -224,7 +224,15 @@ class GoLismeroFacadeAudit(object):
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is not running. Can't obtain progress from not running audits." % str(audit_id))
 
             try:
-                return AuditBridge.get_progress(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+                r = AuditBridge.get_progress(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+                if r:
+                    return r
+                else:
+                    m_audit.audit_state = "finished"
+                    m_audit.save()
+
+                    raise GoLismeroFacadeAuditFinishedException()
+
             except ExceptionAuditNotFound:
                 raise GoLismeroFacadeAuditFinishedException()
 
@@ -392,7 +400,7 @@ class GoLismeroFacadeAudit(object):
             l_audit_id = str(l_audit.id)
 
             # Update the state for each audit
-            GoLismeroFacadeAudit.get_state(l_audit_id)
+            #GoLismeroFacadeAudit.get_state(l_audit_id)
 
             # Store audit info
             m_return.append(GoLismeroFacadeAudit.get_audit(l_audit_id))
@@ -480,35 +488,40 @@ class GoLismeroFacadeAudit(object):
             m_enable_plugins        = data.get('enable_plugins', [])
 
             # Not plugins selected
-            if len(m_enable_plugins) == 0:
-                raise GoLismeroFacadeAuditNotPluginsException("Not plugins selected.")
+            #if len(m_enable_plugins) == 0:
+                #raise GoLismeroFacadeAuditNotPluginsException("Not plugins selected.")
 
 
             # Transform "all" plugins in GoLismero format. For GoLismero, an empty list means
             # all plugins selected.
-            if len(m_enable_plugins) == 1:
-                if isinstance(m_enable_plugins, basestring):
-                    if m_enable_plugins[0].strip().lower() == "all":
-                        m_enable_plugins = []
+            #if len(m_enable_plugins) == 1:
+                #if isinstance(m_enable_plugins, basestring):
+                    #if m_enable_plugins[0].strip().lower() == "all":
+                        #m_enable_plugins = []
 
             m_enable_plugins_stored = []
 
-            for p in m_enable_plugins:
+            if len(m_enable_plugins) == 0:
                 l_plugin             = Plugins()
-                l_plugin.plugin_name = p.get("plugin_name")
+                l_plugin.plugin_name = "all"
                 l_plugin.save()
-
-                # Plugins params
-                for pp in p.get("params", []):
-                    l_param = PluginParameters()
-                    l_param.param_name    = pp['param_name']
-                    l_param.param_value   = pp['param_value']
-                    l_param.plugin        = l_plugin
-                    l_param.audit         = m_audit
-                    l_param.save()
-                # Add to total
                 m_enable_plugins_stored.append(l_plugin)
+            else:
+                for p in m_enable_plugins:
+                    l_plugin             = Plugins()
+                    l_plugin.plugin_name = p.get("plugin_name")
+                    l_plugin.save()
 
+                    # Plugins params
+                    for pp in p.get("params", []):
+                        l_param = PluginParameters()
+                        l_param.param_name    = pp['param_name']
+                        l_param.param_value   = pp['param_value']
+                        l_param.plugin        = l_plugin
+                        l_param.audit         = m_audit
+                        l_param.save()
+                    # Add to total
+                    m_enable_plugins_stored.append(l_plugin)
 
             # Relations
             for t in m_targets_stored:

@@ -726,18 +726,22 @@ class WebUIPlugin(UIPlugin):
 
         # Return the current stage and the status of every plugin.
         r = None
-        try:
-            r = (
-                self.steps[audit_name],
-                self.audit_state[audit_name],
-                tuple(
-                    (plugin_name, identity, progress)
-                    for ((plugin_name, identity), progress)
-                    in self.plugin_state[audit_name].iteritems()
-                )
-            )
-        except Exception,e:
-            pass
+
+        if audit_name in self.audit_state:
+            if self.audit_state[audit_name] != "finish":
+                with SwitchToAudit(audit_name):
+                    try:
+                        r = (
+                            self.steps[audit_name],
+                            self.audit_state[audit_name],
+                            tuple(
+                                (plugin_name, identity, progress)
+                                for ((plugin_name, identity), progress)
+                                in self.plugin_state[audit_name].iteritems()
+                            )
+                        )
+                    except Exception,e:
+                        print e
 
         return r
 
@@ -798,15 +802,16 @@ class WebUIPlugin(UIPlugin):
 
         :returns: return dict as format:
         {
-        'vulns_number'            : int,
-        'discovered_hosts'        : int,
-        'total_hosts'             : int,
-        'vulns_by_level'          : {
-        'info'     : int,
-        'low'      : int,
-        'medium'   : int,
-        'high'     : int,
-        'critical' : int,
+           'vulns_number'            : int,
+           'discovered_hosts'        : int,
+           'total_hosts'             : int,
+           'vulns_by_level'          : {
+              'info'     : int,
+              'low'      : int,
+              'medium'   : int,
+              'high'     : int,
+              'critical' : int,
+            }
         }
         :rtype: dict
         """

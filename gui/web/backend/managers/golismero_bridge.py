@@ -245,7 +245,7 @@ class AuditBridge(object):
         :type audit_id: str
 
         :returns: GoLismeroAuditProgress object
-        :rtype: GoLismeroAuditProgress
+        :rtype: GoLismeroAuditProgress | None
 
         :raises: ExceptionAuditNotFound
         """
@@ -256,35 +256,32 @@ class AuditBridge(object):
 
             if not rpc_response:
                 raise ExceptionAuditNotFound()
+            try:
+                steps         = rpc_response[0]
+                current_state = rpc_response[1]
 
-            steps         = rpc_response[0][0]
-            current_state = rpc_response[0][1]
-            tests_remain  = 0
-            tests_done    = 0
-            for t in rpc_response[2]:
-                l_progress = t[2] # Value between 0.0 - 100.0
+                tests_remain  = 0
+                tests_done    = 0
+                for t in rpc_response[2]:
+                    l_progress = t[2] # Value between 0.0 - 100.0
 
-                if l_progress == 100.0:
-                    tests_done   += 1
-                else:
-                    tests_remain +=1
+                    if l_progress == 100.0:
+                        tests_done   += 1
+                    else:
+                        tests_remain +=1
 
-            m_return = {
-                'current_stage' : current_state,
-                'steps'         : int(steps),
-                'tests_remain'  : tests_remain,
-                'tests_done'    : tests_done
-            }
+                m_return = {
+                    'current_stage' : current_state,
+                    'steps'         : int(steps),
+                    'tests_remain'  : tests_remain,
+                    'tests_done'    : tests_done
+                }
 
-        else:
+                return GoLismeroAuditProgress(m_return)
 
-            m_return = {
-                'current_stage' : "recon",
-                'steps'         : 1,
-                'tests_remain'  : 21,
-                'tests_done'     : 5
-            }
-        return GoLismeroAuditProgress(m_return)
+            except IndexError:
+                return None
+        return None
 
 
 
