@@ -15,6 +15,6 @@ Class  = OpenVASPlugin
 profile   = Full and fast
 user      = admin
 *password = admin
-host      = 127.0.0.1
+host      =
 port      = 9390
 timeout   = 30

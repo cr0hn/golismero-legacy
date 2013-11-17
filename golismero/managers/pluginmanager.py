@@ -38,6 +38,7 @@ from ..api.logger import Logger
 from ..api.plugin import UIPlugin, ImportPlugin, TestingPlugin, ReportPlugin
 from ..common import Configuration, OrchestratorConfig, AuditConfig, \
     get_default_plugins_folder
+from ..managers.processmanager import PluginContext
 from ..messaging.codes import MessageCode
 
 from collections import defaultdict
@@ -1246,14 +1247,16 @@ class AuditPluginManager (PluginManager):
                     try:
                         pluginManager.get_plugin_by_id(plugin_id)
                     except KeyError:
-                        warnings.warn("Unknown plugin ID: %s" % plugin_id)
+                        warnings.warn(
+                            "Unknown plugin ID: %s" % plugin_id,
+                            RuntimeWarning)
                 elif status == 2:
                     warnings.warn(
                         "Some arguments undefined for plugin ID: %s" %
-                        plugin_id)
+                        plugin_id, RuntimeWarning)
 
         # Check the plugin parameters.
-        self.__check_plugin_params()
+        self.__check_plugin_params(auditConfig)
 
         # Calculate the dependencies.
         self.__calculate_dependencies()
@@ -1580,7 +1583,7 @@ class AuditPluginManager (PluginManager):
 
 
     #--------------------------------------------------------------------------
-    def __check_plugin_params(self):
+    def __check_plugin_params(self, audit_config):
         """
         Check the plugin parameters.
         Plugins that fail this check are automatically disabled.
@@ -1590,6 +1593,16 @@ class AuditPluginManager (PluginManager):
         for plugin_id in plugins:
             plugin  = self.load_plugin_by_id(plugin_id)
             new_ctx = orchestrator.build_plugin_context(None, plugin, None)
+            new_ctx = PluginContext(
+                orchestrator_pid = new_ctx._orchestrator_pid,
+                orchestrator_tid = new_ctx._orchestrator_tid,
+                       msg_queue = new_ctx.msg_queue,
+                    ack_identity = None,
+                     plugin_info = self.get_plugin_by_id(plugin_id),
+                      audit_name = audit_config.audit_name,
+                    audit_config = audit_config,
+                     audit_scope = new_ctx.audit_scope,
+            )
             old_ctx = Config._context
             try:
                 Config._context = new_ctx
