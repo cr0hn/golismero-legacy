@@ -45,13 +45,12 @@ class ExceptionAuditNotFound(Exception):
     """Audit not found."""
     pass
 
-
 class ExceptionAuditUnknown(Exception):
     pass
 
-
 class ExceptionAudit(Exception):
     pass
+
 
 #----------------------------------------------------------------------
 #
@@ -63,12 +62,15 @@ class AuditBridge(object):
     Audit bridge between GoLismero <-> GUI
     """
 
+
     #----------------------------------------------------------------------
     #
     # Unidirectional methods
     #
     #----------------------------------------------------------------------
 
+
+    #----------------------------------------------------------------------
     @staticmethod
     def new_audit(data):
         """
@@ -96,7 +98,6 @@ class AuditBridge(object):
                 raise ExceptionAudit()
 
 
-
     #----------------------------------------------------------------------
     @staticmethod
     def stop(audit_id):
@@ -112,7 +113,6 @@ class AuditBridge(object):
             BRIDGE.RPC.call("audit/cancel", audit_id)
 
 
-
     #----------------------------------------------------------------------
     @staticmethod
     def resume(audit_id): #
@@ -126,10 +126,14 @@ class AuditBridge(object):
         """
         pass
 
+
     #----------------------------------------------------------------------
     #
-    # Getters methods
+    # Getter methods
     #
+    #----------------------------------------------------------------------
+
+
     #----------------------------------------------------------------------
     @staticmethod
     def get_log(audit_id):
@@ -143,10 +147,10 @@ class AuditBridge(object):
         [
           {
              'plugin_id'     : str,
-        	 'text'          : str,
-        	 'verbosity'     : int,
-        	 'is_error'      : bool,
-        	 'timestamp'     : float
+             'text'          : str,
+             'verbosity'     : int,
+             'is_error'      : bool,
+             'timestamp'     : float
           }
         ]
         :rtype: list(dict)
@@ -168,7 +172,6 @@ class AuditBridge(object):
 
                 for r in rpc_response
             ]
-
 
 
     #----------------------------------------------------------------------
@@ -205,6 +208,7 @@ class AuditBridge(object):
                 }
             })
 
+
     #----------------------------------------------------------------------
     @staticmethod
     def get_state(audit_id):
@@ -230,9 +234,6 @@ class AuditBridge(object):
 
             #return rpc_response[0][1]
         return "running"
-
-
-
 
 
     #----------------------------------------------------------------------
@@ -282,6 +283,3 @@ class AuditBridge(object):
             except IndexError:
                 return None
         return None
-
-
-

@@ -28,16 +28,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-#----------------------------------------------------------------------
-#
-# Data structures
-#
-#----------------------------------------------------------------------
 from collections import defaultdict
 from backend.models import *
 from os.path import join, abspath, exists, split
 from os import listdir
 import yaml
+
+
+#----------------------------------------------------------------------
+#
+# Data structures
+#
+#----------------------------------------------------------------------
 
 
 REPORT_FORMATS           = []
@@ -69,6 +71,7 @@ if not CONTENT_TYPES_BY_FORMAT:
         'rst'    : 'text/html',
         'text'   : 'text/plain'
     }
+
 
 class GoLismeroAuditProgress(object):
     """
@@ -112,6 +115,7 @@ class GoLismeroAuditProgress(object):
         # Store original json
         self.__json             = data
 
+
     #----------------------------------------------------------------------
     @property
     def to_json(self):
@@ -119,6 +123,7 @@ class GoLismeroAuditProgress(object):
         Return the JSON object
         """
         return self.__json
+
 
 class GoLismeroAuditSummary(object):
     """
@@ -138,6 +143,7 @@ class GoLismeroAuditSummary(object):
 
     PROPERTIES     = ["vulns_number", "discovered_hosts", "total_hosts", "vulns_by_level"]
 
+
     #----------------------------------------------------------------------
     def __init__(self, data):
         """
@@ -149,10 +155,10 @@ class GoLismeroAuditSummary(object):
            'total_hosts'             = int
            'vulns_by_level'          = {
               'info'     : int,
-        	  'low'      : int,
-        	  'medium'   : int,
-        	  'high'     : int,
-        	  'critical' : int,
+              'low'      : int,
+              'medium'   : int,
+              'high'     : int,
+              'critical' : int,
         }
 
         :param data: dict with info.
@@ -170,6 +176,7 @@ class GoLismeroAuditSummary(object):
         # Store original json
         self.__json             = data
 
+
     #----------------------------------------------------------------------
     @property
     def to_json(self):
@@ -177,8 +184,6 @@ class GoLismeroAuditSummary(object):
         Return the JSON object
         """
         return self.__json
-
-
 
 
 class GoLismeroAuditData(object):
@@ -207,6 +212,7 @@ class GoLismeroAuditData(object):
     ]
 
     COMPLEX_PROPERTIES = ["enable_plugins", "user", "targets"]
+
 
     #----------------------------------------------------------------------
     def __init__(self):
@@ -244,6 +250,7 @@ class GoLismeroAuditData(object):
             setattr(c, k, v)
 
         return c
+
 
     #----------------------------------------------------------------------
     @classmethod
@@ -292,6 +299,7 @@ class GoLismeroAuditData(object):
 
         return c
 
+
     #----------------------------------------------------------------------
     @property
     def to_json(self):
@@ -302,29 +310,30 @@ class GoLismeroAuditData(object):
           "audit_name": "asdfasdf",
           "targets": [ "127.0.0.1", "mysite.com" ],
           "enabled_plugins": [
-        	{
-        	  "plugin_name": "openvas",
-        	  "params": [
-        		{
-        		  "param_name": "profile",
-        		  "param_value": "Full and fast"
-        		},
-        		{
-        		  "param_name": "user",
-        		  "param_value": "admin"
-        		},
-        		{
-        		  "param_name": "password",
-        		  "param_value": "admin"
-        		}
-        	  ]
-        	}
+            {
+              "plugin_name": "openvas",
+              "params": [
+                {
+                  "param_name": "profile",
+                  "param_value": "Full and fast"
+                },
+                {
+                  "param_name": "user",
+                  "param_value": "admin"
+                },
+                {
+                  "param_name": "password",
+                  "param_value": "admin"
+                }
+              ]
+            }
           ],
           "disabled_plugins": ["spider","nikto"]
 
         :returns: JSON with info.
         """
         return { k : v for k, v in self.__dict__.iteritems() }
+
 
     #----------------------------------------------------------------------
     @property
@@ -348,6 +357,7 @@ class GoLismeroAuditData(object):
             'user'   : self.user,
             'state'  : self.audit_state
         }
+
 
     #----------------------------------------------------------------------
     @property
