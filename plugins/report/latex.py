@@ -29,27 +29,28 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["LatexReport"]
 
 
-# Uses the RST plugin to generate the report in memory,
-# then converts the RST output to LaTeX with docutils.
-from os.path import abspath, split
+import warnings
 import sys
+
+from os.path import abspath, split
+from StringIO import StringIO
+
+from golismero.api.logger import Logger
+
+# Workaround for docutils bug, see:
+# http://sourceforge.net/p/docutils/bugs/228/
 cwd = abspath(split(__file__)[0])
 sys.path.insert(0, cwd)
 try:
     from rst import RSTReport
-    rst = sys.modules["rst"]      # Workaround for docutils bug, see:
-    del sys.modules["rst"]        # http://sourceforge.net/p/docutils/bugs/228/
+    rst = sys.modules["rst"]
+    del sys.modules["rst"]
 finally:
     sys.path.remove(cwd)
 del cwd
 
-import warnings
 with warnings.catch_warnings(record=True):
     from docutils.core import publish_file
-
-from StringIO import StringIO
-
-from golismero.api.logger import Logger
 
 
 #------------------------------------------------------------------------------
@@ -66,6 +67,30 @@ class LatexReport(RSTReport):
 
     #--------------------------------------------------------------------------
     def generate_report(self, output_file):
+
+        # Workaround for docutils bug, see:
+        # http://sourceforge.net/p/docutils/bugs/228/
+        sentinel = object()
+        old_standalone = sys.modules.get("standalone", sentinel)
+        try:
+            cwd = abspath(split(__file__)[0])
+            sys.path.insert(0, cwd)
+            try:
+                with warnings.catch_warnings(record=True):
+                    from docutils.readers import standalone
+                    sys.modules["standalone"] = standalone
+            finally:
+                sys.path.remove(cwd)
+            self.__generate_report(output_file)
+        finally:
+            if old_standalone is not sentinel:
+                sys.modules["standalone"] = old_standalone
+            else:
+                del sys.modules["standalone"]
+
+
+    #--------------------------------------------------------------------------
+    def __generate_report(self, output_file):
         Logger.log_verbose(
             "Writing LaTeX report to file: %s" % output_file)
 

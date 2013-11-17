@@ -898,7 +898,6 @@ class WebUIPlugin(UIPlugin):
                     },
                 }
 
-
             else:
                 # XXX TODO open the database manually here
                 raise NotImplementedError(
