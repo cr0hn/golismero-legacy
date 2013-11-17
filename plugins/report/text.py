@@ -287,7 +287,7 @@ class TextReport(ReportPlugin):
                     table.add_row(("Risk", vuln.risk))
                     q = len(table.draw())
                     if vuln.cvss_base:
-                        table.add_row(("CVSS Base", "%1.1f" % vuln.cvss_base))
+                        table.add_row(("CVSS Base", vuln.cvss_base))
                     if vuln.cvss_base_vector:
                         table.add_row(("CVSS Base Vector", vuln.cvss_base_vector))
                     if len(targets) > 1:
