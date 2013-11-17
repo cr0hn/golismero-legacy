@@ -762,8 +762,8 @@ class WebUIPlugin(UIPlugin):
                         self.steps[audit_name],
                         self.audit_stage[audit_name],
                         tuple(
-                            (plugin_name, identity, progress)
-                            for ((plugin_name, identity), progress)
+                            (plugin_id, identity, progress)
+                            for ((plugin_id, identity), progress)
                             in self.plugin_state[audit_name].iteritems()
                         )
                     )
@@ -857,50 +857,54 @@ class WebUIPlugin(UIPlugin):
                        'critical' : int,
                     },
                 }
+            Returns None on error.
         :rtype: dict(str -> \\*) | None
         """
-        if (
-            audit_name in self.audit_stage and
-            self.audit_stage[audit_name] != "finish"
-        ):
-            with SwitchToAudit(audit_name):
+        try:
+            if (
+                audit_name in self.audit_stage and
+                self.audit_stage[audit_name] != "finish"
+            ):
+                with SwitchToAudit(audit_name):
 
-                # Get the number of vulnerabilities in the database.
-                vulns_number = Database.count(Data.TYPE_VULNERABILITY)
+                    # Get the number of vulnerabilities in the database.
+                    vulns_number = Database.count(Data.TYPE_VULNERABILITY)
 
-                # Count the vulnerabilities by severity.
-                vulns_counter = collections.Counter()
-                for l_vuln in Database.iterate(Data.TYPE_VULNERABILITY):
-                    vulns_counter[l_vuln.level] += 1
+                    # Count the vulnerabilities by severity.
+                    vulns_counter = collections.Counter()
+                    for l_vuln in Database.iterate(Data.TYPE_VULNERABILITY):
+                        vulns_counter[l_vuln.level] += 1
 
-                # Get the number of IP addresses and hostnames.
-                total_hosts  = Database.count(Data.TYPE_RESOURCE,
-                                                   Resource.RESOURCE_DOMAIN)
-                total_hosts += Database.count(Data.TYPE_RESOURCE,
-                                                   Resource.RESOURCE_IP)
+                    # Get the number of IP addresses and hostnames.
+                    total_hosts  = Database.count(Data.TYPE_RESOURCE,
+                                                       Resource.RESOURCE_DOMAIN)
+                    total_hosts += Database.count(Data.TYPE_RESOURCE,
+                                                       Resource.RESOURCE_IP)
 
-                # Substract the ones that were passed as targets.
-                discovered_hosts = total_hosts - len(Config.scope.targets)
+                    # Substract the ones that were passed as targets.
+                    discovered_hosts = total_hosts - len(Config.scope.targets)
 
-        else:
-            # XXX TODO open the database manually here
-            #raise NotImplementedError(
-                #"Querying finished audits is not implemented yet!")
-            return None
+            else:
+                # XXX TODO open the database manually here
+                raise NotImplementedError(
+                    "Querying finished audits is not implemented yet!")
 
-        # Return the data in the expected format.
-        return {
-            'vulns_number'     : vulns_number,
-            'discovered_hosts' : discovered_hosts,
-            'total_hosts'      : total_hosts,
-            'vulns_by_level'   : {
-                'info'     : vulns_counter['info'],
-                'low'      : vulns_counter['low'],
-                'medium'   : vulns_counter['medium'],
-                'high'     : vulns_counter['high'],
-                'critical' : vulns_counter['critical'],
-            },
-        }
+            # Return the data in the expected format.
+            return {
+                'vulns_number'     : vulns_number,
+                'discovered_hosts' : discovered_hosts,
+                'total_hosts'      : total_hosts,
+                'vulns_by_level'   : {
+                    'info'     : vulns_counter['info'],
+                    'low'      : vulns_counter['low'],
+                    'medium'   : vulns_counter['medium'],
+                    'high'     : vulns_counter['high'],
+                    'critical' : vulns_counter['critical'],
+                },
+            }
+
+        except Exception:
+            Logger.log_error(traceback.format_exc())
 
 
     #----------------------------------------------------------------------
