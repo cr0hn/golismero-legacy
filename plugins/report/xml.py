@@ -219,5 +219,5 @@ class XMLOutput(ReportPlugin):
                 if type(value) in (str, unicode, bool, int, float):
                     value = str(value)
                 else:
-                    value = dumps(value, protocol=0)
+                    value = dumps(value, protocol=0).encode("base64")
                 elem.set(name, value)
