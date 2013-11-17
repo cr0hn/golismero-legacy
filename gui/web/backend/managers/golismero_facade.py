@@ -293,12 +293,14 @@ class GoLismeroFacadeAudit(object):
             'html'   : 'html',
             'rst'    : 'rst',
             'text'   : 'txt',
+            'txt'    : 'txt',
             'csv'    : 'csv'
         }
 
         try:
+            print report_format
             # Check report format
-            if report_format not in REPORT_FORMATS:
+            if report_format not in REPORT_PLUGINS:
                 raise GoLismeroFacadeReportUnknownFormatException("Unknown report format '%s'." % report_format)
 
             m_audit = Audit.objects.get(pk=audit_id)
