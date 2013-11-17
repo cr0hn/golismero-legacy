@@ -315,7 +315,7 @@ class OpenVASPlugin(TestingPlugin):
                 # Get the metadata.
                 nvt  = opv.nvt
                 cvss = nvt.cvss_base
-                cve  = nvt.cve
+                cve  = nvt.cve.split(", ") if nvt.cve else []
                 oid  = nvt.oid
                 name = nvt.name
 

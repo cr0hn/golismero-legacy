@@ -698,8 +698,10 @@ class Data(object):
 
             # Handle the vulnerability taxonomy types.
             if propname in Vulnerability.TAXONOMY_NAMES:
-                key = Vulnerability.TAXONOMY_NAMES[propname]
-                display["Taxonomy"][key] = getattr(self, propname)
+                key   = Vulnerability.TAXONOMY_NAMES[propname]
+                value = getattr(self, propname)
+                if value:
+                    display["Taxonomy"][key] = ", ".join(value)
                 continue
 
             # Ignore the rest of the properties defined in Data.
