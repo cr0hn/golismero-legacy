@@ -665,7 +665,7 @@ class Data(object):
         module instead.
 
         :returns: Grouped properties ready for display.
-        :rtype: dict(str -> dict(str -> *))
+        :rtype: dict(str -> dict(str -> \\*))
         """
 
         # TODO: Some of this logic could be delegated to subclasses.
@@ -772,7 +772,7 @@ class Data(object):
         anything. There is no guarantee that the values will be serializable.
 
         :returns: Dictionary mapping property names to values.
-        :rtype: dict(str -> *)
+        :rtype: dict(str -> \\*)
         """
 
         # This is the dictionary we'll build and return.
@@ -816,7 +816,7 @@ class Data(object):
         This is the reverse operation of the to_dict() method.
 
         :param properties: Dictionary mapping property names to values.
-        :type properties: dict(str -> *)
+        :type properties: dict(str -> \\*)
 
         :returns: Data object.
         :rtype: Data
@@ -884,7 +884,7 @@ class Data(object):
         .. warning: This is an internally used method. Do not call!
 
         :returns: Collected property names and values.
-        :rtype: dict(str -> *)
+        :rtype: dict(str -> \\*)
         """
         is_identity_property = identity.is_identity_property
         clazz = self.__class__

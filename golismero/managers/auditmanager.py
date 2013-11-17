@@ -471,7 +471,7 @@ class Audit (object):
              - "stage_cycles": [dict(int -> int)] Map of stage numbers and
                times each stage ran.
         Future versions of GoLismero may include more keys.
-        :rtype: dict(str -> *)
+        :rtype: dict(str -> \\*)
         """
         return {
             "current_stage":     self.__current_stage,
