@@ -707,7 +707,8 @@ class WebUIPlugin(UIPlugin):
         """
         Implementation of: /scan/state
 
-        Returns a tuple with the following format::
+        Returns the current stage and the status of every plugin
+        in the following format::
           (
             'STEPS' # Count number that "recon" stage was reached
             'STAGE_NAME',
@@ -721,27 +722,29 @@ class WebUIPlugin(UIPlugin):
 
         :returns: Current audit stage, followed by the progress status of
             every plugin (plugin name, data identity, progress percentage).
+            Returns None if the audit is finished or doesn't exist.
         :rtype: tuple(int, tuple( tuple(str, str, float) ... ))
         """
 
-        # Return the current stage and the status of every plugin.
         r = None
 
-        if audit_name in self.audit_state:
-            if self.audit_state[audit_name] != "finish":
-                with SwitchToAudit(audit_name):
-                    try:
-                        r = (
-                            self.steps[audit_name],
-                            self.audit_state[audit_name],
-                            tuple(
-                                (plugin_name, identity, progress)
-                                for ((plugin_name, identity), progress)
-                                in self.plugin_state[audit_name].iteritems()
-                            )
+        if (
+            audit_name in self.audit_state and
+            self.audit_state[audit_name] != "finish"
+        ):
+            with SwitchToAudit(audit_name):
+                try:
+                    r = (
+                        self.steps[audit_name],
+                        self.audit_state[audit_name],
+                        tuple(
+                            (plugin_name, identity, progress)
+                            for ((plugin_name, identity), progress)
+                            in self.plugin_state[audit_name].iteritems()
                         )
-                    except Exception,e:
-                        print e
+                    )
+                except Exception:
+                    Logger.log_error(traceback.format_exc())
 
         return r
 
@@ -767,14 +770,22 @@ class WebUIPlugin(UIPlugin):
 
         :raises KeyError: Data type unknown.
         """
-        with SwitchToAudit(audit_name):
-            i_data_type = {
-                "all": None,
-                "information": Data.TYPE_INFORMATION,
-                "resource": Data.TYPE_RESOURCE,
-                "vulnerability": Data.TYPE_VULNERABILITY,
-                }[data_type.strip().lower()]
-            return sorted( Database.keys(i_data_type) )
+        if (
+            audit_name in self.audit_state and
+            self.audit_state[audit_name] != "finish"
+        ):
+            with SwitchToAudit(audit_name):
+                i_data_type = {
+                    "all": None,
+                    "information": Data.TYPE_INFORMATION,
+                    "resource": Data.TYPE_RESOURCE,
+                    "vulnerability": Data.TYPE_VULNERABILITY,
+                    }[data_type.strip().lower()]
+                return sorted( Database.keys(i_data_type) )
+        else:
+            # XXX TODO open the database manually here
+            raise NotImplementedError(
+                "Querying finished audits is not implemented yet!")
 
 
     #--------------------------------------------------------------------------
@@ -788,8 +799,16 @@ class WebUIPlugin(UIPlugin):
         :param id_list: List of result IDs.
         :type id_list: list(str)
         """
-        with SwitchToAudit(audit_name):
-            return Database.get_many(id_list)
+        if (
+            audit_name in self.audit_state and
+            self.audit_state[audit_name] != "finish"
+        ):
+            with SwitchToAudit(audit_name):
+                return Database.get_many(id_list)
+        else:
+            # XXX TODO open the database manually here
+            raise NotImplementedError(
+                "Querying finished audits is not implemented yet!")
 
 
     #----------------------------------------------------------------------
@@ -800,53 +819,63 @@ class WebUIPlugin(UIPlugin):
         :param audit_name: Name of the audit to query.
         :type audit_name: str
 
-        :returns: return dict as format:
-        {
-           'vulns_number'            : int,
-           'discovered_hosts'        : int,
-           'total_hosts'             : int,
-           'vulns_by_level'          : {
-              'info'     : int,
-              'low'      : int,
-              'medium'   : int,
-              'high'     : int,
-              'critical' : int,
-            }
-        }
-        :rtype: dict
-        """
-        with SwitchToAudit(audit_name):
-
-            # Get vulns
-            tmp_vulns = Database.keys(data_type=Data.TYPE_VULNERABILITY)
-
-            # Get each type of vuln level
-            vulns_counter = collections.Counter()
-            for l_vuln in tmp_vulns:
-                vulns_counter[l_vuln.level] += 1
-
-            # Get discovered host
-            discovered_hosts = 0
-            discovered_hosts += len(Database.keys(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_DOMAIN))
-            discovered_hosts += len(Database.keys(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_IP))
-
-            # Get audit targets number
-            total_hosts       = len(AuditConfig.targets)
-
-            #
-            # Make the response
-            return {
-                'vulns_number'            : len(tmp_vulns),
-                'discovered_hosts'        : discovered_hosts,
-                'total_hosts'             : total_hosts,
-                'vulns_by_level'          : {
-                    'info'     : vulns_counter['info'],
-                    'low'      : vulns_counter['low'],
-                    'medium'   : vulns_counter['medium'],
-                    'high'     : vulns_counter['high'],
-                    'critical' : vulns_counter['critical']
+        :returns:
+            Summary in the following format::
+                {
+                    'vulns_number'     : int,
+                    'discovered_hosts' : int,
+                    'total_hosts'      : int,
+                    'vulns_by_level'   : {
+                       'info'     : int,
+                       'low'      : int,
+                       'medium'   : int,
+                       'high'     : int,
+                       'critical' : int,
+                    },
                 }
-            }
+        :rtype: dict(str -> \\*)
+        """
+        if (
+            audit_name in self.audit_state and
+            self.audit_state[audit_name] != "finish"
+        ):
+            with SwitchToAudit(audit_name):
+
+                # Get vulns.
+                vulns_number = Database.count(Data.TYPE_VULNERABILITY)
+
+                # Get each type of vuln level.
+                vulns_counter = collections.Counter()
+                for l_vuln in Database.iterate(Data.TYPE_VULNERABILITY):
+                    vulns_counter[l_vuln.level] += 1
+
+                # Get discovered hosts.
+                discovered_hosts  = Database.count(Data.TYPE_RESOURCE,
+                                                   Resource.RESOURCE_DOMAIN)
+                discovered_hosts += Database.count(Data.TYPE_RESOURCE,
+                                                   Resource.RESOURCE_IP)
+
+                # Get audit targets number.
+                total_hosts = len(Config.scope.targets)
+
+        else:
+            # XXX TODO open the database manually here
+            raise NotImplementedError(
+                "Querying finished audits is not implemented yet!")
+
+        # Return the data in the expected format.
+        return {
+            'vulns_number'     : vulns_number,
+            'discovered_hosts' : discovered_hosts,
+            'total_hosts'      : total_hosts,
+            'vulns_by_level'   : {
+                'info'     : vulns_counter['info'],
+                'low'      : vulns_counter['low'],
+                'medium'   : vulns_counter['medium'],
+                'high'     : vulns_counter['high'],
+                'critical' : vulns_counter['critical'],
+            },
+        }
 
 
     #----------------------------------------------------------------------
