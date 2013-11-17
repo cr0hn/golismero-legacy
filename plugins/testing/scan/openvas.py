@@ -438,7 +438,7 @@ class OpenVASImportPlugin(ImportPlugin):
                 elif vuln_count == 1:
                     vuln_msg = " (1 vulnerability)"
                 else:
-                    vuln_msg = " (%d vulnerabilities" % vuln_count
+                    vuln_msg = " (%d vulnerabilities)" % vuln_count
                 Logger.log(
                     "Loaded %d %s%s from file: %s" %
                     (data_count, "results" if data_count != 1 else "result",
