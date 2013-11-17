@@ -841,22 +841,22 @@ class WebUIPlugin(UIPlugin):
         ):
             with SwitchToAudit(audit_name):
 
-                # Get vulns.
+                # Get the number of vulnerabilities in the database.
                 vulns_number = Database.count(Data.TYPE_VULNERABILITY)
 
-                # Get each type of vuln level.
+                # Count the vulnerabilities by severity.
                 vulns_counter = collections.Counter()
                 for l_vuln in Database.iterate(Data.TYPE_VULNERABILITY):
                     vulns_counter[l_vuln.level] += 1
 
-                # Get discovered hosts.
-                discovered_hosts  = Database.count(Data.TYPE_RESOURCE,
+                # Get the number of IP addresses and hostnames.
+                total_hosts  = Database.count(Data.TYPE_RESOURCE,
                                                    Resource.RESOURCE_DOMAIN)
-                discovered_hosts += Database.count(Data.TYPE_RESOURCE,
+                total_hosts += Database.count(Data.TYPE_RESOURCE,
                                                    Resource.RESOURCE_IP)
 
-                # Get audit targets number.
-                total_hosts = len(Config.scope.targets)
+                # Substract the ones that were passed as targets.
+                discovered_hosts = total_hosts - len(Config.scope.targets)
 
         else:
             # XXX TODO open the database manually here
