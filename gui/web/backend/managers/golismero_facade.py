@@ -392,7 +392,7 @@ class GoLismeroFacadeAudit(object):
             l_audit_id = str(l_audit.id)
 
             # Update the state for each audit
-            GoLismeroFacadeAudit.get_state(l_audit_id)
+            #GoLismeroFacadeAudit.get_state(l_audit_id)
 
             # Store audit info
             m_return.append(GoLismeroFacadeAudit.get_audit(l_audit_id))
