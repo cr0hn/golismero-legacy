@@ -224,7 +224,15 @@ class GoLismeroFacadeAudit(object):
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is not running. Can't obtain progress from not running audits." % str(audit_id))
 
             try:
-                return AuditBridge.get_progress(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+                r = AuditBridge.get_progress(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+                if r:
+                    return r
+                else:
+                    m_audit.audit_state = "finished"
+                    m_audit.save()
+
+                    raise GoLismeroFacadeAuditFinishedException()
+
             except ExceptionAuditNotFound:
                 raise GoLismeroFacadeAuditFinishedException()
 
