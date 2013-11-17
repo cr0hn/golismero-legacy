@@ -884,25 +884,29 @@ class WebUIPlugin(UIPlugin):
                 # Substract the ones that were passed as targets.
                 discovered_hosts = total_hosts - len(Config.audit_config.targets)
 
-        else:
-            # XXX TODO open the database manually here
-            #raise NotImplementedError(
-                #"Querying finished audits is not implemented yet!")
+                # Return the data in the expected format.
+                return {
+                    'vulns_number'     : vulns_number,
+                    'discovered_hosts' : discovered_hosts,
+                    'total_hosts'      : total_hosts,
+                    'vulns_by_level'   : {
+                        'info'     : vulns_counter['info'],
+                        'low'      : vulns_counter['low'],
+                        'medium'   : vulns_counter['medium'],
+                        'high'     : vulns_counter['high'],
+                        'critical' : vulns_counter['critical'],
+                    },
+                }
+
+
+            else:
+                # XXX TODO open the database manually here
+                #raise NotImplementedError(
+                    #"Querying finished audits is not implemented yet!")
+                return None
+        except:
             return None
 
-            # Return the data in the expected format.
-            return {
-                'vulns_number'     : vulns_number,
-                'discovered_hosts' : discovered_hosts,
-                'total_hosts'      : total_hosts,
-                'vulns_by_level'   : {
-                    'info'     : vulns_counter['info'],
-                    'low'      : vulns_counter['low'],
-                    'medium'   : vulns_counter['medium'],
-                    'high'     : vulns_counter['high'],
-                    'critical' : vulns_counter['critical'],
-                },
-            }
 
 
 
