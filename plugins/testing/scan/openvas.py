@@ -37,9 +37,13 @@ from golismero.api.logger import Logger
 from golismero.api.net.scraper import extract_from_text
 from golismero.api.plugin import TestingPlugin, ImportPlugin
 
+from functools import partial
 from threading import Event
 from traceback import format_exc
-from functools import partial
+from warnings import warn
+
+import os.path
+import sys
 import yaml
 
 try:
@@ -50,13 +54,14 @@ except ImportError:
 from openvas_lib import VulnscanManager, VulnscanException
 from openvas_lib.data import OpenVASResult
 
-# Add openvas_plugin folder
-import os.path
-import sys
-cwd = os.path.abspath(os.path.split(__file__)[0])
-cwd1 = os.path.join(cwd, "openvas_plugin")
-sys.path.insert(0, cwd1)
-#11213 -> trace http method
+
+#------------------------------------------------------------------------------
+# OpenVAS plugin extra files.
+base_dir     = os.path.split(os.path.abspath(__file__))[0]
+openvas_dir  = os.path.join(base_dir, "openvas_plugin")
+openvas_db   = os.path.join(openvas_dir, "openvas.sqlite3")
+openvas_yaml = os.path.join(openvas_dir, "categories.yaml")
+del base_dir
 
 
 #------------------------------------------------------------------------------
@@ -237,68 +242,60 @@ class OpenVASPlugin(TestingPlugin):
             'high'  : "high",
         }
 
-
-
-        #----------------------------------------------------------------------
-        #
-        # All data and imports
-        #
-        #----------------------------------------------------------------------
-
-        # Relative BBDD path
-        m_bbdd = os.path.join(os.path.split(os.path.abspath(__file__))[0], "openvas_plugin", "openvas.sqlite3")
-
-        from standalone.conf import settings
-
-        settings = settings(
-            DATABASES = {
-                'default': {
-                    'ENGINE': 'django.db.backends.sqlite3',
-                    'NAME': '%s' % m_bbdd,
-                }
-            },
-        )
-
-        # Load plugin info
-        cwd = os.path.abspath(os.path.split(__file__)[0])
-        cwd = os.path.join(cwd, "openvas_plugin")
-        sys.path.insert(0, cwd)
-        try:
-            from models import Families, Plugin
-        finally:
-            sys.path.remove(cwd)
-        del cwd
-
-        # Map of OpenVAS levels to GoLismero levels.
-        OPV_LEVELS_TO_GLM_LEVELS = {
-            'debug' : 'informational',
-            'log'   : 'informational',
-            'low'   : "low",
-            'medium': 'middle',
-            'high'  : "high",
-        }
-
-        # Knonw categories
-        m_categories_file = os.path.join(os.path.split(os.path.abspath(__file__))[0], "openvas_plugin", "categories.yaml")
-        CATEGORIES        = None
-        if os.path.exists(m_categories_file):
-            CATEGORIES = yaml.load(file(m_categories_file))
+        # Do we have the OpenVAS plugin database?
+        use_openvas_db = os.path.exists(openvas_db)
+        if not use_openvas_db:
+            Logger.log_error(
+                "OpenVAS plugin not initialized, please run setup.py")
         else:
+
+            # Load the database using the Django ORM.
+            from standalone.conf import settings
+            settings = settings(
+                DATABASES = {
+                    'default': {
+                        'ENGINE': 'django.db.backends.sqlite3',
+                        'NAME': '%s' % openvas_db,
+                    }
+                },
+            )
+
+            # Load the ORM model.
+            sys.path.insert(0, openvas_dir)
+            try:
+                from models import Families, Plugin
+            finally:
+                sys.path.remove(openvas_dir)
+
+            # Load the categories.
             CATEGORIES = {}
+            if os.path.exists(openvas_yaml):
+                try:
+                    CATEGORIES = yaml.load( open(openvas_yaml, 'rU') )
+                except Exception, e:
+                    tb = format_exc()
+                    Logger.log_error_verbose(
+                        "Failed to load categories, reason: %s" % str(e))
+                    Logger.log_error_more_verbose(tb)
+            else:
+                Logger.log_error(
+                    "Missing OpenVAS categories file: %s" % openvas_yaml)
 
         # For each OpenVAS result...
         for opv in openvas_results:
-
-            if not isinstance(opv, OpenVASResult):
-                continue
-
             try:
+
+                # XXX why would this happen?
+                if not isinstance(opv, OpenVASResult):
+                    warn("Expected OpenVASResult, got %r instead" % type(opv),
+                         RuntimeWarning)
+                    continue
+
                 # Get the host.
                 host = opv.host
 
                 # Get or create the vulnerable resource.
                 target = ip
-
                 if host in hosts_seen:
                     target = hosts_seen[host]
                 elif not ip or ip.address != host:
@@ -317,7 +314,6 @@ class OpenVASPlugin(TestingPlugin):
 
                 # Get the metadata.
                 nvt  = opv.nvt
-                ##references = nvt.xrefs.split("\n")
                 cvss = nvt.cvss_base
                 cve  = nvt.cve
                 oid  = nvt.oid
@@ -347,44 +343,44 @@ class OpenVASPlugin(TestingPlugin):
                     "references"  : references,
                     "cvss_base"   : cvss,
                     "cve"         : cve,
-                    ##"references": references,
                 }
+                if name:
+                    kwargs["title"] = name
 
-
-                # Looking family in BBDD
-                vuln = None
-                if oid:
+                # If we have the OpenVAS plugin database, look up the plugin ID
+                # that reported this vulnerability and create the vulnerability
+                # using a specific class. Otherwise use the vulnerability class
+                # for uncategorized vulnerabilities.
+                clazz = UncategorizedVulnerability
+                if use_openvas_db and oid:
                     oid_spt = oid.split(".")
                     if len(oid_spt) > 0:
-                        l_plugin_ide = oid_spt[-1]
+                        l_plugin_id = oid_spt[-1]
                         try:
-                            l_family     = Plugin.objects.get(plugin_id=l_plugin_ide).family_id
-
-                            if l_family.strip()in CATEGORIES or l_plugin_ide in CATEGORIES:
-                                kwargs["plugin_id"]   = "openvas"
-                                kwargs["title"]       = name
-
-                                # Concrete vuln dinamically
-                                vuln         = globals()[CATEGORIES[l_family]](**kwargs)
-
-                                # Set plugin ID of the tool
-                                vuln.tool_id = str(l_plugin_ide)
-
+                            l_family = Plugin.objects.get(
+                                plugin_id = l_plugin_id).family_id
+                            l_family = l_family.strip()
+                            l_plugin_id = str(l_plugin_id)
+                            kwargs["tool_id"] = l_plugin_id
+                            if l_family in CATEGORIES:
+                                clazz = globals()[ CATEGORIES[l_family] ]
+                            elif l_plugin_id in CATEGORIES:
+                                clazz = globals()[ CATEGORIES[l_plugin_id] ]
                         except Exception, e:
-                            print e
-                            Logger.log("Plugin '%s' not found." % l_family)
+                            tb = format_exc()
+                            Logger.log_error_verbose(
+                                "Failed to find category, reason: %s" % str(e))
+                            Logger.log_error_more_verbose(tb)
 
-                else:
-                    # Create the vulnerability instance.
-                    vuln = UncategorizedVulnerability(**kwargs)
+                # Create the vulnerability instance.
+                vuln = clazz(**kwargs)
 
                 # Link the vulnerability to the resource.
-                if vuln:
-                    if target is not None:
-                        target.add_vulnerability(vuln)
+                if target is not None:
+                    target.add_vulnerability(vuln)
 
-                        # Add the vulnerability.
-                        results.append(vuln)
+                # Add the vulnerability.
+                results.append(vuln)
 
             # Skip on error.
             except Exception, e:
@@ -393,8 +389,6 @@ class OpenVASPlugin(TestingPlugin):
                     "Error parsing OpenVAS results: %s" % str(e))
                 Logger.log_error_more_verbose(t)
                 continue
-
-
 
         # Return the converted results.
         return results
@@ -411,9 +405,8 @@ class OpenVASImportPlugin(ImportPlugin):
                 line = fd.readline()
                 is_ours = line.startswith('<report extension="xml" id="')
             if is_ours:
-                m_bbdd = os.path.join(os.path.split(os.path.abspath(__file__))[0], "openvas_plugin", "openvas.sqlite3")
-                if not os.path.exists(m_bbdd):
-                    raise RuntimeError("OpenVAS plugin not initialized, please run setup.py")
+                if not os.path.exists(openvas_db):
+                    warn("OpenVAS plugin not initialized, please run setup.py")
                 return True
         return False
 
@@ -422,7 +415,8 @@ class OpenVASImportPlugin(ImportPlugin):
     def import_results(self, input_file):
         try:
             xml_results       = etree.parse(input_file)
-            openvas_results   = VulnscanManager.transform(xml_results.getroot())
+            xml_root          = xml_results.getroot()
+            openvas_results   = VulnscanManager.transform(xml_root)
             golismero_results = OpenVASPlugin.parse_results(openvas_results)
             if golismero_results:
                 Database.async_add_many(golismero_results)
@@ -434,9 +428,21 @@ class OpenVASImportPlugin(ImportPlugin):
             Logger.log_error_more_verbose(fmt)
         else:
             if golismero_results:
+                data_count = len(golismero_results)
+                vuln_count = sum(
+                    1 for x in golismero_results
+                    if isinstance(x, Vulnerability)
+                )
+                if vuln_count == 0:
+                    vuln_msg = ""
+                elif vuln_count == 1:
+                    vuln_msg = " (1 vulnerability)"
+                else:
+                    vuln_msg = " (%d vulnerabilities" % vuln_count
                 Logger.log(
-                    "Loaded %d results from file: %s" %
-                    (len(golismero_results), input_file)
+                    "Loaded %d %s%s from file: %s" %
+                    (data_count, "results" if data_count != 1 else "result",
+                     vuln_msg, input_file)
                 )
             else:
-                Logger.log_verbose("No data found in file: %s" % input_file)
+                Logger.log_error("No results found in file: %s" % input_file)
