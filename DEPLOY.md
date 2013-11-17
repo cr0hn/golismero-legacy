@@ -3,26 +3,24 @@ Intro
 
 This document explains how to generate a release package of GoLismero in a production server.
 
-To run the script you must to be installed "fabric" library in your system.
+To run the script you must have the "fabric" library installed in your system.
+
 
 Requirements
 ============
 
-To run the script ensure that you have installed python 2.7 or above.
+Run this command to install the required system packages:
 
-To install dependences run this command:
+  sudo apt-get install python2.7 python2.7-dev python-pip git screen
 
-sudo pip install -r requirements.txt
+Afterwards, to install the dependencies run this command:
 
-Required system packages:
-
-- python2.7-dev
-- git
-- screen
+  sudo pip install -r requirements.txt
 
 
 Manual
 ======
+
 
 Intro
 -----
@@ -31,36 +29,37 @@ Intro
 
 ### List commands
 
-You can list all available command writing:
+You can list all available commands with:
 
 ```fab -l```
 
 ### Commands information
 
-You cand display information about some command writing:
+You can display information about a command with:
 
 ```fab -d run_server```
 
 ### Fabric useful options
 
-It's advisable to run fab command with params:
+It's advisable to run fab with these parameters:
 
 ```fab -t 1000 -T 1000 ...```
 
-These params specifies an high timeout connection.
+These parameters specifiy an high connection timeout.
 
-Also you should indicate remote host in command line:
+Also you should indicate the remote host in the command line:
 
 ```fab -t 1000 -T 1000 -H user@myremotehost.com ...```
 
-* All commands has an optional parameters for specifing the installation path:*
+* All commands have an optional parameter for specifing the installation path:*
 
 ```fab command:INSTALLATION_FOLDER=PATH```
+
 
 Create initial repo
 -------------------
 
-First you must download git repositories and generate a deploy folder. To do that, run:
+First you must download the git repositories and generate a deploy folder. To do that, run:
 
 ```fab user@myremotehost.com myremotehost.com init```
 
@@ -68,7 +67,7 @@ First you must download git repositories and generate a deploy folder. To do tha
 Create the virtualenv
 ---------------------
 
-For create the virtualenv, you must run:
+To create the virtualenv, you must run:
 
 ```fab user@myremotehost.com myremotehost.com start```
 
@@ -76,7 +75,7 @@ For create the virtualenv, you must run:
 Updating
 --------
 
-If you want update an existent installation, you must write:
+If you want update an existent installation, you must run:
 
 ```fab -H user@myremotehost.com update```
 
@@ -84,10 +83,10 @@ If you want update an existent installation, you must write:
 Running debug web server
 ------------------------
 
-If you want to run a debug web server, in port 9000, you can write:
+If you want to run a debug web server, in port 9000, you can run:
 
 ```fab -H myremotehost.com run_devel```
 
-If you want to run other instance in other port:
+If you want to run another instance in another port:
 
 ```fab -H my.com run_devel:port=9999```
