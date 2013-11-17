@@ -52,7 +52,6 @@ for f in listdir(g_folder):
     if f.endswith("yaml"):
         l_file = join(g_folder, f)
         if exists(l_file):
-            print l_file
             info = yaml.load(file(l_file))
             REPORT_FORMATS.extend(info.get("formats", None))
             REPORT_PLUGINS.extend(info.get("plugins", None))
@@ -373,11 +372,6 @@ class GoLismeroAuditData(object):
         # Add targets
         m_config['targets']         = self.__dict__["targets"]
 
-        # Add plugins enabled
-        m_config['plugin_load_overrides']  = []
-        m_config['disable_plugins'] = ["all"]
-        m_config['enable_plugins'] = []
-
         #
         # FIXME in next version:
         #
@@ -389,31 +383,40 @@ class GoLismeroAuditData(object):
         #
         # Plugins
         #
-        m_tmp_plugin_args           = {}
-        # Add plugins config
-        for p in self.enable_plugins:
-            l_plugin_name = p["plugin_name"]
+        # Add plugins enabled
+        m_config['disable_plugins']        = None
+        m_config['enable_plugins']         = []
 
-            m_config['plugin_load_overrides'].append((True, l_plugin_name))
+        if len(self.enable_plugins) == 0 or \
+           len(self.enable_plugins) == 1 and self.enable_plugins[0]['plugin_name'] == "all" : # No plugins selected -> enable all
+            m_config['disable_plugins']        = []
+            m_config['plugin_load_overrides']  = []
+            m_config['enable_plugins']         = ["all"]
+        else: # Plugins selected -> enable one by one
+            m_config['disable_plugins']        = ["all"]
+            m_config['enable_plugins']         = []
+            m_config['plugin_load_overrides']  = []
+            m_tmp_plugin_args                  = {}
 
-            # Plugins params
-            for pp in p.get("params", []):
-                l_plugin_param_name  = pp["param_name"]
-                l_plugin_param_value = pp["param_value"]
-                if not l_plugin_name in m_tmp_plugin_args:
-                    m_tmp_plugin_args[l_plugin_name] = {}
-                m_tmp_plugin_args[l_plugin_name][l_plugin_param_name] = l_plugin_param_value
+            # Add plugins config
+            for p in self.enable_plugins:
+                l_plugin_name = p["plugin_name"]
+                m_config['plugin_load_overrides'].append((True, l_plugin_name))
 
-        m_config['plugin_args'] = m_tmp_plugin_args
+                # Plugins params
+                for pp in p.get("params", []):
+                    l_plugin_param_name  = pp["param_name"]
+                    l_plugin_param_value = pp["param_value"]
+                    if not l_plugin_name in m_tmp_plugin_args:
+                        m_tmp_plugin_args[l_plugin_name] = {}
+                    m_tmp_plugin_args[l_plugin_name][l_plugin_param_name] = l_plugin_param_value
 
-        # Configure to golismero format
-        if m_config['plugin_load_overrides']:
-            m_config['enable_plugins'] =  ','.join(x[1] for x in m_config['plugin_load_overrides'])
-            m_config['enable_plugins'] += ','
-            m_config['enable_plugins'] += ','.join(REPORT_PLUGINS) # Report plugins
+            m_config['plugin_args'] = m_tmp_plugin_args
 
-        # No plugins?
-        if len(m_config['plugin_load_overrides']) == 0:
-            m_config['plugin_load_overrides'] = ["all"]
+            # Configure to golismero format
+            if m_config['plugin_load_overrides']:
+                m_config['enable_plugins'] =  ','.join(x[1] for x in m_config['plugin_load_overrides'])
+                m_config['enable_plugins'] += ','
+                m_config['enable_plugins'] += ','.join(REPORT_PLUGINS) # Report plugins
 
         return m_config
