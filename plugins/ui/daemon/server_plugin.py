@@ -723,7 +723,7 @@ class WebUIPlugin(UIPlugin):
         :returns: Current stage for this audit.
         :type: str | None
         """
-        return self.audit_stage.get(audit_name, "finished")
+        return self.audit_stage.get(audit_name, "finish")
 
 
     #--------------------------------------------------------------------------
