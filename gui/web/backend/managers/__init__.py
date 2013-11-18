@@ -211,6 +211,7 @@ class GoLismeroAuditData(object):
         "follow_redirects",
         "follow_first_redirect",
         "proxy_addr",
+        "proxy_port",
         "proxy_user",
         "proxy_pass",
         "cookie",

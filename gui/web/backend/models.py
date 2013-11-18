@@ -45,6 +45,7 @@ class Audit(models.Model):
     follow_redirects        = models.BooleanField(blank=True)
     follow_first_redirect   = models.BooleanField(blank=True)
     proxy_addr              = models.CharField(max_length=200, blank=True)
+    proxy_port              = models.IntegerField(max_length=6, default=0)
     proxy_user              = models.CharField(max_length=200, blank=True)
     proxy_pass              = models.CharField(max_length=200, blank=True)
     cookie                  = models.CharField(max_length=200, blank=True)

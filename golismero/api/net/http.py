@@ -81,6 +81,9 @@ class _HTTP(Singleton):
         # Load the proxy settings.
         proxy_addr = Config.audit_config.proxy_addr
         if proxy_addr:
+            proxy_port = Config.audit_config.proxy_port
+            if proxy_port:
+                proxy_addr = "%s:%s" % (proxy_addr, proxy_port)
             auth_user = Config.audit_config.proxy_user
             auth_pass = Config.audit_config.proxy_pass
             auth, _ = detect_auth_method(proxy_addr)
