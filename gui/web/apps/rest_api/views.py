@@ -13,7 +13,7 @@ from backend.rest_api.authentication import ExpiringTokenAuthentication
 from backend.rest_api.serializers import *
 
 from backend.managers.golismero_facade import *
-from backend.managers import GoLismeroAuditData
+from backend.managers import GoLismeroAuditData, CONTENT_TYPES_BY_FORMAT
 
 #
 # This file defines the actions for the API-REST
@@ -55,8 +55,8 @@ class AuditViewSet(ViewSet):
         [
            {
               'name'  : 'AUDIT NAME',
-        	  'user'  : 'OWNER OF AUDIT',
-        	  'state' : 'A VALID STATE'
+              'user'  : 'OWNER OF AUDIT',
+              'state' : 'A VALID STATE'
            }
         ]
 
@@ -89,8 +89,8 @@ class AuditViewSet(ViewSet):
         [
            {
               'name'  : 'AUDIT NAME',
-        	  'user'  : 'OWNER OF AUDIT',
-        	  'state' : 'A VALID STATE'
+              'user'  : 'OWNER OF AUDIT',
+              'state' : 'A VALID STATE'
            }
         ]
         """
@@ -134,23 +134,23 @@ class AuditViewSet(ViewSet):
           "audit_name": "asdfasdf",
           "targets": [ "127.0.0.1", "mysite.com"],
           "enabled_plugins": [
-        	{
-        	  "plugin_name": "openvas",
-        	  "params": [
-        		{
-        		  "param_name": "profile",
-        		  "param_value": "Full and fast"
-        		},
-        		{
-        		  "param_name": "user",
-        		  "param_value": "admin"
-        		},
-        		{
-        		  "param_name": "password",
-        		  "param_value": "admin"
-        		}
-        	  ]
-        	}
+            {
+              "plugin_name": "openvas",
+              "params": [
+                {
+                  "param_name": "profile",
+                  "param_value": "Full and fast"
+                },
+                {
+                  "param_name": "user",
+                  "param_value": "admin"
+                },
+                {
+                  "param_name": "password",
+                  "param_value": "admin"
+                }
+              ]
+            }
           ],
           "disabled_plugins": "spider,nikto"
         }
@@ -302,9 +302,6 @@ class AuditViewSet(ViewSet):
         return Response(m_return)
 
 
-
-
-
     #----------------------------------------------------------------------
     def delete(self, request, *args, **kwargs):
         """
@@ -379,11 +376,13 @@ class AuditViewSet(ViewSet):
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 
-
     #----------------------------------------------------------------------
     #
     # Management
     #
+    #----------------------------------------------------------------------
+
+
     #----------------------------------------------------------------------
     def start(self, request, *args, **kwargs):
         """
@@ -449,7 +448,6 @@ class AuditViewSet(ViewSet):
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-
         except GoLismeroFacadeAuditNotFoundException:
             m_return['status']      = "error"
             m_return['error_code']  = 0
@@ -464,6 +462,7 @@ class AuditViewSet(ViewSet):
             m_return['error']       = ["Unknown error: %s" % str(e)]
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
 
     #----------------------------------------------------------------------
     def state(self, request, *args, **kwargs):
@@ -509,6 +508,7 @@ class AuditViewSet(ViewSet):
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+
     #----------------------------------------------------------------------
     def progress(self, request, *args, **kwargs):
         """
@@ -538,7 +538,6 @@ class AuditViewSet(ViewSet):
             m_return.update(m_info)
 
             return Response(m_return)
-
 
         # Audit not exits
         except GoLismeroFacadeAuditNotFoundException, e:
@@ -572,8 +571,6 @@ class AuditViewSet(ViewSet):
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 
-
-
     #----------------------------------------------------------------------
     def pause(self, request, *args, **kwargs):
         """
@@ -598,7 +595,6 @@ class AuditViewSet(ViewSet):
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-
         except GoLismeroFacadeAuditNotFoundException:
             m_return['status']      = "error"
             m_return['error_code']  = 0
@@ -613,6 +609,7 @@ class AuditViewSet(ViewSet):
             m_return['error']       = ["Unknown error: %s" % str(e)]
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
 
     #----------------------------------------------------------------------
     def resume(self, request, *args, **kwargs):
@@ -655,7 +652,6 @@ class AuditViewSet(ViewSet):
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 
-
     #----------------------------------------------------------------------
     def log(self, request, *args, **kwargs):
         """
@@ -683,7 +679,6 @@ class AuditViewSet(ViewSet):
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-
         except GoLismeroFacadeAuditNotFoundException:
             m_return['status']      = "error"
             m_return['error_code']  = 0
@@ -705,6 +700,9 @@ class AuditViewSet(ViewSet):
     # Results
     #
     #----------------------------------------------------------------------
+
+
+    #----------------------------------------------------------------------
     def results(self, request, *args, **kwargs):
         """
         Get results as specified format, or in HTML by default.
@@ -717,14 +715,6 @@ class AuditViewSet(ViewSet):
 
         :returns: a format file depending of format requested.
         """
-
-        CONTENT_TYPES_BY_FORMAT = {
-            'xml'    : 'application/xml',
-            'html'   : 'text/html',
-            'rst'    : 'text/html',
-            'text'   : 'text/plain'
-        }
-
         m_audit_id     = str(kwargs.get("pk", ""))
         m_format       = str(kwargs.get("text", "text"))
         m_return       = {}
@@ -741,14 +731,12 @@ class AuditViewSet(ViewSet):
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-
         except GoLismeroFacadeReportUnknownFormatException, e:
             m_return['status']      = "error"
             m_return['error_code']  = 1
             m_return['error']       = [str(e)]
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
 
         except GoLismeroFacadeAuditNotFoundException:
             m_return['status']      = "error"
@@ -765,6 +753,7 @@ class AuditViewSet(ViewSet):
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+
     #----------------------------------------------------------------------
     def results_summary(self, request, *args, **kwargs): ##
         """
@@ -780,15 +769,16 @@ class AuditViewSet(ViewSet):
            'total_hosts'             = int
            'vulns_by_level'          = {
               'info'     : int,
-        	  'low'      : int,
-        	  'medium'   : int,
-        	  'high'     : int,
-        	  'critical' : int,
+              'low'      : int,
+              'medium'   : int,
+              'high'     : int,
+              'critical' : int,
         }
         :rtype: dic
 
         :raise:
         """
+
         # Info
         m_audit_id  = str(kwargs.get("pk", None))
         m_return    = {}
@@ -804,7 +794,6 @@ class AuditViewSet(ViewSet):
             m_return.update(m_info)
 
             return Response(m_return)
-
 
         # Audit not exits
         except GoLismeroFacadeAuditNotFoundException, e:
@@ -838,10 +827,6 @@ class AuditViewSet(ViewSet):
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 
-
-
-
-
 #------------------------------------------------------------------------------
 #
 # Users actions
@@ -868,6 +853,7 @@ class PluginsViewSet(ViewSet):
     authentication_classes  = (ExpiringTokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+
     #----------------------------------------------------------------------
     def list(self, request, *args, **kwargs):
         """
@@ -875,25 +861,27 @@ class PluginsViewSet(ViewSet):
 
         >>> return = [
            {
-        	  'stage'       : 'recon',
-        	  'plugin_name' : 'spider',
-        	  'params'      : [
-        		 {
-        			'name'    : 'param1',
-        			'type'    : 'str',
-        			'default' : ''
-        		 },
-        		 {
-        			'name'    : 'param2',
-        			'type'    : 'int',
-        			'default' : '0'
-        		 }
-        	  ]
-        	}
+              'stage'       : 'recon',
+              'plugin_name' : 'spider',
+              'params'      : [
+                 {
+                    'name'    : 'param1',
+                    'type'    : 'str',
+                    'default' : ''
+                 },
+                 {
+                    'name'    : 'param2',
+                    'type'    : 'int',
+                    'default' : '0'
+                 }
+              ]
+            }
         ]
         """
         return Response({'as':'aaaa'})
 
+
+    #----------------------------------------------------------------------
     def search(self, request, *args, **kwargs):
         s = kwargs['text']
         return Response({'search text' : s})

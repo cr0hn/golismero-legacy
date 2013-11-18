@@ -43,6 +43,10 @@ class AuditsRouters(ParameterizedRouter):
               mapping   = {'get' : 'list'},
               name      = '{basename}-list',
               initkwargs= {}),
+        Route(url       = r'^{prefix}/list$',
+              mapping   = {'get' : 'list'},
+              name      = '{basename}-list',
+              initkwargs= {}),
         # List
         Route(url       = r'^{prefix}/list/{text}',
               mapping   = {'get' : 'list_parameterized'},

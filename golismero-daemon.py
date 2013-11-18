@@ -171,8 +171,6 @@ Listen in loopback IPv6 at port 8000:
     parser = argparse.ArgumentParser(usage=usage, description='run GoLismero web UI')
     parser.add_argument('-l', dest="IP_LISTEN", help="IP address where to listen to (default: 127.0.0.1).", default="127.0.0.1")
     parser.add_argument('-p', dest="PORT", type=int, help="port where to listen to (default 9000).", default=9000)
-    parser.add_argument('-v', '--verbose', dest="VERBOSE", action="store_true", help="display debug info into console instead of file.", default=False)
-    parser.add_argument('-r', '--auto-restart', dest="AUTO_RESTART", action="store_true", help="automatically restart the service when stopped.", default=False)
     args = parser.parse_args()
 
     # Check the port number.
@@ -205,7 +203,6 @@ def daemon_main(listen_address, listen_port):
 
     # Load the Orchestrator options.
     orchestrator_config = OrchestratorConfig()
-    orchestrator_config.verbose     = Logger.MORE_VERBOSE
     orchestrator_config.config_file = config_file
 
     # Config service bind
@@ -227,13 +224,9 @@ def daemon_main(listen_address, listen_port):
     # If no plugins folder is given, use the default.
     plugins_folder = orchestrator_config.plugins_folder
     if not plugins_folder:
-        print __file__
         plugins_folder = path.abspath(__file__)
-        print plugins_folder
         plugins_folder = path.dirname(plugins_folder)
-        print plugins_folder
         plugins_folder = path.join(plugins_folder, "plugins")
-        print plugins_folder
         if not path.isdir(plugins_folder):
             from golismero import common
             plugins_folder = path.abspath(common.__file__)
@@ -250,6 +243,9 @@ def daemon_main(listen_address, listen_port):
     # Force disable colored output.
     orchestrator_config.color = False
 
+    # Force maximum verbosity level.
+    orchestrator_config.verbose = Logger.MORE_VERBOSE
+
     # Launch GoLismero.
     launcher.run(orchestrator_config)
 
@@ -265,29 +261,11 @@ if __name__ == '__main__':
     # Get the working directory.
     working_directory = path.dirname( path.abspath(__file__) )
 
-    ## Save logs to file, unless we're in verbose mode.
-    #fout = None
-    #fin  = None
-    #if not args.VERBOSE:
-        #fout = open(path.join(working_directory, "golismero-out.log"), "a")
-        #fin  = open(path.join(working_directory, "golismero-err.log"), "a")
-        ###fout = open("/var/log/golismero-out.log", "a")
-        ###fin  = open("/var/log/golismero-err.log", "a")
-    #else:
-        #fout = sys.stdout
-        #fin  = sys.stderr
-
+    # Run in daemon mode.
     with daemon.DaemonContext(
         working_directory = working_directory,
         detach_process = False,
         stdout = sys.stdout,
-        stderr = sys.stderr
+        stderr = sys.stderr,
     ):
-        if args.AUTO_RESTART:
-            while True:
-                try:
-                    daemon_main(args.IP_LISTEN, args.PORT)
-                except:
-                    pass
-        else:
-            daemon_main(args.IP_LISTEN, args.PORT)
+        daemon_main(args.IP_LISTEN, args.PORT)

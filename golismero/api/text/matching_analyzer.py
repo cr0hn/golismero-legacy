@@ -97,7 +97,7 @@ class MatchingAnalyzerElement(object):
         :type ratio: float
 
         :param attrs: Custom attributes dictionary.
-        :type attrs: dict(str -> *)
+        :type attrs: dict(str -> \\*)
         """
         self.text    = text
         self.ratio   = ratio

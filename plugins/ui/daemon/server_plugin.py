@@ -38,6 +38,7 @@ from golismero.api.logger import Logger
 from golismero.api.plugin import UIPlugin, get_plugin_info, get_plugin_ids, \
      get_stage_display_name
 from golismero.common import AuditConfig
+from golismero.managers.processmanager import PluginContext
 from golismero.messaging.codes import MessageType, MessageCode, \
      MessagePriority
 
@@ -88,17 +89,17 @@ class SwitchToAudit(object):
 
         # Update the execution context for this audit.
         Config._context = PluginContext(
-            msg_queue = old_context.msg_queue,
-            audit_name = audit_name,
-            audit_config = get_audit_config(audit_name),
-            audit_scope = get_audit_scope(audit_name),
-            orchestrator_pid = old_context._orchestrator_pid,
-            orchestrator_tid = old_context._orchestrator_tid)
+                   msg_queue = self.old_context.msg_queue,
+                  audit_name = self.audit_name,
+                audit_config = get_audit_config(self.audit_name),
+                 audit_scope = get_audit_scope(self.audit_name),
+            orchestrator_pid = self.old_context._orchestrator_pid,
+            orchestrator_tid = self.old_context._orchestrator_tid)
 
     def __exit__(self, *args, **kwargs):
 
         # Restore the original execution context.
-        Config._context = old_context
+        Config._context = self.old_context
 
 
 #------------------------------------------------------------------------------
@@ -305,8 +306,8 @@ class WebUIPlugin(UIPlugin):
 
         # Initialize the audit and plugin state caches.
         self.state_lock   = threading.RLock()
-        self.steps        = collections.Counter() # Count number of stage "recon" was reached
-        self.audit_state  = {}  # audit -> stage
+        self.steps        = collections.Counter() # How many times "recon" was reached
+        self.audit_stage  = {}  # audit -> stage
         self.plugin_state = collections.defaultdict(
             functools.partial(collections.defaultdict, dict)
             )  # audit -> (plugin, identity) -> progress
@@ -382,7 +383,7 @@ class WebUIPlugin(UIPlugin):
 
         # Clear the state cache.
         self.state_lock = threading.RLock()
-        self.audit_state.clear()
+        self.audit_stage.clear()
         self.plugin_state.clear()
 
 
@@ -626,14 +627,14 @@ class WebUIPlugin(UIPlugin):
         print "[%s] Entering stage: %s" % (audit_name,
                                            get_stage_display_name(stage))
 
-        # Save the audit state.
-        self.audit_state[audit_name] = stage
+        # Save the audit stage.
+        self.audit_stage[audit_name] = stage
 
-        # Increase steps if recon stage was reached
+        # Increase steps if recon stage was reached.
         if stage == "recon":
             self.steps[audit_name] += 1
 
-        # Send the audit state.
+        # Send the audit stage.
         packet = ("stage", audit_name, stage)
         self.bridge.send(packet)
 
@@ -664,7 +665,6 @@ class WebUIPlugin(UIPlugin):
         :type audit_config: dict(str -> \\*)
         """
 
-
         # Load the audit configuration from the dictionary.
         o_audit_config = AuditConfig()
         o_audit_config.from_dictionary(audit_config)
@@ -680,10 +680,21 @@ class WebUIPlugin(UIPlugin):
 
         :param audit_name: Name of the audit to cancel.
         :type audit_name: str
-        """
 
-        # Stop the audit.
-        stop_audit(audit_name)
+        :return: True on success, False otherwise.
+        :type: bool
+        """
+        if (
+            audit_name in self.audit_stage and
+            self.audit_stage[audit_name] != "finish"
+        ):
+            try:
+                with SwitchToAudit(audit_name):
+                    stop_audit(audit_name)
+                    return True
+            except Exception:
+                Logger.log_error(traceback.format_exc())
+        return False
 
 
     #--------------------------------------------------------------------------
@@ -701,17 +712,32 @@ class WebUIPlugin(UIPlugin):
         return result
 
 
-    #--------------------------------------------------------------------------
+    #----------------------------------------------------------------------
     def do_audit_state(self, audit_name):
         """
         Implementation of: /scan/state
 
-        Returns a tuple with the following format::
+        :param audit_name: Name of the audit to query.
+        :type audit_name: str
+
+        :returns: Current stage for this audit.
+        :type: str
+        """
+        return self.audit_stage.get(audit_name, "finish")
+
+
+    #--------------------------------------------------------------------------
+    def do_audit_progress(self, audit_name):
+        """
+        Implementation of: /scan/progress
+
+        Returns the current stage and the status of every plugin
+        in the following format::
           (
-            'STEPS' # Count number that "recon" stage was reached
-            'STAGE_NAME',
-            (
-              (PLUGIN_NAME::str, IDENTITY::int, PROGRESS::float(0.0-100.0)),
+            STEPS::int, # How many times the "recon" stage was reached
+            STAGE::str, # Current stage
+            ( # For each plugin...
+              (PLUGIN_ID::str, DATA_ID::str, PROGRESS::float(0.0-100.0)),
             )
           )
 
@@ -720,23 +746,29 @@ class WebUIPlugin(UIPlugin):
 
         :returns: Current audit stage, followed by the progress status of
             every plugin (plugin name, data identity, progress percentage).
+            Returns None if the audit is finished or doesn't exist.
         :rtype: tuple(int, tuple( tuple(str, str, float) ... ))
         """
 
-        # Return the current stage and the status of every plugin.
         r = None
-        try:
-            r = (
-                self.steps[audit_name],
-                self.audit_state[audit_name],
-                tuple(
-                    (plugin_name, identity, progress)
-                    for ((plugin_name, identity), progress)
-                    in self.plugin_state[audit_name].iteritems()
-                )
-            )
-        except Exception,e:
-            pass
+
+        if (
+            audit_name in self.audit_stage and
+            self.audit_stage[audit_name] != "finish"
+        ):
+            with SwitchToAudit(audit_name):
+                try:
+                    r = (
+                        self.steps[audit_name],
+                        self.audit_stage[audit_name],
+                        tuple(
+                            (plugin_id, identity, progress)
+                            for ((plugin_id, identity), progress)
+                            in self.plugin_state[audit_name].iteritems()
+                        )
+                    )
+                except Exception:
+                    Logger.log_error(traceback.format_exc())
 
         return r
 
@@ -762,14 +794,22 @@ class WebUIPlugin(UIPlugin):
 
         :raises KeyError: Data type unknown.
         """
-        with SwitchToAudit(audit_name):
-            i_data_type = {
-                "all": None,
-                "information": Data.TYPE_INFORMATION,
-                "resource": Data.TYPE_RESOURCE,
-                "vulnerability": Data.TYPE_VULNERABILITY,
-                }[data_type.strip().lower()]
-            return sorted( Database.keys(i_data_type) )
+        if (
+            audit_name in self.audit_stage and
+            self.audit_stage[audit_name] != "finish"
+        ):
+            with SwitchToAudit(audit_name):
+                i_data_type = {
+                    "all": None,
+                    "information": Data.TYPE_INFORMATION,
+                    "resource": Data.TYPE_RESOURCE,
+                    "vulnerability": Data.TYPE_VULNERABILITY,
+                    }[data_type.strip().lower()]
+                return sorted( Database.keys(i_data_type) )
+        else:
+            # XXX TODO open the database manually here
+            raise NotImplementedError(
+                "Querying finished audits is not implemented yet!")
 
 
     #--------------------------------------------------------------------------
@@ -783,8 +823,16 @@ class WebUIPlugin(UIPlugin):
         :param id_list: List of result IDs.
         :type id_list: list(str)
         """
-        with SwitchToAudit(audit_name):
-            return Database.get_many(id_list)
+        if (
+            audit_name in self.audit_stage and
+            self.audit_stage[audit_name] != "finish"
+        ):
+            with SwitchToAudit(audit_name):
+                return Database.get_many(id_list)
+        else:
+            # XXX TODO open the database manually here
+            raise NotImplementedError(
+                "Querying finished audits is not implemented yet!")
 
 
     #----------------------------------------------------------------------
@@ -795,52 +843,68 @@ class WebUIPlugin(UIPlugin):
         :param audit_name: Name of the audit to query.
         :type audit_name: str
 
-        :returns: return dict as format:
-        {
-        'vulns_number'            : int,
-        'discovered_hosts'        : int,
-        'total_hosts'             : int,
-        'vulns_by_level'          : {
-        'info'     : int,
-        'low'      : int,
-        'medium'   : int,
-        'high'     : int,
-        'critical' : int,
-        }
-        :rtype: dict
-        """
-        with SwitchToAudit(audit_name):
-
-            # Get vulns
-            tmp_vulns = Database.keys(data_type=Data.TYPE_VULNERABILITY)
-
-            # Get each type of vuln level
-            vulns_counter = collections.Counter()
-            for l_vuln in tmp_vulns:
-                vulns_counter[l_vuln.level] += 1
-
-            # Get discovered host
-            discovered_hosts = 0
-            discovered_hosts += len(Database.keys(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_DOMAIN))
-            discovered_hosts += len(Database.keys(data_type=Data.TYPE_RESOURCE, data_subtype=Resource.RESOURCE_IP))
-
-            # Get audit targets number
-            total_hosts       = len(AuditConfig.targets)
-
-            #
-            # Make the response
-            return {
-                'vulns_number'            : len(tmp_vulns),
-                'discovered_hosts'        : discovered_hosts,
-                'total_hosts'             : total_hosts,
-                'vulns_by_level'          : {
-                    'info'     : vulns_counter['info'],
-                    'low'      : vulns_counter['low'],
-                    'medium'   : vulns_counter['medium'],
-                    'high'     : vulns_counter['high'],
-                    'critical' : vulns_counter['critical']
+        :returns:
+            Summary in the following format::
+                {
+                    'vulns_number'     : int,
+                    'discovered_hosts' : int,
+                    'total_hosts'      : int,
+                    'vulns_by_level'   : {
+                       'info'     : int,
+                       'low'      : int,
+                       'medium'   : int,
+                       'high'     : int,
+                       'critical' : int,
+                    },
                 }
-            }
+            Returns None on error.
+        :rtype: dict(str -> \\*) | None
+        """
+        try:
+            if (
+                audit_name in self.audit_stage and
+                self.audit_stage[audit_name] != "finish"
+            ):
+                with SwitchToAudit(audit_name):
+
+                    # Get the number of vulnerabilities in the database.
+                    vulns_number = Database.count(Data.TYPE_VULNERABILITY)
+
+                    # Count the vulnerabilities by severity.
+                    vulns_counter = collections.Counter()
+                    for l_vuln in Database.iterate(Data.TYPE_VULNERABILITY):
+                        vulns_counter[l_vuln.level] += 1
+
+                    # Get the number of IP addresses and hostnames.
+                    total_hosts  = Database.count(Data.TYPE_RESOURCE,
+                                                       Resource.RESOURCE_DOMAIN)
+                    total_hosts += Database.count(Data.TYPE_RESOURCE,
+                                                       Resource.RESOURCE_IP)
+
+                # Substract the ones that were passed as targets.
+                discovered_hosts = total_hosts - len(Config.audit_scope.targets)
+
+                # Return the data in the expected format.
+                return {
+                    'vulns_number'     : vulns_number,
+                    'discovered_hosts' : discovered_hosts,
+                    'total_hosts'      : total_hosts,
+                    'vulns_by_level'   : {
+                        'info'     : vulns_counter['info'],
+                        'low'      : vulns_counter['low'],
+                        'medium'   : vulns_counter['medium'],
+                        'high'     : vulns_counter['high'],
+                        'critical' : vulns_counter['critical'],
+                    },
+                }
+
+            else:
+                # XXX TODO open the database manually here
+                raise NotImplementedError(
+                    "Querying finished audits is not implemented yet!")
+
+        except Exception:
+            Logger.log_error(traceback.format_exc())
 
 
     #----------------------------------------------------------------------
@@ -860,7 +924,15 @@ class WebUIPlugin(UIPlugin):
              - Timestamp.
         :rtype: list( tuple(str, str, str, int, bool, float) )
         """
-        return get_audit_log_lines(audit_name)
+        if (
+            audit_name in self.audit_stage and
+            self.audit_stage[audit_name] != "finish"
+        ):
+            return get_audit_log_lines(audit_name)
+        else:
+            # XXX TODO open the database manually here
+            raise NotImplementedError(
+                "Querying finished audits is not implemented yet!")
 
 
     #--------------------------------------------------------------------------
@@ -886,20 +958,46 @@ class WebUIPlugin(UIPlugin):
         """
         Implementation of: /plugin/details
 
+        Returns the full information for a plugin in the following format::
+            {
+                "plugin_id"           : str,
+                "descriptor_file"     : str,
+                "category"            : str,
+                "stage"               : str,
+                "stage_number"        : int,
+                "dependencies"        : tuple(str...),
+                "recursive"           : bool,
+                "plugin_module"       : str,
+                "plugin_class"        : str,
+                "display_name"        : str,
+                "description"         : str,
+                "version"             : str,
+                "author"              : str,
+                "copyright"           : str,
+                "license"             : str,
+                "website"             : str,
+                "plugin_args"         : dict(str -> str),
+                "plugin_passwd_args"  : set(str),
+                "plugin_config"       : dict(str -> str),
+                "plugin_extra_config" : dict(str -> dict(str -> str)),
+            }
+
         :param plugin_id: ID of the plugin to query.
         :type plugin_id: str
 
-        :returns: Plugin information.
-        :rtype: PluginInfo
+        :returns: Plugin information. Returns None if the plugin was not found.
+        :rtype: dict(str -> \\*) | None
         """
-        return get_plugin_info(plugin_id)    # XXX TODO encode as JSON
+        info = get_plugin_info(plugin_id)
+        if info:
+            return info.to_dict()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     #
     # Management methods
     #
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
 
     #--------------------------------------------------------------------------

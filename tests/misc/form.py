@@ -56,8 +56,8 @@ class Form(Information):
         :param method: HTTP method to submit the data.
         :type method: str
 
-        :param parameters: Form parameter names.
-        :type parameters: iterable(str)
+        :param parameters: Form parameters.
+        :type parameters: iterable(FormParam)
         """
 
         if not isinstance(url, str):
@@ -118,3 +118,93 @@ class Form(Information):
         if self.url in Config.audit_scope:
             return [Url(self.url, method = self.method)]
         return []
+
+
+#------------------------------------------------------------------------------
+class FormParam(Information):
+    """
+    HTML form parameter.
+    """
+
+    information_type = Information.INFORMATION_FORM_PARAM
+
+
+    # Valid parameter types.
+    VALID_TYPES = [
+        "checkbox",
+        "color",
+        "date",
+        "datetime",
+        "datetime-local",
+        "email",
+        "file",
+        "hidden",
+        "month",
+        "number",
+        "password",
+        "radio",
+        "range",
+        "reset",
+        "search",
+        "tel",
+        "text",
+        "time",
+        "url",
+        "week",
+    ]
+
+
+    #----------------------------------------------------------------------
+    def __init__(self, param_type, name, value):
+        """
+        :param param_type: Parameter type.
+            Must be one of the following values:
+             - "checkbox"
+             - "color"
+             - "date"
+             - "datetime"
+             - "datetime-local"
+             - "email"
+             - "file"
+             - "hidden"
+             - "month"
+             - "number"
+             - "password"
+             - "radio"
+             - "range"
+             - "reset"
+             - "search"
+             - "tel"
+             - "text"
+             - "time"
+             - "url"
+             - "week"
+        :type param_type: str
+
+        :param name: Parameter name.
+        :type name: str
+
+        :param value: Parameter value. Optional for most types.
+            The data type depends on the parameter type - for most types
+            it's a string, but for multiple-choice parameters it's a tuple
+            of strings.
+        :type value: str | tuple(str) | None
+        """
+
+        if not isinstance(param_type, str):
+            raise TypeError("Expected string, got %r instead" % type(param_type))
+        if not isinstance(name, str):
+            raise TypeError("Expected string, got %r instead" % type(name))
+
+        if not name:
+            raise ValueError("Parameter name is mandatory")
+        if param_type not in self.VALID_TYPES:
+            raise ValueError("Unknown parameter type: %r" % param_type)
+
+        # Set the properties.
+        self.__param_type = param_type
+        self.__name       = name
+        self.__value      = value
+
+        # Call the parent constructor.
+        super(FormParam, self).__init__()

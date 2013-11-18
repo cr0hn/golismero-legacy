@@ -28,18 +28,61 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
+from collections import defaultdict
+from backend.models import *
+from os.path import join, abspath, exists, split
+from os import listdir
+import yaml
+
+
 #----------------------------------------------------------------------
 #
 # Data structures
 #
 #----------------------------------------------------------------------
-from collections import defaultdict
-from backend.models import *
-from os.path import join
 
-REPORT_FORMATS = ["html", "txt", "csv"]
-REPORT_PLUGINS = ["html", "text", "rst"]
 
+REPORT_FORMATS           = []
+REPORT_PLUGINS           = []
+CONTENT_TYPES_BY_FORMAT  = {}
+EXTENSIONS_BY_FORMAT     = {}
+
+#
+# Get plugin info from files
+#
+g_folder = (split(__file__)[0])
+
+for f in listdir(g_folder):
+    if f.endswith("yaml"):
+        l_file = join(g_folder, f)
+        if exists(l_file):
+            info = yaml.load(file(l_file))
+            REPORT_FORMATS.extend(info.get("formats", None))
+            REPORT_PLUGINS.extend(info.get("plugins", None))
+            CONTENT_TYPES_BY_FORMAT.update(info.get("content_types", None))
+            EXTENSIONS_BY_FORMAT.update(info.get("extension_by_format", None))
+
+# Info can't be loaded
+if not REPORT_FORMATS:
+    REPORT_FORMATS = ["html", "txt", "rst"]
+if not REPORT_PLUGINS:
+    REPORT_PLUGINS = ["html", "text", "rst"]
+if not CONTENT_TYPES_BY_FORMAT:
+    CONTENT_TYPES_BY_FORMAT = {
+        'xml'    : 'application/xml',
+        'html'   : 'text/html',
+        'rst'    : 'text/html',
+        'text'   : 'text/plain'
+    }
+if not EXTENSIONS_BY_FORMAT:
+    EXTENSIONS_BY_FORMAT = {
+        'xml'    : 'xml',
+        'html'   : 'html',
+        'rst'    : 'rst',
+        'text'   : 'txt',
+        'txt'    : 'txt',
+        'json'   : 'json'
+    }
 
 class GoLismeroAuditProgress(object):
     """
@@ -83,6 +126,7 @@ class GoLismeroAuditProgress(object):
         # Store original json
         self.__json             = data
 
+
     #----------------------------------------------------------------------
     @property
     def to_json(self):
@@ -90,6 +134,7 @@ class GoLismeroAuditProgress(object):
         Return the JSON object
         """
         return self.__json
+
 
 class GoLismeroAuditSummary(object):
     """
@@ -109,6 +154,7 @@ class GoLismeroAuditSummary(object):
 
     PROPERTIES     = ["vulns_number", "discovered_hosts", "total_hosts", "vulns_by_level"]
 
+
     #----------------------------------------------------------------------
     def __init__(self, data):
         """
@@ -120,10 +166,10 @@ class GoLismeroAuditSummary(object):
            'total_hosts'             = int
            'vulns_by_level'          = {
               'info'     : int,
-        	  'low'      : int,
-        	  'medium'   : int,
-        	  'high'     : int,
-        	  'critical' : int,
+              'low'      : int,
+              'medium'   : int,
+              'high'     : int,
+              'critical' : int,
         }
 
         :param data: dict with info.
@@ -141,6 +187,7 @@ class GoLismeroAuditSummary(object):
         # Store original json
         self.__json             = data
 
+
     #----------------------------------------------------------------------
     @property
     def to_json(self):
@@ -148,8 +195,6 @@ class GoLismeroAuditSummary(object):
         Return the JSON object
         """
         return self.__json
-
-
 
 
 class GoLismeroAuditData(object):
@@ -178,6 +223,7 @@ class GoLismeroAuditData(object):
     ]
 
     COMPLEX_PROPERTIES = ["enable_plugins", "user", "targets"]
+
 
     #----------------------------------------------------------------------
     def __init__(self):
@@ -215,6 +261,7 @@ class GoLismeroAuditData(object):
             setattr(c, k, v)
 
         return c
+
 
     #----------------------------------------------------------------------
     @classmethod
@@ -263,6 +310,7 @@ class GoLismeroAuditData(object):
 
         return c
 
+
     #----------------------------------------------------------------------
     @property
     def to_json(self):
@@ -273,29 +321,30 @@ class GoLismeroAuditData(object):
           "audit_name": "asdfasdf",
           "targets": [ "127.0.0.1", "mysite.com" ],
           "enabled_plugins": [
-        	{
-        	  "plugin_name": "openvas",
-        	  "params": [
-        		{
-        		  "param_name": "profile",
-        		  "param_value": "Full and fast"
-        		},
-        		{
-        		  "param_name": "user",
-        		  "param_value": "admin"
-        		},
-        		{
-        		  "param_name": "password",
-        		  "param_value": "admin"
-        		}
-        	  ]
-        	}
+            {
+              "plugin_name": "openvas",
+              "params": [
+                {
+                  "param_name": "profile",
+                  "param_value": "Full and fast"
+                },
+                {
+                  "param_name": "user",
+                  "param_value": "admin"
+                },
+                {
+                  "param_name": "password",
+                  "param_value": "admin"
+                }
+              ]
+            }
           ],
           "disabled_plugins": ["spider","nikto"]
 
         :returns: JSON with info.
         """
         return { k : v for k, v in self.__dict__.iteritems() }
+
 
     #----------------------------------------------------------------------
     @property
@@ -320,6 +369,7 @@ class GoLismeroAuditData(object):
             'state'  : self.audit_state
         }
 
+
     #----------------------------------------------------------------------
     @property
     def to_json_console(self):
@@ -343,11 +393,6 @@ class GoLismeroAuditData(object):
         # Add targets
         m_config['targets']         = self.__dict__["targets"]
 
-        # Add plugins enabled
-        m_config['plugin_load_overrides']  = []
-        m_config['disable_plugins'] = ["all"]
-        m_config['enable_plugins'] = []
-
         #
         # FIXME in next version:
         #
@@ -355,36 +400,44 @@ class GoLismeroAuditData(object):
         # After, core will choice what to serve.
         #
         m_config['reports'] = ','.join([join(self.store_path, "report.%s" % x) for x in REPORT_FORMATS])
-        #m_config['reports'] += "," + join(self.store_path, "report.csv")
 
         #
         # Plugins
         #
-        m_tmp_plugin_args           = {}
-        # Add plugins config
-        for p in self.enable_plugins:
-            l_plugin_name = p["plugin_name"]
+        # Add plugins enabled
+        m_config['disable_plugins']        = None
+        m_config['enable_plugins']         = []
 
-            m_config['plugin_load_overrides'].append((True, l_plugin_name))
+        if len(self.enable_plugins) == 0 or \
+           len(self.enable_plugins) == 1 and self.enable_plugins[0]['plugin_name'] == "all" : # No plugins selected -> enable all
+            m_config['disable_plugins']        = []
+            m_config['plugin_load_overrides']  = []
+            m_config['enable_plugins']         = ["all"]
+        else: # Plugins selected -> enable one by one
+            m_config['disable_plugins']        = ["all"]
+            m_config['enable_plugins']         = []
+            m_config['plugin_load_overrides']  = []
+            m_tmp_plugin_args                  = {}
 
-            # Plugins params
-            for pp in p.get("params", []):
-                l_plugin_param_name  = pp["param_name"]
-                l_plugin_param_value = pp["param_value"]
-                if not l_plugin_name in m_tmp_plugin_args:
-                    m_tmp_plugin_args[l_plugin_name] = {}
-                m_tmp_plugin_args[l_plugin_name][l_plugin_param_name] = l_plugin_param_value
+            # Add plugins config
+            for p in self.enable_plugins:
+                l_plugin_name = p["plugin_name"]
+                m_config['plugin_load_overrides'].append((True, l_plugin_name))
 
-        m_config['plugin_args'] = m_tmp_plugin_args
+                # Plugins params
+                for pp in p.get("params", []):
+                    l_plugin_param_name  = pp["param_name"]
+                    l_plugin_param_value = pp["param_value"]
+                    if not l_plugin_name in m_tmp_plugin_args:
+                        m_tmp_plugin_args[l_plugin_name] = {}
+                    m_tmp_plugin_args[l_plugin_name][l_plugin_param_name] = l_plugin_param_value
 
-        # Configure to golismero format
-        if m_config['plugin_load_overrides']:
-            m_config['enable_plugins'] =  ','.join(x[1] for x in m_config['plugin_load_overrides'])
-            m_config['enable_plugins'] += ','
-            m_config['enable_plugins'] += ','.join(REPORT_PLUGINS) # Report plugins
+            m_config['plugin_args'] = m_tmp_plugin_args
 
-        # No plugins?
-        if len(m_config['plugin_load_overrides']) == 0:
-            m_config['plugin_load_overrides'] = ["all"]
+            # Configure to golismero format
+            if m_config['plugin_load_overrides']:
+                m_config['enable_plugins'] =  ','.join(x[1] for x in m_config['plugin_load_overrides'])
+                m_config['enable_plugins'] += ','
+                m_config['enable_plugins'] += ','.join(REPORT_PLUGINS) # Report plugins
 
         return m_config

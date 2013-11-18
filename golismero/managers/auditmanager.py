@@ -134,7 +134,7 @@ class AuditManager (object):
             raise TypeError(
                 "Expected AuditConfig, got %r instead" % type(audit_config))
 
-        # Check the audit config.
+        # Check the audit config against the UI plugin.
         self.orchestrator.uiManager.check_params(audit_config)
 
         # Create the audit.
@@ -316,6 +316,10 @@ class Audit (object):
             raise TypeError(
                 "Expected AuditConfig, got %r instead" % type(audit_config))
 
+        # XXX DEBUG
+        ##from pprint import pprint
+        ##pprint(audit_config.to_dictionary())
+
         # Keep the audit settings.
         self.__audit_config = audit_config
 
@@ -471,7 +475,7 @@ class Audit (object):
              - "stage_cycles": [dict(int -> int)] Map of stage numbers and
                times each stage ran.
         Future versions of GoLismero may include more keys.
-        :rtype: dict(str -> *)
+        :rtype: dict(str -> \\*)
         """
         return {
             "current_stage":     self.__current_stage,

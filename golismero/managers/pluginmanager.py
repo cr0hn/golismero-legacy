@@ -38,6 +38,7 @@ from ..api.logger import Logger
 from ..api.plugin import UIPlugin, ImportPlugin, TestingPlugin, ReportPlugin
 from ..common import Configuration, OrchestratorConfig, AuditConfig, \
     get_default_plugins_folder
+from ..managers.processmanager import PluginContext
 from ..messaging.codes import MessageCode
 
 from collections import defaultdict
@@ -472,6 +473,7 @@ class PluginInfo (object):
         instance.__license             = self.__license
         instance.__website             = self.__website
         instance.__plugin_args         = self.__plugin_args.copy()
+        instance.__plugin_passwd_args  = self.__plugin_passwd_args.copy()
         instance.__plugin_config       = self.__plugin_config.copy()
         instance.__plugin_extra_config = {
             k: v.copy()
@@ -480,6 +482,65 @@ class PluginInfo (object):
 
         # Return the new instance.
         return instance
+
+
+    #--------------------------------------------------------------------------
+    def __repr__(self):
+        return (
+            "<PluginInfo instance at %x: "
+            "id=%s, "
+            "stage=%s, "
+            "recursive=%s, "
+            "dependencies=%r, "
+            "args=%r, "
+            "config=%r, "
+            "extra=%r"
+            ">"
+        ) % (
+            id(self),
+            self.plugin_id,
+            self.stage,
+            self.recursive,
+            self.dependencies,
+            self.plugin_args,
+            self.plugin_config,
+            self.plugin_extra_config,
+        )
+
+
+    #--------------------------------------------------------------------------
+    def to_dict(self):
+        """
+        Convert this PluginInfo object into a dictionary.
+
+        :returns: Converted PluginInfo object.
+        :rtype: dict(str -> \\*)
+        """
+        return {
+            "plugin_id"           : self.plugin_id,
+            "descriptor_file"     : self.descriptor_file,
+            "category"            : self.category,
+            "stage"               : self.stage,
+            "stage_number"        : self.stage_number,
+            "dependencies"        : self.dependencies,
+            "recursive"           : self.recursive,
+            "plugin_module"       : self.plugin_module,
+            "plugin_class"        : self.plugin_class,
+            "display_name"        : self.display_name,
+            "description"         : self.description,
+            "version"             : self.version,
+            "author"              : self.author,
+            "copyright"           : self.copyright,
+            "license"             : self.license,
+            "website"             : self.website,
+            "plugin_args"         : self.plugin_args.copy(),
+            "plugin_passwd_args"  : self.plugin_passwd_args.copy(),
+            "plugin_config"       : self.plugin_config.copy(),
+            "plugin_extra_config" : {
+                k: v.copy()
+                for (k, v) in self.plugin_extra_config.iteritems()
+            }
+        }
 
 
     #--------------------------------------------------------------------------
@@ -1186,14 +1247,16 @@ class AuditPluginManager (PluginManager):
                     try:
                         pluginManager.get_plugin_by_id(plugin_id)
                     except KeyError:
-                        warnings.warn("Unknown plugin ID: %s" % plugin_id)
+                        warnings.warn(
+                            "Unknown plugin ID: %s" % plugin_id,
+                            RuntimeWarning)
                 elif status == 2:
                     warnings.warn(
                         "Some arguments undefined for plugin ID: %s" %
-                        plugin_id)
+                        plugin_id, RuntimeWarning)
 
         # Check the plugin parameters.
-        self.__check_plugin_params()
+        self.__check_plugin_params(auditConfig)
 
         # Calculate the dependencies.
         self.__calculate_dependencies()
@@ -1520,7 +1583,7 @@ class AuditPluginManager (PluginManager):
 
 
     #--------------------------------------------------------------------------
-    def __check_plugin_params(self):
+    def __check_plugin_params(self, audit_config):
         """
         Check the plugin parameters.
         Plugins that fail this check are automatically disabled.
@@ -1530,6 +1593,16 @@ class AuditPluginManager (PluginManager):
         for plugin_id in plugins:
             plugin  = self.load_plugin_by_id(plugin_id)
             new_ctx = orchestrator.build_plugin_context(None, plugin, None)
+            new_ctx = PluginContext(
+                orchestrator_pid = new_ctx._orchestrator_pid,
+                orchestrator_tid = new_ctx._orchestrator_tid,
+                       msg_queue = new_ctx.msg_queue,
+                    ack_identity = None,
+                     plugin_info = self.get_plugin_by_id(plugin_id),
+                      audit_name = audit_config.audit_name,
+                    audit_config = audit_config,
+                     audit_scope = new_ctx.audit_scope,
+            )
             old_ctx = Config._context
             try:
                 Config._context = new_ctx
@@ -1603,8 +1676,16 @@ class AuditPluginManager (PluginManager):
     #--------------------------------------------------------------------------
     def get_plugin_info_from_instance(self, instance):
 
-        # Cached by the global plugin manager.
-        return self.pluginManager.get_plugin_info_from_instance(instance)
+        # Get the original PluginInfo from the global plugin manager.
+        plugin_id, info = self.pluginManager.get_plugin_info_from_instance(
+                                                                  instance)
+
+        # Try getting the customized PluginInfo object.
+        # If not found, return the original PluginInfo object.
+        try:
+            return plugin_id, self.get_plugin_by_id(plugin_id)
+        except KeyError:
+            return plugin_id, info
 
 
     #--------------------------------------------------------------------------

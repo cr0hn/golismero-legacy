@@ -285,17 +285,17 @@ def parse_files_(path_in, path_out, debug=False):
 
     return m_correlation
     #m_correlation = defaultdict(list)
-    for e in f(files, chuncks):
-        r = p.map(func, e)
+    #for e in f(files, chuncks):
+        #r = p.map(func, e)
 
-        # Filter results
-        for x in r:
-            for fam,v in x.iteritems():
-                m_correlation[fam].append(v)
+        ## Filter results
+        #for x in r:
+            #for fam,v in x.iteritems():
+                #m_correlation[fam].append(v)
 
-    log_file.close()
+    #log_file.close()
 
-    return m_correlation
+    #return m_correlation
 
 
 #

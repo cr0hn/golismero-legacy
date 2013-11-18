@@ -138,7 +138,7 @@ class GoLismeroFacadeAudit(object):
     @staticmethod
     def get_state(audit_id):
         """
-        Get audit state. Each call updates the state of provided audit.
+        Get audit state and update it. Each call updates the state of provided audit.
 
         :param audit_id: audit ID.
         :type audit_id: str
@@ -153,37 +153,45 @@ class GoLismeroFacadeAudit(object):
 
         # Call to GoLismero
         try:
-
             m_audit = Audit.objects.get(pk=audit_id)
 
-            # If audit is new, return state
-            if m_audit.audit_state == "new":
-                return "new"
-
-            m_new_state = None
-            m_total = 0
-            for f in REPORT_FORMATS:
-                l_folder =  get_user_settings_folder()
-                l_id     = str(m_audit.id)
-                l_format = f
-                l_path   = "%s%s/report.%s" % (l_folder, l_id, f)
-
-                if os.path.exists(l_path):
-                    m_total +=1
-
-            if m_total == len(REPORT_FORMATS):
-                m_new_state = "finished"
-            else:
-                m_new_state = "running"
+            # If audit is new or finished return
+            if m_audit.audit_state != "running":
+                return m_audit.audit_state
 
             #
             # FIXME: When GoLismero core works, do that instead of above commands.
             #
-            #try:
-                #m_new_state = AuditBridge.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
-            #except ExceptionAuditNotFound:
-                ## Audit not working
-                #m_new_state = "finished"
+            m_new_state = None
+            try:
+                m_new_state = AuditBridge.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+
+                # Do that because AuditBridge regurns the STAGE, not the state
+                if m_new_state != "finished":
+                    m_new_state = "running"
+            except ExceptionAuditNotFound:
+                # Audit not working
+                raise GoLismeroFacadeAuditNotFoundException()
+
+            #
+            # Ensure that golismero was generated all reports
+            #
+            if m_new_state == "finished":
+                m_new_state = None
+                m_total = 0
+                for f in REPORT_FORMATS:
+                    l_folder =  get_user_settings_folder()
+                    l_id     = str(m_audit.id)
+                    l_format = f
+                    l_path   = "%s%s/report.%s" % (l_folder, l_id, f)
+
+                    if os.path.exists(l_path):
+                        m_total +=1
+
+                if m_total == len(REPORT_FORMATS):
+                    m_new_state = "finished"
+                else:
+                    m_new_state = "running"
 
             #  Update audit state into BBDD
             if m_audit.audit_state != m_new_state:
@@ -214,6 +222,9 @@ class GoLismeroFacadeAudit(object):
         # Call to GoLismero
         try:
 
+            # Update state
+            GoLismeroFacadeAudit.get_state(audit_id)
+
             m_audit = Audit.objects.get(pk=audit_id)
 
             # If audit are not running return error.
@@ -221,7 +232,14 @@ class GoLismeroFacadeAudit(object):
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is not running. Can't obtain progress from not running audits." % str(audit_id))
 
             try:
-                return AuditBridge.get_progress(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+
+                r = AuditBridge.get_progress(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+
+                if r:
+                    return r
+                else:
+                    raise GoLismeroFacadeAuditFinishedException()
+
             except ExceptionAuditNotFound:
                 raise GoLismeroFacadeAuditFinishedException()
 
@@ -280,17 +298,12 @@ class GoLismeroFacadeAudit(object):
 
         :raises: GoLismeroFacadeReportUnknownFormatException, GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeReportNotAvailableException
         """
-        EXTENSIONS_BY_FORMAT = {
-            'xml'    : 'xml',
-            'html'   : 'html',
-            'rst'    : 'rst',
-            'text'   : 'txt',
-            'csv'    : 'csv'
-        }
 
         try:
             # Check report format
-            if report_format not in REPORT_FORMATS:
+            report_format = report_format.lower().strip()
+
+            if report_format not in EXTENSIONS_BY_FORMAT:
                 raise GoLismeroFacadeReportUnknownFormatException("Unknown report format '%s'." % report_format)
 
             m_audit = Audit.objects.get(pk=audit_id)
@@ -309,7 +322,6 @@ class GoLismeroFacadeAudit(object):
                 raise GoLismeroFacadeReportNotAvailableException("Requested report is not available")
 
             # Get report
-
             return file(path.join(l_path, "report.%s" % EXTENSIONS_BY_FORMAT[report_format]), "rU")
 
         except ObjectDoesNotExist:
@@ -329,15 +341,16 @@ class GoLismeroFacadeAudit(object):
 
         :returns: return a dic as format:
         {
-        'vulns_number'            = int
-        'discovered_hosts'        = int # Host discovered into de scan process
-        'total_hosts'             = int
-        'vulns_by_level'          = {
-        'info'     : int,
-        'low'      : int,
-        'medium'   : int,
-        'high'     : int,
-        'critical' : int,
+           'vulns_number'            = int
+           'discovered_hosts'        = int # Host discovered into de scan process
+           'total_hosts'             = int
+           'vulns_by_level'          = {
+              'info'     : int,
+              'low'      : int,
+              'medium'   : int,
+              'high'     : int,
+              'critical' : int,
+            }
         }
 
         :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException
@@ -389,7 +402,7 @@ class GoLismeroFacadeAudit(object):
             l_audit_id = str(l_audit.id)
 
             # Update the state for each audit
-            GoLismeroFacadeAudit.get_state(l_audit_id)
+            #GoLismeroFacadeAudit.get_state(l_audit_id)
 
             # Store audit info
             m_return.append(GoLismeroFacadeAudit.get_audit(l_audit_id))
@@ -477,35 +490,40 @@ class GoLismeroFacadeAudit(object):
             m_enable_plugins        = data.get('enable_plugins', [])
 
             # Not plugins selected
-            if len(m_enable_plugins) == 0:
-                raise GoLismeroFacadeAuditNotPluginsException("Not plugins selected.")
+            #if len(m_enable_plugins) == 0:
+                #raise GoLismeroFacadeAuditNotPluginsException("Not plugins selected.")
 
 
             # Transform "all" plugins in GoLismero format. For GoLismero, an empty list means
             # all plugins selected.
-            if len(m_enable_plugins) == 1:
-                if isinstance(m_enable_plugins, basestring):
-                    if m_enable_plugins[0].strip().lower() == "all":
-                        m_enable_plugins = []
+            #if len(m_enable_plugins) == 1:
+                #if isinstance(m_enable_plugins, basestring):
+                    #if m_enable_plugins[0].strip().lower() == "all":
+                        #m_enable_plugins = []
 
             m_enable_plugins_stored = []
 
-            for p in m_enable_plugins:
+            if len(m_enable_plugins) == 0:
                 l_plugin             = Plugins()
-                l_plugin.plugin_name = p.get("plugin_name")
+                l_plugin.plugin_name = "all"
                 l_plugin.save()
-
-                # Plugins params
-                for pp in p.get("params", []):
-                    l_param = PluginParameters()
-                    l_param.param_name    = pp['param_name']
-                    l_param.param_value   = pp['param_value']
-                    l_param.plugin        = l_plugin
-                    l_param.audit         = m_audit
-                    l_param.save()
-                # Add to total
                 m_enable_plugins_stored.append(l_plugin)
+            else:
+                for p in m_enable_plugins:
+                    l_plugin             = Plugins()
+                    l_plugin.plugin_name = p.get("plugin_name")
+                    l_plugin.save()
 
+                    # Plugins params
+                    for pp in p.get("params", []):
+                        l_param = PluginParameters()
+                        l_param.param_name    = pp['param_name']
+                        l_param.param_value   = pp['param_value']
+                        l_param.plugin        = l_plugin
+                        l_param.audit         = m_audit
+                        l_param.save()
+                    # Add to total
+                    m_enable_plugins_stored.append(l_plugin)
 
             # Relations
             for t in m_targets_stored:
@@ -592,12 +610,13 @@ class GoLismeroFacadeAudit(object):
             #
             # Create dir to store audit info
             #
-            if path.exists(l_path):
-                raise GoLismeroFacadeAuditUnknownException("Storage folder for audit already exits: '%s'" % l_path)
+            ##if path.exists(l_path):
+            ##    raise GoLismeroFacadeAuditUnknownException("Storage folder for audit already exists: '%s'" % l_path)
             try:
                 os.mkdir(l_path)
             except Exception,e:
-                raise GoLismeroFacadeAuditUnknownException("Can't create audit files in: '%s'" % l_path)
+                ##raise GoLismeroFacadeAuditUnknownException("Can't create audit files in: '%s'" % l_path)
+                pass
 
             # Change the state
             m_audit.audit_state = "running"
@@ -629,7 +648,10 @@ class GoLismeroFacadeAudit(object):
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is '%s'. Only running audits can be stopped." % (str(m_audit.id), m_audit.audit_state))
 
             # Send to GoLismero core
-            AuditBridge.stop(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+            r = AuditBridge.stop(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+
+            if r == False:
+                raise GoLismeroFacadeAuditStateException()
 
             # Change the state
             m_audit.audit_state = "stopped"
@@ -662,7 +684,11 @@ class GoLismeroFacadeAudit(object):
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is '%s'. Only running audits can be paused." % (str(m_audit.id), m_audit.audit_state))
 
             # Send to GoLismero core
-            AuditBridge.stop(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+            r = AuditBridge.stop(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+
+            if r == False:
+                raise GoLismeroFacadeAuditStateException()
+
 
             # Change the state
             m_audit.audit_state = "paused"

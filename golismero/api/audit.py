@@ -165,7 +165,7 @@ def get_audit_stats(audit_name = None):
          - "stage_cycles": [dict(int -> int)] Map of stage numbers
            and times each stage ran.
     Future versions of GoLismero may include more keys.
-    :rtype: dict(str -> *)
+    :rtype: dict(str -> \\*)
     """
     return Config._context.remote_call(
         MessageCode.MSG_RPC_AUDIT_STATS, audit_name)

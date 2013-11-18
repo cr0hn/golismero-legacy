@@ -1,0 +1,31 @@
+formats:
+    - html
+    - txt
+    - json
+    - xml
+    - rst
+
+
+plugins:
+    - html
+    - text
+    - json
+    - xml
+    - rst
+
+
+content_types:
+    xml    : 'application/xml'
+    html   : 'text/html'
+    rst    : 'text/html'
+    text   : 'text/plain'
+    txt    : 'text/plain'
+    json   : 'application/json'
+
+extension_by_format:
+    xml    : xml
+    html   : html
+    rst    : rst
+    text   : txt
+    txt    : txt
+    json   : json

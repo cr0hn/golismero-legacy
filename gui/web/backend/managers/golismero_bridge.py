@@ -45,13 +45,12 @@ class ExceptionAuditNotFound(Exception):
     """Audit not found."""
     pass
 
-
 class ExceptionAuditUnknown(Exception):
     pass
 
-
 class ExceptionAudit(Exception):
     pass
+
 
 #----------------------------------------------------------------------
 #
@@ -63,12 +62,15 @@ class AuditBridge(object):
     Audit bridge between GoLismero <-> GUI
     """
 
+
     #----------------------------------------------------------------------
     #
     # Unidirectional methods
     #
     #----------------------------------------------------------------------
 
+
+    #----------------------------------------------------------------------
     @staticmethod
     def new_audit(data):
         """
@@ -96,7 +98,6 @@ class AuditBridge(object):
                 raise ExceptionAudit()
 
 
-
     #----------------------------------------------------------------------
     @staticmethod
     def stop(audit_id):
@@ -112,7 +113,6 @@ class AuditBridge(object):
             BRIDGE.RPC.call("audit/cancel", audit_id)
 
 
-
     #----------------------------------------------------------------------
     @staticmethod
     def resume(audit_id): #
@@ -126,10 +126,14 @@ class AuditBridge(object):
         """
         pass
 
+
     #----------------------------------------------------------------------
     #
-    # Getters methods
+    # Getter methods
     #
+    #----------------------------------------------------------------------
+
+
     #----------------------------------------------------------------------
     @staticmethod
     def get_log(audit_id):
@@ -143,10 +147,10 @@ class AuditBridge(object):
         [
           {
              'plugin_id'     : str,
-        	 'text'          : str,
-        	 'verbosity'     : int,
-        	 'is_error'      : bool,
-        	 'timestamp'     : float
+             'text'          : str,
+             'verbosity'     : int,
+             'is_error'      : bool,
+             'timestamp'     : float
           }
         ]
         :rtype: list(dict)
@@ -168,7 +172,6 @@ class AuditBridge(object):
 
                 for r in rpc_response
             ]
-
 
 
     #----------------------------------------------------------------------
@@ -205,6 +208,7 @@ class AuditBridge(object):
                 }
             })
 
+
     #----------------------------------------------------------------------
     @staticmethod
     def get_state(audit_id):
@@ -221,18 +225,15 @@ class AuditBridge(object):
         """
         if not BRIDGE.SIMULATE:
             #rpc_response, a , b = BRIDGE.RPC.call("audit/state", audit_id)
-            print BRIDGE.RPC.call("audit/state", audit_id)
-            #print rpc_response
+            r = BRIDGE.RPC.call("audit/state", audit_id)
 
-            #print rpc_response
-            #if not rpc_response:
-                #return "finished"
+            if not r:
+                raise ExceptionAuditNotFound("Audit not found")
+            else:
+                # Transform...
+                return "finished" if r == "finish" else r
 
-            #return rpc_response[0][1]
         return "running"
-
-
-
 
 
     #----------------------------------------------------------------------
@@ -245,46 +246,41 @@ class AuditBridge(object):
         :type audit_id: str
 
         :returns: GoLismeroAuditProgress object
-        :rtype: GoLismeroAuditProgress
+        :rtype: GoLismeroAuditProgress | None
 
         :raises: ExceptionAuditNotFound
         """
         m_return = None
 
         if not BRIDGE.SIMULATE:
-            rpc_response = BRIDGE.RPC.call("audit/state", audit_id)
+            rpc_response = BRIDGE.RPC.call("audit/progress", audit_id)
 
             if not rpc_response:
                 raise ExceptionAuditNotFound()
+            try:
+                steps         = rpc_response[0]
+                current_state = rpc_response[1]
 
-            steps         = rpc_response[0][0]
-            current_state = rpc_response[0][1]
-            tests_remain  = 0
-            tests_done    = 0
-            for t in rpc_response[2]:
-                l_progress = t[2] # Value between 0.0 - 100.0
+                tests_remain  = 0
+                tests_done    = 0
 
-                if l_progress == 100.0:
-                    tests_done   += 1
-                else:
-                    tests_remain +=1
+                for t in rpc_response[2]:
+                    l_progress = t[2] # Value between 0.0 - 100.0
 
-            m_return = {
-                'current_stage' : current_state,
-                'steps'         : int(steps),
-                'tests_remain'  : tests_remain,
-                'tests_done'    : tests_done
-            }
+                    if l_progress == 100.0:
+                        tests_done   += 1
+                    else:
+                        tests_remain +=1
 
-        else:
+                m_return = {
+                    'current_stage' : current_state,
+                    'steps'         : int(steps),
+                    'tests_remain'  : tests_remain,
+                    'tests_done'    : tests_done
+                }
 
-            m_return = {
-                'current_stage' : "recon",
-                'steps'         : 1,
-                'tests_remain'  : 21,
-                'tests_done'     : 5
-            }
-        return GoLismeroAuditProgress(m_return)
+                return GoLismeroAuditProgress(m_return)
 
-
-
+            except IndexError:
+                return None
+        return None

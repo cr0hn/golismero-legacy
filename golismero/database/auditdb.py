@@ -48,11 +48,9 @@ from os import path, makedirs
 
 import collections
 import md5
-import posixpath
 import sqlite3
 import threading
 import time
-import urlparse  # cannot use ParsedURL here!
 import warnings
 
 
@@ -2497,14 +2495,14 @@ class AuditDB (BaseAuditDB):
         :type audit_config: AuditConfig
         """
         if audit_config.audit_db == ":memory:":
-                return AuditMemoryDB(audit_config)
+            return AuditMemoryDB(audit_config)
         return AuditSQLiteDB(audit_config)
 
 
     #--------------------------------------------------------------------------
     @classmethod
     def get_config_from_closed_database(cls, audit_db, audit_name = None):
-        if audit_config.audit_db == ":memory":
+        if audit_db == ":memory:":
             raise ValueError(
                 "Operation not supported for in-memory database!")
         return AuditSQLiteDB.get_config_from_closed_database(
