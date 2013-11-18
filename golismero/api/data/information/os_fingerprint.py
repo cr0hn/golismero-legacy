@@ -30,7 +30,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["OSFingerprint", "get_os_fingerprint"]
+__all__ = ["OSFingerprint", "get_os_fingerprint", "get_all_os_fingerprints"]
 
 from . import Information
 from .. import identity, keep_newer, keep_greater
@@ -51,18 +51,35 @@ def get_os_fingerprint(data):
     """
 
     # Get all OS fingerprints associated with the given Data object.
-    fingerprints = data.get_associated_informations_by_category(
-        Information.INFORMATION_OS_FINGERPRINT)
+    fingerprints = get_all_os_fingerprints(data)
 
     # If no fingerprints were found, return None.
     if not fingerprints:
         return None
 
-    # Sort them by accuracy.
-    accurate = sorted(fingerprints, key=(lambda x: x.accuracy))
+    # Return the first one, that is, the one with the greater accuracy value.
+    return fingerprints[0]
 
-    # Return the last one, that is, the one with the greater accuracy value.
-    return accurate[-1]
+
+#------------------------------------------------------------------------------
+def get_all_os_fingerprints(data):
+    """
+    Get all OS fingerprints for the given Data object, if any, sorted by level
+    of accuracy (more accurate fingerprints first).
+
+    :param data: Data object to query.
+    :type data: Data
+
+    :returns: OS fingerprints.
+    :rtype: list(OSFingerprint)
+    """
+
+    # Get all OS fingerprints associated with the given Data object.
+    fingerprints = data.get_associated_informations_by_category(
+        Information.INFORMATION_OS_FINGERPRINT)
+
+    # Sort them by accuracy, more accurate fingerprints first.
+    return sorted(fingerprints, key=(lambda x: 100.0 - x.accuracy))
 
 
 #------------------------------------------------------------------------------
@@ -147,7 +164,8 @@ class OSFingerprint(Information):
 
     #--------------------------------------------------------------------------
     def __str__(self):
-        return self.__name if self.__name else self.__cpe
+        name = self.__name if self.__name else self.__cpe
+        return "%.2f%% - %s" % (self.accuracy, name)
 
 
     #--------------------------------------------------------------------------
