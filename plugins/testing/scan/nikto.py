@@ -38,7 +38,7 @@ from golismero.api.external import run_external_tool, \
      find_cygwin_binary_in_path, tempfile
 from golismero.api.logger import Logger
 from golismero.api.net.scraper import extract_from_text
-from golismero.api.net.web_utils import urljoin
+from golismero.api.net.web_utils import parse_url, urljoin
 from golismero.api.plugin import ImportPlugin, TestingPlugin
 from golismero.api.data.vulnerability.vuln_utils import extract_vuln_ids
 
@@ -78,9 +78,7 @@ class NiktoPlugin(TestingPlugin):
             "-nointeractive",
             ##"-useproxy",
         ]
-        if config:
-            args = ["-config", config] + args
-        for option in ("Pause", "timeout", "Tuning"):
+        for option in ("Pause", "timeout", "Tuning", "plugins"):
             value = Config.plugin_args.get(option.lower(), None)
             if value:
                 args.extend(["-" + option, value])
@@ -92,8 +90,50 @@ class NiktoPlugin(TestingPlugin):
             args.append("-output")
             args.append(output)
 
-            # Run Nikto and parse the output.
-            return self.run_nikto(info, output, nikto_script, args)
+            # If we need to set the proxy or the cookies, we'll have to create
+            # a temporary config file with the modified settings, since there's
+            # no way of passing these options through the command line.
+            if Config.audit_config.proxy_addr or Config.audit_config.cookie:
+
+                # Make sure we have a config file.
+                if not config:
+                    raise ValueError("Missing configuration file!")
+
+                # Create a temporary config file.
+                with tempfile(suffix = ".cfg") as tmp_config:
+
+                    # Copy the contents of the supplied config file.
+                    with open(config, "rU") as f:
+                        tmp_config.write( f.read() )
+
+                    # Append the new settings.
+                    if Config.audit_config.proxy_addr:
+                        parsed = parse_url(Config.audit_config.proxy_addr)
+                        tmp_config.write("PROXYHOST=%s\n" % parsed.host)
+                        tmp_config.write("PROXYPORT=%s\n" % parsed.port)
+                        if Config.audit_config.proxy_user:
+                            tmp_config.write("PROXYUSER=%s\n" %
+                                             Config.audit_config.proxy_user)
+                        if Config.audit_config.proxy_pass:
+                            tmp_config.write("PROXYPASS=%s\n" %
+                                             Config.audit_config.proxy_pass)
+                    if Config.audit_config.cookie:
+                        tmp_config.write("STATIC-COOKIE=%s\n" %
+                                         Config.audit_config.cookie)
+
+                    # Set the new config file.
+                    args = ["-config", tmp_config.name] + args
+
+                    # Run Nikto and parse the output.
+                    return self.run_nikto(info, output, nikto_script, args)
+
+            # Otherwise, just use the supplied config file.
+            else:
+                if config:
+                    args = ["-config", config] + args
+
+                # Run Nikto and parse the output.
+                return self.run_nikto(info, output, nikto_script, args)
 
 
     #--------------------------------------------------------------------------
@@ -134,16 +174,18 @@ class NiktoPlugin(TestingPlugin):
             config = abspath(config)
             if not exists(config):
                 config = "/etc/nikto.conf"
-                if not exists(config):
-                    config = Config.plugin_args["config"]
-                    if config and exists(config):
-                        config = abspath(config)
-                    else:
-                        msg = "Nikto config file not found"
-                        if config:
-                            msg += ". File: %s" % config
-                        Logger.log_error(msg)
-                        raise RuntimeError(msg)
+        else:
+            config = "/etc/nikto.conf"
+        if not exists(config):
+            config = Config.plugin_args["config"]
+            if config:
+                config = abspath(config)
+            if not config or not exists(config):
+                msg = "Nikto config file not found"
+                if config:
+                    msg += ". File: %s" % config
+                Logger.log_error(msg)
+                raise RuntimeError(msg)
 
         # Return the paths.
         return nikto_script, config
