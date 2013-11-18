@@ -45,6 +45,8 @@ import yaml
 REPORT_FORMATS           = []
 REPORT_PLUGINS           = []
 CONTENT_TYPES_BY_FORMAT  = {}
+EXTENSIONS_BY_FORMAT     = {}
+
 #
 # Get plugin info from files
 #
@@ -58,6 +60,7 @@ for f in listdir(g_folder):
             REPORT_FORMATS.extend(info.get("formats", None))
             REPORT_PLUGINS.extend(info.get("plugins", None))
             CONTENT_TYPES_BY_FORMAT.update(info.get("content_types", None))
+            EXTENSIONS_BY_FORMAT.update(info.get("extension_by_format", None))
 
 # Info can't be loaded
 if not REPORT_FORMATS:
@@ -71,7 +74,15 @@ if not CONTENT_TYPES_BY_FORMAT:
         'rst'    : 'text/html',
         'text'   : 'text/plain'
     }
-
+if not EXTENSIONS_BY_FORMAT:
+    EXTENSIONS_BY_FORMAT = {
+        'xml'    : 'xml',
+        'html'   : 'html',
+        'rst'    : 'rst',
+        'text'   : 'txt',
+        'txt'    : 'txt',
+        'json'   : 'json'
+    }
 
 class GoLismeroAuditProgress(object):
     """
