@@ -41,7 +41,7 @@ import argparse
 
 # Test targets
 TARGET = {
-    'quick'     : "http://terra.es", # This test finish very quick because returns an error
+    'long'      : "http://terra.es",
     'long'      : "http://www.terra.es/portada/"
 }
 
@@ -52,8 +52,9 @@ STATES = {
 }
 
 AUDIT_DATA = {
-    'short'   : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "spider"}]}', # Post data for audit creation with short number of plugins
-    'long'    : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "spider"}]}'
+    'short'    : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "spider"}]}',
+    # Run OpenVAS
+    'long'   : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/scan/openvas", "params" : [{"param_name" : "host", "param_value" : "192.168.2.104"}] }]}',
 }
 
 RESULTS_FORMATS = [
@@ -68,7 +69,7 @@ RESULTS_FORMATS = [
 def main(args):
     """Main func"""
 
-    target      = TARGET.get("long") if args.TYPE else TARGET.get("long")
+    target      = TARGET.get("long") if args.TYPE else TARGET.get("quick")
     data        = (AUDIT_DATA.get("short") if args.TYPE else AUDIT_DATA.get("long")) % target
     daemon_addr = args.ADDRESS
     daemon_port = args.PORT
@@ -139,7 +140,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='GoLismero web service tester')
     parser.add_argument('-d', dest="ADDRESS", help="daemon address", default="127.0.0.1")
     parser.add_argument('-p', dest="PORT", help="daemon port", type=int, default=8000)
-    parser.add_argument('--long', dest="TYPE", action="store_false", help="long test type", default=True)
+    parser.add_argument('--long', dest="TYPE", action="store_false", help="long test type", default=False)
 
     args = parser.parse_args()
 
