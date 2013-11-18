@@ -43,7 +43,7 @@ from golismero.api.plugin import ImportPlugin, TestingPlugin
 from golismero.api.data.vulnerability.vuln_utils import extract_vuln_ids
 
 from csv import reader
-from os.path import abspath, join, exists, sep, split
+from os.path import abspath, join, exists, isfile, sep, split
 from traceback import format_exc
 
 
@@ -78,8 +78,11 @@ class NiktoPlugin(TestingPlugin):
             "-nointeractive",
             ##"-useproxy",
         ]
-        for option in ("Pause", "timeout", "Tuning", "plugins"):
-            value = Config.plugin_args.get(option.lower(), None)
+        for option in ("Pause", "timeout", "Tuning", "Plugins"):
+            value = Config.plugin_args.get(option.lower(), "")
+            value = value.replace("\r", "")
+            value = value.replace("\n", "")
+            value = value.replace("\t", "")
             if value:
                 args.extend(["-" + option, value])
 
@@ -100,29 +103,39 @@ class NiktoPlugin(TestingPlugin):
                     raise ValueError("Missing configuration file!")
 
                 # Create a temporary config file.
-                with tempfile(suffix = ".cfg") as tmp_config:
+                with tempfile(suffix = ".conf") as tmp_config:
 
-                    # Copy the contents of the supplied config file.
-                    with open(config, "rU") as f:
-                        tmp_config.write( f.read() )
+                    # Open the original config file.
+                    with open(config, "rU") as src:
 
-                    # Append the new settings.
-                    if Config.audit_config.proxy_addr:
-                        parsed = parse_url(Config.audit_config.proxy_addr)
-                        tmp_config.write("PROXYHOST=%s\n" % parsed.host)
-                        tmp_config.write("PROXYPORT=%s\n" % parsed.port)
-                        if Config.audit_config.proxy_user:
-                            tmp_config.write("PROXYUSER=%s\n" %
-                                             Config.audit_config.proxy_user)
-                        if Config.audit_config.proxy_pass:
-                            tmp_config.write("PROXYPASS=%s\n" %
-                                             Config.audit_config.proxy_pass)
-                    if Config.audit_config.cookie:
-                        tmp_config.write("STATIC-COOKIE=%s\n" %
-                                         Config.audit_config.cookie)
+                        # Open the new config file.
+                        with open(tmp_config, "w") as dst:
+
+                            # Copy the contents of the original config file.
+                            dst.write( src.read() )
+
+                            # Append the new settings.
+                            proxy_addr = Config.audit_config.proxy_addr
+                            if proxy_addr:
+                                parsed = parse_url(proxy_addr)
+                                dst.write("PROXYHOST=%s\n" % parsed.host)
+                                dst.write("PROXYPORT=%s\n" % parsed.port)
+                                if Config.audit_config.proxy_user:
+                                    dst.write("PROXYUSER=%s\n" %
+                                              Config.audit_config.proxy_user)
+                                if Config.audit_config.proxy_pass:
+                                    dst.write("PROXYPASS=%s\n" %
+                                              Config.audit_config.proxy_pass)
+                            cookie_dict = Config.audit_config.cookie
+                            if cookie_dict:
+                                cookie = ";".join(
+                                    '"%s=%s"' % x
+                                    for x in cookie_dict.iteritems()
+                                )
+                                dst.write("STATIC-COOKIE=%s\n" % cookie)
 
                     # Set the new config file.
-                    args = ["-config", tmp_config.name] + args
+                    args = ["-config", tmp_config] + args
 
                     # Run Nikto and parse the output.
                     return self.run_nikto(info, output, nikto_script, args)
@@ -168,24 +181,23 @@ class NiktoPlugin(TestingPlugin):
                     raise RuntimeError(msg)
 
         # Get the path to the configuration file.
-        config = Config.plugin_args["config"]
-        if config:
-            config = join(nikto_dir, config)
+        config = Config.plugin_args.get("config", "nikto.conf")
+        if not config:
+            config = "nikto.conf"
+        config = join(nikto_dir, config)
+        config = abspath(config)
+        if not isfile(config):
+            config = Config.plugin_args.get("config", "nikto.conf")
+            if not config:
+                config = "nikto.conf"
             config = abspath(config)
-            if not exists(config):
+            if not isfile(config):
                 config = "/etc/nikto.conf"
-        else:
-            config = "/etc/nikto.conf"
-        if not exists(config):
-            config = Config.plugin_args["config"]
-            if config:
-                config = abspath(config)
-            if not config or not exists(config):
-                msg = "Nikto config file not found"
-                if config:
-                    msg += ". File: %s" % config
-                Logger.log_error(msg)
-                raise RuntimeError(msg)
+                if not isfile(config):
+                    msg = "Nikto config file not found"
+                    if config:
+                        msg += ". File: %s" % config
+                    raise RuntimeError(msg)
 
         # Return the paths.
         return nikto_script, config

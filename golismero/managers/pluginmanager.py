@@ -1618,7 +1618,7 @@ class AuditPluginManager (PluginManager):
                     plugin.check_params()
                 except Exception, e:
                     del self._PluginManager__plugins[plugin_id]
-                    err_tb = traceback.format_exc()
+                    err_tb  = traceback.format_exc()
                     err_msg = "Plugin disabled, reason: %s" % str(e)
                     Logger.log_error_verbose(err_msg)
                     Logger.log_error_more_verbose(err_tb)
