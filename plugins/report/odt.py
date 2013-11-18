@@ -29,16 +29,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["ODTReport"]
 
 
-# Uses the RST plugin to generate the report in memory,
-# then converts the RST output to ODF with docutils.
 from os.path import abspath, split
 import sys
 cwd = abspath(split(__file__)[0])
 sys.path.insert(0, cwd)
 try:
-    from rst import RSTReport
-    rst = sys.modules["rst"]      # Workaround for docutils bug, see:
-    del sys.modules["rst"]        # http://sourceforge.net/p/docutils/bugs/228/
+    from rstext import RSTReport
 finally:
     sys.path.remove(cwd)
 del cwd
