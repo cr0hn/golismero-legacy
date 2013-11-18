@@ -230,7 +230,8 @@ class AuditBridge(object):
             if not r:
                 raise ExceptionAuditNotFound("Audit not found")
             else:
-                return r
+                # Transform...
+                return "finished" if r == "finish" else r
 
         return "running"
 
