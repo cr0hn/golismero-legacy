@@ -271,7 +271,7 @@ def partial_update(install_dir=None):
         install_dir = GOLISMERO_DEFAULT_PRODUCTION
 
     if not exists(install_dir):
-        abort("'%s' installation dire doesn't exists." % install_dir)
+        abort("'%s' installation dir doesn't exists." % install_dir)
 
     # Backuping virtual-env
     m_golismero_env = os.path.join(install_dir, "golismero")
