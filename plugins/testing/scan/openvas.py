@@ -405,7 +405,7 @@ class OpenVASImportPlugin(ImportPlugin):
         if input_file and input_file.lower().endswith(".xml"):
             with open(input_file, "rU") as fd:
                 line = fd.readline()
-                is_ours = line.startswith('<report extension="xml" id="')
+                is_ours = line.startswith('<report')
             if is_ours:
                 if not os.path.exists(openvas_db):
                     warn("OpenVAS plugin not initialized, please run setup.py")
