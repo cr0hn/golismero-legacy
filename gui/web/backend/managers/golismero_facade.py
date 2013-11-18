@@ -138,7 +138,7 @@ class GoLismeroFacadeAudit(object):
     @staticmethod
     def get_state(audit_id):
         """
-        Get audit state. Each call updates the state of provided audit.
+        Get audit state and update it. Each call updates the state of provided audit.
 
         :param audit_id: audit ID.
         :type audit_id: str
@@ -162,28 +162,36 @@ class GoLismeroFacadeAudit(object):
             #
             # FIXME: When GoLismero core works, do that instead of above commands.
             #
+            m_new_state = None
             try:
                 m_new_state = AuditBridge.get_state(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+
+                # Do that because AuditBridge regurns the STAGE, not the state
+                if m_new_state != "finished":
+                    m_new_state = "running"
             except ExceptionAuditNotFound:
                 # Audit not working
                 raise GoLismeroFacadeAuditNotFoundException()
 
-            m_new_state = None
-            m_total = 0
-            for f in REPORT_FORMATS:
-                l_folder =  get_user_settings_folder()
-                l_id     = str(m_audit.id)
-                l_format = f
-                l_path   = "%s%s/report.%s" % (l_folder, l_id, f)
+            #
+            # Ensure that golismero was generated all reports
+            #
+            if m_new_state == "finished":
+                m_new_state = None
+                m_total = 0
+                for f in REPORT_FORMATS:
+                    l_folder =  get_user_settings_folder()
+                    l_id     = str(m_audit.id)
+                    l_format = f
+                    l_path   = "%s%s/report.%s" % (l_folder, l_id, f)
 
-                if os.path.exists(l_path):
-                    m_total +=1
+                    if os.path.exists(l_path):
+                        m_total +=1
 
-            if m_total == len(REPORT_FORMATS):
-                m_new_state = "finished"
-            else:
-                m_new_state = "running"
-
+                if m_total == len(REPORT_FORMATS):
+                    m_new_state = "finished"
+                else:
+                    m_new_state = "running"
 
             #  Update audit state into BBDD
             if m_audit.audit_state != m_new_state:
@@ -220,14 +228,15 @@ class GoLismeroFacadeAudit(object):
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is not running. Can't obtain progress from not running audits." % str(audit_id))
 
             try:
+
+                # Update state
+                GoLismeroFacadeAudit.get_state(audit_id)
+
                 r = AuditBridge.get_progress(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
 
                 if r:
                     return r
                 else:
-                    m_audit.audit_state = "finished"
-                    m_audit.save()
-
                     raise GoLismeroFacadeAuditFinishedException()
 
             except ExceptionAuditNotFound:
@@ -288,18 +297,12 @@ class GoLismeroFacadeAudit(object):
 
         :raises: GoLismeroFacadeReportUnknownFormatException, GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeReportNotAvailableException
         """
-        EXTENSIONS_BY_FORMAT = {
-            'xml'    : 'xml',
-            'html'   : 'html',
-            'rst'    : 'rst',
-            'text'   : 'txt',
-            'txt'    : 'txt',
-            'csv'    : 'csv'
-        }
 
         try:
             # Check report format
-            if report_format not in REPORT_PLUGINS:
+            report_format = report_format.lower().strip()
+
+            if report_format not in EXTENSIONS_BY_FORMAT:
                 raise GoLismeroFacadeReportUnknownFormatException("Unknown report format '%s'." % report_format)
 
             m_audit = Audit.objects.get(pk=audit_id)
@@ -318,7 +321,6 @@ class GoLismeroFacadeAudit(object):
                 raise GoLismeroFacadeReportNotAvailableException("Requested report is not available")
 
             # Get report
-
             return file(path.join(l_path, "report.%s" % EXTENSIONS_BY_FORMAT[report_format]), "rU")
 
         except ObjectDoesNotExist:
