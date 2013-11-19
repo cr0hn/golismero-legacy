@@ -228,8 +228,8 @@ class GoLismeroFacadeAudit(object):
             m_audit = Audit.objects.get(pk=audit_id)
 
             # If audit are not running return error.
-            if m_audit.audit_state != "running":
-                raise GoLismeroFacadeAuditStateException("Audit '%s' is not running. Can't obtain progress from not running audits." % str(audit_id))
+            #if m_audit.audit_state != "running":
+                #raise GoLismeroFacadeAuditStateException("Audit '%s' is not running. Can't obtain progress from not running audits." % str(audit_id))
 
             try:
 
@@ -241,6 +241,17 @@ class GoLismeroFacadeAudit(object):
                     raise GoLismeroFacadeAuditFinishedException()
 
             except ExceptionAuditNotFound:
+
+                # For debug. Removed as soon as debug is finished.
+                m_return = {
+                    'current_stage' : "cleaning",
+                    'steps'         : 0,
+                    'tests_remain'  : 0,
+                    'tests_done'    : 0
+                }
+
+                return GoLismeroAuditProgress(m_return)
+
                 raise GoLismeroFacadeAuditFinishedException()
 
         except ObjectDoesNotExist:
@@ -359,14 +370,26 @@ class GoLismeroFacadeAudit(object):
         try:
             m_audit = Audit.objects.get(pk=audit_id)
 
-            if m_audit.audit_state != "running":
-                raise GoLismeroFacadeAuditStateException("Audit not running. Only can get summary from running audits.")
+            #if m_audit.audit_state != "running":
+                #raise GoLismeroFacadeAuditStateException("Audit not running. Only can get summary from running audits.")
 
             # Get summary
             try:
                 return AuditBridge.get_summary(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name)).to_json
             except ExceptionAuditNotFound,e:
-                raise GoLismeroFacadeAuditStateException("Audit not running. Only can get summary from running audits.")
+                # For debug. Removed as soon as debug is finished.
+                return GoLismeroAuditSummary({
+                    'vulns_number'            : '10',
+                    'discovered_hosts'        : '4',
+                    'total_hosts'             : '6',
+                    'vulns_by_level'          : {
+                        'info'     : '4',
+                        'low'      : '2',
+                        'medium'   : '2',
+                        'high'     : '1',
+                        'critical' : '1',
+                    }
+                }).to_json
 
         except ObjectDoesNotExist:
             raise GoLismeroFacadeAuditNotFoundException()

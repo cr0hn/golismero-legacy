@@ -21,6 +21,95 @@ from backend.managers import GoLismeroAuditData, CONTENT_TYPES_BY_FORMAT
 
 __all__ = ["AuditViewSet", "UsersViewSet", "PluginsViewSet", "ProfilesViewSet", "NodesViewSet"]
 
+
+#------------------------------------------------------------------------------
+#
+# Pooling actions
+#
+#------------------------------------------------------------------------------
+class PoolingViewSet(ViewSet):
+    """
+    Pooling with plugins
+    """
+
+    def push_progress(self, request, *args, **kwargs):
+        """
+        This method updates the progress for an audit.
+
+        Params must be received as:
+
+        {
+           'audit'      :: str,
+           'token'         :: str,
+           'params' :
+           {
+              'current_stage' :: str,
+              'steps'         :: int,
+              'tests_remain'  :: int,
+              'tests_done'    :: int
+           }
+        }
+
+        :errors:
+
+        code 0 -> parameter missed.
+        code 1 -> audit not found
+        """
+        PARAMS = ['current_stage', 'steps', 'tests_remain', 'tests_done']
+
+        m_in_params = []
+        for i in PARAMS:
+            m_in_params.append(request.DATA.get(i, None))
+
+        m_audit = request.DATA.get("audit", None)
+        m_token = request.DATA.get("audit", "sample_token")
+
+        # Can get all params?
+        if all(m_in_params) and not m_audit and not m_token:
+            Response({"error" : "Some para missed.", "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get Audit progress old info
+        try:
+            m_audit_progress = AuditProgress.objects.get(pk=m_audit)
+
+            # Checks if all parameters are equals
+            for x in PARAMS:
+                if getattr(m_audit_progress, x) != m_in_params[x]:
+                    break
+            else:
+                # Update params if there is some differents
+                getattr(m_audit_progress, x, m_in_params[x])
+                m_audit_progress.save()
+
+        except ObjectDoesNotExist:
+            Response({"error" : "audit not found." : "error_code" : 1}, status=status.HTTP_400_BAD_REQUEST)
+
+
+    def push_summary(self, request, *args, **kwargs):
+        """
+        This method updates the summary for an audit.
+
+        Params must be received as:
+        {
+           'audit_id'      :: str,
+           'token'         :: str,
+           'params' :   {
+              'vulns_number'            = int
+              'discovered_hosts'        = int # Host discovered into de scan process
+              'total_hosts'             = int
+              'vulns_by_level'          = {
+                 'info'     : int,
+                 'low'      : int,
+                 'medium'   : int,
+                 'high'     : int,
+                 'critical' : int,
+               }
+            }
+        }
+        """
+
+
+
 #------------------------------------------------------------------------------
 #
 # Audit actions

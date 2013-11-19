@@ -35,6 +35,32 @@ from rest_framework.compat import patterns, url
 
 
 #------------------------------------------------------------------------------
+class PoolingRoutersPoolingRouters(ParameterizedRouter):
+
+    routes = [
+        # Update progress
+        Route(url       = r'^{prefix}/push/progress/$',
+              mapping   = {'post' : 'push_progress'},
+              name      = '{basename}-push_progress',
+              initkwargs= {}),
+        Route(url       = r'^{prefix}/push/progress$',
+              mapping   = {'post' : 'push_progress'},
+              name      = '{basename}-push_progress2',
+              initkwargs= {}),
+
+        # Update summary
+        Route(url       = r'^{prefix}/push/summary/$',
+              mapping   = {'post' : 'push_summary'},
+              name      = '{basename}-push_summary',
+              initkwargs= {}),
+        Route(url       = r'^{prefix}/push/summary$',
+              mapping   = {'post' : 'push_summary'},
+              name      = '{basename}-push_summary2',
+              initkwargs= {}),
+
+        ]
+
+#------------------------------------------------------------------------------
 class AuditsRouters(ParameterizedRouter):
 
     routes = [
