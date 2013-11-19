@@ -161,7 +161,7 @@ class WebUIPlugin(UIPlugin):
 
             # An audit has started.
             elif message.message_code == MessageCode.MSG_CONTROL_START_AUDIT:
-                self.notify_stage(message.audit_config.audit_name, "start")
+                self.notify_stage(message.message_info.audit_name, "start")
 
             # An audit has finished.
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
