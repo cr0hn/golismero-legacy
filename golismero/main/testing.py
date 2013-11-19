@@ -225,6 +225,7 @@ class PluginTester(object):
             # Create the audit plugin manager.
             plugin_manager = orchestrator.pluginManager.get_plugin_manager_for_audit(audit)
             audit._Audit__plugin_manager = plugin_manager
+            plugin_manager.initialize(audit.config)
 
             # Get the audit name.
             audit_name = self.audit_config.audit_name

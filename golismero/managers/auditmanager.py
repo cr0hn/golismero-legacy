@@ -518,6 +518,7 @@ class Audit (object):
             self.__plugin_manager = \
                 self.orchestrator.pluginManager.get_plugin_manager_for_audit(
                     self)
+            self.__plugin_manager.initialize(self.config)
 
             # Load the testing plugins.
             testing_plugins = self.pluginManager.load_plugins("testing")
