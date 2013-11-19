@@ -61,7 +61,7 @@ server_bridge = load_source(
 import urllib2
 
 #------------------------------------------------------------------------------
-class AsyncPush(threading.thread):
+class AsyncPush(threading.Thread):
     """This class aims to make async request to remote host"""
 
     #----------------------------------------------------------------------
