@@ -244,7 +244,7 @@ class GoLismeroFacadeAudit(object):
 
                 # For debug. Removed as soon as debug is finished.
                 m_return = {
-                    'current_stage' : "cleaning",
+                    'current_stage' : "cleanup",
                     'steps'         : 0,
                     'tests_remain'  : 0,
                     'tests_done'    : 0
