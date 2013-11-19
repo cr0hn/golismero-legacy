@@ -741,8 +741,8 @@ class WebUIPlugin(UIPlugin):
         # Create the new audit.
         start_audit(o_audit_config)
 
-        # Set the state to avoid race conditions when try to check the state before audit
-        # is loaded and configured.
+        # Set the stage to avoid race conditions when trying to get the stage
+        # before the audit is loaded and configured.
         self.audit_stage[o_audit_config.audit_name] = "start"
 
 
@@ -791,10 +791,33 @@ class WebUIPlugin(UIPlugin):
         :param audit_name: Name of the audit to query.
         :type audit_name: str
 
+        :returns: Current state for this audit. One of the following
+            values:
+             - "start"
+             - "running"
+             - "finished"
+        :type: str
+        """
+        stage = self.audit_stage.get(audit_name, "finish")
+        if stage == "start":
+            return "start"
+        if stage in ("finish", "cancel"):
+            return "finished"
+        return "running"
+
+
+    #----------------------------------------------------------------------
+    def do_audit_stage(self, audit_name):
+        """
+        Implementation of: /audit/stage
+
+        :param audit_name: Name of the audit to query.
+        :type audit_name: str
+
         :returns: Current stage for this audit.
         :type: str
         """
-        return self.audit_stage.get(audit_name, "finished")
+        return self.audit_stage.get(audit_name, "finish")
 
 
     #--------------------------------------------------------------------------
