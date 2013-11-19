@@ -58,6 +58,60 @@ server_bridge = load_source(
 )
 
 
+import urllib2
+
+#------------------------------------------------------------------------------
+class AsyncPush(threading.Thread):
+    """This class aims to make async request to remote host"""
+
+    #----------------------------------------------------------------------
+    def __init__(self):
+        """Constructor"""
+        super(AsyncPushs, self).__init__()
+
+        self.__con             = urllib2.build_opener()
+        self.__event           = threading.Event()
+        self.__url             = url
+        self.__post_data       = post_data
+
+    #----------------------------------------------------------------------
+    def run(self):
+        """Start thread"""
+        while True:
+            self.__event.wait()
+            try:
+                self.__con.open(self.__url, data=self.__post_data, timeout=2)
+            except urllib2.HTTPError:
+                Logger.log("Error calling '%s' with data: " % (
+                    self.__url,
+                    "&".join([ "%s=%s" % (x, y ) for x, y in self.__post_data.iteritems()])
+                ))
+
+
+    #----------------------------------------------------------------------
+    def send(self, URL, post_data):
+        """
+        Send some information to the URL.
+
+        :param URL: URL where make the request.
+        :type URL: str
+
+        :param post_data: dict with post data.
+        :type post_data: dict
+        """
+        self.__url       = URL
+        self.__post_data = post_data
+
+        self.__event.set()
+
+
+
+
+
+
+
+
+
 #------------------------------------------------------------------------------
 class SwitchToAudit(object):
     """
