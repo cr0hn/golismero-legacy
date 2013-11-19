@@ -246,8 +246,13 @@ class AuditBridge(object):
             try:
                 steps         = rpc_response[0]
                 current_state = rpc_response[1]
-                if current_state == "finish":
+
+                if current_state == "start":
+                    current_state = "start"
+                elif current_state in ("finish", "cancel"):
                     current_state = "cleanup"
+                else:
+                    current_state = "running"
 
                 tests_remain  = 0
                 tests_done    = 0
