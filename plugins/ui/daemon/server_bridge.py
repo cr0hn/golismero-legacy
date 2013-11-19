@@ -188,6 +188,8 @@ class ServerPush(object):
     Pushes notifications from GoLismero to the given URL using JSON.
     """
 
+    # TODO: use a thread and a queue if needed to avoid latency.
+
 
     #--------------------------------------------------------------------------
     def __init__(self, push_url):
