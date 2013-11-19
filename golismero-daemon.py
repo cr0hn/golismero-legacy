@@ -195,7 +195,7 @@ Listen in loopback IPv6 at port 8000:
 #------------------------------------------------------------------------------
 # Start of program.
 
-def daemon_main(listen_address, listen_port, sever_push):
+def daemon_main(listen_address, listen_port, server_push):
 
     # Get the config file name.
     config_file = get_default_config_file()
