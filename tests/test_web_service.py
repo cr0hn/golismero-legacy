@@ -41,7 +41,7 @@ import argparse
 
 # Test targets
 TARGET = {
-    'long'      : "http://terra.es",
+    'quick'      : "http://terra.es",
     'long'      : "http://www.terra.es/portada/"
 }
 
@@ -52,7 +52,7 @@ STATES = {
 }
 
 AUDIT_DATA = {
-    'short'    : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "spider"}]}',
+    'short'    : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/scan/spider"}]}',
     # Run OpenVAS
     'long'   : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/scan/openvas", "params" : [{"param_name" : "host", "param_value" : "192.168.2.104"}] }]}',
 }
@@ -81,6 +81,7 @@ def main(args):
 
     # First, make the create
     query      = urlparse.urljoin(address, "/api/audits/create/")
+    audit_id   = None
     try:
         print "[*] Creating audit"
         audit_id   = json.load(opener.open(urllib2.Request(query, data=data, headers=headers)))["audit_id"]
