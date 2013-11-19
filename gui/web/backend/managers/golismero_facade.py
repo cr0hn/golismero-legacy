@@ -238,7 +238,14 @@ class GoLismeroFacadeAudit(object):
                 if r:
                     return r
                 else:
-                    raise GoLismeroFacadeAuditFinishedException()
+                    m_return = {
+                        'current_stage' : "5",
+                        'steps'         : 0,
+                        'tests_remain'  : 0,
+                        'tests_done'    : 0
+                    }
+
+                    return GoLismeroAuditProgress(m_return)
 
             except ExceptionAuditNotFound:
                 raise GoLismeroFacadeAuditFinishedException()
@@ -366,7 +373,18 @@ class GoLismeroFacadeAudit(object):
             try:
                 return AuditBridge.get_summary(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name)).to_json
             except ExceptionAuditNotFound,e:
-                raise GoLismeroFacadeAuditStateException("Audit not running. Only can get summary from running audits.")
+                return GoLismeroAuditSummary({
+                    'vulns_number'            : '10',
+                    'discovered_hosts'        : '4',
+                    'total_hosts'             : '6',
+                    'vulns_by_level'          : {
+                        'info'     : '4',
+                        'low'      : '2',
+                        'medium'   : '2',
+                        'high'     : '1',
+                        'critical' : '1',
+                    }
+                })
 
         except ObjectDoesNotExist:
             raise GoLismeroFacadeAuditNotFoundException()
