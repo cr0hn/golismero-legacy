@@ -37,6 +37,7 @@ from golismero.api.config import Config, get_orchestrator_config
 from golismero.api.logger import Logger
 from golismero.api.plugin import UIPlugin, get_plugin_info, get_plugin_ids, \
      get_stage_display_name
+from golismero.database.auditdb import AuditDB
 from golismero.common import AuditConfig
 from golismero.managers.processmanager import PluginContext
 from golismero.messaging.codes import MessageType, MessageCode, \
@@ -160,7 +161,7 @@ class WebUIPlugin(UIPlugin):
 
             # An audit has started.
             elif message.message_code == MessageCode.MSG_CONTROL_START_AUDIT:
-                self.notify_stage(message.audit_name, "start")
+                self.notify_stage(message.audit_config.audit_name, "start")
 
             # An audit has finished.
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
