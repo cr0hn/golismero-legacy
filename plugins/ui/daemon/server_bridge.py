@@ -35,10 +35,20 @@ __all__ = ["launch_server", "GoLismeroStateMachine"]
 
 import multiprocessing
 import os.path
+import requests
 import sys
 import thread
 import threading
 import traceback
+
+try:
+    import cjson as json
+except ImportError:
+    try:
+        import simplejson as json
+    except ImportError:
+        import json
+
 
 #------------------------------------------------------------------------------
 def launch_server(orchestrator_config, plugin_config, plugin_extra_config):
@@ -136,8 +146,15 @@ def _launch_server(input_conn, output_conn,
                 # Instance the bridge object to talk to GoLismero.
                 bridge = Bridge(input_conn, output_conn)
 
-                # Create the state machine.
-                fsm = GoLismeroStateMachine(bridge)
+                # Instance the server pusher, if requested.
+                server_push = orchestrator_config.get('server_push', None)
+                if server_push:
+                    sp = ServerPush(server_push)
+                else:
+                    sp = None
+
+                # Instance the state machine.
+                fsm = GoLismeroStateMachine(bridge, sp)
 
                 # Launch the XMLRPC server.
                 run_xmlrpc_server(fsm,
@@ -163,6 +180,33 @@ def _launch_server(input_conn, output_conn,
     # Silently catch all runaway exceptions.
     except:
         pass
+
+
+#------------------------------------------------------------------------------
+class ServerPush(object):
+    """
+    Pushes notifications from GoLismero to the given URL using JSON.
+    """
+
+
+    #--------------------------------------------------------------------------
+    def __init__(self, push_url):
+        """
+        :param push_url: URL to push notifications to.
+        :type push_url: str
+        """
+        if not push_url.endswith("/"):
+            push_url += "/"
+        self.__push_url = push_url
+
+
+    #--------------------------------------------------------------------------
+    def __call__(self, command, args):
+        """
+        Push a notification.
+        """
+        push_url = self.__push_url + command
+        requests.post(push_url, json.encode(args))
 
 
 #------------------------------------------------------------------------------
@@ -415,7 +459,7 @@ class GoLismeroStateMachine (threading.Thread):
 
                     # Use the callback.
                     if self.__callback:
-                        self.__callback(command, *args)
+                        self.__callback(command, args)
 
             # Break the loop if we're killing the current process.
             except SystemExit:
