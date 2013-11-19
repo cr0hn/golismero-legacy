@@ -41,6 +41,8 @@ import thread
 import threading
 import traceback
 
+from Queue import Queue
+
 try:
     import cjson as json
 except ImportError:
@@ -183,12 +185,10 @@ def _launch_server(input_conn, output_conn,
 
 
 #------------------------------------------------------------------------------
-class ServerPush(object):
+class ServerPush(threading.Thread):
     """
     Pushes notifications from GoLismero to the given URL using JSON.
     """
-
-    # TODO: use a thread and a queue if needed to avoid latency.
 
 
     #--------------------------------------------------------------------------
@@ -197,13 +197,44 @@ class ServerPush(object):
         :param push_url: URL to push notifications to.
         :type push_url: str
         """
+        super(ServerPush, self).__init__(self)
         if not push_url.endswith("/"):
             push_url += "/"
         self.__push_url = push_url
+        self.__queue = Queue()
+
+
+    #--------------------------------------------------------------------------
+    def __del__(self):
+        """
+        Kills the thread when destroying the object.
+        """
+        self.__queue.put( ("quit",) )
 
 
     #--------------------------------------------------------------------------
     def __call__(self, command, args):
+        """
+        Enqueue a notification for pushing.
+        """
+        self.__queue.put( (command, args) )
+
+
+    #--------------------------------------------------------------------------
+    def run(self):
+        """
+        Dequeues notifications and pushes them.
+        """
+        (command, args) = self.__queue.get()
+        if command == "quit":
+            self.__queue.join()
+            del self.__queue
+            return
+        self._push(command, args)
+
+
+    #--------------------------------------------------------------------------
+    def _push(self, command, args):
         """
         Push a notification.
         """
