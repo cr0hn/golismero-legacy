@@ -215,9 +215,6 @@ class AuditBridge(object):
 
             if not r:
                 raise ExceptionAuditNotFound("Audit not found")
-            else:
-                # Transform...
-                return "finished" if r == "finish" else r
 
         return "running"
 
@@ -244,12 +241,12 @@ class AuditBridge(object):
             if not rpc_response:
                 raise ExceptionAuditNotFound()
             try:
-                steps         = rpc_response[0]
-                current_state = rpc_response[1]
+                steps = rpc_response[0]
+                stage = rpc_response[1]
 
-                if current_state == "start":
+                if stage == "start":
                     current_state = "start"
-                elif current_state in ("finish", "cancel"):
+                elif stage in ("finish", "cancel"):
                     current_state = "cleanup"
                 else:
                     current_state = "running"
