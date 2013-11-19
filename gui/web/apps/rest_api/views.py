@@ -24,12 +24,12 @@ __all__ = ["AuditViewSet", "UsersViewSet", "PluginsViewSet", "ProfilesViewSet", 
 
 #------------------------------------------------------------------------------
 #
-# Pooling actions
+# Pushing actions
 #
 #------------------------------------------------------------------------------
 class PushingViewSet(ViewSet):
     """
-    Pooling with plugins
+    Pushing with plugins
     """
 
     def push_progress(self, request, *args, **kwargs):
