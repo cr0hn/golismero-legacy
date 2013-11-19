@@ -9,8 +9,8 @@ import rest_framework.urls
 # http://django-rest-framework.org/api-guide/routers.html#usage
 #
 
-pooling_routes  = PollingRouters()
-pooling_routes.register(r'pooling', PollingViewSet, base_name="pooling")
+pooling_routes  = PushingRouters()
+pooling_routes.register(r'pooling', PushingViewSet, base_name="pooling")
 
 audit_routes    = AuditsRouters()
 audit_routes.register(r'^audits', AuditViewSet, base_name="plugins")

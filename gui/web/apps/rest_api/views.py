@@ -19,7 +19,7 @@ from backend.managers import GoLismeroAuditData, CONTENT_TYPES_BY_FORMAT
 # This file defines the actions for the API-REST
 #
 
-__all__ = ["AuditViewSet", "UsersViewSet", "PluginsViewSet", "ProfilesViewSet", "NodesViewSet", "PollingViewSet"]
+__all__ = ["AuditViewSet", "UsersViewSet", "PluginsViewSet", "ProfilesViewSet", "NodesViewSet", "PushingViewSet"]
 
 
 #------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ __all__ = ["AuditViewSet", "UsersViewSet", "PluginsViewSet", "ProfilesViewSet", 
 # Pooling actions
 #
 #------------------------------------------------------------------------------
-class PollingViewSet(ViewSet):
+class PushingViewSet(ViewSet):
     """
     Pooling with plugins
     """
