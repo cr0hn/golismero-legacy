@@ -222,7 +222,6 @@ class AuditViewSet(ViewSet):
             l_plugin['plugin_name'] = p.get("plugin_name", None)
 
             if not l_plugin['plugin_name']:
-                #print p
                 m_return['status']      = "error"
                 m_return['error_code']  = 1
                 m_return['error']       = ["A plugin name can be provided."]
