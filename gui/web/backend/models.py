@@ -15,43 +15,6 @@ def generate_random_string(length = 30):
 
 __all__ = ["Audit", "Target", "Plugins", "PluginParameters", "AuditProgress", "AuditSummary"]
 
-#------------------------------------------------------------------------------
-class AuditProgress(models.Model):
-    """
-    Summarized audit progress.
-    """
-    current_stage      = models.CharField(max_length=20)
-    steps              = models.IntegerField(default=0)
-    # Number of test not finished
-    tests_remain       = models.IntegerField(default=0)
-    # Number of tests done
-    tests_done         = models.IntegerField(default=0)
-    # Last check
-    last_update        = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
-
-    # Relations
-    audit                        = models.OneToOneField(Audit, primary_key=True)
-
-
-
-#------------------------------------------------------------------------------
-class AuditSummary(models.Model):
-    """
-    Summarized results info.
-    """
-    vulns_number                 = models.IntegerField(default=0)
-    discovered_hosts             = models.IntegerField(default=0)
-    total_hosts                  = models.IntegerField(default=0)
-    vuln_level_info_number       = models.IntegerField(default=0)
-    vuln_level_low_number        = models.IntegerField(default=0)
-    vuln_level_medium_number     = models.IntegerField(default=0)
-    vuln_level_high_number       = models.IntegerField(default=0)
-    vuln_level_critical_number   = models.IntegerField(default=0)
-    # Last check
-    last_update                  = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
-
-    # Relations
-    audit                        = models.OneToOneField(Audit)
 
 
 #------------------------------------------------------------------------------
@@ -117,3 +80,40 @@ class PluginParameters(models.Model):
     plugin     = models.ForeignKey(Plugins)
     audit      = models.ForeignKey(Audit)
 
+#------------------------------------------------------------------------------
+class AuditProgress(models.Model):
+    """
+    Summarized audit progress.
+    """
+    current_stage      = models.CharField(max_length=20)
+    steps              = models.IntegerField(default=0)
+    # Number of test not finished
+    tests_remain       = models.IntegerField(default=0)
+    # Number of tests done
+    tests_done         = models.IntegerField(default=0)
+    # Last check
+    last_update        = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
+
+    # Relations
+    audit                        = models.OneToOneField(Audit, primary_key=True)
+
+
+
+#------------------------------------------------------------------------------
+class AuditSummary(models.Model):
+    """
+    Summarized results info.
+    """
+    vulns_number                 = models.IntegerField(default=0)
+    discovered_hosts             = models.IntegerField(default=0)
+    total_hosts                  = models.IntegerField(default=0)
+    vuln_level_info_number       = models.IntegerField(default=0)
+    vuln_level_low_number        = models.IntegerField(default=0)
+    vuln_level_medium_number     = models.IntegerField(default=0)
+    vuln_level_high_number       = models.IntegerField(default=0)
+    vuln_level_critical_number   = models.IntegerField(default=0)
+    # Last check
+    last_update                  = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
+
+    # Relations
+    audit                        = models.OneToOneField(Audit)

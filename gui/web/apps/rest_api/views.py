@@ -19,7 +19,7 @@ from backend.managers import GoLismeroAuditData, CONTENT_TYPES_BY_FORMAT
 # This file defines the actions for the API-REST
 #
 
-__all__ = ["AuditViewSet", "UsersViewSet", "PluginsViewSet", "ProfilesViewSet", "NodesViewSet"]
+__all__ = ["AuditViewSet", "UsersViewSet", "PluginsViewSet", "ProfilesViewSet", "NodesViewSet", "PollingViewSet"]
 
 
 #------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ __all__ = ["AuditViewSet", "UsersViewSet", "PluginsViewSet", "ProfilesViewSet", 
 # Pooling actions
 #
 #------------------------------------------------------------------------------
-class PoolingViewSet(ViewSet):
+class PollingViewSet(ViewSet):
     """
     Pooling with plugins
     """
@@ -82,7 +82,7 @@ class PoolingViewSet(ViewSet):
                 m_audit_progress.save()
 
         except ObjectDoesNotExist:
-            Response({"error" : "audit not found." : "error_code" : 1}, status=status.HTTP_400_BAD_REQUEST)
+            Response({"error" : "audit not found.",  "error_code" : 1}, status=status.HTTP_400_BAD_REQUEST)
 
 
     def push_summary(self, request, *args, **kwargs):

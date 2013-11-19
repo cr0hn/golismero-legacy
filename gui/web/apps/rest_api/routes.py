@@ -27,7 +27,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["AuditsRouters", "UsersRouters", "PluginsRouters", "ProfilesRouters", "NodesRouters"]
+__all__ = ["AuditsRouters", "UsersRouters", "PluginsRouters", "ProfilesRouters", "NodesRouters", "PollingRouters"]
 
 from backend.rest_api.routes import ParameterizedRouter
 from rest_framework.routers import Route
@@ -35,7 +35,7 @@ from rest_framework.compat import patterns, url
 
 
 #------------------------------------------------------------------------------
-class PoolingRoutersPoolingRouters(ParameterizedRouter):
+class PollingRouters(ParameterizedRouter):
 
     routes = [
         # Update progress
