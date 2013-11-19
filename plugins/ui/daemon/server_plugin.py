@@ -741,6 +741,11 @@ class WebUIPlugin(UIPlugin):
         # Create the new audit.
         start_audit(o_audit_config)
 
+        # Set the state to avoid race conditions when try to check the state before audit
+        # is loaded and configured.
+        self.audit_stage[o_audit_config.audit_name] = "start"
+
+
 
     #--------------------------------------------------------------------------
     def do_audit_cancel(self, audit_name):
@@ -789,7 +794,7 @@ class WebUIPlugin(UIPlugin):
         :returns: Current stage for this audit.
         :type: str
         """
-        return self.audit_stage.get(audit_name, "finish")
+        return self.audit_stage.get(audit_name, "finished")
 
 
     #--------------------------------------------------------------------------
