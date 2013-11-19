@@ -11,8 +11,6 @@ import rest_framework.urls
 
 pushing_routes  = PushingRouters()
 pushing_routes.register(r'push', PushingViewSet, base_name="push")
-pooling_routes  = PushingRouters()
-pooling_routes.register(r'pooling', PushingViewSet, base_name="pooling")
 
 audit_routes    = AuditsRouters()
 audit_routes.register(r'^audits', AuditViewSet, base_name="plugins")
