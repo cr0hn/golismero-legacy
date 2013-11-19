@@ -719,9 +719,16 @@ class GoLismeroFacadeAudit(object):
             if m_audit.audit_state != "paused":
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is '%s'. Only paused audits can be resumed." % (str(m_audit.id), m_audit.audit_state))
 
+            # Create folder: home folder + audit id
+            l_path = path.join(get_user_settings_folder(), str(m_audit.id))
+
+            # Configuration
+            audit_config            = GoLismeroAuditData.from_django(m_audit)
+            audit_config.store_path = l_path
+
             # Send to GoLismero core
             try:
-                AuditBridge.resume(GoLismeroFacadeAudit._get_unique_id(m_audit.id, m_audit.audit_name))
+                AuditBridge.new_audit(audit_config)
             except ExceptionAuditUnknown:
                 m_audit.audit_state = "error"
                 m_audit.save()

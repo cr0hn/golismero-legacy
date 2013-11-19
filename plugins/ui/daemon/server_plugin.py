@@ -702,7 +702,7 @@ class WebUIPlugin(UIPlugin):
         if self.is_audit_running(audit_name):
             try:
                 with SwitchToAudit(audit_name):
-                    stop_audit(audit_name)
+                    cancel_audit(audit_name)
                     return True
             except Exception:
                 Logger.log_error(traceback.format_exc())

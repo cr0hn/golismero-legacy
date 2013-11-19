@@ -114,20 +114,6 @@ class AuditBridge(object):
 
 
     #----------------------------------------------------------------------
-    @staticmethod
-    def resume(audit_id): #
-        """
-        Resumes and audit.
-
-        :param audit_id: string with audit ID.
-        :type audit_id: str
-
-        :raises: ExceptionAuditNotFound, ExceptionAuditUnknown
-        """
-        pass
-
-
-    #----------------------------------------------------------------------
     #
     # Getter methods
     #
