@@ -90,6 +90,10 @@ def main(args):
         print "[!] Error creating the audit"
         print e
 
+    if not audit_id:
+        print "[!] Audit not created correctly"
+        return
+
     # First, make the start
     query      = urlparse.urljoin(address, "/api/audits/start/%s" % str(audit_id))
     try:
