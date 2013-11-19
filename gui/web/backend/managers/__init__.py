@@ -66,12 +66,12 @@ for f in listdir(g_folder):
 if not REPORT_FORMATS:
     REPORT_FORMATS = ["html", "txt", "rst"]
 if not REPORT_PLUGINS:
-    REPORT_PLUGINS = ["html", "text", "rst"]
+    REPORT_PLUGINS = ["html", "text", "rstext"]
 if not CONTENT_TYPES_BY_FORMAT:
     CONTENT_TYPES_BY_FORMAT = {
         'xml'    : 'application/xml',
         'html'   : 'text/html',
-        'rst'    : 'text/html',
+        'rstext' : 'text/html',
         'text'   : 'text/plain'
     }
 if not EXTENSIONS_BY_FORMAT:
@@ -79,6 +79,7 @@ if not EXTENSIONS_BY_FORMAT:
         'xml'    : 'xml',
         'html'   : 'html',
         'rst'    : 'rst',
+        'rstext' : 'rst',
         'text'   : 'txt',
         'txt'    : 'txt',
         'json'   : 'json'
