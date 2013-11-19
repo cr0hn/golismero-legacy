@@ -52,7 +52,7 @@ STATES = {
 }
 
 AUDIT_DATA = {
-    'short'    : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/scan/spider"}]}',
+    'short'    : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/spider"}]}',
     # Run OpenVAS
     'long'   : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/scan/openvas", "params" : [{"param_name" : "host", "param_value" : "192.168.2.104"}] }]}',
 }
@@ -70,11 +70,11 @@ def main(args):
     """Main func"""
 
     target      = TARGET.get("long") if args.TYPE else TARGET.get("quick")
-    data        = (AUDIT_DATA.get("short") if args.TYPE else AUDIT_DATA.get("long")) % target
+    data        = (AUDIT_DATA.get("long") if args.TYPE else AUDIT_DATA.get("short")) % target
     daemon_addr = args.ADDRESS
     daemon_port = args.PORT
     address     = "http://%s:%s" % (daemon_addr, daemon_port)
-
+    print data
     # Prepare urllib2
     opener  = urllib2.build_opener()
     headers = {'Content-Type': 'application/json'}
