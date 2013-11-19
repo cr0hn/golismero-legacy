@@ -247,7 +247,7 @@ class AuditBridge(object):
                 steps         = rpc_response[0]
                 current_state = rpc_response[1]
                 if current_state == "finish":
-                    current_state = "finished"
+                    current_state = "cleanup"
 
                 tests_remain  = 0
                 tests_done    = 0
