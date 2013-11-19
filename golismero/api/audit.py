@@ -270,7 +270,6 @@ def stop_audit(audit_name = None):
         message_code = MessageCode.MSG_CONTROL_STOP_AUDIT,
         message_info = False,        # True for finished, False for user cancel
           audit_name = audit_name,
-         plugin_id = Config.plugin_id,
             priority = MessagePriority.MSG_PRIORITY_HIGH,
     )
     Config._context.send_raw_msg(msg)
