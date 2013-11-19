@@ -41,7 +41,7 @@ import argparse
 
 # Test targets
 TARGET = {
-    'long'      : "http://terra.es",
+    'quick'      : "http://terra.es",
     'long'      : "http://www.terra.es/portada/"
 }
 
@@ -52,7 +52,7 @@ STATES = {
 }
 
 AUDIT_DATA = {
-    'short'    : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "spider"}]}',
+    'short'    : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/spider"}]}',
     # Run OpenVAS
     'long'   : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/scan/openvas", "params" : [{"param_name" : "host", "param_value" : "192.168.2.104"}] }]}',
 }
@@ -70,17 +70,18 @@ def main(args):
     """Main func"""
 
     target      = TARGET.get("long") if args.TYPE else TARGET.get("quick")
-    data        = (AUDIT_DATA.get("short") if args.TYPE else AUDIT_DATA.get("long")) % target
+    data        = (AUDIT_DATA.get("long") if args.TYPE else AUDIT_DATA.get("short")) % target
     daemon_addr = args.ADDRESS
     daemon_port = args.PORT
     address     = "http://%s:%s" % (daemon_addr, daemon_port)
-
+    print data
     # Prepare urllib2
     opener  = urllib2.build_opener()
     headers = {'Content-Type': 'application/json'}
 
     # First, make the create
     query      = urlparse.urljoin(address, "/api/audits/create/")
+    audit_id   = None
     try:
         print "[*] Creating audit"
         audit_id   = json.load(opener.open(urllib2.Request(query, data=data, headers=headers)))["audit_id"]
@@ -88,6 +89,10 @@ def main(args):
     except urllib2.HTTPError, e:
         print "[!] Error creating the audit"
         print e
+
+    if not audit_id:
+        print "[!] Audit not created correctly"
+        return
 
     # First, make the start
     query      = urlparse.urljoin(address, "/api/audits/start/%s" % str(audit_id))
