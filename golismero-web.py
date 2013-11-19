@@ -177,8 +177,9 @@ Listen in loopback IPv6 at port 8000:
     # Run django
     listen_addr = "%s:%s" % (m_ip, args.PORT)
 
-    # Create database
-    call_command("syncdb", noinput=True)
+    # Create database if not exits
+    if not os.path.exists(os.path.abspath((settings.DATABASES['default']['NAME']))):
+        call_command("syncdb", interactive=False)
 
     if args.DEBUG_MODE:
         # Set debug mode
