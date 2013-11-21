@@ -159,7 +159,6 @@ class SuspiciousURLPlugin(TestingPlugin):
 
         wordlist_filtered     = set((x for x in wordlist if not x.startswith("#") and not x.startswith("[")))
         output_links_filtered = set(m_urls_allowed)
-        output_links_filtered.add("http://025p0.vuyaw.com/550")
 
         for l_malware_site in output_links_filtered.intersection(wordlist_filtered):
             Logger.log("Found an outputlink to possible malware site: %s" % l_malware_site)
