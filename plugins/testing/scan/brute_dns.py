@@ -38,7 +38,7 @@ from golismero.api.logger import Logger
 from golismero.api.net.dns import DNS
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist import WordListLoader, WordlistNotFound
-
+from golismero.api.data.vulnerability.information_disclosure.domain_disclosure import DomainDisclosure
 
 #--------------------------------------------------------------------------
 class DNSBruteforcer(TestingPlugin):
@@ -73,6 +73,17 @@ class DNSBruteforcer(TestingPlugin):
         except TypeError:
             Logger.log_error_verbose("Wordlist '%s' is not a file." % Config.plugin_args["wordlist"])
             return
+
+        # Load the subdomains whitelist.
+        try:
+            whitelist = WordListLoader.get_advanced_wordlist_as_list(Config.plugin_config["wordlist"])
+        except WordlistNotFound:
+            Logger.log_error_verbose("Wordlist '%s' not found.." % Config.plugin_config["wordlist"])
+            return
+        except TypeError:
+            Logger.log_error_verbose("Wordlist '%s' is not a file." % Config.plugin_config["wordlist"])
+            return
+
 
         #
         # Set a base line for dinamyc sub-domains
@@ -135,6 +146,20 @@ class DNSBruteforcer(TestingPlugin):
             # Create the Domain object for the subdomain.
             domain = Domain(name)
             results.append(domain)
+
+            #
+            # Check for Domain disclosure
+            #
+            if prefix not in whitelist:
+                d = DomainDisclosure(name,
+                                     risk        = 0,
+                                     level       = "low",
+                                     title       = "Possible subdomain leak",
+                                     description = "Subdomain discovered may be a unwanted information disclosure"
+                                     )
+                d.add_resource(domain)
+                results.append(d)
+
 
             # For each DNs record, grab the address or name.
             # Skip duplicated records.

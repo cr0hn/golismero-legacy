@@ -9,3 +9,6 @@ License     = GNU Public License
 
 [Arguments]
 wordlist   = dns/dnsrecon.txt
+
+[Configuration]
+wordlist   = dns/whitelist.txt
