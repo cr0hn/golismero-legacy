@@ -170,6 +170,7 @@ class SuspiciousURLPlugin(TestingPlugin):
             v = SuspiciousURL(url         = u,
                               title       = "Posible links to malware found",
                               description = "The URL '%s' could contains output links to malware site or software.",
+                              solution    = "You should review your website and ensure that your site was not compromised by a security intrusion.",
                               severity    = 2,
                               level       = "middle",
                               risk        = 2)
