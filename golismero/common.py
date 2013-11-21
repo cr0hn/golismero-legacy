@@ -673,9 +673,10 @@ class OrchestratorConfig (Configuration):
         # Use persistent cache?
         "use_cache_db": (Configuration.boolean, True),
 
-        # When run as a service
-        "listen_address" : Configuration.string,
-        "listen_port" : Configuration.integer
+        # When run as a service.
+        "listen_address": Configuration.string,
+        "listen_port": Configuration.integer,
+        "server_push": Configuration.string,
     }
 
 
