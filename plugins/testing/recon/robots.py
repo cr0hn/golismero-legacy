@@ -192,14 +192,15 @@ class Robots(TestingPlugin):
                         discard_data(l_p)
                         continue
                     if l_p:
-                        match[l_url] = l_p
-                        if not m_analyzer.analyze(l_p.data, url=l_url):
+                        if m_analyzer.analyze(l_p.data, url=l_url):
+                            match[l_url] = l_p
+                        else:
                             discard_data(l_p)
 
             # Generate results
             for i in m_analyzer.unique_texts:
                 l_url    = i.url
-                l_p      = match[l_url]
+                l_p      = match.pop(l_url)
                 m_result = Url(l_url, referer=m_url)
                 m_result.add_information(l_p)
                 m_return.append(m_result)
@@ -208,7 +209,6 @@ class Robots(TestingPlugin):
                 # Check for posible suspicious URL
                 if l_url in m_discovered_suspicious:
                     v = SuspiciousURL(m_result,
-                                   parse_url(l_url).request_uri,
                                    title       = "Suspicious URL found un robots.txt",
                                    risk        = 1,
                                    severity    = 0,
@@ -217,6 +217,10 @@ class Robots(TestingPlugin):
                                    tool_id     = "robots")
                     v.add_resource(info)
                     m_return.append(v)
+
+            # Discard not neccesary info
+            map(discard_data, match.values())
+
 
         # No tricky error page, assume the status codes work
         else:
