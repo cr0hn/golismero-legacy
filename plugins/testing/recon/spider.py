@@ -70,6 +70,7 @@ class Spider(TestingPlugin):
             p = download(m_url, self.check_download, allow_redirects=allow_redirects)
         except NetworkException,e:
             Logger.log_more_verbose("Error while processing %r: %s" % (m_url, str(e)))
+
         if not p:
             return m_return
 
@@ -170,10 +171,23 @@ class Spider(TestingPlugin):
             return True
 
         # Content length absent but likely points to a directory index.
-        if not parse_url(url).filename:
-
+        parsed_url = parse_url(url)
+        if not parsed_url.filename:
             # Approved!
             return True
+
+        if not parsed_url.extension:
+            return True
+
+        # List from wikipedia: http://en.wikipedia.org/wiki/List_of_file_formats#Webpage
+        if parsed_url.extension not in (".xml", ".html", ".htm", ".xhtml", ".xht", \
+                                        ".mht", ".mhtml", ".maff", ".asp", ".aspx", ".bml", \
+                                        ".cfm", ".cgi", ".ihtml", ".jsp", ".las", ".lasso", \
+                                        ".lassoapp", ".pl", ".php", ".php3", ".phtml", \
+                                        ".rna", ".r", ".rnx", ".shtml", ".stm", ".atom", \
+                                        ".xml", ".eml", ".jsonld", ".metalink", ".met", \
+                                        ".rss", ".xml", ".markdown"):
+            return False
 
         # Approved!
         return True
