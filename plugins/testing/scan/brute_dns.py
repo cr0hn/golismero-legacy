@@ -155,7 +155,7 @@ class DNSBruteforcer(TestingPlugin):
                                      risk        = 0,
                                      level       = "low",
                                      title       = "Possible subdomain leak",
-                                     description = "Subdomain discovered may be a unwanted information disclosure"
+                                     description = "A subdomain was discovered which may be an unwanted information disclosure."
                                      )
                 d.add_resource(domain)
                 results.append(d)

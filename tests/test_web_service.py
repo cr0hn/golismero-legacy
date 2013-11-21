@@ -41,8 +41,8 @@ import argparse
 
 # Test targets
 TARGET = {
-    'quick'      : "http://terra.es",
-    'long'      : "http://www.terra.es/portada/"
+    'quick'      : "http://navajanegra.com",
+    #'long'      : "http://www.terra.es/portada/"
 }
 
 STATES = {
@@ -52,7 +52,7 @@ STATES = {
 }
 
 AUDIT_DATA = {
-    'short'    : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/spider"}]}',
+    'short'    : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/spider"} , { "plugin_name" : "testing/recon/theharvester"}]}',
     # Run OpenVAS
     'long'   : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/scan/openvas", "params" : [{"param_name" : "host", "param_value" : "192.168.2.104"}] }]}',
 }
