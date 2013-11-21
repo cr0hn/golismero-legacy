@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.config import Config
 from golismero.api.data.resource.domain import Domain
+from golismero.api.text.text_utils import generate_random_string
 from golismero.api.logger import Logger
 from golismero.api.net.dns import DNS
 from golismero.api.plugin import TestingPlugin
@@ -73,12 +74,30 @@ class DNSBruteforcer(TestingPlugin):
             Logger.log_error_verbose("Wordlist '%s' is not a file." % Config.plugin_args["wordlist"])
             return
 
+        #
+        # Set a base line for dinamyc sub-domains
+        #
+        m_virtual_domains = []
+        for v in (generate_random_string(40) for x in xrange(3)):
+            l_subdomain = ".".join((v, root))
+
+            records = DNS.get_a(l_subdomain, also_CNAME=True)
+
+            for rec in records:
+                if rec.type == "CNAME":
+                    m_virtual_domains.append(rec.target)
+
+        # If 3 subdomains are the same, set the base domain
+        m_base_domain = None
+        if len(set(m_virtual_domains)) == 1:
+            m_base_domain = m_virtual_domains[0]
+
         # Configure the progress notifier.
         self.progress.set_total(len(wordlist))
         self.progress.min_delta = 1  # notify every 1%
 
         # For each subdomain in the wordlist...
-        found = 0
+        found   = 0
         results = []
         visited = set()
         for prefix in wordlist:
@@ -101,6 +120,11 @@ class DNSBruteforcer(TestingPlugin):
 
             # If no DNS records were found, skip.
             if not records:
+                continue
+
+            # If CNAME is the base domain, skip
+            chk = [True for x in records if x.type == "CNAME" and x.target == m_base_domain]
+            if len(chk) > 0 and all(chk):
                 continue
 
             # We found a subdomain!
