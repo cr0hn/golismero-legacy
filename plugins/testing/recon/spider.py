@@ -175,12 +175,5 @@ class Spider(TestingPlugin):
             # Approved!
             return True
 
-        # Content length absent but likely points to a webpage.
-        if "download" in url or name[name.rfind(".")+1:].lower() not in (
-            "htm", "html", "php", "asp", "aspx", "jsp",
-        ):
-            Logger.log_more_verbose("Skipping URL, content is likely not text: %s" % url)
-            return False
-
         # Approved!
         return True
