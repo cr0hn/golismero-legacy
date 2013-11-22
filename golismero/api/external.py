@@ -64,7 +64,7 @@ import stat
 import shlex
 import sys
 
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, mkdtemp
 
 # Needed on non-Windows platforms to prevent a syntax error.
 try:
@@ -614,3 +614,46 @@ def tempfile(*args, **kwargs):
     else:
         with NamedTemporaryFile(suffix = ".xml") as output_file:
             yield output_file.name
+
+
+
+#------------------------------------------------------------------------------
+class _TemporaryDirWrapper:
+    """Temporary directoy wrapper based on native _TemporaryFileWrapper
+
+    This class provides a wrapper around directories opened for
+    temporary use.  In particular, it seeks to automatically
+    remove the dir when it is no longer needed.
+    """
+
+    def __init__(self, path):
+        self.path = path
+
+    def __enter__(self):
+        return self.path
+
+
+    def __exit__(self, exc, value, tb):
+        if os.path.exists(self.path) and \
+           os.path.isdir(self.path):
+            os.removedirs(self.path)
+            return True
+        else:
+            return False
+
+
+
+#------------------------------------------------------------------------------
+@contextlib.contextmanager
+def tempdir():
+    """
+    Context manager that creates a temporary directory.
+    The directory is deleted when leaving the context.
+
+    Example::
+        >>> with tempdir() as directory:
+        ...     print run_external_tool("cmd.exe", ["dir", directory])
+        ...
+    """
+    with _TemporaryDirWrapper(mkdtemp()) as output_dir:
+        yield output_dir
