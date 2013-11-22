@@ -1,0 +1,8 @@
+[Documentation]
+Name        = SSL Analyzer
+Description = Analyze SSL certificates from a web site
+Author      = GoLismero project team
+Version     = 0.1
+Website     = https://github.com/golismero
+Copyright   = Copyright (C) 2011-2013 GoLismero Project
+License     = GNU Public License
