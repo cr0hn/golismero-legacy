@@ -158,41 +158,29 @@ class SSLAnalyzerPlugin(TestingPlugin):
             # Insecure algorithm
             c = [y.cipher for y in m_ciphers if "CBC" in y.cipher]
             if len(c):
-                v = InsecureAlgorithm(info, c)
-                v.add_resource(info)
-                results.append(v)
+                results.append(InsecureAlgorithm(info, c))
 
             # Self-signed
             if m_self_signed:
-                v = InvalidCert(info)
-                v.add_resource(info)
-                results.append(v)
+                results.append(InvalidCert(info))
 
             # Valid CN?
             if m_cn != info.hostname:
-                v = InvalidCommonName(info, m_cn)
-                v.add_resource(info)
-                results.append(v)
+                results.append(InvalidCommonName(info, m_cn))
 
             # Weak keys?
             k = [int(y.bits) for i in m_ciphers if int(y.bits) <= 56]
             if len(k):
-                v = WeakKey(info, k)
-                v.add_resource(info)
-                results.append(v)
+                results.append(WeakKey(info, k))
 
             # Obsolete protocol?
             c = [y.version for y in m_ciphers if "SSLv1" in y.version]
             if len(c):
-                v = ObsoleteProtocol(info, "SSLv1")
-                v.add_resource(info)
-                results.append(v)
+                results.append(ObsoleteProtocol(info, "SSLv1"))
 
             # Outdated?
             if m_valid_after_date < m_valid_before_date:
-                v = OutdatedCert()
-                v.add_resource(info)
-                results.append(v)
+                results.append(OutdatedCert())
 
         # On error, log the exception.
         except Exception, e:
