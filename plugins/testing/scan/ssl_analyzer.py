@@ -181,6 +181,13 @@ class SSLAnalyzerPlugin(TestingPlugin):
                 v.add_resource(info)
                 results.append(v)
 
+            # Obsolete protocol?
+            c = [y.version for y in m_ciphers if "SSLv1" in y.version]
+            if len(c):
+                v = ObsoleteProtocol(info, "SSLv1")
+                v.add_resource(info)
+                results.append(v)
+
             # Outdated?
             if m_valid_after_date < m_valid_before_date:
                 v = OutdatedCert()
