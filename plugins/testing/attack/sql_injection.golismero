@@ -1,6 +1,6 @@
 [Documentation]
 Name        = SQL Injection
-Description = SQL Injection plugin. Only detect the injection try to getting remote db banner. Not explote it.
+Description = SQL Injection plugin. Only retrieves the DB banner, does not exploit any vulnerabilities.
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero
