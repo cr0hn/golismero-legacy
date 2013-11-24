@@ -1,6 +1,6 @@
 [Documentation]
 Name        = SSL Analyzer
-Description = Analyze SSL certificates from a web site
+Description = Analyze SSL certificates
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

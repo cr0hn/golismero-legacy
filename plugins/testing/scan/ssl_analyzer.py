@@ -54,11 +54,13 @@ from collections import namedtuple
 from datetime import datetime
 import re
 
+
 Ciphers = namedtuple("Ciphers", ["version", "bits", "cipher"])
 
 
 #------------------------------------------------------------------------------
 class SSLAnalyzerPlugin(TestingPlugin):
+
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
@@ -105,6 +107,7 @@ class SSLAnalyzerPlugin(TestingPlugin):
                 Logger.log("No SSL vulns found.")
 
             return r
+
 
     #--------------------------------------------------------------------------
     @staticmethod
@@ -180,7 +183,7 @@ class SSLAnalyzerPlugin(TestingPlugin):
 
             # Outdated?
             if m_valid_after_date < m_valid_before_date:
-                results.append(OutdatedCert())
+                results.append(OutdatedCert(info))
 
         # On error, log the exception.
         except Exception, e:
