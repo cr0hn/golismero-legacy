@@ -616,33 +616,6 @@ def tempfile(*args, **kwargs):
             yield output_file.name
 
 
-
-#------------------------------------------------------------------------------
-class _TemporaryDirWrapper:
-    """Temporary directoy wrapper based on native _TemporaryFileWrapper
-
-    This class provides a wrapper around directories opened for
-    temporary use.  In particular, it seeks to automatically
-    remove the dir when it is no longer needed.
-    """
-
-    def __init__(self, path):
-        self.path = path
-
-    def __enter__(self):
-        return self.path
-
-
-    def __exit__(self, exc, value, tb):
-        if os.path.exists(self.path) and \
-           os.path.isdir(self.path):
-            os.removedirs(self.path)
-            return True
-        else:
-            return False
-
-
-
 #------------------------------------------------------------------------------
 @contextlib.contextmanager
 def tempdir():
@@ -655,5 +628,10 @@ def tempdir():
         ...     print run_external_tool("cmd.exe", ["dir", directory])
         ...
     """
-    with _TemporaryDirWrapper(mkdtemp()) as output_dir:
-        yield output_dir
+    output_dir = mkdtemp()
+    yield output_dir
+    if os.path.isdir(output_dir):
+        try:
+            os.removedirs(output_dir)
+        except Exception:
+            pass
