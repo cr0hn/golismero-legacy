@@ -246,7 +246,7 @@ class Url(_AbstractUrl):
     def post_params(self):
         """
         :return: POST parameters.
-        :rtype: dict(str)
+        :rtype: dict(str -> str)
         """
         return self.__post_params
 
