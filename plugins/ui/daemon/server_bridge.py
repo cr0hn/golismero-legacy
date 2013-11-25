@@ -240,7 +240,7 @@ class ServerPush(threading.Thread):
         Push a notification.
         """
         push_url = self.__push_url + command
-        requests.post(push_url, json.encode(args))
+        requests.post(push_url, json.encode(args), headers={'Content-type': 'application/json'})
 
 
 #------------------------------------------------------------------------------
