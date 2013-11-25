@@ -82,7 +82,7 @@ class Spider(TestingPlugin):
         # Get links
         if p.information_type == Information.INFORMATION_HTML:
             m_links = extract_from_html(p.raw_data, m_url)
-            m_links.update( extract_from_text(p.raw_data, m_url) )
+            #m_links.update( extract_from_text(p.raw_data, m_url) )
         elif p.information_type == Information.INFORMATION_PLAIN_TEXT:
             m_links = extract_from_text(p.raw_data, m_url)
         else:
