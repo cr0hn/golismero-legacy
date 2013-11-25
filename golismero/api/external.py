@@ -63,6 +63,7 @@ import subprocess
 import stat
 import shlex
 import sys
+from shutil import rmtree
 
 from tempfile import NamedTemporaryFile, mkdtemp
 
@@ -632,6 +633,6 @@ def tempdir():
     yield output_dir
     if os.path.isdir(output_dir):
         try:
-            os.removedirs(output_dir)
+            rmtree(output_dir)
         except Exception:
             pass
