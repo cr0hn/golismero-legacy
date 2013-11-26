@@ -28,7 +28,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 # Test the GoLismero daemon.
-
 from time import sleep
 import requests
 import argparse
@@ -37,12 +36,8 @@ import time
 import traceback
 import urlparse
 
+from sys import exit
 
-# Test targets
-TARGET = {
-    'quick'      : "http://navajanegra.com",
-    'long'      : "http://www.terra.es/portada/"
-}
 
 STATUS =  "/api/audits/state/%s"
 
@@ -52,24 +47,29 @@ STATES = {
     'log'         : "/api/audits/log/%s"
 }
 
-AUDIT_DATA = {
-    'short'    : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/spideraaa"}, { "plugin_name" : "testing/recon/theharvester"}]}',
+TESTS = {
+    'all_plugins'    : '{"audit_name":"all_plugins", "targets":["%s"], "enable_plugins": ["all"]}',
+
+    'test1'          : '{"audit_name":"short", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/robots"}, { "plugin_name" : "testing/scan/ssl_analyzer"}]}',
+
+    'short'          : '{"audit_name":"short", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/spider"}]}',
+
     # Run OpenVAS
-    'long'   : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/scan/openvas", "params" : [{"param_name" : "host", "param_value" : "192.168.2.104"}] }]}',
+    'long'           : '{"audit_name":"long", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/scan/openvas", "params" : [{"param_name" : "host", "param_value" : "192.168.2.104"}] }]}',
 }
 
 
 IMPORT = "/api/audits/import/"
 
 RESULTS_FORMATS = [
-    'txt',
     "html",
     "xml",
     "csv",
     "json",
     "rst",
-    "odt",
-    "tex",
+    #"odt",
+    "text",
+    "csv"
 ]
 
 
@@ -110,12 +110,18 @@ def scan_audit(args):
     """Test the complete audit scan"""
 
     # Get the parameters.
-    target      = TARGET.get("long") if args.TYPE else TARGET.get("quick")
-    data        = (AUDIT_DATA.get("long") if args.TYPE else AUDIT_DATA.get("short")) % target
+    target      = args.HOST
+    data        = TESTS[args.TEST_NAME] % target
     daemon_addr = args.ADDRESS
     daemon_port = args.PORT
     address     = "http://%s:%s" % (daemon_addr, daemon_port)
     headers     = {'Content-Type': 'application/json'}
+
+    # Debug info
+    print "[i] Selected test: %s" % args.TEST_NAME
+    print "    | Request: "
+    print "    |  %s" % data
+
 
     # First, make the create
     query      = urlparse.urljoin(address, "/api/audits/create/")
@@ -190,7 +196,7 @@ def scan_audit(args):
 
     # Wait while generate the results
     print "[*] Waiting for report generation"
-    sleep(5)
+    sleep(2)
 
     # Gettirng results for each format
     for l_format in RESULTS_FORMATS:
@@ -202,7 +208,7 @@ def scan_audit(args):
             query      = urlparse.urljoin(address, "/api/audits/results/%s/%s" % (str(audit_id), l_format))
             r          = requests.get(query)
 
-            if r.status_code == "200":
+            if r.status_code == 200:
                 print "OK!"
                 # Out of first loop
                 break
@@ -215,13 +221,35 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='GoLismero web service tester')
     parser.add_argument('-d', dest="ADDRESS", help="daemon address", default="127.0.0.1")
     parser.add_argument('-p', dest="PORT", help="daemon port", type=int, default=8000)
-    parser.add_argument('--long', dest="TYPE", action="store_false", help="long test type", default=False)
+
+    gr1 = parser.add_argument_group("Tests options")
+    gr1.add_argument('--test-name', dest="TEST_NAME", help="Name of test", default="short")
+    gr1.add_argument('--list-tests', dest="TEST_LIST", action="store_true", help="Name of test", default=False)
+    gr1.add_argument('--host', dest="HOST", help="Name of test", default=False)
 
     gr1 = parser.add_argument_group("Import options")
     gr1.add_argument('-i', dest="IMPORT", action="store_true", help="test the import options only", default=False)
     gr1.add_argument('--files', dest="IMPORT_FILES", help="comma separeted files to import.", default=False)
 
     args = parser.parse_args()
+
+    # List the tests?
+    if args.TEST_LIST:
+        print
+        print "Tests list:"
+        for t in TESTS:
+            print " - %s" % t
+
+        print ""
+        exit(0)
+
+    # Check test name
+    if args.TEST_NAME:
+        try:
+            TESTS[args.TEST_NAME]
+        except KeyError:
+            print "[!] Test '%s' not found." % args.TEST_NAME
+            exit(1)
 
     if args.IMPORT:
         import_options(args)
