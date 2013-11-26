@@ -97,6 +97,8 @@ class GoLismeroFacadeReportUnknownFormatException(Exception):
 class GoLismeroFacadeReportNotAvailableException(Exception):
     """Unknown format of report requested"""
 
+class GoLismeroFacadeAuditImportFileExitsException(Exception):
+    """Import exception"""
 
 #------------------------------------------------------------------------------
 #
@@ -268,6 +270,15 @@ class GoLismeroFacadeAuditCommon(object):
 
         try:
 
+            # Check regex, if specified
+            if data.get("subdomain_regex", False):
+                import re
+                reg_expr = data.get("subdomain_regex")
+                try:
+                    re.compile(reg_expr)
+                except re.error:
+                    raise GoLismeroFacadeAuditUnknownException("'subdomain_regex' value contain a not valid regex: %s" % reg_expr)
+
             #
             # AUDIT
             #
@@ -409,6 +420,15 @@ class GoLismeroFacadeAuditCommon(object):
 
             # Prepare config
             m_imports     = list(set((os.path.abspath(y.strip()) for y in data.get("imports"))))
+            # Checks if files exits
+            for x in m_imports:
+                # File exists?
+                if not os.path.exists(x):
+                    raise GoLismeroFacadeAuditImportFileExitsException("File '%s' not exists." % x)
+                # Is really a file?
+                if not os.path.isfile(x):
+                    raise GoLismeroFacadeAuditImportFileExitsException("'%s' is not a file." % x)
+
 
             AuditBridge.import_audit(dj, m_imports)
 
