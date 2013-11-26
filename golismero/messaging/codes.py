@@ -215,6 +215,7 @@ class MessageCode(MessageConstants):
     # Audit control
     MSG_CONTROL_START_AUDIT        = 10
     MSG_CONTROL_STOP_AUDIT         = 11
+    MSG_CONTROL_START_ERROR_AUDIT  = 12
 
     # UI subsystem
     MSG_CONTROL_START_UI           = 20
