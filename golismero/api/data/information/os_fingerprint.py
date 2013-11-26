@@ -137,18 +137,24 @@ class OSFingerprint(Information):
                 cpe_parts.extend( "*" * (11 - len(cpe_parts)) )
             cpe = "cpe:2.3:" + ":".join(cpe_parts)
 
-        # Save the CPE.
-        self.__cpe = cpe
+        # Validate the accuracy value.
+        if type(accuracy) is not float:
+            accuracy = float(accuracy)
+        if accuracy < 0.0 or accuracy > 100.0:
+            raise ValueError(
+                "Accuracy must be between 0.0 and 100.0, got %r" % accuracy)
+
+        # Save the CPE and accuracy.
+        self.__cpe      = cpe
+        self.__accuracy = accuracy
 
         # Save the rest of the properties.
-        self.accuracy   = accuracy
+        # TODO: extract missing parameters from the CPE string.
         self.name       = name
         self.vendor     = vendor
         self.type       = os_type
         self.generation = generation
         self.family     = family
-
-        # TODO: extract missing parameters from the CPE string.
 
         # Parent constructor.
         super(OSFingerprint, self).__init__()
@@ -180,28 +186,13 @@ class OSFingerprint(Information):
 
 
     #--------------------------------------------------------------------------
-    @keep_greater
+    @identity
     def accuracy(self):
         """
         :return: Accuracy percentage (between 0.0 and 100.0).
         :rtype: float
         """
         return self.__accuracy
-
-
-    #--------------------------------------------------------------------------
-    @accuracy.setter
-    def accuracy(self, accuracy):
-        """
-        :param accuracy: Accuracy percentage (between 0.0 and 100.0).
-        :type accuracy: float
-        """
-        if type(accuracy) is not float:
-            accuracy = float(accuracy)
-        if accuracy < 0.0 or accuracy > 100.0:
-            raise ValueError(
-                "Accuracy must be between 0.0 and 100.0, got %r" % accuracy)
-        self.__accuracy = accuracy
 
 
     #--------------------------------------------------------------------------
