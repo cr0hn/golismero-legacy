@@ -29,16 +29,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 # Test the GoLismero daemon.
 
-<<<<<<< HEAD
 from time import sleep
 import requests
-=======
 import argparse
 import json
 import time
 import traceback
-import urllib2
->>>>>>> af84b98cb1da5dcef26514e58b5adb112c85c50e
 import urlparse
 
 
@@ -48,7 +44,6 @@ TARGET = {
     'long'      : "http://www.terra.es/portada/"
 }
 
-<<<<<<< HEAD
 STATUS =  "/api/audits/state/%s"
 
 STATES = {
@@ -57,23 +52,17 @@ STATES = {
     'log'         : "/api/audits/log/%s"
 }
 
-=======
->>>>>>> af84b98cb1da5dcef26514e58b5adb112c85c50e
 AUDIT_DATA = {
     'short'    : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/spideraaa"}, { "plugin_name" : "testing/recon/theharvester"}]}',
     # Run OpenVAS
     'long'   : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/scan/openvas", "params" : [{"param_name" : "host", "param_value" : "192.168.2.104"}] }]}',
 }
 
-<<<<<<< HEAD
+
 IMPORT = "/api/audits/import/"
 
 RESULTS_FORMATS = [
     'txt',
-=======
-RESULT_FORMATS = [
-    "txt",
->>>>>>> af84b98cb1da5dcef26514e58b5adb112c85c50e
     "html",
     "xml",
     "csv",
@@ -85,7 +74,6 @@ RESULT_FORMATS = [
 
 
 #----------------------------------------------------------------------
-<<<<<<< HEAD
 def import_options(args):
     """"""
     daemon_addr = args.ADDRESS
@@ -120,9 +108,6 @@ def import_options(args):
 #----------------------------------------------------------------------
 def scan_audit(args):
     """Test the complete audit scan"""
-=======
-def main(args):
->>>>>>> af84b98cb1da5dcef26514e58b5adb112c85c50e
 
     # Get the parameters.
     target      = TARGET.get("long") if args.TYPE else TARGET.get("quick")
@@ -130,7 +115,6 @@ def main(args):
     daemon_addr = args.ADDRESS
     daemon_port = args.PORT
     address     = "http://%s:%s" % (daemon_addr, daemon_port)
-<<<<<<< HEAD
     headers     = {'Content-Type': 'application/json'}
 
     # First, make the create
@@ -225,62 +209,6 @@ def main(args):
         else:
             print "[!] Can't generate the results in format: %s" % l_format
 
-=======
-
-    # Prepare urllib2.
-    opener  = urllib2.build_opener()
-    headers = {'Content-Type': 'application/json'}
-
-    # Create the audit.
-    query = urlparse.urljoin(address, "/api/audits/create/")
-    print "[*] Creating audit"
-    audit_id = json.load(opener.open(urllib2.Request(query, data=data, headers=headers)))["audit_id"]
-    print "    | Got audit id: %s" % str(audit_id)
-    assert bool(audit_id)
-
-    # Start the audit.
-    query = urlparse.urljoin(address, "/api/audits/start/%s" % str(audit_id))
-    print "[*] Starting audit %s" % str(audit_id)
-    print "      %s" % opener.open(urllib2.Request(query, headers=headers)).read()
-
-    # Wait until the audit is finished.
-    while True:
-
-        # Get the state, to know if it's running.
-        query = urlparse.urljoin(address, "/api/audits/state/%s" % str(audit_id))
-        print "[*] Making request: state..."
-        resp = opener.open(urllib2.Request(query, headers=headers)).read()
-        print "      %s" % resp
-
-        # Break if it's not running anymore.
-        if json.loads(resp)["state"] != "running":
-            break
-
-        # Get the progress.
-        query = urlparse.urljoin(address, "/api/audits/progress/%s" % str(audit_id))
-        print "[*] Making request: progress..."
-        resp = opener.open(urllib2.Request(query, headers=headers)).read()
-        print "      %s" % resp
-
-        # Get the summary.
-        query = urlparse.urljoin(address, "/api/audits/results/summary/%s" % str(audit_id))
-        print "[*] Making request: summary..."
-        resp = opener.open(urllib2.Request(query, headers=headers)).read()
-        print "      %s" % resp
-
-        # Wait before polling again.
-        time.sleep(1)
-
-    # Get the results in each format.
-    for l_format in RESULT_FORMATS:
-        print "[*] Getting results for audit %s in format %s" % (str(audit_id), l_format)
-        try:
-            query = urlparse.urljoin(address, "/api/audits/results/%s/%s" % (str(audit_id), l_format))
-            print "%s\n      %s" % ("=" * 70, opener.open(urllib2.Request(query, headers=headers)).read())
-        except Exception:
-            traceback.print_exc()
->>>>>>> af84b98cb1da5dcef26514e58b5adb112c85c50e
-
 
 if __name__ == "__main__":
 
@@ -295,11 +223,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-<<<<<<< HEAD
     if args.IMPORT:
         import_options(args)
     else:
         scan_audit(args)
-=======
-    main(args)
->>>>>>> af84b98cb1da5dcef26514e58b5adb112c85c50e
