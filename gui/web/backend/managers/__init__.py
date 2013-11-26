@@ -37,7 +37,7 @@ import yaml
 
 #----------------------------------------------------------------------
 #
-# Data structures
+# Data variables
 #
 #----------------------------------------------------------------------
 
@@ -66,12 +66,12 @@ for f in listdir(g_folder):
 if not REPORT_FORMATS:
     REPORT_FORMATS = ["html", "txt", "rst"]
 if not REPORT_PLUGINS:
-    REPORT_PLUGINS = ["html", "text", "rst"]
+    REPORT_PLUGINS = ["html", "text", "rstext"]
 if not CONTENT_TYPES_BY_FORMAT:
     CONTENT_TYPES_BY_FORMAT = {
         'xml'    : 'application/xml',
         'html'   : 'text/html',
-        'rst'    : 'text/html',
+        'rstext' : 'text/html',
         'text'   : 'text/plain'
     }
 if not EXTENSIONS_BY_FORMAT:
@@ -79,15 +79,194 @@ if not EXTENSIONS_BY_FORMAT:
         'xml'    : 'xml',
         'html'   : 'html',
         'rst'    : 'rst',
+        'rstext' : 'rst',
         'text'   : 'txt',
         'txt'    : 'txt',
         'json'   : 'json'
     }
 
-class GoLismeroAuditProgress(object):
+#----------------------------------------------------------------------
+#
+# Data structures
+#
+#----------------------------------------------------------------------
+class _AbstractInfo(object):
+    """Abstract class for GoLismero managers data structures"""
+
+    #----------------------------------------------------------------------
+    def __init__(self, json_info):
+        self.__json_info             = json_info
+
+    #----------------------------------------------------------------------
+    @property
+    def to_json(self):
+        """
+        :return:
+        :rtype:
+        """
+        return self.__json_info
+
+
+
+
+
+    #----------------------------------------------------------------------
+    def __getitem__(self, value):
+        return self.__json_info[value]
+
+
+
+class GoLismeroAuditInfo(_AbstractInfo):
+    """
+    Get the audit info for errors or warnings. This class acts as java POJO, having these attributes:
+
+    - text      :: str
+    - level     :: int
     """
 
-    Get the audit state. This class acts as java POJO, having these attributes:
+    PROPERTIES     = ["text", "level"]
+
+
+    #----------------------------------------------------------------------
+    def __init__(self, data):
+        """
+        Load data from JSON, in format:
+
+        {
+          text      :: str
+          level     :: int
+        }
+
+        :param data: dict with info.
+        :type data: dict
+
+        :raises: ValueError
+        """
+        if not isinstance(data, dict):
+            raise TypeError("Expected dict, got '%s' instead" % type(data))
+
+        for p in GoLismeroAuditInfo.PROPERTIES:
+            try:
+                setattr(self, p, data[p])
+            except KeyError:
+                raise ValueError("Invalid JSON format. Property '%s' unknown" % p)
+
+        # Store original json
+        super(GoLismeroAuditInfo, self).__init__(data)
+
+
+class GoLismeroAuditLog(GoLismeroAuditInfo):
+    """
+    Get the audit info for log. This class acts as java POJO, having these attributes:
+
+    - is_error  :: bool
+    - text      :: str
+    - level     :: int
+    """
+
+    PROPERTIES     = GoLismeroAuditInfo.PROPERTIES
+    PROPERTIES.extend(["is_error", "verbosity", "timestamp"])
+
+
+    #----------------------------------------------------------------------
+    def __init__(self, data):
+        """
+        Load data from JSON, in format:
+
+        {
+          is_error  :: bool
+          text      :: str
+          level     :: int
+        }
+
+        :param data: dict with info.
+        :type data: dict
+
+        :raises: ValueError
+        """
+        super(GoLismeroAuditLog, self).__init__(data)
+
+        try:
+            setattr(self, "is_error", data["is_error"])
+        except KeyError:
+            raise ValueError("Invalid JSON format. Property '%s' unknown" % p)
+
+
+
+
+
+
+class GoLismeroAuditSummary(_AbstractInfo):
+    """
+    Get the audit summary. This class acts as java POJO, having these attributes:
+
+    'vulns_number'            = int
+    'discovered_hosts'        = int # Host discovered into de scan process
+    'total_hosts'             = int
+    'vulns_by_level'          = {
+       'info'     : int,
+       'low'      : int,
+       'medium'   : int,
+       'high'     : int,
+       'critical' : int,
+     }
+    """
+
+    PROPERTIES     = ["vulns_number", "discovered_hosts", "total_hosts"]
+    LEVEL_VULNS    = ["info", "low", "medium", "high", "critical"]
+
+
+    #----------------------------------------------------------------------
+    def __init__(self, data):
+        """
+        Load data from JSON, in format:
+
+        {
+        'vulns_number'            = int
+        'discovered_hosts'        = int # Host discovered into de scan process
+        'total_hosts'             = int
+        'vulns_by_level'          = {
+           'info'     : int,
+           'low'      : int,
+           'medium'   : int,
+           'high'     : int,
+           'critical' : int,
+         }
+
+        :param data: dict with info.
+        :type data: dict
+
+        :raises: ValueError
+        """
+        if not isinstance(data, dict):
+            raise TypeError("Expected dict, got '%s' instead" % type(data))
+
+        # Commom properties
+        for p in GoLismeroAuditSummary.PROPERTIES:
+            try:
+                setattr(self, p, data[p])
+            except KeyError:
+                raise ValueError("Invalid JSON format. Property '%s' unknown" % p)
+
+        # Vulns by level
+        m_vulns_by_level = data.get("vulns_by_level", None)
+        if not m_vulns_by_level:
+            raise ValueError("Invalid JSON format. Property 'vulns_by_level' unknown")
+
+        for p in GoLismeroAuditSummary.LEVEL_VULNS:
+            try:
+                setattr(self, p, m_vulns_by_level[p])
+            except KeyError:
+                raise ValueError("Invalid JSON format. Property '%s' unknown" % p)
+
+
+        # Store original json
+        super(GoLismeroAuditSummary, self).__init__(data)
+
+
+class GoLismeroAuditProgress(_AbstractInfo):
+    """
+    Get the audit progress. This class acts as java POJO, having these attributes:
 
     - current_stage :: str
     - steps         :: int
@@ -108,11 +287,13 @@ class GoLismeroAuditProgress(object):
           'current_stage' : str,
           'steps'         : int,
           'tests_remain'  : int,
-          'tests_done'     : int
+          'tests_done'    : int
         }
 
         :param data: dict with info.
         :type data: dict
+
+        :raises: ValueError
         """
         if not isinstance(data, dict):
             raise TypeError("Expected dict, got '%s' instead" % type(data))
@@ -121,83 +302,12 @@ class GoLismeroAuditProgress(object):
             try:
                 setattr(self, p, data[p])
             except KeyError:
-                raise ValueError("Invalid JSON format.")
+                raise ValueError("Invalid JSON format. Property '%s' unknown" % p)
 
         # Store original json
-        self.__json             = data
+        super(GoLismeroAuditProgress, self).__init__(data)
 
-
-    #----------------------------------------------------------------------
-    @property
-    def to_json(self):
-        """
-        Return the JSON object
-        """
-        return self.__json
-
-
-class GoLismeroAuditSummary(object):
-    """
-
-    Get the audit state. This class acts as java POJO, having these attributes:
-
-    - vulns_number        :: int
-    - discovered_hosts    :: int   # Hosts discovered into de scan process
-    - total_hosts         :: int   # Hosts discovered + initial targets
-    - vulns_by_level      :: dict( # Total summary of vulns by level
-       'info'     : int,
-       'low'      : int,
-       'medium'   : int,
-       'high'     : int,
-       'critical' : int)
-    """
-
-    PROPERTIES     = ["vulns_number", "discovered_hosts", "total_hosts", "vulns_by_level"]
-
-
-    #----------------------------------------------------------------------
-    def __init__(self, data):
-        """
-        Load data from JSON, in format:
-
-        {
-           'vulns_number'            = int
-           'discovered_hosts'        = int
-           'total_hosts'             = int
-           'vulns_by_level'          = {
-              'info'     : int,
-              'low'      : int,
-              'medium'   : int,
-              'high'     : int,
-              'critical' : int,
-        }
-
-        :param data: dict with info.
-        :type data: dict
-        """
-        if not isinstance(data, dict):
-            raise TypeError("Expected dict, got '%s' instead" % type(data))
-
-        for p in self.PROPERTIES:
-            try:
-                setattr(self, p, data[p])
-            except KeyError,e:
-                raise ValueError("Invalid JSON format.")
-
-        # Store original json
-        self.__json             = data
-
-
-    #----------------------------------------------------------------------
-    @property
-    def to_json(self):
-        """
-        Return the JSON object
-        """
-        return self.__json
-
-
-class GoLismeroAuditData(object):
+class GoLismeroAuditData(object): # TODO: Rewrite and clean this class
     """Audit info"""
 
     PROPERTIES = [
@@ -211,6 +321,7 @@ class GoLismeroAuditData(object):
         "follow_redirects",
         "follow_first_redirect",
         "proxy_addr",
+        "proxy_port",
         "proxy_user",
         "proxy_pass",
         "cookie",
@@ -286,24 +397,28 @@ class GoLismeroAuditData(object):
         # Set relations
         #
         # Targets
-        c.targets = []
-        for d in data.targets.all():
-            c.targets.append(d.target_name)
+        ts = data.targets.all()
+        if ts:
+            c.targets = []
+            for d in ts:
+                c.targets.append(d.target_name)
 
         # Plugins
-        c.enable_plugins = []
-        for d in data.enable_plugins.all():
-            l_plugin = {}
-            l_plugin['plugin_name'] = str(d.plugin_name)
-            l_plugin['params'] = []
+        ps = data.enable_plugins.all()
+        if ps:
+            c.enable_plugins = []
+            for d in ps:
+                l_plugin = {}
+                l_plugin['plugin_name'] = str(d.plugin_name)
+                l_plugin['params'] = []
 
-            for p in d.pluginparameters_set.filter(audit__id=data.id).all():
-                l_param = {}
-                l_param['param_name']  = str(p.param_name)
-                l_param['param_value'] = str(p.param_value)
-                l_plugin['params'].append(l_param)
+                for p in d.pluginparameters_set.filter(audit__id=data.id).all():
+                    l_param = {}
+                    l_param['param_name']  = str(p.param_name)
+                    l_param['param_value'] = str(p.param_value)
+                    l_plugin['params'].append(l_param)
 
-            c.enable_plugins.append(l_plugin)
+                c.enable_plugins.append(l_plugin)
 
         # Users
         c.user = str(data.user.username)
@@ -391,7 +506,10 @@ class GoLismeroAuditData(object):
         m_config['audit_name']      = "%s_%s" % (self.audit_name, str(self.id))
 
         # Add targets
-        m_config['targets']         = self.__dict__["targets"]
+        try:
+            m_config['targets']         = self.__dict__["targets"]
+        except KeyError:
+            pass # No targets -> imports audits
 
         #
         # FIXME in next version:

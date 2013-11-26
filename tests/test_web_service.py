@@ -27,112 +27,187 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-"""
-
-This test file makes tests for GoLismero when it works as daemon
-
-"""
+# Test the GoLismero daemon.
 
 from time import sleep
-import urllib2
-import urlparse
-import json
+import requests
 import argparse
+import json
+import time
+import traceback
+import urlparse
+
 
 # Test targets
 TARGET = {
-    'long'      : "http://terra.es",
+    'quick'      : "http://navajanegra.com",
     'long'      : "http://www.terra.es/portada/"
 }
 
+STATUS =  "/api/audits/state/%s"
+
 STATES = {
     'progress'    : "/api/audits/progress/%s",
-    'status'      : "/api/audits/state/%s",
-    'summary'     : "/api/audits/results/summary/%s"
+    'summary'     : "/api/audits/results/summary/%s",
+    'log'         : "/api/audits/log/%s"
 }
 
 AUDIT_DATA = {
-    'short'    : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "spider"}]}',
+    'short'    : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/spideraaa"}, { "plugin_name" : "testing/recon/theharvester"}]}',
     # Run OpenVAS
     'long'   : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/scan/openvas", "params" : [{"param_name" : "host", "param_value" : "192.168.2.104"}] }]}',
 }
+
+
+IMPORT = "/api/audits/import/"
 
 RESULTS_FORMATS = [
     'txt',
     "html",
     "xml",
     "csv",
-    "json"
+    "json",
+    "rst",
+    "odt",
+    "tex",
 ]
 
-#----------------------------------------------------------------------
-def main(args):
-    """Main func"""
 
+#----------------------------------------------------------------------
+def import_options(args):
+    """"""
+    daemon_addr = args.ADDRESS
+    daemon_port = args.PORT
+    files       = args.IMPORT_FILES
+
+    if not files:
+        raise ValueError("files can't be None")
+
+    address     = "http://%s:%s" % (daemon_addr, daemon_port)
+    query       = urlparse.urljoin(address, IMPORT)
+    headers     = {'Content-Type': 'application/json'}
+
+
+    data        = '{"audit_name":"asdfasdf", "imports": [%s], "enable_plugins": [{ "plugin_name" : "report/bugblast_1.6", "params" : [{"param_name" : "proyecto_d", "param_value" : "GRUPOOO"}] }]}' % ','.join("\"%s\"" % y.strip() for y in files.split(","))
+    print data
+
+    print "[*] Importing files"
+    r          = requests.post(query, data=data, headers=headers)
+    if r.status_code != 200:
+        print "[!] Error importing the files"
+        print r.text
+        return
+    r_json     = json.loads(r.text)
+    audit_id   = r_json["audit_id"]
+    print "    | Got audit id: %s" % str(audit_id)
+
+    if not audit_id:
+        print "[!] Import can't be done."
+        return
+
+#----------------------------------------------------------------------
+def scan_audit(args):
+    """Test the complete audit scan"""
+
+    # Get the parameters.
     target      = TARGET.get("long") if args.TYPE else TARGET.get("quick")
-    data        = (AUDIT_DATA.get("short") if args.TYPE else AUDIT_DATA.get("long")) % target
+    data        = (AUDIT_DATA.get("long") if args.TYPE else AUDIT_DATA.get("short")) % target
     daemon_addr = args.ADDRESS
     daemon_port = args.PORT
     address     = "http://%s:%s" % (daemon_addr, daemon_port)
-
-    # Prepare urllib2
-    opener  = urllib2.build_opener()
-    headers = {'Content-Type': 'application/json'}
+    headers     = {'Content-Type': 'application/json'}
 
     # First, make the create
     query      = urlparse.urljoin(address, "/api/audits/create/")
-    try:
-        print "[*] Creating audit"
-        audit_id   = json.load(opener.open(urllib2.Request(query, data=data, headers=headers)))["audit_id"]
-        print "    | Got audit id: %s" % str(audit_id)
-    except urllib2.HTTPError, e:
-        print "[!] Error creating the audit"
-        print e
+    audit_id   = None
 
-    # First, make the start
-    query      = urlparse.urljoin(address, "/api/audits/start/%s" % str(audit_id))
-    try:
-        print "[*] Starting audit %s" % str(audit_id)
-        print "      %s" % opener.open(urllib2.Request(query, headers=headers)).read()
-    except urllib2.HTTPError, e:
+    #
+    # Create audit
+    #
+    print "[*] Creating audit"
+    r          = requests.post(query, data=data, headers=headers)
+    if r.status_code != 200:
         print "[!] Error creating the audit"
-        print e
+        print r.text
+        return
+    r_json     = json.loads(r.text)
+    audit_id   = r_json["audit_id"]
+    print "    | Got audit id: %s" % str(audit_id)
+
+    if not audit_id:
+        print "[!] Audit not created correctly"
+        return
+
+    #
+    # Start the audit
+    #
+    print "[*] Starting audit %s" % str(audit_id)
+    query   = urlparse.urljoin(address, "/api/audits/start/%s" % str(audit_id))
+    r       = requests.get(query, headers=headers)
+    if r.status_code != 200:
+        print "[!] Error creating the audit"
+        print r.text
+        return
+    print "      %s" % r.text
+
 
     # Check states
-    try:
-        while True:
-            for t, r in STATES.iteritems():
-                print "[*] Making request: %s..." % t
-                query  = urlparse.urljoin(address, r % audit_id)
-                print "      %s" % opener.open(urllib2.Request(query, headers=headers)).read()
-                sleep(1)
-    except urllib2.HTTPError, e:
-        print "    | Error in method: %s (Probably the audit is finished)" % t
-        print e
+    cont = True
+    while cont:
+
+        # Check state for finish
+        query  = urlparse.urljoin(address, STATUS % audit_id)
+        r      = json.loads(requests.get(query, headers = headers).text)
+        print "[*] Audit state: %s" % r["state"]
+        if r["state"] != "running":
+            print "Audit finished with state: %s" % r["state"]
+            break
+
+        for t, r in STATES.iteritems():
+
+            # Check progress + summary
+            print "[*] Making request: %s..." % t
+            query  = urlparse.urljoin(address, r % audit_id)
+            r      = requests.get(query, headers = headers)
+            r_json = json.loads(r.text)
+
+            # To console...
+            print r.text
+
+            # Check for errors
+            if r_json.get("error_code", True):
+                if r_json.get("error_code") == -1:
+                    return
+
+            if r.status_code != 200:
+                print "    | Error in method: %s (Probably the audit is finished):" % t
+                print "    | %s" % r.text
+                cont = False
+                break
+
+
+            sleep(1)
 
     # Wait while generate the results
     print "[*] Waiting for report generation"
     sleep(5)
 
-
     # Gettirng results for each format
     for l_format in RESULTS_FORMATS:
         # Try to get 3 times the results
-        print "[*] Getting results for audit %s in format %s" % (str(audit_id), l_format)
+        print "[*] Getting results for audit %s in format %s..." % (str(audit_id), l_format),
         for l_times in xrange(3):
-            try:
-                # Get results
-                query      = urlparse.urljoin(address, "/api/audits/results/%s/%s" % (str(audit_id), l_format))
-                print "%s\n      %s" % ("=" * 70, opener.open(urllib2.Request(query, headers=headers)).read())
 
+            # Get results
+            query      = urlparse.urljoin(address, "/api/audits/results/%s/%s" % (str(audit_id), l_format))
+            r          = requests.get(query)
+
+            if r.status_code == "200":
+                print "OK!"
                 # Out of first loop
                 break
-            except urllib2.HTTPError, e:
-                print "    | - i - Error getting results. Waiting 1 second..."
-                sleep(1)
         else:
             print "[!] Can't generate the results in format: %s" % l_format
-
 
 
 if __name__ == "__main__":
@@ -142,6 +217,13 @@ if __name__ == "__main__":
     parser.add_argument('-p', dest="PORT", help="daemon port", type=int, default=8000)
     parser.add_argument('--long', dest="TYPE", action="store_false", help="long test type", default=False)
 
+    gr1 = parser.add_argument_group("Import options")
+    gr1.add_argument('-i', dest="IMPORT", action="store_true", help="test the import options only", default=False)
+    gr1.add_argument('--files', dest="IMPORT_FILES", help="comma separeted files to import.", default=False)
+
     args = parser.parse_args()
 
-    main(args)
+    if args.IMPORT:
+        import_options(args)
+    else:
+        scan_audit(args)

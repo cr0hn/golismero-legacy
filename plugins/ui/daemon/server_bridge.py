@@ -35,10 +35,22 @@ __all__ = ["launch_server", "GoLismeroStateMachine"]
 
 import multiprocessing
 import os.path
+import requests
 import sys
 import thread
 import threading
 import traceback
+
+from Queue import Queue
+
+try:
+    import cjson as json
+except ImportError:
+    try:
+        import simplejson as json
+    except ImportError:
+        import json
+
 
 #------------------------------------------------------------------------------
 def launch_server(orchestrator_config, plugin_config, plugin_extra_config):
@@ -136,8 +148,16 @@ def _launch_server(input_conn, output_conn,
                 # Instance the bridge object to talk to GoLismero.
                 bridge = Bridge(input_conn, output_conn)
 
-                # Create the state machine.
-                fsm = GoLismeroStateMachine(bridge)
+                # Instance the server pusher, if requested.
+                server_push = orchestrator_config.get('server_push', None)
+
+                if server_push:
+                    sp = ServerPush(server_push)
+                else:
+                    sp = None
+
+                # Instance the state machine.
+                fsm = GoLismeroStateMachine(bridge, sp)
 
                 # Launch the XMLRPC server.
                 run_xmlrpc_server(fsm,
@@ -163,6 +183,64 @@ def _launch_server(input_conn, output_conn,
     # Silently catch all runaway exceptions.
     except:
         pass
+
+
+#------------------------------------------------------------------------------
+class ServerPush(threading.Thread):
+    """
+    Pushes notifications from GoLismero to the given URL using JSON.
+    """
+
+
+    #--------------------------------------------------------------------------
+    def __init__(self, push_url):
+        """
+        :param push_url: URL to push notifications to.
+        :type push_url: str
+        """
+        super(ServerPush, self).__init__()
+        if not push_url.endswith("/"):
+            push_url += "/"
+        self.__push_url = push_url
+        self.__queue = Queue()
+
+
+    #--------------------------------------------------------------------------
+    def __del__(self):
+        """
+        Kills the thread when destroying the object.
+        """
+        self.__queue.put( ("quit",) )
+
+
+    #--------------------------------------------------------------------------
+    def __call__(self, command, args):
+        """
+        Enqueue a notification for pushing.
+        """
+        self.__queue.put( (command, args) )
+
+
+    #--------------------------------------------------------------------------
+    def run(self):
+        """
+        Dequeues notifications and pushes them.
+        """
+        (command, args) = self.__queue.get()
+        if command == "quit":
+            self.__queue.join()
+            del self.__queue
+            return
+        self._push(command, args)
+
+
+    #--------------------------------------------------------------------------
+    def _push(self, command, args):
+        """
+        Push a notification.
+        """
+        push_url = self.__push_url + command
+        requests.post(push_url, json.encode(args), headers={'Content-type': 'application/json'})
 
 
 #------------------------------------------------------------------------------
@@ -415,7 +493,7 @@ class GoLismeroStateMachine (threading.Thread):
 
                     # Use the callback.
                     if self.__callback:
-                        self.__callback(command, *args)
+                        self.__callback(command, args)
 
             # Break the loop if we're killing the current process.
             except SystemExit:

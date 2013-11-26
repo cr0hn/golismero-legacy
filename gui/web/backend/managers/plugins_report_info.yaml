@@ -11,7 +11,7 @@ plugins:
     - text
     - json
     - xml
-    - rst
+    - rstext
 
 
 content_types:
@@ -26,6 +26,7 @@ extension_by_format:
     xml    : xml
     html   : html
     rst    : rst
+    rstext : rst
     text   : txt
     txt    : txt
     json   : json

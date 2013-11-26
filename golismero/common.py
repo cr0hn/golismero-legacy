@@ -673,9 +673,10 @@ class OrchestratorConfig (Configuration):
         # Use persistent cache?
         "use_cache_db": (Configuration.boolean, True),
 
-        # When run as a service
-        "listen_address" : Configuration.string,
-        "listen_port" : Configuration.integer
+        # When run as a service.
+        "listen_address": Configuration.string,
+        "listen_port": Configuration.integer,
+        "server_push": Configuration.string,
     }
 
 
@@ -788,6 +789,7 @@ class AuditConfig (Configuration):
 
         # Proxy options
         "proxy_addr": Configuration.string,
+        "proxy_port": Configuration.integer,
         "proxy_user": Configuration.string,
         "proxy_pass": Configuration.string,
 
@@ -1006,6 +1008,45 @@ class AuditConfig (Configuration):
         else:
             cookie = None
         self._cookie = cookie
+
+
+    #--------------------------------------------------------------------------
+
+    @property
+    def proxy_addr(self):
+        return self._proxy_addr
+
+    @proxy_addr.setter
+    def proxy_addr(self, proxy_addr):
+        if proxy_addr:
+            proxy_addr = proxy_addr.strip()
+            if isinstance(proxy_addr, unicode):
+                proxy_addr = proxy_addr.encode("UTF-8")
+            if ":" in proxy_addr:
+                proxy_addr, proxy_port = proxy_addr.split(":", 1)
+                proxy_addr = proxy_addr.strip()
+                proxy_port = proxy_port.strip()
+                self.proxy_port = proxy_port
+            self._proxy_addr = proxy_addr
+        else:
+            self._proxy_addr = None
+
+
+    #--------------------------------------------------------------------------
+
+    @property
+    def proxy_port(self):
+        return self._proxy_port
+
+    @proxy_port.setter
+    def proxy_port(self, proxy_port):
+        if proxy_port:
+            self._proxy_port = int(proxy_port)
+            if self._proxy_port < 1 or self._proxy_port > 65534:
+                raise ValueError(
+                    "Invalid proxy port number: %d" % self._proxy_port)
+        else:
+            self._proxy_port = None
 
 
     #--------------------------------------------------------------------------

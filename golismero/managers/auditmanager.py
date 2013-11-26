@@ -30,7 +30,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["AuditManager", "Audit"]
+__all__ = ["AuditManager", "Audit", "AuditException"]
 
 from .importmanager import ImportManager
 from .processmanager import PluginContext
@@ -87,6 +87,11 @@ def rpc_audit_get_scope(orchestrator, current_audit_name, audit_name = None):
     if audit_name:
         return orchestrator.auditManager.get_audit(audit_name).scope
     return DummyScope()
+
+#------------------------------------------------------------------------------
+class AuditException(Exception):
+    """Exception for audits"""
+
 
 
 #------------------------------------------------------------------------------
@@ -159,7 +164,8 @@ class AuditManager (object):
                 self.remove_audit(m_audit.name)
             except Exception:
                 pass
-            raise RuntimeError("Failed to add new audit, reason: %s" % e)
+            raise AuditException("Failed to add new audit, reason: %s" % e)
+
 
 
     #--------------------------------------------------------------------------
@@ -263,7 +269,17 @@ class AuditManager (object):
 
             # Start an audit if requested
             elif message.message_code == MessageCode.MSG_CONTROL_START_AUDIT:
-                self.new_audit(message.message_info)
+                try:
+                    self.new_audit(message.message_info)
+                except AuditException,e:
+                    message = Message(
+                        message_type = MessageType.MSG_TYPE_CONTROL,
+                        message_code = MessageCode.MSG_CONTROL_START_ERROR_AUDIT,
+                        message_info = (str(e), message.message_info.audit_name),
+                            priority = MessagePriority.MSG_PRIORITY_HIGH,
+                    )
+                    self.orchestrator.enqueue_msg(message)
+
 
             # Stop an audit if requested
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
@@ -518,6 +534,7 @@ class Audit (object):
             self.__plugin_manager = \
                 self.orchestrator.pluginManager.get_plugin_manager_for_audit(
                     self)
+            self.__plugin_manager.initialize(self.config)
 
             # Load the testing plugins.
             testing_plugins = self.pluginManager.load_plugins("testing")

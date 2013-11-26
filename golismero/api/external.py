@@ -63,8 +63,9 @@ import subprocess
 import stat
 import shlex
 import sys
+from shutil import rmtree
 
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, mkdtemp
 
 # Needed on non-Windows platforms to prevent a syntax error.
 try:
@@ -614,3 +615,24 @@ def tempfile(*args, **kwargs):
     else:
         with NamedTemporaryFile(suffix = ".xml") as output_file:
             yield output_file.name
+
+
+#------------------------------------------------------------------------------
+@contextlib.contextmanager
+def tempdir():
+    """
+    Context manager that creates a temporary directory.
+    The directory is deleted when leaving the context.
+
+    Example::
+        >>> with tempdir() as directory:
+        ...     print run_external_tool("cmd.exe", ["dir", directory])
+        ...
+    """
+    output_dir = mkdtemp()
+    yield output_dir
+    if os.path.isdir(output_dir):
+        try:
+            rmtree(output_dir)
+        except Exception:
+            pass

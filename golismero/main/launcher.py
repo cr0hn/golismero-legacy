@@ -41,7 +41,7 @@ import datetime
 import traceback
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def run(options, *audits):
     """
     Runs GoLismero in the current process.
@@ -84,7 +84,8 @@ def run(options, *audits):
 
     # Show the cancel message if cancelled.
     except KeyboardInterrupt:
-        Console.display("GoLismero cancelled by the user at %s" % datetime.datetime.now())
+        Console.display(
+            "GoLismero cancelled by the user at %s" % datetime.datetime.now())
         return 1
     except SystemExit, e:
         Console.display("GoLismero stopped at %s" % datetime.datetime.now())
@@ -99,32 +100,64 @@ def _run(options, *audits):
 
         # Detect auth in proxy, if specified.
         for auditParams in audits:
-            if auditParams.proxy_addr:
-                if auditParams.proxy_user:
-                    if not check_auth(auditParams.proxy_addr, auditParams.proxy_user, auditParams.proxy_pass):
-                        Console.display_error("[!] Authentication failed for proxy: '%s'." % auditParams.proxy_addr)
-                        Console.display_error_more_verbose(traceback.format_exc())
-                        return 1
-                else:
-                    auth, _ = detect_auth_method(auditParams.proxy_addr)
-                    if auth:
-                        Console.display_error("[!] Authentication required for proxy: '%s'. Use '--proxy-user' and '--proxy-pass' to set the username and password." % auditParams.proxy_addr)
-                        Console.display_error_more_verbose(traceback.format_exc())
-                        return 1
-
-        # Instance the Orchestrator.
-        with Orchestrator(options) as orchestrator:
-
-            # Validate the settings against the UI plugin.
             try:
-                orchestrator.uiManager.check_params(*audits)
+                proxy_addr = auditParams.proxy_addr
+                if proxy_addr:
+                    proxy_port = auditParams.proxy_port
+                    if proxy_port:
+                        proxy_addr = "%s:%s" % (proxy_addr, proxy_port)
+                    proxy_addr = "http://" + proxy_addr
+                    if auditParams.proxy_user:
+                        if not check_auth(
+                            proxy_addr,
+                            auditParams.proxy_user,
+                            auditParams.proxy_pass
+                        ):
+                            tb = traceback.format_exc()
+                            Console.display_error(
+                                "[!] Authentication failed for proxy: %r" %
+                                proxy_addr)
+                            Console.display_error_more_verbose(tb)
+                            return 1
+                    else:
+                        auth, _ = detect_auth_method(proxy_addr)
+                        if auth:
+                            tb = traceback.format_exc()
+                            Console.display_error(
+                                "[!] Authentication required for proxy: %r" %
+                                proxy_addr)
+                            Console.display_error(
+                                "Use '--proxy-user' and '--proxy-pass' to set"
+                                " the username and password.")
+                            Console.display_error_more_verbose(tb)
+                            return 1
             except Exception, e:
-                Console.display_error("[!] Configuration error: %s" % str(e))
-                Console.display_error_more_verbose(traceback.format_exc())
+                tb = traceback.format_exc()
+                Console.display_error(
+                    "[!] Proxy settings failed, reason: %s" % str(e))
+                Console.display_error_more_verbose(tb)
                 return 1
 
-            # Run the Orchestrator.
-            orchestrator.run(*audits)
+        # Instance the Orchestrator.
+        while True:
+            with Orchestrator(options) as orchestrator:
+
+                # Validate the settings against the UI plugin.
+                try:
+                    orchestrator.uiManager.check_params(*audits)
+                except Exception, e:
+                    Console.display_error("[!] Configuration error: %s" % str(e))
+                    Console.display_error_more_verbose(traceback.format_exc())
+                    #return 1
+                    continue
+
+                # Run the Orchestrator.
+                try:
+                    orchestrator.run(*audits)
+                except Exception,e:
+                    Console.display_error(e)
+                    continue
+
 
     # On error, show a fatal error message.
     except Exception, e:
@@ -133,7 +166,7 @@ def _run(options, *audits):
         return 1
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def _sanitize_config(options, audits):
     """
     Validate and sanitize the arguments to the launcher.
@@ -154,7 +187,8 @@ def _sanitize_config(options, audits):
     if options is None:
         options = OrchestratorConfig()
     elif not isinstance(options, OrchestratorConfig):
-        raise TypeError("Expected OrchestratorConfig, got %r instead" % type(options))
+        raise TypeError(
+            "Expected OrchestratorConfig, got %r instead" % type(options))
     if not hasattr(options, "profile"):
         options.profile = None
         options.profile_file = None
@@ -170,7 +204,8 @@ def _sanitize_config(options, audits):
         if params is None:
             params = AuditConfig()
         elif not isinstance(params, AuditConfig):
-            raise TypeError("Expected AuditConfig, got %r instead" % type(params))
+            raise TypeError(
+                "Expected AuditConfig, got %r instead" % type(params))
         if not hasattr(params, "profile"):
             params.profile = options.profile
             params.profile_file = options.profile_file

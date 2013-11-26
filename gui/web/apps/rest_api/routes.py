@@ -27,11 +27,79 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["AuditsRouters", "UsersRouters", "PluginsRouters", "ProfilesRouters", "NodesRouters"]
+__all__ = ["AuditsRouters", "UsersRouters", "PluginsRouters", "ProfilesRouters", "NodesRouters", "PushingRouters"]
 
 from backend.rest_api.routes import ParameterizedRouter
 from rest_framework.routers import Route
 from rest_framework.compat import patterns, url
+
+
+#------------------------------------------------------------------------------
+class PushingRouters(ParameterizedRouter):
+
+    routes = [
+        # Update progress
+        Route(url       = r'^{prefix}/push/progress/$',
+              mapping   = {'post' : 'push_progress'},
+              name      = '{basename}-push_progress',
+              initkwargs= {}),
+        Route(url       = r'^{prefix}/push/progress$',
+              mapping   = {'post' : 'push_progress'},
+              name      = '{basename}-push_progress2',
+              initkwargs= {}),
+
+        # Update summary
+        Route(url       = r'^{prefix}/push/summary/$',
+              mapping   = {'post' : 'push_summary'},
+              name      = '{basename}-push_summary',
+              initkwargs= {}),
+        Route(url       = r'^{prefix}/push/summary$',
+              mapping   = {'post' : 'push_summary'},
+              name      = '{basename}-push_summary2',
+              initkwargs= {}),
+
+        # Update Log
+        Route(url       = r'^{prefix}/push/log/$',
+              mapping   = {'post' : 'push_log'},
+              name      = '{basename}-push_log',
+              initkwargs= {}),
+        Route(url       = r'^{prefix}/push/log$',
+              mapping   = {'post' : 'push_log'},
+              name      = '{basename}-push_log2',
+              initkwargs= {}),
+
+        # Update plugins errors
+        Route(url       = r'^{prefix}/push/perrors/$',
+              mapping   = {'post' : 'push_perrors'},
+              name      = '{basename}-push_perrors',
+              initkwargs= {}),
+        Route(url       = r'^{prefix}/push/perrors$',
+              mapping   = {'post' : 'push_perrors'},
+              name      = '{basename}-push_perrors2',
+              initkwargs= {}),
+
+        # Update plugins warnings
+        Route(url       = r'^{prefix}/push/pwarning/$',
+              mapping   = {'post' : 'push_pwarning'},
+              name      = '{basename}-push_pwarning',
+              initkwargs= {}),
+        Route(url       = r'^{prefix}/push/pwarning$',
+              mapping   = {'post' : 'push_pwarning'},
+              name      = '{basename}-push_pwarning2',
+              initkwargs= {}),
+
+        # Update stage
+        Route(url       = r'^{prefix}/push/stage/$',
+              mapping   = {'post' : 'push_stage'},
+              name      = '{basename}-push_stage',
+              initkwargs= {}),
+        Route(url       = r'^{prefix}/push/stage$',
+              mapping   = {'post' : 'push_stage'},
+              name      = '{basename}-push_stage2',
+              initkwargs= {}),
+
+        ]
+
 
 
 #------------------------------------------------------------------------------
@@ -61,6 +129,16 @@ class AuditsRouters(ParameterizedRouter):
         Route(url       = r'^{prefix}/create$',
               mapping   = {'post' : 'create'},
               name      = '{basename}-create',
+              initkwargs= {}),
+
+        # Import
+        Route(url       = r'^{prefix}/import{trailing_slash}$',
+              mapping   = {'post' : 'audit_import'},
+              name      = '{basename}-audit_import',
+              initkwargs= {}),
+        Route(url       = r'^{prefix}/import$',
+              mapping   = {'post' : 'audit_import'},
+              name      = '{basename}-audit_import2',
               initkwargs= {}),
 
         # Delete

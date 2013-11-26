@@ -37,14 +37,10 @@ from StringIO import StringIO
 
 from golismero.api.logger import Logger
 
-# Workaround for docutils bug, see:
-# http://sourceforge.net/p/docutils/bugs/228/
 cwd = abspath(split(__file__)[0])
 sys.path.insert(0, cwd)
 try:
-    from rst import RSTReport
-    rst = sys.modules["rst"]
-    del sys.modules["rst"]
+    from rstext import RSTReport
 finally:
     sys.path.remove(cwd)
 del cwd

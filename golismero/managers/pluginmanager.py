@@ -1239,13 +1239,21 @@ class AuditPluginManager (PluginManager):
         # Apply the plugin black and white lists, and all the overrides.
         self._PluginManager__plugins = self.__apply_config(auditConfig)
 
+
+    #--------------------------------------------------------------------------
+    def initialize(self, auditConfig):
+        """
+        Initializes the plugin arguments and disables the plugins that fail the
+        parameter checks. Also calculates the dependencies.
+        """
+
         # Set the plugin arguments.
         if auditConfig.plugin_args:
             for plugin_id, plugin_args in auditConfig.plugin_args.iteritems():
                 status = self.set_plugin_args(plugin_id, plugin_args)
                 if status == 1:
                     try:
-                        pluginManager.get_plugin_by_id(plugin_id)
+                        self.__pluginManager.get_plugin_by_id(plugin_id)
                     except KeyError:
                         warnings.warn(
                             "Unknown plugin ID: %s" % plugin_id,
@@ -1610,13 +1618,10 @@ class AuditPluginManager (PluginManager):
                     plugin.check_params()
                 except Exception, e:
                     del self._PluginManager__plugins[plugin_id]
-                    try:
-                        t = traceback.format_exc()
-                        msg = "Plugin disabled, reason: %s" % str(e)
-                        Logger.log_error_verbose(msg)
-                        Logger.log_error_more_verbose(t)
-                    except Exception:
-                        pass
+                    err_tb  = traceback.format_exc()
+                    err_msg = "Plugin disabled, reason: %s" % str(e)
+                    Logger.log_error_verbose(err_msg)
+                    Logger.log_error_more_verbose(err_tb)
             finally:
                 Config._context = old_ctx
 

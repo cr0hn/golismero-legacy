@@ -42,7 +42,7 @@ __all__ = [
     "get_audit_log_lines",
 
     # Control functions.
-    "start_audit", "stop_audit",
+    "start_audit", "stop_audit", "cancel_audit",
 ]
 
 from .config import Config
@@ -268,9 +268,29 @@ def stop_audit(audit_name = None):
     msg = Message(
         message_type = MessageType.MSG_TYPE_CONTROL,
         message_code = MessageCode.MSG_CONTROL_STOP_AUDIT,
+        message_info = True,        # True for finished, False for user cancel
+          audit_name = audit_name,
+            priority = MessagePriority.MSG_PRIORITY_HIGH,
+    )
+    Config._context.send_raw_msg(msg)
+
+
+#------------------------------------------------------------------------------
+def cancel_audit(audit_name = None):
+    """
+    Cancels an audit.
+
+    :param audit_name: Name of the audit to cancel.
+        Use None for the current audit.
+    :type audit_name: str | None
+    """
+    if not audit_name:
+        audit_name = Config.audit_name
+    msg = Message(
+        message_type = MessageType.MSG_TYPE_CONTROL,
+        message_code = MessageCode.MSG_CONTROL_STOP_AUDIT,
         message_info = False,        # True for finished, False for user cancel
           audit_name = audit_name,
-         plugin_id = Config.plugin_id,
             priority = MessagePriority.MSG_PRIORITY_HIGH,
     )
     Config._context.send_raw_msg(msg)

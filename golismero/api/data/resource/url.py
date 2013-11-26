@@ -246,7 +246,7 @@ class Url(_AbstractUrl):
     def post_params(self):
         """
         :return: POST parameters.
-        :rtype: dict(str)
+        :rtype: dict(str -> str)
         """
         return self.__post_params
 
@@ -260,8 +260,8 @@ class Url(_AbstractUrl):
         :rtype: dict(str -> str)
         """
         query = self.parsed_url.query
-        if type(query) not in (str, unicode):
-            return query
+        if type(query) in (str, unicode):
+            return self.parsed_url.query_params
         return {}
 
     @property

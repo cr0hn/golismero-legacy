@@ -9,6 +9,9 @@ import rest_framework.urls
 # http://django-rest-framework.org/api-guide/routers.html#usage
 #
 
+pushing_routes  = PushingRouters()
+pushing_routes.register(r'push', PushingViewSet, base_name="push")
+
 audit_routes    = AuditsRouters()
 audit_routes.register(r'^audits', AuditViewSet, base_name="plugins")
 
@@ -25,6 +28,9 @@ nodes_routes    = NodesRouters()
 nodes_routes.register(r'nodes', NodesViewSet, base_name="nodes")
 
 urlpatterns = patterns('',
+
+    # Pushing methods
+    url(r'push', include(pushing_routes.urls)),
 
     # Audits methods
     url(r'^api/', include(audit_routes.urls)),

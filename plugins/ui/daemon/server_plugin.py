@@ -37,6 +37,7 @@ from golismero.api.config import Config, get_orchestrator_config
 from golismero.api.logger import Logger
 from golismero.api.plugin import UIPlugin, get_plugin_info, get_plugin_ids, \
      get_stage_display_name
+from golismero.database.auditdb import AuditDB
 from golismero.common import AuditConfig
 from golismero.managers.processmanager import PluginContext
 from golismero.messaging.codes import MessageType, MessageCode, \
@@ -55,6 +56,7 @@ server_bridge = load_source(
     "server_bridge",
     abspath(join(split(__file__)[0], "server_bridge.py"))
 )
+
 
 
 #------------------------------------------------------------------------------
@@ -160,7 +162,12 @@ class WebUIPlugin(UIPlugin):
 
             # An audit has started.
             elif message.message_code == MessageCode.MSG_CONTROL_START_AUDIT:
-                self.notify_stage(message.audit_name, "start")
+                self.notify_stage(message.message_info.audit_name, "start")
+
+            # Notify starting error for audit
+            elif message.message_code == MessageCode.MSG_CONTROL_START_ERROR_AUDIT:
+                (reason, audit_name) = message.message_info
+                self.notify_audit_error(audit_name, reason)
 
             # An audit has finished.
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
@@ -168,8 +175,12 @@ class WebUIPlugin(UIPlugin):
                     del self.current_plugins[Config.audit_name]
                 except KeyError:
                     pass
+                # Notify end of an audit
                 self.notify_stage(message.audit_name,
                             "finish" if message.message_info else "cancel")
+                # Nofity summary results
+                self.notify_summary(message.audit_name)
+
 
             # A plugin has sent a log message.
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
@@ -294,6 +305,20 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
+    def is_audit_running(self, audit_name):
+        """
+        :param audit_name: Name of the audit to query.
+        :type audit_name: str
+
+        :returns: True if the audit is currently running, False otherwise.
+        :rtype: bool
+        """
+        return self.audit_stage.get(audit_name, "") not in ("start",
+                                                            "finish",
+                                                            "cancel")
+
+
+    #--------------------------------------------------------------------------
     def start_ui(self):
         """
         This method is called when the UI start message arrives.
@@ -311,6 +336,9 @@ class WebUIPlugin(UIPlugin):
         self.plugin_state = collections.defaultdict(
             functools.partial(collections.defaultdict, dict)
             )  # audit -> (plugin, identity) -> progress
+
+        # Audit not started correctly
+        self.audit_error  = {}
 
         # Create the consumer thread object.
         self.thread_continue = True
@@ -472,6 +500,23 @@ class WebUIPlugin(UIPlugin):
     # They run in the context of the main thread, invoked from recv_msg().
     #
     #--------------------------------------------------------------------------
+
+
+
+    #--------------------------------------------------------------------------
+    def notify_audit_error(self, audit_name, reason):
+        """
+        This method is called when an audit has any error at starting.
+
+        :param audit_name: Name of the audit.
+        :type audit_name: str
+
+        :param reason: the reason of fail.
+        :type reason: str
+        """
+        self.audit_error[audit_name] = reason
+
+        print self.audit_error
 
 
     #--------------------------------------------------------------------------
@@ -640,6 +685,35 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
+    def notify_summary(self, audit_name):
+        """
+        This method is called when an audit ends.
+
+        :param audit_name: Name of the audit.
+        :type audit_name: str
+        """
+        return
+        # Get summary
+        summary = self.do_audit_summary(audit_name)
+
+        # Log the event.
+        print "[%s] Summary for audit:" % (audit_name)
+        if summary:
+            for k, v in summary.iteritems():
+                if k == "vulns_by_level":
+                    print "      | Vulns by level:"
+                    for kk, vv in v.iteritems():
+                        print "      |- %s : %s" % (kk, vv)
+                else:
+                    print "     | %s : %s" % (k, v)
+
+
+        # Send the audit stage.
+        packet = ("summary", summary)
+        self.bridge.send(packet)
+
+
+    #--------------------------------------------------------------------------
     #
     # Command methods
     # ===============
@@ -659,7 +733,7 @@ class WebUIPlugin(UIPlugin):
     #--------------------------------------------------------------------------
     def do_audit_create(self, audit_config):
         """
-        Implementation of: /scan/create
+        Implementation of: /audit/create
 
         :param audit_config: Audit configuration.
         :type audit_config: dict(str -> \\*)
@@ -673,10 +747,16 @@ class WebUIPlugin(UIPlugin):
         start_audit(o_audit_config)
 
 
+        # Set the stage to avoid race conditions when trying to get the stage
+        # before the audit is loaded and configured.
+        #self.audit_stage[o_audit_config.audit_name] = "start"
+
+
+
     #--------------------------------------------------------------------------
     def do_audit_cancel(self, audit_name):
         """
-        Implementation of: /scan/cancel
+        Implementation of: /audit/cancel
 
         :param audit_name: Name of the audit to cancel.
         :type audit_name: str
@@ -684,13 +764,13 @@ class WebUIPlugin(UIPlugin):
         :return: True on success, False otherwise.
         :type: bool
         """
-        if (
-            audit_name in self.audit_stage and
-            self.audit_stage[audit_name] != "finish"
-        ):
+        if audit_name in self.audit_error:
+            return False
+
+        if self.is_audit_running(audit_name):
             try:
                 with SwitchToAudit(audit_name):
-                    stop_audit(audit_name)
+                    cancel_audit(audit_name)
                     return True
             except Exception:
                 Logger.log_error(traceback.format_exc())
@@ -698,9 +778,9 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_audit_list(self):
+    def do_audit_list(self): # TODO: control audits with error at start
         """
-        Implementation of: /scan/list
+        Implementation of: /audit/list
 
         :returns: Dictionary mapping audit names to their configurations.
         :rtype: dict(str -> dict(str -> \\*))
@@ -715,7 +795,34 @@ class WebUIPlugin(UIPlugin):
     #----------------------------------------------------------------------
     def do_audit_state(self, audit_name):
         """
-        Implementation of: /scan/state
+        Implementation of: /audit/state
+
+        :param audit_name: Name of the audit to query.
+        :type audit_name: str
+
+        :returns: Current state for this audit.
+            One of the following values:
+             - "start"
+             - "running"
+             - "finished"
+             - "error"
+        :type: str
+        """
+        if audit_name in self.audit_error:
+            return "error"
+
+        stage = self.audit_stage.get(audit_name, "finish")
+        if stage == "start":
+            return "start"
+        if stage in ("finish", "cancel"):
+            return "finished"
+        return "running"
+
+
+    #----------------------------------------------------------------------
+    def do_audit_stage(self, audit_name):
+        """
+        Implementation of: /audit/stage
 
         :param audit_name: Name of the audit to query.
         :type audit_name: str
@@ -723,13 +830,13 @@ class WebUIPlugin(UIPlugin):
         :returns: Current stage for this audit.
         :type: str
         """
-        return self.audit_stage.get(audit_name, "finish")
+        return "error" if audit_name in self.audit_error else self.audit_stage.get(audit_name, "finish")
 
 
     #--------------------------------------------------------------------------
     def do_audit_progress(self, audit_name):
         """
-        Implementation of: /scan/progress
+        Implementation of: /audit/progress
 
         Returns the current stage and the status of every plugin
         in the following format::
@@ -746,16 +853,18 @@ class WebUIPlugin(UIPlugin):
 
         :returns: Current audit stage, followed by the progress status of
             every plugin (plugin name, data identity, progress percentage).
-            Returns None if the audit is finished or doesn't exist.
         :rtype: tuple(int, tuple( tuple(str, str, float) ... ))
         """
+        # Checks for error
+        if audit_name in self.audit_error:
+            return "error"
 
-        r = None
-
-        if (
-            audit_name in self.audit_stage and
-            self.audit_stage[audit_name] != "finish"
-        ):
+        r = (
+            0,
+            "finish",
+            (),
+        )
+        if self.is_audit_running(audit_name):
             with SwitchToAudit(audit_name):
                 try:
                     r = (
@@ -769,14 +878,13 @@ class WebUIPlugin(UIPlugin):
                     )
                 except Exception:
                     Logger.log_error(traceback.format_exc())
-
         return r
 
 
     #--------------------------------------------------------------------------
-    def do_audit_results(self, audit_name, data_type = "all"):
+    def do_audit_results(self, audit_name, data_type = "all"): # TODO: control audits with error at start
         """
-        Implementation of: /scan/results
+        Implementation of: /audit/results
 
         :param audit_name: Name of the audit to query.
         :type audit_name: str
@@ -794,10 +902,7 @@ class WebUIPlugin(UIPlugin):
 
         :raises KeyError: Data type unknown.
         """
-        if (
-            audit_name in self.audit_stage and
-            self.audit_stage[audit_name] != "finish"
-        ):
+        if self.is_audit_running(audit_name):
             with SwitchToAudit(audit_name):
                 i_data_type = {
                     "all": None,
@@ -813,9 +918,9 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_audit_details(self, audit_name, id_list):
+    def do_audit_details(self, audit_name, id_list): # TODO: control audits with error at start
         """
-        Implementation of: /scan/details
+        Implementation of: /audit/details
 
         :param audit_name: Name of the audit to query.
         :type audit_name: str
@@ -823,10 +928,7 @@ class WebUIPlugin(UIPlugin):
         :param id_list: List of result IDs.
         :type id_list: list(str)
         """
-        if (
-            audit_name in self.audit_stage and
-            self.audit_stage[audit_name] != "finish"
-        ):
+        if self.is_audit_running(audit_name):
             with SwitchToAudit(audit_name):
                 return Database.get_many(id_list)
         else:
@@ -838,7 +940,7 @@ class WebUIPlugin(UIPlugin):
     #----------------------------------------------------------------------
     def do_audit_summary(self, audit_name):
         """
-        Get results summary for an audit.
+        Implementation of: /audit/summary
 
         :param audit_name: Name of the audit to query.
         :type audit_name: str
@@ -860,11 +962,12 @@ class WebUIPlugin(UIPlugin):
             Returns None on error.
         :rtype: dict(str -> \\*) | None
         """
+        # Checks for errors
+        if audit_name in self.audit_error:
+            return "error"
+
         try:
-            if (
-                audit_name in self.audit_stage and
-                self.audit_stage[audit_name] != "finish"
-            ):
+            if self.is_audit_running(audit_name):
                 with SwitchToAudit(audit_name):
 
                     # Get the number of vulnerabilities in the database.
@@ -895,7 +998,7 @@ class WebUIPlugin(UIPlugin):
                         'medium'   : vulns_counter['medium'],
                         'high'     : vulns_counter['high'],
                         'critical' : vulns_counter['critical'],
-                    },
+                    }
                 }
 
             else:
@@ -908,8 +1011,9 @@ class WebUIPlugin(UIPlugin):
 
 
     #----------------------------------------------------------------------
-    def do_audit_log(self, audit_name):
+    def do_audit_log(self, audit_name): # TODO: control audits with error at start
         """
+        Implementation of: /audit/log
 
         :param audit_name: Name of the audit to query.
         :type audit_name: str
@@ -924,15 +1028,18 @@ class WebUIPlugin(UIPlugin):
              - Timestamp.
         :rtype: list( tuple(str, str, str, int, bool, float) )
         """
-        if (
-            audit_name in self.audit_stage and
-            self.audit_stage[audit_name] != "finish"
-        ):
-            return get_audit_log_lines(audit_name)
-        else:
-            # XXX TODO open the database manually here
-            raise NotImplementedError(
-                "Querying finished audits is not implemented yet!")
+        if audit_name in self.audit_error:
+            return "error"
+
+        try:
+            if self.is_audit_running(audit_name):
+                return get_audit_log_lines(audit_name)
+            else:
+                # XXX TODO open the database manually here
+                raise NotImplementedError(
+                    "Querying finished audits is not implemented yet!")
+        except Exception:
+            Logger.log_error(traceback.format_exc())
 
 
     #--------------------------------------------------------------------------
@@ -943,7 +1050,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_plugin_list(self):
+    def do_plugin_list(self): # TODO: control audits with error at start
         """
         Implementation of: /plugin/list
 
@@ -954,7 +1061,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_plugin_details(self, plugin_id):
+    def do_plugin_details(self, plugin_id): # TODO: control audits with error at start
         """
         Implementation of: /plugin/details
 

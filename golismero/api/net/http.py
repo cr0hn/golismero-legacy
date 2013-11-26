@@ -45,6 +45,7 @@ from hashlib import md5
 from os import environ
 from os.path import join
 from requests import Session
+from requests.cookies import cookiejar_from_dict
 from requests.exceptions import RequestException
 from socket import socket, error, getaddrinfo, SOCK_STREAM
 from ssl import wrap_socket
@@ -80,6 +81,9 @@ class _HTTP(Singleton):
         # Load the proxy settings.
         proxy_addr = Config.audit_config.proxy_addr
         if proxy_addr:
+            proxy_port = Config.audit_config.proxy_port
+            if proxy_port:
+                proxy_addr = "%s:%s" % (proxy_addr, proxy_port)
             auth_user = Config.audit_config.proxy_user
             auth_pass = Config.audit_config.proxy_pass
             auth, _ = detect_auth_method(proxy_addr)
@@ -90,10 +94,10 @@ class _HTTP(Singleton):
                 "ftp":   proxy_addr,
             }
 
-        # Load the cookie.
+        # Load the cookies.
         cookie = Config.audit_config.cookie
         if cookie:
-            self.__session.cookies.set_cookie(cookie)
+            self.__session.cookies = cookiejar_from_dict(cookie)
 
         # Set User Agent
         self.__user_agent = Config.audit_config.user_agent

@@ -169,8 +169,9 @@ Listen in loopback IPv6 at port 8000:
 
     # Parse the command line arguments.
     parser = argparse.ArgumentParser(usage=usage, description='run GoLismero web UI')
-    parser.add_argument('-l', dest="IP_LISTEN", help="IP address where to listen to (default: 127.0.0.1).", default="127.0.0.1")
-    parser.add_argument('-p', dest="PORT", type=int, help="port where to listen to (default 9000).", default=9000)
+    parser.add_argument('-l', dest="IP_LISTEN", help="IP address where to listen")
+    parser.add_argument('-p', dest="PORT", type=int, help="port where to listen")
+    parser.add_argument('-u', dest="SERVER_PUSH", help="base URL to push notifications")
     args = parser.parse_args()
 
     # Check the port number.
@@ -194,7 +195,7 @@ Listen in loopback IPv6 at port 8000:
 #------------------------------------------------------------------------------
 # Start of program.
 
-def daemon_main(listen_address, listen_port):
+def daemon_main(listen_address, listen_port, server_push):
 
     # Get the config file name.
     config_file = get_default_config_file()
@@ -204,11 +205,6 @@ def daemon_main(listen_address, listen_port):
     # Load the Orchestrator options.
     orchestrator_config = OrchestratorConfig()
     orchestrator_config.config_file = config_file
-
-    # Config service bind
-    orchestrator_config.listen_address = listen_address
-    orchestrator_config.listen_port    = listen_port
-
     orchestrator_config.from_config_file(orchestrator_config.config_file,
                                          allow_profile = True)
     if orchestrator_config.profile:
@@ -237,7 +233,15 @@ def daemon_main(listen_address, listen_port):
                     "Default plugins folder not found, aborting!")
         orchestrator_config.plugins_folder = plugins_folder
 
-    # Force the Daemon UI.
+    # Load the daemon configuration from command line.
+    if listen_address:
+        orchestrator_config.listen_address = listen_address
+    if listen_port:
+        orchestrator_config.listen_port    = listen_port
+    if server_push:
+        orchestrator_config.server_push    = server_push
+
+    # Force the daemon UI plugin.
     orchestrator_config.ui_mode = "daemon"
 
     # Force disable colored output.
@@ -268,4 +272,4 @@ if __name__ == '__main__':
         stdout = sys.stdout,
         stderr = sys.stderr,
     ):
-        daemon_main(args.IP_LISTEN, args.PORT)
+        daemon_main(args.IP_LISTEN, args.PORT, args.SERVER_PUSH)

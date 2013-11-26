@@ -356,10 +356,9 @@ class OpenVASPlugin(TestingPlugin):
                     oid_spt = oid.split(".")
                     if len(oid_spt) > 0:
                         l_plugin_id = oid_spt[-1]
-                        l_family = l_plugin_id
-                        if l_family in CATEGORIES:
-                            clazz = globals()[ CATEGORIES[l_family] ]
                         try:
+                            if l_plugin_id in CATEGORIES:
+                                clazz = globals()[ CATEGORIES[l_plugin_id] ]
                             l_family = Plugin.objects.get(
                                 plugin_id = l_plugin_id).family_id
                             l_family = l_family.strip()
@@ -371,7 +370,7 @@ class OpenVASPlugin(TestingPlugin):
                             tb = format_exc()
                             Logger.log_error_verbose(
                                 "Failed to find category %r, reason: %s" %
-                                (l_family, str(e)))
+                                (l_plugin_id, str(e)))
                             Logger.log_error_more_verbose(tb)
 
                 # Create the vulnerability instance.
