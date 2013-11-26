@@ -55,7 +55,8 @@ __all__ = ["GoLismeroFacadeAuditPolling",
            "GoLismeroFacadeAuditStateException",
            "GoLismeroFacadeAuditUnknownException",
            "GoLismeroFacadeReportUnknownFormatException",
-           "GoLismeroFacadeReportNotAvailableException"]
+           "GoLismeroFacadeReportNotAvailableException",
+           "GoLismeroFacadeAuditImportFileExitsException"]
 
 import os
 import os.path as path
@@ -411,6 +412,41 @@ class GoLismeroFacadeAuditCommon(object):
             m_audit.user = User.objects.get(pk=5)
             m_audit.save()
 
+
+            #
+            # PLUGINS
+            #
+            m_enable_plugins        = data.get('enable_plugins', [])
+            m_enable_plugins_stored = []
+
+            if len(m_enable_plugins) == 0:
+                l_plugin             = Plugins()
+                l_plugin.plugin_name = "all"
+                l_plugin.save()
+                m_enable_plugins_stored.append(l_plugin)
+            else:
+                for p in m_enable_plugins:
+                    l_plugin             = Plugins()
+                    l_plugin.plugin_name = p.get("plugin_name")
+                    l_plugin.save()
+
+                    # Plugins params
+                    for pp in p.get("params", []):
+                        l_param = PluginParameters()
+                        l_param.param_name    = pp['param_name']
+                        l_param.param_value   = pp['param_value']
+                        l_param.plugin        = l_plugin
+                        l_param.audit         = m_audit
+                        l_param.save()
+                    # Add to total
+                    m_enable_plugins_stored.append(l_plugin)
+
+            # Relations
+            for kk in m_enable_plugins_stored:
+                m_audit.enable_plugins.add(kk)
+
+
+
             # Local storage
             l_path       = path.join(get_user_settings_folder(), str(m_audit.id))
 
@@ -428,7 +464,6 @@ class GoLismeroFacadeAuditCommon(object):
                 # Is really a file?
                 if not os.path.isfile(x):
                     raise GoLismeroFacadeAuditImportFileExitsException("'%s' is not a file." % x)
-
 
             AuditBridge.import_audit(dj, m_imports)
 
