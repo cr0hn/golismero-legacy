@@ -770,22 +770,22 @@ class AuditViewSet(ViewSet):
         m_info = { "audit_name" : audit}
 
         # Get files
-        files    = request.DATA.get("imports", None)
+        m_imports    = request.DATA.get("imports", None)
 
         # Audit is valid?
-        if not files:
+        if not m_imports:
             m_return['status']      = "error"
             m_return['error_code']  = 0
             m_return['error']       = ["Field 'files' is required."]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-        if not isinstance(files, list):
+        if not isinstance(m_imports, list):
             m_return['status']      = "error"
             m_return['error_code']  = 0
-            m_return['error']       = ["Field 'files' must be a list"]
+            m_return['error']       = ["Field 'imports' must be a list"]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-        m_info["imports"] = files
+        m_info["imports"] = m_imports
 
 
         #
