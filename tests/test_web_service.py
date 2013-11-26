@@ -27,28 +27,20 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-"""
+# Test the GoLismero daemon.
 
-This test file makes tests for GoLismero when it works as daemon
-
-"""
-
-from time import sleep
+import argparse
+import json
+import time
+import traceback
 import urllib2
 import urlparse
-import json
-import argparse
+
 
 # Test targets
 TARGET = {
     'quick'      : "http://terra.es",
     'long'      : "http://www.terra.es/portada/"
-}
-
-STATES = {
-    'progress'    : "/api/audits/progress/%s",
-    'status'      : "/api/audits/state/%s",
-    'summary'     : "/api/audits/results/summary/%s"
 }
 
 AUDIT_DATA = {
@@ -57,87 +49,79 @@ AUDIT_DATA = {
     'long'   : '{"audit_name":"asdfasdf", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/scan/openvas", "params" : [{"param_name" : "host", "param_value" : "192.168.2.104"}] }]}',
 }
 
-RESULTS_FORMATS = [
-    'txt',
+RESULT_FORMATS = [
+    "txt",
     "html",
     "xml",
     "csv",
-    "json"
+    "json",
+    "rst",
+    "odt",
+    "tex",
 ]
 
 #----------------------------------------------------------------------
 def main(args):
-    """Main func"""
 
+    # Get the parameters.
     target      = TARGET.get("long") if args.TYPE else TARGET.get("quick")
     data        = (AUDIT_DATA.get("long") if args.TYPE else AUDIT_DATA.get("short")) % target
     daemon_addr = args.ADDRESS
     daemon_port = args.PORT
     address     = "http://%s:%s" % (daemon_addr, daemon_port)
-    print data
-    # Prepare urllib2
+
+    # Prepare urllib2.
     opener  = urllib2.build_opener()
     headers = {'Content-Type': 'application/json'}
 
-    # First, make the create
-    query      = urlparse.urljoin(address, "/api/audits/create/")
-    audit_id   = None
-    try:
-        print "[*] Creating audit"
-        audit_id   = json.load(opener.open(urllib2.Request(query, data=data, headers=headers)))["audit_id"]
-        print "    | Got audit id: %s" % str(audit_id)
-    except urllib2.HTTPError, e:
-        print "[!] Error creating the audit"
-        print e
+    # Create the audit.
+    query = urlparse.urljoin(address, "/api/audits/create/")
+    print "[*] Creating audit"
+    audit_id = json.load(opener.open(urllib2.Request(query, data=data, headers=headers)))["audit_id"]
+    print "    | Got audit id: %s" % str(audit_id)
+    assert bool(audit_id)
 
-    if not audit_id:
-        print "[!] Audit not created correctly"
-        return
+    # Start the audit.
+    query = urlparse.urljoin(address, "/api/audits/start/%s" % str(audit_id))
+    print "[*] Starting audit %s" % str(audit_id)
+    print "      %s" % opener.open(urllib2.Request(query, headers=headers)).read()
 
-    # First, make the start
-    query      = urlparse.urljoin(address, "/api/audits/start/%s" % str(audit_id))
-    try:
-        print "[*] Starting audit %s" % str(audit_id)
-        print "      %s" % opener.open(urllib2.Request(query, headers=headers)).read()
-    except urllib2.HTTPError, e:
-        print "[!] Error creating the audit"
-        print e
+    # Wait until the audit is finished.
+    while True:
 
-    # Check states
-    try:
-        while True:
-            for t, r in STATES.iteritems():
-                print "[*] Making request: %s..." % t
-                query  = urlparse.urljoin(address, r % audit_id)
-                print "      %s" % opener.open(urllib2.Request(query, headers=headers)).read()
-                sleep(1)
-    except urllib2.HTTPError, e:
-        print "    | Error in method: %s (Probably the audit is finished)" % t
-        print e
+        # Get the state, to know if it's running.
+        query = urlparse.urljoin(address, "/api/audits/state/%s" % str(audit_id))
+        print "[*] Making request: state..."
+        resp = opener.open(urllib2.Request(query, headers=headers)).read()
+        print "      %s" % resp
 
-    # Wait while generate the results
-    print "[*] Waiting for report generation"
-    sleep(5)
+        # Break if it's not running anymore.
+        if json.loads(resp)["state"] != "running":
+            break
 
+        # Get the progress.
+        query = urlparse.urljoin(address, "/api/audits/progress/%s" % str(audit_id))
+        print "[*] Making request: progress..."
+        resp = opener.open(urllib2.Request(query, headers=headers)).read()
+        print "      %s" % resp
 
-    # Gettirng results for each format
-    for l_format in RESULTS_FORMATS:
-        # Try to get 3 times the results
+        # Get the summary.
+        query = urlparse.urljoin(address, "/api/audits/results/summary/%s" % str(audit_id))
+        print "[*] Making request: summary..."
+        resp = opener.open(urllib2.Request(query, headers=headers)).read()
+        print "      %s" % resp
+
+        # Wait before polling again.
+        time.sleep(1)
+
+    # Get the results in each format.
+    for l_format in RESULT_FORMATS:
         print "[*] Getting results for audit %s in format %s" % (str(audit_id), l_format)
-        for l_times in xrange(3):
-            try:
-                # Get results
-                query      = urlparse.urljoin(address, "/api/audits/results/%s/%s" % (str(audit_id), l_format))
-                print "%s\n      %s" % ("=" * 70, opener.open(urllib2.Request(query, headers=headers)).read())
-
-                # Out of first loop
-                break
-            except urllib2.HTTPError, e:
-                print "    | - i - Error getting results. Waiting 1 second..."
-                sleep(1)
-        else:
-            print "[!] Can't generate the results in format: %s" % l_format
-
+        try:
+            query = urlparse.urljoin(address, "/api/audits/results/%s/%s" % (str(audit_id), l_format))
+            print "%s\n      %s" % ("=" * 70, opener.open(urllib2.Request(query, headers=headers)).read())
+        except Exception:
+            traceback.print_exc()
 
 
 if __name__ == "__main__":
