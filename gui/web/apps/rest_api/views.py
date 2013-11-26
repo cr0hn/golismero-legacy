@@ -762,7 +762,7 @@ class AuditViewSet(ViewSet):
         # Audit is valid?
         if not audit:
             m_return['status']      = "error"
-            m_return['error_code']  = 0
+            m_return['error_code']  = 1
             m_return['error']       = ["Field 'audit_name' is required."]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
@@ -775,8 +775,8 @@ class AuditViewSet(ViewSet):
         # Audit is valid?
         if not m_imports:
             m_return['status']      = "error"
-            m_return['error_code']  = 0
-            m_return['error']       = ["Field 'files' is required."]
+            m_return['error_code']  = 1
+            m_return['error']       = ["Field 'imports' is required."]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
         if not isinstance(m_imports, list):
@@ -862,15 +862,9 @@ class AuditViewSet(ViewSet):
             m_return['error']       = [str(e)]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-        except GoLismeroFacadeAuditNotAllowedHostException,e:
+        except GoLismeroFacadeAuditImportFileExitsException,e:
             m_return['status']      = "error"
-            m_return['error_code']  = 3
-            m_return['error']       = [str(e)]
-            return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-        except GoLismeroFacadeAuditNotPluginsException,e:
-            m_return['status']      = "error"
-            m_return['error_code']  = 4
+            m_return['error_code']  = 2
             m_return['error']       = [str(e)]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
