@@ -40,7 +40,7 @@ from .scope import DummyScope
 from ..api.config import Config
 from ..api.logger import Logger
 from ..database.cachedb import PersistentNetworkCache, VolatileNetworkCache
-from ..managers.auditmanager import AuditManager
+from ..managers.auditmanager import AuditManager, AuditException
 from ..managers.pluginmanager import PluginManager
 from ..managers.uimanager import UIManager
 from ..managers.rpcmanager import RPCManager
@@ -449,8 +449,18 @@ class Orchestrator (object):
                         # But let KeyboardInterrupt and SystemExit through.
                         exit(1)
 
-                    # Dispatch the message.
-                    self.dispatch_msg(message)
+                    try:
+                        # Dispatch the message.
+                        self.dispatch_msg(message)
+                    except AuditException, e:
+                        message = Message(
+                            message_type = MessageType.MSG_TYPE_CONTROL,
+                            message_code = MessageCode.MSG_CONTROL_ERROR,
+                            message_info = ("Error starting audit", str(e)),
+                                priority = MessagePriority.MSG_PRIORITY_HIGH,
+                        )
+                        self.dispatch_msg(message)
+
 
                 # If an exception is raised during message processing,
                 # just log the exception and continue.
