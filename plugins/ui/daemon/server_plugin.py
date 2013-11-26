@@ -800,8 +800,8 @@ class WebUIPlugin(UIPlugin):
         :param audit_name: Name of the audit to query.
         :type audit_name: str
 
-        :returns: Current state for this audit. One of the following
-            values:
+        :returns: Current state for this audit.
+            One of the following values:
              - "start"
              - "running"
              - "finished"

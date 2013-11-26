@@ -1324,6 +1324,7 @@ class AuditSQLiteDB (BaseAuditDB):
 
             # Create the database file.
             self.__db = sqlite3.connect(self.__filename)
+            self.__db.text_factory = lambda x: unicode(x, "utf-8", "ignore")
 
         # Update the database filename.
         audit_config.audit_db = self.__filename

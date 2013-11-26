@@ -52,6 +52,7 @@ __all__ = ["GoLismeroFacadeAuditPolling",
            "GoLismeroFacadeAuditFinishedException",
            "GoLismeroFacadeAuditStoppedException",
            "GoLismeroFacadeAuditRunningException",
+           "GoLismeroFacadeAuditNotStartedException",
            "GoLismeroFacadeAuditStateException",
            "GoLismeroFacadeAuditUnknownException",
            "GoLismeroFacadeReportUnknownFormatException",
@@ -89,6 +90,8 @@ class GoLismeroFacadeAuditStoppedException(Exception):
     """Audit is stopped"""
 class GoLismeroFacadeAuditRunningException(Exception):
     """Audit is currently running."""
+class GoLismeroFacadeAuditNotStartedException(Exception):
+    """Audit not started"""
 class GoLismeroFacadeAuditStateException(Exception):
     """Audit state general exception"""
 class GoLismeroFacadeAuditUnknownException(Exception):
@@ -751,7 +754,8 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
             m_audit = Audit.objects.get(pk=audit_id)
 
             # If audit is new or finished return
-            if m_audit.audit_state != "running":
+            if m_audit.audit_state != "running" and\
+               m_audit.audit_state != "error":
                 return m_audit.audit_state
 
             #
@@ -760,6 +764,11 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
             m_new_state = None
             try:
                 m_new_state = AuditBridge.get_state(GoLismeroFacadeAuditPolling._get_unique_id(m_audit.id, m_audit.audit_name))
+
+                if m_new_state == "error":
+                    m_audit.audit_state = "finished"
+                    m_audit.save()
+                    GoLismeroFacadeAuditNotStartedException()
 
                 # Do that because AuditBridge regurns the STAGE, not the state
                 if m_new_state != "finished":
