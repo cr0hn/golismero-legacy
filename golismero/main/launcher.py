@@ -139,18 +139,25 @@ def _run(options, *audits):
                 return 1
 
         # Instance the Orchestrator.
-        with Orchestrator(options) as orchestrator:
+        while True:
+            with Orchestrator(options) as orchestrator:
 
-            # Validate the settings against the UI plugin.
-            try:
-                orchestrator.uiManager.check_params(*audits)
-            except Exception, e:
-                Console.display_error("[!] Configuration error: %s" % str(e))
-                Console.display_error_more_verbose(traceback.format_exc())
-                return 1
+                # Validate the settings against the UI plugin.
+                try:
+                    orchestrator.uiManager.check_params(*audits)
+                except Exception, e:
+                    Console.display_error("[!] Configuration error: %s" % str(e))
+                    Console.display_error_more_verbose(traceback.format_exc())
+                    #return 1
+                    continue
 
-            # Run the Orchestrator.
-            orchestrator.run(*audits)
+                # Run the Orchestrator.
+                try:
+                    orchestrator.run(*audits)
+                except Exception,e:
+                    Console.display_error(e)
+                    continue
+
 
     # On error, show a fatal error message.
     except Exception, e:
