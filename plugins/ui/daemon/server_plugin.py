@@ -58,59 +58,6 @@ server_bridge = load_source(
 )
 
 
-import urllib2
-
-#------------------------------------------------------------------------------
-class AsyncPush(threading.Thread):
-    """This class aims to make async request to remote host"""
-
-    #----------------------------------------------------------------------
-    def __init__(self):
-        """Constructor"""
-        super(AsyncPushs, self).__init__()
-
-        self.__con             = urllib2.build_opener()
-        self.__event           = threading.Event()
-        self.__url             = url
-        self.__post_data       = post_data
-
-    #----------------------------------------------------------------------
-    def run(self):
-        """Start thread"""
-        while True:
-            self.__event.wait()
-            try:
-                self.__con.open(self.__url, data=self.__post_data, timeout=2)
-            except urllib2.HTTPError:
-                Logger.log("Error calling '%s' with data: " % (
-                    self.__url,
-                    "&".join([ "%s=%s" % (x, y ) for x, y in self.__post_data.iteritems()])
-                ))
-
-
-    #----------------------------------------------------------------------
-    def send(self, URL, post_data):
-        """
-        Send some information to the URL.
-
-        :param URL: URL where make the request.
-        :type URL: str
-
-        :param post_data: dict with post data.
-        :type post_data: dict
-        """
-        self.__url       = URL
-        self.__post_data = post_data
-
-        self.__event.set()
-
-
-
-
-
-
-
-
 
 #------------------------------------------------------------------------------
 class SwitchToAudit(object):
@@ -223,8 +170,12 @@ class WebUIPlugin(UIPlugin):
                     del self.current_plugins[Config.audit_name]
                 except KeyError:
                     pass
+                # Notify end of an audit
                 self.notify_stage(message.audit_name,
                             "finish" if message.message_info else "cancel")
+                # Nofity summary results
+                self.notify_summary(message.audit_name)
+
 
             # A plugin has sent a log message.
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
@@ -709,6 +660,35 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
+    def notify_summary(self, audit_name):
+        """
+        This method is called when an audit ends.
+
+        :param audit_name: Name of the audit.
+        :type audit_name: str
+        """
+        return
+        # Get summary
+        summary = self.do_audit_summary(audit_name)
+
+        # Log the event.
+        print "[%s] Summary for audit:" % (audit_name)
+        if summary:
+            for k, v in summary.iteritems():
+                if k == "vulns_by_level":
+                    print "      | Vulns by level:"
+                    for kk, vv in v.iteritems():
+                        print "      |- %s : %s" % (kk, vv)
+                else:
+                    print "     | %s : %s" % (k, v)
+
+
+        # Send the audit stage.
+        packet = ("summary", summary)
+        self.bridge.send(packet)
+
+
+    #--------------------------------------------------------------------------
     #
     # Command methods
     # ===============
@@ -977,7 +957,7 @@ class WebUIPlugin(UIPlugin):
                         'medium'   : vulns_counter['medium'],
                         'high'     : vulns_counter['high'],
                         'critical' : vulns_counter['critical'],
-                    },
+                    }
                 }
 
             else:
@@ -1007,12 +987,15 @@ class WebUIPlugin(UIPlugin):
              - Timestamp.
         :rtype: list( tuple(str, str, str, int, bool, float) )
         """
-        if self.is_audit_running(audit_name):
-            return get_audit_log_lines(audit_name)
-        else:
-            # XXX TODO open the database manually here
-            raise NotImplementedError(
-                "Querying finished audits is not implemented yet!")
+        try:
+            if self.is_audit_running(audit_name):
+                return get_audit_log_lines(audit_name)
+            else:
+                # XXX TODO open the database manually here
+                raise NotImplementedError(
+                    "Querying finished audits is not implemented yet!")
+        except Exception:
+            Logger.log_error(traceback.format_exc())
 
 
     #--------------------------------------------------------------------------

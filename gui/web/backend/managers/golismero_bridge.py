@@ -72,6 +72,48 @@ class AuditBridge(object):
 
     #----------------------------------------------------------------------
     @staticmethod
+    def import_audit(data, imports):
+        """
+        Create a new audit from imported data
+
+        :param data: GoLismeroAuditData with audit info.
+        :type data: GoLismeroAuditData
+
+        :param imports: list of files to import.
+        :type imports: list(str)
+
+        :raises: ExceptionAudit
+        """
+        if not isinstance(data, GoLismeroAuditData):
+            raise TypeError("Expected GoLismeroAuditData, got '%s' instead" % type(data))
+
+        config = data.to_json_console
+        print config
+
+        # Set command
+        config["command"]        = "IMPORT"
+        # Set BBDD store location
+        config["audit_db"]       = "%s.db" % join(data.store_path,config['audit_name'])
+
+        # Config the plu
+        config["enable_plugins"] += ",import" # Add import plugins
+        config["disable_plugins"] = ['all']
+
+        print "-" * 90
+        print config
+        # Config the file imports
+        config["imports"]        = imports
+
+        if not BRIDGE.SIMULATE:
+            try:
+                BRIDGE.RPC.call("audit/create", config)
+            except Exception,e:
+                raise ExceptionAudit(e)
+
+
+
+    #----------------------------------------------------------------------
+    @staticmethod
     def new_audit(data):
         """
         Creates and start a new audit.
@@ -145,19 +187,26 @@ class AuditBridge(object):
         """
 
         if not BRIDGE.SIMULATE:
+
             rpc_response = BRIDGE.RPC.call("audit/log", audit_id)
 
-            return [
-                {
-                    'plugin_id'     : r[0],
-                    'text'          : r[1],
-                    'verbosity'     : r[2],
-                    'is_error'      : r[3],
-                    'timestamp'     : r[4]
-                }
+            if not rpc_response:
+                raise ExceptionAuditNotFound()
+
+            r = [
+                GoLismeroAuditLog({
+                    #'plugin_id'     : r[0],
+                    'level'         : r[1],
+                    'text'          : r[2],
+                    'verbosity'     : r[3],
+                    'is_error'      : r[4],
+                    'timestamp'     : r[5]
+                })
 
                 for r in rpc_response
             ]
+
+            return r
 
 
     #----------------------------------------------------------------------
@@ -172,6 +221,7 @@ class AuditBridge(object):
         :raises: ExceptionAuditNotFound
         """
         if not BRIDGE.SIMULATE:
+
             rpc_response = BRIDGE.RPC.call("audit/summary", audit_id)
 
             # If info not found -> audit not found
@@ -179,7 +229,6 @@ class AuditBridge(object):
                 raise ExceptionAuditNotFound()
 
             return GoLismeroAuditSummary(rpc_response)
-
         else:
             return GoLismeroAuditSummary({
                 'vulns_number'            : '10',
@@ -210,11 +259,12 @@ class AuditBridge(object):
         :raises: ExceptionAuditNotFound
         """
         if not BRIDGE.SIMULATE:
-            #rpc_response, a , b = BRIDGE.RPC.call("audit/state", audit_id)
             r = BRIDGE.RPC.call("audit/state", audit_id)
 
             if not r:
                 raise ExceptionAuditNotFound("Audit not found")
+
+            return r
 
         return "running"
 

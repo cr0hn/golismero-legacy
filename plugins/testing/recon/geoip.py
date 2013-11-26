@@ -30,7 +30,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # Thank you Danito for pointing out the Freegeoip.net service!
 # https://twitter.com/dan1t0
 
+from golismero.api.data import discard_data
 from golismero.api.data.information.geolocation import Geolocation
+from golismero.api.data.information.traceroute import Traceroute
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.logger import Logger
@@ -57,7 +59,7 @@ class GeoIP(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Domain, IP, Geolocation]
+        return [Domain, IP, Traceroute, Geolocation]
 
 
     #--------------------------------------------------------------------------
@@ -79,6 +81,22 @@ class GeoIP(TestingPlugin):
                     Logger.log("(%s, %s) is in %s" % \
                                (info.latitude, info.longitude, street_addr))
             return
+
+        # Extract IPs and domains from traceroute results and geolocate them.
+        if info.is_instance(Traceroute):
+            hops = []
+            for hop in info.hops:
+                if hop is not None:
+                    if hop.address:
+                        hops.append( IP(hop.address) )
+                    elif hop.hostname:
+                        hops.append( Domain(hop.hostname) )
+            results.extend(hops)
+            for res in hops:
+                r = self.recv_info(res)
+                if r:
+                    results.extend(r)
+            return results
 
         # Get the IP address or domain name.
         # Skip unsupported targets.

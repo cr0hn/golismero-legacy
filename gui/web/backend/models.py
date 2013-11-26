@@ -12,8 +12,17 @@ def generate_random_string(length = 30):
 
     return "".join(choice(m_available_chars) for _ in xrange(length))
 
+#----------------------------------------------------------------------
+def generate_random_string_long():
+    """Generate token with 100 chars of length"""
+    return generate_random_string(100)
 
-__all__ = ["Audit", "Target", "Plugins", "PluginParameters", "AuditProgress", "AuditSummary"]
+
+
+__all__ = ["Audit", "Target", "Plugins", "PluginParameters",
+           "RTAuditProgress", "RTAuditSummary", "RTAuditLog", "RTPluginErrors",
+           "RTPluginWarning", "RTAuditStage"]
+
 
 
 
@@ -38,6 +47,8 @@ class Audit(models.Model):
     Audit configuration
     """
     audit_name              = models.CharField(max_length=200, default=generate_random_string)
+    # Audit type: scan or import.
+    audit_type              = models.CharField(max_length=20, default="scan")
     only_vulns              = models.BooleanField(blank=True)
     #imports                 = serializers.ChoiceField()
     include_subdomains      = models.BooleanField(blank=True)
@@ -54,15 +65,21 @@ class Audit(models.Model):
     user_agent              = models.CharField(max_length=200, blank=True)
     start_date              = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
     end_date                = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
+
+    # Running stage
+    current_stage           = models.CharField(max_length=30, default="start")
+
     # Comma separated disabled plugins
     disable_plugins         = models.CharField(max_length=1000, blank=True)
-
     audit_state             = models.CharField(max_length=50, default="new")
 
     # Relations
-    targets                 = models.ManyToManyField(Target)
-    enable_plugins          = models.ManyToManyField(Plugins)
+    targets                 = models.ManyToManyField(Target, blank=True)
+    enable_plugins          = models.ManyToManyField(Plugins, blank=True)
     user                    = models.ForeignKey(User)
+
+    # Pushing info
+    token                   = models.CharField(max_length=100, default=generate_random_string_long)
 
 
 #------------------------------------------------------------------------------
@@ -80,8 +97,13 @@ class PluginParameters(models.Model):
     plugin     = models.ForeignKey(Plugins)
     audit      = models.ForeignKey(Audit)
 
+
 #------------------------------------------------------------------------------
-class AuditProgress(models.Model):
+#
+# Real time options
+#
+#------------------------------------------------------------------------------
+class RTAuditProgress(models.Model):
     """
     Summarized audit progress.
     """
@@ -95,12 +117,12 @@ class AuditProgress(models.Model):
     last_update        = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
 
     # Relations
-    audit                        = models.OneToOneField(Audit, primary_key=True)
+    audit              = models.OneToOneField(Audit, primary_key=True)
 
 
 
 #------------------------------------------------------------------------------
-class AuditSummary(models.Model):
+class RTAuditSummary(models.Model):
     """
     Summarized results info.
     """
@@ -112,8 +134,62 @@ class AuditSummary(models.Model):
     vuln_level_medium_number     = models.IntegerField(default=0)
     vuln_level_high_number       = models.IntegerField(default=0)
     vuln_level_critical_number   = models.IntegerField(default=0)
+
     # Last check
     last_update                  = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
 
     # Relations
-    audit                        = models.OneToOneField(Audit)
+    audit                        = models.OneToOneField(Audit, primary_key=True)
+
+
+#------------------------------------------------------------------------------
+class RTAuditLog(models.Model):
+    """
+    Audit logs
+    """
+    text                 = models.TextField()
+    level                = models.IntegerField(default=0)
+    verbosity            = models.IntegerField(default=0)
+    timestamp            = models.DateField()
+    is_error             = models.BooleanField(default=False)
+    insert_date          = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
+
+    # Relations
+    audit                = models.ForeignKey(Audit)
+
+#------------------------------------------------------------------------------
+class RTPluginErrors(models.Model):
+    """
+    Plugin errors
+    """
+    text                 = models.TextField()
+    level                = models.IntegerField(default=0)
+    insert_date          = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
+
+    # Relations
+    plugin               = models.ForeignKey(Plugins)
+    audit                = models.ForeignKey(Audit)
+
+#------------------------------------------------------------------------------
+class RTPluginWarning(models.Model):
+    """
+    Plugin warnings
+    """
+    text                 = models.TextField()
+    level                = models.IntegerField(default=0)
+    insert_date          = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
+
+    # Relations
+    plugin               = models.ForeignKey(Plugins)
+    audit                = models.ForeignKey(Audit)
+
+#------------------------------------------------------------------------------
+class RTAuditStage(models.Model):
+    """
+    Audit logs
+    """
+    stage                = models.CharField(max_length=30)
+    insert_date          = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
+
+    # Relations
+    audit                = models.ForeignKey(Audit)

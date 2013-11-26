@@ -90,6 +90,11 @@ class _WordListLoader(Singleton):
 
         m_return = None
 
+        # For avoid user errors, library accept also, wordlists starting as:
+        # wordlist/....
+        if "wordlist" in wordlist:
+            wordlist = "/".join(wordlist.split("/")[1:])
+
         try:
             m_return = open(self.__store[wordlist], "rU")
         except KeyError: # Wordlist is not in the internal database

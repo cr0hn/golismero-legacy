@@ -70,6 +70,7 @@ class Spider(TestingPlugin):
             p = download(m_url, self.check_download, allow_redirects=allow_redirects)
         except NetworkException,e:
             Logger.log_more_verbose("Error while processing %r: %s" % (m_url, str(e)))
+
         if not p:
             return m_return
 
@@ -81,7 +82,7 @@ class Spider(TestingPlugin):
         # Get links
         if p.information_type == Information.INFORMATION_HTML:
             m_links = extract_from_html(p.raw_data, m_url)
-            m_links.update( extract_from_text(p.raw_data, m_url) )
+            #m_links.update( extract_from_text(p.raw_data, m_url) )
         elif p.information_type == Information.INFORMATION_PLAIN_TEXT:
             m_links = extract_from_text(p.raw_data, m_url)
         else:
@@ -170,16 +171,22 @@ class Spider(TestingPlugin):
             return True
 
         # Content length absent but likely points to a directory index.
-        if not parse_url(url).filename:
-
+        parsed_url = parse_url(url)
+        if not parsed_url.filename:
             # Approved!
             return True
 
-        # Content length absent but likely points to a webpage.
-        if "download" in url or name[name.rfind(".")+1:].lower() not in (
-            "htm", "html", "php", "asp", "aspx", "jsp",
-        ):
-            Logger.log_more_verbose("Skipping URL, content is likely not text: %s" % url)
+        if not parsed_url.extension:
+            return True
+
+        # List from wikipedia: http://en.wikipedia.org/wiki/List_of_file_formats#Webpage
+        if parsed_url.extension not in (".xml", ".html", ".htm", ".xhtml", ".xht", \
+                                        ".mht", ".mhtml", ".maff", ".asp", ".aspx", ".bml", \
+                                        ".cfm", ".cgi", ".ihtml", ".jsp", ".las", ".lasso", \
+                                        ".lassoapp", ".pl", ".php", ".php3", ".phtml", \
+                                        ".rna", ".r", ".rnx", ".shtml", ".stm", ".atom", \
+                                        ".xml", ".eml", ".jsonld", ".metalink", ".met", \
+                                        ".rss", ".xml", ".markdown"):
             return False
 
         # Approved!

@@ -8,5 +8,7 @@ Copyright   = Copyright (C) 2011-2013 GoLismero Project
 License     = GNU Public License
 
 [Configuration]
-middle      = golismero/warning_url.txt
-extensions  = fuzzdb/Discovery/FilenameBruteforce/Extensions.Backup.fuzz.txt
+middle             = golismero/warning_url.txt
+extensions         = fuzzdb/Discovery/FilenameBruteforce/Extensions.Backup.fuzz.txt
+malware_sites      = malware/joxean/normal.txt
+wordlist_no_spider = golismero/no_spiderable_urls.txt
