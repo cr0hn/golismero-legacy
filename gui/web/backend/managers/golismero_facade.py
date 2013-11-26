@@ -366,7 +366,18 @@ class GoLismeroFacadeAuditCommon(object):
 
         {
            "audit_name":: str,
-           "files":: [str]
+           "imports":: [str],
+           "enable_plugins" :: [
+              {
+                 'plugin_name'  :: str,
+                 'params' :: [
+                    {
+                       'param_name'  :: str,
+                       'param_value' :: str
+                    }
+                 ]
+              }
+           ]
         }
 
         :param data: A JSON info.
@@ -396,10 +407,10 @@ class GoLismeroFacadeAuditCommon(object):
             dj = GoLismeroAuditData.from_django(m_audit)
             dj.store_path = l_path
 
-            audit_config            = dj.to_json_console
-            audit_config["imports"] = data.get("files")
+            # Prepare config
+            m_imports     = list(set((os.path.abspath(y.strip()) for y in data.get("imports"))))
 
-            AuditBridge.import_audit(audit_config)
+            AuditBridge.import_audit(dj, m_imports)
 
             return m_audit.id
         except ValueError,e:
