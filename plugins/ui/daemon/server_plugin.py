@@ -164,6 +164,11 @@ class WebUIPlugin(UIPlugin):
             elif message.message_code == MessageCode.MSG_CONTROL_START_AUDIT:
                 self.notify_stage(message.message_info.audit_name, "start")
 
+            # Notify starting error for audit
+            elif message.message_code == MessageCode.MSG_CONTROL_START_ERROR_AUDIT:
+                (reason, audit_name) = message.message_info
+                self.notify_audit_error(audit_name, reason)
+
             # An audit has finished.
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
                 try:
@@ -332,6 +337,9 @@ class WebUIPlugin(UIPlugin):
             functools.partial(collections.defaultdict, dict)
             )  # audit -> (plugin, identity) -> progress
 
+        # Audit not started correctly
+        self.audit_error  = {}
+
         # Create the consumer thread object.
         self.thread_continue = True
         self.thread = threading.Thread(
@@ -492,6 +500,23 @@ class WebUIPlugin(UIPlugin):
     # They run in the context of the main thread, invoked from recv_msg().
     #
     #--------------------------------------------------------------------------
+
+
+
+    #--------------------------------------------------------------------------
+    def notify_audit_error(self, audit_name, reason):
+        """
+        This method is called when an audit has any error at starting.
+
+        :param audit_name: Name of the audit.
+        :type audit_name: str
+
+        :param reason: the reason of fail.
+        :type reason: str
+        """
+        self.audit_error[audit_name] = reason
+
+        print self.audit_error
 
 
     #--------------------------------------------------------------------------
@@ -721,9 +746,10 @@ class WebUIPlugin(UIPlugin):
         # Create the new audit.
         start_audit(o_audit_config)
 
+
         # Set the stage to avoid race conditions when trying to get the stage
         # before the audit is loaded and configured.
-        self.audit_stage[o_audit_config.audit_name] = "start"
+        #self.audit_stage[o_audit_config.audit_name] = "start"
 
 
 
@@ -738,6 +764,9 @@ class WebUIPlugin(UIPlugin):
         :return: True on success, False otherwise.
         :type: bool
         """
+        if audit_name in self.audit_error:
+            return False
+
         if self.is_audit_running(audit_name):
             try:
                 with SwitchToAudit(audit_name):
@@ -749,7 +778,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_audit_list(self):
+    def do_audit_list(self): # TODO: control audits with error at start
         """
         Implementation of: /audit/list
 
@@ -776,8 +805,12 @@ class WebUIPlugin(UIPlugin):
              - "start"
              - "running"
              - "finished"
+             - "error"
         :type: str
         """
+        if audit_name in self.audit_error:
+            return "error"
+
         stage = self.audit_stage.get(audit_name, "finish")
         if stage == "start":
             return "start"
@@ -797,7 +830,7 @@ class WebUIPlugin(UIPlugin):
         :returns: Current stage for this audit.
         :type: str
         """
-        return self.audit_stage.get(audit_name, "finish")
+        return "error" if audit_name in self.audit_error else self.audit_stage.get(audit_name, "finish")
 
 
     #--------------------------------------------------------------------------
@@ -822,6 +855,10 @@ class WebUIPlugin(UIPlugin):
             every plugin (plugin name, data identity, progress percentage).
         :rtype: tuple(int, tuple( tuple(str, str, float) ... ))
         """
+        # Checks for error
+        if audit_name in self.audit_error:
+            return "error"
+
         r = (
             0,
             "finish",
@@ -845,7 +882,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_audit_results(self, audit_name, data_type = "all"):
+    def do_audit_results(self, audit_name, data_type = "all"): # TODO: control audits with error at start
         """
         Implementation of: /audit/results
 
@@ -881,7 +918,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_audit_details(self, audit_name, id_list):
+    def do_audit_details(self, audit_name, id_list): # TODO: control audits with error at start
         """
         Implementation of: /audit/details
 
@@ -925,6 +962,10 @@ class WebUIPlugin(UIPlugin):
             Returns None on error.
         :rtype: dict(str -> \\*) | None
         """
+        # Checks for errors
+        if audit_name in self.audit_error:
+            return "error"
+
         try:
             if self.is_audit_running(audit_name):
                 with SwitchToAudit(audit_name):
@@ -970,7 +1011,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #----------------------------------------------------------------------
-    def do_audit_log(self, audit_name):
+    def do_audit_log(self, audit_name): # TODO: control audits with error at start
         """
         Implementation of: /audit/log
 
@@ -987,6 +1028,9 @@ class WebUIPlugin(UIPlugin):
              - Timestamp.
         :rtype: list( tuple(str, str, str, int, bool, float) )
         """
+        if audit_name in self.audit_error:
+            return "error"
+
         try:
             if self.is_audit_running(audit_name):
                 return get_audit_log_lines(audit_name)
@@ -1006,7 +1050,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_plugin_list(self):
+    def do_plugin_list(self): # TODO: control audits with error at start
         """
         Implementation of: /plugin/list
 
@@ -1017,7 +1061,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def do_plugin_details(self, plugin_id):
+    def do_plugin_details(self, plugin_id): # TODO: control audits with error at start
         """
         Implementation of: /plugin/details
 
