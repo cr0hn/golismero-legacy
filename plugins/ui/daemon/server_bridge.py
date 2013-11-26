@@ -150,6 +150,7 @@ def _launch_server(input_conn, output_conn,
 
                 # Instance the server pusher, if requested.
                 server_push = orchestrator_config.get('server_push', None)
+
                 if server_push:
                     sp = ServerPush(server_push)
                 else:
@@ -197,7 +198,7 @@ class ServerPush(threading.Thread):
         :param push_url: URL to push notifications to.
         :type push_url: str
         """
-        super(ServerPush, self).__init__(self)
+        super(ServerPush, self).__init__()
         if not push_url.endswith("/"):
             push_url += "/"
         self.__push_url = push_url
@@ -239,7 +240,7 @@ class ServerPush(threading.Thread):
         Push a notification.
         """
         push_url = self.__push_url + command
-        requests.post(push_url, json.encode(args))
+        requests.post(push_url, json.encode(args), headers={'Content-type': 'application/json'})
 
 
 #------------------------------------------------------------------------------

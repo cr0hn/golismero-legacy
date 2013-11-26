@@ -97,10 +97,20 @@ class SQLInjectionPlugin(TestingPlugin):
                     results.extend(self.parse_sqlmap_results(info, output_dir))
 
             #
-            # GET Parameters injection
+            # POST Parameters injection
             #
             if info.has_post_param:
-                pass
+
+                args = [
+                    "--data",
+                    "&".join([ "%s=%s" % (k, v) for k, v in info.post_params.iteritems()])
+                ]
+
+                r = self.make_injection(info.url, sqlmap_script, args)
+                # Parse and return the results.
+                if r:
+                    results.extend(self.parse_sqlmap_results(info, output_dir))
+
 
 
         if results:

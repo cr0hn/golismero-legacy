@@ -2188,10 +2188,10 @@ class AuditSQLiteDB (BaseAuditDB):
 
         # Build the query.
         query = (
-            "SELECT plugin.name, log.ack_id,"
+            "SELECT plugin.name, log.rowid,"
             "       log.text, log.level, log.is_error, log.timestamp"
             " FROM plugin, log"
-            " WHERE plugin.rowid = log.plugin_rowid")
+            " WHERE plugin.rowid = log.plugin_id")
         params = []
         if filter_by_plugin:
             plugin_rowid = self.__get_or_create_plugin_rowid(filter_by_plugin)
