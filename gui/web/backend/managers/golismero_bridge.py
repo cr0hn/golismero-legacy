@@ -88,7 +88,6 @@ class AuditBridge(object):
             raise TypeError("Expected GoLismeroAuditData, got '%s' instead" % type(data))
 
         config = data.to_json_console
-        print config
 
         # Set command
         config["command"]        = "IMPORT"
@@ -96,11 +95,9 @@ class AuditBridge(object):
         config["audit_db"]       = "%s.db" % join(data.store_path,config['audit_name'])
 
         # Config the plu
-        config["enable_plugins"] += ",import" # Add import plugins
-        config["disable_plugins"] = ['all']
+        config["disable_plugins"] = []
+        config["plugin_load_overrides"] = [(False, 'testing')]
 
-        print "-" * 90
-        print config
         # Config the file imports
         config["imports"]        = imports
 
@@ -129,10 +126,10 @@ class AuditBridge(object):
         config = data.to_json_console
 
         # Set command
-        config["command"]     = "scan"
+        config["command"]     = "SCAN"
         # Set BBDD store location
         config["audit_db"] = "%s.db" % join(data.store_path,config['audit_name'])
-        print config
+
         if not BRIDGE.SIMULATE:
             try:
                 BRIDGE.RPC.call("audit/create", config)

@@ -2177,10 +2177,15 @@ class AuditSQLiteDB (BaseAuditDB):
 
         # Append the log line.
         try:
+            try:
+                filtered_text = text.encode("utf-8")
+            except UnicodeDecodeError:
+                filtered_text = text.decode("latin-1").encode("utf-8")
+
             self.__cursor.execute(
                 "INSERT INTO log VALUES (NULL, ?, ?, ?, ?, ?, ?);",
-                (plugin_rowid, ack_id, text, level, is_error, timestamp))
-        except:
+                (plugin_rowid, ack_id, filtered_text, level, is_error, timestamp))
+        except Exception:
             return
 
 
