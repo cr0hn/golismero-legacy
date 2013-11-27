@@ -129,10 +129,10 @@ class AuditBridge(object):
         config = data.to_json_console
 
         # Set command
-        config["command"]     = "scan"
+        config["command"]     = "SCAN"
         # Set BBDD store location
         config["audit_db"] = "%s.db" % join(data.store_path,config['audit_name'])
-        print config
+
         if not BRIDGE.SIMULATE:
             try:
                 BRIDGE.RPC.call("audit/create", config)
