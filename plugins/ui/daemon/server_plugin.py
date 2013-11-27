@@ -692,7 +692,10 @@ class WebUIPlugin(UIPlugin):
         :param audit_name: Name of the audit.
         :type audit_name: str
         """
+
+        # XXX FIXME disabled for now
         return
+
         # Get summary
         summary = self.do_audit_summary(audit_name)
 
@@ -708,7 +711,7 @@ class WebUIPlugin(UIPlugin):
                     print "     | %s : %s" % (k, v)
 
 
-        # Send the audit stage.
+        # Send the summary.
         packet = ("summary", summary)
         self.bridge.send(packet)
 
@@ -855,18 +858,14 @@ class WebUIPlugin(UIPlugin):
             every plugin (plugin name, data identity, progress percentage).
         :rtype: tuple(int, tuple( tuple(str, str, float) ... ))
         """
+
         # Checks for error
         if audit_name in self.audit_error:
             return "error"
 
         r = None
-        if self.is_audit_running(audit_name):
-            r = (
-                0,
-                "finish",
-                (),
-            )
 
+        if self.is_audit_running(audit_name):
             with SwitchToAudit(audit_name):
                 try:
                     r = (
@@ -880,6 +879,7 @@ class WebUIPlugin(UIPlugin):
                     )
                 except Exception:
                     Logger.log_error(traceback.format_exc())
+
         return r
 
 
