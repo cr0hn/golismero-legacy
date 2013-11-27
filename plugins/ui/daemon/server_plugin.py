@@ -859,12 +859,14 @@ class WebUIPlugin(UIPlugin):
         if audit_name in self.audit_error:
             return "error"
 
-        r = (
-            0,
-            "finish",
-            (),
-        )
+        r = None
         if self.is_audit_running(audit_name):
+            r = (
+                0,
+                "finish",
+                (),
+            )
+
             with SwitchToAudit(audit_name):
                 try:
                     r = (
