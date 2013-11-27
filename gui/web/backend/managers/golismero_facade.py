@@ -62,6 +62,7 @@ __all__ = ["GoLismeroFacadeAuditPolling",
 import os
 import os.path as path
 import datetime
+from zipfile import ZipFile, BadZipfile
 
 from backend.managers.golismero_bridge import *
 from backend.managers import *
@@ -461,15 +462,36 @@ class GoLismeroFacadeAuditCommon(object):
             dj.store_path = l_path
 
             # Prepare config
-            m_imports     = list(set((os.path.abspath(y.strip()) for y in data.get("imports"))))
+            tmp_import     = list(set((os.path.abspath(y.strip()) for y in data.get("imports"))))
             # Checks if files exits
-            for x in m_imports:
+            m_imports      = []
+            for x in tmp_import:
                 # File exists?
                 if not os.path.exists(x):
                     raise GoLismeroFacadeAuditImportFileExitsException("File '%s' not exists." % x)
                 # Is really a file?
                 if not os.path.isfile(x):
                     raise GoLismeroFacadeAuditImportFileExitsException("'%s' is not a file." % x)
+
+                # Checks if file is a zip
+                if x.endswith("zip"):
+                    # Extract
+                    try:
+                        l_zip = ZipFile(x)
+
+                        for l_zip_file in l_zip.filelist:
+                            # Checks if file is a dir
+                            if os.path.sep in l_zip_file.filename:
+                                continue
+                            l_zip.extract(l_zip_file, l_path)
+
+                            l_file_name = os.path.join(l_path, l_zip_file.filename)
+                            m_imports.append(l_file_name)
+
+                    except BadZipfile:
+                        raise ValueError("Error zip file format for file: '%s'" % x)
+                else:
+                    m_imports.append(x)
 
             AuditBridge.import_audit(dj, m_imports)
 
