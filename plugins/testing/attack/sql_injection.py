@@ -58,7 +58,7 @@ class SQLInjectionPlugin(TestingPlugin):
         if not isinstance(info, Url):
             return
 
-        if not info.has_url_param and not info.has_post_param:
+        if not info.has_url_params and not info.has_post_params:
             Logger.log("URL '%s' has not parameters" % info.url)
             return
 
@@ -84,7 +84,7 @@ class SQLInjectionPlugin(TestingPlugin):
             #
             # GET Parameters injection
             #
-            if info.has_url_param:
+            if info.has_url_params:
 
                 args = [
                     "-p",
@@ -99,7 +99,7 @@ class SQLInjectionPlugin(TestingPlugin):
             #
             # POST Parameters injection
             #
-            if info.has_post_param:
+            if info.has_post_params:
 
                 args = [
                     "--data",
