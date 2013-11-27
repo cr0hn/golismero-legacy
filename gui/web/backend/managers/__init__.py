@@ -507,7 +507,18 @@ class GoLismeroAuditData(object): # TODO: Rewrite and clean this class
 
         # Add targets
         try:
-            m_config['targets']         = self.__dict__["targets"]
+            #m_config['targets']         = self.__dict__["targets"]
+
+            tmp_targets = []
+
+            for target in self.__dict__["targets"]:
+                if not "://" in target:
+                    tmp_targets.append("http://" + target)
+
+                tmp_targets.append(target)
+
+            m_config['targets'] = tmp_targets
+
         except KeyError:
             pass # No targets -> imports audits
 
@@ -532,14 +543,46 @@ class GoLismeroAuditData(object): # TODO: Rewrite and clean this class
             m_config['plugin_load_overrides']  = []
             m_config['enable_plugins']         = ["all"]
         else: # Plugins selected -> enable one by one
-            m_config['disable_plugins']        = ["all"]
-            m_config['enable_plugins']         = []
+
+            #----------------------------------------------------------------------
+            #m_config['disable_plugins']        = ["all"]
+            #m_config['enable_plugins']         = []
+            #m_config['plugin_load_overrides']  = []
+            #m_tmp_plugin_args                  = {}
+
+            ## Add plugins config
+            #for p in self.enable_plugins:
+                #l_plugin_name = p["plugin_name"]
+                #m_config['plugin_load_overrides'].append((True, l_plugin_name))
+
+                ## Plugins params
+                #for pp in p.get("params", []):
+                    #l_plugin_param_name  = pp["param_name"]
+                    #l_plugin_param_value = pp["param_value"]
+                    #if not l_plugin_name in m_tmp_plugin_args:
+                        #m_tmp_plugin_args[l_plugin_name] = {}
+                    #m_tmp_plugin_args[l_plugin_name][l_plugin_param_name] = l_plugin_param_value
+
+            #m_config['plugin_args'] = m_tmp_plugin_args
+
+            ## Configure to golismero format
+            #if m_config['plugin_load_overrides']:
+                #m_config['enable_plugins'] =  ','.join(x[1] for x in m_config['plugin_load_overrides'])
+                #m_config['enable_plugins'] += ','
+                #m_config['enable_plugins'] = ','.join(REPORT_PLUGINS) # Report plugins
+
+
+
+            #----------------------------------------------------------------------
+            m_config['enable_plugins']         = ["all"]
+            m_config['disable_plugins']        = []
             m_config['plugin_load_overrides']  = []
             m_tmp_plugin_args                  = {}
 
             # Add plugins config
             for p in self.enable_plugins:
                 l_plugin_name = p["plugin_name"]
+
                 m_config['plugin_load_overrides'].append((True, l_plugin_name))
 
                 # Plugins params
@@ -553,9 +596,11 @@ class GoLismeroAuditData(object): # TODO: Rewrite and clean this class
             m_config['plugin_args'] = m_tmp_plugin_args
 
             # Configure to golismero format
-            if m_config['plugin_load_overrides']:
-                m_config['enable_plugins'] =  ','.join(x[1] for x in m_config['plugin_load_overrides'])
-                m_config['enable_plugins'] += ','
-                m_config['enable_plugins'] += ','.join(REPORT_PLUGINS) # Report plugins
+            #if m_config['plugin_load_overrides']:
+                #m_config['enable_plugins'] =  ','.join(x[1] for x in m_config['plugin_load_overrides'])
+                #m_config['enable_plugins'] += ','
+                #m_config['enable_plugins'] = ','.join(REPORT_PLUGINS) # Report plugins
+
+
 
         return m_config
