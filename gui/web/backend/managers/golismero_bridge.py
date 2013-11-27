@@ -152,7 +152,10 @@ class AuditBridge(object):
         :raises: ExceptionAuditNotFound
         """
         if not BRIDGE.SIMULATE:
-            BRIDGE.RPC.call("audit/cancel", audit_id)
+            try:
+                BRIDGE.RPC.call("audit/cancel", audit_id)
+            except:
+                raise ExceptionAuditNotFound()
 
 
     #----------------------------------------------------------------------
@@ -187,7 +190,11 @@ class AuditBridge(object):
         """
 
         if not BRIDGE.SIMULATE:
-            rpc_response = BRIDGE.RPC.call("audit/log", audit_id)
+            try:
+                rpc_response = BRIDGE.RPC.call("audit/log", audit_id)
+            except:
+                raise ExceptionAuditNotFound()
+
 
             if rpc_response == "error":
                 raise ExceptionAuditNotStarted()
@@ -222,8 +229,11 @@ class AuditBridge(object):
         :raises: ExceptionAuditNotFound, ExceptionAuditNotStarted
         """
         if not BRIDGE.SIMULATE:
+            try:
+                rpc_response = BRIDGE.RPC.call("audit/summary", audit_id)
+            except:
+                raise ExceptionAuditNotFound()
 
-            rpc_response = BRIDGE.RPC.call("audit/summary", audit_id)
 
             # If info not found -> audit not found
             if not rpc_response:
@@ -263,7 +273,11 @@ class AuditBridge(object):
         :raises: ExceptionAuditNotFound, ExceptionAuditNotStarted
         """
         if not BRIDGE.SIMULATE:
-            r = BRIDGE.RPC.call("audit/state", audit_id)
+            try:
+                r = BRIDGE.RPC.call("audit/state", audit_id)
+            except:
+                raise ExceptionAuditNotFound()
+
 
             if not r:
                 raise ExceptionAuditNotFound("Audit not found")
@@ -293,7 +307,10 @@ class AuditBridge(object):
         m_return = None
 
         if not BRIDGE.SIMULATE:
-            rpc_response = BRIDGE.RPC.call("audit/progress", audit_id)
+            try:
+                rpc_response = BRIDGE.RPC.call("audit/progress", audit_id)
+            except:
+                raise ExceptionAuditNotFound()
 
             if not rpc_response:
                 raise ExceptionAuditNotFound()
