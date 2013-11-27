@@ -157,13 +157,13 @@ class RSTReport(ReportPlugin):
 
         try:
 
-            # Report the vulnerabilities.
-            if datas:
-                self.__write_rst(f, datas, Data.TYPE_VULNERABILITY, "Vulnerabilities")
-
             # This dictionary tracks which data to show
             # and which not to in brief report mode.
             self.__vulnerable = set()
+
+            # Report the vulnerabilities.
+            if datas:
+                self.__write_rst(f, datas, Data.TYPE_VULNERABILITY, "Vulnerabilities")
 
             try:
 
@@ -332,10 +332,10 @@ class RSTReport(ReportPlugin):
                         property_groups["Graph Links"]["False Positives"] = sorted(linked_fp)
                 elif data_type == Data.TYPE_VULNERABILITY:
                     if linked_info:
-                        #self.__vulnerable.update(linked_info) # FIXME
+                        self.__vulnerable.update(linked_info)
                         property_groups["Graph Links"]["Evidences"]       = sorted(linked_info)
                     if linked_res:
-                        #self.__vulnerable.update(linked_res) # FIXME
+                        self.__vulnerable.update(linked_res)
                         property_groups["Graph Links"]["Assets"]          = sorted(linked_res)
                     if linked_vuln:
                         property_groups["Graph Links"]["Related"]         = sorted(linked_vuln)
