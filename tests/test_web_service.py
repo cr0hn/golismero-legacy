@@ -50,6 +50,8 @@ STATES = {
 TESTS = {
     'all_plugins'    : '{"audit_name":"all_plugins", "targets":["%s"], "enable_plugins": ["all"]}',
 
+    'robots'          : '{"audit_name":"robots", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "robots"}]}',
+
     'test1'          : '{"audit_name":"short", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/robots"}, { "plugin_name" : "testing/scan/ssl_analyzer"}]}',
 
     'short'          : '{"audit_name":"short", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/spider"}]}',
