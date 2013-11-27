@@ -145,6 +145,8 @@ def _run(options, *audits):
                 # Validate the settings against the UI plugin.
                 try:
                     orchestrator.uiManager.check_params(*audits)
+                except SystemExit:
+                    return 1
                 except Exception, e:
                     Console.display_error("[!] Configuration error: %s" % str(e))
                     Console.display_error_more_verbose(traceback.format_exc())
@@ -157,6 +159,8 @@ def _run(options, *audits):
                 # Run the Orchestrator.
                 try:
                     orchestrator.run(*audits)
+                except SystemExit:
+                    return 1
                 except Exception,e:
                     Console.display_error(e)
 
