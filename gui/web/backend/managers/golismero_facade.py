@@ -778,6 +778,7 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
             #
             m_new_state = None
             try:
+
                 m_new_state = AuditBridge.get_state(GoLismeroFacadeAuditPolling._get_unique_id(m_audit.id, m_audit.audit_name))
 
                 # Do that because AuditBridge regurns the STAGE, not the state
@@ -794,12 +795,10 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                 # Audit not working
                 raise GoLismeroFacadeAuditNotFoundException()
 
-
             #
             # Ensure that golismero was generated all reports
             #
             if m_new_state == "finished":
-                m_new_state = None
                 m_total = 0
                 for f in REPORT_FORMATS:
                     l_folder =  get_user_settings_folder()
