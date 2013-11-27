@@ -50,9 +50,13 @@ STATES = {
 TESTS = {
     'all_plugins'    : '{"audit_name":"all_plugins", "targets":["%s"], "enable_plugins": ["all"]}',
 
-    'robots'          : '{"audit_name":"robots", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "robots"}]}',
+    'robots'         : '{"audit_name":"robots", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/robots"}]}',
 
-    'bad'          : '{"audit_name":"robots", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "robotsaaa"}]}',
+    'spider'         : '{"audit_name":"robots", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/spider"}]}',
+
+    'ssl'            : '{"audit_name":"robots", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/scan/ssl_analyzer"}]}',
+
+    'bad'            : '{"audit_name":"robots", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "robotsaaa"}]}',
 
     'test1'          : '{"audit_name":"short", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/robots"}, { "plugin_name" : "testing/scan/ssl_analyzer"}]}',
 
