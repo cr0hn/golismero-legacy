@@ -169,6 +169,9 @@ def _run(options, *audits):
 
                     continue
 
+    except SystemExit:
+        return 1
+
 
     # On error, show a fatal error message.
     except Exception, e:
