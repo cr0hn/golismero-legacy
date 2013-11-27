@@ -148,7 +148,10 @@ def _run(options, *audits):
                 except Exception, e:
                     Console.display_error("[!] Configuration error: %s" % str(e))
                     Console.display_error_more_verbose(traceback.format_exc())
-                    #return 1
+
+                    if orchestrator.config.ui_mode != "daemon":
+                        return 1
+
                     continue
 
                 # Run the Orchestrator.
@@ -156,6 +159,10 @@ def _run(options, *audits):
                     orchestrator.run(*audits)
                 except Exception,e:
                     Console.display_error(e)
+
+                    if orchestrator.config.ui_mode != "daemon":
+                        return 1
+
                     continue
 
 

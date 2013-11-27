@@ -272,6 +272,11 @@ class AuditManager (object):
                 try:
                     self.new_audit(message.message_info)
                 except AuditException,e:
+
+                    # Check running mode. If mode is not dameon, service stops
+                    if self.orchestrator.config.ui_mode != "daemon":
+                        raise RuntimeError("Error when try to start audit: %s" %  str(e))
+
                     message = Message(
                         message_type = MessageType.MSG_TYPE_CONTROL,
                         message_code = MessageCode.MSG_CONTROL_START_ERROR_AUDIT,
