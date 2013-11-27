@@ -52,6 +52,8 @@ TESTS = {
 
     'robots'          : '{"audit_name":"robots", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "robots"}]}',
 
+    'bad'          : '{"audit_name":"robots", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "robotsaaa"}]}',
+
     'test1'          : '{"audit_name":"short", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/robots"}, { "plugin_name" : "testing/scan/ssl_analyzer"}]}',
 
     'short'          : '{"audit_name":"short", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/spider"}]}',
