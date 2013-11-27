@@ -848,6 +848,12 @@ class AuditConfig (Configuration):
             if isinstance(self.command, unicode):
                 self.command = self.command.encode("UTF-8")
 
+        if "plugin_load_overrides" in args:
+            self.plugin_load_overrides = []
+            for (val, plugin_id) in args["plugin_load_overrides"]:
+                self.plugin_load_overrides.append((val, plugin_id))
+
+
     def to_dictionary(self):
         result = super(AuditConfig, self).to_dictionary()
         result["profile"]     = self.profile
