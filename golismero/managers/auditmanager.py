@@ -157,9 +157,9 @@ class AuditManager (object):
 
         # On error, abort.
         except Exception, e:
-            trace = format_exc()
+            #trace = format_exc()
             Logger.log_error("Failed to add new audit, reason: %s" % e)
-            Logger.log_error_more_verbose(trace)
+            #Logger.log_error_more_verbose(trace)
             try:
                 self.remove_audit(m_audit.name)
             except Exception:
