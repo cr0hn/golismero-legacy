@@ -1206,7 +1206,6 @@ class GoLismeroFacadeState(object):
         info = {}
         # Checks if all parameters are equals
         for x in GoLismeroAuditProgress.PROPERTIES:
-            print getattr(m_audit_progress,x)
             info[x] = getattr(m_audit_progress, x)
 
         return GoLismeroAuditProgress(info)
