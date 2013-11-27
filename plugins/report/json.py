@@ -410,7 +410,10 @@ class JSONReport(ReportPlugin):
                     for l_res in l_vuln.associated_resources:
                         l_info = {}
                         l_info['resource_type'] = l_res.__class__.__name__
-                        l_info['main_info']     = getattr(l_res, self.MAIN_RESOURCES_PROPERTIES[l_res.__class__.__name__.upper()])
+                        try:
+                            l_info['main_info']     = getattr(l_res, self.MAIN_RESOURCES_PROPERTIES[l_res.__class__.__name__.upper()])
+                        except KeyError:
+                            continue
 
                         l_res_affected_append(l_info)
 
