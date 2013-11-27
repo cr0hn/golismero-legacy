@@ -163,7 +163,7 @@ class GoLismeroFacadeAuditCommon(object):
         :returns: return file handler ready to read report.
         :rtype: file
 
-        :raises: GoLismeroFacadeReportUnknownFormatException, GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeReportNotAvailableException
+        :raises: GoLismeroFacadeAuditNotStartedException, GoLismeroFacadeReportUnknownFormatException, GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeReportNotAvailableException
         """
 
         try:
@@ -178,6 +178,9 @@ class GoLismeroFacadeAuditCommon(object):
             # Update state
             #GoLismeroFacadeAuditPolling.get_state(m_audit.id)
 
+
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
             if m_audit.audit_state != "finished":
                 raise GoLismeroFacadeReportNotAvailableException("Not finished audit. Report is not available.")
 
@@ -581,6 +584,9 @@ class GoLismeroFacadeAuditCommon(object):
         try:
             m_audit = Audit.objects.get(pk=audit_id)
 
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
+
             # Checks if state is correct
             if m_audit.audit_state != "running":
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is '%s'. Only running audits can be stopped." % (str(m_audit.id), m_audit.audit_state))
@@ -617,6 +623,9 @@ class GoLismeroFacadeAuditCommon(object):
         try:
             m_audit = Audit.objects.get(pk=audit_id)
 
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
+
             # Checks if state is correct
             if m_audit.audit_state != "running":
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is '%s'. Only running audits can be paused." % (str(m_audit.id), m_audit.audit_state))
@@ -651,6 +660,10 @@ class GoLismeroFacadeAuditCommon(object):
             raise TypeError("Expected basestring, got '%s' instead" % type(audit_id))
 
         try:
+
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
+
             m_audit = Audit.objects.get(pk=audit_id)
 
             # Checks if state is correct
@@ -753,9 +766,11 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
         try:
             m_audit = Audit.objects.get(pk=audit_id)
 
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
+
             # If audit is new or finished return
-            if m_audit.audit_state != "running" and\
-               m_audit.audit_state != "error":
+            if m_audit.audit_state != "running":
                 return m_audit.audit_state
 
             #
@@ -765,17 +780,20 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
             try:
                 m_new_state = AuditBridge.get_state(GoLismeroFacadeAuditPolling._get_unique_id(m_audit.id, m_audit.audit_name))
 
-                if m_new_state == "error":
-                    m_audit.audit_state = "finished"
-                    m_audit.save()
-                    GoLismeroFacadeAuditNotStartedException()
-
                 # Do that because AuditBridge regurns the STAGE, not the state
                 if m_new_state != "finished":
                     m_new_state = "running"
+            except ExceptionAuditNotStarted:
+                m_audit.audit_state = "error"
+                m_audit.save()
+
+                # Audit not working
+                raise GoLismeroFacadeAuditNotStartedException()
+
             except ExceptionAuditNotFound:
                 # Audit not working
                 raise GoLismeroFacadeAuditNotFoundException()
+
 
             #
             # Ensure that golismero was generated all reports
@@ -831,6 +849,9 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
 
             m_audit = Audit.objects.get(pk=audit_id)
 
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
+
             # If audit are not running return error.
             #if m_audit.audit_state != "running":
                 #raise GoLismeroFacadeAuditStateException("Audit '%s' is not running. Can't obtain progress from not running audits." % str(audit_id))
@@ -841,6 +862,9 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                     # Store the state
                     GoLismeroFacadeState.set_progress(audit_id, r)
                     return r
+            except ExceptionAuditNotStarted:
+                # Audit error when started
+                raise GoLismeroFacadeAuditNotStartedException()
             except ExceptionAuditNotFound:
                     # Return last progress state
                 try:
@@ -882,6 +906,9 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
 
             m_audit = Audit.objects.get(pk=audit_id)
 
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
+
             # If audit is new, return state
             if m_audit.audit_state == "new":
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is not running. Can't obtain log for non started audits." % str(audit_id))
@@ -897,6 +924,11 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                     return '\n'.join([ "[%s] %s" % (
                         datetime.datetime.fromtimestamp(
                             float(x.to_json['timestamp'])).strftime('%Y-%m-%d %H:%M:%S:%s'), x.to_json['text']) for x in m_info])
+
+            except ExceptionAuditNotStarted:
+                # Audit error when started
+                raise GoLismeroFacadeAuditNotStartedException()
+
             except ExceptionAuditNotFound:
                 # Return last log
                 try:
@@ -904,6 +936,7 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
 
                     return '\n'.join([ "[%s] %s" % (
                         x.to_json['timestamp'].strftime('%Y-%m-%d %H:%M:%S:%s'), x.to_json['text']) for x in m_info])
+
                 except ExceptionAuditNotFound:
                     # If not info stored in database returned general info
                     return ""
@@ -941,6 +974,9 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
         try:
             m_audit = Audit.objects.get(pk=audit_id)
 
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
+
             #if m_audit.audit_state != "running":
                 #raise GoLismeroFacadeAuditStateException("Audit not running. Only can get summary from running audits.")
 
@@ -952,6 +988,10 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                     # Store info
                     GoLismeroFacadeState.set_summary(audit_id, r)
                     return r
+            except ExceptionAuditNotStarted:
+                # Audit error when started
+                raise GoLismeroFacadeAuditNotStartedException()
+
             except ExceptionAuditNotFound,e:
                 try:
                     return GoLismeroFacadeState.get_summary(audit_id).to_json
