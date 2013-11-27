@@ -737,7 +737,7 @@ class OrchestratorConfig (Configuration):
         self._load_plugin_args(self, args)  # don't change it or it breaks
 
     def to_dictionary(self):
-        result = super(AuditConfig, self).to_dictionary()
+        result = super(OrchestratorConfig, self).to_dictionary()
         result["config_file"]  = self.config_file
         result["profile"]      = self.profile
         result["profile_file"] = self.profile_file
