@@ -366,7 +366,11 @@ class Configuration (object):
     #            "data": None,        # Omitting the parser too.
     #        }
     #
-    _settings_ = {}
+    _settings_  = dict()
+
+    # This is a set of properties that may not be loaded from a config file.
+    # They will still be loaded from objects, dictionaries, JSON, etc.
+    _forbidden_ = set()
 
 
     #--------------------------------------------------------------------------
@@ -588,6 +592,9 @@ class Configuration (object):
                 self.profile_file = get_profile(self.profile)
             else:
                 del options["profile"]
+        for k in self._forbidden_:
+            if k in options:
+                del options[k]
         self.from_dictionary(options)
 
 
@@ -632,6 +639,10 @@ class OrchestratorConfig (Configuration):
     #--------------------------------------------------------------------------
     # The options definitions, they will be read from the config file:
     #
+    _forbidden_ = set(("ui_mode",))  # except for the UI mode!
+    _forbidden = set((  # except for these:
+        "config_file", "profile_file", "plugin_args", "ui_mode",
+    ))
     _settings_ = {
 
         #
@@ -693,6 +704,48 @@ class OrchestratorConfig (Configuration):
 
 
     #--------------------------------------------------------------------------
+
+    @staticmethod
+    def _load_profile(self, args):
+        if "profile" in args:
+            self.profile = args["profile"]
+            if isinstance(self.profile, unicode):
+                self.profile = self.profile.encode("UTF-8")
+            self.profile_file = get_profile(self.profile)
+
+    @staticmethod
+    def _load_plugin_args(self, args):
+        if "plugin_args" in args:
+            plugin_args = {}
+            for (plugin_id, target_args) in args["plugin_args"].iteritems():
+                if isinstance(plugin_id, unicode):
+                    plugin_id = plugin_id.encode("UTF-8")
+                if not plugin_id in plugin_args:
+                    plugin_args[plugin_id] = {}
+                for (key, value) in target_args.iteritems():
+                    if isinstance(key, unicode):
+                        key = key.encode("UTF-8")
+                    if isinstance(value, unicode):
+                        value = value.encode("UTF-8")
+                    plugin_args[plugin_id][key] = value
+            self.plugin_args = plugin_args
+
+    def from_dictionary(self, args):
+        # Security note: do not copy config_file or profile_file!
+        super(OrchestratorConfig, self).from_dictionary(args)
+        self._load_profile(self, args)      # "self" is twice on purpose!
+        self._load_plugin_args(self, args)  # don't change it or it breaks
+
+    def to_dictionary(self):
+        result = super(AuditConfig, self).to_dictionary()
+        result["config_file"]  = self.config_file
+        result["profile"]      = self.profile
+        result["profile_file"] = self.profile_file
+        result["plugin_args"]  = self.plugin_args
+        return result
+
+
+    #--------------------------------------------------------------------------
     def check_params(self):
 
         # Validate the network connections limit.
@@ -720,6 +773,10 @@ class AuditConfig (Configuration):
     #--------------------------------------------------------------------------
     # The options definitions, they will be read from the config file:
     #
+    _forbidden = set(( # except for these:
+        "config_file", "profile_file", "plugin_args",
+        "plugin_load_overrides", "command",
+    ))
     _settings_ = {
 
         #
@@ -820,45 +877,36 @@ class AuditConfig (Configuration):
 
 
     #--------------------------------------------------------------------------
-    # Security note: do not copy config_file or profile_file!
-
     def from_dictionary(self, args):
+
+        # Security note: do not copy config_file or profile_file!
         super(AuditConfig, self).from_dictionary(args)
-        if "profile" in args:
-            self.profile = args["profile"]
-            if isinstance(self.profile, unicode):
-                self.profile = self.profile.encode("UTF-8")
-            self.profile_file = get_profile(self.profile)
-        if "plugin_args" in args:
-            plugin_args = {}
-            for (plugin_id, target_args) in args["plugin_args"].iteritems():
-                if isinstance(plugin_id, unicode):
-                    plugin_id = plugin_id.encode("UTF-8")
-                if not plugin_id in plugin_args:
-                    plugin_args[plugin_id] = {}
-                for (key, value) in target_args.iteritems():
-                    if isinstance(key, unicode):
-                        key = key.encode("UTF-8")
-                    if isinstance(value, unicode):
-                        value = value.encode("UTF-8")
-                    plugin_args[plugin_id][key] = value
-            self.plugin_args = plugin_args
+        OrchestratorConfig._load_profile(self, args)
+        OrchestratorConfig._load_plugin_args(self, args)
+
+        # Load the "command" property.
         if "command" in args:
             self.command = args["command"]
             if isinstance(self.command, unicode):
                 self.command = self.command.encode("UTF-8")
 
+        # Load the "plugin_load_overrides" property.
         if "plugin_load_overrides" in args:
-            self.plugin_load_overrides = []
+            if not self.plugin_load_overrides:
+                self.plugin_load_overrides = []
             for (val, plugin_id) in args["plugin_load_overrides"]:
-                self.plugin_load_overrides.append((val, plugin_id))
+                self.plugin_load_overrides.append((bool(val), str(plugin_id)))
 
 
+    #--------------------------------------------------------------------------
     def to_dictionary(self):
         result = super(AuditConfig, self).to_dictionary()
-        result["profile"]     = self.profile
-        result["plugin_args"] = self.plugin_args
-        result["command"]     = self.command
+        result["config_file"]  = self.config_file
+        result["profile"]      = self.profile
+        result["profile_file"] = self.profile_file
+        result["plugin_args"]  = self.plugin_args
+        result["command"]      = self.command
+        result["plugin_load_overrides"] = self.plugin_load_overrides
         return result
 
 
