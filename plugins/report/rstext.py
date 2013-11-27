@@ -332,10 +332,10 @@ class RSTReport(ReportPlugin):
                         property_groups["Graph Links"]["False Positives"] = sorted(linked_fp)
                 elif data_type == Data.TYPE_VULNERABILITY:
                     if linked_info:
-                        self.__vulnerable.update(linked_info)
+                        #self.__vulnerable.update(linked_info) # FIXME
                         property_groups["Graph Links"]["Evidences"]       = sorted(linked_info)
                     if linked_res:
-                        self.__vulnerable.update(linked_res)
+                        #self.__vulnerable.update(linked_res) # FIXME
                         property_groups["Graph Links"]["Assets"]          = sorted(linked_res)
                     if linked_vuln:
                         property_groups["Graph Links"]["Related"]         = sorted(linked_vuln)
