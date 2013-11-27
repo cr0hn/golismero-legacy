@@ -271,13 +271,13 @@ class Url(_AbstractUrl):
         :return: GET parameters.
         :rtype: dict(str -> str)
         """
-        query = self.parsed_url.query
-        if type(query) in (str, unicode):
-            return self.parsed_url.query_params
+        query_params = self.parsed_url.query_params
+        if query_params:
+            return query_params
         return {}
 
     @property
-    def has_url_param(self):
+    def has_url_params(self):
         """
         :return: True if there are GET parameters, False otherwise.
         :rtype: bool
@@ -295,7 +295,7 @@ class Url(_AbstractUrl):
         return {}
 
     @property
-    def has_post_param(self):
+    def has_post_params(self):
         """
         :return: True if there are POST parameters, False otherwise.
         :rtype: bool
