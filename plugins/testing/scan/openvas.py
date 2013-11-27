@@ -357,15 +357,17 @@ class OpenVASPlugin(TestingPlugin):
                     if len(oid_spt) > 0:
                         l_plugin_id = oid_spt[-1]
                         try:
+                            l_family = Plugin.objects.get(plugin_id = l_plugin_id).family_id
+                            l_family = l_family.strip()
+
                             if l_plugin_id in CATEGORIES:
                                 clazz = globals()[ CATEGORIES[l_plugin_id] ]
-                            l_family = Plugin.objects.get(
-                                plugin_id = l_plugin_id).family_id
-                            l_family = l_family.strip()
-                            l_plugin_id = str(l_plugin_id)
-                            kwargs["tool_id"] = l_plugin_id
-                            if l_family in CATEGORIES:
+                                kwargs["tool_id"] = l_plugin_id
+
+                            elif l_family in CATEGORIES:
                                 clazz = globals()[ CATEGORIES[l_family] ]
+                                kwargs["tool_id"] = l_plugin_id
+
                         except Exception, e:
                             tb = format_exc()
                             Logger.log_error_verbose(
