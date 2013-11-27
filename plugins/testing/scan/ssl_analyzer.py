@@ -132,7 +132,23 @@ class SSLAnalyzerPlugin(TestingPlugin):
             #
             # Get SSL info
             #
-            t = ET.parse(output_filename)
+            with open(output_filename, "rU") as f:
+                m_info = f.read()
+
+            # Transform to avoid unicode fails
+            m_text = None
+            try:
+                m_text = m_info.encode("utf-8")
+            except UnicodeDecodeError:
+                m_text = m_info.decode("latin-1").encode("utf-8")
+
+            try:
+                t = ET.fromstring(m_text)
+                #t = ET.parse(source, parser)
+            except ET.ParseError,e:
+                Logger.log_error("Error when try to parse XML file")
+                return
+
             m_ciphers        = []
             m_ciphers_append = m_ciphers.append
 
