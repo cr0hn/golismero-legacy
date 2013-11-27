@@ -355,18 +355,17 @@ class OpenVASPlugin(TestingPlugin):
                 if use_openvas_db and oid:
                     oid_spt = oid.split(".")
                     if len(oid_spt) > 0:
-                        l_plugin_id = oid_spt[-1]
+                        l_plugin_id       = oid_spt[-1]
+                        kwargs["tool_id"] = l_plugin_id
                         try:
                             l_family = Plugin.objects.get(plugin_id = l_plugin_id).family_id
                             l_family = l_family.strip()
 
                             if l_plugin_id in CATEGORIES:
                                 clazz = globals()[ CATEGORIES[l_plugin_id] ]
-                                kwargs["tool_id"] = l_plugin_id
 
                             elif l_family in CATEGORIES:
                                 clazz = globals()[ CATEGORIES[l_family] ]
-                                kwargs["tool_id"] = l_plugin_id
 
                         except Exception, e:
                             tb = format_exc()
