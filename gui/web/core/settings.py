@@ -5,7 +5,10 @@ import os
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-SIMULATE = True # Expose API methods, but not call to golismero core.
+SIMULATE = False # Expose API methods, but not call to golismero core.
+
+GOLISMERO_CORE_OKS  = True # RPC instance for golismero core
+RPC                 = None # RPC instance for golismero core
 
 ADMINS = (
     ('GoLismero Team', 'golismero.project@gmail.com'),
@@ -23,6 +26,17 @@ DATABASES = {
         'HOST': '',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': '',                      # Set to empty string for default.
     }
+
+
+    #'default': {
+        #'ENGINE': 'django.db.backends.mysql', #sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        #'NAME': 'golismero',                      # Or path to database file if using sqlite3.
+        ## The following settings are not used with sqlite3:
+        #'USER': 'mysql',
+        #'PASSWORD': '',
+        #'HOST': '127.0.0.1',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        #'PORT': '',                      # Set to empty string for default.
+    #}
 }
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
@@ -101,7 +115,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    #'core.middleware.AntiFingerPrint',
+    'core.middleware.GoLismeroMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',

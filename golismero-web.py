@@ -29,7 +29,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
 import sys
-import xmlrpclib
 import argparse
 import netaddr
 
@@ -164,9 +163,9 @@ Listen in loopback IPv6 at port 8000:
     from django.core.management import execute_from_command_line, call_command
     from django.conf import settings
 
-    # XML-RPC client
-    proxy = xmlrpclib.ServerProxy("http://%s:%s" % (args.SERVER_ADDR, args.SERVER_PORT))
-    settings.RPC = proxy
+    # Configure RPC
+    settings.GOLISMERO_CORE_PORT = args.SERVER_PORT
+    settings.GOLISMERO_CORE_HOST = args.SERVER_ADDR
 
     # Prepare IPv6 address
     m_ip = args.IP_LISTEN
@@ -188,9 +187,11 @@ Listen in loopback IPv6 at port 8000:
 
         call_command("runserver", listen_addr)
     else:
+
+
         # Unset debug mode
         settings.SIMULATE = False
-        settings.DEBUG    = False
+        settings.DEBUG    = True
 
         sys.argv = ["run_gunicorn", listen_addr]
-        call_command("run_gunicorn", listen_addr)
+        call_command("run_gunicorn")
