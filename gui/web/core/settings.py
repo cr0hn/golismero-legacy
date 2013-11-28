@@ -5,8 +5,6 @@ import os
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-SIMULATE = False # Expose API methods, but not call to golismero core.
-
 GOLISMERO_CORE_OKS  = True # RPC instance for golismero core
 RPC                 = None # RPC instance for golismero core
 

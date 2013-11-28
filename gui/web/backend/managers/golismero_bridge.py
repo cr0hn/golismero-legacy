@@ -101,11 +101,11 @@ class AuditBridge(object):
         # Config the file imports
         config["imports"]        = imports
 
-        if not BRIDGE.SIMULATE:
-            try:
-                BRIDGE.RPC.call("audit/create", config)
-            except Exception,e:
-                raise ExceptionAudit(e)
+
+        try:
+            BRIDGE.RPC.call("audit/create", config)
+        except Exception,e:
+            raise ExceptionAudit(e)
 
 
 
@@ -130,11 +130,10 @@ class AuditBridge(object):
         # Set BBDD store location
         config["audit_db"] = "%s.db" % join(data.store_path,config['audit_name'])
 
-        if not BRIDGE.SIMULATE:
-            try:
-                BRIDGE.RPC.call("audit/create", config)
-            except:
-                raise ExceptionAudit()
+        try:
+            BRIDGE.RPC.call("audit/create", config)
+        except:
+            raise ExceptionAudit()
 
 
     #----------------------------------------------------------------------
@@ -148,11 +147,11 @@ class AuditBridge(object):
 
         :raises: ExceptionAuditNotFound
         """
-        if not BRIDGE.SIMULATE:
-            try:
-                BRIDGE.RPC.call("audit/cancel", audit_id)
-            except:
-                raise ExceptionAuditNotFound()
+
+        try:
+            BRIDGE.RPC.call("audit/cancel", audit_id)
+        except:
+            raise ExceptionAuditNotFound()
 
 
     #----------------------------------------------------------------------
@@ -186,32 +185,31 @@ class AuditBridge(object):
         :raises: ExceptionAuditNotFound, ExceptionAuditNotStarted
         """
 
-        if not BRIDGE.SIMULATE:
-            try:
-                rpc_response = BRIDGE.RPC.call("audit/log", audit_id)
-            except:
-                raise ExceptionAuditNotFound()
+        try:
+            rpc_response = BRIDGE.RPC.call("audit/log", audit_id)
+        except:
+            raise ExceptionAuditNotFound()
 
 
-            if rpc_response == "error":
-                raise ExceptionAuditNotStarted()
+        if rpc_response == "error":
+            raise ExceptionAuditNotStarted()
 
-            if not rpc_response:
-                raise ExceptionAuditNotFound()
-            r = [
-                GoLismeroAuditLog({
-                    #'plugin_id'     : r[0],
-                    'level'         : r[1],
-                    'text'          : r[2],
-                    'verbosity'     : r[3],
-                    'is_error'      : r[4],
-                    'timestamp'     : r[5]
-                })
+        if not rpc_response:
+            raise ExceptionAuditNotFound()
+        r = [
+            GoLismeroAuditLog({
+                #'plugin_id'     : r[0],
+                'level'         : r[1],
+                'text'          : r[2],
+                'verbosity'     : r[3],
+                'is_error'      : r[4],
+                'timestamp'     : r[5]
+            })
 
-                for r in rpc_response
-            ]
+            for r in rpc_response
+        ]
 
-            return r
+        return r
 
 
     #----------------------------------------------------------------------
@@ -225,34 +223,22 @@ class AuditBridge(object):
 
         :raises: ExceptionAuditNotFound, ExceptionAuditNotStarted
         """
-        if not BRIDGE.SIMULATE:
-            try:
-                rpc_response = BRIDGE.RPC.call("audit/summary", audit_id)
-            except:
-                raise ExceptionAuditNotFound()
+
+        try:
+            rpc_response = BRIDGE.RPC.call("audit/summary", audit_id)
+        except:
+            raise ExceptionAuditNotFound()
 
 
-            # If info not found -> audit not found
-            if not rpc_response:
-                raise ExceptionAuditNotFound()
+        # If info not found -> audit not found
+        if not rpc_response:
+            raise ExceptionAuditNotFound()
 
-            if rpc_response == "error":
-                raise ExceptionAuditNotStarted()
+        if rpc_response == "error":
+            raise ExceptionAuditNotStarted()
 
-            return GoLismeroAuditSummary(rpc_response)
-        else:
-            return GoLismeroAuditSummary({
-                'vulns_number'            : '10',
-                'discovered_hosts'        : '4',
-                'total_hosts'             : '6',
-                'vulns_by_level'          : {
-                    'info'     : '4',
-                    'low'      : '2',
-                    'medium'   : '2',
-                    'high'     : '1',
-                    'critical' : '1',
-                }
-            })
+        return GoLismeroAuditSummary(rpc_response)
+
 
 
     #----------------------------------------------------------------------
@@ -269,22 +255,22 @@ class AuditBridge(object):
 
         :raises: ExceptionAuditNotFound, ExceptionAuditNotStarted
         """
-        if not BRIDGE.SIMULATE:
-            try:
-                r = BRIDGE.RPC.call("audit/state", audit_id)
-            except:
-                raise ExceptionAuditNotFound()
+
+        try:
+            r = BRIDGE.RPC.call("audit/state", audit_id)
+        except:
+            raise ExceptionAuditNotFound()
 
 
-            if not r:
-                raise ExceptionAuditNotFound("Audit not found")
+        if not r:
+            raise ExceptionAuditNotFound("Audit not found")
 
-            if r == "error":
-                raise ExceptionAuditNotStarted()
+        if r == "error":
+            raise ExceptionAuditNotStarted()
 
-            return r
+        return r
 
-        return "running"
+
 
 
     #----------------------------------------------------------------------
