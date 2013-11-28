@@ -638,6 +638,8 @@ class AuditViewSet(ViewSet):
 
                 # Remove spaces and transform: unicode -> str
                 for ll in m_plugins_in:
+                    if isinstance(str(ll), basestring):
+                        continue
                     l_dict = {}
                     for dk, dv in ll.iteritems():
                         l_dict[str(dk.strip())] = dv
