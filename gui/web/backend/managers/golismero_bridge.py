@@ -289,49 +289,47 @@ class AuditBridge(object):
         """
         m_return = None
 
-        if not BRIDGE.SIMULATE:
-            try:
-                rpc_response = BRIDGE.RPC.call("audit/progress", audit_id)
-            except:
-                raise ExceptionAuditNotFound()
+        try:
+            rpc_response = BRIDGE.RPC.call("audit/progress", audit_id)
+        except:
+            raise ExceptionAuditNotFound()
 
-            if not rpc_response:
-                raise ExceptionAuditNotFound()
+        if not rpc_response:
+            raise ExceptionAuditNotFound()
 
-            if rpc_response == "error":
-                raise ExceptionAuditNotStarted()
+        if rpc_response == "error":
+            raise ExceptionAuditNotStarted()
 
-            try:
-                steps = rpc_response[0]
-                stage = rpc_response[1]
+        try:
+            steps = rpc_response[0]
+            stage = rpc_response[1]
 
-                if stage == "start":
-                    current_state = "start"
-                elif stage in ("finish", "cancel"):
-                    current_state = "cleanup"
+            if stage == "start":
+                current_state = "start"
+            elif stage in ("finish", "cancel"):
+                current_state = "cleanup"
+            else:
+                current_state = "running"
+
+            tests_remain  = 0
+            tests_done    = 0
+
+            for t in rpc_response[2]:
+                l_progress = t[2] # Value between 0.0 - 100.0
+
+                if l_progress == 100.0:
+                    tests_done   += 1
                 else:
-                    current_state = "running"
+                    tests_remain +=1
 
-                tests_remain  = 0
-                tests_done    = 0
+            m_return = {
+                'current_stage' : current_state,
+                'steps'         : int(steps),
+                'tests_remain'  : tests_remain,
+                'tests_done'    : tests_done
+            }
 
-                for t in rpc_response[2]:
-                    l_progress = t[2] # Value between 0.0 - 100.0
+            return GoLismeroAuditProgress(m_return)
 
-                    if l_progress == 100.0:
-                        tests_done   += 1
-                    else:
-                        tests_remain +=1
-
-                m_return = {
-                    'current_stage' : current_state,
-                    'steps'         : int(steps),
-                    'tests_remain'  : tests_remain,
-                    'tests_done'    : tests_done
-                }
-
-                return GoLismeroAuditProgress(m_return)
-
-            except IndexError:
-                return None
-        return None
+        except IndexError:
+            return None
