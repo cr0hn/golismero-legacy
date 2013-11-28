@@ -578,8 +578,7 @@ class GoLismeroFacadeAuditCommon(object):
             try:
                 os.mkdir(l_path)
             except Exception,e:
-                ##raise GoLismeroFacadeAuditUnknownException("Can't create audit files in: '%s'" % l_path)
-                pass
+                raise GoLismeroFacadeAuditUnknownException("Can't create audit files in: '%s'. Error: %s" % l_path, str(e))
 
             # Change the state
             m_audit.audit_state = "running"
