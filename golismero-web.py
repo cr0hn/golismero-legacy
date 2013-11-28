@@ -193,5 +193,5 @@ Listen in loopback IPv6 at port 8000:
         settings.SIMULATE = False
         settings.DEBUG    = True
 
-        sys.argv = ["run_gunicorn", listen_addr]
-        call_command("run_gunicorn")
+        sys.argv = [listen_addr]
+        call_command("run_gunicorn", listen_addr)
