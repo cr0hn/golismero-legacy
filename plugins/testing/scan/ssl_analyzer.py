@@ -158,17 +158,20 @@ class SSLAnalyzerPlugin(TestingPlugin):
                                          bits    = c.get("bits"),
                                          cipher  = c.get("cipher")))
 
-            # Get CERT dates
-            m_valid_before      = re.search("([a-zA-Z:0-9\s]+)( GMT)", t.find(".//not-valid-before").text).group(1)
-            m_valid_after       = re.search("([a-zA-Z:0-9\s]+)( GMT)", t.find(".//not-valid-after").text).group(1)
-            m_valid_before_date = datetime.strptime(m_valid_before, "%b %d %H:%M:%S %Y")
-            m_valid_after_date  = datetime.strptime(m_valid_after, "%b %d %H:%M:%S %Y")
+            try:
+                # Get CERT dates
+                m_valid_before      = re.search("([a-zA-Z:0-9\s]+)( GMT)", t.find(".//not-valid-before").text).group(1)
+                m_valid_after       = re.search("([a-zA-Z:0-9\s]+)( GMT)", t.find(".//not-valid-after").text).group(1)
+                m_valid_before_date = datetime.strptime(m_valid_before, "%b %d %H:%M:%S %Y")
+                m_valid_after_date  = datetime.strptime(m_valid_after, "%b %d %H:%M:%S %Y")
 
-            # Get subject
-            m_cn                = re.search("(CN=)([0-9a-zA-Z\.\*]+)", t.find(".//subject").text).group(2)
+                # Get subject
+                m_cn                = re.search("(CN=)([0-9a-zA-Z\.\*]+)", t.find(".//subject").text).group(2)
 
-            # Is self signed?
-            m_self_signed       = t.find(".//pk").get("error")
+                # Is self signed?
+                m_self_signed       = t.find(".//pk").get("error")
+            except AttributeError:
+                return
 
             #
             # Looking for vulns
