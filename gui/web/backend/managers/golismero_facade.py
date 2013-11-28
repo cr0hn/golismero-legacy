@@ -735,7 +735,7 @@ class GoLismeroFacadeAuditCommon(object):
         :returns: string with unique audit ID.
         :rtype: str
         """
-        if not isinstance(audit_id, basestring) and not isinstance(audit_id, int):
+        if not isinstance(audit_id, basestring) and not isinstance(audit_id, int) and not isinstance(audit_id, long):
             raise TypeError("Expected basestring, got '%s' instead" % type(audit_id))
 
         if audit_name:
