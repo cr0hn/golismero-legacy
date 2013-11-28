@@ -233,7 +233,7 @@ class GoLismeroFacadeAuditCommon(object):
             #GoLismeroFacadeAudit.get_state(l_audit_id)
 
             # Store audit info
-            m_return.append(GoLismeroFacadeAuditPolling.get_audit(l_audit_id))
+            m_return.append(GoLismeroFacadeAuditPolling.get_audit(str(l_audit_id)))
 
         return m_return
 
