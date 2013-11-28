@@ -889,7 +889,7 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                 # Audit error when started
                 raise GoLismeroFacadeAuditNotStartedException()
             except ExceptionAuditNotFound:
-                    # Return last progress state
+                # Return last progress state, because audit is finished
                 try:
                     return GoLismeroFacadeState.get_progress(audit_id)
                 except ExceptionAuditNotFound:
@@ -1215,7 +1215,7 @@ class GoLismeroFacadeState(object):
 
         # Audit exits?
         try:
-            Audit.objects.get(pk=audit_id)
+            m_audit = Audit.objects.get(pk=audit_id)
         except ObjectDoesNotExist:
             raise GoLismeroFacadeAuditNotFoundException()
 
@@ -1226,6 +1226,11 @@ class GoLismeroFacadeState(object):
         except ObjectDoesNotExist:
             # If not exit the object, create it
             raise GoLismeroFacadeAuditNotFoundException()
+
+        # If audit current stage is finished, updated
+        if m_audit.current_stage != m_audit_progress.current_stage:
+            m_audit.current_stage = m_audit_progress.current_stage
+            m_audit_progress.save()
 
         info = {}
         # Checks if all parameters are equals
