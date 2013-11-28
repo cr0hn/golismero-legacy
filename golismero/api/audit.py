@@ -123,7 +123,7 @@ def parse_audit_times(start_time, stop_time):
             days     = td.days
             hours    = td.seconds // 3600
             minutes  = (td.seconds // 60) % 60
-            seconds  = td.seconds
+            seconds  = td.seconds % 60
             run_time = "%d days, %d hours, %d minutes and %d seconds" % \
                 (days, hours, minutes, seconds)
         else:

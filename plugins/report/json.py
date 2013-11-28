@@ -141,7 +141,7 @@ class JSONReport(ReportPlugin):
             days    = td.days
             hours   = td.seconds // 3600
             minutes = (td.seconds // 60) % 60
-            seconds = td.seconds
+            seconds = td.seconds % 60
             c['execution_time'] = "%d days %d hours %d minutes %d seconds" % (days, hours, minutes, seconds)
         else:
             c['execution_time'] = "Unknown"
