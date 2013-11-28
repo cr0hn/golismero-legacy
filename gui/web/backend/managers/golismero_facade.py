@@ -781,7 +781,9 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
 
         :raises: GoLismeroFacadeAuditNotFoundException, TypeError
         """
-        if not isinstance(audit_id, basestring) and not isinstance(audit_id, int):
+        try:
+            audit_id = long(audit_id)
+        except TypeError:
             raise TypeError("Expected basestring, got '%s' instead" % type(audit_id))
 
         # Call to GoLismero
