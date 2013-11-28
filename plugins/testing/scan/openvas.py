@@ -251,14 +251,17 @@ class OpenVASPlugin(TestingPlugin):
 
             # Load the database using the Django ORM.
             from standalone.conf import settings
-            settings = settings(
-                DATABASES = {
-                    'default': {
-                        'ENGINE': 'django.db.backends.sqlite3',
-                        'NAME': '%s' % openvas_db,
-                    }
-                },
-            )
+            try:
+                settings = settings(
+                    DATABASES = {
+                        'default': {
+                            'ENGINE': 'django.db.backends.sqlite3',
+                            'NAME': '%s' % openvas_db,
+                        }
+                    },
+                )
+            except RuntimeError:
+                Logger.log("Django backend previously charged.")
 
             # Load the ORM model.
             sys.path.insert(0, openvas_dir)
