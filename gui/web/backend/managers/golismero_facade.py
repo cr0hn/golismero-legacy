@@ -564,12 +564,6 @@ class GoLismeroFacadeAuditCommon(object):
             audit_config            = GoLismeroAuditData.from_django(m_audit)
             audit_config.store_path = l_path
 
-            try:
-                # Send to GoLismero core
-                AuditBridge.new_audit(audit_config)
-            except ExceptionAudit, e:
-                raise GoLismeroFacadeAuditStateException("Error starting audit: %s" % e)
-
             #
             # Create dir to store audit info
             #
@@ -579,6 +573,14 @@ class GoLismeroFacadeAuditCommon(object):
                 os.mkdir(l_path)
             except Exception,e:
                 raise GoLismeroFacadeAuditUnknownException("Can't create audit files in: '%s'. Error: %s" % l_path, str(e))
+
+
+            try:
+                # Send to GoLismero core
+                AuditBridge.new_audit(audit_config)
+            except ExceptionAudit, e:
+                raise GoLismeroFacadeAuditStateException("Error starting audit: %s" % e)
+
 
             # Change the state
             m_audit.audit_state = "running"
