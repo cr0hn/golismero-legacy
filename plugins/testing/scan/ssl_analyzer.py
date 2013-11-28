@@ -171,7 +171,7 @@ class SSLAnalyzerPlugin(TestingPlugin):
                 # Is self signed?
                 m_self_signed       = t.find(".//pk").get("error")
             except AttributeError:
-                return
+                Logger.log("Not SSL information found")
 
             #
             # Looking for vulns
