@@ -76,7 +76,7 @@ class SSLScanImportPlugin(ImportPlugin):
 
     #--------------------------------------------------------------------------
     def import_results(self, input_file):
-        results = SSLAnalyzerPlugin.parse_sslscan_results(None, input_file)
+        results = SSLScanPlugin.parse_sslscan_results(None, input_file)
         if results:
             Database.async_add_many(results)
             Logger.log("Loaded %d elements from file: %s" %
