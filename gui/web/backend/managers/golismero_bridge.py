@@ -27,14 +27,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["AuditBridge", "ExceptionAuditNotFound", "ExceptionAudit", "ExceptionAuditUnknown", "ExceptionAuditNotStarted"]
+__all__ = ["AuditBridge", "ExceptionAuditNotFound", "ExceptionAudit", "ExceptionAuditUnknown", "ExceptionAuditNotStarted", "ExceptionTimeout"]
 
 __doc__ = """This file has data structures and method to access to GoLismero engine."""
 
 from django.conf import settings as BRIDGE
 from backend.managers import *
 from os.path import join
-
+from httplib import CannotSendHeader, CannotSendRequest
 
 #----------------------------------------------------------------------
 #
@@ -49,6 +49,8 @@ class ExceptionAuditUnknown(Exception):
 class ExceptionAuditNotStarted(Exception):
     pass
 class ExceptionAudit(Exception):
+    pass
+class ExceptionTimeout(Exception):
     pass
 
 
@@ -82,7 +84,7 @@ class AuditBridge(object):
         :param imports: list of files to import.
         :type imports: list(str)
 
-        :raises: ExceptionAudit
+        :raises: ExceptionAudit, ExceptionTimeout
         """
         if not isinstance(data, GoLismeroAuditData):
             raise TypeError("Expected GoLismeroAuditData, got '%s' instead" % type(data))
@@ -104,6 +106,9 @@ class AuditBridge(object):
 
         try:
             BRIDGE.RPC.call("audit/create", config)
+        # Checks for timeouts
+        except (CannotSendHeader, CannotSendRequest):
+            raise ExceptionTimeout()
         except Exception,e:
             raise ExceptionAudit(e)
 
@@ -118,7 +123,7 @@ class AuditBridge(object):
         :param data: GoLismeroAuditData with audit info.
         :type data: GoLismeroAuditData
 
-        :raises: ExceptionAudit
+        :raises: ExceptionAudit, ExceptionTimeout
         """
         if not isinstance(data, GoLismeroAuditData):
             raise TypeError("Expected GoLismeroAuditData, got '%s' instead" % type(data))
@@ -132,6 +137,9 @@ class AuditBridge(object):
 
         try:
             BRIDGE.RPC.call("audit/create", config)
+        # Checks for timeouts
+        except (CannotSendHeader, CannotSendRequest):
+            raise ExceptionTimeout()
         except:
             raise ExceptionAudit()
 
@@ -145,11 +153,14 @@ class AuditBridge(object):
         :param audit_id: string with audit ID.
         :type audit_id: str
 
-        :raises: ExceptionAuditNotFound
+        :raises: ExceptionAuditNotFound, ExceptionTimeout
         """
 
         try:
             BRIDGE.RPC.call("audit/cancel", audit_id)
+        # Checks for timeouts
+        except (CannotSendHeader, CannotSendRequest):
+            raise ExceptionTimeout()
         except:
             raise ExceptionAuditNotFound()
 
@@ -182,11 +193,14 @@ class AuditBridge(object):
         ]
         :rtype: list(dict)
 
-        :raises: ExceptionAuditNotFound, ExceptionAuditNotStarted
+        :raises: ExceptionAuditNotFound, ExceptionAuditNotStarted, ExceptionTimeout
         """
 
         try:
             rpc_response = BRIDGE.RPC.call("audit/log", audit_id)
+        # Checks for timeouts
+        except (CannotSendHeader, CannotSendRequest):
+            raise ExceptionTimeout()
         except:
             raise ExceptionAuditNotFound()
 
@@ -221,11 +235,14 @@ class AuditBridge(object):
         :param audit_id: GoLismeroAuditSummary object
         :type audit_id: GoLismeroAuditSummary
 
-        :raises: ExceptionAuditNotFound, ExceptionAuditNotStarted
+        :raises: ExceptionAuditNotFound, ExceptionAuditNotStarted, ExceptionTimeout
         """
 
         try:
             rpc_response = BRIDGE.RPC.call("audit/summary", audit_id)
+        # Checks for timeouts
+        except (CannotSendHeader, CannotSendRequest):
+            raise ExceptionTimeout()
         except:
             raise ExceptionAuditNotFound()
 
@@ -253,11 +270,14 @@ class AuditBridge(object):
         :returns: a string with audit state.
         :type: str
 
-        :raises: ExceptionAuditNotFound, ExceptionAuditNotStarted
+        :raises: ExceptionAuditNotFound, ExceptionAuditNotStarted, ExceptionTimeout
         """
 
         try:
             r = BRIDGE.RPC.call("audit/state", audit_id)
+        # Checks for timeouts
+        except (CannotSendHeader, CannotSendRequest):
+            raise ExceptionTimeout()
         except:
             raise ExceptionAuditNotFound()
 
@@ -285,12 +305,15 @@ class AuditBridge(object):
         :returns: GoLismeroAuditProgress object
         :rtype: GoLismeroAuditProgress | None
 
-        :raises: ExceptionAuditNotFound, ExceptionAuditNotStarted
+        :raises: ExceptionAuditNotFound, ExceptionAuditNotStarted, ExceptionTimeout
         """
         m_return = None
 
         try:
             rpc_response = BRIDGE.RPC.call("audit/progress", audit_id)
+        # Checks for timeouts
+        except (CannotSendHeader, CannotSendRequest):
+            raise ExceptionTimeout()
         except:
             raise ExceptionAuditNotFound()
 
@@ -303,13 +326,6 @@ class AuditBridge(object):
         try:
             steps = rpc_response[0]
             stage = rpc_response[1]
-
-            #if stage == "start":
-                #current_state = "start"
-            #elif stage in ("finish", "cancel"):
-                #current_state = "cleanup"
-            #else:
-                #current_state = "running"
 
             tests_remain  = 0
             tests_done    = 0
