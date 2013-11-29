@@ -43,7 +43,7 @@ from golismero.api.logger import Logger
 from golismero.api.net import ConnectionSlot
 from golismero.api.plugin import ImportPlugin, TestingPlugin
 
-from os.path import join
+from os.path import join, sep
 from traceback import format_exc
 from time import time
 
@@ -92,8 +92,12 @@ class SSLScanPlugin(TestingPlugin):
     #--------------------------------------------------------------------------
     def check_params(self):
         if not find_binary_in_path("sslscan"):
+            if sep == "\\":
+                url = "https://code.google.com/p/sslscan-win/"
+            else:
+                url = "http://sourceforge.net/projects/sslscan/"
             raise RuntimeError(
-                "SSlScan not found in the PATH environment variable")
+                "SSLScan not found! You can download it from: %s" % url)
 
 
     #--------------------------------------------------------------------------

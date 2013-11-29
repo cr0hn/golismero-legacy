@@ -83,7 +83,7 @@ class NmapScanPlugin(TestingPlugin):
     def check_params(self):
         if not find_binary_in_path("nmap"):
             raise RuntimeError(
-                "Nmap not found in the PATH environment variable")
+                "Nmap not found! You can download it from: http://nmap.org/")
 
 
     #--------------------------------------------------------------------------
