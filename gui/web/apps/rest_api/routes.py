@@ -39,64 +39,76 @@ class PushingRouters(ParameterizedRouter):
 
     routes = [
         # Update progress
-        Route(url       = r'^{prefix}/push/progress/$',
+        Route(url       = r'^{prefix}/progress/$',
               mapping   = {'post' : 'push_progress'},
               name      = '{basename}-push_progress',
               initkwargs= {}),
-        Route(url       = r'^{prefix}/push/progress$',
+        Route(url       = r'^{prefix}/progress$',
               mapping   = {'post' : 'push_progress'},
               name      = '{basename}-push_progress2',
               initkwargs= {}),
 
         # Update summary
-        Route(url       = r'^{prefix}/push/summary/$',
+        Route(url       = r'^{prefix}/summary/$',
               mapping   = {'post' : 'push_summary'},
               name      = '{basename}-push_summary',
               initkwargs= {}),
-        Route(url       = r'^{prefix}/push/summary$',
+        Route(url       = r'^{prefix}/summary$',
               mapping   = {'post' : 'push_summary'},
               name      = '{basename}-push_summary2',
               initkwargs= {}),
 
         # Update Log
-        Route(url       = r'^{prefix}/push/log/$',
+        Route(url       = r'^{prefix}/log/$',
               mapping   = {'post' : 'push_log'},
               name      = '{basename}-push_log',
               initkwargs= {}),
-        Route(url       = r'^{prefix}/push/log$',
+        Route(url       = r'^{prefix}/log$',
               mapping   = {'post' : 'push_log'},
               name      = '{basename}-push_log2',
               initkwargs= {}),
 
         # Update plugins errors
-        Route(url       = r'^{prefix}/push/perrors/$',
+        Route(url       = r'^{prefix}/perrors/$',
               mapping   = {'post' : 'push_perrors'},
               name      = '{basename}-push_perrors',
               initkwargs= {}),
-        Route(url       = r'^{prefix}/push/perrors$',
+        Route(url       = r'^{prefix}/perrors$',
               mapping   = {'post' : 'push_perrors'},
               name      = '{basename}-push_perrors2',
               initkwargs= {}),
 
         # Update plugins warnings
-        Route(url       = r'^{prefix}/push/pwarning/$',
+        Route(url       = r'^{prefix}/pwarning/$',
               mapping   = {'post' : 'push_pwarning'},
               name      = '{basename}-push_pwarning',
               initkwargs= {}),
-        Route(url       = r'^{prefix}/push/pwarning$',
+        Route(url       = r'^{prefix}/pwarning$',
               mapping   = {'post' : 'push_pwarning'},
               name      = '{basename}-push_pwarning2',
               initkwargs= {}),
 
         # Update stage
-        Route(url       = r'^{prefix}/push/stage/$',
+        Route(url       = r'^{prefix}/stage/$',
               mapping   = {'post' : 'push_stage'},
               name      = '{basename}-push_stage',
               initkwargs= {}),
-        Route(url       = r'^{prefix}/push/stage$',
+        Route(url       = r'^{prefix}/stage$',
               mapping   = {'post' : 'push_stage'},
               name      = '{basename}-push_stage2',
               initkwargs= {}),
+
+        # Start UI
+        Route(url       = r'^{prefix}/start_ui/$',
+              mapping   = {'post' : 'push_start_ui'},
+              name      = '{basename}-push_start_ui',
+              initkwargs= {}),
+        Route(url       = r'^{prefix}/start_ui$',
+              mapping   = {'post' : 'push_start_ui'},
+              name      = '{basename}-push_start_ui2',
+              initkwargs= {}),
+
+
 
         ]
 
