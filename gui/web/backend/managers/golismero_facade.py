@@ -414,6 +414,7 @@ class GoLismeroFacadeAuditCommon(object):
             #
             m_audit = Audit()
             m_audit.audit_name = str(data.get("audit_name"))
+            m_audit.audit_type = "import"
 
             # Set user
             m_audit.user = User.objects.get(pk=5)
@@ -493,7 +494,12 @@ class GoLismeroFacadeAuditCommon(object):
                 else:
                     m_imports.append(x)
 
+            # Launch command
             AuditBridge.import_audit(dj, m_imports)
+
+            # Update audit state
+            m_audit.audit_state = "running"
+            m_audit.save()
 
             return m_audit.id
         except ValueError,e:
@@ -824,20 +830,23 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
             # Ensure that golismero was generated all reports
             #
             if m_new_state == "finished":
-                m_total = 0
-                for f in REPORT_FORMATS:
-                    l_folder =  get_user_settings_folder()
-                    l_id     = str(m_audit.id)
-                    l_format = f
-                    l_path   = "%s%s/report.%s" % (l_folder, l_id, f)
 
-                    if os.path.exists(l_path):
-                        m_total +=1
+                # Only when audit type is SCAN type
+                if m_audit.audit_type.lower() == "scan":
+                    m_total = 0
+                    for f in REPORT_FORMATS:
+                        l_folder =  get_user_settings_folder()
+                        l_id     = str(m_audit.id)
+                        l_format = f
+                        l_path   = "%s%s/report.%s" % (l_folder, l_id, f)
 
-                if m_total == len(REPORT_FORMATS):
-                    m_new_state = "finished"
-                else:
-                    m_new_state = "running"
+                        if os.path.exists(l_path):
+                            m_total +=1
+
+                    if m_total == len(REPORT_FORMATS):
+                        m_new_state = "finished"
+                    else:
+                        m_new_state = "running"
 
             #  Update audit state into BBDD
             if m_audit.audit_state != m_new_state:
