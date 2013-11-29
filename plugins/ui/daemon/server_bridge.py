@@ -150,9 +150,9 @@ def _launch_server(input_conn, output_conn,
 
                 # Instance the server pusher, if requested.
                 server_push = orchestrator_config.get('server_push', None)
-
                 if server_push:
                     sp = ServerPush(server_push)
+                    sp.start()
                 else:
                     sp = None
 
@@ -226,12 +226,13 @@ class ServerPush(threading.Thread):
         """
         Dequeues notifications and pushes them.
         """
-        (command, args) = self.__queue.get()
-        if command == "quit":
-            self.__queue.join()
-            del self.__queue
-            return
-        self._push(command, args)
+        while True:
+            (command, args) = self.__queue.get()
+            if command == "quit":
+                self.__queue.join()
+                del self.__queue
+                return
+            self._push(command, args)
 
 
     #--------------------------------------------------------------------------
