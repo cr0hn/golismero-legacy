@@ -269,6 +269,7 @@ class SSLScanPlugin(TestingPlugin):
                                 bits    = c.get("bits"),
                                 cipher  = c.get("cipher"))
                         for c in t.findall(".//cipher")
+                        if c.get("status") == "accepted"
                     ]
 
                     # Get CERT dates.
