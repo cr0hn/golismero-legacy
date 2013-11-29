@@ -76,11 +76,11 @@ class SSLScanImportPlugin(ImportPlugin):
 
     #--------------------------------------------------------------------------
     def import_results(self, input_file):
-        results = SSLScanPlugin.parse_sslscan_results(None, input_file)
+        results, count = SSLScanPlugin.parse_sslscan_results(input_file)
         if results:
             Database.async_add_many(results)
-            Logger.log("Loaded %d elements from file: %s" %
-                       (len(results), input_file))
+            Logger.log("Loaded %d hosts and %d vulnerabilities from file: %s" %
+                       (len(results) - count, count, input_file))
         else:
             Logger.log_verbose("No data found in file: %s" % input_file)
 
@@ -190,46 +190,44 @@ class SSLScanPlugin(TestingPlugin):
                 m_host
             ]
 
-            # Run SSLscan and capture the text output.
-            Logger.log("Launching SSLscan against: %s" % m_host)
-            Logger.log_more_verbose("SSLscan arguments: %s" % " ".join(args))
+            # Run SSLScan and capture the text output.
+            Logger.log("Launching SSLScan against: %s" % m_host)
+            Logger.log_more_verbose("SSLScan arguments: %s" % " ".join(args))
             with ConnectionSlot(m_host):
                 t1 = time()
                 code = run_external_tool("sslscan", args, callback=Logger.log_verbose)
                 t2 = time()
             if code:
                 Logger.log_error(
-                    "SSLscan execution failed, status code: %d" % code)
+                    "SSLScan execution failed, status code: %d" % code)
             else:
-                Logger.log("SSLscan scan finished in %s seconds for target: %s"
+                Logger.log("SSLScan scan finished in %s seconds for target: %s"
                            % (t2 - t1, m_host))
 
             # Parse and return the results.
-            r = self.parse_sslscan_results(info, output)
-            if r and len(r) > 1:
-                Logger.log("Found %s SSL vulns." % len(r) - 1)
+            r, v = self.parse_sslscan_results(output)
+            if v:
+                Logger.log("Found %s SSL vulnerabilities." % v)
             else:
-                Logger.log("No SSL vulns found.")
+                Logger.log("No SSL vulnerabilities found.")
             return r
 
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def parse_sslscan_results(info, output_filename):
+    def parse_sslscan_results(output_filename):
         """
-        Convert the output of a SSLscan scan to the GoLismero data model.
-
-        :param info: Data object to link all results to (optional).
-        :type info: Domain | None
+        Convert the output of a SSLScan run to the GoLismero data model.
 
         :param output_filename: Path to the output filename.
             The format should always be XML.
         :type output_filename:
 
-        :returns: Results from the SSLscan scan.
-        :rtype: list(Vulnerability)
+        :returns: Results from the SSLScan scan, and the vulnerability count.
+        :rtype: list(Domain|Vulnerability), int
         """
         results = []
+        count   = 0
         try:
 
             # Read the XML file contents.
@@ -245,82 +243,84 @@ class SSLScanPlugin(TestingPlugin):
 
             # Parse the XML file.
             try:
-                t = ET.fromstring(m_text)
+                tree = ET.fromstring(m_text)
             except ET.ParseError, e:
                 Logger.log_error("Error parsing XML file: %s" % str(e))
-                return results
+                return results, count
 
-            # Get the target hostname if not provided.
-            if info is None:
+            # For each scan result...
+            try:
+                tags = tree.findall(".//ssltest")
+            except Exception, e:
+                tb = format_exc()
+                Logger.log_error("Error parsing XML file: %s" % str(e))
+                Logger.log_error_more_verbose(tb)
+                return results, count
+            for t in tags:
                 try:
-                    info = Domain( t.find(".//ssltest").get("host") )
+
+                    # Get the target hostname.
+                    info = Domain( t.get("host") )
+                    results.append(info)
+
+                    # Get the ciphers.
+                    m_ciphers = [
+                        Ciphers(version = c.get("sslversion"),
+                                bits    = c.get("bits"),
+                                cipher  = c.get("cipher"))
+                        for c in t.findall(".//cipher")
+                    ]
+
+                    # Get CERT dates.
+                    m_valid_before      = re.search("([a-zA-Z:0-9\s]+)( GMT)", t.find(".//not-valid-before").text).group(1)
+                    m_valid_after       = re.search("([a-zA-Z:0-9\s]+)( GMT)", t.find(".//not-valid-after").text).group(1)
+                    m_valid_before_date = datetime.strptime(m_valid_before, "%b %d %H:%M:%S %Y")
+                    m_valid_after_date  = datetime.strptime(m_valid_after, "%b %d %H:%M:%S %Y")
+
+                    # Get subject.
+                    m_cn                = re.search("(CN=)([0-9a-zA-Z\.\*]+)", t.find(".//subject").text).group(2)
+
+                    # Is self signed?
+                    m_self_signed       = t.find(".//pk").get("error")
+
+                    # Insecure algorithm?
+                    c = [y.cipher for y in m_ciphers if "CBC" in y.cipher]
+                    if c:
+                        results.append( InsecureAlgorithm(info, c) )
+                        count += 1
+
+                    # Self-signed?
+                    if m_self_signed:
+                        results.append( InvalidCert(info) )
+                        count += 1
+
+                    # Valid CN?
+                    if m_cn != info.hostname:
+                        results.append( InvalidCommonName(info, m_cn) )
+                        count += 1
+
+                    # Weak keys?
+                    k = [int(y.bits) for i in m_ciphers if int(y.bits) <= 56]
+                    if k:
+                        results.append( WeakKey(info, k) )
+                        count += 1
+
+                    # Obsolete protocol?
+                    c = [y.version for y in m_ciphers if "SSLv1" in y.version]
+                    if c:
+                        results.append( ObsoleteProtocol(info, "SSLv1") )
+                        count += 1
+
+                    # Outdated?
+                    if m_valid_after_date < m_valid_before_date:
+                        results.append( OutdatedCert(info) )
+                        count += 1
+
+                # On error, log the exception and continue.
                 except Exception, e:
                     tb = format_exc()
-                    Logger.log_error("Error parsing XML file: %s" % str(e))
+                    Logger.log_error_verbose(str(e))
                     Logger.log_error_more_verbose(tb)
-                    return results
-                results.append(info)
-
-            # Get the ciphers.
-            try:
-                m_ciphers = [
-                    Ciphers(version = c.get("sslversion"),
-                            bits    = c.get("bits"),
-                            cipher  = c.get("cipher"))
-                    for c in t.findall(".//cipher")
-                ]
-            except Exception, e:
-                tb = format_exc()
-                Logger.log_error("Error parsing XML file: %s" % str(e))
-                Logger.log_error_more_verbose(tb)
-                return results
-
-            try:
-
-                # Get CERT dates.
-                m_valid_before      = re.search("([a-zA-Z:0-9\s]+)( GMT)", t.find(".//not-valid-before").text).group(1)
-                m_valid_after       = re.search("([a-zA-Z:0-9\s]+)( GMT)", t.find(".//not-valid-after").text).group(1)
-                m_valid_before_date = datetime.strptime(m_valid_before, "%b %d %H:%M:%S %Y")
-                m_valid_after_date  = datetime.strptime(m_valid_after, "%b %d %H:%M:%S %Y")
-
-                # Get subject.
-                m_cn                = re.search("(CN=)([0-9a-zA-Z\.\*]+)", t.find(".//subject").text).group(2)
-
-                # Is self signed?
-                m_self_signed       = t.find(".//pk").get("error")
-
-            except Exception, e:
-                tb = format_exc()
-                Logger.log_error("Error parsing XML file: %s" % str(e))
-                Logger.log_error_more_verbose(tb)
-                return results
-
-            # Insecure algorithm?
-            c = [y.cipher for y in m_ciphers if "CBC" in y.cipher]
-            if len(c):
-                results.append( InsecureAlgorithm(info, c) )
-
-            # Self-signed?
-            if m_self_signed:
-                results.append( InvalidCert(info) )
-
-            # Valid CN?
-            if m_cn != info.hostname:
-                results.append( InvalidCommonName(info, m_cn) )
-
-            # Weak keys?
-            k = [int(y.bits) for i in m_ciphers if int(y.bits) <= 56]
-            if len(k):
-                results.append( WeakKey(info, k) )
-
-            # Obsolete protocol?
-            c = [y.version for y in m_ciphers if "SSLv1" in y.version]
-            if len(c):
-                results.append( ObsoleteProtocol(info, "SSLv1") )
-
-            # Outdated?
-            if m_valid_after_date < m_valid_before_date:
-                results.append( OutdatedCert(info) )
 
         # On error, log the exception.
         except Exception, e:
@@ -328,5 +328,5 @@ class SSLScanPlugin(TestingPlugin):
             Logger.log_error_verbose(str(e))
             Logger.log_error_more_verbose(tb)
 
-        # Return the results.
-        return results
+        # Return the results and the vulnerability count.
+        return results, count
