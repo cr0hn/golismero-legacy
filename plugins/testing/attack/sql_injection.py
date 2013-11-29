@@ -145,10 +145,10 @@ class SQLInjectionPlugin(TestingPlugin):
         Logger.log("Launching sqlmap against: %s" % target)
         Logger.log_more_verbose("sqlmap arguments: %s" % " ".join(args))
 
-        t1 = time()
         with ConnectionSlot(target):
+            t1 = time()
             code = run_external_tool(command, args, callback=Logger.log_verbose)
-        t2 = time()
+            t2 = time()
 
         # Log in extra verbose mode.
         if code:
