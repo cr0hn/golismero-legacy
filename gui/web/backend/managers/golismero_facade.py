@@ -46,6 +46,7 @@ Scheme of process is:
 """
 
 __all__ = ["GoLismeroFacadeAuditPolling",
+           "GoLismeroFacadeState",
            "GoLismeroFacadeAuditNotAllowedHostException",
            "GoLismeroFacadeAuditNotFoundException",
            "GoLismeroFacadeAuditNotPluginsException",
@@ -57,7 +58,8 @@ __all__ = ["GoLismeroFacadeAuditPolling",
            "GoLismeroFacadeAuditUnknownException",
            "GoLismeroFacadeReportUnknownFormatException",
            "GoLismeroFacadeReportNotAvailableException",
-           "GoLismeroFacadeAuditImportFileExitsException"]
+           "GoLismeroFacadeAuditImportFileExitsException",
+           "GoLismeroFacadeTimeoutException"]
 
 import os
 import os.path as path
@@ -104,6 +106,10 @@ class GoLismeroFacadeReportNotAvailableException(Exception):
 
 class GoLismeroFacadeAuditImportFileExitsException(Exception):
     """Import exception"""
+
+class GoLismeroFacadeTimeoutException(Exception):
+    """Timeout when connect with the core"""
+
 
 #------------------------------------------------------------------------------
 #
@@ -502,6 +508,8 @@ class GoLismeroFacadeAuditCommon(object):
             m_audit.save()
 
             return m_audit.id
+        except ExceptionTimeout:
+            raise GoLismeroFacadeTimeoutException()
         except ValueError,e:
             raise ValueError(e)
         except Exception,e:
@@ -519,7 +527,7 @@ class GoLismeroFacadeAuditCommon(object):
         :param audit_id: Audit id
         :type audit_id: str
 
-        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditRunningException, TypeError
+        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditRunningException, TypeError, GoLismeroFacadeTimeoutException
         """
 
         if not isinstance(audit_id, basestring):
@@ -550,7 +558,7 @@ class GoLismeroFacadeAuditCommon(object):
         :param audit_id: Audit id.
         :type audit_id: str
 
-        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException, TypeError
+        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException, TypeError, GoLismeroFacadeTimeoutException
         """
 
         if not isinstance(audit_id, basestring):
@@ -584,6 +592,8 @@ class GoLismeroFacadeAuditCommon(object):
             try:
                 # Send to GoLismero core
                 AuditBridge.new_audit(audit_config)
+            except ExceptionTimeout:
+                raise GoLismeroFacadeTimeoutException()
             except ExceptionAudit, e:
                 raise GoLismeroFacadeAuditStateException("Error starting audit: %s" % e)
 
@@ -604,7 +614,7 @@ class GoLismeroFacadeAuditCommon(object):
         :param audit_id: Audit id.
         :type audit_id: str
 
-        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException, TypeError
+        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException, TypeError, GoLismeroFacadeTimeoutException
         """
 
         if not isinstance(audit_id, basestring):
@@ -621,7 +631,10 @@ class GoLismeroFacadeAuditCommon(object):
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is '%s'. Only running audits can be stopped." % (str(m_audit.id), m_audit.audit_state))
 
             # Send to GoLismero core
-            r = AuditBridge.stop(GoLismeroFacadeAuditPolling._get_unique_id(m_audit.id, m_audit.audit_name))
+            try:
+                r = AuditBridge.stop(GoLismeroFacadeAuditPolling._get_unique_id(m_audit.id, m_audit.audit_name))
+            except ExceptionTimeout:
+                raise GoLismeroFacadeTimeoutException()
 
             if r == False:
                 raise GoLismeroFacadeAuditStateException()
@@ -643,7 +656,7 @@ class GoLismeroFacadeAuditCommon(object):
         :param audit_id: Audit id.
         :type audit_id: str
 
-        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException, TypeError
+        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException, TypeError, GoLismeroFacadeTimeoutException
         """
 
         if not isinstance(audit_id, basestring):
@@ -660,7 +673,10 @@ class GoLismeroFacadeAuditCommon(object):
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is '%s'. Only running audits can be paused." % (str(m_audit.id), m_audit.audit_state))
 
             # Send to GoLismero core
-            r = AuditBridge.stop(GoLismeroFacadeAuditPolling._get_unique_id(m_audit.id, m_audit.audit_name))
+            try:
+                r = AuditBridge.stop(GoLismeroFacadeAuditPolling._get_unique_id(m_audit.id, m_audit.audit_name))
+            except ExceptionTimeout:
+                raise GoLismeroFacadeTimeoutException()
 
             if r == False:
                 raise GoLismeroFacadeAuditStateException()
@@ -682,7 +698,7 @@ class GoLismeroFacadeAuditCommon(object):
         :param audit_id: Audit id.
         :type audit_id: str
 
-        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException, TypeError
+        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException, TypeError, GoLismeroFacadeTimeoutException
         """
 
         if not isinstance(audit_id, basestring):
@@ -709,6 +725,8 @@ class GoLismeroFacadeAuditCommon(object):
             # Send to GoLismero core
             try:
                 AuditBridge.new_audit(audit_config)
+            except ExceptionTimeout:
+                raise GoLismeroFacadeTimeoutException()
             except ExceptionAuditUnknown:
                 m_audit.audit_state = "error"
                 m_audit.save()
@@ -786,7 +804,7 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
         :returns: an string with the state
         :rtype: str
 
-        :raises: GoLismeroFacadeAuditNotFoundException, TypeError
+        :raises: GoLismeroFacadeAuditNotFoundException, TypeError, GoLismeroFacadeTimeoutException
         """
         try:
             audit_id = long(audit_id)
@@ -815,6 +833,8 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                 # Do that because AuditBridge regurns the STAGE, not the state
                 if m_new_state != "finished":
                     m_new_state = "running"
+            except ExceptionTimeout:
+                raise GoLismeroFacadeTimeoutException()
             except ExceptionAuditNotStarted:
                 m_audit.audit_state = "error"
                 m_audit.save()
@@ -869,7 +889,7 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
         :returns: GoLismeroAuditProgress object
         :rtype: GoLismeroAuditProgress
 
-        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditRunningException, TypeError, GoLismeroFacadeAuditFinishedException
+        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditRunningException, TypeError, GoLismeroFacadeAuditFinishedException, GoLismeroFacadeTimeoutException
         """
         if not isinstance(audit_id, basestring):
             raise TypeError("Expected basestring, got '%s' instead" % type(audit_id))
@@ -895,6 +915,9 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                     # Store the state
                     GoLismeroFacadeState.set_progress(audit_id, r)
                     return r
+
+            except ExceptionTimeout:
+                raise GoLismeroFacadeTimeoutException()
             except ExceptionAuditNotStarted:
                 # Audit error when started
                 raise GoLismeroFacadeAuditNotStartedException()
@@ -905,7 +928,7 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                 except ExceptionAuditNotFound:
                     # If not info stored in database returned general info
                     return GoLismeroAuditProgress({
-                        'current_stage' : "finished",
+                        'current_stage' : "cleanup",
                         'steps'         : 1,
                         'tests_remain'  : 0,
                         'tests_done'    : 1,
@@ -929,7 +952,7 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
         :returns: an string with the log
         :rtype: str
 
-        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException, TypeError
+        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException, TypeError, GoLismeroFacadeTimeoutException
         """
         if not isinstance(audit_id, basestring):
             raise TypeError("Expected basestring, got '%s' instead" % type(audit_id))
@@ -958,6 +981,8 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                         datetime.datetime.fromtimestamp(
                             float(x.to_json['timestamp'])).strftime('%Y-%m-%d %H:%M:%S:%s'), x.to_json['text']) for x in m_info])
 
+            except ExceptionTimeout:
+                raise GoLismeroFacadeTimeoutException()
             except ExceptionAuditNotStarted:
                 # Audit error when started
                 raise GoLismeroFacadeAuditNotStartedException()
@@ -1001,7 +1026,7 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
             }
         }
 
-        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException
+        :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException, GoLismeroFacadeTimeoutException
         """
 
         try:
@@ -1021,6 +1046,8 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                     # Store info
                     GoLismeroFacadeState.set_summary(audit_id, r)
                     return r
+            except ExceptionTimeout:
+                raise GoLismeroFacadeTimeoutException()
             except ExceptionAuditNotStarted:
                 # Audit error when started
                 raise GoLismeroFacadeAuditNotStartedException()
