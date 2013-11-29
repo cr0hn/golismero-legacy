@@ -188,7 +188,8 @@ class GoLismeroAuditLog(GoLismeroAuditInfo):
 
         try:
             setattr(self, "is_error", data["is_error"])
-        except KeyError:
+
+        except KeyError,p:
             raise ValueError("Invalid JSON format. Property '%s' unknown" % p)
 
 
