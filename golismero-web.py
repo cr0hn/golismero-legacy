@@ -191,5 +191,5 @@ Listen in loopback IPv6 at port 8000:
         # Unset debug mode
         settings.DEBUG    = True
 
-        sys.argv = [listen_addr]
-        call_command("run_gunicorn", listen_addr)
+        sys.argv = [listen_addr, "--timeout", "6000"]
+        call_command("run_gunicorn", listen_addr, timeout=6000)
