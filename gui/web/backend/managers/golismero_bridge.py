@@ -304,12 +304,12 @@ class AuditBridge(object):
             steps = rpc_response[0]
             stage = rpc_response[1]
 
-            if stage == "start":
-                current_state = "start"
-            elif stage in ("finish", "cancel"):
-                current_state = "cleanup"
-            else:
-                current_state = "running"
+            #if stage == "start":
+                #current_state = "start"
+            #elif stage in ("finish", "cancel"):
+                #current_state = "cleanup"
+            #else:
+                #current_state = "running"
 
             tests_remain  = 0
             tests_done    = 0
@@ -323,7 +323,7 @@ class AuditBridge(object):
                     tests_remain +=1
 
             m_return = {
-                'current_stage' : current_state,
+                'current_stage' : stage,
                 'steps'         : int(steps),
                 'tests_remain'  : tests_remain,
                 'tests_done'    : tests_done
