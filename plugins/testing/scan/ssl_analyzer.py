@@ -53,6 +53,8 @@ except ImportError:
 
 from collections import namedtuple
 from datetime import datetime
+from traceback import format_exc
+
 import re
 
 
@@ -60,26 +62,26 @@ Ciphers = namedtuple("Ciphers", ["version", "bits", "cipher"])
 
 
 #------------------------------------------------------------------------------
-#class SSLScanImportPlugin(ImportPlugin):
+class SSLScanImportPlugin(ImportPlugin):
 
 
-    ##--------------------------------------------------------------------------
-    #def is_supported(self, input_file):
-        #if input_file and input_file.lower().endswith(".xml"):
-            #with open(input_file, "rU") as fd:
-                #return "<nmaprun " in fd.read(1024)
-        #return False
+    #--------------------------------------------------------------------------
+    def is_supported(self, input_file):
+        if input_file and input_file.lower().endswith(".xml"):
+            with open(input_file, "rU") as fd:
+                return "SSLScan Results" in fd.read(1024)
+        return False
 
 
-    ##--------------------------------------------------------------------------
-    #def import_results(self, input_file):
-        #results = SSLAnalyzerPlugin.parse_sslscan_results(None, input_file)
-        #if results:
-            #Database.async_add_many(results)
-            #Logger.log("Loaded %d elements from file: %s" %
-                       #(len(results), input_file))
-        #else:
-            #Logger.log_verbose("No data found in file: %s" % input_file)
+    #--------------------------------------------------------------------------
+    def import_results(self, input_file):
+        results = SSLAnalyzerPlugin.parse_sslscan_results(None, input_file)
+        if results:
+            Database.async_add_many(results)
+            Logger.log("Loaded %d elements from file: %s" %
+                       (len(results), input_file))
+        else:
+            Logger.log_verbose("No data found in file: %s" % input_file)
 
 
 #------------------------------------------------------------------------------
@@ -122,8 +124,8 @@ class SSLAnalyzerPlugin(TestingPlugin):
 
             # Parse and return the results.
             r = self.parse_sslscan_results(info, output)
-            if r:
-                Logger.log("Found %s SSL vulns." % len(r))
+            if r and len(r) > 1:
+                Logger.log("Found %s SSL vulns." % len(r) - 1)
             else:
                 Logger.log("No SSL vulns found.")
             return r
@@ -145,87 +147,104 @@ class SSLAnalyzerPlugin(TestingPlugin):
         :returns: Results from the SSLscan scan.
         :rtype: list(Vulnerability)
         """
-        results    = []
-
-        # Parse
+        results = []
         try:
 
-            # Get SSL info
+            # Read the XML file contents.
             with open(output_filename, "rU") as f:
                 m_info = f.read()
 
-            # Transform to avoid unicode fails
-            m_text = None
+            # Force conversion to UTF-8, or Latin-1 on failure.
+            # This prevents XML parsing errors.
             try:
                 m_text = m_info.encode("utf-8")
             except UnicodeDecodeError:
                 m_text = m_info.decode("latin-1").encode("utf-8")
 
+            # Parse the XML file.
             try:
                 t = ET.fromstring(m_text)
-                #t = ET.parse(source, parser)
-            except ET.ParseError,e:
-                Logger.log_error("Error parsing XML file")
-                return
+            except ET.ParseError, e:
+                Logger.log_error("Error parsing XML file: %s" % str(e))
+                return results
 
-            m_ciphers        = []
-            m_ciphers_append = m_ciphers.append
+            # Get the target hostname if not provided.
+            if info is None:
+                try:
+                    info = Domain( t.find(".//ssltest").get("host") )
+                except Exception, e:
+                    tb = format_exc()
+                    Logger.log_error("Error parsing XML file: %s" % str(e))
+                    Logger.log_error_more_verbose(tb)
+                    return results
+                results.append(info)
 
-            # Get ciphers
-            for c in t.findall(".//cipher"):
-                m_ciphers_append(Ciphers(version = c.get("sslversion"),
-                                         bits    = c.get("bits"),
-                                         cipher  = c.get("cipher")))
+            # Get the ciphers.
+            try:
+                m_ciphers = [
+                    Ciphers(version = c.get("sslversion"),
+                            bits    = c.get("bits"),
+                            cipher  = c.get("cipher"))
+                    for c in t.findall(".//cipher")
+                ]
+            except Exception, e:
+                tb = format_exc()
+                Logger.log_error("Error parsing XML file: %s" % str(e))
+                Logger.log_error_more_verbose(tb)
+                return results
 
             try:
-                # Get CERT dates
+
+                # Get CERT dates.
                 m_valid_before      = re.search("([a-zA-Z:0-9\s]+)( GMT)", t.find(".//not-valid-before").text).group(1)
                 m_valid_after       = re.search("([a-zA-Z:0-9\s]+)( GMT)", t.find(".//not-valid-after").text).group(1)
                 m_valid_before_date = datetime.strptime(m_valid_before, "%b %d %H:%M:%S %Y")
                 m_valid_after_date  = datetime.strptime(m_valid_after, "%b %d %H:%M:%S %Y")
 
-                # Get subject
+                # Get subject.
                 m_cn                = re.search("(CN=)([0-9a-zA-Z\.\*]+)", t.find(".//subject").text).group(2)
 
                 # Is self signed?
                 m_self_signed       = t.find(".//pk").get("error")
-            except AttributeError:
-                Logger.log_error("No SSL information found")
 
-            #
-            # Looking for vulns
-            #
+            except Exception, e:
+                tb = format_exc()
+                Logger.log_error("Error parsing XML file: %s" % str(e))
+                Logger.log_error_more_verbose(tb)
+                return results
 
-            # Insecure algorithm
+            # Insecure algorithm?
             c = [y.cipher for y in m_ciphers if "CBC" in y.cipher]
             if len(c):
-                results.append(InsecureAlgorithm(info, c))
+                results.append( InsecureAlgorithm(info, c) )
 
-            # Self-signed
+            # Self-signed?
             if m_self_signed:
-                results.append(InvalidCert(info))
+                results.append( InvalidCert(info) )
 
             # Valid CN?
             if m_cn != info.hostname:
-                results.append(InvalidCommonName(info, m_cn))
+                results.append( InvalidCommonName(info, m_cn) )
 
             # Weak keys?
             k = [int(y.bits) for i in m_ciphers if int(y.bits) <= 56]
             if len(k):
-                results.append(WeakKey(info, k))
+                results.append( WeakKey(info, k) )
 
             # Obsolete protocol?
             c = [y.version for y in m_ciphers if "SSLv1" in y.version]
             if len(c):
-                results.append(ObsoleteProtocol(info, "SSLv1"))
+                results.append( ObsoleteProtocol(info, "SSLv1") )
 
             # Outdated?
             if m_valid_after_date < m_valid_before_date:
-                results.append(OutdatedCert(info))
+                results.append( OutdatedCert(info) )
 
         # On error, log the exception.
         except Exception, e:
+            tb = format_exc()
             Logger.log_error_verbose(str(e))
-            Logger.log_error_more_verbose(format_exc())
+            Logger.log_error_more_verbose(tb)
 
+        # Return the results.
         return results
