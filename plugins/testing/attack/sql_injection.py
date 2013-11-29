@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
+from golismero.api.net import ConnectionSlot
 from golismero.api.data.resource.url import Url
 from golismero.api.external import run_external_tool, \
      find_cygwin_binary_in_path, tempfile, tempdir
@@ -37,7 +38,6 @@ from golismero.api.data.vulnerability.injection.sql_injection import SQLInjectio
 from os.path import join, split, abspath, exists
 from traceback import format_exc
 from time import time, sleep
-
 
 from collections import namedtuple
 from datetime import datetime
@@ -55,12 +55,14 @@ class SQLInjectionPlugin(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
+        Logger.log(info)
         if not isinstance(info, Url):
             return
 
         if not info.has_url_params and not info.has_post_params:
             Logger.log("URL '%s' has not parameters" % info.url)
             return
+
 
         # Get sqlmap script executable
         sqlmap_script = self.get_sqlmap()
@@ -144,7 +146,8 @@ class SQLInjectionPlugin(TestingPlugin):
         Logger.log_more_verbose("sqlmap arguments: %s" % " ".join(args))
 
         t1 = time()
-        code = run_external_tool(command, args, callback=Logger.log_verbose)
+        with ConnectionSlot(target):
+            code = run_external_tool(command, args, callback=Logger.log_verbose)
         t2 = time()
 
         # Log in extra verbose mode.
