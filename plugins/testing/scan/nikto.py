@@ -37,6 +37,7 @@ from golismero.api.data.vulnerability.infrastructure.vulnerable_webapp \
 from golismero.api.external import run_external_tool, \
      find_cygwin_binary_in_path, tempfile
 from golismero.api.logger import Logger
+from golismero.api.net import ConnectionSlot
 from golismero.api.net.scraper import extract_from_text
 from golismero.api.net.web_utils import parse_url, urljoin
 from golismero.api.plugin import ImportPlugin, TestingPlugin
@@ -241,8 +242,9 @@ class NiktoPlugin(TestingPlugin):
         Logger.log("Launching Nikto against: %s" % info.hostname)
         Logger.log_more_verbose(
             "Nikto arguments: %s %s" % (command, " ".join(args)))
-        code = run_external_tool(command, args, cwd = cwd,
-                                 callback = Logger.log_verbose)
+        with ConnectionSlot(info.hostname):
+            code = run_external_tool(command, args, cwd = cwd,
+                                     callback = Logger.log_verbose)
 
         # Log the output in extra verbose mode.
         if code:

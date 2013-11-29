@@ -39,6 +39,7 @@ from golismero.api.data.vulnerability.ssl.invalid_common_name import InvalidComm
 from golismero.api.external import run_external_tool, \
      find_cygwin_binary_in_path, tempfile
 from golismero.api.logger import Logger
+from golismero.api.net import ConnectionSlot
 from golismero.api.plugin import ImportPlugin, TestingPlugin
 
 from os.path import join
@@ -56,6 +57,29 @@ import re
 
 
 Ciphers = namedtuple("Ciphers", ["version", "bits", "cipher"])
+
+
+#------------------------------------------------------------------------------
+#class SSLScanImportPlugin(ImportPlugin):
+
+
+    ##--------------------------------------------------------------------------
+    #def is_supported(self, input_file):
+        #if input_file and input_file.lower().endswith(".xml"):
+            #with open(input_file, "rU") as fd:
+                #return "<nmaprun " in fd.read(1024)
+        #return False
+
+
+    ##--------------------------------------------------------------------------
+    #def import_results(self, input_file):
+        #results = SSLAnalyzerPlugin.parse_sslscan_results(None, input_file)
+        #if results:
+            #Database.async_add_many(results)
+            #Logger.log("Loaded %d elements from file: %s" %
+                       #(len(results), input_file))
+        #else:
+            #Logger.log_verbose("No data found in file: %s" % input_file)
 
 
 #------------------------------------------------------------------------------
@@ -82,15 +106,13 @@ class SSLAnalyzerPlugin(TestingPlugin):
                 m_host
             ]
 
-            # Run Nmap and capture the text output.
+            # Run SSLscan and capture the text output.
             Logger.log("Launching SSLscan against: %s" % m_host)
             Logger.log_more_verbose("SSLscan arguments: %s" % " ".join(args))
-
-            t1 = time()
-            code = run_external_tool("sslscan", args, callback=Logger.log_verbose)
-            t2 = time()
-
-            # Log the output in extra verbose mode.
+            with ConnectionSlot(m_host):
+                t1 = time()
+                code = run_external_tool("sslscan", args, callback=Logger.log_verbose)
+                t2 = time()
             if code:
                 Logger.log_error(
                     "SSLscan execution failed, status code: %d" % code)
@@ -99,13 +121,11 @@ class SSLAnalyzerPlugin(TestingPlugin):
                            % (t2 - t1, m_host))
 
             # Parse and return the results.
-            r =  self.parse_sslscan_results(info, output)
-
+            r = self.parse_sslscan_results(info, output)
             if r:
                 Logger.log("Found %s SSL vulns." % len(r))
             else:
                 Logger.log("No SSL vulns found.")
-
             return r
 
 
@@ -116,22 +136,21 @@ class SSLAnalyzerPlugin(TestingPlugin):
         Convert the output of a SSLscan scan to the GoLismero data model.
 
         :param info: Data object to link all results to (optional).
-        :type info: Domain
+        :type info: Domain | None
 
         :param output_filename: Path to the output filename.
             The format should always be XML.
         :type output_filename:
 
-        :returns: Results from the sslscan scan, and the vulnerability count.
-        :rtype: list(Data)
+        :returns: Results from the SSLscan scan.
+        :rtype: list(Vulnerability)
         """
         results    = []
 
         # Parse
         try:
-            #
+
             # Get SSL info
-            #
             with open(output_filename, "rU") as f:
                 m_info = f.read()
 
@@ -146,7 +165,7 @@ class SSLAnalyzerPlugin(TestingPlugin):
                 t = ET.fromstring(m_text)
                 #t = ET.parse(source, parser)
             except ET.ParseError,e:
-                Logger.log_error("Error when try to parse XML file")
+                Logger.log_error("Error parsing XML file")
                 return
 
             m_ciphers        = []
@@ -171,7 +190,7 @@ class SSLAnalyzerPlugin(TestingPlugin):
                 # Is self signed?
                 m_self_signed       = t.find(".//pk").get("error")
             except AttributeError:
-                Logger.log("Not SSL information found")
+                Logger.log_error("No SSL information found")
 
             #
             # Looking for vulns
@@ -210,4 +229,3 @@ class SSLAnalyzerPlugin(TestingPlugin):
             Logger.log_error_more_verbose(format_exc())
 
         return results
-

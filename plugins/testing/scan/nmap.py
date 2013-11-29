@@ -35,6 +35,7 @@ from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.external import run_external_tool, tempfile, find_binary_in_path
 from golismero.api.logger import Logger
+from golismero.api.net import ConnectionSlot
 from golismero.api.plugin import ImportPlugin, TestingPlugin
 
 import shlex
@@ -107,17 +108,20 @@ class NmapScanPlugin(TestingPlugin):
             # Run Nmap and capture the text output.
             Logger.log("Launching Nmap against: %s" % info.address)
             Logger.log_more_verbose("Nmap arguments: %s" % " ".join(args))
-            t1 = time()
-            code = run_external_tool("nmap", args, callback=Logger.log_verbose)
-            t2 = time()
+            with ConnectionSlot(info.address):
+                t1 = time()
+                code = run_external_tool("nmap", args,
+                                         callback=Logger.log_verbose)
+                t2 = time()
 
             # Log the output in extra verbose mode.
             if code:
                 Logger.log_error(
                     "Nmap execution failed, status code: %d" % code)
             else:
-                Logger.log("Nmap scan finished in %s seconds for target: %s"
-                           % (t2 - t1, info.address))
+                Logger.log(
+                    "Nmap scan finished in %s seconds for target: %s"
+                    % (t2 - t1, info.address))
 
             # Parse and return the results.
             return self.parse_nmap_results(info, output)
