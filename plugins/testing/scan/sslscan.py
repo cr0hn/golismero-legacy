@@ -86,7 +86,7 @@ class SSLScanImportPlugin(ImportPlugin):
 
 
 #------------------------------------------------------------------------------
-class SSLAnalyzerPlugin(TestingPlugin):
+class SSLScanPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------

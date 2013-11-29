@@ -1,6 +1,6 @@
 [Documentation]
-Name        = SSLScan XML Importer
-Description = Import the results of an SSLScan run in XML format.
+Name        = SSLScan
+Description = Integration with SSLScan: http://sourceforge.net/projects/sslscan/
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero
@@ -8,5 +8,5 @@ Copyright   = Copyright (C) 2011-2013 GoLismero Project
 License     = GNU Public License
 
 [Core]
-Module = ../testing/scan/sslscan.py
-Class  = SSLScanImportPlugin
+Module = sslscan.py
+Class  = SSLScanPlugin
