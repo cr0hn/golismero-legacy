@@ -10,7 +10,7 @@ import rest_framework.urls
 #
 
 pushing_routes  = PushingRouters()
-pushing_routes.register(r'push', PushingViewSet, base_name="push")
+pushing_routes.register(r'push', PushingViewSet, base_name="pushing")
 
 audit_routes    = AuditsRouters()
 audit_routes.register(r'^audits', AuditViewSet, base_name="plugins")
@@ -30,7 +30,7 @@ nodes_routes.register(r'nodes', NodesViewSet, base_name="nodes")
 urlpatterns = patterns('',
 
     # Pushing methods
-    url(r'push', include(pushing_routes.urls)),
+    url(r'^', include(pushing_routes.urls)),
 
     # Audits methods
     url(r'^api/', include(audit_routes.urls)),
