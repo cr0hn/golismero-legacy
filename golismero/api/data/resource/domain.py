@@ -62,6 +62,8 @@ class Domain(Resource):
         hostname = to_utf8(hostname)
         if not isinstance(hostname, str):
             raise TypeError("Expected string, got %r instead" % type(hostname))
+        if not hostname:
+            raise ValueError("Missing hostname")
 
         # Check we've not confused an IP address for a hostname.
         try:

@@ -189,7 +189,8 @@ class Robots(TestingPlugin):
                     try:
                         l_p = HTTP.get_url(l_url, callback=self.check_response)  # FIXME handle exceptions!
                     except:
-                        discard_data(l_p)
+                        if l_p:
+                            discard_data(l_p)
                         continue
                     if l_p:
                         if m_analyzer.analyze(l_p.data, url=l_url):

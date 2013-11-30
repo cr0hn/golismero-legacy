@@ -157,13 +157,13 @@ class RSTReport(ReportPlugin):
 
         try:
 
-            # Report the vulnerabilities.
-            if datas:
-                self.__write_rst(f, datas, Data.TYPE_VULNERABILITY, "Vulnerabilities")
-
             # This dictionary tracks which data to show
             # and which not to in brief report mode.
             self.__vulnerable = set()
+
+            # Report the vulnerabilities.
+            if datas:
+                self.__write_rst(f, datas, Data.TYPE_VULNERABILITY, "Vulnerabilities")
 
             try:
 

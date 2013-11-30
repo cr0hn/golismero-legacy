@@ -251,14 +251,17 @@ class OpenVASPlugin(TestingPlugin):
 
             # Load the database using the Django ORM.
             from standalone.conf import settings
-            settings = settings(
-                DATABASES = {
-                    'default': {
-                        'ENGINE': 'django.db.backends.sqlite3',
-                        'NAME': '%s' % openvas_db,
-                    }
-                },
-            )
+            try:
+                settings = settings(
+                    DATABASES = {
+                        'default': {
+                            'ENGINE': 'django.db.backends.sqlite3',
+                            'NAME': '%s' % openvas_db,
+                        }
+                    },
+                )
+            except RuntimeError:
+                Logger.log("Django backend previously charged.")
 
             # Load the ORM model.
             sys.path.insert(0, openvas_dir)
@@ -355,17 +358,18 @@ class OpenVASPlugin(TestingPlugin):
                 if use_openvas_db and oid:
                     oid_spt = oid.split(".")
                     if len(oid_spt) > 0:
-                        l_plugin_id = oid_spt[-1]
+                        l_plugin_id       = oid_spt[-1]
+                        kwargs["tool_id"] = l_plugin_id
                         try:
+                            l_family = Plugin.objects.get(plugin_id = l_plugin_id).family_id
+                            l_family = l_family.strip()
+
                             if l_plugin_id in CATEGORIES:
                                 clazz = globals()[ CATEGORIES[l_plugin_id] ]
-                            l_family = Plugin.objects.get(
-                                plugin_id = l_plugin_id).family_id
-                            l_family = l_family.strip()
-                            l_plugin_id = str(l_plugin_id)
-                            kwargs["tool_id"] = l_plugin_id
-                            if l_family in CATEGORIES:
+
+                            elif l_family in CATEGORIES:
                                 clazz = globals()[ CATEGORIES[l_family] ]
+
                         except Exception, e:
                             tb = format_exc()
                             Logger.log_error_verbose(

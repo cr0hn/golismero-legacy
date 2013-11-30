@@ -142,13 +142,18 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
         m_urls_update    = m_urls.update
 
         # Fixed Url
-        m_url_fixed      = m_url if m_url.endswith("/") else "%s/" % m_url
+        #m_url_fixed      = m_url if m_url.endswith("/") else "%s/" % m_url
 
         for l_w in m_wordlist:
             # Use a copy of wordlist to avoid modify the original source
             l_loaded_wordlist = WordListLoader.get_advanced_wordlist_as_list(l_w)
 
-            m_urls_update((urljoin(m_url_fixed, (l_wo[1:] if l_wo.startswith("/") else l_wo)) for l_wo in l_loaded_wordlist))
+            for l_wo in l_loaded_wordlist:
+                tmp_u = urljoin(m_url, (l_wo[1:] if l_wo.startswith("/") else l_wo))
+
+                Logger.log(tmp_u)
+
+                m_urls_update(tmp_u)
 
         # Generates the error page
         m_error_response = get_error_page(m_url)

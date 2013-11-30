@@ -2161,6 +2161,7 @@ class AuditSQLiteDB (BaseAuditDB):
             timestamp = time.time()
         else:
             timestamp = float(timestamp)
+
         level     = int(level)
         is_error  = bool(is_error)
         if plugin_id is not None and type(plugin_id) is not str:
@@ -2175,9 +2176,17 @@ class AuditSQLiteDB (BaseAuditDB):
             plugin_rowid = None
 
         # Append the log line.
-        self.__cursor.execute(
-            "INSERT INTO log VALUES (NULL, ?, ?, ?, ?, ?, ?);",
-            (plugin_rowid, ack_id, text, level, is_error, timestamp))
+        try:
+            try:
+                filtered_text = text.encode("utf-8")
+            except UnicodeDecodeError:
+                filtered_text = text.decode("latin-1").encode("utf-8")
+
+            self.__cursor.execute(
+                "INSERT INTO log VALUES (NULL, ?, ?, ?, ?, ?, ?);",
+                (plugin_rowid, ack_id, filtered_text, level, is_error, timestamp))
+        except Exception:
+            return
 
 
     #--------------------------------------------------------------------------

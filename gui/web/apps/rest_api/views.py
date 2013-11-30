@@ -628,59 +628,65 @@ class AuditViewSet(ViewSet):
         # PLUGINS
         #
         m_plugins_in = request.DATA.get("enable_plugins", [])
+        m_plugins    = [] # Plugins lists
+
 
         # Clean keys
         if m_plugins_in:
             tmp = []
-            for ll in m_plugins_in:
-                l_dict = {}
-                for dk, dv in ll.iteritems():
-                    l_dict[str(dk.strip())] = dv
+            if isinstance(m_plugins_in, list):
 
-                tmp.append(l_dict)
-            m_plugins_in = tmp
+                # Remove spaces and transform: unicode -> str
+                for ll in m_plugins_in:
+                    if isinstance(str(ll), basestring):
+                        continue
+                    l_dict = {}
+                    for dk, dv in ll.iteritems():
+                        l_dict[str(dk.strip())] = dv
 
-        m_plugins    = [] # Plugins lists
+                    tmp.append(l_dict)
+                m_plugins_in = tmp
 
-        for p in m_plugins_in:
+                # Collect plugins
+                for p in m_plugins_in:
 
-            l_plugin                = {}
-            l_plugin['plugin_name'] = p.get("plugin_name", None)
+                    l_plugin                = {}
+                    l_plugin['plugin_name'] = p.get("plugin_name", None)
 
-            if not l_plugin['plugin_name']:
-                m_return['status']      = "error"
-                m_return['error_code']  = 1
-                m_return['error']       = ["A plugin name can be provided."]
-                return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-            pp = p.get('params', None)
-            if pp:
-                l_plugin_results = []
-                for plug_p in pp:
-
-                    l_p                = {}
-                    l_p['param_name']  = plug_p.get("param_name", None)
-                    l_p['param_value'] = plug_p.get("param_value", None)
-
-                    if not l_p['param_name']:
+                    if not l_plugin['plugin_name']:
                         m_return['status']      = "error"
                         m_return['error_code']  = 1
-                        m_return['error']       = ["If you specify keywork 'params' in plugin '%s', you must provide a 'param_name' value." % l_plugin['plugin_name']]
+                        m_return['error']       = ["A plugin name can be provided."]
                         return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-                    if not l_p['param_value']:
-                        m_return['status']      = "error"
-                        m_return['error_code']  = 1
-                        m_return['error']       = ["Parameter '%s' must have a 'param_value' value." % l_p['param_name']]
-                        return Response(m_return, status.HTTP_400_BAD_REQUEST)
+                    pp = p.get('params', None)
+                    if pp:
+                        l_plugin_results = []
+                        for plug_p in pp:
 
-                    l_plugin_results.append(l_p)
+                            l_p                = {}
+                            l_p['param_name']  = plug_p.get("param_name", None)
+                            l_p['param_value'] = plug_p.get("param_value", None)
 
-                # Add to plugin
-                l_plugin['params'] = l_plugin_results
+                            if not l_p['param_name']:
+                                m_return['status']      = "error"
+                                m_return['error_code']  = 1
+                                m_return['error']       = ["If you specify keywork 'params' in plugin '%s', you must provide a 'param_name' value." % l_plugin['plugin_name']]
+                                return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-            # Add to plugins store
-            m_plugins.append(l_plugin)
+                            if not l_p['param_value']:
+                                m_return['status']      = "error"
+                                m_return['error_code']  = 1
+                                m_return['error']       = ["Parameter '%s' must have a 'param_value' value." % l_p['param_name']]
+                                return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+                            l_plugin_results.append(l_p)
+
+                        # Add to plugin
+                        l_plugin['params'] = l_plugin_results
+
+                    # Add to plugins store
+                    m_plugins.append(l_plugin)
 
         # Add to global info
         m_info['enable_plugins'] = m_plugins
@@ -713,6 +719,12 @@ class AuditViewSet(ViewSet):
             m_return['status']      = "error"
             m_return['error_code']  = -1
             m_return['error']       = [str(e)]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+        except GoLismeroFacadeAuditNotStartedException,e:
+            m_return['status']      = "error"
+            m_return['error_code']  = -1
+            m_return['error']       = ["Requested audit when try to start it and not started."]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
         except Exception,e:
@@ -1041,6 +1053,12 @@ class AuditViewSet(ViewSet):
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+        except GoLismeroFacadeAuditNotStartedException,e:
+            m_return['status']      = "error"
+            m_return['error_code']  = -1
+            m_return['error']       = ["Requested audit when try to start it and not started."]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
         # Unknown exception
         except Exception, e:
             m_return['status']      = "error"
@@ -1085,6 +1103,14 @@ class AuditViewSet(ViewSet):
             m_return['error']       = ["Provided audit ID not found"]
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+        # Error when audit fails and not started
+        except GoLismeroFacadeAuditNotStartedException,e:
+            m_return['status']      = "error"
+            m_return['error_code']  = -1
+            m_return['error']       = ["Requested audit when try to start it and not started."]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
 
         # Unknown exception
         except Exception, e:
@@ -1148,6 +1174,14 @@ class AuditViewSet(ViewSet):
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+        # Error when audit fails and not started
+        except GoLismeroFacadeAuditNotStartedException,e:
+            m_return['status']      = "error"
+            m_return['error_code']  = -1
+            m_return['error']       = ["Requested audit when try to start it and not started."]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+
         # Unknown exception
         except Exception, e:
             m_return['status']      = "error"
@@ -1187,6 +1221,14 @@ class AuditViewSet(ViewSet):
             m_return['error']       = ["Provided audit ID not exits"]
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+        # Error when audit fails and not started
+        except GoLismeroFacadeAuditNotStartedException,e:
+            m_return['status']      = "error"
+            m_return['error_code']  = -1
+            m_return['error']       = ["Requested audit when try to start it and not started."]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
 
         # Unknown exception
         except Exception, e:
@@ -1228,6 +1270,14 @@ class AuditViewSet(ViewSet):
             m_return['error']       = ["Provided audit ID not exits"]
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+        # Error when audit fails and not started
+        except GoLismeroFacadeAuditNotStartedException,e:
+            m_return['status']      = "error"
+            m_return['error_code']  = -1
+            m_return['error']       = ["Requested audit when try to start it and not started."]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
 
         # Unknown exception
         except Exception, e:
@@ -1271,6 +1321,15 @@ class AuditViewSet(ViewSet):
             m_return['error']       = ["Provided audit ID not exits"]
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+        # Error when audit fails and not started
+        except GoLismeroFacadeAuditNotStartedException,e:
+            m_return['status']      = "error"
+            m_return['error_code']  = -1
+            m_return['error']       = ["Requested audit when try to start it and not started."]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+
 
         # Unknown exception
         except Exception, e:
@@ -1323,6 +1382,14 @@ class AuditViewSet(ViewSet):
             m_return['error']       = [str(e)]
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+        # Error when audit fails and not started
+        except GoLismeroFacadeAuditNotStartedException,e:
+            m_return['status']      = "error"
+            m_return['error_code']  = -1
+            m_return['error']       = ["Requested audit when try to start it and not started."]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
 
         except GoLismeroFacadeAuditNotFoundException:
             m_return['status']      = "error"
@@ -1403,6 +1470,14 @@ class AuditViewSet(ViewSet):
             m_return['error']       = ["Provided audit is finished."]
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+        # Error when audit fails and not started
+        except GoLismeroFacadeAuditNotStartedException,e:
+            m_return['status']      = "error"
+            m_return['error_code']  = -1
+            m_return['error']       = ["Requested audit when try to start it and not started."]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
 
         # Unknown exception
         except Exception, e:

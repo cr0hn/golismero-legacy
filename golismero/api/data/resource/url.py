@@ -40,6 +40,8 @@ from ...config import Config
 from ...net.web_utils import ParsedURL
 from ...text.text_utils import to_utf8
 
+from urllib import quote
+
 
 #------------------------------------------------------------------------------
 class _AbstractUrl(Resource):
@@ -182,8 +184,8 @@ class Url(_AbstractUrl):
         :param method: HTTP method.
         :type method: str
 
-        :param post_params: POST parameters.
-        :type post_params: dict(str -> str)
+        :param post_params: POST parameters or raw data.
+        :type post_params: dict(str -> str) | str
 
         :param referer: Referrer URL.
         :type referer: str
@@ -207,14 +209,24 @@ class Url(_AbstractUrl):
         if referer is not None and not isinstance(referer, str):
             raise TypeError("Expected string, got %r instead" % type(referer))
         if post_params:
-            post_params = {
-                to_utf8(k): to_utf8(v) for k,v in post_params.iteritems()
-            }
+            if hasattr(post_params, "iteritems"):
+                post_params = {
+                    to_utf8(k): to_utf8(v) for k,v in post_params.iteritems()
+                }
+                post_data = '&'.join(
+                    '%s=%s' % ( quote(k, safe=''), quote(v, safe='') )
+                    for (k, v) in sorted(post_params.iteritems())
+                )
+            else:
+                post_data   = to_utf8(post_params)
+                post_params = None
         else:
-            post_params = {}
+            post_data   = None
+            post_params = None
 
         # Save the properties.
         self.__method      = method
+        self.__post_data   = post_data
         self.__post_params = post_params
         self.__referer     = referer
 
@@ -243,12 +255,12 @@ class Url(_AbstractUrl):
         return self.__method
 
     @identity
-    def post_params(self):
+    def post_data(self):
         """
-        :return: POST parameters.
-        :rtype: dict(str -> str)
+        :return: POST data.
+        :rtype: str
         """
-        return self.__post_params
+        return self.__post_data
 
 
     #--------------------------------------------------------------------------
@@ -259,13 +271,13 @@ class Url(_AbstractUrl):
         :return: GET parameters.
         :rtype: dict(str -> str)
         """
-        query = self.parsed_url.query
-        if type(query) in (str, unicode):
-            return self.parsed_url.query_params
+        query_params = self.parsed_url.query_params
+        if query_params:
+            return query_params
         return {}
 
     @property
-    def has_url_param(self):
+    def has_url_params(self):
         """
         :return: True if there are GET parameters, False otherwise.
         :rtype: bool
@@ -273,7 +285,17 @@ class Url(_AbstractUrl):
         return bool(self.url_params)
 
     @property
-    def has_post_param(self):
+    def post_params(self):
+        """
+        :return: POST parameters.
+        :rtype: dict(str -> str)
+        """
+        if self.__post_params:
+            return self.__post_params.copy()
+        return {}
+
+    @property
+    def has_post_params(self):
         """
         :return: True if there are POST parameters, False otherwise.
         :rtype: bool

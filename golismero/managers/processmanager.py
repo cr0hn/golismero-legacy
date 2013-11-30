@@ -73,6 +73,14 @@ class Process(_Original_Process):
     This means we have to take care of killing our own subprocesses.
     """
 
+    def __init__(self, *arg, **kwarg):
+        super(Process, self).__init__(*arg, **kwarg)
+        try:
+            import posix
+            posix.nice(99)
+        except Exception:
+            pass
+
     @property
     def daemon(self):
         return False

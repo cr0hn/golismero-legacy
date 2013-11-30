@@ -157,9 +157,9 @@ class AuditManager (object):
 
         # On error, abort.
         except Exception, e:
-            trace = format_exc()
+            #trace = format_exc()
             Logger.log_error("Failed to add new audit, reason: %s" % e)
-            Logger.log_error_more_verbose(trace)
+            #Logger.log_error_more_verbose(trace)
             try:
                 self.remove_audit(m_audit.name)
             except Exception:
@@ -272,6 +272,11 @@ class AuditManager (object):
                 try:
                     self.new_audit(message.message_info)
                 except AuditException,e:
+
+                    # Check running mode. If mode is not dameon, service stops
+                    if self.orchestrator.config.ui_mode != "daemon":
+                        raise RuntimeError("Error when try to start audit: %s" %  str(e))
+
                     message = Message(
                         message_type = MessageType.MSG_TYPE_CONTROL,
                         message_code = MessageCode.MSG_CONTROL_START_ERROR_AUDIT,

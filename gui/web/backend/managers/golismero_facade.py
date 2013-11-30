@@ -62,6 +62,7 @@ __all__ = ["GoLismeroFacadeAuditPolling",
 import os
 import os.path as path
 import datetime
+from zipfile import ZipFile, BadZipfile
 
 from backend.managers.golismero_bridge import *
 from backend.managers import *
@@ -163,7 +164,7 @@ class GoLismeroFacadeAuditCommon(object):
         :returns: return file handler ready to read report.
         :rtype: file
 
-        :raises: GoLismeroFacadeReportUnknownFormatException, GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeReportNotAvailableException
+        :raises: GoLismeroFacadeAuditNotStartedException, GoLismeroFacadeReportUnknownFormatException, GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeReportNotAvailableException
         """
 
         try:
@@ -178,6 +179,9 @@ class GoLismeroFacadeAuditCommon(object):
             # Update state
             #GoLismeroFacadeAuditPolling.get_state(m_audit.id)
 
+
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
             if m_audit.audit_state != "finished":
                 raise GoLismeroFacadeReportNotAvailableException("Not finished audit. Report is not available.")
 
@@ -229,7 +233,7 @@ class GoLismeroFacadeAuditCommon(object):
             #GoLismeroFacadeAudit.get_state(l_audit_id)
 
             # Store audit info
-            m_return.append(GoLismeroFacadeAuditPolling.get_audit(l_audit_id))
+            m_return.append(GoLismeroFacadeAuditPolling.get_audit(str(l_audit_id)))
 
         return m_return
 
@@ -410,6 +414,7 @@ class GoLismeroFacadeAuditCommon(object):
             #
             m_audit = Audit()
             m_audit.audit_name = str(data.get("audit_name"))
+            m_audit.audit_type = "import"
 
             # Set user
             m_audit.user = User.objects.get(pk=5)
@@ -458,9 +463,10 @@ class GoLismeroFacadeAuditCommon(object):
             dj.store_path = l_path
 
             # Prepare config
-            m_imports     = list(set((os.path.abspath(y.strip()) for y in data.get("imports"))))
+            tmp_import     = list(set((os.path.abspath(y.strip()) for y in data.get("imports"))))
             # Checks if files exits
-            for x in m_imports:
+            m_imports      = []
+            for x in tmp_import:
                 # File exists?
                 if not os.path.exists(x):
                     raise GoLismeroFacadeAuditImportFileExitsException("File '%s' not exists." % x)
@@ -468,7 +474,32 @@ class GoLismeroFacadeAuditCommon(object):
                 if not os.path.isfile(x):
                     raise GoLismeroFacadeAuditImportFileExitsException("'%s' is not a file." % x)
 
+                # Checks if file is a zip
+                if x.endswith("zip"):
+                    # Extract
+                    try:
+                        l_zip = ZipFile(x)
+
+                        for l_zip_file in l_zip.filelist:
+                            # Checks if file is a dir
+                            if os.path.sep in l_zip_file.filename:
+                                continue
+                            l_zip.extract(l_zip_file, l_path)
+
+                            l_file_name = os.path.join(l_path, l_zip_file.filename)
+                            m_imports.append(l_file_name)
+
+                    except BadZipfile:
+                        raise ValueError("Error zip file format for file: '%s'" % x)
+                else:
+                    m_imports.append(x)
+
+            # Launch command
             AuditBridge.import_audit(dj, m_imports)
+
+            # Update audit state
+            m_audit.audit_state = "running"
+            m_audit.save()
 
             return m_audit.id
         except ValueError,e:
@@ -539,22 +570,23 @@ class GoLismeroFacadeAuditCommon(object):
             audit_config            = GoLismeroAuditData.from_django(m_audit)
             audit_config.store_path = l_path
 
+            #
+            # Create dir to store audit info
+            #
+            if path.exists(l_path):
+                raise GoLismeroFacadeAuditUnknownException("Storage folder for audit already exists: '%s'" % l_path)
+            try:
+                os.mkdir(l_path)
+            except Exception,e:
+                raise GoLismeroFacadeAuditUnknownException("Can't create audit files in: '%s'. Error: %s" % l_path, str(e))
+
+
             try:
                 # Send to GoLismero core
                 AuditBridge.new_audit(audit_config)
             except ExceptionAudit, e:
                 raise GoLismeroFacadeAuditStateException("Error starting audit: %s" % e)
 
-            #
-            # Create dir to store audit info
-            #
-            ##if path.exists(l_path):
-            ##    raise GoLismeroFacadeAuditUnknownException("Storage folder for audit already exists: '%s'" % l_path)
-            try:
-                os.mkdir(l_path)
-            except Exception,e:
-                ##raise GoLismeroFacadeAuditUnknownException("Can't create audit files in: '%s'" % l_path)
-                pass
 
             # Change the state
             m_audit.audit_state = "running"
@@ -580,6 +612,9 @@ class GoLismeroFacadeAuditCommon(object):
 
         try:
             m_audit = Audit.objects.get(pk=audit_id)
+
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
 
             # Checks if state is correct
             if m_audit.audit_state != "running":
@@ -617,6 +652,9 @@ class GoLismeroFacadeAuditCommon(object):
         try:
             m_audit = Audit.objects.get(pk=audit_id)
 
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
+
             # Checks if state is correct
             if m_audit.audit_state != "running":
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is '%s'. Only running audits can be paused." % (str(m_audit.id), m_audit.audit_state))
@@ -651,6 +689,10 @@ class GoLismeroFacadeAuditCommon(object):
             raise TypeError("Expected basestring, got '%s' instead" % type(audit_id))
 
         try:
+
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
+
             m_audit = Audit.objects.get(pk=audit_id)
 
             # Checks if state is correct
@@ -700,7 +742,7 @@ class GoLismeroFacadeAuditCommon(object):
         :returns: string with unique audit ID.
         :rtype: str
         """
-        if not isinstance(audit_id, basestring) and not isinstance(audit_id, int):
+        if not isinstance(audit_id, basestring) and not isinstance(audit_id, int) and not isinstance(audit_id, long):
             raise TypeError("Expected basestring, got '%s' instead" % type(audit_id))
 
         if audit_name:
@@ -746,16 +788,20 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
 
         :raises: GoLismeroFacadeAuditNotFoundException, TypeError
         """
-        if not isinstance(audit_id, basestring) and not isinstance(audit_id, int):
+        try:
+            audit_id = long(audit_id)
+        except TypeError:
             raise TypeError("Expected basestring, got '%s' instead" % type(audit_id))
 
         # Call to GoLismero
         try:
             m_audit = Audit.objects.get(pk=audit_id)
 
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
+
             # If audit is new or finished return
-            if m_audit.audit_state != "running" and\
-               m_audit.audit_state != "error":
+            if m_audit.audit_state != "running":
                 return m_audit.audit_state
 
             #
@@ -763,16 +809,19 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
             #
             m_new_state = None
             try:
-                m_new_state = AuditBridge.get_state(GoLismeroFacadeAuditPolling._get_unique_id(m_audit.id, m_audit.audit_name))
 
-                if m_new_state == "error":
-                    m_audit.audit_state = "finished"
-                    m_audit.save()
-                    GoLismeroFacadeAuditNotStartedException()
+                m_new_state = AuditBridge.get_state(GoLismeroFacadeAuditPolling._get_unique_id(m_audit.id, m_audit.audit_name))
 
                 # Do that because AuditBridge regurns the STAGE, not the state
                 if m_new_state != "finished":
                     m_new_state = "running"
+            except ExceptionAuditNotStarted:
+                m_audit.audit_state = "error"
+                m_audit.save()
+
+                # Audit not working
+                raise GoLismeroFacadeAuditNotStartedException()
+
             except ExceptionAuditNotFound:
                 # Audit not working
                 raise GoLismeroFacadeAuditNotFoundException()
@@ -781,21 +830,23 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
             # Ensure that golismero was generated all reports
             #
             if m_new_state == "finished":
-                m_new_state = None
-                m_total = 0
-                for f in REPORT_FORMATS:
-                    l_folder =  get_user_settings_folder()
-                    l_id     = str(m_audit.id)
-                    l_format = f
-                    l_path   = "%s%s/report.%s" % (l_folder, l_id, f)
 
-                    if os.path.exists(l_path):
-                        m_total +=1
+                # Only when audit type is SCAN type
+                if m_audit.audit_type.lower() == "scan":
+                    m_total = 0
+                    for f in REPORT_FORMATS:
+                        l_folder =  get_user_settings_folder()
+                        l_id     = str(m_audit.id)
+                        l_format = f
+                        l_path   = "%s%s/report.%s" % (l_folder, l_id, f)
 
-                if m_total == len(REPORT_FORMATS):
-                    m_new_state = "finished"
-                else:
-                    m_new_state = "running"
+                        if os.path.exists(l_path):
+                            m_total +=1
+
+                    if m_total == len(REPORT_FORMATS):
+                        m_new_state = "finished"
+                    else:
+                        m_new_state = "running"
 
             #  Update audit state into BBDD
             if m_audit.audit_state != m_new_state:
@@ -831,6 +882,9 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
 
             m_audit = Audit.objects.get(pk=audit_id)
 
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
+
             # If audit are not running return error.
             #if m_audit.audit_state != "running":
                 #raise GoLismeroFacadeAuditStateException("Audit '%s' is not running. Can't obtain progress from not running audits." % str(audit_id))
@@ -841,8 +895,11 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                     # Store the state
                     GoLismeroFacadeState.set_progress(audit_id, r)
                     return r
+            except ExceptionAuditNotStarted:
+                # Audit error when started
+                raise GoLismeroFacadeAuditNotStartedException()
             except ExceptionAuditNotFound:
-                    # Return last progress state
+                # Return last progress state, because audit is finished
                 try:
                     return GoLismeroFacadeState.get_progress(audit_id)
                 except ExceptionAuditNotFound:
@@ -882,6 +939,9 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
 
             m_audit = Audit.objects.get(pk=audit_id)
 
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
+
             # If audit is new, return state
             if m_audit.audit_state == "new":
                 raise GoLismeroFacadeAuditStateException("Audit '%s' is not running. Can't obtain log for non started audits." % str(audit_id))
@@ -897,6 +957,11 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                     return '\n'.join([ "[%s] %s" % (
                         datetime.datetime.fromtimestamp(
                             float(x.to_json['timestamp'])).strftime('%Y-%m-%d %H:%M:%S:%s'), x.to_json['text']) for x in m_info])
+
+            except ExceptionAuditNotStarted:
+                # Audit error when started
+                raise GoLismeroFacadeAuditNotStartedException()
+
             except ExceptionAuditNotFound:
                 # Return last log
                 try:
@@ -904,6 +969,7 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
 
                     return '\n'.join([ "[%s] %s" % (
                         x.to_json['timestamp'].strftime('%Y-%m-%d %H:%M:%S:%s'), x.to_json['text']) for x in m_info])
+
                 except ExceptionAuditNotFound:
                     # If not info stored in database returned general info
                     return ""
@@ -941,6 +1007,9 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
         try:
             m_audit = Audit.objects.get(pk=audit_id)
 
+            if m_audit.audit_state == "error":
+                raise GoLismeroFacadeAuditNotStartedException()
+
             #if m_audit.audit_state != "running":
                 #raise GoLismeroFacadeAuditStateException("Audit not running. Only can get summary from running audits.")
 
@@ -952,6 +1021,10 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                     # Store info
                     GoLismeroFacadeState.set_summary(audit_id, r)
                     return r
+            except ExceptionAuditNotStarted:
+                # Audit error when started
+                raise GoLismeroFacadeAuditNotStartedException()
+
             except ExceptionAuditNotFound,e:
                 try:
                     return GoLismeroFacadeState.get_summary(audit_id).to_json
@@ -1152,7 +1225,7 @@ class GoLismeroFacadeState(object):
 
         # Audit exits?
         try:
-            Audit.objects.get(pk=audit_id)
+            m_audit = Audit.objects.get(pk=audit_id)
         except ObjectDoesNotExist:
             raise GoLismeroFacadeAuditNotFoundException()
 
@@ -1164,11 +1237,15 @@ class GoLismeroFacadeState(object):
             # If not exit the object, create it
             raise GoLismeroFacadeAuditNotFoundException()
 
-        info = {}
+        # If audit current stage is finished, updated
+        if m_audit.current_stage != m_audit_progress.current_stage:
+            m_audit.current_stage = m_audit_progress.current_stage
+            m_audit_progress.save()
 
+        info = {}
         # Checks if all parameters are equals
         for x in GoLismeroAuditProgress.PROPERTIES:
-            setattr(info, x, getattr(m_audit_progress, x))
+            info[x] = getattr(m_audit_progress, x)
 
         return GoLismeroAuditProgress(info)
 
