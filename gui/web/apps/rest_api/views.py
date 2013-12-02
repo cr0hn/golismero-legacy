@@ -1,3 +1,4 @@
+from django.utils.datastructures import MultiValueDictKeyError
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet, ModelViewSet
@@ -13,7 +14,8 @@ from backend.rest_api.authentication import ExpiringTokenAuthentication
 from backend.rest_api.serializers import *
 
 from backend.managers.golismero_facade import *
-from backend.managers import GoLismeroAuditData, CONTENT_TYPES_BY_FORMAT
+from backend.managers import *
+from time import time
 
 #
 # This file defines the actions for the API-REST
@@ -31,354 +33,355 @@ class PushingViewSet(ViewSet):
     """
     Pushing with plugins
     """
+    #----------------------------------------------------------------------
     def push_progress(self, request, *args, **kwargs): # /push/progress/
         """
         This method updates the progress for an audit.
 
         Params must be received as:
-
-        {
-           'audit'      :: str,
-           'token'         :: str,
-           'params' :
-           {
-              'current_stage' :: str,
-              'steps'         :: int,
-              'tests_remain'  :: int,
-              'tests_done'    :: int
-           }
-        }
-
-        :errors:
-
-        code 0 -> parameter missed.
-        code 1 -> audit not found
+        [
+           AUDIT_NAME    :: str
+           CURRENT_STAGE :: str,
+           STEPS         :: INT,
+           TEST_REMAIN   :: INT,
+           TEST_DONE     :: INT,
+        ]
         """
 
-        #
-        # Checks for all input params
-        #
-        # Request has params?
-        m_params = request.DATA.get("params", None)
-        if not m_params:
-            Response({"error" : "params key 'params' missed." % i, "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
-
-        #
-        # Checks params
+        # Convert input data
         try:
-            m_progress = GoLismeroAuditProgress(m_params)
-        except ValueError, e:
-            Response({"error" : e.message, "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
+            l_audit_id      = request.DATA[0]
+            l_current_stage = request.DATA[1]
+            l_steps         = request.DATA[2]
+            l_tests_remain  = request.DATA[3]
+            l_test_done     = request.DATA[4]
+        except KeyError, e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+        except IndexError,e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+        except MultiValueDictKeyError, e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+
+        if l_audit_id is None:
+            return Response({"error" : "Audit is required.", "error_code" : -1}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Convert golismero core
+        l_audit_id = l_audit_id.split("_")[-1]
+
+        m_progress =  {
+          'current_stage' : l_current_stage,
+          'steps'         : l_steps,
+          'tests_remain'  : l_tests_remain,
+          'tests_done'    : l_test_done
+        }
 
 
-        # Additional info
-        m_audit = request.DATA.get("audit", None)
-        m_token = request.DATA.get("audit", "sample_token")
-
-        # Checks additional params
-        if not m_audit and not m_token:
-            Response({"error" : "Some para missed.", "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
+        #
+        # Update
         try:
-            # Resquest to core
-            GoLismeroFacadeState.set_progress(m_audit, m_progress)
+            GoLismeroFacadeState.set_progress(
+                l_audit_id,
+                GoLismeroAuditProgress(m_progress)
+            )
 
-            m_return['status']       = "ok"
+            return Response(data={"status" : "ok"})
 
-            return Response(m_return)
-
-        except GoLismeroFacadeAuditNotFoundException:
-            m_return['status']      = "error"
-            m_return['error_code']  = 0
-            m_return['error']       = ["Provided audit ID not exits"]
-
-            return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-        # Unknown exception
-        except Exception, e:
-            m_return['status']      = "error"
-            m_return['error_code']  = -1
-            m_return['error']       = ["Unknown error: %s" % str(e)]
-
-            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+        except GoLismeroFacadeAuditNotFoundException, e:
+            Response({"error" : "Audit not exists.", "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
 
 
-    def push_summary(self, request, *args, **kwargs):
+
+
+    #----------------------------------------------------------------------
+    def push_summary(self, request, *args, **kwargs): # /push/summary/
         """
         This method updates the summary for an audit.
 
         Params must be received as:
-        {
-           'audit_id'      :: str,
-           'token'         :: str,
-           'params' :   {
-              'vulns_number'            = int
-              'discovered_hosts'        = int # Host discovered into de scan process
-              'total_hosts'             = int
-              'vulns_by_level'          = {
-                 'info'     : int,
-                 'low'      : int,
-                 'medium'   : int,
-                 'high'     : int,
-                 'critical' : int,
-               }
-            }
-        }
+        [
+          AUDIT_NAME           :: str,
+          VULN_NUMBER          :: int,
+          DISCOVERED_HOSTS     :: int,
+          TOTAL_HOSTS          :: int,
+          VULN_NUMBER_INFO     :: int,
+          VULN_NUMBER_LOW      :: int,
+          VULN_NUMBER_MEDIUM   :: int,
+          VULN_NUMBER_HIGH     :: int,
+          VULN_NUMBER_CRITICAL :: int,
+
+        ]
         """
-
-        #
-        # Checks for all input params
-        #
-        # Request has params?
-        m_params = request.DATA.get("params", None)
-        if not m_params:
-            Response({"error" : "params key 'params' missed." % i, "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
-
-        #
-        # Checks params
+        # Convert input data
         try:
-            m_summary = GoLismeroAuditSummary(m_params)
-        except ValueError, e:
-            Response({"error" : e.message, "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
+            l_audit_id           = request.DATA[0]
+            l_vuln_number        = request.DATA[1]
+            l_discovered_hosts   = request.DATA[2]
+            l_total_hosts        = request.DATA[3]
+
+            l_vuln_num_low       = request.DATA[4]
+            l_vuln_num_info      = request.DATA[5]
+            l_vuln_num_medium    = request.DATA[6]
+            l_vuln_num_high      = request.DATA[7]
+            l_vuln_num_critical  = request.DATA[8]
+        except KeyError, e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+        except IndexError,e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+        except MultiValueDictKeyError, e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+
+        if l_audit_id is None:
+            return Response({"error" : "Audit is required.", "error_code" : -1}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Convert golismero core
+        l_audit_id = l_audit_id.split("_")[-1]
+
+        m_summary =  {
+            'vulns_number'            : l_vuln_number,
+            'discovered_hosts'        : l_discovered_hosts,
+            'total_hosts'             : l_total_hosts,
+            'vulns_by_level'          : {
+               'info'     : l_vuln_num_info,
+               'low'      : l_vuln_num_low,
+               'medium'   : l_vuln_num_medium,
+               'high'     : l_vuln_num_high,
+               'critical' : l_vuln_num_critical,
+             }
+        }
 
 
-        # Additional info
-        m_audit = request.DATA.get("audit", None)
-        m_token = request.DATA.get("audit", "sample_token")
-
-        # Checks additional params
-        if not m_audit and not m_token:
-            Response({"error" : "Some para missed.", "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
+        #
+        # Update
         try:
-            # Resquest to core
-            GoLismeroFacadeState.summary(m_audit, m_summary)
+            GoLismeroFacadeState.set_summary(
+                l_audit_id,
+                GoLismeroAuditSummary(m_summary)
+            )
 
-            m_return['status']       = "ok"
+            return Response(data={"status" : "ok"})
 
-            return Response(m_return)
-
-        except GoLismeroFacadeAuditNotFoundException:
-            m_return['status']      = "error"
-            m_return['error_code']  = 0
-            m_return['error']       = ["Provided audit ID not exits"]
-
-            return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-        # Unknown exception
-        except Exception, e:
-            m_return['status']      = "error"
-            m_return['error_code']  = -1
-            m_return['error']       = ["Unknown error: %s" % str(e)]
-
-            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+        except GoLismeroFacadeAuditNotFoundException, e:
+            Response({"error" : "Audit not exists.", "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
+    #----------------------------------------------------------------------
     def push_log(self, request, *args, **kwargs): # /push/log/ ##
         """
         This method updates the audit log.
 
         Params must be received as:
-        {
-           'audit_id'      :: str,
-           'token'         :: str,
-           'params' : {
-             plugin_id :: str
-             text      :: str
-             level     :: int
-           }
+        [
+           AUDIT_NAME :: str,
+           PLUGIN_ID  :: str,
+           IDENTITY   :: str,
+           TEXT       :: str,
+           LEVEL      :: int,
+           VERBOSITY  :: int
+        ]
         """
 
-        #
-        # Checks for all input params
-        #
-        # Request has params?
-        m_params = request.DATA.get("params", None)
-        if not m_params:
-            Response({"error" : "params key 'params' missed." % i, "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
-
-        #
-        # Checks params
+        # Convert input data
         try:
-            m_info = GoLismeroAuditInfo(m_params)
-        except ValueError, e:
-            Response({"error" : e.message, "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
+            l_audit_id    = request.DATA[0]
+            l_plugin_id   = request.DATA[1]
+            l_identity    = request.DATA[2]
+            l_text        = request.DATA[3]
+            l_level       = request.DATA[4]
+        except KeyError, e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+        except IndexError,e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+        except MultiValueDictKeyError, e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
 
+        if l_audit_id is None:
+            return Response({"error" : "Audit is required.", "error_code" : -1}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Additional info
-        m_audit = request.DATA.get("audit", None)
-        m_token = request.DATA.get("audit", "sample_token")
-
-        # Checks additional params
-        if not m_audit and not m_token:
-            Response({"error" : "Some para missed.", "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
-
-
+        # Convert golismero core
+        l_audit_id = l_audit_id.split("_")[-1]
 
         try:
-            # Resquest to core
-            GoLismeroFacadeState.log(m_audit, m_info)
+            # Update
+            GoLismeroFacadeState.set_log(
+                l_audit_id,
+                [GoLismeroAuditLog({
+                    'is_error' : False,
+                    'text'     : l_text,
+                    'level'    : l_level,
+                    'verbosity': l_level,
+                    'timestamp': time()
+                })]
+            )
 
-            m_return['status']       = "ok"
+            return Response(data={"status" : "ok"})
 
-            return Response(m_return)
-
-        except GoLismeroFacadeAuditNotFoundException:
-            m_return['status']      = "error"
-            m_return['error_code']  = 0
-            m_return['error']       = ["Provided audit ID not exits"]
-
-            return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-        # Unknown exception
-        except Exception, e:
-            m_return['status']      = "error"
-            m_return['error_code']  = -1
-            m_return['error']       = ["Unknown error: %s" % str(e)]
-
-            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+        except GoLismeroFacadeAuditNotFoundException, e:
+            Response({"error" : "Audit not exists.", "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
-    def push_perrors(self, request, *args, **kwargs): # /push/perrors/ ##
+
+
+    #----------------------------------------------------------------------
+    def push_perrors(self, request, *args, **kwargs): # /push/errors/ ##
         """
         This method updates audit plugins errors.
 
         Params must be received as:
-        {
-           'audit_id'      :: str,
-           'token'         :: str,
-           'params' : {
-             plugin_id :: str
-             text      :: str
-             level     :: int
-           }
-        }
+        [
+           AUDIT_NAME    :: str
+           PLUGIN_ID     :: str,
+           IDENTITY      :: str,
+           TEXT          :: str,
+           LEVEL         :: str,
+           VERBOSITY     :: int,
+        ]
         """
-
-        #
-        # Checks for all input params
-        #
-        # Request has params?
-        m_params = request.DATA.get("params", None)
-        if not m_params:
-            Response({"error" : "params key 'params' missed." % i, "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
-
-        #
-        # Checks params
+        # Convert input data
         try:
-            m_info = GoLismeroAuditInfo(m_params)
-        except ValueError, e:
-            Response({"error" : e.message, "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
+            l_audit_id     = request.DATA[0]
+            l_text         = request.DATA[3]
+            l_level        = request.DATA[4]
+            l_verbosity    = request.DATA[5]
+        except KeyError, e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+        except IndexError,e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+        except MultiValueDictKeyError, e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+
+        if l_audit_id is None:
+            return Response({"error" : "Audit is required.", "error_code" : -1}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Convert golismero core
+        l_audit_id = l_audit_id.split("_")[-1]
 
 
-        # Additional info
-        m_audit = request.DATA.get("audit", None)
-        m_token = request.DATA.get("audit", "sample_token")
-
-        # Checks additional params
-        if not m_audit and not m_token:
-            Response({"error" : "Some para missed.", "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
-
-
+        data = {
+            'text'     : l_text,
+            'level'    : l_level,
+            'is_error' : True,
+            'verbosity': l_verbosity,
+            'timestamp': time()
+        }
 
         try:
-            # Resquest to core
-            GoLismeroFacadeState.plugin_errors(m_audit, m_info)
+            # Update
+            GoLismeroFacadeState.set_plugin_errors(
+                l_audit_id,
+                GoLismeroAuditInfo(data)
+            )
 
-            m_return['status']       = "ok"
+            return Response(data={"status" : "ok"})
 
-            return Response(m_return)
-
-        except GoLismeroFacadeAuditNotFoundException:
-            m_return['status']      = "error"
-            m_return['error_code']  = 0
-            m_return['error']       = ["Provided audit ID not exits"]
-
-            return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-        # Unknown exception
-        except Exception, e:
-            m_return['status']      = "error"
-            m_return['error_code']  = -1
-            m_return['error']       = ["Unknown error: %s" % str(e)]
-
-            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+        except GoLismeroFacadeAuditNotFoundException, e:
+            Response({"error" : "Audit not exists.", "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
 
 
-    def push_pwarning(self, request, *args, **kwargs): # /push/pwarning/ ##
+    #----------------------------------------------------------------------
+    def push_pwarning(self, request, *args, **kwargs): # /push/warning/ ##
         """
         This method updates audit warnings.
 
         Params must be received as:
-        {
-           'audit_id'      :: str,
-           'token'         :: str,
-           'params' : {
-             plugin_id :: str
-             text      :: str
-             level     :: int
-           }
-        }
+        [
+           AUDIT_NAME    :: str
+           PLUGIN_ID     :: str,
+           IDENTITY      :: str,
+           TEXT          :: str,
+           LEVEL         :: str,
+           VERBOSITY     :: int,
+        ]
         """
-
-        #
-        # Checks for all input params
-        #
-        # Request has params?
-        m_params = request.DATA.get("params", None)
-        if not m_params:
-            Response({"error" : "params key 'params' missed." % i, "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
-
-        #
-        # Checks params
+        print request.DATA
+        return Response()
+        # Convert input data
         try:
-            m_info = GoLismeroAuditInfo(m_params)
-        except ValueError, e:
-            Response({"error" : e.message, "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
+            l_audit_id     = request.DATA[0]
+            l_text         = request.DATA[3]
+            l_level        = request.DATA[4]
+            l_verbosity    = request.DATA[5]
+        except KeyError, e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+        except IndexError,e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+        except MultiValueDictKeyError, e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+
+        if l_audit_id is None:
+            return Response({"error" : "Audit is required.", "error_code" : -1}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Convert golismero core
+        l_audit_id = l_audit_id.split("_")[-1]
 
 
-        # Additional info
-        m_audit = request.DATA.get("audit", None)
-        m_token = request.DATA.get("audit", "sample_token")
-
-        # Checks additional params
-        if not m_audit and not m_token:
-            Response({"error" : "Some para missed.", "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
-
-
+        data = {
+            'text'     : l_text,
+            'level'    : l_level,
+            'is_error' : False,
+            'verbosity': l_verbosity,
+            'timestamp': time()
+        }
 
         try:
-            # Resquest to core
-            GoLismeroFacadeState.plugin_warning(m_audit, m_info)
+            # Update
+            GoLismeroFacadeState.set_plugin_warning(
+                l_audit_id,
+                GoLismeroAuditInfo(data)
+            )
 
-            m_return['status']       = "ok"
+            return Response(data={"status" : "ok"})
 
-            return Response(m_return)
-
-        except GoLismeroFacadeAuditNotFoundException:
-            m_return['status']      = "error"
-            m_return['error_code']  = 0
-            m_return['error']       = ["Provided audit ID not exits"]
-
-            return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-        # Unknown exception
-        except Exception, e:
-            m_return['status']      = "error"
-            m_return['error_code']  = -1
-            m_return['error']       = ["Unknown error: %s" % str(e)]
-
-            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+        except GoLismeroFacadeAuditNotFoundException, e:
+            Response({"error" : "Audit not exists.", "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
 
 
+    #----------------------------------------------------------------------
     def push_stage(self, request, *args, **kwargs): # /push/stage/ ##
+        """
+        This method updates audit stage.
+
+        Params must be received as:
+        [
+           AUDIT_NAME    :: str
+           CURRENT_STAGE :: str,
+        ]
+        """
+        # Convert input data
+        try:
+            l_audit_id     = request.DATA[0]
+            l_audit_stage  = request.DATA[1]
+        except KeyError, e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+        except IndexError,e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+        except MultiValueDictKeyError, e:
+            return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+
+        if l_audit_id is None:
+            return Response({"error" : "Audit is required.", "error_code" : -1}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Convert golismero core
+        l_audit_id = l_audit_id.split("_")[-1]
+
+        try:
+            # Update
+            GoLismeroFacadeState.set_stage(
+                l_audit_id,
+                l_audit_stage
+            )
+
+            return Response(data={"status" : "ok"})
+
+        except GoLismeroFacadeAuditNotFoundException, e:
+            Response({"error" : "Audit not exists.", "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+    #----------------------------------------------------------------------
+    def push_start_ui(self, request, *args, **kwargs): # /push/start_ui/ ##
         """
         This method updates audit stage.
 
@@ -392,60 +395,8 @@ class PushingViewSet(ViewSet):
         }
         """
 
-        #
-        # Checks for all input params
-        #
-        # Request has params?
-        m_params = request.DATA.get("params", None)
-        if not m_params:
-            Response({"error" : "params key 'params' missed." % i, "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
-
-        #
-        # Checks params
-        try:
-            m_info = GoLismeroAuditInfo(m_params)
-        except ValueError, e:
-            Response({"error" : e.message, "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
-
-
-        # Additional info
-        m_audit = request.DATA.get("audit", None)
-        m_token = request.DATA.get("audit", "sample_token")
-
-        # Checks additional params
-        if not m_audit and not m_token:
-            Response({"error" : "Some para missed.", "error_code" : 0}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-        try:
-            # Resquest to core
-            GoLismeroFacadeState.stage(m_audit, m_info)
-
-            m_return['status']       = "ok"
-
-            return Response(m_return)
-
-        except GoLismeroFacadeAuditNotFoundException:
-            m_return['status']      = "error"
-            m_return['error_code']  = 0
-            m_return['error']       = ["Provided audit ID not exits"]
-
-            return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-        # Unknown exception
-        except Exception, e:
-            m_return['status']      = "error"
-            m_return['error_code']  = -1
-            m_return['error']       = ["Unknown error: %s" % str(e)]
-
-            return Response(m_return, status.HTTP_400_BAD_REQUEST)
-
-
-
-
-
-
+        print "Backend started"
+        return  Response()
 
 #------------------------------------------------------------------------------
 #
@@ -490,7 +441,7 @@ class AuditViewSet(ViewSet):
 
         m_return = {
             'status'  : 'ok',
-            'results' : [x.to_json_brief for x in GoLismeroFacadeAuditPolling.list_audits()]
+            'results' : [x.to_json_brief for x in GoLismeroFactory.get_instance().list_audits()]
         }
 
         return Response(m_return)
@@ -538,7 +489,7 @@ class AuditViewSet(ViewSet):
                 return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
         m_return['status']  = "ok"
-        m_return['results'] = [x.to_json_brief for x in GoLismeroFacadeAuditPolling.list_audits(m_state)]
+        m_return['results'] = [x.to_json_brief for x in GoLismeroFactory.get_instance().list_audits(m_state)]
 
         return Response(m_return)
 
@@ -696,7 +647,7 @@ class AuditViewSet(ViewSet):
         #
         m_audit_id = None
         try:
-            m_audit_id = GoLismeroFacadeAuditPolling.create(m_info)
+            m_audit_id = GoLismeroFactory.get_instance().create(m_info)
         except ValueError,e:
             m_return['status']      = "error"
             m_return['error_code']  = 1
@@ -867,7 +818,7 @@ class AuditViewSet(ViewSet):
         #
         m_audit_id = None
         try:
-            m_audit_id = GoLismeroFacadeAuditPolling.audit_import(m_info)
+            m_audit_id = GoLismeroFactory.get_instance().audit_import(m_info)
         except ValueError,e:
             m_return['status']      = "error"
             m_return['error_code']  = 1
@@ -892,6 +843,13 @@ class AuditViewSet(ViewSet):
             m_return['error']       = [str(e)]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+        except GoLismeroFacadeTimeoutException:
+            m_return['status']      = "error"
+            m_return['error_code']  = -2
+            m_return['error']       = ["Timeout when try to connect with the core"]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+
         m_return['status']        = "ok"
         m_return['audit_id']      = m_audit_id
 
@@ -913,7 +871,7 @@ class AuditViewSet(ViewSet):
         m_return       = {}
 
         try:
-            GoLismeroFacadeAuditPolling.delete(m_audit_id)
+            GoLismeroFactory.get_instance().delete(m_audit_id)
             m_return['status']       = "ok"
 
             return Response(m_return)
@@ -952,7 +910,7 @@ class AuditViewSet(ViewSet):
         m_return       = {}
 
         try:
-            r                        = GoLismeroFacadeAuditPolling.get_audit(m_audit_id)
+            r                        = GoLismeroFactory.get_instance().get_audit(m_audit_id)
             m_return['status']       = "ok"
             m_return.update(r.to_json)
 
@@ -993,7 +951,7 @@ class AuditViewSet(ViewSet):
         m_return       = {}
 
         try:
-            GoLismeroFacadeAuditPolling.start(m_audit_id)
+            GoLismeroFactory.get_instance().start(m_audit_id)
             m_return['status']       = "ok"
 
             return Response(m_return)
@@ -1011,6 +969,12 @@ class AuditViewSet(ViewSet):
             m_return['error_code']  = 0
             m_return['error']       = ["Provided audit ID not exits"]
 
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+        except GoLismeroFacadeTimeoutException:
+            m_return['status']      = "error"
+            m_return['error_code']  = -2
+            m_return['error']       = ["Timeout when try to connect with the core"]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
         # Unknown exception
@@ -1053,6 +1017,12 @@ class AuditViewSet(ViewSet):
 
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+        except GoLismeroFacadeTimeoutException:
+            m_return['status']      = "error"
+            m_return['error_code']  = -2
+            m_return['error']       = ["Timeout when try to connect with the core"]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
         except GoLismeroFacadeAuditNotStartedException,e:
             m_return['status']      = "error"
             m_return['error_code']  = -1
@@ -1086,7 +1056,7 @@ class AuditViewSet(ViewSet):
 
         m_info = None
         try:
-            m_info = GoLismeroFacadeAuditPolling.get_state(m_audit_id)
+            m_info = GoLismeroFactory.get_instance().get_state(m_audit_id)
 
             #
             # Returns info
@@ -1111,6 +1081,11 @@ class AuditViewSet(ViewSet):
             m_return['error']       = ["Requested audit when try to start it and not started."]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+        except GoLismeroFacadeTimeoutException:
+            m_return['status']      = "error"
+            m_return['error_code']  = -2
+            m_return['error']       = ["Timeout when try to connect with the core"]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
         # Unknown exception
         except Exception, e:
@@ -1141,7 +1116,7 @@ class AuditViewSet(ViewSet):
 
         m_info = None
         try:
-            m_info = GoLismeroFacadeAuditPolling.get_progress(m_audit_id).to_json
+            m_info = GoLismeroFactory.get_instance().get_progress(m_audit_id).to_json
 
             #
             # Returns info
@@ -1179,6 +1154,12 @@ class AuditViewSet(ViewSet):
             m_return['status']      = "error"
             m_return['error_code']  = -1
             m_return['error']       = ["Requested audit when try to start it and not started."]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
+
+        except GoLismeroFacadeTimeoutException:
+            m_return['status']      = "error"
+            m_return['error_code']  = -2
+            m_return['error']       = ["Timeout when try to connect with the core"]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
 
@@ -1229,6 +1210,11 @@ class AuditViewSet(ViewSet):
             m_return['error']       = ["Requested audit when try to start it and not started."]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+        except GoLismeroFacadeTimeoutException:
+            m_return['status']      = "error"
+            m_return['error_code']  = -2
+            m_return['error']       = ["Timeout when try to connect with the core"]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
         # Unknown exception
         except Exception, e:
@@ -1278,6 +1264,11 @@ class AuditViewSet(ViewSet):
             m_return['error']       = ["Requested audit when try to start it and not started."]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+        except GoLismeroFacadeTimeoutException:
+            m_return['status']      = "error"
+            m_return['error_code']  = -2
+            m_return['error']       = ["Timeout when try to connect with the core"]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
         # Unknown exception
         except Exception, e:
@@ -1303,7 +1294,7 @@ class AuditViewSet(ViewSet):
         m_return       = {}
 
         try:
-            m_return['log']       = GoLismeroFacadeAuditPolling.get_log(m_audit_id)
+            m_return['log']       = GoLismeroFactory.get_instance().get_log(m_audit_id)
             m_return['status']    = "ok"
 
             return Response(m_return)
@@ -1329,7 +1320,11 @@ class AuditViewSet(ViewSet):
             m_return['error']       = ["Requested audit when try to start it and not started."]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
-
+        except GoLismeroFacadeTimeoutException:
+            m_return['status']      = "error"
+            m_return['error_code']  = -2
+            m_return['error']       = ["Timeout when try to connect with the core"]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
         # Unknown exception
         except Exception, e:
@@ -1365,7 +1360,7 @@ class AuditViewSet(ViewSet):
         m_return       = {}
 
         try:
-            f = GoLismeroFacadeAuditPolling.get_results(m_audit_id, m_format)
+            f = GoLismeroFactory.get_instance().get_results(m_audit_id, m_format)
 
             return Response(f.read(), content_type=CONTENT_TYPES_BY_FORMAT[m_format])
 
@@ -1438,7 +1433,7 @@ class AuditViewSet(ViewSet):
 
         m_info = None
         try:
-            m_info = GoLismeroFacadeAuditPolling.get_results_summary(m_audit_id)
+            m_info = GoLismeroFactory.get_instance().get_results_summary(m_audit_id)
 
             #
             # Returns info
@@ -1478,6 +1473,11 @@ class AuditViewSet(ViewSet):
             m_return['error']       = ["Requested audit when try to start it and not started."]
             return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
+        except GoLismeroFacadeTimeoutException:
+            m_return['status']      = "error"
+            m_return['error_code']  = -2
+            m_return['error']       = ["Timeout when try to connect with the core"]
+            return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
         # Unknown exception
         except Exception, e:
