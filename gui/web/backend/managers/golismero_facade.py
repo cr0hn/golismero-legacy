@@ -45,7 +45,8 @@ Scheme of process is:
 
 """
 
-__all__ = ["GoLismeroFacadeAuditPolling",
+__all__ = ["GoLismeroFactory",
+           "GoLismeroFacadeAuditPolling",
            "GoLismeroFacadeState",
            "GoLismeroFacadeAuditNotAllowedHostException",
            "GoLismeroFacadeAuditNotFoundException",
@@ -73,7 +74,7 @@ from backend.utils import *
 
 from django.contrib.auth.models import User
 from django.db.models import ObjectDoesNotExist
-
+from django.conf import settings
 
 
 #----------------------------------------------------------------------
@@ -116,7 +117,7 @@ class GoLismeroFacadeTimeoutException(Exception):
 # Audit methods: Polling and pushing aproaches.
 #
 #------------------------------------------------------------------------------
-class GoLismeroFacadeAuditCommon(object):
+class GoLismeroFacadeAudit(object):
     """
     This class acts as Facade between REST API and GoLismero Backend.
     """
@@ -781,7 +782,11 @@ class GoLismeroFacadeAuditCommon(object):
 
 
 #------------------------------------------------------------------------------
-class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
+#
+# Polling aproach
+#
+#------------------------------------------------------------------------------
+class GoLismeroFacadeAuditPolling(GoLismeroFacadeAudit):
     """
     This calls implements real time methods using polling.
     """
@@ -925,7 +930,7 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                 # Return last progress state, because audit is finished
                 try:
                     return GoLismeroFacadeState.get_progress(audit_id)
-                except ExceptionAuditNotFound:
+                except GoLismeroFacadeAuditNotFoundException:
                     # If not info stored in database returned general info
                     return GoLismeroAuditProgress({
                         'current_stage' : "cleanup",
@@ -995,7 +1000,7 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
                     return '\n'.join([ "[%s] %s" % (
                         x.to_json['timestamp'].strftime('%Y-%m-%d %H:%M:%S:%s'), x.to_json['text']) for x in m_info])
 
-                except ExceptionAuditNotFound:
+                except GoLismeroFacadeAuditNotFoundException:
                     # If not info stored in database returned general info
                     return ""
 
@@ -1075,11 +1080,12 @@ class GoLismeroFacadeAuditPolling(GoLismeroFacadeAuditCommon):
 
 
 
-
-
-
 #------------------------------------------------------------------------------
-class GoLismeroFacadeAuditPushing(GoLismeroFacadeAuditCommon):
+#
+# Pushing aproach
+#
+#------------------------------------------------------------------------------
+class GoLismeroFacadeAuditPushing(GoLismeroFacadeAudit):
     """
     This calls implements real time methods using polling.
     """
@@ -1104,7 +1110,12 @@ class GoLismeroFacadeAuditPushing(GoLismeroFacadeAuditCommon):
 
         :raises: GoLismeroFacadeAuditNotFoundException, TypeError
         """
-        raise NotImplemented()
+        try:
+            m_audit = Audit.objects.get(pk=audit_id)
+
+            return m_audit.audit_state
+        except ObjectDoesNotExist:
+            raise GoLismeroFacadeAuditNotFoundException()
 
     #----------------------------------------------------------------------
     @staticmethod
@@ -1120,7 +1131,18 @@ class GoLismeroFacadeAuditPushing(GoLismeroFacadeAuditCommon):
 
         :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditRunningException, TypeError, GoLismeroFacadeAuditFinishedException
         """
-        raise NotImplemented()
+        try:
+            return GoLismeroFacadeState.get_progress(audit_id)
+        except GoLismeroFacadeAuditNotFoundException:
+            # If not info stored in database returned general info
+            return GoLismeroAuditProgress({
+                'current_stage' : "running",
+                'steps'         : 0,
+                'tests_remain'  : 0,
+                'tests_done'    : 0,
+              })
+
+
 
 
     #----------------------------------------------------------------------
@@ -1139,7 +1161,15 @@ class GoLismeroFacadeAuditPushing(GoLismeroFacadeAuditCommon):
 
         :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException, TypeError
         """
-        raise NotImplemented()
+        try:
+            m_info = GoLismeroFacadeState.get_log(audit_id)
+
+            return '\n'.join([ "[%s] %s" % (
+                x.to_json['timestamp'].strftime('%Y-%m-%d %H:%M:%S:%s'), x.to_json['text']) for x in m_info])
+
+        except GoLismeroFacadeAuditNotFoundException:
+            return ""
+
 
     #----------------------------------------------------------------------
     @staticmethod
@@ -1166,10 +1196,59 @@ class GoLismeroFacadeAuditPushing(GoLismeroFacadeAuditCommon):
 
         :raises: GoLismeroFacadeAuditNotFoundException, GoLismeroFacadeAuditStateException
         """
-        raise NotImplemented()
+        try:
+            return GoLismeroFacadeState.get_summary(audit_id).to_json
+        except GoLismeroFacadeAuditNotFoundException:
+            # If not info stored in database, returned only total hosts scanned
+            try:
+                m_audit = Audit.objects.get(pk=audit_id)
+            except ObjectDoesNotExist:
+                raise GoLismeroFacadeAuditNotFoundException()
+
+            return {
+                'vulns_number'            : '0',
+                'discovered_hosts'        : len(m_audit.targets.all()),
+                'total_hosts'             : '0',
+                'vulns_by_level'          : {
+                    'info'     : '0',
+                    'low'      : '0',
+                    'medium'   : '0',
+                    'high'     : '0',
+                    'critical' : '0',
+                }
+            }
 
 
 
+
+#------------------------------------------------------------------------------
+#
+# Factory method
+#
+#------------------------------------------------------------------------------
+class GoLismeroFactory(object):
+
+    #----------------------------------------------------------------------
+    @staticmethod
+    def get_instance():
+        """
+        Get Facade action class.
+
+        It can return a push mode or polling mode.
+
+        :return: GoLismeroFacadeAudit class.
+        :rtype: GoLismeroFacadeAudit
+        """
+        if settings.GOLISMERO_PUSH_MODE:
+            return GoLismeroFacadeAuditPushing
+        else:
+            return GoLismeroFacadeAuditPolling
+
+
+#------------------------------------------------------------------------------
+#
+# Savers class
+#
 #------------------------------------------------------------------------------
 class GoLismeroFacadeState(object):
     """
@@ -1249,7 +1328,6 @@ class GoLismeroFacadeState(object):
         :raises: GoLismeroFacadeAuditNotFoundException
         """
 
-
         # Audit exits?
         try:
             m_audit = Audit.objects.get(pk=audit_id)
@@ -1259,10 +1337,12 @@ class GoLismeroFacadeState(object):
         # Get Audit progress old info
         m_audit_progress = None
         try:
-            m_audit_progress = RTAuditProgress.objects.get(pk=audit_id)
-        except ObjectDoesNotExist:
+            m_audit_progress = RTAuditProgress.objects.get(audit=audit_id)
+        except ObjectDoesNotExist,e:
+            print e
             # If not exit the object, create it
-            raise GoLismeroFacadeAuditNotFoundException()
+            raise GoLismeroFacadeAuditNotFoundException(e)
+
 
         # If audit current stage is finished, updated
         if m_audit.current_stage != m_audit_progress.current_stage:
@@ -1497,7 +1577,7 @@ class GoLismeroFacadeState(object):
 
     #----------------------------------------------------------------------
     @staticmethod
-    def set_stage(audit_id, token=None):
+    def get_stage(audit_id, token=None):
         """
         Get audit stage
 
@@ -1515,11 +1595,6 @@ class GoLismeroFacadeState(object):
             return m_audit.current_stage
         except ObjectDoesNotExist:
             raise GoLismeroFacadeAuditNotFoundException()
-
-
-
-
-
 
 
 
@@ -1570,7 +1645,7 @@ class GoLismeroFacadeState(object):
 
         # Set properties
         for x in GoLismeroAuditInfo.PROPERTIES:
-            setattr(m_info, x, d[x])
+            setattr(m_info, x, data[x])
 
         # Save changes
         m_info.save()
@@ -1639,8 +1714,8 @@ class GoLismeroFacadeState(object):
         :param audit_id: Audit id.
         :type audit_id: str
 
-        :param data: Progress object
-        :type data: GoLismeroAuditProgress
+        :param data: GoLismeroAuditInfo object
+        :type data: GoLismeroAuditInfo
 
         :param token: auth token
         :type token: str
@@ -1674,8 +1749,8 @@ class GoLismeroFacadeState(object):
         :param audit_id: Audit id.
         :type audit_id: str
 
-        :param data: Progress object
-        :type data: GoLismeroAuditProgress
+        :param data: GoLismeroAuditInfo object
+        :type data: GoLismeroAuditInfo
 
         :param token: auth token
         :type token: str
