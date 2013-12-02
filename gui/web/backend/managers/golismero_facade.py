@@ -1291,6 +1291,10 @@ class GoLismeroFacadeState(object):
             m_audit_progress.audit = m_audit
             m_audit_progress.save()
 
+        # Fix stage name: report -> cleanup
+        if data["current_stage"] == "report":
+            data["current_stage"] = "cleanup"
+
         # Checks if all parameters are equals
         save = False
         for x in GoLismeroAuditProgress.PROPERTIES:
