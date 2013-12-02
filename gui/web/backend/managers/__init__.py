@@ -106,10 +106,6 @@ class _AbstractInfo(object):
         """
         return self.__json_info
 
-
-
-
-
     #----------------------------------------------------------------------
     def __getitem__(self, value):
         return self.__json_info[value]
@@ -223,10 +219,10 @@ class GoLismeroAuditSummary(_AbstractInfo):
         Load data from JSON, in format:
 
         {
-        'vulns_number'            = int
-        'discovered_hosts'        = int # Host discovered into de scan process
-        'total_hosts'             = int
-        'vulns_by_level'          = {
+        'vulns_number'            : int
+        'discovered_hosts'        : int # Host discovered into de scan process
+        'total_hosts'             : int
+        'vulns_by_level'          : {
            'info'     : int,
            'low'      : int,
            'medium'   : int,
