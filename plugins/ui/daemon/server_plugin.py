@@ -51,6 +51,7 @@ import warnings
 
 # Import the XML-RPC <-> GoLismero bridge.
 from imp import load_source
+from os import getpid
 from os.path import abspath, join, split
 server_bridge = load_source(
     "server_bridge",
@@ -236,17 +237,16 @@ class WebUIPlugin(UIPlugin):
                 id_dict[message.ack_identity] = simple_id
 
                 # Call the notification method.
-                self.notify_progress(
-                    message.audit_name, message.plugin_id,
-                    message.ack_identity, 0.0)
+                self.notify_progress(message.audit_name)
 
             # A plugin has finished processing a Data object.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_END:
 
                 # Call the notification method.
-                self.notify_progress(
-                    message.audit_name, message.plugin_id,
-                    message.ack_identity, 100.0)
+                self.notify_progress(message.audit_name)
+
+                # Call to the summary
+                self.notify_summary(message.audit_name)
 
                 # Free the simple ID for the plugin execution.
                 del self.current_plugins[message.audit_name]\
@@ -255,13 +255,19 @@ class WebUIPlugin(UIPlugin):
 
             # A plugin is currently processing a Data object.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
-                self.notify_progress(
-                    message.audit_name, message.plugin_id,
-                    message.ack_identity, message.message_info)
+                self.notify_progress(message.audit_name)
 
             # An audit has switched to another execution stage.
             elif message.message_code == MessageCode.MSG_STATUS_STAGE_UPDATE:
                 self.notify_stage(message.audit_name, message.message_info)
+
+    #----------------------------------------------------------------------
+    def restore_db(self, audit_name, path):
+        """
+        Helper method to restore unloaded database.
+
+        """
+
 
 
     #--------------------------------------------------------------------------
@@ -360,6 +366,9 @@ class WebUIPlugin(UIPlugin):
         # Start the consumer thread.
         self.thread.start()
 
+        # Notify the start event for the UI.
+        self.notify_start_ui()
+
 
     #--------------------------------------------------------------------------
     def stop_ui(self):
@@ -367,6 +376,9 @@ class WebUIPlugin(UIPlugin):
         This method is called when the UI stop message arrives.
         It shuts down the web UI.
         """
+
+        # Notify the stop event for the UI.
+        self.notify_stop_ui()
 
         # Log the event.
         print "Stopping XML-RPC server..."
@@ -502,6 +514,33 @@ class WebUIPlugin(UIPlugin):
     #--------------------------------------------------------------------------
 
 
+    #--------------------------------------------------------------------------
+    def notify_start_ui(self):
+        """
+        This method is called when the UI starts.
+        """
+
+        # Log the event.
+        print "UI started."
+
+        # Send the packet.
+        packet = ("start_ui", getpid())
+        self.bridge.send(packet)
+
+
+    #--------------------------------------------------------------------------
+    def notify_stop_ui(self):
+        """
+        This method is called when the UI stops.
+        """
+
+        # Log the event.
+        print "UI stopped."
+
+        # Send the packet.
+        ##packet = ("stop_ui", getpid())
+        ##self.bridge.send(packet)
+
 
     #--------------------------------------------------------------------------
     def notify_audit_error(self, audit_name, reason):
@@ -574,8 +613,11 @@ class WebUIPlugin(UIPlugin):
         plugin_name = self.get_plugin_name(audit_name, plugin_id, identity)
         print "[%s - %s] %s" % (audit_name, plugin_name, text)
 
+        # In daemon mode verbosity level always is 3
+        verbosity = 3
+
         # Send the packet.
-        packet = ("error", audit_name, plugin_id, identity, text, level)
+        packet = ("error", audit_name, plugin_id, identity, text, level, verbosity)
         self.bridge.send(packet)
 
 
@@ -604,13 +646,17 @@ class WebUIPlugin(UIPlugin):
         plugin_name = self.get_plugin_name(audit_name, plugin_id, identity)
         print "[%s - %s] %s" % (audit_name, plugin_name, text)
 
+        # In daemon mode verbosity level always is 3
+        verbosity = 3
+
+
         # Send the packet.
-        packet = ("warn", audit_name, plugin_id, identity, text, level)
+        packet = ("warn", audit_name, plugin_id, identity, text, level, verbosity)
         self.bridge.send(packet)
 
 
     #--------------------------------------------------------------------------
-    def notify_progress(self, audit_name, plugin_id, identity, progress):
+    def notify_progress(self, audit_name):
         """
         This method is called when a plugin sends a status update.
 
@@ -627,22 +673,22 @@ class WebUIPlugin(UIPlugin):
         :type progress: float
         """
 
-        # Log the event.
-        plugin_name = self.get_plugin_name(audit_name, plugin_id, identity)
-        if progress is not None:
-            progress_h = int(progress)
-            progress_l = int((progress - float(progress_h)) * 100)
-            text = "%i.%.2i%% percent done..." % (progress_h, progress_l)
-        else:
-            text = "Working..."
-        print "[%s - %s] %s" % (audit_name, plugin_name, text)
+        if self.is_audit_running(audit_name):
 
-        # Save the plugin state.
-        self.plugin_state[audit_name][(plugin_id, identity)] = progress
+            try:
+                steps   = self.steps[audit_name]
+                stage   = self.audit_stage[audit_name]
 
-        # Send the plugin state.
-        packet = ("progress", audit_name, plugin_id, identity, progress)
-        self.bridge.send(packet)
+                # Calculate progress
+                tests_remain  = len([x for x in self.plugin_state[audit_name].itervalues() if x < 100.0])
+                tests_done    = len([x for x in self.plugin_state[audit_name].itervalues() if x == 100.0])
+
+                # Send the plugin state.
+                packet = ("progress", audit_name, stage, steps, tests_remain, tests_done)
+                self.bridge.send(packet)
+
+            except Exception:
+                print "[!] Progress of audit '%s' not found." % audit_name
 
 
     #--------------------------------------------------------------------------
@@ -687,32 +733,37 @@ class WebUIPlugin(UIPlugin):
     #--------------------------------------------------------------------------
     def notify_summary(self, audit_name):
         """
-        This method is called when an audit ends.
+        This method is called when an audit ends and when a plugin ends.
 
         :param audit_name: Name of the audit.
         :type audit_name: str
         """
 
         # XXX FIXME disabled for now
-        return
 
-        # Get summary
-        summary = self.do_audit_summary(audit_name)
 
-        # Log the event.
-        print "[%s] Summary for audit:" % (audit_name)
-        if summary:
-            for k, v in summary.iteritems():
-                if k == "vulns_by_level":
-                    print "      | Vulns by level:"
-                    for kk, vv in v.iteritems():
-                        print "      |- %s : %s" % (kk, vv)
-                else:
-                    print "     | %s : %s" % (k, v)
+        # Get the number of vulnerabilities in the database.
+        vulns_number = Database.count(Data.TYPE_VULNERABILITY)
 
+        # Count the vulnerabilities by severity.
+        vulns_counter = collections.Counter()
+        for l_vuln in Database.iterate(Data.TYPE_VULNERABILITY):
+            vulns_counter[l_vuln.level] += 1
+
+        # Get the number of IP addresses and hostnames.
+        total_hosts  = Database.count(Data.TYPE_RESOURCE,
+                                           Resource.RESOURCE_DOMAIN)
+        total_hosts += Database.count(Data.TYPE_RESOURCE,
+                                           Resource.RESOURCE_IP)
+
+        # Substract the ones that were passed as targets.
+        discovered_hosts = total_hosts - len(Config.audit_scope.targets)
+        discovered_hosts = discovered_hosts if discovered_hosts > 0 else 0
 
         # Send the summary.
-        packet = ("summary", summary)
+        packet = ("summary", audit_name, vulns_number, discovered_hosts, total_hosts,
+                  vulns_counter['info'], vulns_counter['low'], vulns_counter['medium'],
+                  vulns_counter['high'], vulns_counter['critical'],)
         self.bridge.send(packet)
 
 
@@ -866,17 +917,29 @@ class WebUIPlugin(UIPlugin):
         r = None
 
         if self.is_audit_running(audit_name):
+            #with SwitchToAudit(audit_name):
+                #try:
+                    #r = (
+                        #self.steps[audit_name],
+                        #self.audit_stage[audit_name],
+                        #tuple(
+                            #(plugin_id, identity, progress)
+                            #for ((plugin_id, identity), progress)
+                            #in self.plugin_state[audit_name].iteritems()
+                        #)
+                    #)
+                #except Exception:
+                    #Logger.log_error(traceback.format_exc())
             with SwitchToAudit(audit_name):
                 try:
-                    r = (
-                        self.steps[audit_name],
-                        self.audit_stage[audit_name],
-                        tuple(
-                            (plugin_id, identity, progress)
-                            for ((plugin_id, identity), progress)
-                            in self.plugin_state[audit_name].iteritems()
-                        )
-                    )
+                    steps   = self.steps[audit_name]
+                    stage   = self.audit_stage[audit_name]
+
+                    # Calculate progress
+                    tests_remain  = len([x for x in self.plugin_state[audit_name].itervalues() if x < 100.0])
+                    tests_done    = len([x for x in self.plugin_state[audit_name].itervalues() if x == 100.0])
+
+                    r = (steps, stage, tests_remain, tests_done)
                 except Exception:
                     Logger.log_error(traceback.format_exc())
 
@@ -914,9 +977,23 @@ class WebUIPlugin(UIPlugin):
                     }[data_type.strip().lower()]
                 return sorted( Database.keys(i_data_type) )
         else:
+
+
             # XXX TODO open the database manually here
             raise NotImplementedError(
                 "Querying finished audits is not implemented yet!")
+
+
+            audit_db = "/home/pepe/fdfd/%s.db" % audit_name  # MENTIRA
+            audit_config = AuditDB.get_audit_config(audit_db)
+            with AuditDB(audit_config) as db:
+                i_data_type = {
+                    "all": None,
+                    "information": Data.TYPE_INFORMATION,
+                    "resource": Data.TYPE_RESOURCE,
+                    "vulnerability": Data.TYPE_VULNERABILITY,
+                    }[data_type.strip().lower()]
+                return sorted( db.get_data_keys(i_data_type) )
 
 
     #--------------------------------------------------------------------------
@@ -988,6 +1065,7 @@ class WebUIPlugin(UIPlugin):
 
                 # Substract the ones that were passed as targets.
                 discovered_hosts = total_hosts - len(Config.audit_scope.targets)
+                discovered_hosts = discovered_hosts if discovered_hosts > 0 else 0
 
                 # Return the data in the expected format.
                 return {
