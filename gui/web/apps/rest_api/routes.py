@@ -69,21 +69,21 @@ class PushingRouters(ParameterizedRouter):
               initkwargs= {}),
 
         # Update plugins errors
-        Route(url       = r'^{prefix}/perrors/$',
+        Route(url       = r'^{prefix}/error/$',
               mapping   = {'post' : 'push_perrors'},
               name      = '{basename}-push_perrors',
               initkwargs= {}),
-        Route(url       = r'^{prefix}/perrors$',
+        Route(url       = r'^{prefix}/error$',
               mapping   = {'post' : 'push_perrors'},
               name      = '{basename}-push_perrors2',
               initkwargs= {}),
 
         # Update plugins warnings
-        Route(url       = r'^{prefix}/pwarning/$',
+        Route(url       = r'^{prefix}/warning/$',
               mapping   = {'post' : 'push_pwarning'},
               name      = '{basename}-push_pwarning',
               initkwargs= {}),
-        Route(url       = r'^{prefix}/pwarning$',
+        Route(url       = r'^{prefix}/warning$',
               mapping   = {'post' : 'push_pwarning'},
               name      = '{basename}-push_pwarning2',
               initkwargs= {}),
