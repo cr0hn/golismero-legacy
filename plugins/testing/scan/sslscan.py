@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
+from golismero.api.data import discard_data
 from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.url import BaseUrl, Url
@@ -42,6 +43,11 @@ from golismero.api.external import run_external_tool, \
 from golismero.api.logger import Logger
 from golismero.api.net import ConnectionSlot
 from golismero.api.plugin import ImportPlugin, TestingPlugin
+
+from golismero.api.net import NetworkException
+from golismero.api.net.http import HTTP
+
+
 
 from os.path import join, split, sep
 from traceback import format_exc
@@ -179,6 +185,15 @@ class SSLScanPlugin(TestingPlugin):
     def recv_info(self, info):
 
         m_host = info.hostname
+
+        # Check for 443 port
+        try:
+            m_url = "https://%s:443" % m_host
+            r     = HTTP.get_url(m_url, timeout=4)
+            discard_data(r)
+        except NetworkException,e:
+            Logger.log_more_verbose("Error while connection with %s." % (m_host))
+            return
 
         # Create a temporary output file.
         with tempfile(suffix = ".xml") as output:
