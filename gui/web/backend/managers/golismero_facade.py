@@ -1590,8 +1590,8 @@ class GoLismeroFacadeState(object):
                 try:
                     m_audit_progress = RTAuditProgress.objects.get(audit__id=audit_id)
                     m_audit_progress.current_stage = "cleanup"
-                    m_audit.save()
-                except ObjectDoesNotExist:
+                    m_audit_progress.save()
+                except ObjectDoesNotExist,e:
                     # State not found -> progress not found
                     pass
             else:
