@@ -252,11 +252,23 @@ class AuditManager (object):
             raise TypeError(
                 "Expected Message, got %r instead" % type(message))
 
+        # Discard messages to stopped/clossed audits
+        try:
+            self.get_audit(message.audit_name)
+        except KeyError:
+            if message.message_code != MessageCode.MSG_CONTROL_START_AUDIT:
+                print "Discard message for audit %s. Audit is not working" % message.audit_name
+                return
+
         # Send data messages to their target audit
         if message.message_type == MessageType.MSG_TYPE_DATA:
             if not message.audit_name:
                 raise ValueError("Data message with no target audit!")
-            self.get_audit(message.audit_name).dispatch_msg(message)
+            try:
+                self.get_audit(message.audit_name).dispatch_msg(message)
+            except KeyError:
+                print "Audit: %s not found. DATA." % message.audit_name
+                return
 
         # Process control messages
         elif message.message_type == MessageType.MSG_TYPE_CONTROL:
@@ -264,7 +276,12 @@ class AuditManager (object):
             # Send ACKs to their target audit
             if message.message_code == MessageCode.MSG_CONTROL_ACK:
                 if message.audit_name:
-                    audit = self.get_audit(message.audit_name)
+                    try:
+                        audit = self.get_audit(message.audit_name)
+                    except KeyError:
+                        print "Audit: %s not found. ACK." % message.audit_name
+                        return
+
                     audit.acknowledge(message)
 
             # Start an audit if requested
@@ -290,13 +307,22 @@ class AuditManager (object):
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
                 if not message.audit_name:
                     raise ValueError("I don't know which audit to stop...")
-                self.get_audit(message.audit_name).close()
+                try:
+                    self.get_audit(message.audit_name).close()
+                except KeyError:
+                    print "Audit: %s not found. STOP." % message.audit_name
+                    return
+
                 self.remove_audit(message.audit_name)
 
             # Send log messages to their target audit
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
                 if message.audit_name:
-                    self.get_audit(message.audit_name).dispatch_msg(message)
+                    try:
+                        self.get_audit(message.audit_name).dispatch_msg(message)
+                    except KeyError:
+                        print "Audit: %s not found. LOG." % message.audit_name
+                        return
 
             # TODO: pause and resume audits, start new audits
 
