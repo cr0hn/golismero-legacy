@@ -581,15 +581,15 @@ class AuditViewSet(ViewSet):
         m_plugins_in = request.DATA.get("enable_plugins", [])
         m_plugins    = [] # Plugins lists
 
-
         # Clean keys
         if m_plugins_in:
             tmp = []
+
             if isinstance(m_plugins_in, list):
 
                 # Remove spaces and transform: unicode -> str
                 for ll in m_plugins_in:
-                    if isinstance(str(ll), basestring):
+                    if isinstance(ll, basestring) or isinstance(ll, unicode):
                         continue
                     l_dict = {}
                     for dk, dv in ll.iteritems():
