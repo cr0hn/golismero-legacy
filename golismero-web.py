@@ -99,10 +99,13 @@ Listen in loopback IPv6 at port 8000:
     parser.add_argument('-l', dest="IP_LISTEN", help="IP address where to listen to (default: 127.0.0.1)", default="127.0.0.1")
     parser.add_argument('-p', dest="PORT", type=int, help="port where to listen to (default 8000)", default=8000)
     parser.add_argument('--debug', dest="DEBUG_MODE", action="store_true", help="runs debug web server instead a gunicorn (default)", default=False)
+    parser.add_argument('--push', dest="PUSH_MODE", action="store_true", help="set PUSH mode for get stats", default=False)
 
     gr1 = parser.add_argument_group("GoLismero server settings")
     gr1.add_argument('-sa', dest="SERVER_ADDR", help="GoLismero server address [default 127.0.0.1]", default="127.0.0.1")
     gr1.add_argument('-sp', dest="SERVER_PORT", type=int, help="GoLismero server port [default 9000]", default=9000)
+
+
 
     args = parser.parse_args()
 
@@ -166,6 +169,9 @@ Listen in loopback IPv6 at port 8000:
     # Configure RPC
     settings.GOLISMERO_CORE_PORT = args.SERVER_PORT
     settings.GOLISMERO_CORE_HOST = args.SERVER_ADDR
+
+    # Push setted?
+    settings.GOLISMERO_PUSH_MODE = args.PUSH_MODE
 
     # Prepare IPv6 address
     m_ip = args.IP_LISTEN
