@@ -149,9 +149,10 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
             l_loaded_wordlist = WordListLoader.get_advanced_wordlist_as_list(l_w)
 
             for l_wo in l_loaded_wordlist:
-                tmp_u = urljoin(m_url, (l_wo[1:] if l_wo.startswith("/") else l_wo))
-
-                Logger.log(tmp_u)
+                try:
+                    tmp_u = urljoin(m_url, l_wo[1:] if l_wo.startswith("/") else l_wo)
+                except ValueError:
+                    continue
 
                 m_urls_update(tmp_u)
 
