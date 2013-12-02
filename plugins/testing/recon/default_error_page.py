@@ -49,7 +49,7 @@ class DefaultErrorPagePlugin(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
-
+        return
         # Get the response page.
         response = HTTP.get_url(info.url, callback = self.check_response)
         if response:
