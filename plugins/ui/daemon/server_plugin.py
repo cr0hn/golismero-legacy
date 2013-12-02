@@ -29,7 +29,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.audit import start_audit, stop_audit, \
      get_audit_names, get_audit_count, get_audit_config, \
-     get_audit_stats, get_audit_log_lines, get_audit_scope
+     get_audit_stats, get_audit_log_lines, get_audit_scope, \
+     cancel_audit
 from golismero.api.data import Data
 from golismero.api.data.resource import Resource
 from golismero.api.data.db import Database
