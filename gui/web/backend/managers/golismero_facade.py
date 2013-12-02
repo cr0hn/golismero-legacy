@@ -1304,7 +1304,11 @@ class GoLismeroFacadeState(object):
         if save:
             # Update params if there is some differents values
             for x in GoLismeroAuditProgress.PROPERTIES:
-                setattr(m_audit_progress, x, data[x])
+                if x == "current_stage":
+                    if data["current_stage"] == "report":
+                        setattr(m_audit_progress, x, "cleanup")
+                else:
+                    setattr(m_audit_progress, x, data[x])
             # Save changes
             m_audit_progress.save()
 
