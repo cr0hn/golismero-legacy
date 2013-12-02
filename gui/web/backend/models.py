@@ -21,7 +21,7 @@ def generate_random_string_long():
 
 __all__ = ["Audit", "Target", "Plugins", "PluginParameters",
            "RTAuditProgress", "RTAuditSummary", "RTAuditLog", "RTPluginErrors",
-           "RTPluginWarning", "RTAuditStage"]
+           "RTPluginWarning"]
 
 
 
@@ -167,7 +167,7 @@ class RTPluginErrors(models.Model):
     insert_date          = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
 
     # Relations
-    plugin               = models.ForeignKey(Plugins)
+    #plugin               = models.ForeignKey(Plugins)
     audit                = models.ForeignKey(Audit)
 
 #------------------------------------------------------------------------------
@@ -180,16 +180,5 @@ class RTPluginWarning(models.Model):
     insert_date          = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
 
     # Relations
-    plugin               = models.ForeignKey(Plugins)
-    audit                = models.ForeignKey(Audit)
-
-#------------------------------------------------------------------------------
-class RTAuditStage(models.Model):
-    """
-    Audit logs
-    """
-    stage                = models.CharField(max_length=30)
-    insert_date          = models.DateField(auto_now_add=True, auto_now=True, default=datetime.datetime.now)
-
-    # Relations
+    #plugin               = models.ForeignKey(Plugins)
     audit                = models.ForeignKey(Audit)
