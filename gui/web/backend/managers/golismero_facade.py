@@ -709,6 +709,8 @@ class GoLismeroFacadeAudit(object):
 
         try:
 
+            m_audit = Audit.objects.get(pk=audit_id)
+
             if m_audit.audit_state == "error":
                 raise GoLismeroFacadeAuditNotStartedException()
 
