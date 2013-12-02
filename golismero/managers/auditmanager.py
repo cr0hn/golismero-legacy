@@ -253,12 +253,12 @@ class AuditManager (object):
                 "Expected Message, got %r instead" % type(message))
 
         # Discard messages to stopped/clossed audits
-        try:
-            self.get_audit(message.audit_name)
-        except KeyError:
-            if message.message_code != MessageCode.MSG_CONTROL_START_AUDIT:
-                print "Discard message for audit %s. Audit is not working" % message.audit_name
-                return
+        #try:
+            #self.get_audit(message.audit_name)
+        #except KeyError:
+            #if message.message_code != MessageCode.MSG_CONTROL_START_AUDIT:
+                #print "Discard message for audit %s. Audit is not working" % message.audit_name
+                #return
 
         # Send data messages to their target audit
         if message.message_type == MessageType.MSG_TYPE_DATA:
