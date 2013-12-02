@@ -1291,10 +1291,6 @@ class GoLismeroFacadeState(object):
             m_audit_progress.audit = m_audit
             m_audit_progress.save()
 
-        # Fix stage name: report -> cleanup
-        if data["current_stage"] == "report":
-            data["current_stage"] = "cleanup"
-
         # Checks if all parameters are equals
         save = False
         for x in GoLismeroAuditProgress.PROPERTIES:
@@ -1305,6 +1301,7 @@ class GoLismeroFacadeState(object):
             # Update params if there is some differents values
             for x in GoLismeroAuditProgress.PROPERTIES:
                 if x == "current_stage":
+                    # Fix stage name: report -> cleanup
                     if data["current_stage"] == "report":
                         setattr(m_audit_progress, x, "cleanup")
                 else:
