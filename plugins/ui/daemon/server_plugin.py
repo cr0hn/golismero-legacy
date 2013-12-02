@@ -237,13 +237,17 @@ class WebUIPlugin(UIPlugin):
                 id_dict[message.ack_identity] = simple_id
 
                 # Call the notification method.
-                self.notify_progress(message.audit_name)
+                self.notify_progress(
+                    message.audit_name,
+                    message.plugin_id,message.ack_identity, 0.0)
 
             # A plugin has finished processing a Data object.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_END:
 
                 # Call the notification method.
-                self.notify_progress(message.audit_name)
+                self.notify_progress(
+                    message.audit_name, message.plugin_id,
+                    message.ack_identity, 100.0)
 
                 # Call to the summary
                 self.notify_summary(message.audit_name)
@@ -255,7 +259,9 @@ class WebUIPlugin(UIPlugin):
 
             # A plugin is currently processing a Data object.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
-                self.notify_progress(message.audit_name)
+                self.notify_progress(
+                    message.audit_name, message.plugin_id,
+                    message.ack_identity, message.message_info)
 
             # An audit has switched to another execution stage.
             elif message.message_code == MessageCode.MSG_STATUS_STAGE_UPDATE:
@@ -656,7 +662,7 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def notify_progress(self, audit_name):
+    def notify_progress(self, audit_name, plugin_id, identity, progress):
         """
         This method is called when a plugin sends a status update.
 
@@ -673,22 +679,36 @@ class WebUIPlugin(UIPlugin):
         :type progress: float
         """
 
-        if self.is_audit_running(audit_name):
+        # Log the event.
+        plugin_name = self.get_plugin_name(audit_name, plugin_id, identity)
 
-            try:
-                steps   = self.steps[audit_name]
-                stage   = self.audit_stage[audit_name]
+        if progress is not None:
+            progress_h = int(progress)
+            progress_l = int((progress - float(progress_h)) * 100)
+            text = "%i.%.2i%% percent done..." % (progress_h, progress_l)
+        else:
+            text = "Working..."
 
-                # Calculate progress
-                tests_remain  = len([x for x in self.plugin_state[audit_name].itervalues() if x < 100.0])
-                tests_done    = len([x for x in self.plugin_state[audit_name].itervalues() if x == 100.0])
+        print "[%s - %s] %s" % (audit_name, plugin_name, text)
 
-                # Send the plugin state.
-                packet = ("progress", audit_name, stage, steps, tests_remain, tests_done)
-                self.bridge.send(packet)
+        # Save the plugin state.
+        self.plugin_state[audit_name][(plugin_id, identity)] = progress
 
-            except Exception:
-                print "[!] Progress of audit '%s' not found." % audit_name
+        # Calculate global state and send it
+        try:
+            steps   = self.steps[audit_name]
+            stage   = self.audit_stage[audit_name]
+
+            # Calculate progress
+            tests_remain  = len([x for x in self.plugin_state[audit_name].itervalues() if x < 100.0])
+            tests_done    = len([x for x in self.plugin_state[audit_name].itervalues() if x == 100.0])
+
+            # Send the plugin state.
+            packet = ("progress", audit_name, stage, steps, tests_remain, tests_done)
+            self.bridge.send(packet)
+
+        except Exception:
+            print "[!] Progress of audit '%s' not found." % audit_name
 
 
     #--------------------------------------------------------------------------
