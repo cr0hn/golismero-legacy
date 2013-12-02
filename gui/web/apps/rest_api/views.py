@@ -67,7 +67,7 @@ class PushingViewSet(ViewSet):
 
         # Convert golismero core
         l_audit_id = l_audit_id.split("_")[-1]
-        print l_current_stage
+
         m_progress =  {
           'current_stage' : l_current_stage,
           'steps'         : l_steps,
@@ -295,6 +295,7 @@ class PushingViewSet(ViewSet):
         """
         print request.DATA
         return Response()
+
         # Convert input data
         try:
             l_audit_id     = request.DATA[0]
