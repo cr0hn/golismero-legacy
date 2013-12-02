@@ -324,19 +324,10 @@ class AuditBridge(object):
             raise ExceptionAuditNotStarted()
 
         try:
-            steps = rpc_response[0]
-            stage = rpc_response[1]
-
-            tests_remain  = 0
-            tests_done    = 0
-
-            for t in rpc_response[2]:
-                l_progress = t[2] # Value between 0.0 - 100.0
-
-                if l_progress == 100.0:
-                    tests_done   += 1
-                else:
-                    tests_remain +=1
+            steps         = rpc_response[0]
+            stage         = rpc_response[1]
+            tests_remain  = rpc_response[2]
+            tests_done    = rpc_response[3]
 
             m_return = {
                 'current_stage' : stage,
