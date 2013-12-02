@@ -112,6 +112,8 @@ class GoLismeroFacadeTimeoutException(Exception):
     """Timeout when connect with the core"""
 
 
+class GoLismeroFacadeStateNotAvailableException(Exception):
+    """Status not available for an audit"""
 #------------------------------------------------------------------------------
 #
 # Audit methods: Polling and pushing aproaches.
@@ -1133,7 +1135,7 @@ class GoLismeroFacadeAuditPushing(GoLismeroFacadeAudit):
         """
         try:
             return GoLismeroFacadeState.get_progress(audit_id)
-        except GoLismeroFacadeAuditNotFoundException:
+        except GoLismeroFacadeStateNotAvailableException:
             # If not info stored in database returned general info
             return GoLismeroAuditProgress({
                 'current_stage' : "running",
@@ -1141,7 +1143,6 @@ class GoLismeroFacadeAuditPushing(GoLismeroFacadeAudit):
                 'tests_remain'  : 0,
                 'tests_done'    : 0,
               })
-
 
 
 
@@ -1167,7 +1168,7 @@ class GoLismeroFacadeAuditPushing(GoLismeroFacadeAudit):
             return '\n'.join([ "[%s] %s" % (
                 x.to_json['timestamp'].strftime('%Y-%m-%d %H:%M:%S:%s'), x.to_json['text']) for x in m_info])
 
-        except GoLismeroFacadeAuditNotFoundException:
+        except GoLismeroFacadeStateNotAvailableException:
             return ""
 
 
@@ -1198,16 +1199,16 @@ class GoLismeroFacadeAuditPushing(GoLismeroFacadeAudit):
         """
         try:
             return GoLismeroFacadeState.get_summary(audit_id).to_json
-        except GoLismeroFacadeAuditNotFoundException:
+        except GoLismeroFacadeStateNotAvailableException, e:
             # If not info stored in database, returned only total hosts scanned
-            try:
-                m_audit = Audit.objects.get(pk=audit_id)
-            except ObjectDoesNotExist:
-                raise GoLismeroFacadeAuditNotFoundException()
+            #try:
+                #m_audit = Audit.objects.get(pk=audit_id)
+            #except ObjectDoesNotExist:
+                #raise GoLismeroFacadeAuditNotFoundException()
 
             return {
                 'vulns_number'            : '0',
-                'discovered_hosts'        : len(m_audit.targets.all()),
+                'discovered_hosts'        : int(str(e)),
                 'total_hosts'             : '0',
                 'vulns_by_level'          : {
                     'info'     : '0',
@@ -1337,9 +1338,13 @@ class GoLismeroFacadeState(object):
         # Get Audit progress old info
         m_audit_progress = None
         try:
-            m_audit_progress = RTAuditProgress.objects.get(audit=audit_id)
+            m_audit_progress = RTAuditProgress.objects.get(pk=audit_id)
         except ObjectDoesNotExist,e:
-            print e
+
+            # Audit exists but state is not available
+            if m_audit:
+                raise GoLismeroFacadeStateNotAvailableException()
+
             # If not exit the object, create it
             raise GoLismeroFacadeAuditNotFoundException(e)
 
@@ -1431,7 +1436,7 @@ class GoLismeroFacadeState(object):
 
         # Audit exits?
         try:
-            Audit.objects.get(pk=audit_id)
+            m_audit = Audit.objects.get(pk=audit_id)
         except ObjectDoesNotExist:
             raise GoLismeroFacadeAuditNotFoundException()
 
@@ -1440,6 +1445,11 @@ class GoLismeroFacadeState(object):
         try:
             m_audit_summary = RTAuditSummary.objects.get(pk=audit_id)
         except ObjectDoesNotExist:
+
+            # Audit exists but state is not available
+            if m_audit:
+                raise GoLismeroFacadeStateNotAvailableException()
+
             # If not exit the object, create it
             raise GoLismeroFacadeAuditNotFoundException()
 
@@ -1520,7 +1530,7 @@ class GoLismeroFacadeState(object):
 
         # Audit exits?
         try:
-            Audit.objects.get(pk=audit_id)
+            m_audit = Audit.objects.get(pk=audit_id)
         except ObjectDoesNotExist:
             raise GoLismeroFacadeAuditNotFoundException()
 
@@ -1529,6 +1539,12 @@ class GoLismeroFacadeState(object):
         try:
             logs = RTAuditLog.objects.filter(audit__id=audit_id).all()
         except ObjectDoesNotExist:
+
+            # Audit exists but state is not available
+            if m_audit:
+                raise GoLismeroFacadeStateNotAvailableException(m_audit.targets.all())
+
+
             # If not exit the object, create it
             raise GoLismeroFacadeAuditNotFoundException()
 
@@ -1571,7 +1587,13 @@ class GoLismeroFacadeState(object):
             raise GoLismeroFacadeAuditNotFoundException()
 
         if m_audit.current_stage != stage:
-            m_audit.current_stage = stage
+            # Fix stage and state
+            if stage == "finish":
+                m_audit.current_stage = "cleanup"
+                m_audit.audit_state   = "finished"
+            else:
+                m_audit.current_stage = stage
+
             m_audit.save()
 
 
@@ -1679,7 +1701,7 @@ class GoLismeroFacadeState(object):
 
         # Audit exits?
         try:
-            Audit.objects.get(pk=audit_id)
+            m_audit = Audit.objects.get(pk=audit_id)
         except ObjectDoesNotExist:
             raise GoLismeroFacadeAuditNotFoundException()
 
@@ -1687,6 +1709,11 @@ class GoLismeroFacadeState(object):
         try:
             logs = ACTIONS[action].objects.filter(audit__id=audit_id).all()
         except ObjectDoesNotExist:
+
+            # Audit exists but state is not available
+            if m_audit:
+                raise GoLismeroFacadeStateNotAvailableException()
+
             # If not exit the object, create it
             raise GoLismeroFacadeAuditNotFoundException()
 
