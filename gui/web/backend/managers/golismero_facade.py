@@ -1201,15 +1201,10 @@ class GoLismeroFacadeAuditPushing(GoLismeroFacadeAudit):
             return GoLismeroFacadeState.get_summary(audit_id).to_json
         except GoLismeroFacadeStateNotAvailableException, e:
             # If not info stored in database, returned only total hosts scanned
-            #try:
-                #m_audit = Audit.objects.get(pk=audit_id)
-            #except ObjectDoesNotExist:
-                #raise GoLismeroFacadeAuditNotFoundException()
-
             return {
                 'vulns_number'            : '0',
-                'discovered_hosts'        : int(str(e)),
-                'total_hosts'             : '0',
+                'discovered_hosts'        : '0',
+                'total_hosts'             : int(str(e)),
                 'vulns_by_level'          : {
                     'info'     : '0',
                     'low'      : '0',
@@ -1448,7 +1443,7 @@ class GoLismeroFacadeState(object):
 
             # Audit exists but state is not available
             if m_audit:
-                raise GoLismeroFacadeStateNotAvailableException()
+                raise GoLismeroFacadeStateNotAvailableException(len(m_audit.targets.all()))
 
             # If not exit the object, create it
             raise GoLismeroFacadeAuditNotFoundException()
@@ -1542,7 +1537,7 @@ class GoLismeroFacadeState(object):
 
             # Audit exists but state is not available
             if m_audit:
-                raise GoLismeroFacadeStateNotAvailableException(m_audit.targets.all())
+                raise GoLismeroFacadeStateNotAvailableException()
 
 
             # If not exit the object, create it
@@ -1591,6 +1586,14 @@ class GoLismeroFacadeState(object):
             if stage == "finish":
                 m_audit.current_stage = "cleanup"
                 m_audit.audit_state   = "finished"
+
+                try:
+                    m_audit_progress = RTAuditProgress.objects.get(audit__id=audit_id)
+                    m_audit_progress.current_stage = "cleanup"
+                    m_audit.save()
+                except ObjectDoesNotExist:
+                    # State not found -> progress not found
+                    pass
             else:
                 m_audit.current_stage = stage
 
