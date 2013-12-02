@@ -1138,7 +1138,7 @@ class GoLismeroFacadeAuditPushing(GoLismeroFacadeAudit):
         except GoLismeroFacadeStateNotAvailableException:
             # If not info stored in database returned general info
             return GoLismeroAuditProgress({
-                'current_stage' : "running",
+                'current_stage' : "recon",
                 'steps'         : 0,
                 'tests_remain'  : 0,
                 'tests_done'    : 0,
