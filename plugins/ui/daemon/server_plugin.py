@@ -186,7 +186,7 @@ class WebUIPlugin(UIPlugin):
                 self.notify_summary(message.audit_name)
 
                 # Clean up information associated with the audit, if any.
-                self.cleanup_audit(audit_name)
+                self.cleanup_audit(message.audit_name)
 
             # A plugin has sent a log message.
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
@@ -280,10 +280,10 @@ class WebUIPlugin(UIPlugin):
                 self.notify_audit_error(message.audit_name, error, tb)
 
                 # Remember the failed audit name.
-                self.audit_error.add(audit_name)
+                self.audit_error.add(message.audit_name)
 
                 # Clean up information associated with the audit, if any.
-                self.cleanup_audit(audit_name)
+                self.cleanup_audit(message.audit_name)
 
 
     #----------------------------------------------------------------------
