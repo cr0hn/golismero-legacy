@@ -27,7 +27,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
-from golismero.api.data import discard_data
 from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.url import BaseUrl, Url
@@ -44,12 +43,11 @@ from golismero.api.logger import Logger
 from golismero.api.net import ConnectionSlot
 from golismero.api.plugin import ImportPlugin, TestingPlugin
 
-from golismero.api.net import NetworkException
-from golismero.api.net.http import HTTP
-
-
-
+from collections import namedtuple
+from datetime import datetime
 from os.path import join, split, sep
+from socket import socket, AF_INET, SOCK_STREAM
+from ssl import wrap_socket
 from traceback import format_exc
 from time import time
 
@@ -58,14 +56,7 @@ try:
 except ImportError:
     from xml.etree import ElementTree as ET
 
-from collections import namedtuple
-from datetime import datetime
-from traceback import format_exc
-
 import re
-
-
-Ciphers = namedtuple("Ciphers", ["version", "bits", "cipher"])
 
 
 #------------------------------------------------------------------------------
@@ -96,7 +87,13 @@ class SSLScanPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
+    Ciphers = namedtuple("Ciphers", ["version", "bits", "cipher"])
+
+
+    #--------------------------------------------------------------------------
     def check_params(self):
+
+        # Check that SSLScan is installed.
         if not find_binary_in_path("sslscan"):
             if sep == "\\":
                 url = "https://code.google.com/p/sslscan-win/"
@@ -105,10 +102,16 @@ class SSLScanPlugin(TestingPlugin):
             raise RuntimeError(
                 "SSLScan not found! You can download it from: %s" % url)
 
+        # SSLScan doesn't support scanning from behind a proxy.
+        if Config.audit_config.proxy_addr:
+            raise RuntimeError(
+                "SSLScan doesn't support scanning from behind a proxy.")
+
         # Detect sslscan-win bug #2:
         # https://code.google.com/p/sslscan-win/issues/detail?id=2
         if sep == "\\":
-            from ctypes import windll, c_char_p, c_uint32, c_void_p, byref, create_string_buffer, Structure, sizeof, POINTER
+            from ctypes import windll, c_char_p, c_uint32, c_void_p, byref, \
+                 create_string_buffer, Structure, sizeof, POINTER
             class VS_FIXEDFILEINFO (Structure):
                 _fields_ = [
                     ("dwSignature",         c_uint32),     # 0xFEEF04BD
@@ -127,21 +130,28 @@ class SSLScanPlugin(TestingPlugin):
                 ]
             def GetFileVersionInfo(lptstrFilename):
                 _GetFileVersionInfoA = windll.version.GetFileVersionInfoA
-                _GetFileVersionInfoA.argtypes = [c_char_p, c_uint32, c_uint32, c_void_p]
+                _GetFileVersionInfoA.argtypes = [
+                    c_char_p, c_uint32, c_uint32, c_void_p]
                 _GetFileVersionInfoA.restype  = bool
-                _GetFileVersionInfoSizeA = windll.version.GetFileVersionInfoSizeA
+                _GetFileVersionInfoSizeA = \
+                    windll.version.GetFileVersionInfoSizeA
                 _GetFileVersionInfoSizeA.argtypes = [c_char_p, c_void_p]
                 _GetFileVersionInfoSizeA.restype  = c_uint32
                 _VerQueryValueA = windll.version.VerQueryValueA
-                _VerQueryValueA.argtypes = [c_void_p, c_char_p, c_void_p, POINTER(c_uint32)]
+                _VerQueryValueA.argtypes = [
+                    c_void_p, c_char_p, c_void_p, POINTER(c_uint32)]
                 _VerQueryValueA.restype  = bool
                 dwLen = _GetFileVersionInfoSizeA(lptstrFilename, None)
                 if dwLen:
                     lpData = create_string_buffer(dwLen)
-                    if _GetFileVersionInfoA(lptstrFilename, 0, dwLen, byref(lpData)):
+                    success = _GetFileVersionInfoA(
+                        lptstrFilename, 0, dwLen, byref(lpData))
+                    if success:
                         lpFileInfo = POINTER(VS_FIXEDFILEINFO)()
                         uLen = c_uint32(sizeof(lpFileInfo))
-                        if _VerQueryValueA(lpData, "\\", byref(lpFileInfo), byref(uLen)):
+                        success = _VerQueryValueA(
+                            lpData, "\\", byref(lpFileInfo), byref(uLen))
+                        if success:
                             sFileInfo = lpFileInfo.contents
                             if sFileInfo.dwSignature == 0xFEEF04BD:
                                 return sFileInfo
@@ -184,15 +194,25 @@ class SSLScanPlugin(TestingPlugin):
     #--------------------------------------------------------------------------
     def recv_info(self, info):
 
+        # Get the hostname to test.
         m_host = info.hostname
 
-        # Check for 443 port
+        # Workaround for a bug in SSLScan:
+        # if the target website doesn't actually support SSL,
+        # sometimes SSLScan just blocks indefinitely.
         try:
-            m_url = "https://%s:443" % m_host
-            r     = HTTP.get_url(m_url, timeout=4)
-            discard_data(r)
-        except NetworkException,e:
-            Logger.log_more_verbose("Error while connection with %s." % (m_host))
+            with ConnectionSlot(m_host):
+                s = socket(AF_INET, SOCK_STREAM)
+                try:
+                    s.settimeout(4.0)
+                    s.connect( (m_host, 443) )
+                    s = wrap_socket(s)
+                    s.shutdown(2)
+                finally:
+                    s.close()
+        except Exception:
+            Logger.log_error_more_verbose(
+                "Host %r doesn't seem to support SSL, aborting." % m_host)
             return
 
         # Create a temporary output file.
@@ -201,7 +221,7 @@ class SSLScanPlugin(TestingPlugin):
             # Build the command line arguments.
             args = [
                 "--no-failed",
-                "--xml=%s" % output,
+                "--xml=" + output,  # non standard cmdline parsing :(
                 m_host
             ]
 
@@ -229,8 +249,8 @@ class SSLScanPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    @staticmethod
-    def parse_sslscan_results(output_filename):
+    @classmethod
+    def parse_sslscan_results(cls, output_filename):
         """
         Convert the output of a SSLScan run to the GoLismero data model.
 
@@ -241,6 +261,7 @@ class SSLScanPlugin(TestingPlugin):
         :returns: Results from the SSLScan scan, and the vulnerability count.
         :rtype: list(Domain|Vulnerability), int
         """
+        Ciphers = cls.Ciphers
         results = []
         count   = 0
         try:
