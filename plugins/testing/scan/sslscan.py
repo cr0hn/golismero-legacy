@@ -197,9 +197,9 @@ class SSLScanPlugin(TestingPlugin):
         # Get the hostname to test.
         m_host = info.hostname
 
-        # Workaround for a bug in SSLScan:
-        # if the target website doesn't actually support SSL,
-        # sometimes SSLScan just blocks indefinitely.
+        # Workaround for a bug in SSLScan: if the target port doesn't answer
+        # back the SSL handshake (i.e. if port 443 is open but another protocol
+        # is being used) then SSLScan just blocks indefinitely.
         try:
             with ConnectionSlot(m_host):
                 s = socket(AF_INET, SOCK_STREAM)
@@ -301,7 +301,7 @@ class SSLScanPlugin(TestingPlugin):
 
                     # Self-signed?
                     m_t_pk = t.find(".//pk")
-                    if m_t_pk:
+                    if m_t_pk is not None:
                         m_self_signed = m_t_pk.get("error")
                         if m_self_signed:
                             results.append( InvalidCert(info) )
@@ -309,7 +309,7 @@ class SSLScanPlugin(TestingPlugin):
 
                     # Valid CN?
                     m_t_cn = t.find(".//subject")
-                    if m_t_cn:
+                    if m_t_cn is not None:
                         m_cn = re.search(
                             "(CN=)([0-9a-zA-Z\.\*]+)", m_t_cn.text).group(2)
                         if m_cn != info.hostname:
@@ -319,7 +319,7 @@ class SSLScanPlugin(TestingPlugin):
                     # Outdated?
                     m_t_before = t.find(".//not-valid-before")
                     m_t_after  = t.find(".//not-valid-after")
-                    if m_t_before and m_t_after:
+                    if m_t_before is not None and m_t_after is not None:
                         m_valid_before = re.search(
                             "([a-zA-Z:0-9\s]+)( GMT)", m_t_before.text).group(1)
                         m_valid_after = re.search(
