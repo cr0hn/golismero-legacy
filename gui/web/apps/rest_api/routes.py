@@ -109,6 +109,18 @@ class PushingRouters(ParameterizedRouter):
               initkwargs= {}),
 
 
+        # Connection testing URL
+        Route(url       = r'^{prefix}/test/$',
+              mapping   = {'get' : 'push_test'},
+              name      = '{basename}-push_test',
+              initkwargs= {}),
+        Route(url       = r'^{prefix}/test$',
+              mapping   = {'get' : 'push_test'},
+              name      = '{basename}-push_test2',
+              initkwargs= {}),
+
+
+
 
         ]
 

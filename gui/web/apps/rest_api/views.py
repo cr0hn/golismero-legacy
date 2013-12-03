@@ -399,6 +399,17 @@ class PushingViewSet(ViewSet):
         print "Backend started"
         return  Response()
 
+
+
+    #----------------------------------------------------------------------
+    def push_test(self, request, *args, **kwargs): # /push/test/ ##
+        """
+        This method allow to check push service
+        """
+        return  Response()
+
+
+
 #------------------------------------------------------------------------------
 #
 # Audit actions
