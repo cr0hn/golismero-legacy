@@ -190,6 +190,15 @@ Listen in loopback IPv6 at port 8000:
         except Exception, e:
             parser.error(str(e))
 
+    # Check the server push URL.
+    if args.SERVER_PUSH:
+        try:
+            url = urljoin(args.SERVER_PUSH, "/push/test")
+            req = urllib2.Request(url, headers={'Content-Type': 'application/json'})
+            urllib2.urlopen(req, timeout=5)
+        except Exception:
+            parser.error("Push URL is not available: %s" % args.SERVER_PUSH)
+
     # Return the parsed command line options.
     return args
 
@@ -266,16 +275,6 @@ if __name__ == '__main__':
 
     # Get the working directory.
     working_directory = path.dirname( path.abspath(__file__) )
-
-    # If push is set, check de URL connection.
-    if args.SERVER_PUSH:
-        try:
-            query = urljoin(args.SERVER_PUSH, "/push/test")
-            q = urllib2.Request(query, headers={'Content-Type': 'application/json'})
-            urllib2.urlopen(q, timeout=5)
-        except Exception:
-            print "[!] Push URL is not available"
-            sys.exit(1)
 
     # Run in daemon mode.
     with daemon.DaemonContext(
