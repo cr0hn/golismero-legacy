@@ -119,6 +119,15 @@ class WebUIPlugin(UIPlugin):
     #--------------------------------------------------------------------------
     def __init__(self):
 
+        # Initialize the audit and plugin state caches.
+        self.steps        = collections.defaultdict(int) # audit -> # in recon
+        self.audit_stage  = {}  # audit -> stage
+        self.audit_error  = set() # Aborted audit names.
+        self.plugin_state = collections.defaultdict(
+            functools.partial(collections.defaultdict, dict)
+            )  # audit -> (plugin, identity) -> progress
+
+        # Map running plugins to simplified IDs.
         # audit_name -> plugin_name -> ack_identity -> simple_id
         self.current_plugins = collections.defaultdict(
             functools.partial(collections.defaultdict, dict) )
@@ -168,10 +177,6 @@ class WebUIPlugin(UIPlugin):
 
             # An audit has finished.
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
-                try:
-                    del self.current_plugins[Config.audit_name]
-                except KeyError:
-                    pass
 
                 # Notify end of an audit.
                 self.notify_stage(message.audit_name,
@@ -179,6 +184,9 @@ class WebUIPlugin(UIPlugin):
 
                 # Notify summary results.
                 self.notify_summary(message.audit_name)
+
+                # Clean up information associated with the audit, if any.
+                self.cleanup_audit(audit_name)
 
             # A plugin has sent a log message.
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
@@ -275,10 +283,7 @@ class WebUIPlugin(UIPlugin):
                 self.audit_error.add(audit_name)
 
                 # Clean up information associated with the audit, if any.
-                try:
-                    del self.current_plugins[Config.audit_name]
-                except KeyError:
-                    pass
+                self.cleanup_audit(audit_name)
 
 
     #----------------------------------------------------------------------
@@ -345,6 +350,36 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
+    def cleanup_audit(self, audit_name):
+        """
+        Cleans up all information related to the given audit.
+
+        :param audit_name: Name of the audit to clean up.
+        :type audit_name: str
+        """
+        try:
+            del self.current_plugins[audit_name]
+        except KeyError:
+            pass
+        try:
+            del self.audit_stage[audit_name]
+        except KeyError:
+            pass
+        try:
+            del self.plugin_state[audit_name]
+        except KeyError:
+            pass
+        try:
+            del self.steps[audit_name]
+        except KeyError:
+            pass
+        try:
+            self.audit_error.remove(audit_name)
+        except KeyError:
+            pass
+
+
+    #--------------------------------------------------------------------------
     def start_ui(self):
         """
         This method is called when the UI start message arrives.
@@ -355,16 +390,12 @@ class WebUIPlugin(UIPlugin):
         # Log the event.
         print "Starting XML-RPC server..."
 
-        # Initialize the audit and plugin state caches.
-        self.state_lock   = threading.RLock()
-        self.steps        = collections.Counter() # How many times "recon" was reached
-        self.audit_stage  = {}  # audit -> stage
-        self.plugin_state = collections.defaultdict(
-            functools.partial(collections.defaultdict, dict)
-            )  # audit -> (plugin, identity) -> progress
-
-        # Aborted audit names.
-        self.audit_error = set()
+        # Cleanup.
+        self.steps.clear()
+        self.audit_stage.clear()
+        self.audit_error.clear()
+        self.plugin_state.clear()
+        self.current_plugins.clear()
 
         # Create the consumer thread object.
         self.thread_continue = True
@@ -441,10 +472,12 @@ class WebUIPlugin(UIPlugin):
             except:
                 pass
 
-        # Clear the state cache.
-        self.state_lock = threading.RLock()
+        # Cleanup.
+        self.steps.clear()
         self.audit_stage.clear()
+        self.audit_error.clear()
         self.plugin_state.clear()
+        self.current_plugins.clear()
 
 
     #--------------------------------------------------------------------------
@@ -704,34 +737,40 @@ class WebUIPlugin(UIPlugin):
 
         # Log the event.
         plugin_name = self.get_plugin_name(audit_name, plugin_id, identity)
-
         if progress is not None:
             progress_h = int(progress)
             progress_l = int((progress - float(progress_h)) * 100)
             text = "%i.%.2i%% percent done..." % (progress_h, progress_l)
         else:
             text = "Working..."
-
         print "[%s - %s] %s" % (audit_name, plugin_name, text)
 
         # Save the plugin state.
         self.plugin_state[audit_name][(plugin_id, identity)] = progress
 
-        # Calculate global state and send it
+        # Calculate global progress.
         try:
-            steps   = self.steps[audit_name]
-            stage   = self.audit_stage[audit_name]
+            steps = self.steps[audit_name]
+            stage = self.audit_stage[audit_name]
 
-            # Calculate progress
-            tests_remain  = len([x for x in self.plugin_state[audit_name].itervalues() if x < 100.0])
-            tests_done    = len([x for x in self.plugin_state[audit_name].itervalues() if x == 100.0])
-
-            # Send the plugin state.
-            packet = ("progress", audit_name, stage, steps, tests_remain, tests_done)
-            self.bridge.send(packet)
+            # Calculate plugin progress.
+            tests_remain = sum(
+                1 for x in self.plugin_state[audit_name].values()
+                  if x < 100.0)
+            tests_done   = sum(
+                1 for x in self.plugin_state[audit_name].values()
+                  if x == 100.0)
 
         except Exception:
             print "[!] Progress of audit '%s' not found." % audit_name
+            return
+
+        # Send the progress.
+        packet = (
+            "progress",
+            audit_name, stage, steps, tests_remain, tests_done
+        )
+        self.bridge.send(packet)
 
 
     #--------------------------------------------------------------------------
@@ -764,6 +803,9 @@ class WebUIPlugin(UIPlugin):
         # Save the audit stage.
         self.audit_stage[audit_name] = stage
 
+        # Clear the progress for this audit.
+        self.plugin_state[audit_name].clear()
+
         # Increase steps if recon stage was reached.
         if stage == "recon":
             self.steps[audit_name] += 1
@@ -786,7 +828,7 @@ class WebUIPlugin(UIPlugin):
         vulns_number = Database.count(Data.TYPE_VULNERABILITY)
 
         # Count the vulnerabilities by severity.
-        vulns_counter = collections.Counter()
+        vulns_counter = collections.defaultdict(int)
         for l_vuln in Database.iterate(Data.TYPE_VULNERABILITY):
             vulns_counter[l_vuln.level] += 1
 
@@ -952,29 +994,24 @@ class WebUIPlugin(UIPlugin):
         r = None
 
         if self.is_audit_running(audit_name):
-            #with SwitchToAudit(audit_name):
-                #try:
-                    #r = (
-                        #self.steps[audit_name],
-                        #self.audit_stage[audit_name],
-                        #tuple(
-                            #(plugin_id, identity, progress)
-                            #for ((plugin_id, identity), progress)
-                            #in self.plugin_state[audit_name].iteritems()
-                        #)
-                    #)
-                #except Exception:
-                    #Logger.log_error(traceback.format_exc())
             with SwitchToAudit(audit_name):
                 try:
+
+                    # Calculate global progress.
                     steps   = self.steps[audit_name]
                     stage   = self.audit_stage[audit_name]
 
-                    # Calculate progress
-                    tests_remain  = len([x for x in self.plugin_state[audit_name].itervalues() if x < 100.0])
-                    tests_done    = len([x for x in self.plugin_state[audit_name].itervalues() if x == 100.0])
+                    # Calculate plugin progress.
+                    tests_remain = sum(
+                        1 for x in self.plugin_state[audit_name].values()
+                           if x < 100.0)
+                    tests_done = sum(1
+                        for x in self.plugin_state[audit_name].values()
+                         if x == 100.0)
 
+                    # Build the response tuple.
                     r = (steps, stage, tests_remain, tests_done)
+
                 except Exception:
                     Logger.log_error(traceback.format_exc())
 
@@ -1088,7 +1125,7 @@ class WebUIPlugin(UIPlugin):
                     vulns_number = Database.count(Data.TYPE_VULNERABILITY)
 
                     # Count the vulnerabilities by severity.
-                    vulns_counter = collections.Counter()
+                    vulns_counter = collections.defaultdict(int)
                     for l_vuln in Database.iterate(Data.TYPE_VULNERABILITY):
                         vulns_counter[l_vuln.level] += 1
 
