@@ -640,7 +640,7 @@ class AuditViewSet(ViewSet):
                             if not l_p['param_value']:
                                 m_return['status']      = "error"
                                 m_return['error_code']  = 1
-                                m_return['error']       = ["Parameter '%s' must have a 'param_value' value." % l_p['param_name']]
+                                m_return['error']       = ["Parameter '%s' must have a 'param_value' value in plugin '%s'." % (l_p['param_value'], l_plugin['plugin_name'])]
                                 return Response(m_return, status.HTTP_400_BAD_REQUEST)
 
                             l_plugin_results.append(l_p)
