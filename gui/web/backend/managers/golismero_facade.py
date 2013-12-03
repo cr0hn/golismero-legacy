@@ -1304,6 +1304,8 @@ class GoLismeroFacadeState(object):
                     # Fix stage name: report -> cleanup
                     if data["current_stage"] == "report":
                         setattr(m_audit_progress, x, "cleanup")
+                    else:
+                        setattr(m_audit_progress, x, data[x])
                 else:
                     setattr(m_audit_progress, x, data[x])
             # Save changes
