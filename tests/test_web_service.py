@@ -52,6 +52,8 @@ TESTS = {
 
     'robots'         : '{"audit_name":"robots", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/robots"}]}',
 
+    'fingerprint'    : '{"audit_name":"robots", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/fingerprint_web"}]}',
+
     'spider'         : '{"audit_name":"robots", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/recon/spider"}]}',
 
     'ssl'            : '{"audit_name":"robots", "targets":["%s"], "enable_plugins": [{ "plugin_name" : "testing/scan/ssl_analyzer"}]}',
