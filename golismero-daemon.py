@@ -102,6 +102,8 @@ from golismero.api.logger import Logger
 from golismero.common import OrchestratorConfig, get_profile, \
     get_default_config_file
 from golismero.main import launcher
+import urllib2
+from urlparse import urljoin
 
 
 #----------------------------------------------------------------------
@@ -264,6 +266,16 @@ if __name__ == '__main__':
 
     # Get the working directory.
     working_directory = path.dirname( path.abspath(__file__) )
+
+    # If push is set, check de URL connection.
+    if args.SERVER_PUSH:
+        try:
+            query = urljoin(args.SERVER_PUSH, "/push/test")
+            q = urllib2.Request(query, headers={'Content-Type': 'application/json'})
+            urllib2.urlopen(q, timeout=5)
+        except Exception:
+            print "[!] Push URL is not available"
+            sys.exit(1)
 
     # Run in daemon mode.
     with daemon.DaemonContext(
