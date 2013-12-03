@@ -166,23 +166,19 @@ class WebUIPlugin(UIPlugin):
             elif message.message_code == MessageCode.MSG_CONTROL_START_AUDIT:
                 self.notify_stage(message.message_info.audit_name, "start")
 
-            # Notify starting error for audit
-            elif message.message_code == MessageCode.MSG_CONTROL_START_ERROR_AUDIT:
-                (reason, audit_name) = message.message_info
-                self.notify_audit_error(audit_name, reason)
-
             # An audit has finished.
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
                 try:
                     del self.current_plugins[Config.audit_name]
                 except KeyError:
                     pass
-                # Notify end of an audit
+
+                # Notify end of an audit.
                 self.notify_stage(message.audit_name,
                             "finish" if message.message_info else "cancel")
-                # Nofity summary results
-                self.notify_summary(message.audit_name)
 
+                # Notify summary results.
+                self.notify_summary(message.audit_name)
 
             # A plugin has sent a log message.
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
@@ -268,6 +264,23 @@ class WebUIPlugin(UIPlugin):
             elif message.message_code == MessageCode.MSG_STATUS_STAGE_UPDATE:
                 self.notify_stage(message.audit_name, message.message_info)
 
+            # An audit has been aborted due to an unrecoverable error.
+            elif message.message_code == MessageCode.MSG_STATUS_AUDIT_ABORTED:
+
+                # Notify the audit error.
+                (error, tb) = message.message_info
+                self.notify_audit_error(message.audit_name, error, tb)
+
+                # Remember the failed audit name.
+                self.audit_error.add(audit_name)
+
+                # Clean up information associated with the audit, if any.
+                try:
+                    del self.current_plugins[Config.audit_name]
+                except KeyError:
+                    pass
+
+
     #----------------------------------------------------------------------
     def restore_db(self, audit_name, path):
         """
@@ -350,8 +363,8 @@ class WebUIPlugin(UIPlugin):
             functools.partial(collections.defaultdict, dict)
             )  # audit -> (plugin, identity) -> progress
 
-        # Audit not started correctly
-        self.audit_error  = {}
+        # Aborted audit names.
+        self.audit_error = set()
 
         # Create the consumer thread object.
         self.thread_continue = True
@@ -550,19 +563,28 @@ class WebUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def notify_audit_error(self, audit_name, reason):
+    def notify_audit_error(self, audit_name, error, tb):
         """
-        This method is called when an audit has any error at starting.
+        This method is called when an audit has been aborted
+        due to an unrecoverable error.
 
         :param audit_name: Name of the audit.
         :type audit_name: str
 
-        :param reason: the reason of fail.
-        :type reason: str
-        """
-        self.audit_error[audit_name] = reason
+        :param error: Error message.
+        :type error: str
 
-        print self.audit_error
+        :param tb: Error traceback.
+        :type tb: str
+        """
+
+        # Log the event.
+        print "Audit aborted, reason: %s" % error
+        if tb:
+            print tb
+
+        # Notify the end of the audit.
+        self.notify_stage(message.audit_name, "cancel")
 
 
     #--------------------------------------------------------------------------
@@ -760,9 +782,6 @@ class WebUIPlugin(UIPlugin):
         :type audit_name: str
         """
 
-        # XXX FIXME disabled for now
-
-
         # Get the number of vulnerabilities in the database.
         vulns_number = Database.count(Data.TYPE_VULNERABILITY)
 
@@ -822,12 +841,6 @@ class WebUIPlugin(UIPlugin):
         start_audit(o_audit_config)
 
 
-        # Set the stage to avoid race conditions when trying to get the stage
-        # before the audit is loaded and configured.
-        #self.audit_stage[o_audit_config.audit_name] = "start"
-
-
-
     #--------------------------------------------------------------------------
     def do_audit_cancel(self, audit_name):
         """
@@ -841,7 +854,6 @@ class WebUIPlugin(UIPlugin):
         """
         if audit_name in self.audit_error:
             return False
-
         if self.is_audit_running(audit_name):
             try:
                 with SwitchToAudit(audit_name):
@@ -885,7 +897,6 @@ class WebUIPlugin(UIPlugin):
         """
         if audit_name in self.audit_error:
             return "error"
-
         stage = self.audit_stage.get(audit_name, "finish")
         if stage == "start":
             return "start"
@@ -905,7 +916,10 @@ class WebUIPlugin(UIPlugin):
         :returns: Current stage for this audit.
         :type: str
         """
-        return "error" if audit_name in self.audit_error else self.audit_stage.get(audit_name, "finish")
+        return (
+            "error" if audit_name in self.audit_error
+            else self.audit_stage.get(audit_name, "finish")
+        )
 
 
     #--------------------------------------------------------------------------

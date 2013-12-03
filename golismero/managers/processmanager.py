@@ -386,7 +386,7 @@ def _plugin_killer(context):
             context.send_msg(
                 message_type = MessageType.MSG_TYPE_CONTROL,
                 message_code = MessageCode.MSG_CONTROL_ERROR,
-                message_info = ("Plugin execution timeout reached.", ""),
+                message_info = ("Execution timeout reached.", ""),
                     priority = MessagePriority.MSG_PRIORITY_HIGH,
             )
 

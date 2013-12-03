@@ -302,6 +302,16 @@ class Orchestrator (object):
 
         try:
 
+            # Check the audit exists, drop the message otherwise.
+            if (
+                message.audit_name and
+                not self.auditManager.has_audit(message.audit_name)
+            ):
+                Logger.log_error_more_verbose(
+                    "Internal error: dropped message for audit %r: %r"
+                    % (message.audit_name, message))
+                return
+
             # If it's an RPC message...
             if message.message_type == MessageType.MSG_TYPE_RPC:
 
