@@ -177,10 +177,6 @@ class WebUIPlugin(UIPlugin):
 
             # An audit has finished.
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
-                try:
-                    del self.current_plugins[Config.audit_name]
-                except KeyError:
-                    pass
 
                 # Notify end of an audit.
                 self.notify_stage(message.audit_name,
@@ -188,6 +184,9 @@ class WebUIPlugin(UIPlugin):
 
                 # Notify summary results.
                 self.notify_summary(message.audit_name)
+
+                # Clean up information associated with the audit, if any.
+                self.cleanup_audit(audit_name)
 
             # A plugin has sent a log message.
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
@@ -284,10 +283,7 @@ class WebUIPlugin(UIPlugin):
                 self.audit_error.add(audit_name)
 
                 # Clean up information associated with the audit, if any.
-                try:
-                    del self.current_plugins[Config.audit_name]
-                except KeyError:
-                    pass
+                self.cleanup_audit(audit_name)
 
 
     #----------------------------------------------------------------------
