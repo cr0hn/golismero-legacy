@@ -125,9 +125,13 @@ class HTMLReport(ReportPlugin):
         #
 
         import django.conf
-        django.conf.settings.configure(
-            TEMPLATE_DIRS = (join(dirname(__file__), './html_report'),)
-        )
+        try:
+            django.conf.settings.configure(
+                TEMPLATE_DIRS = (join(dirname(__file__), './html_report'),)
+            )
+        except RuntimeError:
+            # Already configured django
+            pass
 
         from django.template import Template, loader, Context
         from django.conf import settings
