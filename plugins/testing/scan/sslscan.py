@@ -299,6 +299,39 @@ class SSLScanPlugin(TestingPlugin):
                     info = Domain( t.get("host") )
                     results.append(info)
 
+                    # Self-signed?
+                    m_t_pk = t.find(".//pk")
+                    if m_t_pk:
+                        m_self_signed = m_t_pk.get("error")
+                        if m_self_signed:
+                            results.append( InvalidCert(info) )
+                            count += 1
+
+                    # Valid CN?
+                    m_t_cn = t.find(".//subject")
+                    if m_t_cn:
+                        m_cn = re.search(
+                            "(CN=)([0-9a-zA-Z\.\*]+)", m_t_cn.text).group(2)
+                        if m_cn != info.hostname:
+                            results.append( InvalidCommonName(info, m_cn) )
+                            count += 1
+
+                    # Outdated?
+                    m_t_before = t.find(".//not-valid-before")
+                    m_t_after  = t.find(".//not-valid-after")
+                    if m_t_before and m_t_after:
+                        m_valid_before = re.search(
+                            "([a-zA-Z:0-9\s]+)( GMT)", m_t_before.text).group(1)
+                        m_valid_after = re.search(
+                            "([a-zA-Z:0-9\s]+)( GMT)", m_t_after.text).group(1)
+                        m_valid_before_date = datetime.strptime(
+                            m_valid_before, "%b %d %H:%M:%S %Y")
+                        m_valid_after_date = datetime.strptime(
+                            m_valid_after, "%b %d %H:%M:%S %Y")
+                        if m_valid_after_date < m_valid_before_date:
+                            results.append( OutdatedCert(info) )
+                            count += 1
+
                     # Get the ciphers.
                     m_ciphers = [
                         Ciphers(version = c.get("sslversion"),
@@ -308,32 +341,10 @@ class SSLScanPlugin(TestingPlugin):
                         if c.get("status") == "accepted"
                     ]
 
-                    # Get CERT dates.
-                    m_valid_before      = re.search("([a-zA-Z:0-9\s]+)( GMT)", t.find(".//not-valid-before").text).group(1)
-                    m_valid_after       = re.search("([a-zA-Z:0-9\s]+)( GMT)", t.find(".//not-valid-after").text).group(1)
-                    m_valid_before_date = datetime.strptime(m_valid_before, "%b %d %H:%M:%S %Y")
-                    m_valid_after_date  = datetime.strptime(m_valid_after, "%b %d %H:%M:%S %Y")
-
-                    # Get subject.
-                    m_cn                = re.search("(CN=)([0-9a-zA-Z\.\*]+)", t.find(".//subject").text).group(2)
-
-                    # Is self signed?
-                    m_self_signed       = t.find(".//pk").get("error")
-
                     # Insecure algorithm?
                     c = [y.cipher for y in m_ciphers if "CBC" in y.cipher]
                     if c:
                         results.append( InsecureAlgorithm(info, c) )
-                        count += 1
-
-                    # Self-signed?
-                    if m_self_signed:
-                        results.append( InvalidCert(info) )
-                        count += 1
-
-                    # Valid CN?
-                    if m_cn != info.hostname:
-                        results.append( InvalidCommonName(info, m_cn) )
                         count += 1
 
                     # Weak keys?
@@ -346,11 +357,6 @@ class SSLScanPlugin(TestingPlugin):
                     c = [y.version for y in m_ciphers if "SSLv1" in y.version]
                     if c:
                         results.append( ObsoleteProtocol(info, "SSLv1") )
-                        count += 1
-
-                    # Outdated?
-                    if m_valid_after_date < m_valid_before_date:
-                        results.append( OutdatedCert(info) )
                         count += 1
 
                 # On error, log the exception and continue.
