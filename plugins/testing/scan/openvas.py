@@ -369,13 +369,17 @@ class OpenVASPlugin(TestingPlugin):
 
                             elif l_family in CATEGORIES:
                                 clazz = globals()[ CATEGORIES[l_family] ]
-
                         except Exception, e:
-                            tb = format_exc()
-                            Logger.log_error_verbose(
-                                "Failed to find category %r, reason: %s" %
-                                (l_plugin_id, str(e)))
-                            Logger.log_error_more_verbose(tb)
+                            # FIXME: When message system works well, display logger.
+                            #
+                            # No family found
+                            pass
+
+                            #tb = format_exc()
+                            #Logger.log_error_verbose(
+                                #"Failed to find category %r, reason: %s" %
+                                #(l_plugin_id, str(e)))
+                            #Logger.log_error_more_verbose(tb)
 
                 # Create the vulnerability instance.
                 vuln = clazz(**kwargs)
