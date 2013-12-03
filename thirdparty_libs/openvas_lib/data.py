@@ -337,6 +337,11 @@ class OpenVASNVT(object):
         :param val: The description of NVT
         :type val: basestring
         """
+        if not val:
+            val = ""
+        elif not isinstance(val, basestring):
+            raise TypeError("Expected string, got %r instead" % type(val))
+
         self.__description = val
 
 
@@ -1028,6 +1033,10 @@ class OpenVASResult(object):
         """
         :type val: basestring
         """
+        if not val:
+            val = ""
+        elif not isinstance(val, basestring):
+            raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__description = val
 
