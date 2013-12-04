@@ -1,6 +1,6 @@
 [Documentation]
-Name        = Xsser
-Description = Detects and exploits general XSS.
+Name        = XSSer
+Description = Integation with XSSer: http://xsser.sourceforge.net/
 Author      = Jekkay Hu
 Version     = 0.1
 Website     = http://blog.csdn.net/hujkay

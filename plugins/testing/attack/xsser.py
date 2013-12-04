@@ -28,13 +28,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from golismero.api.plugin import TestingPlugin
-from golismero.api.logger import Logger
 from golismero.api.data.resource.url import Url
-from golismero.api.external import run_external_tool, tempfile
-from golismero.api.data.vulnerability.injection.xss_injection import XSSInjection
+from golismero.api.data.vulnerability.injection.xss import XSS
+from golismero.api.external import run_external_tool, tempfile, \
+     find_binary_in_path
+from golismero.api.logger import Logger
+from golismero.api.net import ConnectionSlot
+from golismero.api.plugin import TestingPlugin
+
+from os.path import join, dirname, abspath, isfile
 from time import time
-import os
+from traceback import format_exc
 
 try:
     from xml.etree import cElementTree as ET
@@ -42,159 +46,187 @@ except ImportError:
     from xml.etree import ElementTree as ET
 
 
-class XSSerplugin(TestingPlugin):
-    
+#------------------------------------------------------------------------------
+class XSSerPlugin(TestingPlugin):
+
+
+    #--------------------------------------------------------------------------
+    def check_params(self):
+        if not isfile( self.get_xsser() ):
+            raise RuntimeError(
+                "XSSer not found! You can download it from: "
+                "http://xsser.sourceforge.net/")
+
+
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
-    
+
+
+    #--------------------------------------------------------------------------
     def recv_info(self, info):
-        if not isinstance(info, Url):
-            return
-        
+
         if not info.has_url_params and not info.has_post_params:
-             Logger.log("URL '%s' has not parameters" % info.url)
-             return
-         
-        # Get xss script executable
+            Logger.log_more_verbose("URL '%s' has no parameters" % info.url)
+            return
+
         xsser_script = self.get_xsser()
 
         results = []
 
-        args = [
+        with tempfile(prefix="tmpxss", suffix=".xml") as filename:
+
+            args = [
                 "-u",
                 info.url,
-                ]
-        with tempfile(prefix="tmpxss", suffix=".xml") as filename:
-            args.extend([
-                         "--xml=%s" % filename
-                        ])
+                "--xml=%s" % filename,
+            ]
+
             if info.has_url_params:
-                if self.run_xsser(info.url,xsser_script, args):
-                    results.extend(self.parse_xsser_result(info,filename))
-        
+                if self.run_xsser(info.url, xsser_script, args):
+                    results.extend(self.parse_xsser_result(info, filename))
+
             if info.has_post_params:
                 args.extend([
-                             "-p",
-                             "&".join([ "%s=%s" % (k, v) for k, v in info.post_params.iteritems()])
-                             ])
-                if self.run_xsser(info.url,xsser_script, args):
-                    results.extend(self.parse_xsser_result(info,filename))        
-        
+                    "-p",
+                    "&".join(
+                        [ "%s=%s" % (k, v)
+                          for k, v in info.post_params.iteritems() ]
+                    ),
+                ])
+                if self.run_xsser(info.url, xsser_script, args):
+                    results.extend(self.parse_xsser_result(info, filename))
+
         if results:
-            Logger.log("Found %s xss vulns." % len(results))
+            Logger.log("Found %s XSS vulnerabilities." % len(results))
         else:
-            Logger.log("No xss vulns found.")
-            
+            Logger.log_verbose("No XSS vulnerabilities found.")
 
         return results
-    
-    def run_xsser(self,url,command,args):
+
+
+    #--------------------------------------------------------------------------
+    def run_xsser(self, url, command, args):
         """
-        Run xsser target
-        
-        :param url: the url to be tested
+        Run XSSer against the given target.
+
+        :param url: The URL to be tested.
         :type url: str
-        
-        :param command: path to xsser script
+
+        :param command: Path to the XSSer script.
         :type command: str
-        
-        :param args: the arguments pass to xsser
+
+        :param args: The arguments to pass to XSSer.
         :type args: list
-        
-        :return: return True is run successful, or False for fail
-        :rtype: bool   
+
+        :return: True id successful, False otherwise.
+        :rtype: bool
         """
-        Logger.log("Launching xsser against: %s" % url)
-        Logger.log_more_verbose("xsser arguments: %s" % " ".join(args))
+
+        Logger.log("Launching XSSer against: %s" % url)
+        Logger.log_more_verbose("XSSer arguments: %s" % " ".join(args))
 
         t1 = time()
         code = run_external_tool(command, args, callback=Logger.log_verbose)
         t2 = time()
 
-        # Log in extra verbose mode.
         if code:
-            Logger.log_error("xsser execution failed, status code: %d" % code)
+            Logger.log_error("XSSer execution failed, status code: %d" % code)
             return False
-        else:
-            Logger.log("xsser scan finished in %s seconds for target: %s"% (t2 - t1, url))
-            return True
-        
-    def get_subnode_text(self,node,childname,defaulvalue = None):
+        Logger.log("XSSer scan finished in %s seconds for target: %s" % (t2 - t1, url))
+        return True
+
+
+    #--------------------------------------------------------------------------
+    def get_subnode_text(self, node, childname, defaulvalue = None):
         """
-        Get the node text
-        
-        :param node: the xml tree element
-        :type node:
-        
-        :param childname: the child node name
+        Get the subnode text.
+
+        :param node: XML tree element.
+        :type node: Element
+
+        :param childname: Child node name.
         :type childname: str
-        
-        :param defaultvalue: return default value if not child node exists
-        :type defaultvalue: str or None
-        
-        :return: child node's text
-        :rtype: str|None
+
+        :param defaultvalue:
+            Default value to return if child node doesn't exist.
+        :type defaultvalue: str | None
+
+        :return: Child node's text.
+        :rtype: str | None
         """
         try:
             return node.find(childname).text
-        except:
+        except Exception:
             pass
         return defaulvalue
 
-    def parse_xsser_result(self,target,filename):
+
+    #--------------------------------------------------------------------------
+    def parse_xsser_result(self, target, filename):
         """
-        Convert the result to golismero data model
-        
-        :param target: the dectected url  
+        Convert the result to golismero data model.
+
+        :param target: Dectected URL.
         :type target: Url
-        
-        :param filename: the path to scan result file generated by xsser
+
+        :param filename: Path to scan results file generated by XSSer.
         :type filename: str
-        
-        :return: return the scan result
+
+        :return: Scan results.
         :rtype: list(XSSInjection)
         """
-        result=[]
+        result = []
         try:
             tree = ET.parse(filename)
             scan = tree.getroot()
-            
-            # get successful count
+
+            # Get the count of successful injections.
+            # Abort if no injections were successful.
             node = scan.find('.//abstract/injections/successful')
             if node is None:
-                raise "Error"
+                return result
             successcount = int(node.text)
             if successcount <= 0:
-                raise "No result, stop parsing"
-            
-            # ger result
+                return result
+
+            # Get the results.
             for node in scan.findall(".//results/attack"):
-                _injection = self.get_subnode_text(node,"injection",None)
-                _browsers  = self.get_subnode_text(node,"browsers","IE")
-                _method    = self.get_subnode_text(node,"method","GET")
+
+                _injection = self.get_subnode_text(node, "injection", None)
                 if _injection is None:
                     continue
-            
-                vul = XSSInjection(url = target,
-                                   vulnerable_params = {"injection":_injection},
-                                   method = _method,
-                                   title = "XSS"
-                                   )
-                vul.description = "XSS vulnerability, browsers:%s" % _browsers
+
+                _browsers = self.get_subnode_text(node, "browsers", "IE")
+                _method   = self.get_subnode_text(node, "method",   "GET")
+
+                url = Url(url = target.url,
+                          method = method,
+                          post_params = target.post_params if method == "POST" else None,
+                          referer = target.referer)
+                vul = XSS(url = url,
+                          vulnerable_params = {"injection":_injection},
+                          injection_point = XSS.INJECTION_POINT_URL,
+                          injection_type = "XSS",
+                          )
+                vul.description += "\n\nBrowsers: %s\n" % _browsers
                 result.append(vul)
 
-        except:
-            pass
-        
+        except Exception, e:
+            tb = format_exc()
+            Logger.log_error(str(e))
+            Logger.log_error_more_verbose(tb)
+
         return result
-    
+
+
+    #--------------------------------------------------------------------------
     def get_xsser(self):
         """
-        get xsser script path
-        
-        :return: return the path to xsser script
+        :return: Path to the XSSer script.
         :rtype: str
         """
-        return  os.path.join(os.path.dirname(os.path.realpath(__file__)),'xsser/xsser') 
-    
-    
+        xsser = join(dirname(abspath(__file__)), "xsser", "xsser")
+        if not isfile(xsser):
+            xsser = find_binary_in_path("xsser")
+        return xsser
