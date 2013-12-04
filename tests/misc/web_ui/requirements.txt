@@ -1,0 +1,22 @@
+BeautifulSoup < 4.0.0
+colorizer
+decorator
+django-cors-headers
+django-filter
+django<1.6
+djangorestframework
+django-standalone
+dnspython
+gunicorn
+markdown
+netaddr
+nltk
+pygments
+python_cjson
+pyyaml
+requests
+requests_ntlm
+texttable
+tldextract
+docutils
+simplejson
