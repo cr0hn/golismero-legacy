@@ -617,7 +617,7 @@ class WebUIPlugin(UIPlugin):
             print tb
 
         # Notify the end of the audit.
-        self.notify_stage(message.audit_name, "cancel")
+        self.notify_stage(audit_name, "cancel")
 
 
     #--------------------------------------------------------------------------
