@@ -1,12 +1,1 @@
-BeautifulSoup < 4.0.0
-colorizer
-decorator
-dnspython
-netaddr
-nltk
-pyyaml
-requests
-requests_ntlm
-texttable
-tldextract
 docutils
