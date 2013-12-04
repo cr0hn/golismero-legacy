@@ -1,0 +1,8 @@
+[Documentation]
+Name        = Xsser
+Description = Detects and exploits general XSS.
+Author      = Jekkay Hu
+Version     = 0.1
+Website     = http://blog.csdn.net/hujkay
+Copyright   = Copyright (C) 2011-2013 GoLismero Project
+License     = GNU Public License
