@@ -8,7 +8,7 @@
 		<link rel="stylesheet" type="text/css" href="./css/jquery.jqplot.min.css">
 		<link rel="stylesheet" type="text/css" href="./css/stylesHighlight/default.css">
 	</head>
-	<body>	
+	<body>
 		<div class="navbar navbar-fixed-top navbar-inverse" role="navigation">
 	      <div class="container">
 	        <div class="navbar-header">
@@ -36,10 +36,6 @@
 	      </div><!-- /.container -->
 	    </div>
 		<div class="container">
-			<div class="alert alert-dismissable alert-info">
-			  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-			  <span class="bold">Info!</span> If you want the ability to generate a custom report purchase the professional version. <a href="https://buguroo.com/productos/bugblast/" class="alert-link" target="_blank">More info</a>
-			</div>
 			<div class="row" data-anchor="quickInfo">
 				<div class="col-sm-4 ">
 					<div class="well quickInfo">
@@ -54,10 +50,10 @@
 								<li><span class="glyphicon glyphicon-play"></span>192.168.1.1</li>
 								<li><span class="glyphicon glyphicon-play"></span>http://google.com</li>
 								<li><span class="glyphicon glyphicon-play"></span>http://golismero-project.com</li>
-								
+
 							</ul>
 						</div>
-					</div>					
+					</div>
 				</div>
 				<div class="col-sm-4 " >
 					<div class="well quickInfo">
@@ -85,7 +81,7 @@
 								<li><span class="infoVulnerability bold">Informational</span>:10</li>
 							</ul>
 						</div>
-					</div>					
+					</div>
 				</div>
 			</div>
 			<div class="row">
@@ -98,7 +94,7 @@
 						Curabitur nec ultrices arcu. Aliquam iaculis tellus enim, vel aliquam enim aliquam nec. Donec vitae commodo nisi, ut aliquet leo. Donec vitae sodales tortor. Vivamus porta tortor eu felis fermentum, at dapibus tortor volutpat. Ut aliquam turpis in odio laoreet, in sollicitudin tortor suscipit. Maecenas cursus, ante in hendrerit tincidunt, sem nulla ornare metus, id pretium eros magna eget leo.
 
 						Quisque leo dui, viverra et velit non, faucibus vestibulum eros. Nunc dictum nunc eu lorem fringilla tristique vitae in tortor. Suspendisse potenti. Etiam rhoncus felis eros, vel luctus mauris iaculis eu. Nam suscipit euismod bibendum. Donec a justo dignissim, porttitor leo eu, sodales urna. Integer placerat risus sit amet ornare ornare. Cras vulputate ligula at dolor accumsan, non convallis elit gravida. Maecenas mollis dui lacus, at malesuada diam gravida scelerisque. Sed arcu eros, mattis non est eu, luctus aliquet nisi. Nunc dapibus, orci a feugiat pulvinar, dolor urna hendrerit leo, et ultrices libero ipsum non ligula.
-	
+
 						Quisque pretium mattis consequat. Etiam mi diam, aliquam id enim in, mollis rutrum lorem. Etiam sollicitudin eros vitae diam vehicula congue. Suspendisse convallis risus adipiscing felis volutpat hendrerit. Donec faucibus tellus ut nisi vulputate tempor. Pellentesque erat tellus, dapibus ac laoreet vitae, condimentum ut quam. Praesent velit tellus, pulvinar quis velit et, adipiscing sollicitudin sem. In interdum urna ac rhoncus ullamcorper. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed cursus cursus metus imperdiet lobortis. Nulla nulla lectus, elementum non turpis vel, elementum fermentum elit. Nullam rhoncus eros at euismod mollis. Sed commodo fermentum lorem, a ornare ligula mollis non. Nam mollis dui sit amet semper pretium.
 					</div>
 				</div>
@@ -139,7 +135,7 @@
 									</th>
 					        	</tr>
 					        </thead>
-					        <tbody>					        	
+					        <tbody>
 					        </tbody>
 					  	</table>
 					  	<a href="#" id="showMoreVulnerabilities">Show more </a><div class="pull-right">(Show: <span id="showTableVulnerabilities"></span>, Total: <span id="totalTableVulnerabilities"></span>)</div>
@@ -152,14 +148,14 @@
 						<h3 data-anchor="technicalReportTable">Technical report</h3>
 					  	<table class="table table-bordered table-hover" id="tableTechnicalReport">
 						   <tbody>
-						   	
+
 						   </tbody>
-					  	</table>					  	
+					  	</table>
 					</div>
 				</div>
 			</div>
 		</div>
-		<span class="totop"><a href="#"><i class="glyphicon glyphicon-chevron-up"></i></a></span> 
+		<span class="totop"><a href="#"><i class="glyphicon glyphicon-chevron-up"></i></a></span>
 
 
 
@@ -186,15 +182,15 @@
 		</script>
 		<script type="text/template" id="rowTargetTechnicalTable">
 			<tr class="targetRow" data-target="${$data}">
-				<td><span class="glyphicon glyphicon-record"></span>${$data}</td>				
+				<td><span class="glyphicon glyphicon-record"></span>${$data}</td>
 			</tr>
 		</script>
 		<script type="text/template" id="tableResourcesTechnicalTable">
-			<tr class="openResourceRow"><td>	
-			<h4>Resources</h4>		
+			<tr class="openResourceRow"><td>
+			<h4>Resources</h4>
 			<table class="table table-bordered table-hover">
 			   <tbody>
-			   	
+
 			   </tbody>
 		  	</table>
 		  	</td></tr>
@@ -202,21 +198,21 @@
 		<script type="text/template" id="rowResourcesTechnicalTable">
 
 			<tr class="resourceRow" data-resource="${$data}">
-				<td>${$data}</td>				
+				<td>${$data}</td>
 			</tr>
 		</script>
 		<script type="text/template" id="tableVulnerabilitiesTechnicalTable">
-			<tr class="openVulnerabilitiesRow"><td>	
+			<tr class="openVulnerabilitiesRow"><td>
 			<h4>Vulnerabilities</h4>
 			<table class="table table-bordered table-hover">
 			   <tbody>
-			   	
+
 			   </tbody>
 		  	</table></td></tr>
 		</script>
 		<script type="text/template" id="rowVulnerabilitiesTechnicalTable">
 			<tr class="vulnerabilityRow" data-vulnerability="${id}">
-				<td>${type}</td>				
+				<td>${type}</td>
 			</tr>
 		</script>
 		<script type="text/template" id="dataVulnerabilitiesTechnicalTable">
@@ -238,10 +234,10 @@
 
 	    	function initChart(){
 				var data = [
-				    ['Critical', 2],['High', 12],['Medium', 9], ['Low', 14], 
+				    ['Critical', 2],['High', 12],['Medium', 9], ['Low', 14],
 				    ['Informational', 16]
 				  ];
-				  var plot1 = jQuery.jqplot ('chartVulnerabilities', [data], 
+				  var plot1 = jQuery.jqplot ('chartVulnerabilities', [data],
 				    {
 			            seriesDefaults: {
 			              // Make this a pie chart.
@@ -338,9 +334,9 @@
 	    				$nextRow.show();
 	    			}
 	    		}else{
-	    			var div = $.tmpl( "dataVulnerabilitiesTechnicalTable",  dataVulnerability);	 
+	    			var div = $.tmpl( "dataVulnerabilitiesTechnicalTable",  dataVulnerability);
 	    			$(div).find('pre code').each(function(i, e) {hljs.highlightBlock(e)});
-	    			$tr.attr("data-show", true);   			
+	    			$tr.attr("data-show", true);
 	    			$(div).insertAfter($tr);
 	    		}
 	    	}
@@ -399,7 +395,7 @@
 	    		$.template("tableVulnerabilitiesTechnicalTable", $("#tableVulnerabilitiesTechnicalTable"));
 	    		$.template("rowVulnerabilitiesTechnicalTable", $("#rowVulnerabilitiesTechnicalTable"));
 	    		$.template("dataVulnerabilitiesTechnicalTable", $("#dataVulnerabilitiesTechnicalTable"));
-	    		
+
 	    	}
 	    	function obtainCriticality(c){
 	    			switch (c){
@@ -414,7 +410,7 @@
 	    			case 5: return "criticalVulnerability";
 	    			break;
 	    		}
-	    		
+
 	    	}
 	    	function obtainNameCriticality(c){
 	    			switch (c){
@@ -428,7 +424,7 @@
 	    			break;
 	    			case 5: return "Critical";
 	    			break;
-	    		}	    		
+	    		}
 	    	}
 	    	function initToTop(){
 	    		$(".totop").hide();
@@ -438,7 +434,7 @@
 						if ($(this).scrollTop()>600)
 						{
 							$('.totop').slideDown();
-						} 
+						}
 						else
 						{
 							$('.totop').slideUp();
@@ -462,7 +458,7 @@
 				initTemplates();
 				initVulnerabilitiesTable();
 				initTechnicalTable();
-				
+
 			});
 	    </script>
 	</body>
