@@ -293,8 +293,6 @@ class PushingViewSet(ViewSet):
            VERBOSITY     :: int,
         ]
         """
-        print request.DATA
-        return Response()
 
         # Convert input data
         try:
