@@ -226,7 +226,7 @@ class XSSerPlugin(TestingPlugin):
         :return: Path to the XSSer script.
         :rtype: str
         """
-        xsser = join(dirname(abspath(__file__)), "xsser", "xsser")
+        xsser = join(dirname(abspath(__file__)), "xsser", "xsser.py")
         if not isfile(xsser):
             xsser = find_binary_in_path("xsser")
         return xsser
