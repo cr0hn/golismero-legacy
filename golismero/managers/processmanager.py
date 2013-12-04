@@ -48,17 +48,14 @@ from ..messaging.message import Message
 from imp import load_source
 from multiprocessing import Manager
 from os import getpid
+from signal import signal, SIGINT, SIG_IGN
 from thread import get_ident
 from threading import Timer
 from traceback import format_exc, print_exc, format_exception_only, format_list
 from warnings import catch_warnings, simplefilter
 
-import sys
 import socket
-
-# Make some runtime patches to the multiprocessing module.
-# Just importing this submodule does the magic!
-from ..patches import mp  # noqa
+import sys
 
 # Imports needed to override the multiprocessing Process and Pool classes.
 from multiprocessing import Process as _Original_Process
@@ -72,14 +69,6 @@ class Process(_Original_Process):
 
     This means we have to take care of killing our own subprocesses.
     """
-
-    def __init__(self, *arg, **kwarg):
-        super(Process, self).__init__(*arg, **kwarg)
-        try:
-            import posix
-            posix.nice(99)
-        except Exception:
-            pass
 
     @property
     def daemon(self):
@@ -121,6 +110,9 @@ def launcher(queue, max_concurrent, refresh_after_tasks):
     return _launcher(queue, max_concurrent, refresh_after_tasks)
 
 def _launcher(queue, max_concurrent, refresh_after_tasks):
+
+    # Initialize this worker process.
+    _init_worker()
 
     # Instance the pool manager.
     pool = PluginPoolManager(max_concurrent, refresh_after_tasks)
@@ -402,6 +394,45 @@ def _plugin_killer(context):
 
         # Kill the current process.
         exit(1)
+
+
+#------------------------------------------------------------------------------
+class _FakeFile(object):
+    """
+    Mimics a file object well enough to supress print messages.
+    Also faster than opening a file descriptor for /dev/null.
+    """
+
+    def write(self, s):
+        pass
+
+    def flush(self):
+        pass
+
+    def close(self):
+        pass
+
+
+#------------------------------------------------------------------------------
+def _init_worker():
+    """
+    Initializer for pooled processes.
+    """
+
+    # Disable handling of KeyboardInterrupt.
+    # This way only the main process gets the signal.
+    signal(SIGINT, SIG_IGN)
+
+    # Try to lower the CPU usage priority as much as possible.
+    try:
+        import posix
+        posix.nice(99)
+    except Exception:
+        pass
+
+    # Disable standard output and standard error.
+    f = _FakeFile()
+    sys.stdout, sys.stderr = f, f
 
 
 #------------------------------------------------------------------------------
@@ -888,6 +919,7 @@ class PluginPoolManager (object):
 
                 # Create the process pool.
                 self.__pool = Pool(
+                    initializer = _init_worker,
                     processes = self.__max_processes,
                     maxtasksperchild = self.__refresh_after_tasks)
 
