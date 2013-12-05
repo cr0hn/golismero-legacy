@@ -1,5 +1,5 @@
-Ui - User Interface
-*******************
+User Interface
+**************
 
 User Interface plugins control the way in which the user interacts with GoLismero.
 

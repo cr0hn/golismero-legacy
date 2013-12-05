@@ -1,5 +1,5 @@
-Recon - Reconnaisance
-*********************
+Reconnaisance
+*************
 
 Reconnaisance plugins perform passive, non-invasive information gathering tests on the targets.
 

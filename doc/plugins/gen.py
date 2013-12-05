@@ -53,8 +53,6 @@ if __name__ == '__main__':
     for plugin_type in ("import", "recon", "scan", "attack", "intrude", "cleanup", "report", "ui"):
         with open(path.join(here, "source", plugin_type + ".rst"), "w") as f:
             name = get_plugin_type_display_name(plugin_type)
-            if plugin_type.title() != name:
-                name = "%s - %s" % (plugin_type.title(), name)
             print >>f, name
             print >>f, "*" * len(name)
             print >>f, ""
