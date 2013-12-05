@@ -34,7 +34,7 @@ if standalone is not None:
 
 # Autogenerate the rst files on the first run.
 if not os.path.exists("index.rst"):
-    sys.path.append(".")
+    sys.path.append(os.path.abspath("."))
     from gen import gen
     gen()
 
