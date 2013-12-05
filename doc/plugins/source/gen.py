@@ -47,11 +47,23 @@ from golismero.api.plugin import get_plugin_type_display_name, get_plugin_type_d
 from golismero.managers.pluginmanager import PluginManager
 from golismero.common import OrchestratorConfig
 
-if __name__ == '__main__':
+categories = ("import", "recon", "scan", "attack", "intrude", "cleanup", "report", "ui")
+
+index = """List of plugins
+===============
+
+These are the plugins shipped by default with GoLismero:
+
+.. toctree::
+   :maxdepth: 2
+
+""".replace("\r\n", "\n")
+
+def gen():
     pluginManager = PluginManager()
     pluginManager.find_plugins( OrchestratorConfig() )
-    for plugin_type in ("import", "recon", "scan", "attack", "intrude", "cleanup", "report", "ui"):
-        with open(path.join(here, "source", plugin_type + ".rst"), "w") as f:
+    for plugin_type in categories:
+        with open(path.join(here, plugin_type + ".rst"), "w") as f:
             name = get_plugin_type_display_name(plugin_type)
             print >>f, name
             print >>f, "*" * len(name)
@@ -95,7 +107,14 @@ if __name__ == '__main__':
             else:
                 print >>f, "There are currently no plugins in this category."
                 print >>f, ""
-        with open(path.join(here, "source", plugin_type + ".rst"), "rU") as f:
+        with open(path.join(here, plugin_type + ".rst"), "rU") as f:
             data = f.read()
-        with open(path.join(here, "source", plugin_type + ".rst"), "wb") as f:
+        with open(path.join(here, plugin_type + ".rst"), "wb") as f:
             f.write(data)
+    with open("index.rst", "wb") as f:
+        f.write(index)
+        for plugin_type in categories:
+            f.write("   %s\n" % plugin_type)
+
+if __name__ == '__main__':
+    gen()

@@ -32,6 +32,12 @@ if standalone is not None:
         from docutils.readers import standalone
         sys.modules["standalone"] = standalone
 
+# Autogenerate the rst files on the first run.
+if not os.path.exists("index.rst"):
+    sys.path.append(".")
+    from gen import gen
+    gen()
+
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
