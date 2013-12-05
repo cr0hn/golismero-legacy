@@ -43,51 +43,35 @@ except NameError:
         sys.path.insert(0, golismero)
     _FIXED_PATH_ = True
 
-from golismero.main.testing import PluginTester
-
-stage_names = {
-    "import"  : "Import",
-    "recon"   : "Reconnaisance",
-    "scan"    : "Scan",
-    "attack"  : "Attack",
-    "intrude" : "Intrude",
-    "cleanup" : "Cleanup",
-    "report"  : "Report",
-    "ui"      : "User Interface",
-}
-
-stage_descriptions = {
-    "import"  : "Import plugins collect previously found resources from other tools and store them in the audit database right before the audit starts.",
-    "recon"   : "Reconnaisance plugins perform passive, non-invasive information gathering tests on the targets.",
-    "scan"    : "Scan plugins perform active, non-invasive information gathering tests on the targets.",
-    "attack"  : "Attack plugins perform invasive tests on the targets to exploit vulnerabilities in them.",
-    "intrude" : "Intrude plugins use the access gained by Attack plugins to extract privileged information from the targets.",
-    "cleanup" : "Cleanup plugins undo whatever changes the previous plugins may have done on the targets.",
-    "report"  : "Report plugins control how the audit results will be exported.",
-    "ui"      : "User Interface plugins control the way in which the user interacts with GoLismero.",
-}
+from golismero.api.plugin import get_plugin_type_display_name, get_plugin_type_description
+from golismero.managers.pluginmanager import PluginManager
+from golismero.common import OrchestratorConfig
 
 if __name__ == '__main__':
-    with PluginTester(autoinit = False) as t:
-        t.orchestrator_config.use_colors = False
-        t.orchestrator_config.verbose = 0
-        t.orchestrator_config.max_concurrent = 0
-        t.init_environment()
-        for stage in ("import", "recon", "scan", "attack", "intrude", "cleanup", "report", "ui"):
-            with open(path.join(here, "source", stage + ".rst"), "w") as f:
-                print >>f, stage_names[stage]
-                print >>f, "*" * len(stage_names[stage])
-                print >>f, ""
-                print >>f, stage_descriptions[stage]
-                print >>f, ""
-                plugins = t.orchestrator.pluginManager.get_plugins(stage)
+    pluginManager = PluginManager()
+    pluginManager.find_plugins( OrchestratorConfig() )
+    for plugin_type in ("import", "recon", "scan", "attack", "intrude", "cleanup", "report", "ui"):
+        with open(path.join(here, "source", plugin_type + ".rst"), "w") as f:
+            name = get_plugin_type_display_name(plugin_type)
+            if plugin_type.title() != name:
+                name = "%s - %s" % (plugin_type.title(), name)
+            print >>f, name
+            print >>f, "*" * len(name)
+            print >>f, ""
+            print >>f, get_plugin_type_description(plugin_type)
+            print >>f, ""
+            plugins = pluginManager.get_plugins(plugin_type)
+            if plugins:
                 for plugin_id in sorted(plugins.keys()):
                     plugin_info = plugins[plugin_id]
                     display_name = "%s (*%s*)" % (plugin_info.display_name, plugin_id[plugin_id.rfind("/")+1:])
+                    description = plugin_info.description
+                    description = description.replace("\r\n", "\n")
+                    description = description.replace("\n", "\n\n")
                     print >>f, display_name
                     print >>f, "=" * len(display_name)
                     print >>f, ""
-                    print >>f, plugin_info.description
+                    print >>f, description
                     print >>f, ""
                     if plugin_info.plugin_args:
                         width_key = 17
@@ -98,13 +82,16 @@ if __name__ == '__main__':
                             width_key = max(width_key, len(key))
                             width_value = max(width_value, len(value))
                         print >>f, "%s %s" % (("=" * width_key), ("=" * width_value))
-                        print >>f, "**Argument name**%s **Default value**%s" % ((" " * (width_key - 17)), (" " * (width_value - 17)))
+                        print >>f, ("**Argument name**%s **Default value**%s" % ((" " * (width_key - 17)), (" " * (width_value - 17)))).rstrip()
                         print >>f, "%s %s" % (("-" * width_key), ("-" * width_value))
                         for key, value in plugin_info.plugin_args.iteritems():
                             if key in plugin_info.plugin_passwd_args:
                                 value = "\\*" * 16
                             pad_key = (" " * (width_key - len(key)))
                             pad_value = (" " * (width_value - len(value)))
-                            print >>f, "%s%s %s%s" % (key, pad_key, value, pad_value)
-                        print >>f, "%s %s" % (("=" * width_key), ("=" * width_value))
+                            print >>f, ("%s%s %s%s" % (key, pad_key, value, pad_value)).rstrip()
+                        print >>f, ("%s %s" % (("=" * width_key), ("=" * width_value))).rstrip()
                         print >>f, ""
+            else:
+                print >>f, "There are currently no plugins in this category."
+                print >>f, ""

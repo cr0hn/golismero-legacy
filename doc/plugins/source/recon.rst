@@ -1,5 +1,5 @@
-Reconnaisance
-*************
+Recon - Reconnaisance
+*********************
 
 Reconnaisance plugins perform passive, non-invasive information gathering tests on the targets.
 
@@ -12,12 +12,19 @@ DNS Resolver (*dns*)
 ====================
 
 DNS resolver plugin.
+
 Without it, GoLismero can't resolve domain names to IP addresses.
 
-OS Fingerprinter (*fingerprint_os*)
-===================================
+Malware DNS detection (*dns_malware*)
+=====================================
 
-Fingerprinter of server operating systems.
+Detect if a domain has been potentially spoofed, hijacked.
+
+================= ========================================
+**Argument name** **Default value**
+----------------- ----------------------------------------
+wordlist          malware/joxean/paranoid_only_domains.txt
+================= ========================================
 
 Web Server Fingerprinter (*fingerprint_web*)
 ============================================
@@ -28,6 +35,7 @@ IP Geolocator (*geoip*)
 =======================
 
 Geolocates IP addresses using online services.
+
 This plugin requires a working Internet connection to work.
 
 Robots.txt Analyzer (*robots*)
@@ -39,6 +47,7 @@ Web Spider (*spider*)
 =====================
 
 Web spider plugin.
+
 Without it, GoLismero can't crawl web sites.
 
 Suspicious URL Finder (*suspicious_url*)

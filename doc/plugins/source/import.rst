@@ -18,3 +18,8 @@ OpenVAS XML Importer (*xml_openvas*)
 
 Import the results of an OpenVAS scan in XML format.
 
+SSLScan XML Importer (*xml_sslscan*)
+====================================
+
+Import the results of an SSLScan run in XML format.
+

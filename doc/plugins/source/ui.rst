@@ -1,5 +1,5 @@
-User Interface
-**************
+Ui - User Interface
+*******************
 
 User Interface plugins control the way in which the user interacts with GoLismero.
 
@@ -12,9 +12,4 @@ NO UI (*disabled*)
 ==================
 
 Empty user interface. Used when running in daemon mode.
-
-Web UI (*web*)
-==============
-
-Web user interface.
 
