@@ -68,11 +68,7 @@ pause             0
 tuning            x6
 exec
 timeout           10
-plugins           nikto_apacheusers,nikto_apache_expect_xss,nikto_auth,nikto_cgi,
-nikto_clientaccesspolicy,nikto_content_search,nikto_cookies,nikto_core,
-nikto_embedded,nikto_favicon,nikto_fileops,nikto_headers,nikto_httpoptions,
-nikto_msgs,nikto_multiple_index,nikto_outdated,nikto_parked,nikto_report_csv,
-nikto_siebel,nikto_ssl,nikto_tests
+plugins           nikto_apacheusers,nikto_apache_expect_xss,nikto_auth,nikto_cgi, nikto_clientaccesspolicy,nikto_content_search,nikto_cookies,nikto_core, nikto_embedded,nikto_favicon,nikto_fileops,nikto_headers,nikto_httpoptions, nikto_msgs,nikto_multiple_index,nikto_outdated,nikto_parked,nikto_report_csv, nikto_siebel,nikto_ssl,nikto_tests
 config
 ================= ====================================================================================================================================================================================================================================================================================================================================
 

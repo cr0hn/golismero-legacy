@@ -85,6 +85,8 @@ if __name__ == '__main__':
                         print >>f, ("**Argument name**%s **Default value**%s" % ((" " * (width_key - 17)), (" " * (width_value - 17)))).rstrip()
                         print >>f, "%s %s" % (("-" * width_key), ("-" * width_value))
                         for key, value in plugin_info.plugin_args.iteritems():
+                            value = value.replace("\r\n", "\n")
+                            value = value.replace("\n", " ")
                             if key in plugin_info.plugin_passwd_args:
                                 value = "\\*" * 16
                             pad_key = (" " * (width_key - len(key)))
