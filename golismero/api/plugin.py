@@ -39,8 +39,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = [
     "UIPlugin", "ImportPlugin", "TestingPlugin", "ReportPlugin",
-    "get_plugin_info", "get_plugin_ids", "get_plugin_name",
-    "get_stage_name", "get_stage_display_name", "PluginState",
+    "PluginState", "get_plugin_info", "get_plugin_ids", "get_plugin_name",
+    "get_stage_name", "get_stage_display_name",
+    "get_plugin_type_display_name", "get_plugin_type_description",
 ]
 
 from .config import Config
@@ -135,11 +136,13 @@ _STAGE_DISPLAY_NAMES = {
     "finish"  : "Finished",
     "cancel"  : "Cancelled",
 }
+
 def get_stage_display_name(stage):
     """
     Get a user friendly display name for the given stage.
 
-    :param stage: Stage.
+    :param stage:
+        Valid stages are:%s
     :type stage: str
 
     :returns: Display name for the stage.
@@ -148,6 +151,83 @@ def get_stage_display_name(stage):
     :raises KeyError: The given stage does not exist.
     """
     return _STAGE_DISPLAY_NAMES[ stage.strip().lower() ]
+
+get_stage_display_name.__doc__ %= "".join(
+    "\n         - %s" % x for x in _STAGE_DISPLAY_NAMES.iterkeys())
+
+
+#------------------------------------------------------------------------------
+_PLUGIN_TYPE_NAMES = {
+    "import"  : "Import",
+    "recon"   : "Reconnaisance",
+    "scan"    : "Scan",
+    "attack"  : "Attack",
+    "intrude" : "Intrude",
+    "cleanup" : "Cleanup",
+    "report"  : "Report",
+    "ui"      : "User Interface",
+}
+
+def get_plugin_type_display_name(plugin_type):
+    """
+    Get a user friendly display name for the given plugin type.
+
+    :param plugin_type:
+        Valid plugin types are:%s
+    :type plugin_type: str
+
+    :returns: Display name for the plugin type.
+    :rtype: str
+
+    :raises KeyError: The given plugin type does not exist.
+    """
+    return _PLUGIN_TYPE_NAMES[ plugin_type.strip().lower() ]
+
+get_plugin_type_display_name.__doc__ %= "".join(
+    "\n         - %s" % x for x in _PLUGIN_TYPE_NAMES.iterkeys())
+
+
+#------------------------------------------------------------------------------
+_PLUGIN_TYPE_DESCRIPTIONS = {
+    "import"  : "Import plugins collect previously found resources from other"
+                " tools and store them in the audit database right before the"
+                " audit starts.",
+    "recon"   : "Reconnaisance plugins perform passive, non-invasive"
+                " information gathering tests on the targets.",
+    "scan"    : "Scan plugins perform active, non-invasive information"
+                " gathering tests on the targets.",
+    "attack"  : "Attack plugins perform invasive tests on the targets to"
+                " exploit vulnerabilities in them.",
+    "intrude" : "Intrude plugins use the access gained by Attack plugins to"
+                " extract privileged information from the targets.",
+    "cleanup" : "Cleanup plugins undo whatever changes the previous plugins"
+                " may have done on the targets.",
+    "report"  : "Report plugins control how the audit results will be"
+                " exported to different file formats.",
+    "testing" : "Testing plugins are the ones that perform the security tests."
+                " They are categorized by stage: recon, scan, attack, intrude"
+                " and cleanup.",
+    "ui"      : "User Interface plugins control the way in which the user"
+                " interacts with GoLismero.",
+}
+
+def get_plugin_type_description(plugin_type):
+    """
+    Get a user-friendly description from a plugin type.
+
+    :param plugin_type:
+        Valid plugin types are:%s
+    :type plugin_type: str
+
+    :returns: Plugin type description.
+    :rtype: str
+
+    :raises KeyError: The given plugin type does not exist.
+    """
+    return _PLUGIN_TYPE_DESCRIPTIONS[ plugin_type.strip().lower() ]
+
+get_plugin_type_description.__doc__ %= "".join(
+    "\n         - %s" % x for x in _PLUGIN_TYPE_DESCRIPTIONS.iterkeys())
 
 
 #------------------------------------------------------------------------------

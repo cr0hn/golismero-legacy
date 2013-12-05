@@ -1241,15 +1241,15 @@ class AuditPluginManager (PluginManager):
 
 
     #--------------------------------------------------------------------------
-    def initialize(self, auditConfig):
+    def initialize(self, audit_config):
         """
         Initializes the plugin arguments and disables the plugins that fail the
         parameter checks. Also calculates the dependencies.
         """
 
         # Set the plugin arguments.
-        if auditConfig.plugin_args:
-            for plugin_id, plugin_args in auditConfig.plugin_args.iteritems():
+        if audit_config.plugin_args:
+            for plugin_id, plugin_args in audit_config.plugin_args.iteritems():
                 status = self.set_plugin_args(plugin_id, plugin_args)
                 if status == 1:
                     try:
@@ -1264,7 +1264,7 @@ class AuditPluginManager (PluginManager):
                         plugin_id, RuntimeWarning)
 
         # Check the plugin parameters.
-        self.__check_plugin_params(auditConfig)
+        self.__check_plugin_params(audit_config)
 
         # Calculate the dependencies.
         self.__calculate_dependencies()

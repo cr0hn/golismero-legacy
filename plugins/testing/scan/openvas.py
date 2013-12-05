@@ -261,7 +261,7 @@ class OpenVASPlugin(TestingPlugin):
                     },
                 )
             except RuntimeError:
-                Logger.log("Django backend previously charged.")
+                Logger.log("Django backend previously loaded.")
 
             # Load the ORM model.
             sys.path.insert(0, openvas_dir)

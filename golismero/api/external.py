@@ -100,7 +100,7 @@ def run_external_tool(command, args = None, env = None, cwd = None,
                 complete compromise of your machine! See:
                 https://www.owasp.org/index.php/Command_Injection
 
-    Example::
+    Example:
         >>> def callback(line):
         ...    print line
         ...
@@ -585,10 +585,10 @@ def tempfile(*args, **kwargs):
     Context manager that creates a temporary file.
     The file is deleted when leaving the context.
 
-    Example::
+    Example:
         >>> with tempfile(prefix="tmp", suffix=".bat") as filename:
         ...     with open(filename, "w") as fd:
-        ...         fd.write("@echo off\necho Hello World!\n")
+        ...         fd.write("@echo off\\necho Hello World!\\n")
         ...     print run_external_tool("cmd.exe", ["/C", filename])
         ...
         ('Hello World!', 0)
@@ -624,7 +624,7 @@ def tempdir():
     Context manager that creates a temporary directory.
     The directory is deleted when leaving the context.
 
-    Example::
+    Example:
         >>> with tempdir() as directory:
         ...     print run_external_tool("cmd.exe", ["dir", directory])
         ...

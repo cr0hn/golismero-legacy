@@ -151,20 +151,21 @@ def get_audit_stats(audit_name = None):
     """
     Get the audit runtime statistics.
 
-    :param audit_name: Name of the audit to query.
+    :param audit_name:
+        Name of the audit to query.
         Use None for the current audit.
     :type audit_name: str | None
 
-    :returns: Dictionary with runtime statistics
+    :returns:
+        Dictionary with runtime statistics
         with at least the following keys:
+
          - "current_stage": [int] Current stage number.
-         - "total_count": [int] Total number of data objects
-           to process in this stage.
-         - "processed_count": [int] Number of data objects already
-           processed in this stage.
-         - "stage_cycles": [dict(int -> int)] Map of stage numbers
-           and times each stage ran.
-    Future versions of GoLismero may include more keys.
+         - "total_count": [int] Total number of data objects to process in this stage.
+         - "processed_count": [int] Number of data objects already processed in this stage.
+         - "stage_cycles": [dict(int -> int)] Map of stage numbers and times each stage ran.
+
+        Future versions of GoLismero may include more keys.
     :rtype: dict(str -> \\*)
     """
     return Config._context.remote_call(
@@ -203,14 +204,17 @@ def get_audit_log_lines(audit_name = None,
         Ignored unless page_num is used too.
     :type per_page: int
 
-    :returns: List of tuples.
+    :returns:
+        List of tuples.
         Each tuple contains the following elements:
+
          - Plugin ID.
          - Data object ID (plugin instance).
          - Log line text. May contain newline characters.
          - Log level.
          - True if the message is an error, False otherwise.
          - Timestamp.
+
     :rtype: list( tuple(str, str, str, int, bool, float) )
     """
     return Config._context.remote_call(MessageCode.MSG_RPC_AUDIT_LOG,
