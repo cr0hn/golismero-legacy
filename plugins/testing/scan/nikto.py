@@ -84,6 +84,7 @@ class NiktoPlugin(TestingPlugin):
             value = value.replace("\r", "")
             value = value.replace("\n", "")
             value = value.replace("\t", "")
+            value = value.replace(" ", "")
             if value:
                 args.extend(["-" + option, value])
 
