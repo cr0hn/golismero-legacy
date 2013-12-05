@@ -68,7 +68,7 @@ class SwitchToAudit(object):
     from within an audit. This is useful, for example, to have access to the
     audit database APIs.
 
-    Example::
+    Example:
         >>> from golismero.api.data.db import Database
         >>> with SwitchToAudit("my_audit"):
         ...     data_ids = Database.keys()
