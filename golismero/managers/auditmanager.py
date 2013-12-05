@@ -143,17 +143,27 @@ class AuditManager (object):
         self.orchestrator.uiManager.check_params(audit_config)
 
         # Create the audit.
-        m_audit = Audit(audit_config, self.orchestrator)
+        audit = Audit(audit_config, self.orchestrator)
 
         # Store it.
-        self.__audits[m_audit.name] = m_audit
+        self.__audits[audit.name] = audit
+
+        # Log the event.
+        if audit.is_new:
+            Logger.log("Audit name: %s" % audit.name)
+        else:
+            Logger.log_verbose("Audit name: %s" % audit.name)
+        if (hasattr(audit.database, "filename") and
+            audit.database.filename != "memory://"
+        ):
+            Logger.log_verbose("Audit database: %s" % audit.database.filename)
 
         # Run!
         try:
-            m_audit.run()
+            audit.run()
 
             # Return it.
-            return m_audit
+            return audit
 
         # On error, abort.
         except Exception, e:
@@ -161,7 +171,7 @@ class AuditManager (object):
             Logger.log_error("Failed to add new audit, reason: %s" % e)
             #Logger.log_error_more_verbose(trace)
             try:
-                self.remove_audit(m_audit.name)
+                self.remove_audit(audit.name)
             except Exception:
                 pass
             raise AuditException("Failed to add new audit, reason: %s" % e)
@@ -346,10 +356,6 @@ class Audit (object):
             raise TypeError(
                 "Expected AuditConfig, got %r instead" % type(audit_config))
 
-        # XXX DEBUG
-        ##from pprint import pprint
-        ##pprint(audit_config.to_dictionary())
-
         # Keep the audit settings.
         self.__audit_config = audit_config
 
@@ -384,17 +390,11 @@ class Audit (object):
         self.__report_manager = None
 
         # Create or open the database.
-        force_print_name = not audit_config.audit_name or audit_config.audit_db == ":auto:"
+        self.__is_new = not audit_config.audit_name or audit_config.audit_db == ":auto:"
         self.__database = AuditDB(audit_config)
 
         # Set the audit name.
         self.__name = self.__database.audit_name
-        if force_print_name:
-            Logger.log("Audit name: %s" % self.__name)
-        else:
-            Logger.log_verbose("Audit name: %s" % self.__name)
-        if hasattr(self.__database, "filename"):
-            Logger.log_verbose("Audit database: %s" % self.database.filename)
 
 
     #--------------------------------------------------------------------------
@@ -406,6 +406,14 @@ class Audit (object):
         :rtype: str
         """
         return self.__name
+
+    @property
+    def is_new(self):
+        """
+        :returns: True if the audit is new, False if it's a reopened audit.
+        :rtype: bool
+        """
+        return self.__is_new
 
     @property
     def orchestrator(self):
