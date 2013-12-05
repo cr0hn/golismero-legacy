@@ -95,3 +95,7 @@ if __name__ == '__main__':
             else:
                 print >>f, "There are currently no plugins in this category."
                 print >>f, ""
+        with open(path.join(here, "source", plugin_type + ".rst"), "rU") as f:
+            data = f.read()
+        with open(path.join(here, "source", plugin_type + ".rst"), "wb") as f:
+            f.write(data)
