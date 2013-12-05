@@ -885,351 +885,6 @@ class BaseAuditDB (BaseDB):
 
 
 #------------------------------------------------------------------------------
-class AuditMemoryDB (BaseAuditDB):
-    """
-    Stores Audit results in memory.
-    """
-
-
-    #--------------------------------------------------------------------------
-    def __init__(self, audit_config):
-        super(AuditMemoryDB, self).__init__(audit_config)
-        self.__start_time   = time.time()
-        self.__stop_time    = None
-        self.__audit_config = audit_config
-        self.__audit_scope  = None
-        self.__results      = dict()
-        self.__history      = collections.defaultdict(set)
-        self.__stages       = collections.defaultdict(int)
-        self.__shared_maps  = collections.defaultdict(dict)
-        self.__shared_heaps = collections.defaultdict(set)
-
-
-    #--------------------------------------------------------------------------
-    def close(self):
-        self.__start_time   = None
-        self.__stop_time    = None
-        self.__audit_config = None
-        self.__audit_scope  = None
-        self.__results.clear()
-        self.__history.clear()
-        self.__stages.clear()
-        self.__shared_maps.clear()
-        self.__shared_heaps.clear()
-
-
-    #--------------------------------------------------------------------------
-    def encode(self, data):
-        return data
-
-
-    #--------------------------------------------------------------------------
-    def decode(self, data):
-        return data
-
-
-    #--------------------------------------------------------------------------
-    def get_audit_times(self):
-        return self.__start_time, self.__stop_time
-
-
-    #--------------------------------------------------------------------------
-    def set_audit_times(self, start_time, stop_time):
-        self.__start_time, self.__stop_time = start_time, stop_time
-
-
-    #--------------------------------------------------------------------------
-    def set_audit_start_time(self, start_time):
-        self.__start_time = start_time
-
-
-    #--------------------------------------------------------------------------
-    def set_audit_stop_time(self, stop_time):
-        self.__stop_time = stop_time
-
-
-    #--------------------------------------------------------------------------
-    def get_audit_config(self):
-        return self.__audit_config
-
-
-    #--------------------------------------------------------------------------
-    def save_audit_config(self, audit_config):
-        self.__audit_config = audit_config
-
-
-    #--------------------------------------------------------------------------
-    def get_audit_scope(self):
-        return self.__audit_scope
-
-
-    #--------------------------------------------------------------------------
-    def save_audit_scope(self, audit_scope):
-        self.__audit_scope = audit_scope
-
-
-    #--------------------------------------------------------------------------
-    def append_log_line(self, text, level, is_error, plugin_id, ack_id,
-                        timestamp = None):
-        pass
-
-
-    #--------------------------------------------------------------------------
-    def get_log_lines(self, from_timestamp = None, to_timestamp = None,
-                      filter_by_plugin = None, filter_by_data = None,
-                      page_num = None, per_page = None):
-        return []
-
-
-    #--------------------------------------------------------------------------
-    def add_data(self, data):
-        if not isinstance(data, Data):
-            raise TypeError("Expected Data, got %d instead" % type(data))
-        identity = data.identity
-        if identity in self.__results:
-            self.__results[identity].merge(data)
-            return False
-        self.__results[identity] = data
-        return True
-
-
-    #--------------------------------------------------------------------------
-    def add_many_data(self, dataset):
-        for data in dataset:
-            self.add_data(data)
-
-
-    #--------------------------------------------------------------------------
-    def remove_data(self, identity, data_type = None):
-        try:
-            if data_type is None or self.__results[identity].data_type == data_type:
-                del self.__results[identity]
-                return True
-        except KeyError:
-            pass
-        return False
-
-
-    #--------------------------------------------------------------------------
-    def remove_many_data(self, identities, data_type = None):
-        for identity in identities:
-            self.remove_data(identity, data_type)
-
-
-    #--------------------------------------------------------------------------
-    def has_data_key(self, identity, data_type = None):
-        return self.get_data(identity, data_type) is not None
-
-
-    #--------------------------------------------------------------------------
-    def get_data(self, identity, data_type = None):
-        data = self.__results.get(identity, None)
-        if data_type is not None and data is not None and data.data_type != data_type:
-            data = None
-        return data
-
-
-    #----------------------------------------------------------------------
-    def get_many_data(self, identities, data_type = None):
-        result = ( self.get_data(identity, data_type) for identity in identities )
-        return [ data for data in result if data ]
-
-
-    #--------------------------------------------------------------------------
-    def get_data_keys(self, data_type = None, data_subtype = None):
-
-        # Ugly but (hopefully) efficient code follows.
-
-        if data_type is None:
-            if data_subtype is not None:
-                raise NotImplementedError(
-                    "Can't filter by subtype for all types")
-            return { identity
-                     for identity, data in self.__results.iteritems() }
-        if data_subtype is None:
-            return { identity
-                     for identity, data in self.__results.iteritems()
-                     if data.data_type == data_type }
-        return { identity
-                 for identity, data in self.__results.iteritems()
-                 if data.data_type == data_type
-                 and data.data_subtype == data_subtype }
-
-
-    #--------------------------------------------------------------------------
-    def get_data_types(self, identities):
-        result = { self.__get_data_type(identity) for identity in identities }
-        try:
-            result.remove(None)
-        except KeyError:
-            pass
-        return result
-
-    def __get_data_type(self, identity):
-        data = self.__results.get(identity, None)
-        if data is not None:
-            return data.data_type, data.data_subtype
-
-
-    #--------------------------------------------------------------------------
-    def get_data_count(self, data_type = None, data_subtype = None):
-        if data_type is None:
-            if data_subtype is not None:
-                raise NotImplementedError(
-                    "Can't filter by subtype for all types")
-            return len(self.__results)
-        if data_subtype is None:
-            return len({ identity
-                     for identity, data in self.__results.iteritems()
-                     if data.data_type == data_type })
-        return len({ identity
-                 for identity, data in self.__results.iteritems()
-                 if data.data_type == data_type
-                 and data.data_subtype == data_subtype })
-
-
-    #--------------------------------------------------------------------------
-    def mark_plugin_finished(self, identity, plugin_id):
-        self.__history[identity].add(plugin_id)
-
-
-    #--------------------------------------------------------------------------
-    def mark_stage_finished(self, identity, stage):
-        self.__stages[identity] = stage
-
-
-    #--------------------------------------------------------------------------
-    def clear_stage_mark(self, identity):
-        try:
-            del self.__stages[identity]
-        except KeyError:
-            pass
-
-
-    #--------------------------------------------------------------------------
-    def clear_all_stage_marks(self):
-        self.__stages.clear()
-
-
-    #--------------------------------------------------------------------------
-    def get_past_plugins(self, identity):
-        return self.__history[identity]
-
-
-    #--------------------------------------------------------------------------
-    def get_pending_data(self, stage):
-        pending = {i for i,n in self.__stages.iteritems() if n < stage}
-        missing = set(self.__results.iterkeys())
-        missing.difference_update(self.__stages.iterkeys())
-        pending.update(missing)
-        return pending
-
-
-    #--------------------------------------------------------------------------
-    def get_mapped_values(self, shared_id, keys):
-        d = self.__shared_maps[shared_id]
-        return tuple( d[key] for key in keys )
-
-
-    #--------------------------------------------------------------------------
-    def has_all_mapped_keys(self, shared_id, keys):
-        d = self.__shared_maps[shared_id]
-        return all( key in d for key in keys )
-
-
-    #--------------------------------------------------------------------------
-    def has_any_mapped_key(self, shared_id, keys):
-        d = self.__shared_maps[shared_id]
-        return any( key in d for key in keys )
-
-
-    #--------------------------------------------------------------------------
-    def has_each_mapped_key(self, shared_id, keys):
-        d = self.__shared_maps[shared_id]
-        return tuple( key in d for key in keys )
-
-
-    #--------------------------------------------------------------------------
-    def pop_mapped_values(self, shared_id, keys):
-        d = self.__shared_maps[shared_id]
-        values = tuple(d[key] for key in keys)
-        for key in keys:
-            del d[key]
-        return values
-
-
-    #--------------------------------------------------------------------------
-    def put_mapped_values(self, shared_id, items):
-        self.__shared_maps[shared_id].update(items)
-
-
-    #--------------------------------------------------------------------------
-    def swap_mapped_values(self, shared_id, items):
-        d = self.__shared_maps[shared_id]
-        old = []
-        for key, value in items:
-            old.append( d.get(key, None) )
-            d[key] = value
-        return tuple(old)
-
-
-    #--------------------------------------------------------------------------
-    def delete_mapped_values(self, shared_id, keys):
-        d = self.__shared_maps[shared_id]
-        for key in keys:
-            try:
-                del d[key]
-            except KeyError:
-                pass
-
-
-    #--------------------------------------------------------------------------
-    def get_mapped_keys(self, shared_id):
-        return set( self.__shared_maps[shared_id].iterkeys() )
-
-
-    #--------------------------------------------------------------------------
-    def has_all_shared_values(self, shared_id, values):
-        d = self.__shared_heaps[shared_id]
-        return all(value in d for value in values)
-
-
-    #--------------------------------------------------------------------------
-    def has_any_shared_value(self, shared_id, values):
-        d = self.__shared_heaps[shared_id]
-        return any(value in d for value in values)
-
-
-    #--------------------------------------------------------------------------
-    def has_each_shared_value(self, shared_id, values):
-        d = self.__shared_heaps[shared_id]
-        return tuple(value in d for value in values)
-
-
-    #--------------------------------------------------------------------------
-    def pop_shared_values(self, shared_id, maximum):
-        d = self.__shared_heaps[shared_id]
-        result = []
-        while maximum != 0:  # don't do > 0, we want -1 to be infinite
-            maximum -= 1
-            try:
-                result.append( d.pop() )
-            except KeyError:
-                break
-        return tuple(result)
-
-
-    #--------------------------------------------------------------------------
-    def add_shared_values(self, shared_id, values):
-        self.__shared_heaps[shared_id].update(values)
-
-
-    #--------------------------------------------------------------------------
-    def remove_shared_values(self, shared_id, values):
-        self.__shared_heaps[shared_id].difference_update(values)
-
-
-#------------------------------------------------------------------------------
 class AuditSQLiteDB (BaseAuditDB):
     """
     Stores Audit results in a database file using SQLite.
@@ -1254,10 +909,14 @@ class AuditSQLiteDB (BaseAuditDB):
             audit_config.audit_db, audit_config.audit_name)
 
         # See if we have a filename, and an old database file.
-        have_file = filename and path.exists(filename)
+        have_file = (
+            filename and
+            filename != ":memory:" and
+            path.exists(filename)
+        )
 
         # If we have a filename...
-        if filename:
+        if filename and filename != ":memory:":
 
             # If we have an old database...
             if have_file:
@@ -1288,7 +947,8 @@ class AuditSQLiteDB (BaseAuditDB):
             elif not audit_config.audit_name:
 
                 # Guess the audit name from the file name.
-                audit_config.audit_name = path.splitext(path.basename(filename))[0]
+                audit_config.audit_name = path.splitext(
+                    path.basename(filename))[0]
 
         # Call the superclass constructor.
         # This generates an audit name if we don't have any,
@@ -1308,26 +968,28 @@ class AuditSQLiteDB (BaseAuditDB):
                 filename = filename + ".db"
 
             # Make sure the directory exists.
-            directory = path.split(filename)[0]
-            if directory and not path.exists(directory):
-                try:
-                    makedirs(directory)
-                except Exception, e:
-                    warnings.warn(
-                        "Error creating directory %r: %s" %
-                        (directory, str(e)),
-                        RuntimeWarning
-                    )
+            if filename != ":memory:":
+                directory = path.split(filename)[0]
+                if directory and not path.exists(directory):
+                    try:
+                        makedirs(directory)
+                    except Exception, e:
+                        warnings.warn(
+                            "Error creating directory %r: %s" %
+                            (directory, str(e)),
+                            RuntimeWarning
+                        )
 
-            # Set filename
+            # Save the filename.
             self.__filename = filename
 
             # Create the database file.
-            self.__db = sqlite3.connect(self.__filename)
+            self.__db = sqlite3.connect(filename)
             self.__db.text_factory = lambda x: unicode(x, "utf-8", "ignore")
 
         # Update the database filename.
-        audit_config.audit_db = self.__filename
+        if self.__filename != ":memory:":
+            audit_config.audit_db = self.__filename
 
         # Create or validate the database schema.
         # This raises an exception on error.
@@ -1347,9 +1009,6 @@ class AuditSQLiteDB (BaseAuditDB):
         :returns: Database filename, or None on error.
         :rtype: str | None
         """
-        # If we don't have a filename but we have an audit name...
-        if audit_db.find("//") != -1:
-            audit_db = audit_db[audit_db.find("//") + 2:]
 
         # If we don't have a filename but we have an audit name...
         if not audit_db or audit_db == ":auto:":
@@ -2504,8 +2163,6 @@ class AuditDB (BaseAuditDB):
         :param audit_config: Audit configuration.
         :type audit_config: AuditConfig
         """
-        if audit_config.audit_db == ":memory:":
-            return AuditMemoryDB(audit_config)
         return AuditSQLiteDB(audit_config)
 
 

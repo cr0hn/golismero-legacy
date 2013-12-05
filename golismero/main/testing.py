@@ -405,9 +405,9 @@ class PluginTester(object):
         self.__orchestrator = None
 
         if self.__autodelete:
-            if filename:
+            if filename and filename not in (":memory:", ":auto:"):
                 try:
                     unlink(filename)
-                except IOError:
+                except Exception:
                     pass
             # TODO: delete the report files too

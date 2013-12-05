@@ -86,9 +86,9 @@ def test_auditdb_interfaces():
 # Tests the audit DB for consistency.
 def test_auditdb_consistency():
     print "Testing consistency of in-memory database..."
-    helper_test_auditdb_consistency_setup("fake_mem_audit", "memory://")
+    helper_test_auditdb_consistency_setup("fake_mem_audit", ":memory:")
     print "Testing consistency of disk database..."
-    helper_test_auditdb_consistency_setup(None, "")
+    helper_test_auditdb_consistency_setup(None, ":auto:")
 
 def helper_test_auditdb_consistency_setup(audit_name, audit_db):
     main_config = OrchestratorConfig()
@@ -429,6 +429,13 @@ def helper_test_auditdb_data_consistency(db, key, data):
 # Benchmark for the disk database.
 def test_auditdb_stress():
 
+    print "Stress testing the memory database..."
+    helper_auditdb_stress(10,   ":memory:")
+    helper_auditdb_stress(20,   ":memory:")
+    helper_auditdb_stress(30,   ":memory:")
+    helper_auditdb_stress(100,  ":memory:")
+    helper_auditdb_stress(1000, ":memory:")
+
     print "Stress testing the disk database..."
     helper_auditdb_stress(10)
     helper_auditdb_stress(20)
@@ -436,12 +443,12 @@ def test_auditdb_stress():
     helper_auditdb_stress(100)
     helper_auditdb_stress(1000)
 
-def helper_auditdb_stress(n):
+def helper_auditdb_stress(n, dbname = ":auto:"):
     main_config = OrchestratorConfig()
     main_config.ui_mode = "disabled"
     audit_config = AuditConfig()
     audit_config.targets = ["www.example.com"]
-    audit_config.audit_db = ""
+    audit_config.audit_db = dbname
     with PluginTester(main_config, audit_config) as t:
         disk = t.audit.database
         assert type(disk) is AuditSQLiteDB
