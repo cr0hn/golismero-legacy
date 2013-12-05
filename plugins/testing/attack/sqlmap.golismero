@@ -1,6 +1,7 @@
 [Documentation]
-Name        = SQL Injection
-Description = SQL Injection plugin. Only retrieves the DB banner, does not exploit any vulnerabilities.
+Name        = SQLMap
+Description = SQL Injection plugin, using SQLMap.
+  Only retrieves the DB banner, does not exploit any vulnerabilities.
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero
