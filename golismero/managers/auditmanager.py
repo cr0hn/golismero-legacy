@@ -154,7 +154,7 @@ class AuditManager (object):
         else:
             Logger.log_verbose("Audit name: %s" % audit.name)
         if (hasattr(audit.database, "filename") and
-            audit.database.filename != "memory://"
+            audit.database.filename != ":memory:"
         ):
             Logger.log_verbose("Audit database: %s" % audit.database.filename)
 

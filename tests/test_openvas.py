@@ -126,7 +126,7 @@ def test_import():
     orchestrator_config.ui_mode = "disabled"
     audit_config = AuditConfig()
     audit_config.targets  = ["192.168.56.101"]
-    audit_config.audit_db = "memory://"
+    audit_config.audit_db = ":memory:"
     with PluginTester(orchestrator_config, audit_config) as t:
         t.run_plugin("import/xml_openvas", path.join(here, "test_openvas.xml"))
         results = Database.get_many( Database.keys(), Data.TYPE_VULNERABILITY )
