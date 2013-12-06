@@ -189,7 +189,7 @@ def _bootstrap(context, func, args, kwargs):
                         try:
 
                             # Run the plugin.
-                            result = _bootstrap_inner(context, func, args, kwargs)
+                            _bootstrap_inner(context, func, args, kwargs)
 
                         finally:
 
@@ -355,9 +355,6 @@ def _bootstrap_inner(context, func, args, kwargs):
                         message_info = (str(e), format_exc()),
                             priority = MessagePriority.MSG_PRIORITY_HIGH,
                     )
-
-    # Return the result.
-    return result
 
 
 #------------------------------------------------------------------------------

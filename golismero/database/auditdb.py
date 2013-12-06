@@ -46,7 +46,6 @@ from ..managers.rpcmanager import implementor
 
 from os import path, makedirs
 
-import collections
 import md5
 import sqlite3
 import threading
@@ -1029,11 +1028,6 @@ class AuditSQLiteDB (BaseAuditDB):
     #--------------------------------------------------------------------------
     @classmethod
     def get_config_from_closed_database(cls, audit_db, audit_name = None):
-
-        # Load the SQLite module.
-        global sqlite3
-        if sqlite3 is None:
-            import sqlite3
 
         # Get the filename from the connection string.
         filename = cls.__parse_connection_string(audit_db, audit_name)
