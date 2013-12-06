@@ -755,7 +755,8 @@ class OrchestratorNotifier(AbstractNotifier):
             ##raise                                                 # XXX DEBUG
             msg = "Plugin %s raised an exception:\n%s"
             msg = msg % (plugin.__class__.__name__, format_exc())
-            Logger.log_error(msg)
+            ##Logger.log_error(msg)
+            print msg   # it's safer to print, avoids possible infinite loops
 
 
     #--------------------------------------------------------------------------
