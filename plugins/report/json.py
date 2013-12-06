@@ -190,14 +190,13 @@ class JSONReport(ReportPlugin):
         m_results['total'] = 0
 
         # Count each type of vuln
-        m_counter = defaultdict(int)
-
-        # Init
-        m_counter['critical']       = 0
-        m_counter['high']           = 0
-        m_counter['middle']         = 0
-        m_counter['low']            = 0
-        m_counter['informational']  = 0
+        m_counter = {
+            "critical": 0,
+            "high": 0,
+            "middle": 0,
+            "low": 0,
+            "informational": 0,
+        }
 
         # Vulnerabilities by type
         for l_v in m_all_vulns:
@@ -211,7 +210,7 @@ class JSONReport(ReportPlugin):
         for k,v in m_counter.iteritems():
             m_results[k] = v
 
-        context['summary_vulns']     = m_results
+        context['summary_vulns'] = m_results
 
 
 
@@ -377,7 +376,7 @@ class JSONReport(ReportPlugin):
         :type context: Context
         """
 
-        m_results        = defaultdict(list)
+        m_results = defaultdict(list)
 
         # Get all type of resources
         m_all_resources = set([x for x in dir(Resource) if x.startswith("RESOURCE")])
@@ -443,13 +442,14 @@ class JSONReport(ReportPlugin):
         :rtype: list(dict())
         """
 
-        m_counter                   = Counter()
-        m_counter['critical']       = 0
-        m_counter['high']           = 0
-        m_counter['middle']         = 0
-        m_counter['low']            = 0
-        m_counter['informational']  = 0
-        m_total                     = 0
+        m_counter = {
+            "critical": 0,
+            "high": 0,
+            "middle": 0,
+            "low": 0,
+            "informational": 0,
+        }
+        m_total = 0
 
         for l_v in vuln:
             if not l_v.false_positive:
