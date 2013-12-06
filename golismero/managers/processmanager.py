@@ -418,7 +418,9 @@ def _init_worker():
 
     # Disable handling of KeyboardInterrupt.
     # This way only the main process gets the signal.
-    signal(SIGINT, SIG_IGN)
+    # XXX FIXME doesn't seem to work on Windows!
+    ##signal(SIGINT, SIG_IGN)
+    signal(SIGINT, _suicide)
 
     # Try to lower the CPU usage priority as much as possible.
     try:
@@ -430,6 +432,9 @@ def _init_worker():
     # Disable standard output and standard error.
     f = _FakeFile()
     sys.stdout, sys.stderr = f, f
+
+def _suicide(signum, frame):
+    exit(1)
 
 
 #------------------------------------------------------------------------------
