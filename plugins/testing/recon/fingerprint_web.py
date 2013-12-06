@@ -195,18 +195,19 @@ For an Apache 1.3.26 we will have these results for a normal GET:
 """
 
 
+#------------------------------------------------------------------------------
 class ServerFingerprinting(TestingPlugin):
     """
     Plugin to fingerprint web servers.
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [BaseUrl]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def recv_info(self, info):
         """
         Main function for server fingerprint. Get an URL and return the fingerprint results.
@@ -289,7 +290,7 @@ def http_simple_analyzer(main_url, update_status_func, number_of_entries=4):
         l_method      = v["method"]
         l_payload     = v["payload"]
         l_proto       = v["protocol"]
-        l_wordlist    = v["wordlist"]
+        #l_wordlist    = v["wordlist"]
 
         # Each type of probe hast different weight.
         #
@@ -357,7 +358,7 @@ def http_simple_analyzer(main_url, update_status_func, number_of_entries=4):
 
         m_counters.simple_inc(l_server_name, l_method, l_weight)
 
-    return parse_analyzer_results(m_counters, m_banners_counter)
+    return parse_analyzer_results(m_counters, m_banners_counter, number_of_entries)
 
 
 
@@ -812,11 +813,11 @@ def http_analyzers(main_url, update_status_func, number_of_entries=4):
                 print "   %s (%s  [ %s ] )" % (l, ','.join(v), str(len(v)))
 
 
-    return parse_analyzer_results(m_counters, m_banners_counter)
+    return parse_analyzer_results(m_counters, m_banners_counter, number_of_entries)
 
 
 #----------------------------------------------------------------------
-def parse_analyzer_results(analyzer, banner_counter):
+def parse_analyzer_results(analyzer, banner_counter, number_of_entries=4):
     """
     Parse analyzer results and gets the values:
 

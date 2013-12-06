@@ -52,7 +52,7 @@ cwd = os.path.join(cwd, "theHarvester")
 sys.path.insert(0, cwd)
 try:
     import discovery
-    from discovery import *
+    from discovery import * #noqa
 finally:
     sys.path.remove(cwd)
 del cwd

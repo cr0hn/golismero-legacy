@@ -34,8 +34,7 @@ from golismero.api.data.resource import Resource
 from golismero.api.logger import Logger
 from golismero.api.plugin import ReportPlugin
 
-from os.path import join, dirname
-from collections import Counter, defaultdict
+from collections import defaultdict
 import datetime
 import simplejson
 
@@ -191,7 +190,7 @@ class JSONReport(ReportPlugin):
         m_results['total'] = 0
 
         # Count each type of vuln
-        m_counter = Counter()
+        m_counter = defaultdict(int)
 
         # Init
         m_counter['critical']       = 0

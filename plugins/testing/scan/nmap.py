@@ -41,7 +41,6 @@ from golismero.api.plugin import ImportPlugin, TestingPlugin
 import shlex
 
 from socket import getservbyname
-from traceback import format_exc
 from time import time
 from traceback import format_exc
 from warnings import warn

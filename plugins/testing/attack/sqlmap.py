@@ -28,15 +28,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.injection.sql_injection import SQLInjection
-from golismero.api.external import run_external_tool, find_binary_in_path, tempfile, tempdir
+from golismero.api.external import run_external_tool, find_binary_in_path, tempdir
 from golismero.api.logger import Logger
 from golismero.api.net import ConnectionSlot
-from golismero.api.plugin import ImportPlugin, TestingPlugin
+from golismero.api.plugin import TestingPlugin
 
-from collections import namedtuple
-from datetime import datetime
-from os.path import join, split, abspath, exists
-from time import time, sleep
+from os.path import join, abspath, dirname, isfile
+from time import time
 from traceback import format_exc
 
 import re
@@ -55,7 +53,8 @@ class SQLInjectionPlugin(TestingPlugin):
     def recv_info(self, info):
 
         if not info.has_url_params and not info.has_post_params:
-            Logger.log_more_verbose("URL %r has no parameters" % info.url)
+            Logger.log_more_verbose(
+                "URL %r has no parameters, skipping" % info.url)
             return
 
         # Get sqlmap script executable
@@ -117,8 +116,8 @@ class SQLInjectionPlugin(TestingPlugin):
         """
         Run SQLmap against the given target.
 
-        :param target: Base URL to scan.
-        :type target: BaseUrl
+        :param target: URL to scan.
+        :type target: Url
 
         :param command: Path to the SQLmap script.
         :type command: str
@@ -182,7 +181,7 @@ class SQLInjectionPlugin(TestingPlugin):
         results = []
 
         # Get result file
-        log_file = join(join(output_dir, info.parsed_url.host), "log")
+        log_file = join(output_dir, info.parsed_url.host, "log")
 
         # Parse
         try:
@@ -209,6 +208,7 @@ class SQLInjectionPlugin(TestingPlugin):
 
                         url = Url(info.url, method=l_inject_place, post_params=info.post_params, referer=info.referer)
                         v = SQLInjection(url,
+                            title = "SQL Injection Vulnerability - " + l_inject_title,
                             vulnerable_params = { l_inject_param : l_inject_payload },
                             injection_point = SQLInjection.str2injection_point(l_inject_place),
                             injection_type = l_inject_type,

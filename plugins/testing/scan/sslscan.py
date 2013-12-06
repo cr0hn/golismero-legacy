@@ -29,16 +29,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.config import Config
 from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
-from golismero.api.data.resource.url import BaseUrl, Url
-from golismero.api.data.vulnerability.ssl import SSLVulnerability
 from golismero.api.data.vulnerability.ssl.insecure_algorithm import InsecureAlgorithm
 from golismero.api.data.vulnerability.ssl.invalid_cert import InvalidCert
 from golismero.api.data.vulnerability.ssl.obsolete_protocol import ObsoleteProtocol
 from golismero.api.data.vulnerability.ssl.outdated_cert import OutdatedCert
 from golismero.api.data.vulnerability.ssl.weak_key import WeakKey
 from golismero.api.data.vulnerability.ssl.invalid_common_name import InvalidCommonName
-from golismero.api.external import run_external_tool, \
-     find_cygwin_binary_in_path, tempfile, find_binary_in_path
+from golismero.api.external import run_external_tool, tempfile, find_binary_in_path
 from golismero.api.logger import Logger
 from golismero.api.net import ConnectionSlot
 from golismero.api.plugin import ImportPlugin, TestingPlugin

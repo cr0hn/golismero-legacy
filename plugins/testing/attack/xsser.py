@@ -83,7 +83,7 @@ class XSSerPlugin(TestingPlugin):
             ]
 
             if info.has_url_params:
-                if self.run_xsser(info.url, xsser_script, args):
+                if self.run_xsser(info.hostname, info.url, xsser_script, args):
                     results.extend(self.parse_xsser_result(info, filename))
 
             if info.has_post_params:
@@ -94,7 +94,7 @@ class XSSerPlugin(TestingPlugin):
                           for k, v in info.post_params.iteritems() ]
                     ),
                 ])
-                if self.run_xsser(info.url, xsser_script, args):
+                if self.run_xsser(info.hostname, info.url, xsser_script, args):
                     results.extend(self.parse_xsser_result(info, filename))
 
         if results:
@@ -106,7 +106,7 @@ class XSSerPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def run_xsser(self, url, command, args):
+    def run_xsser(self, hostname, url, command, args):
         """
         Run XSSer against the given target.
 
@@ -126,9 +126,10 @@ class XSSerPlugin(TestingPlugin):
         Logger.log("Launching XSSer against: %s" % url)
         Logger.log_more_verbose("XSSer arguments: %s" % " ".join(args))
 
-        t1 = time()
-        code = run_external_tool(command, args, callback=Logger.log_verbose)
-        t2 = time()
+        with ConnectionSlot(hostname):
+            t1 = time()
+            code = run_external_tool(command, args, callback=Logger.log_verbose)
+            t2 = time()
 
         if code:
             Logger.log_error("XSSer execution failed, status code: %d" % code)
