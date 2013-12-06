@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["OSFingerprint", "get_os_fingerprint", "get_all_os_fingerprints"]
 
 from . import Information
-from .. import identity, keep_newer, keep_greater
+from .. import identity, keep_newer
 from ...text.text_utils import to_utf8
 
 
