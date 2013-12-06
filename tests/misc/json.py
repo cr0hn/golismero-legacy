@@ -169,9 +169,9 @@ class JSONReport(ReportPlugin):
         #
         #m_rendered = t.render(c)
 
-
         with open(output_file, "w") as f:
             simplejson.dump(c, f)
+
 
     #----------------------------------------------------------------------
     def fill_summary_vulns(self, context):
@@ -182,15 +182,11 @@ class JSONReport(ReportPlugin):
         :type context: Context
         """
 
-        m_all_vulns   = self.common_get_resources(data_type=Data.TYPE_VULNERABILITY)
-
-        m_results          = {}
-
-        # Total vulns
-        m_results['total'] = 0
+        m_all_vulns = self.common_get_resources(data_type=Data.TYPE_VULNERABILITY)
 
         # Count each type of vuln
         m_counter = {
+            "total": 0,
             "critical": 0,
             "high": 0,
             "middle": 0,
