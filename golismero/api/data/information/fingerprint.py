@@ -39,7 +39,7 @@ __all__ = [
 ]
 
 from . import Information
-from .. import identity, keep_newer
+from .. import identity, merge, keep_newer
 from ...text.text_utils import to_utf8
 
 
@@ -372,15 +372,17 @@ class WebServerFingerprint(Information):
         if not isinstance(canonical_name, str):
             raise TypeError("Expected str, got %r instead" % type(canonical_name))
 
-        if related is not None:
+        if related:
             if not isinstance(related, set):
                 raise TypeError("Expected set, got %r instead" % type(related))
             related = { to_utf8(v) for v in related }
             for v in related:
                 if not isinstance(v, str):
                     raise TypeError("Expected str, got %r instead" % type(v))
+        else:
+            related = {}
 
-        if others is not None:
+        if others:
             if not isinstance(others, dict):
                 raise TypeError("Expected dict, got %r instead" % type(others))
             others = {
@@ -390,23 +392,15 @@ class WebServerFingerprint(Information):
             for k, v in others.iteritems():
                 if not isinstance(k, str):
                     raise TypeError("Expected str, got %r instead" % type(k))
+        else:
+            others = {}
 
-        # Web server name.
+        # Save the properties.
         self.__name           = name
-
-        # Web server version.
         self.__version        = version
-
-        # Web server banner.
         self.__banner         = banner
-
-        # Web server canonical name
         self.__name_canonical = canonical_name
-
-        # Other possibilities for this web server.
         self.__others         = others
-
-        # Related web servers
         self.__related        = related
 
         # Parent constructor.
@@ -421,6 +415,15 @@ class WebServerFingerprint(Information):
             self.__banner,
         )
 
+
+    #----------------------------------------------------------------------
+    def __str__(self):
+        return "%s-%s" % (
+            self.__name,
+            self.__version,
+        )
+
+
     #----------------------------------------------------------------------
     @identity
     def name_canonical(self):
@@ -429,7 +432,6 @@ class WebServerFingerprint(Information):
         :rtype: str
         """
         return self.__name_canonical
-
 
 
     #----------------------------------------------------------------------
@@ -463,7 +465,7 @@ class WebServerFingerprint(Information):
 
 
     #----------------------------------------------------------------------
-    @identity
+    @merge
     def others(self):
         """
         :return: Map of other possible web servers by name and their probabilities of being correct [0.0 ~ 1.0].
@@ -471,7 +473,9 @@ class WebServerFingerprint(Information):
         """
         return self.__others
 
-    @identity
+
+    #----------------------------------------------------------------------
+    @merge
     def related(self):
         """
         :return: Dict with the web server that act same as the discovered web server.
