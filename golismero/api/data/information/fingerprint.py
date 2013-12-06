@@ -177,6 +177,8 @@ class OSFingerprint(Information):
     #--------------------------------------------------------------------------
     def __str__(self):
         name = self.__name if self.__name else self.__cpe
+        if self.__type:
+            name = "[%s] %s" % (self.__type, name)
         return "%.2f%% - %s" % (self.accuracy, name)
 
 
@@ -372,36 +374,15 @@ class WebServerFingerprint(Information):
         if not isinstance(canonical_name, str):
             raise TypeError("Expected str, got %r instead" % type(canonical_name))
 
-        if related:
-            if not isinstance(related, set):
-                raise TypeError("Expected set, got %r instead" % type(related))
-            related = { to_utf8(v) for v in related }
-            for v in related:
-                if not isinstance(v, str):
-                    raise TypeError("Expected str, got %r instead" % type(v))
-        else:
-            related = {}
-
-        if others:
-            if not isinstance(others, dict):
-                raise TypeError("Expected dict, got %r instead" % type(others))
-            others = {
-                to_utf8(k): float(v)
-                for k,v in others.iteritems()
-            }
-            for k, v in others.iteritems():
-                if not isinstance(k, str):
-                    raise TypeError("Expected str, got %r instead" % type(k))
-        else:
-            others = {}
-
-        # Save the properties.
+        # Save the identity properties.
         self.__name           = name
         self.__version        = version
         self.__banner         = banner
         self.__name_canonical = canonical_name
-        self.__others         = others
-        self.__related        = related
+
+        # Save the mergeable properties.
+        self.others           = others
+        self.related          = related
 
         # Parent constructor.
         super(WebServerFingerprint, self).__init__()
@@ -418,10 +399,7 @@ class WebServerFingerprint(Information):
 
     #----------------------------------------------------------------------
     def __str__(self):
-        return "%s-%s" % (
-            self.__name,
-            self.__version,
-        )
+        return self.__banner
 
 
     #----------------------------------------------------------------------
@@ -475,6 +453,28 @@ class WebServerFingerprint(Information):
 
 
     #----------------------------------------------------------------------
+    @others.setter
+    def others(self, others):
+        """
+        :param others: Map of other possible web servers by name and their probabilities of being correct [0.0 ~ 1.0].
+        :type others: dict( str -> float )
+        """
+        if others:
+            if not isinstance(others, dict):
+                raise TypeError("Expected dict, got %r instead" % type(others))
+            others = {
+                to_utf8(k): float(v)
+                for k,v in others.iteritems()
+            }
+            for k, v in others.iteritems():
+                if not isinstance(k, str):
+                    raise TypeError("Expected str, got %r instead" % type(k))
+        else:
+            others = {}
+        self.__others = others
+
+
+    #----------------------------------------------------------------------
     @merge
     def related(self):
         """
@@ -482,3 +482,22 @@ class WebServerFingerprint(Information):
         :rtype: dict(str -> set() ) -> ('iis' : ('hyperion'))
         """
         return self.__related
+
+
+    #----------------------------------------------------------------------
+    @related.setter
+    def related(self, related):
+        """
+        :param related: Dict with the web server that act same as the discovered web server.
+        :type related: dict(str -> set() ) -> ('iis' : ('hyperion'))
+        """
+        if related:
+            if not isinstance(related, set):
+                raise TypeError("Expected set, got %r instead" % type(related))
+            related = { to_utf8(v) for v in related }
+            for v in related:
+                if not isinstance(v, str):
+                    raise TypeError("Expected str, got %r instead" % type(v))
+        else:
+            related = {}
+        self.__related = related
