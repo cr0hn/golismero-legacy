@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.injection.xss import XSS
 from golismero.api.external import run_external_tool, tempfile, \
-     find_binary_in_path
+     find_binary_in_path, get_tools_folder
 from golismero.api.logger import Logger
 from golismero.api.net import ConnectionSlot
 from golismero.api.plugin import TestingPlugin
@@ -227,7 +227,7 @@ class XSSerPlugin(TestingPlugin):
         :return: Path to the XSSer script.
         :rtype: str
         """
-        xsser = join(dirname(abspath(__file__)), "xsser", "xsser.py")
+        xsser = join(get_tools_folder(), "xsser", "xsser.py")
         if not isfile(xsser):
             xsser = find_binary_in_path("xsser")
         return xsser

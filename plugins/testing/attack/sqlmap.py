@@ -41,7 +41,15 @@ import re
 
 
 #------------------------------------------------------------------------------
-class SQLInjectionPlugin(TestingPlugin):
+class SQLMapTestingPlugin(TestingPlugin):
+
+
+    #--------------------------------------------------------------------------
+    def check_params(self):
+        if not find_binary_in_path("sqlmap.py"):
+            raise RuntimeError(
+                "SQLMap not found!"
+                " You can download it from: http://sqlmap.org/")
 
 
     #--------------------------------------------------------------------------
@@ -56,9 +64,6 @@ class SQLInjectionPlugin(TestingPlugin):
             Logger.log_more_verbose(
                 "URL %r has no parameters, skipping" % info.url)
             return
-
-        # Get sqlmap script executable
-        sqlmap_script = self.get_sqlmap()
 
         results = []
         with tempdir() as output_dir:
@@ -85,7 +90,7 @@ class SQLInjectionPlugin(TestingPlugin):
                     ",".join(info.url_params),
                 ]
 
-                r = self.make_injection(info.url, sqlmap_script, args)
+                r = self.make_injection(info.url, args)
                 if r:
                     results.extend(self.parse_sqlmap_results(info, output_dir))
 
@@ -99,7 +104,7 @@ class SQLInjectionPlugin(TestingPlugin):
                     "&".join([ "%s=%s" % (k, v) for k, v in info.post_params.iteritems()])
                 ]
 
-                r = self.make_injection(info.url, sqlmap_script, args)
+                r = self.make_injection(info.url, args)
                 if r:
                     results.extend(self.parse_sqlmap_results(info, output_dir))
 
@@ -112,36 +117,34 @@ class SQLInjectionPlugin(TestingPlugin):
 
 
     #----------------------------------------------------------------------
-    def make_injection(self, target, command, args):
+    def make_injection(self, target, args):
         """
-        Run SQLmap against the given target.
+        Run SQLMap against the given target.
 
         :param target: URL to scan.
         :type target: Url
 
-        :param command: Path to the SQLmap script.
-        :type command: str
-
-        :param args: Arguments to pass to SQLmap.
+        :param args: Arguments to pass to SQLMap.
         :type args: list(str)
 
         :return: True on success, False on failure.
         :rtype: bool
         """
 
-        Logger.log("Launching SQLmap against: %s" % target)
-        Logger.log_more_verbose("SQLmap arguments: %s" % " ".join(args))
+        Logger.log("Launching SQLMap against: %s" % target)
+        Logger.log_more_verbose("SQLMap arguments: %s" % " ".join(args))
 
         with ConnectionSlot(target):
             t1 = time()
-            code = run_external_tool(command, args, callback=Logger.log_verbose)
+            code = run_external_tool("sqlmap.py", args,
+                                     callback=Logger.log_verbose)
             t2 = time()
 
         if code:
-            Logger.log_error("SQLmap execution failed, status code: %d" % code)
+            Logger.log_error("SQLMap execution failed, status code: %d" % code)
             return False
         Logger.log(
-            "SQLmap scan finished in %s seconds for target: %s"
+            "SQLMap scan finished in %s seconds for target: %s"
             % (t2 - t1, target))
         return True
 
@@ -236,15 +239,3 @@ class SQLInjectionPlugin(TestingPlugin):
             Logger.log_error_more_verbose(format_exc())
 
         return results
-
-
-    #--------------------------------------------------------------------------
-    def get_sqlmap(self):
-        """
-        :returns: Path to the SQLmap script.
-        :rtype: str
-        """
-        sqlmap = join(dirname(abspath(__file__)), "sqlmap", "sqlmap.py")
-        if not isfile(sqlmap):
-            sqlmap = find_binary_in_path("sqlmap")
-        return sqlmap

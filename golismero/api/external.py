@@ -38,8 +38,12 @@ __all__ = [
     # Run an external tool.
     "run_external_tool",
 
+    # Bundled tools folder.
+    "get_tools_folder",
+
     # Temporary file utility functions.
     "tempfile",
+    "tempdir",
 
     # Executable file utility functions.
     "is_executable",
@@ -53,6 +57,8 @@ __all__ = [
     "win_to_cygwin_path",
     "cygwin_to_win_path",
 ]
+
+from ..common import get_tools_folder # exported
 
 import contextlib
 import re
@@ -414,6 +420,11 @@ def find_binary_in_path(binary):
     """
     Find the given binary in the current environment PATH.
 
+    :note:
+        The location of the bundled tools is always prepended to the PATH,
+        independently of the actual value of the environment variable.
+        This means bundled tools will always be picked before system tools.
+
     :param path: Path to the binary.
     :type path: str
 
@@ -425,8 +436,20 @@ def find_binary_in_path(binary):
     # Get the filename.
     binary = os.path.split(binary)[1]
 
+    # Get the location of the external tools bundled with GoLismero.
+    tools_folder = get_tools_folder()
+    locations = [
+        os.path.join(tools_folder, x) for x in os.listdir(tools_folder)
+    ]
+
     # Get the possible locations from the PATH environment variable.
-    locations = os.environ.get("PATH", "").split(os.path.pathsep)
+    locations.extend(
+        os.path.abspath(x)
+        for x in os.environ.get("PATH", "").split(os.path.pathsep)
+    )
+
+    # Filter out bad entries.
+    locations = [ x for x in locations if os.path.isdir(x) ]
 
     # On Windows...
     if sys.platform in ("win32", "cygwin"):
@@ -442,23 +465,45 @@ def find_binary_in_path(binary):
         if system_32 not in locations: locations.append(system_32)
         if system_64 not in locations: locations.append(system_64)
 
-        # Append the ".exe" extension to the binary if missing.
-        if os.path.splitext(binary)[1] == "":
-            binary += ".exe"
-
     # Look for the file in the PATH.
     found = []
     for candidate in locations:
         if candidate:
-            candidate = os.path.abspath(candidate)
             candidate = os.path.join(candidate, binary)
-            if is_executable(candidate):
+            if os.path.exists(candidate):
                 found.append(candidate)
 
-    # On Windows, remove duplicates caused by case differences.
+    # On Windows...
     if sys.platform in ("win32", "cygwin"):
+
+        # Append the ".exe" extension to the binary if missing.
+        if os.path.splitext(binary)[1] == "":
+            binary += ".exe"
+
+            # Try again.
+            for candidate in locations:
+                if candidate:
+                    candidate = os.path.join(candidate, binary)
+                    if os.path.exists(candidate):
+                        found.append(candidate)
+
+        # Remove duplicates caused by case differences.
         upper = [x.upper() for x in found]
         found = [x for i, x in enumerate(found) if x.upper() not in upper[:i]]
+
+    # On *nix...
+    else:
+
+        # Remove the extension to the binary if present.
+        if os.path.splitext(binary)[1] != "":
+            binary = os.path.splitext(binary)[0]
+
+            # Try again.
+            for candidate in locations:
+                if candidate:
+                    candidate = os.path.join(candidate, binary)
+                    if os.path.exists(candidate):
+                        found.append(candidate)
 
     # Return all instances found.
     return found

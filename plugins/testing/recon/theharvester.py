@@ -36,6 +36,7 @@ from golismero.api.data import discard_data
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.email import Email
 from golismero.api.data.resource.ip import IP
+from golismero.api.external import get_tools_folder
 from golismero.api.logger import Logger
 from golismero.api.plugin import TestingPlugin
 
@@ -47,7 +48,7 @@ import traceback
 import warnings
 
 # Import theHarvester as a library.
-cwd = os.path.abspath(os.path.split(__file__)[0])
+cwd = os.path.abspath(get_tools_folder())
 cwd = os.path.join(cwd, "theHarvester")
 sys.path.insert(0, cwd)
 try:

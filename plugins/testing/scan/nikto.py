@@ -34,8 +34,8 @@ from golismero.api.data.resource.url import BaseUrl, Url
 from golismero.api.data.vulnerability import UncategorizedVulnerability
 from golismero.api.data.vulnerability.infrastructure.vulnerable_webapp \
      import VulnerableWebApp
-from golismero.api.external import run_external_tool, \
-     find_cygwin_binary_in_path, tempfile
+from golismero.api.external import run_external_tool, find_binary_in_path, \
+     find_cygwin_binary_in_path, tempfile, get_tools_folder
 from golismero.api.logger import Logger
 from golismero.api.net import ConnectionSlot
 from golismero.api.net.scraper import extract_from_text
@@ -165,18 +165,15 @@ class NiktoPlugin(TestingPlugin):
         # Get the path to the Nikto scanner.
         nikto_script = Config.plugin_args["exec"]
         if nikto_script and exists(nikto_script):
-            nikto_dir = split(nikto_script)[0]
-            nikto_dir = abspath(nikto_dir)
+            nikto_dir = abspath(split(nikto_script)[0])
         else:
-            nikto_dir = split(__file__)[0]
-            nikto_dir = join(nikto_dir, "nikto")
-            nikto_dir = abspath(nikto_dir)
+            nikto_dir = join(get_tools_folder(), "nikto")
             nikto_script = join(nikto_dir, "nikto.pl")
             if not nikto_script or not exists(nikto_script):
-                nikto_script = "/usr/bin/nikto"
+                nikto_script = find_binary_in_path("nikto")
                 if not exists(nikto_script):
                     nikto_script = Config.plugin_args["exec"]
-                    msg = "Nikto not found in the PATH environment variable"
+                    msg = "Nikto not found"
                     if nikto_script:
                         msg += ". File: %s" % nikto_script
                     Logger.log_error(msg)
