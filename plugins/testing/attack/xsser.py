@@ -202,8 +202,8 @@ class XSSerPlugin(TestingPlugin):
                 _method   = self.get_subnode_text(node, "method",   "GET")
 
                 url = Url(url = target.url,
-                          method = method,
-                          post_params = target.post_params if method == "POST" else None,
+                          method = _method,
+                          post_params = target.post_params if _method == "POST" else None,
                           referer = target.referer)
                 vul = XSS(url = url,
                           vulnerable_params = {"injection":_injection},
