@@ -97,6 +97,19 @@ golismero/api/data/information/dns.py:1973: Warning (W, DnsRegisterSPF): Method 
 golismero/api/data/information/dns.py:2016: Warning (W, DnsRegisterSRV): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/dns.py:2111: Warning (W, DnsRegisterWKS): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/dns.py:2189: Warning (W, DnsRegisterX25): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/information/fingerprint.py:92: Warning (W, OSFingerprint): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/information/fingerprint.py:103: Warning (W, OSFingerprint.__init__): Redefining built-in 'type'
+golismero/api/data/information/fingerprint.py:206: Error (E, OSFingerprint.name): An attribute affected in golismero.api.data.information.fingerprint line 159 hide this method
+golismero/api/data/information/fingerprint.py:225: Warning (W, OSFingerprint.name): Attribute '__name' defined outside __init__
+golismero/api/data/information/fingerprint.py:230: Error (E, OSFingerprint.vendor): An attribute affected in golismero.api.data.information.fingerprint line 160 hide this method
+golismero/api/data/information/fingerprint.py:249: Warning (W, OSFingerprint.vendor): Attribute '__vendor' defined outside __init__
+golismero/api/data/information/fingerprint.py:254: Error (E, OSFingerprint.type): An attribute affected in golismero.api.data.information.fingerprint line 161 hide this method
+golismero/api/data/information/fingerprint.py:273: Warning (W, OSFingerprint.type): Attribute '__type' defined outside __init__
+golismero/api/data/information/fingerprint.py:278: Error (E, OSFingerprint.generation): An attribute affected in golismero.api.data.information.fingerprint line 162 hide this method
+golismero/api/data/information/fingerprint.py:297: Warning (W, OSFingerprint.generation): Attribute '__generation' defined outside __init__
+golismero/api/data/information/fingerprint.py:302: Error (E, OSFingerprint.family): An attribute affected in golismero.api.data.information.fingerprint line 163 hide this method
+golismero/api/data/information/fingerprint.py:321: Warning (W, OSFingerprint.family): Attribute '__family' defined outside __init__
+golismero/api/data/information/fingerprint.py:325: Warning (W, WebServerFingerprint): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/geolocation.py:41: Warning (W, Geolocation): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/html.py:42: Warning (W, HTML): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/http.py:405: Warning (W, HTTP_Request): Method 'from_dict' is abstract in class 'Data' but is not overridden
@@ -116,22 +129,9 @@ golismero/api/data/information/image.py:123: Warning (W, Image.get_exif): Using 
 golismero/api/data/information/image.py:125: Warning (W, Image.get_exif): Redefining name 'PIL_TAGS' from outer scope (line 44)
 golismero/api/data/information/image.py:135: Warning (W, Image.get_exif): Access to a protected member _getexif of a client class
 golismero/api/data/information/image.py:176: Warning (W, Image.discovered): Catching too general exception Exception
-golismero/api/data/information/os_fingerprint.py:40: Warning (W, OSFingerprint): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/information/os_fingerprint.py:80: Warning (W, OSFingerprint.__init__): Redefining built-in 'type'
-golismero/api/data/information/os_fingerprint.py:200: Error (E, OSFingerprint.name): An attribute affected in golismero.api.data.information.os_fingerprint line 153 hide this method
-golismero/api/data/information/os_fingerprint.py:210: Warning (W, OSFingerprint.name): Attribute '__name' defined outside __init__
-golismero/api/data/information/os_fingerprint.py:224: Error (E, OSFingerprint.vendor): An attribute affected in golismero.api.data.information.os_fingerprint line 154 hide this method
-golismero/api/data/information/os_fingerprint.py:234: Warning (W, OSFingerprint.vendor): Attribute '__vendor' defined outside __init__
-golismero/api/data/information/os_fingerprint.py:248: Error (E, OSFingerprint.type): An attribute affected in golismero.api.data.information.os_fingerprint line 155 hide this method
-golismero/api/data/information/os_fingerprint.py:258: Warning (W, OSFingerprint.type): Attribute '__type' defined outside __init__
-golismero/api/data/information/os_fingerprint.py:272: Error (E, OSFingerprint.generation): An attribute affected in golismero.api.data.information.os_fingerprint line 156 hide this method
-golismero/api/data/information/os_fingerprint.py:282: Warning (W, OSFingerprint.generation): Attribute '__generation' defined outside __init__
-golismero/api/data/information/os_fingerprint.py:296: Error (E, OSFingerprint.family): An attribute affected in golismero.api.data.information.os_fingerprint line 157 hide this method
-golismero/api/data/information/os_fingerprint.py:306: Warning (W, OSFingerprint.family): Attribute '__family' defined outside __init__
 golismero/api/data/information/portscan.py:43: Warning (W, Portscan): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/text.py:41: Warning (W, Text): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/traceroute.py:106: Warning (W, Traceroute): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/information/webserver_fingerprint.py:41: Warning (W, WebServerFingerprint): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/resource/__init__.py:39: Warning (W, Resource): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/resource/domain.py:45: Warning (W, Domain): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/resource/domain.py:71: Warning (W, Domain.__init__): Catching too general exception Exception
@@ -689,6 +689,7 @@ golismero/managers/pluginmanager.py:1555: Warning (W, AuditPluginManager.__check
 golismero/managers/pluginmanager.py:1560: Warning (W, AuditPluginManager.__check_plugin_params): Catching too general exception Exception
 golismero/managers/pluginmanager.py:1605: Warning (W, AuditPluginManager.__check_plugin_params): Access to a protected member _orchestrator_pid of a client class
 golismero/managers/pluginmanager.py:1606: Warning (W, AuditPluginManager.__check_plugin_params): Access to a protected member _orchestrator_tid of a client class
+golismero/managers/processmanager.py:51: Warning (W): Unused import SIG_IGN
 golismero/managers/processmanager.py:73: Warning (W, Process.daemon): Arguments number differs from overridden method
 golismero/managers/processmanager.py:73: Warning (W, Process.daemon): Arguments number differs from overridden method
 golismero/managers/processmanager.py:82: Warning (W, Pool): Method '__reduce__' is abstract in class 'Pool' but is not overridden
@@ -715,6 +716,8 @@ golismero/managers/processmanager.py:351: Warning (W, _bootstrap_inner): Catchin
 golismero/managers/processmanager.py:391: Warning (W, _plugin_killer): Access to a protected member _depth of a client class
 golismero/managers/processmanager.py:428: [F, _init_worker] Unable to import 'posix'
 golismero/managers/processmanager.py:430: Warning (W, _init_worker): Catching too general exception Exception
+golismero/managers/processmanager.py:436: Warning (W, _suicide): Unused argument 'frame'
+golismero/managers/processmanager.py:436: Warning (W, _suicide): Unused argument 'signum'
 golismero/managers/processmanager.py:576: Warning (W, PluginContext.send_msg): Used * or ** magic
 golismero/managers/processmanager.py:613: Warning (W, PluginContext.send_raw_msg): No exception type(s) specified
 golismero/managers/processmanager.py:631: Error (E, PluginContext.remote_call): Instance of 'SyncManager' has no 'Queue' member
