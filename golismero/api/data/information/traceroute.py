@@ -172,12 +172,16 @@ class Traceroute(Information):
     #--------------------------------------------------------------------------
     def to_dict(self):
         return {
-            "_class":    self.__class__.__name__,
-            "timestamp": self.__timestamp,
-            "address":   self.__address,
-            "port":      self.__port,
-            "protocol":  self.__protocol,
-            "hops":      [h.to_dict() for h in self.__hops],
+            "_class":       self.__class__.__name__,
+            "identity":     self.identity,
+            "depth":        self.depth,
+            "data_type":    self.data_type,
+            "data_subtype": self.data_subtype,
+            "timestamp":    self.__timestamp,
+            "address":      self.__address,
+            "port":         self.__port,
+            "protocol":     self.__protocol,
+            "hops":         [h.to_dict() for h in self.__hops],
         }
 
 
