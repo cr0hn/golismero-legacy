@@ -99,7 +99,7 @@ class _AbstractUrl(Resource):
     @property
     def parsed_url(self):
         """
-        :return: URL in decomposed form.
+        :return: URL in parsed form.
         :rtype: ParsedURL
         """
         return self.__parsed_url

@@ -331,10 +331,6 @@ class WebServerFingerprint(Information):
 
     information_type = Information.INFORMATION_WEB_SERVER_FINGERPRINT
 
-    #----------------------------------------------------------------------
-    # TODO: we may want to add a list of default servers and descriptions.
-    #----------------------------------------------------------------------
-
 
     #----------------------------------------------------------------------
     def __init__(self, name, version, banner, canonical_name, related = None, others = None):
@@ -378,11 +374,11 @@ class WebServerFingerprint(Information):
         self.__name           = name
         self.__version        = version
         self.__banner         = banner
-        self.__name_canonical = canonical_name
+        self.__canonical_name = canonical_name
 
         # Save the mergeable properties.
-        self.others           = others
         self.related          = related
+        self.others           = others
 
         # Parent constructor.
         super(WebServerFingerprint, self).__init__()
@@ -403,13 +399,21 @@ class WebServerFingerprint(Information):
 
 
     #----------------------------------------------------------------------
-    @identity
-    def name_canonical(self):
-        """
-        :return: Web server name, at lowcase. The name will be one of the the file: 'wordlist/fingerprint/webservers_keywords.txt'. Example: "apache"
-        :rtype: str
-        """
-        return self.__name_canonical
+    def to_dict(self):
+        others = { k: list(v) for (k,v) in self.others.iteritems() }
+        return {
+            "_class":         self.__class__.__name__,
+            "identity":       self.identity,
+            "depth":          self.depth,
+            "data_type":      self.data_type,
+            "data_subtype":   self.data_subtype,
+            "name":           self.name,
+            "version":        self.version,
+            "banner":         self.banner,
+            "canonical_name": self.canonical_name,
+            "related":        self.related,
+            "others":         others,
+        }
 
 
     #----------------------------------------------------------------------
@@ -440,6 +444,16 @@ class WebServerFingerprint(Information):
         :rtype: str
         """
         return self.__banner
+
+
+    #----------------------------------------------------------------------
+    @identity
+    def canonical_name(self):
+        """
+        :return: Web server name, at lowcase. The name will be one of the the file: 'wordlist/fingerprint/webservers_keywords.txt'. Example: "apache"
+        :rtype: str
+        """
+        return self.__canonical_name
 
 
     #----------------------------------------------------------------------
