@@ -347,7 +347,7 @@ class WebServerFingerprint(Information):
         :param canonical_name: Web server name, at lowcase. The name will be one of the the file: 'wordlist/fingerprint/webservers_keywords.txt'. Example: "Apache"
         :type canonical_name: str
 
-        :param related: Related webservers.
+        :param related: Alternative brands for this web server.
         :type related: set(str)
 
         :param others: Map of other possible web servers by name and their probabilities of being correct [0.0 ~ 1.0].
@@ -400,6 +400,7 @@ class WebServerFingerprint(Information):
 
     #----------------------------------------------------------------------
     def to_dict(self):
+        related = list(self.related)
         others = { k: list(v) for (k,v) in self.others.iteritems() }
         return {
             "_class":         self.__class__.__name__,
@@ -411,7 +412,7 @@ class WebServerFingerprint(Information):
             "version":        self.version,
             "banner":         self.banner,
             "canonical_name": self.canonical_name,
-            "related":        self.related,
+            "related":        related,
             "others":         others,
         }
 
@@ -492,8 +493,8 @@ class WebServerFingerprint(Information):
     @merge
     def related(self):
         """
-        :return: Dict with the web server that act same as the discovered web server.
-        :rtype: dict(str -> set() ) -> ('iis' : ('hyperion'))
+        :return: Alternative brands for this web server.
+        :rtype: set(str)
         """
         return self.__related
 
@@ -502,8 +503,8 @@ class WebServerFingerprint(Information):
     @related.setter
     def related(self, related):
         """
-        :param related: Dict with the web server that act same as the discovered web server.
-        :type related: dict(str -> set() ) -> ('iis' : ('hyperion'))
+        :param related: Alternative brands for this web server.
+        :type related: set(str)
         """
         if related:
             if not isinstance(related, set):
