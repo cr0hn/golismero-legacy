@@ -55,8 +55,6 @@ try:
 except ImportError:
     import pickle
 
-json_encode = None
-
 # Import @decorator from the decorator module, if available.
 # Otherwise define a simple but crude replacement.
 try:
