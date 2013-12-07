@@ -439,9 +439,11 @@ class HTTP_Request (Information):
 
         :param headers: HTTP headers, in raw or parsed form.
             Defaults to DEFAULT_HEADERS.
-        :type headers: HTTP_Headers | dict(str -> str) | tuple( tuple(str, str) ) | str
+        :type headers: HTTP_Headers | dict(str -> str) | tuple( tuple(str, str) ) | str | None
 
-        :param post_data: POST data.
+        :param post_data: Optional POST data.
+            If used, the Content-Type and Content-Length headers are populated automatically,
+            unless already present in "headers".
         :type post_data: str | None
 
         :param method: HTTP method.
@@ -454,8 +456,12 @@ class HTTP_Request (Information):
         :param version: Protocol version.
         :type version: str
 
-        :param referer: Optional referer, overrides that of "headers".
+        :param referer: Optional referer. Ignored if already present in "headers".
         :type referer: str
+
+        :param user_agent: Optional user-agent string. Ignored if already present in "headers".
+            Defaults to DEFAULT_USER_AGENT.
+        :type user_agent: str | None
         """
 
         # Default method.
@@ -473,6 +479,12 @@ class HTTP_Request (Information):
         # URL.
         self.__parsed_url = ParsedURL(url)
         self.__url = self.__parsed_url.url
+
+        # Cookie header value.
+        try:
+            cookie = Config.audit_config.cookie
+        except Exception:
+            cookie = None
 
         # User-Agent header value.
         if user_agent:
@@ -497,10 +509,6 @@ class HTTP_Request (Information):
             if post_data:
                 headers = headers + (("Content-Type", "application/x-www-form-urlencoded"),
                                      ("Content-Length", str(len(post_data))))
-            try:
-                cookie = Config.audit_config.cookie
-            except Exception:
-                cookie = None
             if cookie:
                 headers = headers + (("Cookie", cookie),)
             if referer:
@@ -509,21 +517,22 @@ class HTTP_Request (Information):
                 headers = headers + (("User-Agent", user_agent),)
             headers = HTTP_Headers.from_items(headers)
         elif not isinstance(headers, HTTP_Headers):
-            if type(headers) == unicode:
-                headers = str(headers)   # FIXME: better collation!
+            headers = to_utf8(headers)
             if type(headers) == str:             # raw headers
                 headers = HTTP_Headers(headers)
             elif hasattr(headers, "items"):      # dictionary
                 headers = HTTP_Headers.from_items(sorted(headers.items()))
             else:                                # dictionary items
                 headers = HTTP_Headers.from_items(sorted(headers))
-            if referer or user_agent:
-                headers = headers.to_dict()
-                if referer:
-                    headers["Referer"] = referer
-                if user_agent:
-                    headers["User-Agent"] = user_agent
-                headers = HTTP_Headers.from_items(sorted(headers.items()))
+            if cookie or referer or user_agent:
+                headers = headers.to_tuple()
+                if cookie and not any(x[0].lower() == "cookie" for x in headers):
+                    headers = headers + (("Cookie", cookie),)
+                if referer and not any(x[0].lower() == "referer" for x in headers):
+                    headers = headers + (("Referer", referer),)
+                if user_agent and not any(x[0].lower() == "user-agent" for x in headers):
+                    headers = headers + (("User-Agent", user_agent),)
+                headers = HTTP_Headers.from_items(headers)
         self.__headers = headers
 
         # Call the parent constructor.

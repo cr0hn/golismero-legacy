@@ -25,7 +25,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
-from golismero.api.net.web_utils import urlparse, split_hostname
+
 from golismero.api.data.information import Information
 from golismero.api.logger import Logger
 from golismero.api.config import Config
@@ -33,32 +33,31 @@ from golismero.api.text.wordlist import WordListLoader, WordlistNotFound
 from golismero.api.crypto import calculate_shannon_entropy
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.suspicious.url import SuspiciousURL, SuspiciousURLPath
-from golismero.api.data.vulnerability.information_disclosure.domain_disclosure import DomainDisclosure
 from golismero.api.plugin import TestingPlugin
-from golismero.api.text.wordlist import WordListLoader
 from golismero.api.net import NetworkException
 from golismero.api.net.scraper import extract_from_html, extract_from_text
 from golismero.api.net.web_utils import download, parse_url
-from collections import defaultdict
 
+
+#------------------------------------------------------------------------------
 class SuspiciousURLPlugin(TestingPlugin):
     """
     Find suspicious words in URLs.
     """
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def recv_info(self, info):
 
         m_parsed_url = info.parsed_url
         m_results = []
 
-        #------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Find suspicious URLs by matching against known substrings.
 
         # Load wordlists
@@ -77,7 +76,7 @@ class SuspiciousURLPlugin(TestingPlugin):
                           for x in m_wordlist_extensions
                           if m_parsed_url.extension == x])
 
-        #------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Find suspicious URLs by calculating the Shannon entropy of the hostname.
         # Idea from: https://github.com/stricaud/urlweirdos/blob/master/src/urlw/plugins/shannon/__init__.py
         # TODO: test with unicode enabled hostnames!
@@ -95,15 +94,9 @@ class SuspiciousURLPlugin(TestingPlugin):
                 if entropy > 4.0:
                     m_results.append( SuspiciousURLPath(info, subdomain) )
 
-        #------------------------------------------------------------------
-        #
-        #
-        #
-        # Get malware suspicious links
-        #
-        #
-        #
-        #------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        # Get malware suspicious links.
+
         p     = None
         m_url = info.url
         Logger.log_more_verbose("Looking for output links to malware sites")
@@ -147,6 +140,7 @@ class SuspiciousURLPlugin(TestingPlugin):
         m_urls_allowed = [
             url for url in m_links if not any(x in url for x in m_forbidden)
         ]
+
         # Get only output links
         m_output_links        = []
         m_output_links_append = m_output_links.append
@@ -178,16 +172,12 @@ class SuspiciousURLPlugin(TestingPlugin):
             m_results.append(v)
             m_results.append(u)
 
-
         if m_results:
             Logger.log_verbose("Discovered %s links to malware sites." % len(m_results))
         else:
             Logger.log_verbose("No output links to malware sites found.")
 
-
         return m_results
-
-
 
 
     #--------------------------------------------------------------------------

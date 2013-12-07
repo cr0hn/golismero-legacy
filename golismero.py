@@ -317,6 +317,7 @@ def cmdline_parser():
     if autocomplete_enabled:
         cmd.completer = plugins_completer
     gr_plugins.add_argument("--max-concurrent", metavar="N", type=int, default=None, help="maximum number of plugins to run concurrently")
+    gr_plugins.add_argument("--plugin-timeout", metavar="N", type=float, default=None, help="timeout in seconds for the execution of a plugin")
     cmd = gr_plugins.add_argument("--plugins-folder", metavar="PATH", help="customize the location of the plugins" )
     if autocomplete_enabled:
         cmd.completer = FilesCompleter(directories=True)

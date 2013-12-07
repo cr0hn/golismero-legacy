@@ -177,27 +177,18 @@ class ConsoleUIPlugin(UIPlugin):
                     m_text = "[*] %s: Current stage: %s"
                     Console.display(m_text % (m_plugin_name, m_stage))
 
+            # When an audit is aborted, check if there are more running audits.
+            # If there aren't any, stop the Orchestrator.
+            elif message.message_code == MessageCode.MSG_STATUS_AUDIT_ABORTED:
+                self.audit_is_dead(message.audit_name)
+
         # Process control messages.
         elif message.message_type == MessageType.MSG_TYPE_CONTROL:
 
             # When an audit is finished, check if there are more running audits.
             # If there aren't any, stop the Orchestrator.
             if message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
-                try:
-                    del self.already_seen_info[Config.audit_name]
-                except KeyError:
-                    pass # may happen when only generating reports
-                try:
-                    del self.current_plugins[Config.audit_name]
-                except KeyError:
-                    pass
-                if get_audit_count() == 1:  # this is the last one
-                    Config._context.send_msg(  # XXX FIXME hide this from plugins!
-                        message_type = MessageType.MSG_TYPE_CONTROL,
-                        message_code = MessageCode.MSG_CONTROL_STOP,
-                        message_info = True,  # True for finished, False for user cancel
-                            priority = MessagePriority.MSG_PRIORITY_LOW
-                    )
+                self.audit_is_dead(message.audit_name)
 
             # Show log messages. The verbosity is sent by Logger.
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
@@ -225,9 +216,9 @@ class ConsoleUIPlugin(UIPlugin):
                     m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                 except Exception:
                     m_plugin_name = "GoLismero"
-                text        = "[!] Plugin '%s' error: %s " % (m_plugin_name, str(description))
-                text        = colorize(text, 'critical')
-                traceback   = colorize(traceback, 'critical')
+                text      = "[!] Plugin '%s' error: %s " % (m_plugin_name, str(description))
+                text      = colorize(text, 'critical')
+                traceback = colorize(traceback, 'critical')
                 Console.display_error(text)
                 Console.display_error_more_verbose(traceback)
 
@@ -247,6 +238,25 @@ class ConsoleUIPlugin(UIPlugin):
                         text = "[!] Plugin '%s' warning: %s " % (m_plugin_name, str(formatted))
                         text = colorize(text, 'low')
                         Console.display_error(text)
+
+
+    #--------------------------------------------------------------------------
+    def audit_is_dead(self, audit_name):
+        try:
+            del self.already_seen_info[audit_name]
+        except KeyError:
+            pass # may happen when only generating reports
+        try:
+            del self.current_plugins[audit_name]
+        except KeyError:
+            pass
+        if get_audit_count() == 1:  # this is the last one
+            Config._context.send_msg(  # XXX FIXME hide this from plugins!
+                message_type = MessageType.MSG_TYPE_CONTROL,
+                message_code = MessageCode.MSG_CONTROL_STOP,
+                message_info = True,  # True for finished, False for user cancel
+                    priority = MessagePriority.MSG_PRIORITY_LOW
+            )
 
 
     #--------------------------------------------------------------------------

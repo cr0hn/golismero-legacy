@@ -33,7 +33,7 @@ from golismero.api.logger import Logger
 from golismero.api.net import NetworkException, NetworkOutOfScope
 from golismero.api.net.http import HTTP
 from golismero.api.net.web_utils import download, generate_error_page_url, \
-                                        fix_url, urljoin, parse_url
+                                        fix_url, urljoin
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.matching_analyzer import MatchingAnalyzer
 from golismero.api.data.vulnerability.suspicious.url import SuspiciousURL
@@ -181,8 +181,11 @@ class Robots(TestingPlugin):
             m_analyzer = MatchingAnalyzer(m_response_error_page.data)
             m_total = len(m_discovered_urls)
             for m_step, l_url in enumerate(m_discovered_urls):
-                progress = (float(m_step * 100) / m_total)
-                self.update_status(progress=progress)
+
+                # Update only odd iterations
+                if m_step % 2:
+                    progress = (float(m_step * 100) / m_total)
+                    self.update_status(progress=progress)
                 l_url = fix_url(l_url, m_url)
                 if l_url in Config.audit_scope:
                     l_p = None
@@ -227,8 +230,12 @@ class Robots(TestingPlugin):
         else:
             m_total = len(m_discovered_urls)
             for m_step, l_url in enumerate(m_discovered_urls):
-                progress = (float(m_step * 100) / m_total)
-                self.update_status(progress=progress)
+
+                # Update only odd iterations
+                if m_step % 2:
+                    progress = (float(m_step * 100) / m_total)
+                    self.update_status(progress=progress)
+
                 l_url = fix_url(l_url, m_url)   # XXX FIXME
                 try:
                     l_p = HTTP.get_url(l_url, callback=self.check_response)

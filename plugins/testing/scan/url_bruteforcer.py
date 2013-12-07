@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.config import Config
 from golismero.api.data import discard_data
-from golismero.api.data.information.webserver_fingerprint import WebServerFingerprint
+from golismero.api.data.information.fingerprint import WebServerFingerprint
 from golismero.api.data.resource.url import FolderUrl, Url
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.logger import Logger
@@ -149,9 +149,10 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
             l_loaded_wordlist = WordListLoader.get_advanced_wordlist_as_list(l_w)
 
             for l_wo in l_loaded_wordlist:
-                tmp_u = urljoin(m_url, (l_wo[1:] if l_wo.startswith("/") else l_wo))
-
-                Logger.log(tmp_u)
+                try:
+                    tmp_u = urljoin(m_url, l_wo[1:] if l_wo.startswith("/") else l_wo)
+                except ValueError:
+                    continue
 
                 m_urls_update(tmp_u)
 

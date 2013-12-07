@@ -215,7 +215,6 @@ class MessageCode(MessageConstants):
     # Audit control
     MSG_CONTROL_START_AUDIT        = 10
     MSG_CONTROL_STOP_AUDIT         = 11
-    MSG_CONTROL_START_ERROR_AUDIT  = 12
 
     # UI subsystem
     MSG_CONTROL_START_UI           = 20
@@ -290,6 +289,7 @@ class MessageCode(MessageConstants):
     MSG_STATUS_PLUGIN_BEGIN        = 1
     MSG_STATUS_PLUGIN_END          = 2
     MSG_STATUS_PLUGIN_STEP         = 3
+    MSG_STATUS_AUDIT_ABORTED       = 4
 
 
 #------------------------------------------------------------------------------

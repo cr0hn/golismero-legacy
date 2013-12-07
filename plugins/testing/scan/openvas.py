@@ -31,8 +31,7 @@ from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.vulnerability import UncategorizedVulnerability
-from golismero.api.data.vulnerability.infrastructure.vulnerable_service import VulnerableService
-from golismero.api.data.vulnerability.infrastructure.outdated_software import *
+from golismero.api.data.vulnerability.infrastructure.outdated_software import * # noqa
 from golismero.api.logger import Logger
 from golismero.api.net.scraper import extract_from_text
 from golismero.api.plugin import TestingPlugin, ImportPlugin
@@ -261,7 +260,7 @@ class OpenVASPlugin(TestingPlugin):
                     },
                 )
             except RuntimeError:
-                Logger.log("Django backend previously charged.")
+                Logger.log("Django backend previously loaded.")
 
             # Load the ORM model.
             sys.path.insert(0, openvas_dir)
@@ -369,13 +368,17 @@ class OpenVASPlugin(TestingPlugin):
 
                             elif l_family in CATEGORIES:
                                 clazz = globals()[ CATEGORIES[l_family] ]
-
                         except Exception, e:
-                            tb = format_exc()
-                            Logger.log_error_verbose(
-                                "Failed to find category %r, reason: %s" %
-                                (l_plugin_id, str(e)))
-                            Logger.log_error_more_verbose(tb)
+                            # FIXME: When message system works well, display logger.
+                            #
+                            # No family found
+                            pass
+
+                            #tb = format_exc()
+                            #Logger.log_error_verbose(
+                                #"Failed to find category %r, reason: %s" %
+                                #(l_plugin_id, str(e)))
+                            #Logger.log_error_more_verbose(tb)
 
                 # Create the vulnerability instance.
                 vuln = clazz(**kwargs)

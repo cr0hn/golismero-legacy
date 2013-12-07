@@ -48,17 +48,14 @@ from ..messaging.message import Message
 from imp import load_source
 from multiprocessing import Manager
 from os import getpid
+from signal import signal, SIGINT, SIG_IGN
 from thread import get_ident
 from threading import Timer
 from traceback import format_exc, print_exc, format_exception_only, format_list
 from warnings import catch_warnings, simplefilter
 
-import sys
 import socket
-
-# Make some runtime patches to the multiprocessing module.
-# Just importing this submodule does the magic!
-from ..patches import mp  # noqa
+import sys
 
 # Imports needed to override the multiprocessing Process and Pool classes.
 from multiprocessing import Process as _Original_Process
@@ -72,14 +69,6 @@ class Process(_Original_Process):
 
     This means we have to take care of killing our own subprocesses.
     """
-
-    def __init__(self, *arg, **kwarg):
-        super(Process, self).__init__(*arg, **kwarg)
-        try:
-            import posix
-            posix.nice(99)
-        except Exception:
-            pass
 
     @property
     def daemon(self):
@@ -121,6 +110,9 @@ def launcher(queue, max_concurrent, refresh_after_tasks):
     return _launcher(queue, max_concurrent, refresh_after_tasks)
 
 def _launcher(queue, max_concurrent, refresh_after_tasks):
+
+    # Initialize this worker process.
+    _init_worker()
 
     # Instance the pool manager.
     pool = PluginPoolManager(max_concurrent, refresh_after_tasks)
@@ -166,9 +158,12 @@ def _launcher(queue, max_concurrent, refresh_after_tasks):
 def bootstrap(context, func, args, kwargs):
     return _bootstrap(context, func, args, kwargs)
 
+_do_notify_end = False
+
 def _bootstrap(context, func, args, kwargs):
+    global _do_notify_end
     try:
-        do_notify_end = False
+        _do_notify_end = False
         try:
             try:
                 plugin_warnings = []
@@ -187,114 +182,14 @@ def _bootstrap(context, func, args, kwargs):
                         if Config.audit_config.plugin_timeout:
                             kill_timer = Timer(
                                 Config.audit_config.plugin_timeout,
-                                exit, (1,)
+                                _plugin_killer, (context,)
                             )
                             kill_timer.start()
 
                         try:
 
-                            # If the plugin receives a Data object...
-                            if func == "recv_info":
-
-                                # Get the data sent to the plugin.
-                                try:
-                                    input_data = kwargs["info"]
-                                except KeyError:
-                                    input_data = args[0]
-
-                                # Abort if the data is out of scope
-                                # for the current audit.
-                                if not input_data.is_in_scope():
-                                    return
-
-                                # Save the current crawling depth.
-                                if hasattr(input_data, "depth"):
-                                    context._depth = input_data.depth
-
-                                    # Check we didn't exceed the maximum depth.
-                                    max_depth = context.audit_config.depth
-                                    if (
-                                        max_depth is not None and
-                                        context._depth > max_depth
-                                    ):
-                                        return
-
-                            # Set the default socket timeout.
-                            socket.setdefaulttimeout(5.0)
-
-                            # Initialize the private file API.
-                            LocalFile._update_plugin_path()
-
-                            # Clear the HTTP connection pool.
-                            HTTP._initialize()
-
-                            # Clear the local network cache for this process.
-                            NetworkCache._clear_local_cache()
-
-                            # Initialize the local data cache for this run.
-                            LocalDataCache.on_run()
-                            if func == "recv_info":
-                                LocalDataCache.on_create(input_data)
-
-                            # Try to get the plugin from the cache.
-                            cache_key = (context.plugin_module,
-                                         context.plugin_class)
-                            try:
-                                cls = plugin_class_cache[cache_key]
-
-                            # If not in the cache, load the class.
-                            except KeyError:
-
-                                # Load the plugin module.
-                                mod = load_source(
-                                    "_plugin_tmp_" + \
-                                    context.plugin_class.replace(".", "_"),
-                                    context.plugin_module)
-
-                                # Get the plugin class.
-                                cls = getattr(mod, context.plugin_class)
-
-                                # Cache the plugin class.
-                                plugin_class_cache[cache_key] = cls
-
-                            # Instance the plugin.
-                            instance = cls()
-
-                            # Notify the Orchestrator of the plugin start.
-                            context.send_msg(
-                                message_type = MessageType.MSG_TYPE_STATUS,
-                                message_code = MessageCode.MSG_STATUS_PLUGIN_BEGIN,
-                            )
-                            do_notify_end = True
-
-                            # Call the callback method.
-                            result = None
-                            try:
-                                result = getattr(instance, func)(*args, **kwargs)
-                            finally:
-
-                                # Return value is a list of data for recv_info().
-                                if func == "recv_info":
-
-                                    # Validate and sanitize the result data.
-                                    result = LocalDataCache.on_finish(
-                                        result, input_data)
-
-                                    # Send the result data to the Orchestrator.
-                                    if result:
-                                        try:
-                                            context.send_msg(
-                                                message_type = MessageType.MSG_TYPE_DATA,
-                                                message_code = MessageCode.MSG_DATA_RESPONSE,
-                                                message_info = result,
-                                            )
-                                        except Exception, e:
-                                            context.send_msg(
-                                                message_type = MessageType.MSG_TYPE_CONTROL,
-                                                message_code = MessageCode.MSG_CONTROL_ERROR,
-                                                message_info = (str(e), format_exc()),
-                                                    priority = MessagePriority.MSG_PRIORITY_HIGH,
-                                            )
+                            # Run the plugin.
+                            _bootstrap_inner(context, func, args, kwargs)
 
                         finally:
 
@@ -334,7 +229,7 @@ def _bootstrap(context, func, args, kwargs):
         finally:
 
             # Send back an ACK.
-            context.send_ack(do_notify_end)
+            context.send_ack(_do_notify_end)
 
             # Reset the current crawling depth.
             context._depth = -1
@@ -360,6 +255,186 @@ def _bootstrap(context, func, args, kwargs):
 
         # If we reached this point we can assume the parent process is dead.
         exit(1)
+
+def _bootstrap_inner(context, func, args, kwargs):
+    global _do_notify_end
+
+    # If the plugin receives a Data object...
+    if func == "recv_info":
+
+        # Get the data sent to the plugin.
+        try:
+            input_data = kwargs["info"]
+        except KeyError:
+            input_data = args[0]
+
+        # Abort if the data is out of scope
+        # for the current audit.
+        if not input_data.is_in_scope():
+            return
+
+        # Save the current crawling depth.
+        if hasattr(input_data, "depth"):
+            context._depth = input_data.depth
+
+            # Check we didn't exceed the maximum depth.
+            max_depth = context.audit_config.depth
+            if max_depth is not None and context._depth > max_depth:
+                return
+
+    # Set the default socket timeout.
+    socket.setdefaulttimeout(5.0)
+
+    # Initialize the private file API.
+    LocalFile._update_plugin_path()
+
+    # Clear the HTTP connection pool.
+    HTTP._initialize()
+
+    # Clear the local network cache for this process.
+    NetworkCache._clear_local_cache()
+
+    # Initialize the local data cache for this run.
+    LocalDataCache.on_run()
+    if func == "recv_info":
+        LocalDataCache.on_create(input_data)
+
+    # Try to get the plugin from the cache.
+    cache_key = (context.plugin_module, context.plugin_class)
+    try:
+        cls = plugin_class_cache[cache_key]
+
+    # If not in the cache, load the class.
+    except KeyError:
+
+        # Load the plugin module.
+        mod = load_source(
+            "_plugin_tmp_" + context.plugin_class.replace(".", "_"),
+            context.plugin_module)
+
+        # Get the plugin class.
+        cls = getattr(mod, context.plugin_class)
+
+        # Cache the plugin class.
+        plugin_class_cache[cache_key] = cls
+
+    # Instance the plugin.
+    instance = cls()
+
+    # Notify the Orchestrator of the plugin start.
+    context.send_msg(
+        message_type = MessageType.MSG_TYPE_STATUS,
+        message_code = MessageCode.MSG_STATUS_PLUGIN_BEGIN,
+    )
+    _do_notify_end = True
+
+    # Call the callback method.
+    result = None
+    try:
+        result = getattr(instance, func)(*args, **kwargs)
+    finally:
+
+        # Return value is a list of data for recv_info().
+        if func == "recv_info":
+
+            # Validate and sanitize the result data.
+            result = LocalDataCache.on_finish(result, input_data)
+
+            # Send the result data to the Orchestrator.
+            if result:
+                try:
+                    context.send_msg(
+                        message_type = MessageType.MSG_TYPE_DATA,
+                        message_code = MessageCode.MSG_DATA_RESPONSE,
+                        message_info = result,
+                    )
+                except Exception, e:
+                    context.send_msg(
+                        message_type = MessageType.MSG_TYPE_CONTROL,
+                        message_code = MessageCode.MSG_CONTROL_ERROR,
+                        message_info = (str(e), format_exc()),
+                            priority = MessagePriority.MSG_PRIORITY_HIGH,
+                    )
+
+
+#------------------------------------------------------------------------------
+def _plugin_killer(context):
+    """
+    Internally used function that kills a plugin
+    when the execution timeout has been reached.
+
+    :param context: Plugin execution context.
+    :type context: PluginContext
+    """
+
+    try:
+
+        try:
+
+            # Tell the Orchestrator there's been an error.
+            context.send_msg(
+                message_type = MessageType.MSG_TYPE_CONTROL,
+                message_code = MessageCode.MSG_CONTROL_ERROR,
+                message_info = ("Execution timeout reached.", ""),
+                    priority = MessagePriority.MSG_PRIORITY_HIGH,
+            )
+
+        finally:
+
+            # Send back an ACK.
+            context.send_ack(_do_notify_end)
+
+            # Reset the current crawling depth.
+            context._depth = -1
+
+    finally:
+
+        # Kill the current process.
+        exit(1)
+
+
+#------------------------------------------------------------------------------
+class _FakeFile(object):
+    """
+    Mimics a file object well enough to supress print messages.
+    Also faster than opening a file descriptor for /dev/null.
+    """
+
+    def write(self, s):
+        pass
+
+    def flush(self):
+        pass
+
+    def close(self):
+        pass
+
+
+#------------------------------------------------------------------------------
+def _init_worker():
+    """
+    Initializer for pooled processes.
+    """
+
+    # Disable handling of KeyboardInterrupt.
+    # This way only the main process gets the signal.
+    # XXX FIXME doesn't seem to work on Windows!
+    ##signal(SIGINT, SIG_IGN)
+    signal(SIGINT, _suicide)
+
+    # Try to lower the CPU usage priority as much as possible.
+    try:
+        import posix
+        posix.nice(99)
+    except Exception:
+        pass
+
+    # Disable standard output and standard error.
+    f = _FakeFile()
+    sys.stdout, sys.stderr = f, f
+
+def _suicide(signum, frame):
+    exit(1)
 
 
 #------------------------------------------------------------------------------
@@ -846,6 +921,7 @@ class PluginPoolManager (object):
 
                 # Create the process pool.
                 self.__pool = Pool(
+                    initializer = _init_worker,
                     processes = self.__max_processes,
                     maxtasksperchild = self.__refresh_after_tasks)
 

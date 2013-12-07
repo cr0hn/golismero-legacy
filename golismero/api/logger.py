@@ -44,8 +44,7 @@ class Logger (object):
     Plugins should use this class instead of a simple `print`,
     otherwise messages will not be logged by GoLismero.
 
-    Example::
-
+    Example:
        >>> Logger.log("My log message with information")
        >>> Logger.log_error("My log with error information")
        >>> Logger.log_verbose("Log message to display only when verbose mode is enabled")

@@ -143,17 +143,27 @@ class AuditManager (object):
         self.orchestrator.uiManager.check_params(audit_config)
 
         # Create the audit.
-        m_audit = Audit(audit_config, self.orchestrator)
+        audit = Audit(audit_config, self.orchestrator)
 
         # Store it.
-        self.__audits[m_audit.name] = m_audit
+        self.__audits[audit.name] = audit
+
+        # Log the event.
+        if audit.is_new:
+            Logger.log("Audit name: %s" % audit.name)
+        else:
+            Logger.log_verbose("Audit name: %s" % audit.name)
+        if (hasattr(audit.database, "filename") and
+            audit.database.filename != ":memory:"
+        ):
+            Logger.log_verbose("Audit database: %s" % audit.database.filename)
 
         # Run!
         try:
-            m_audit.run()
+            audit.run()
 
             # Return it.
-            return m_audit
+            return audit
 
         # On error, abort.
         except Exception, e:
@@ -161,7 +171,7 @@ class AuditManager (object):
             Logger.log_error("Failed to add new audit, reason: %s" % e)
             #Logger.log_error_more_verbose(trace)
             try:
-                self.remove_audit(m_audit.name)
+                self.remove_audit(audit.name)
             except Exception:
                 pass
             raise AuditException("Failed to add new audit, reason: %s" % e)
@@ -199,6 +209,20 @@ class AuditManager (object):
         :rtype: dict(str -> Audit)
         """
         return self.__audits
+
+
+    #--------------------------------------------------------------------------
+    def has_audit(self, name):
+        """
+        Check if there's an audit with the given name.
+
+        :param name: Audit name.
+        :type name: str
+
+        :returns: True if the audit exists, False otherwise.
+        :rtype: bool
+        """
+        return name in self.__audits
 
 
     #--------------------------------------------------------------------------
@@ -248,57 +272,52 @@ class AuditManager (object):
         :param message: Incoming message.
         :type message: Message
         """
+
+        # Type check.
         if not isinstance(message, Message):
             raise TypeError(
                 "Expected Message, got %r instead" % type(message))
 
-        # Send data messages to their target audit
+        # Send data messages to their target audit.
         if message.message_type == MessageType.MSG_TYPE_DATA:
             if not message.audit_name:
                 raise ValueError("Data message with no target audit!")
             self.get_audit(message.audit_name).dispatch_msg(message)
 
-        # Process control messages
+        # Process control messages.
         elif message.message_type == MessageType.MSG_TYPE_CONTROL:
 
-            # Send ACKs to their target audit
+            # Send ACKs to their target audit.
             if message.message_code == MessageCode.MSG_CONTROL_ACK:
                 if message.audit_name:
-                    audit = self.get_audit(message.audit_name)
-                    audit.acknowledge(message)
+                    self.get_audit(message.audit_name).acknowledge(message)
 
-            # Start an audit if requested
+            # Start an audit if requested.
             elif message.message_code == MessageCode.MSG_CONTROL_START_AUDIT:
                 try:
                     self.new_audit(message.message_info)
-                except AuditException,e:
-
-                    # Check running mode. If mode is not dameon, service stops
-                    if self.orchestrator.config.ui_mode != "daemon":
-                        raise RuntimeError("Error when try to start audit: %s" %  str(e))
-
+                except AuditException, e:
+                    tb = format_exc()
                     message = Message(
-                        message_type = MessageType.MSG_TYPE_CONTROL,
-                        message_code = MessageCode.MSG_CONTROL_START_ERROR_AUDIT,
-                        message_info = (str(e), message.message_info.audit_name),
+                        message_type = MessageType.MSG_TYPE_STATUS,
+                        message_code = MessageCode.MSG_STATUS_AUDIT_ABORTED,
+                        message_info = (str(e), tb),
                             priority = MessagePriority.MSG_PRIORITY_HIGH,
+                          audit_name = message.message_info.audit_name,
                     )
                     self.orchestrator.enqueue_msg(message)
 
-
-            # Stop an audit if requested
+            # Stop an audit if requested.
             elif message.message_code == MessageCode.MSG_CONTROL_STOP_AUDIT:
                 if not message.audit_name:
                     raise ValueError("I don't know which audit to stop...")
                 self.get_audit(message.audit_name).close()
                 self.remove_audit(message.audit_name)
 
-            # Send log messages to their target audit
+            # Send log messages to their target audit.
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
                 if message.audit_name:
                     self.get_audit(message.audit_name).dispatch_msg(message)
-
-            # TODO: pause and resume audits, start new audits
 
 
     #--------------------------------------------------------------------------
@@ -337,10 +356,6 @@ class Audit (object):
             raise TypeError(
                 "Expected AuditConfig, got %r instead" % type(audit_config))
 
-        # XXX DEBUG
-        ##from pprint import pprint
-        ##pprint(audit_config.to_dictionary())
-
         # Keep the audit settings.
         self.__audit_config = audit_config
 
@@ -375,17 +390,11 @@ class Audit (object):
         self.__report_manager = None
 
         # Create or open the database.
-        force_print_name = not audit_config.audit_name or audit_config.audit_db == ":auto:"
+        self.__is_new = not audit_config.audit_name or audit_config.audit_db == ":auto:"
         self.__database = AuditDB(audit_config)
 
         # Set the audit name.
         self.__name = self.__database.audit_name
-        if force_print_name:
-            Logger.log("Audit name: %s" % self.__name)
-        else:
-            Logger.log_verbose("Audit name: %s" % self.__name)
-        if hasattr(self.__database, "filename"):
-            Logger.log_verbose("Audit database: %s" % self.database.filename)
 
 
     #--------------------------------------------------------------------------
@@ -397,6 +406,14 @@ class Audit (object):
         :rtype: str
         """
         return self.__name
+
+    @property
+    def is_new(self):
+        """
+        :returns: True if the audit is new, False if it's a reopened audit.
+        :rtype: bool
+        """
+        return self.__is_new
 
     @property
     def orchestrator(self):

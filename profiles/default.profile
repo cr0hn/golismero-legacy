@@ -11,7 +11,7 @@ description = Default user profile for GoLismero.
 # Audit database.
 # Use ":memory:" for in-memory database, or a filename for a database file.
 # Use ":auto:" to create a new database file based on the audit name.
-#audit_db = :auto:
+audit_db = :memory:
 
 #------------------------------------------------------------------------------
 # Report options
