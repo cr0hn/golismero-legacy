@@ -11,6 +11,7 @@ golismero_2/TODO.txt
 *.komodoproject
 /.komodotools/
 .spyderproject
+.idea/
 
 # Source control folders
 .svn
