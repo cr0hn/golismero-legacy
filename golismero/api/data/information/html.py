@@ -117,6 +117,7 @@ class HTML(Information):
     #----------------------------------------------------------------------
     def to_dict(self):
         return {
+            "_class": self.__class__.__name__,
             "raw_data": self.__raw_data,
         }
 

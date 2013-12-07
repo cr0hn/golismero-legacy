@@ -517,6 +517,7 @@ class PluginInfo (object):
         :rtype: dict(str -> \\*)
         """
         return {
+            ##"_class"              : self.__class__.__name__,
             "plugin_id"           : self.plugin_id,
             "descriptor_file"     : self.descriptor_file,
             "category"            : self.category,
