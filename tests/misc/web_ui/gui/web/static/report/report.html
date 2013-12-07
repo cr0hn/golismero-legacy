@@ -105,11 +105,11 @@
 						<h3 data-anchor="vulnerabilitiesTable">Vulnerabilities</h3>
 					  	<table class="table table-bordered" id="tableVulnerabilities">
 						    <thead>
-					          <tr>
-					            <th style="width:15%">ID</th>
-					            <th style="width:25%">Target</th>
-					            <th style="width:50%">Vulnerability</th>
-					            <th style="width:10%">Criticality</th>
+					          <tr id="headVulnerability">
+					            <th style="width:15%" data-orderColumn="id" data-orderDirection="asc">ID</th>
+					            <th style="width:25%" data-orderColumn="target" data-orderDirection="asc">Target</th>
+					            <th style="width:50%" data-orderColumn="type" data-orderDirection="asc">Vulnerability</th>
+					            <th style="width:10%" data-orderColumn="criticality" data-orderDirection="asc">Criticality</th>
 					          </tr>
 					          <tr class="filter">
 									<th></th>
@@ -275,13 +275,19 @@
 				});
 
 	    	}
+
+
 	    	function updateTable(){
 	    		$("#tableVulnerabilities tbody").empty();
 	    		indexVulnerabilities=0;
 	    		var vulnerabilityFilter = $('#vulnerabilityFilterTable').val();
     			var targetFilter = $('#targetFilterTable').val();
     			var criticalityFilter = $('#criticalityFilterTable').val();
-    			var data = dataAccess.getVulnerabilities(targetFilter, vulnerabilityFilter,criticalityFilter);
+    			var orderColumn = $("#headVulnerability").data("ordercolumn");
+    			
+	    		var orderDirection = $("#headVulnerability").data("orderdirection");
+				
+    			var data = dataAccess.getVulnerabilities(targetFilter, vulnerabilityFilter,criticalityFilter, orderColumn, orderDirection);
     			
 				$("#tableVulnerabilities tbody").append($.tmpl( "rowVulnerabilityTemplate", data ));
 				//cargo el count
@@ -344,6 +350,25 @@
 	    		$('#criticalityFilterTable').change(function(e){
 	    			updateTable();
 	    		});
+	    		$("#headVulnerability").find("th").click(function(){
+	    			column = $(this).data("ordercolumn");
+	    			direction = $(this).data("orderdirection");
+	    			$("#headVulnerability").data("ordercolumn", column);
+	    			$("#headVulnerability").data("orderdirection", direction);
+	    			if(direction =="asc"){
+	    				$(this).data("orderdirection", "desc");
+	    			}else{
+						$(this).data("orderdirection", "asc");
+					}
+
+	    			$("#headVulnerability").find("th").removeClass("sort");
+	    			$("#headVulnerability").find("th").removeClass("asc");
+	    			$("#headVulnerability").find("th").removeClass("desc");
+	    			$(this).addClass("sort");
+	    			$(this).addClass(direction);
+	    			updateTable();
+	    		});
+
 	    		updateTable();
     			
 	    	}

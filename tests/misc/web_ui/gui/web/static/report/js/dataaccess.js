@@ -72,7 +72,7 @@ DataAccess.prototype.getTargetTechnical = function() {
 	return bd.get();
 	
 };
-DataAccess.prototype.getVulnerabilities = function(target, vulnerability, criticality) {
+DataAccess.prototype.getVulnerabilities = function(target, vulnerability, criticality, orderColumn, orderDirection) {
 	var bd = this.bbddVulnerabilities();
 	if(target){
 		bd = bd.filter({'target':{'has':[target]}});
@@ -82,6 +82,13 @@ DataAccess.prototype.getVulnerabilities = function(target, vulnerability, critic
 	}
 	if(criticality){
 		bd = bd.filter({'criticality':parseInt(criticality)});
+	}
+	if(orderColumn){
+		if(orderDirection=="asc")
+		{
+			orderDirection = ""
+		}
+		return bd.order(orderColumn +" " + orderDirection).get();
 	}
 	return bd.get();
 	
