@@ -979,6 +979,10 @@ class AuditConfig (Configuration):
         # Add the new targets.
         self._targets.extend(parsed_targets)
 
+    @targets.deleter
+    def targets(self):
+        self._targets = []
+
 
     #--------------------------------------------------------------------------
 

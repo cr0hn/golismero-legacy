@@ -483,14 +483,19 @@ def build_config_from_cmdline():
         auditParams.plugin_load_overrides = P.plugin_load_overrides
 
         # If importing is turned off, remove the list of imports.
+        # FIXME this should be done by argparse in argument order!
         if P.disable_importing:
             auditParams.imports = []
 
         # If reports are turned off, remove the list of reports.
         # Otherwise, if no reports are specified, default to screen report.
+        # FIXME this should be done by argparse in argument order!
         if P.disable_reporting:
             auditParams.reports = []
-        elif not auditParams.reports and P.command in ("SCAN", "REPORT"):
+        elif (
+            not auditParams.reports and
+            (P.command != "REPORT" or not auditParams.targets)
+        ):
             auditParams.reports = ["-"]
             if auditParams.only_vulns is None:
                 auditParams.only_vulns = True
@@ -794,16 +799,31 @@ def command_update(parser, P, cmdParams, auditParams):
 #------------------------------------------------------------------------------
 def command_run(parser, P, cmdParams, auditParams):
 
-    # Check if all options are correct.
-    if P.command != "SCAN":
+    # For the SCAN command, assume targets are URLs whenever feasible.
+    if P.command == "SCAN":
+        guessed_urls = []
+        for target in auditParams.targets:
+            if not "://" in target:
+                guessed_urls.append("http://" + target)
+        auditParams.targets.extend(guessed_urls)
+
+    # For all other commands, disable the testing plugins.
+    else:
         auditParams.plugin_load_overrides.append( (False, "testing") )
 
-    # Assume targets are URLs whenever feasible.
-    guessed_urls = []
-    for target in auditParams.targets:
-        if not "://" in target:
-            guessed_urls.append("http://" + target)
-    auditParams.targets.extend(guessed_urls)
+        # For the IMPORT command, targets are import files.
+        if P.command == "IMPORT":
+            auditParams.imports = auditParams.targets   # magic
+            del auditParams.targets                     # magic
+
+        # For the REPORT command, targets are report files.
+        elif P.command == "REPORT":
+            auditParams.reports = auditParams.targets   # magic
+            del auditParams.targets                     # magic
+
+        # If we reached this point, we have an internal error!
+        else:
+            raise RuntimeError("Unsupported command: %s" % P.command)
 
     try:
 
