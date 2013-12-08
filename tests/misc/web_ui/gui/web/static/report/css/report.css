@@ -190,4 +190,7 @@ tr.vulnerabilityRow span.glyphicon {
     width: 410px !important;
     background: inherit;
   }
+  #hideShowAll {
+    display: none;
+  }
 }

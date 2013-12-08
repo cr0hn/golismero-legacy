@@ -112,8 +112,8 @@
 					          <tr id="headVulnerability">
 					            <th style="width:15%" data-orderColumn="id" data-orderDirection="asc">ID</th>
 					            <th style="width:25%" data-orderColumn="target" data-orderDirection="asc">Target</th>
-					            <th style="width:50%" data-orderColumn="type" data-orderDirection="asc">Vulnerability</th>
-					            <th style="width:10%" data-orderColumn="criticality" data-orderDirection="asc">Criticality</th>
+					            <th style="width:45%" data-orderColumn="type" data-orderDirection="asc">Vulnerability</th>
+					            <th style="width:15%" data-orderColumn="criticality" data-orderDirection="asc">Criticality</th>
 					          </tr>
 					          <tr class="filter">
 									<th></th>
@@ -142,7 +142,7 @@
 					        <tbody>
 					        </tbody>
 					  	</table>
-					  	<div class="pull-right">(Show: <span id="showTableVulnerabilities"></span>, Total: <span id="totalTableVulnerabilities"></span>)</div>
+					  	<div >Total: <span id="totalTableVulnerabilities"></span></div>
 					</div>
 				</div>
 			</div>
@@ -156,8 +156,8 @@
 								<tr id="headVulnerability">
 						            <th style="width:15%" data-orderColumn="id" data-orderDirection="asc">ID</th>
 						            <th style="width:25%" data-orderColumn="target" data-orderDirection="asc">Target</th>
-						            <th style="width:50%" data-orderColumn="type" data-orderDirection="asc">Vulnerability</th>
-						            <th style="width:10%" data-orderColumn="criticality" data-orderDirection="asc">Criticality</th>
+						            <th style="width:45%" data-orderColumn="type" data-orderDirection="asc">Vulnerability</th>
+						            <th style="width:15%" data-orderColumn="criticality" data-orderDirection="asc">Criticality</th>
 						          </tr>
 						   </tbody>
 					  	</table>
@@ -306,8 +306,7 @@
 				//cargo el count
 				$("#totalTableVulnerabilities").html(dataAccess.getVulnerabilitiesCount(targetFilter,vulnerabilityFilter,criticalityFilter));
     			
-    			//actualizeo el numero de mostradas
-    			$("#showTableVulnerabilities").html(indexVulnerabilities*10+data.length);
+    			
     			updateAnchorTable();
 	    	}
 	    	function initTechnicalTable(){
@@ -453,6 +452,7 @@
 				initTechnicalTable();
 
 			});
+			
 	    </script>
 	</body>
 </html>
