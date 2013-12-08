@@ -212,10 +212,12 @@ class JSONOutput(ReportPlugin):
     #--------------------------------------------------------------------------
     def __add_to_json(self, parent, datas, data_type):
         for data in self.__iterate_data(datas, data_type):
-            d = data.to_dict()
+            i = data.identity
+            d = i
             try:
+                d = data.to_dict()
                 dumps(d)
             except Exception:
                 warn("Cannot serialize data: %r" % d, RuntimeWarning)
                 continue
-            parent[data.identity] = d
+            parent[i] = d
