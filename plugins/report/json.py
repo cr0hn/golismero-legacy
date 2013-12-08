@@ -216,6 +216,6 @@ class JSONOutput(ReportPlugin):
             try:
                 dumps(d)
             except Exception:
-                warn("Cannot serialize data: %r" % d)
+                warn("Cannot serialize data: %r" % d, RuntimeWarning)
                 continue
             parent[data.identity] = d
