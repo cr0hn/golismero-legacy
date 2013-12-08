@@ -37,6 +37,7 @@ from golismero.api.plugin import ReportPlugin
 
 from datetime import datetime
 from shlex import split
+from warnings import warn
 
 import os.path
 
@@ -211,8 +212,10 @@ class JSONOutput(ReportPlugin):
     #--------------------------------------------------------------------------
     def __add_to_json(self, parent, datas, data_type):
         for data in self.__iterate_data(datas, data_type):
-            ##try:                                         # XXX DEBUG
-            ##    dumps(data.to_dict())                    # XXX DEBUG
-            ##except Exception:                            # XXX DEBUG
-            ##    raise TypeError(data.to_dict())          # XXX DEBUG
-            parent[data.identity] = data.to_dict()
+            d = data.to_dict()
+            try:
+                dumps(d)
+            except Exception:
+                warn("Cannot serialize data: %r" % d)
+                continue
+            parent[data.identity] = d
