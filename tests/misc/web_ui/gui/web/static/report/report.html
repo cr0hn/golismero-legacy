@@ -9,7 +9,7 @@
 		<link rel="stylesheet" type="text/css" href="./css/stylesHighlight/default.css">
 	</head>
 	<body>
-		<div class="navbar navbar-fixed-top navbar-inverse" role="navigation">
+		<div class="navbar navbar-fixed-top navbar-inverse " role="navigation">
 	      <div class="container">
 	        <div class="navbar-header">
 	          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -35,6 +35,9 @@
 	        </div><!-- /.nav-collapse -->
 	      </div><!-- /.container -->
 	    </div>
+	    <div class="headerPrint ">
+			<h1>GoLismero Report</h1>
+	    </div>
 		<div class="container">
 			<div class="row" data-anchor="quickInfo">
 				<div class="col-sm-4 ">
@@ -57,8 +60,8 @@
 				</div>
 				<div class="col-sm-4 " >
 					<div class="well quickInfo">
-						<span class="glyphicon glyphicon-time hidden-xs hidden-sm"></span>
-						<div class="text-right">
+						<span class="glyphicon glyphicon-time"></span>
+						<div class="text-right info-links">
 							<p class="title">Time</p>
 							<p class="info"><span class="bold">Start:</span> Aug. 30, 2013, 6:01 p.m.</p>
 							<p class="info"><span class="bold">End:</span> Aug. 30, 2013, 6:24 p.m</p>
@@ -99,7 +102,8 @@
 					</div>
 				</div>
 			</div>
-			<div class="row">
+			
+			<div class="row break-after">
 				<div class="col-sm-12">
 					<div class="table-responsive well">
 						<h3 data-anchor="vulnerabilitiesTable">Vulnerabilities</h3>
@@ -142,14 +146,19 @@
 					</div>
 				</div>
 			</div>
-			<div class="row">
+			<div class="row break-after">
 				<div class="col-sm-12">
 					<div class="table-responsive well">
 						<h3 data-anchor="technicalReportTable">Technical report</h3>
 						<span class="pull-right" id="hideShowAll" data-show="true">Hide all</span>
-					  	<table class="table table-bordered table-hover" id="tableTechnicalReport">
+					  	<table class="table table-bordered" id="tableTechnicalReport">
 						   <tbody>
-
+								<tr id="headVulnerability">
+						            <th style="width:15%" data-orderColumn="id" data-orderDirection="asc">ID</th>
+						            <th style="width:25%" data-orderColumn="target" data-orderDirection="asc">Target</th>
+						            <th style="width:50%" data-orderColumn="type" data-orderDirection="asc">Vulnerability</th>
+						            <th style="width:10%" data-orderColumn="criticality" data-orderDirection="asc">Criticality</th>
+						          </tr>
 						   </tbody>
 					  	</table>
 					</div>
@@ -195,25 +204,29 @@
 				<td><span class="bold ${obtainCriticality(criticality)}">${criticality}-${obtainNameCriticality(criticality)}</span></td>
 			</tr>
 			<tr class="openVulnerabilitiesRow"><td colspan="4">
-			<h4>Information</h4>
-			<div class="well">
-				<ul>
-					{{tmpl(target) "#targetsTechnical"}}
-				</ul>
-			</div>
-			{{if description}}
-				<div class="well">
-					<span class="bold">Description:</span> ${description}
-				</div>
-			{{/if}}	
-			{{if solution}}
-				<div class="well">
-					<span class="bold">Solution:</span> ${solution}
-				</div>
-			{{/if}}	
-			<div class="well">	
-				{{tmpl(references) "#referencesTechnical"}}	
-	   		</div>
+			<div class="row ">
+				<div class="col-sm-12">
+					<h4>Information</h4>
+					<div class="well">
+						<ul>
+							{{tmpl(target) "#targetsTechnical"}}
+						</ul>
+					</div>
+					{{if description}}
+						<div class="well">
+							<span class="bold">Description:</span> ${description}
+						</div>
+					{{/if}}	
+					{{if solution}}
+						<div class="well">
+							<span class="bold">Solution:</span> ${solution}
+						</div>
+					{{/if}}	
+					<div class="well">	
+						{{tmpl(references) "#referencesTechnical"}}	
+			   		</div>
+			   	</div>
+			   </div>
 			 </td></tr>
 		</script>
 		
