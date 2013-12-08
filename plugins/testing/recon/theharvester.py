@@ -68,7 +68,7 @@ class HarvesterPlugin(TestingPlugin):
 
     # Supported theHarvester modules.
     SUPPORTED = (
-        "google", "bing", "pgp", "exalead", # "yandex",
+        "google", "bing", "pgp", #"exalead", # "yandex",
     )
 
 

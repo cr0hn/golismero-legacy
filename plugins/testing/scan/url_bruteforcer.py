@@ -96,7 +96,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
 
             m_webserver_finger = m_webserver_finger.pop()
 
-            m_server_canonical_name = m_webserver_finger.name_canonical
+            m_server_canonical_name = m_webserver_finger.canonical_name
             m_servers_related       = m_webserver_finger.related # Set with related web servers
 
             #

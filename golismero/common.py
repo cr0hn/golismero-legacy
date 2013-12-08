@@ -55,8 +55,6 @@ try:
 except ImportError:
     import pickle
 
-json_encode = None
-
 # Import @decorator from the decorator module, if available.
 # Otherwise define a simple but crude replacement.
 try:
@@ -980,6 +978,10 @@ class AuditConfig (Configuration):
 
         # Add the new targets.
         self._targets.extend(parsed_targets)
+
+    @targets.deleter
+    def targets(self):
+        self._targets = []
 
 
     #--------------------------------------------------------------------------

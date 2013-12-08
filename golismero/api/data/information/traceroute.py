@@ -73,6 +73,16 @@ class Hop (object):
 
 
     #--------------------------------------------------------------------------
+    def to_dict(self):
+        return {
+            "_class":   self.__class__.__name__,
+            "address":  self.__address,
+            "rtt":      self.__rtt,
+            "hostname": self.__hostname,
+        }
+
+
+    #--------------------------------------------------------------------------
     @property
     def address(self):
         """
@@ -157,6 +167,22 @@ class Traceroute(Information):
 
         # Now we can associate the traceroute results to the IP address.
         self.add_resource(ip)
+
+
+    #--------------------------------------------------------------------------
+    def to_dict(self):
+        return {
+            "_class":       self.__class__.__name__,
+            "identity":     self.identity,
+            "depth":        self.depth,
+            "data_type":    self.data_type,
+            "data_subtype": self.data_subtype,
+            "timestamp":    self.__timestamp,
+            "address":      self.__address,
+            "port":         self.__port,
+            "protocol":     self.__protocol,
+            "hops":         [h.to_dict() for h in self.__hops],
+        }
 
 
     #----------------------------------------------------------------------

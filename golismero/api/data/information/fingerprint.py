@@ -331,10 +331,6 @@ class WebServerFingerprint(Information):
 
     information_type = Information.INFORMATION_WEB_SERVER_FINGERPRINT
 
-    #----------------------------------------------------------------------
-    # TODO: we may want to add a list of default servers and descriptions.
-    #----------------------------------------------------------------------
-
 
     #----------------------------------------------------------------------
     def __init__(self, name, version, banner, canonical_name, related = None, others = None):
@@ -351,7 +347,7 @@ class WebServerFingerprint(Information):
         :param canonical_name: Web server name, at lowcase. The name will be one of the the file: 'wordlist/fingerprint/webservers_keywords.txt'. Example: "Apache"
         :type canonical_name: str
 
-        :param related: Related webservers.
+        :param related: Alternative brands for this web server.
         :type related: set(str)
 
         :param others: Map of other possible web servers by name and their probabilities of being correct [0.0 ~ 1.0].
@@ -378,11 +374,11 @@ class WebServerFingerprint(Information):
         self.__name           = name
         self.__version        = version
         self.__banner         = banner
-        self.__name_canonical = canonical_name
+        self.__canonical_name = canonical_name
 
         # Save the mergeable properties.
-        self.others           = others
         self.related          = related
+        self.others           = others
 
         # Parent constructor.
         super(WebServerFingerprint, self).__init__()
@@ -403,13 +399,22 @@ class WebServerFingerprint(Information):
 
 
     #----------------------------------------------------------------------
-    @identity
-    def name_canonical(self):
-        """
-        :return: Web server name, at lowcase. The name will be one of the the file: 'wordlist/fingerprint/webservers_keywords.txt'. Example: "apache"
-        :rtype: str
-        """
-        return self.__name_canonical
+    def to_dict(self):
+        related = list(self.related)
+        others = { k: list(v) for (k,v) in self.others.iteritems() }
+        return {
+            "_class":         self.__class__.__name__,
+            "identity":       self.identity,
+            "depth":          self.depth,
+            "data_type":      self.data_type,
+            "data_subtype":   self.data_subtype,
+            "name":           self.name,
+            "version":        self.version,
+            "banner":         self.banner,
+            "canonical_name": self.canonical_name,
+            "related":        related,
+            "others":         others,
+        }
 
 
     #----------------------------------------------------------------------
@@ -440,6 +445,16 @@ class WebServerFingerprint(Information):
         :rtype: str
         """
         return self.__banner
+
+
+    #----------------------------------------------------------------------
+    @identity
+    def canonical_name(self):
+        """
+        :return: Web server name, at lowcase. The name will be one of the the file: 'wordlist/fingerprint/webservers_keywords.txt'. Example: "apache"
+        :rtype: str
+        """
+        return self.__canonical_name
 
 
     #----------------------------------------------------------------------
@@ -478,8 +493,8 @@ class WebServerFingerprint(Information):
     @merge
     def related(self):
         """
-        :return: Dict with the web server that act same as the discovered web server.
-        :rtype: dict(str -> set() ) -> ('iis' : ('hyperion'))
+        :return: Alternative brands for this web server.
+        :rtype: set(str)
         """
         return self.__related
 
@@ -488,8 +503,8 @@ class WebServerFingerprint(Information):
     @related.setter
     def related(self, related):
         """
-        :param related: Dict with the web server that act same as the discovered web server.
-        :type related: dict(str -> set() ) -> ('iis' : ('hyperion'))
+        :param related: Alternative brands for this web server.
+        :type related: set(str)
         """
         if related:
             if not isinstance(related, set):
