@@ -327,9 +327,13 @@ class WebUIPlugin(UIPlugin):
 
         # Append the simple ID if it's greater than zero.
         if identity:
-            simple_id = self.current_plugins[audit_name][plugin_id][identity]
-            if simple_id:
-                plugin_name = "%s (%d)" % (plugin_name, simple_id + 1)
+            try:
+                simple_id = self.current_plugins[audit_name][plugin_id][identity]
+
+                if simple_id:
+                    plugin_name = "%s (%d)" % (plugin_name, simple_id + 1)
+            except KeyError:
+                return plugin_name
 
         # Return the display name.
         return plugin_name
@@ -617,7 +621,7 @@ class WebUIPlugin(UIPlugin):
             print tb
 
         # Notify the end of the audit.
-        self.notify_stage(message.audit_name, "cancel")
+        self.notify_stage(audit_name, "cancel")
 
 
     #--------------------------------------------------------------------------
