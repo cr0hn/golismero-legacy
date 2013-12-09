@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.injection.xss import XSS
 from golismero.api.external import run_external_tool, tempfile, \
-     find_binary_in_path
+     find_binary_in_path, get_tools_folder
 from golismero.api.logger import Logger
 from golismero.api.net import ConnectionSlot
 from golismero.api.plugin import TestingPlugin
@@ -83,7 +83,7 @@ class XSSerPlugin(TestingPlugin):
             ]
 
             if info.has_url_params:
-                if self.run_xsser(info.url, xsser_script, args):
+                if self.run_xsser(info.hostname, info.url, xsser_script, args):
                     results.extend(self.parse_xsser_result(info, filename))
 
             if info.has_post_params:
@@ -94,7 +94,7 @@ class XSSerPlugin(TestingPlugin):
                           for k, v in info.post_params.iteritems() ]
                     ),
                 ])
-                if self.run_xsser(info.url, xsser_script, args):
+                if self.run_xsser(info.hostname, info.url, xsser_script, args):
                     results.extend(self.parse_xsser_result(info, filename))
 
         if results:
@@ -106,7 +106,7 @@ class XSSerPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def run_xsser(self, url, command, args):
+    def run_xsser(self, hostname, url, command, args):
         """
         Run XSSer against the given target.
 
@@ -126,9 +126,10 @@ class XSSerPlugin(TestingPlugin):
         Logger.log("Launching XSSer against: %s" % url)
         Logger.log_more_verbose("XSSer arguments: %s" % " ".join(args))
 
-        t1 = time()
-        code = run_external_tool(command, args, callback=Logger.log_verbose)
-        t2 = time()
+        with ConnectionSlot(hostname):
+            t1 = time()
+            code = run_external_tool(command, args, callback=Logger.log_verbose)
+            t2 = time()
 
         if code:
             Logger.log_error("XSSer execution failed, status code: %d" % code)
@@ -201,8 +202,8 @@ class XSSerPlugin(TestingPlugin):
                 _method   = self.get_subnode_text(node, "method",   "GET")
 
                 url = Url(url = target.url,
-                          method = method,
-                          post_params = target.post_params if method == "POST" else None,
+                          method = _method,
+                          post_params = target.post_params if _method == "POST" else None,
                           referer = target.referer)
                 vul = XSS(url = url,
                           vulnerable_params = {"injection":_injection},
@@ -226,7 +227,7 @@ class XSSerPlugin(TestingPlugin):
         :return: Path to the XSSer script.
         :rtype: str
         """
-        xsser = join(dirname(abspath(__file__)), "xsser", "xsser.py")
+        xsser = join(get_tools_folder(), "xsser", "xsser.py")
         if not isfile(xsser):
             xsser = find_binary_in_path("xsser")
         return xsser

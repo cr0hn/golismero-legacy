@@ -9,7 +9,7 @@
 		<link rel="stylesheet" type="text/css" href="./css/stylesHighlight/default.css">
 	</head>
 	<body>
-		<div class="navbar navbar-fixed-top navbar-inverse" role="navigation">
+		<div class="navbar navbar-fixed-top navbar-inverse " role="navigation">
 	      <div class="container">
 	        <div class="navbar-header">
 	          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -35,6 +35,9 @@
 	        </div><!-- /.nav-collapse -->
 	      </div><!-- /.container -->
 	    </div>
+	    <div class="headerPrint ">
+			<h1>GoLismero Report</h1>
+	    </div>
 		<div class="container">
 			<div class="row" data-anchor="quickInfo">
 				<div class="col-sm-4 ">
@@ -57,8 +60,8 @@
 				</div>
 				<div class="col-sm-4 " >
 					<div class="well quickInfo">
-						<span class="glyphicon glyphicon-time hidden-xs hidden-sm"></span>
-						<div class="text-right">
+						<span class="glyphicon glyphicon-time"></span>
+						<div class="text-right info-links">
 							<p class="title">Time</p>
 							<p class="info"><span class="bold">Start:</span> Aug. 30, 2013, 6:01 p.m.</p>
 							<p class="info"><span class="bold">End:</span> Aug. 30, 2013, 6:24 p.m</p>
@@ -99,17 +102,18 @@
 					</div>
 				</div>
 			</div>
-			<div class="row">
+			
+			<div class="row break-after">
 				<div class="col-sm-12">
 					<div class="table-responsive well">
 						<h3 data-anchor="vulnerabilitiesTable">Vulnerabilities</h3>
 					  	<table class="table table-bordered" id="tableVulnerabilities">
 						    <thead>
-					          <tr>
-					            <th style="width:15%">ID</th>
-					            <th style="width:25%">Target</th>
-					            <th style="width:50%">Vulnerability</th>
-					            <th style="width:10%">Criticality</th>
+					          <tr id="headVulnerability">
+					            <th style="width:15%" data-orderColumn="id" data-orderDirection="asc">ID</th>
+					            <th style="width:25%" data-orderColumn="target" data-orderDirection="asc">Target</th>
+					            <th style="width:45%" data-orderColumn="type" data-orderDirection="asc">Vulnerability</th>
+					            <th style="width:15%" data-orderColumn="criticality" data-orderDirection="asc">Criticality</th>
 					          </tr>
 					          <tr class="filter">
 									<th></th>
@@ -138,17 +142,23 @@
 					        <tbody>
 					        </tbody>
 					  	</table>
-					  	<a href="#" id="showMoreVulnerabilities">Show more </a><div class="pull-right">(Show: <span id="showTableVulnerabilities"></span>, Total: <span id="totalTableVulnerabilities"></span>)</div>
+					  	<div >Total: <span id="totalTableVulnerabilities"></span></div>
 					</div>
 				</div>
 			</div>
-			<div class="row">
+			<div class="row break-after">
 				<div class="col-sm-12">
 					<div class="table-responsive well">
 						<h3 data-anchor="technicalReportTable">Technical report</h3>
-					  	<table class="table table-bordered table-hover" id="tableTechnicalReport">
+						<span class="pull-right" id="hideShowAll" data-show="true">Hide all</span>
+					  	<table class="table table-bordered" id="tableTechnicalReport">
 						   <tbody>
-
+								<tr id="headVulnerability">
+						            <th style="width:15%" data-orderColumn="id" data-orderDirection="asc">ID</th>
+						            <th style="width:25%" data-orderColumn="target" data-orderDirection="asc">Target</th>
+						            <th style="width:45%" data-orderColumn="type" data-orderDirection="asc">Vulnerability</th>
+						            <th style="width:15%" data-orderColumn="criticality" data-orderDirection="asc">Criticality</th>
+						          </tr>
 						   </tbody>
 					  	</table>
 					</div>
@@ -167,75 +177,70 @@
 	    <script type="text/javascript" src="js/jquery.jqplot.min.js"></script>
 	    <script type="text/javascript" src="js/jqplot.pieRenderer.min.js"></script>
 	    <script type="text/javascript" src="js/jquery.tmpl.min.js"></script>
-	    <script type="text/javascript" src="js/jsonDataExample.js"></script>
+	    <script type="text/javascript" src="js/examplejson.js"></script>
 	    <script type="text/javascript" src="js/taffy-min.js"></script>
 	    <script type="text/javascript" src="js/dataaccess.js"></script>
 	    <script type="text/javascript" src="js/highlight.pack.js"></script>
 	    <!--plantillas para la generacion de codigo html-->
 	    <script type="text/template" id="rowVulnerabilityTemplate">
-			<tr>
+			<tr data-href="technical-${id}" class="anchor">
 				<td>${id}</td>
 				<td>${target}</td>
-				<td>${vulnerability}</td>
+				<td>${type}</td>
 				<td><span class="bold ${obtainCriticality(criticality)}">${criticality}-${obtainNameCriticality(criticality)}</span></td>
 			</tr>
 		</script>
-		<script type="text/template" id="rowTargetTechnicalTable">
-			<tr class="targetRow" data-target="${$data}">
-				<td><span class="glyphicon glyphicon-record"></span>${$data}</td>
-			</tr>
+		<script type="text/template" id="targetsTechnical">
+			<li><span class="glyphicon glyphicon-play"></span>${$data}</li>
 		</script>
-		<script type="text/template" id="tableResourcesTechnicalTable">
-			<tr class="openResourceRow"><td>
-			<h4>Resources</h4>
-			<table class="table table-bordered table-hover">
-			   <tbody>
-
-			   </tbody>
-		  	</table>
-		  	</td></tr>
-		</script>
-		<script type="text/template" id="rowResourcesTechnicalTable">
-
-			<tr class="resourceRow" data-resource="${$data}">
-				<td>${$data}</td>
-			</tr>
+		<script type="text/template" id="referencesTechnical">
+			<div><a href="${$data}" target="_blank">${$data}</a></div>
 		</script>
 		<script type="text/template" id="tableVulnerabilitiesTechnicalTable">
-			<tr class="openVulnerabilitiesRow"><td>
-			<h4>Vulnerabilities</h4>
-			<table class="table table-bordered table-hover">
-			   <tbody>
-
-			   </tbody>
-		  	</table></td></tr>
-		</script>
-		<script type="text/template" id="rowVulnerabilitiesTechnicalTable">
-			<tr class="vulnerabilityRow" data-vulnerability="${id}">
+			<tr data-anchor="technical-${id}" class="headData" >
+				<td>${id}</td>
+				<td>${target}</td>
 				<td>${type}</td>
+				<td><span class="bold ${obtainCriticality(criticality)}">${criticality}-${obtainNameCriticality(criticality)}</span></td>
 			</tr>
-		</script>
-		<script type="text/template" id="dataVulnerabilitiesTechnicalTable">
-			<tr class="openVulnerabilityRow"><td>
-			<div class="well">
+			<tr class="openVulnerabilitiesRow"><td colspan="4">
+			<div class="row ">
 				<div class="col-sm-12">
-					<h4>Details</h4>
-					<div class="row"><span class="bold">Type:&nbsp;</span>${type}</div>
-					<div class="row"><span class="bold">Level:&nbsp;</span><span class="bold ${obtainCriticality(level)}">${level}-${obtainNameCriticality(level)}</span></div>
-					{{if language}}
-					<div class="row" ><span class="bold">Code:</span><pre><code class="${language}">${code}</code></pre></div>
-					{{/if}}
-					<div class="row"><span class="bold">Description:&nbsp;</span>${description}</div>
-				</div>
-			</div>
-			</td></tr>
+					<h4>Information</h4>
+					<div class="well">
+						<ul>
+							{{tmpl(target) "#targetsTechnical"}}
+						</ul>
+					</div>
+					{{if description}}
+						<div class="well">
+							<span class="bold">Description:</span> ${description}
+						</div>
+					{{/if}}	
+					{{if solution}}
+						<div class="well">
+							<span class="bold">Solution:</span> ${solution}
+						</div>
+					{{/if}}	
+					<div class="well">	
+						{{tmpl(references) "#referencesTechnical"}}	
+			   		</div>
+			   	</div>
+			   </div>
+			 </td></tr>
 		</script>
+		
+		
+
 	    <script type="text/javascript">
 
 	    	function initChart(){
 				var data = [
-				    ['Critical', 2],['High', 12],['Medium', 9], ['Low', 14],
-				    ['Informational', 16]
+				    ['Critical', dataAccess.getVulnerabilitiesCount(null,null,5)],
+				    ['High', dataAccess.getVulnerabilitiesCount(null,null,4)],
+				    ['Medium', dataAccess.getVulnerabilitiesCount(null,null,3)], 
+				    ['Low', dataAccess.getVulnerabilitiesCount(null,null,2)],
+				    ['Informational', dataAccess.getVulnerabilitiesCount(null,null,1)]
 				  ];
 				  var plot1 = jQuery.jqplot ('chartVulnerabilities', [data],
 				    {
@@ -258,88 +263,85 @@
 	    	function initAnchor(){
 				//clic en un enlace de la lista
 				$('.anchor').on('click',function(e){
-					e.preventDefault();
+					e.preventDefault();					
 					var strAnchor=$(this).attr('href');
+					if($(this).data("href")){
+						strAnchor=$(this).data("href");
+					}
 					$('body,html').stop(true,true).animate({
-						scrollTop: $("[data-anchor='"+strAnchor+"']").first().offset().top -90
+						scrollTop: $("[data-anchor='"+strAnchor+"']").first().offset().top -80
 					},1000);
 				});
 
 	    	}
+	    	function updateAnchorTable(){
+				//clic en un enlace de la lista
+				$("#tableVulnerabilities").find('.anchor').on('click',function(e){
+					e.preventDefault();
+					var strAnchor=$(this).attr('href');
+					if($(this).data("href")){
+						strAnchor=$(this).data("href");
+					}
+					$('body,html').stop(true,true).animate({
+						scrollTop: $("[data-anchor='"+strAnchor+"']").first().offset().top -80
+					},1000);
+				});
+
+	    	}
+
+
 	    	function updateTable(){
 	    		$("#tableVulnerabilities tbody").empty();
 	    		indexVulnerabilities=0;
-	    		$( "#showMoreVulnerabilities" ).trigger( "click" );
+	    		var vulnerabilityFilter = $('#vulnerabilityFilterTable').val();
+    			var targetFilter = $('#targetFilterTable').val();
+    			var criticalityFilter = $('#criticalityFilterTable').val();
+    			var orderColumn = $("#headVulnerability").data("ordercolumn");
+    			
+	    		var orderDirection = $("#headVulnerability").data("orderdirection");
+				
+    			var data = dataAccess.getVulnerabilities(targetFilter, vulnerabilityFilter,criticalityFilter, orderColumn, orderDirection);
+    			
+				$("#tableVulnerabilities tbody").append($.tmpl( "rowVulnerabilityTemplate", data ));
+				//cargo el count
+				$("#totalTableVulnerabilities").html(dataAccess.getVulnerabilitiesCount(targetFilter,vulnerabilityFilter,criticalityFilter));
+    			
+    			
+    			updateAnchorTable();
 	    	}
 	    	function initTechnicalTable(){
 	    		var data = dataAccess.getTargetTechnical();
-	    		$("#tableTechnicalReport tbody").append($.tmpl( "rowTargetTechnicalTable", data ));
-	    		$("#tableTechnicalReport tbody").find("tr.targetRow").click(function(data){
-	    			var target = $(this).data("target");
-	    			obtainResources(target, $(this));
+	    		$("#tableTechnicalReport tbody").append($.tmpl( "tableVulnerabilitiesTechnicalTable", data ));
+	    		$("#tableTechnicalReport tbody").find("tr.headData").click(function(e, data){	    			
+	    			var $nextRow = $(this).next();
+	    			if(data != undefined){
+	    				if(data){
+	    					$nextRow.show();
+	    				}else{
+	    					$nextRow.hide();
+	    				}
+	    			}else{
+		    			if($nextRow.is(":visible")){
+		    				$nextRow.hide();
+		    			}else{
+		    				$nextRow.show();
+		    			}
+		    		}
+	    		});
+	    		$("#hideShowAll").click(function(){
+	    			if($(this).data("show")==true){
+	    				$("#tableTechnicalReport tbody").find("tr.headData").trigger("click", false);
+	    				$(this).data("show", false);
+	    				$(this).html("Show all");
+	    			}else{
+	    				$("#tableTechnicalReport tbody").find("tr.headData").trigger("click", true);
+	    				$(this).data("show", true);
+	    				$(this).html("Hide all");
+	    			}
 	    		});
 	    	}
 
-	    	function obtainResources(target, $tr){
-	    		var resources = dataAccess.getResourcesTechnical(target);
-	    		if($tr.data("show")){
-	    			//ya existe
-	    			var $nextRow = $tr.next();
-	    			if($nextRow.is(":visible")){
-	    				$nextRow.hide();
-	    			}else{
-	    				$nextRow.show();
-	    			}
-	    		}else{
-	    			var table = $.tmpl( "tableResourcesTechnicalTable", target )
-	    			$(table).find("tbody").append($.tmpl( "rowResourcesTechnicalTable", resources ));
-	    			$(table).find("tr.resourceRow").click(function(){
-	    				var resource = $(this).data("resource");
-	    				obtainVulnerabilities(target, resource, $(this));
-	    			});
-	    			$tr.attr("data-show", true);
-	    			$(table).insertAfter($tr);
-	    		}
-	    	}
-
-	    	function obtainVulnerabilities(target, type, $tr){
-	    		var vuln = dataAccess.getVulnerabilitiesTechnical(target, type);
-	    		if($tr.data("show")){
-	    			//ya existe
-	    			var $nextRow = $tr.next();
-	    			if($nextRow.is(":visible")){
-	    				$nextRow.hide();
-	    			}else{
-	    				$nextRow.show();
-	    			}
-	    		}else{
-	    			var table = $.tmpl( "tableVulnerabilitiesTechnicalTable" );
-	    			$(table).find("tbody").append($.tmpl( "rowVulnerabilitiesTechnicalTable", vuln ));
-	    			$(table).find("tr.vulnerabilityRow").click(function(){
-	    				var id = $(this).data("vulnerability");
-	    				obtainDataVulnerability(target, type, id, $(this));
-	    			});
-	    			$tr.attr("data-show", true);
-	    			$(table).insertAfter($tr);
-	    		}
-	    	}
-	    	function obtainDataVulnerability(target, type, id, $tr){
-	    		var dataVulnerability = dataAccess.getDataVulnerabilityTechnical(target, type, id);
-	    		if($tr.data("show")){
-	    			//ya existe
-	    			var $nextRow = $tr.next();
-	    			if($nextRow.is(":visible")){
-	    				$nextRow.hide();
-	    			}else{
-	    				$nextRow.show();
-	    			}
-	    		}else{
-	    			var div = $.tmpl( "dataVulnerabilitiesTechnicalTable",  dataVulnerability);
-	    			$(div).find('pre code').each(function(i, e) {hljs.highlightBlock(e)});
-	    			$tr.attr("data-show", true);
-	    			$(div).insertAfter($tr);
-	    		}
-	    	}
+	    	
 	    	function initVulnerabilitiesTable(){
 	    		//vulnerabilities
 	    		$('#vulnerabilityFilterTable').append('<option value="">All</option>');
@@ -360,42 +362,32 @@
 	    		$('#criticalityFilterTable').change(function(e){
 	    			updateTable();
 	    		});
+	    		$("#headVulnerability").find("th").click(function(){
+	    			column = $(this).data("ordercolumn");
+	    			direction = $(this).data("orderdirection");
+	    			$("#headVulnerability").data("ordercolumn", column);
+	    			$("#headVulnerability").data("orderdirection", direction);
+	    			if(direction =="asc"){
+	    				$(this).data("orderdirection", "desc");
+	    			}else{
+						$(this).data("orderdirection", "asc");
+					}
 
-	    		$("#showMoreVulnerabilities").click(function(e){
-	    			e.preventDefault();
-	    			var vulnerabilityFilter = $('#vulnerabilityFilterTable').val();
-	    			var targetFilter = $('#targetFilterTable').val();
-	    			var criticalityFilter = $('#criticalityFilterTable').val();
-	    			var data = dataAccess.getVulnerabilities(indexVulnerabilities,10, targetFilter, vulnerabilityFilter,criticalityFilter);
-	    			if(indexVulnerabilities == 0){
-	    				$("#tableVulnerabilities tbody").append($.tmpl( "rowVulnerabilityTemplate", data ));
-	    				//cargo el count
-	    				$("#totalTableVulnerabilities").html(dataAccess.getVulnerabilitiesCount(targetFilter,vulnerabilityFilter,criticalityFilter));
-	    			}else{
-	    				$.tmpl( "rowVulnerabilityTemplate", data ).insertAfter($('tr:last', $("#tableVulnerabilities tbody")));
-	    			}
-	    			//actualizeo el numero de mostradas
-	    			$("#showTableVulnerabilities").html(indexVulnerabilities*10+data.length);
-	    			if(parseInt($("#totalTableVulnerabilities").html())== indexVulnerabilities*10+data.length){
-	    				//ya no aparce showMore
-	    				$("#showMoreVulnerabilities").css("visibility", "hidden");
-	    			}else{
-	    				$("#showMoreVulnerabilities").css("visibility", "");
-	    			}
-	    			//$('tr:last', $("#tableVulnerabilities")).append()
-	    			indexVulnerabilities++;
+	    			$("#headVulnerability").find("th").removeClass("sort");
+	    			$("#headVulnerability").find("th").removeClass("asc");
+	    			$("#headVulnerability").find("th").removeClass("desc");
+	    			$(this).addClass("sort");
+	    			$(this).addClass(direction);
+	    			updateTable();
 	    		});
-	    		$( "#showMoreVulnerabilities" ).trigger( "click" );
+
+	    		updateTable();
+    			
 	    	}
 	    	function initTemplates(){
 	    		$.template( "rowVulnerabilityTemplate", $("#rowVulnerabilityTemplate") );
 	    		$.template("rowTargetTechnicalTable", $("#rowTargetTechnicalTable"));
-	    		$.template("rowResourcesTechnicalTable", $("#rowResourcesTechnicalTable"));
-	    		$.template("tableResourcesTechnicalTable", $("#tableResourcesTechnicalTable"));
 	    		$.template("tableVulnerabilitiesTechnicalTable", $("#tableVulnerabilitiesTechnicalTable"));
-	    		$.template("rowVulnerabilitiesTechnicalTable", $("#rowVulnerabilitiesTechnicalTable"));
-	    		$.template("dataVulnerabilitiesTechnicalTable", $("#dataVulnerabilitiesTechnicalTable"));
-
 	    	}
 	    	function obtainCriticality(c){
 	    			switch (c){
@@ -418,7 +410,7 @@
 	    			break;
 	    			case 2: return "Low";
 	    			break;
-	    			case 3: return "Middle";
+	    			case 3: return "Medium";
 	    			break;
 	    			case 4: return "High";
 	    			break;
@@ -460,6 +452,7 @@
 				initTechnicalTable();
 
 			});
+			
 	    </script>
 	</body>
 </html>

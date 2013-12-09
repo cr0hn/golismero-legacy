@@ -161,3 +161,57 @@ tr.targetRow, tr.resourceRow, tr.vulnerabilityRow,{
 .table-hover>tbody>tr:hover>th{
 	background-color: lighten(@lightYellow, 10%);
 }*/
+
+.break-after{
+
+   page-break-after:always; 
+}
+
+.headerPrint{
+	display:none;
+}
+.openVulnerabilitiesRow {
+	.well{
+		white-space: normal;
+	}
+	ul{
+		list-style-type: none;
+	}
+}
+.headData, .anchor{
+	cursor: pointer;
+}
+@media print {
+  	@page {
+		margin: 0.5cm;
+	}
+	.container{
+		width:100%;
+		max-width: 100%;
+	}
+	.filter{
+		display:none;
+	}
+	body{
+		background:@colorBase; 
+		padding-top: 0px;
+	}
+	.headerPrint{
+		text-align: center;
+		color: @darkYellow;
+		display:block;
+	}
+	
+	.jqplot-table-legend{
+		right:-20px !important;
+	}
+	.jqplot-grid-canvas, .jqplot-series-shadowCanvas, .jqplot-series-canvas, .jqplot-pieRenderer-highlight-canvas, 
+	.jqplot-event-canvas{
+		width: 410px !important;
+
+		background: inherit;
+	}
+	#hideShowAll{
+		display: none;
+	}
+}

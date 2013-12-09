@@ -222,16 +222,16 @@ class PluginTester(object):
                 audit_scope = DummyScope()
             audit._Audit__audit_scope = audit_scope
 
-            # Create the audit plugin manager.
-            plugin_manager = orchestrator.pluginManager.get_plugin_manager_for_audit(audit)
-            audit._Audit__plugin_manager = plugin_manager
-            plugin_manager.initialize(audit.config)
-
             # Get the audit name.
             audit_name = self.audit_config.audit_name
 
             # Register the Audit with the AuditManager.
             orchestrator.auditManager._AuditManager__audits[audit_name] = audit
+
+            # Create the audit plugin manager.
+            plugin_manager = orchestrator.pluginManager.get_plugin_manager_for_audit(audit)
+            audit._Audit__plugin_manager = plugin_manager
+            plugin_manager.initialize(audit.config)
 
         # Setup a local plugin execution context.
         Config._context  = PluginContext(
@@ -405,9 +405,9 @@ class PluginTester(object):
         self.__orchestrator = None
 
         if self.__autodelete:
-            if filename:
+            if filename and filename not in (":memory:", ":auto:"):
                 try:
                     unlink(filename)
-                except IOError:
+                except Exception:
                     pass
             # TODO: delete the report files too

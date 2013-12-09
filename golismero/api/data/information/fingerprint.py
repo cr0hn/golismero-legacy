@@ -2,7 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-Fingerprint information for a particular operating system of a host.
+Fingerprint information.
+
+ - OSFingerprint: for a particular operating system of a host.
+ - WebServerFingerprint: for a particular host and web server.
 """
 
 __license__ = """
@@ -30,10 +33,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["OSFingerprint", "get_os_fingerprint", "get_all_os_fingerprints"]
+__all__ = [
+    "OSFingerprint", "get_os_fingerprint", "get_all_os_fingerprints",
+    "WebServerFingerprint",
+]
 
 from . import Information
-from .. import identity, keep_newer, keep_greater
+from .. import identity, merge, keep_newer
 from ...text.text_utils import to_utf8
 
 
@@ -171,6 +177,8 @@ class OSFingerprint(Information):
     #--------------------------------------------------------------------------
     def __str__(self):
         name = self.__name if self.__name else self.__cpe
+        if self.__type:
+            name = "[%s] %s" % (self.__type, name)
         return "%.2f%% - %s" % (self.accuracy, name)
 
 
@@ -313,3 +321,198 @@ class OSFingerprint(Information):
             if type(family) is not str:
                 raise TypeError("Expected string, got %r instead" % type(family))
         self.__family = family
+
+
+#------------------------------------------------------------------------------
+class WebServerFingerprint(Information):
+    """
+    Fingerprint information for a particular host and web server.
+    """
+
+    information_type = Information.INFORMATION_WEB_SERVER_FINGERPRINT
+
+
+    #----------------------------------------------------------------------
+    def __init__(self, name, version, banner, canonical_name, related = None, others = None):
+        """
+        :param name: Web server name as raw format. The name is taken from a raw banner with internal filters, and It can has errors with unusual servers. If you want to ensure that this is correct, use name_canonical instead. I.E: "Ricoh Aficio 1045 5.23 Web-Server 3.0" -> name = "Ricoh Aficio 1045 5.23 Web-Server"
+        :type name: str
+
+        :param version: Web server version. Example: "2.4"
+        :type version: str
+
+        :param banner: Complete description for web server. Example: "Apache 2.2.23 ((Unix) mod_ssl/2.2.23 OpenSSL/1.0.1e-fips)"
+        :type banner: str
+
+        :param canonical_name: Web server name, at lowcase. The name will be one of the the file: 'wordlist/fingerprint/webservers_keywords.txt'. Example: "Apache"
+        :type canonical_name: str
+
+        :param related: Alternative brands for this web server.
+        :type related: set(str)
+
+        :param others: Map of other possible web servers by name and their probabilities of being correct [0.0 ~ 1.0].
+        :type others: dict( str -> float )
+        """
+
+        # Sanitize the strings.
+        name           = to_utf8(name)
+        version        = to_utf8(version)
+        banner         = to_utf8(banner)
+        canonical_name = to_utf8(canonical_name)
+
+        # Check the data types.
+        if not isinstance(name, str):
+            raise TypeError("Expected str, got %r instead" % type(name))
+        if not isinstance(version, str):
+            raise TypeError("Expected str, got %r instead" % type(version))
+        if not isinstance(banner, str):
+            raise TypeError("Expected str, got %r instead" % type(banner))
+        if not isinstance(canonical_name, str):
+            raise TypeError("Expected str, got %r instead" % type(canonical_name))
+
+        # Save the identity properties.
+        self.__name           = name
+        self.__version        = version
+        self.__banner         = banner
+        self.__canonical_name = canonical_name
+
+        # Save the mergeable properties.
+        self.related          = related
+        self.others           = others
+
+        # Parent constructor.
+        super(WebServerFingerprint, self).__init__()
+
+
+    #----------------------------------------------------------------------
+    def __repr__(self):
+        return "<WebServerFingerprint server='%s-%s' banner='%s'>" % (
+            self.__name,
+            self.__version,
+            self.__banner,
+        )
+
+
+    #----------------------------------------------------------------------
+    def __str__(self):
+        return self.__banner
+
+
+    #----------------------------------------------------------------------
+    def to_dict(self):
+        related = list(self.related)
+        others = { k: list(v) for (k,v) in self.others.iteritems() }
+        return {
+            "_class":         self.__class__.__name__,
+            "identity":       self.identity,
+            "depth":          self.depth,
+            "data_type":      self.data_type,
+            "data_subtype":   self.data_subtype,
+            "name":           self.name,
+            "version":        self.version,
+            "banner":         self.banner,
+            "canonical_name": self.canonical_name,
+            "related":        related,
+            "others":         others,
+        }
+
+
+    #----------------------------------------------------------------------
+    @identity
+    def name(self):
+        """
+        :return: Web server name.
+        :rtype: str
+        """
+        return self.__name
+
+
+    #----------------------------------------------------------------------
+    @identity
+    def version(self):
+        """
+        :return: Web server version.
+        :rtype: str
+        """
+        return self.__version
+
+
+    #----------------------------------------------------------------------
+    @identity
+    def banner(self):
+        """
+        :return: Web server banner.
+        :rtype: str
+        """
+        return self.__banner
+
+
+    #----------------------------------------------------------------------
+    @identity
+    def canonical_name(self):
+        """
+        :return: Web server name, at lowcase. The name will be one of the the file: 'wordlist/fingerprint/webservers_keywords.txt'. Example: "apache"
+        :rtype: str
+        """
+        return self.__canonical_name
+
+
+    #----------------------------------------------------------------------
+    @merge
+    def others(self):
+        """
+        :return: Map of other possible web servers by name and their probabilities of being correct [0.0 ~ 1.0].
+        :rtype: dict( str -> float )
+        """
+        return self.__others
+
+
+    #----------------------------------------------------------------------
+    @others.setter
+    def others(self, others):
+        """
+        :param others: Map of other possible web servers by name and their probabilities of being correct [0.0 ~ 1.0].
+        :type others: dict( str -> float )
+        """
+        if others:
+            if not isinstance(others, dict):
+                raise TypeError("Expected dict, got %r instead" % type(others))
+            others = {
+                to_utf8(k): float(v)
+                for k,v in others.iteritems()
+            }
+            for k, v in others.iteritems():
+                if not isinstance(k, str):
+                    raise TypeError("Expected str, got %r instead" % type(k))
+        else:
+            others = {}
+        self.__others = others
+
+
+    #----------------------------------------------------------------------
+    @merge
+    def related(self):
+        """
+        :return: Alternative brands for this web server.
+        :rtype: set(str)
+        """
+        return self.__related
+
+
+    #----------------------------------------------------------------------
+    @related.setter
+    def related(self, related):
+        """
+        :param related: Alternative brands for this web server.
+        :type related: set(str)
+        """
+        if related:
+            if not isinstance(related, set):
+                raise TypeError("Expected set, got %r instead" % type(related))
+            related = { to_utf8(v) for v in related }
+            for v in related:
+                if not isinstance(v, str):
+                    raise TypeError("Expected str, got %r instead" % type(v))
+        else:
+            related = {}
+        self.__related = related

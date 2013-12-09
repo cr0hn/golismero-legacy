@@ -39,7 +39,7 @@ __all__ = [
     "get_user_settings_folder", "get_default_config_file",
     "get_profiles_folder", "get_profile", "get_available_profiles",
     "get_default_plugins_folder", "get_data_folder", "get_wordlists_folder",
-    "get_install_folder",
+    "get_install_folder", "get_tools_folder",
 
     # Helper classes and decorators.
     "Singleton", "decorator", "export_methods_as_functions",
@@ -54,8 +54,6 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
-
-json_encode = None
 
 # Import @decorator from the decorator module, if available.
 # Otherwise define a simple but crude replacement.
@@ -182,6 +180,15 @@ def get_install_folder():
         pathname = path.abspath(pathname)
         _install_folder = pathname
     return _install_folder
+
+
+#------------------------------------------------------------------------------
+def get_tools_folder():
+    """
+    :returns: Pathname of the bundled tools folder.
+    :rtype: str
+    """
+    return path.join(get_install_folder(), "tools")
 
 
 #------------------------------------------------------------------------------
@@ -971,6 +978,10 @@ class AuditConfig (Configuration):
 
         # Add the new targets.
         self._targets.extend(parsed_targets)
+
+    @targets.deleter
+    def targets(self):
+        self._targets = []
 
 
     #--------------------------------------------------------------------------

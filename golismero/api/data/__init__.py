@@ -803,7 +803,10 @@ class Data(object):
         """
 
         # This is the dictionary we'll build and return.
-        properties = {}
+        # Always has the current class name.
+        properties = {
+            "_class": self.__class__.__name__,
+        }
 
         # Enumerate properties and filter them using different criteria.
         for name in dir(self):
@@ -829,8 +832,19 @@ class Data(object):
                    not merge.is_mergeable_property(propdef):
                     continue
 
+            # Get the property value.
+            value = getattr(self, name)
+
+            # Convert the value types that aren't safe to serialize.
+            if hasattr(value, "to_dict"):
+                value = value.to_dict()
+            elif isinstance(value, set):
+                value = list(value)
+            elif isinstance(value, frozenset):
+                value = tuple(value)
+
             # Add the property name and value to the dictionary.
-            properties[name] = getattr(self, name)
+            properties[name] = value
 
         # Return the dictionary.
         return properties
@@ -848,9 +862,9 @@ class Data(object):
         :returns: Data object.
         :rtype: Data
         """
-        #
-        # TODO
-        #
+
+        # There's no generic way of implementing this,
+        # so it has to be an abstract method.
         raise NotImplementedError()
 
 

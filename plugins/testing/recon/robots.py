@@ -33,7 +33,7 @@ from golismero.api.logger import Logger
 from golismero.api.net import NetworkException, NetworkOutOfScope
 from golismero.api.net.http import HTTP
 from golismero.api.net.web_utils import download, generate_error_page_url, \
-                                        fix_url, urljoin, parse_url
+                                        fix_url, urljoin
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.matching_analyzer import MatchingAnalyzer
 from golismero.api.data.vulnerability.suspicious.url import SuspiciousURL
