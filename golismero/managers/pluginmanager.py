@@ -1493,7 +1493,7 @@ class AuditPluginManager (PluginManager):
                 if not matching_plugins:
                     missing_plugins.add(plugin_id)
                     continue
-                if len(matching_plugins) > 1:
+                if len(matching_plugins) > 1 and not "*" in plugin_id:
                     msg = ("Ambiguous entry in %s (%r)"
                            " may refer to any of the following plugins: %s")
                     msg %= (list_name,
