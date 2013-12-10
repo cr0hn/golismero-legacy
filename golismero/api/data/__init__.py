@@ -767,17 +767,20 @@ class Data(object):
             elif isinstance(value, set):
                 value = list(value)
             elif isinstance(value, frozenset):
-                value = tuple(value)
+                value = list(value)
             elif isinstance(value, dict):
                 value = dict(value)
             elif isinstance(value, list):
                 value = list(value)
             elif isinstance(value, tuple):
-                value = tuple(value)
+                value = list(value)
             elif isinstance(value, int):
                 value = int(value)
             elif isinstance(value, long):
-                value = long(value)
+                try:
+                    value = int(value)
+                except Exception:
+                    value = long(value)
             elif isinstance(value, float):
                 value = float(value)
             elif isinstance(value, unicode):
@@ -865,17 +868,20 @@ class Data(object):
             elif isinstance(value, set):
                 value = list(value)
             elif isinstance(value, frozenset):
-                value = tuple(value)
+                value = list(value)
             elif isinstance(value, dict):
                 value = dict(value)
             elif isinstance(value, list):
                 value = list(value)
             elif isinstance(value, tuple):
-                value = tuple(value)
+                value = list(value)
             elif isinstance(value, int):
                 value = int(value)
             elif isinstance(value, long):
-                value = long(value)
+                try:
+                    value = int(value)
+                except Exception:
+                    value = long(value)
             elif isinstance(value, float):
                 value = float(value)
             elif isinstance(value, str):
