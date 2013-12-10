@@ -66,11 +66,6 @@ class JSONOutput(ReportPlugin):
 
 
     #--------------------------------------------------------------------------
-    def is_supported(self, output_file):
-        return output_file and output_file.lower().endswith(self.EXTENSION)
-
-
-    #--------------------------------------------------------------------------
     def generate_report(self, output_file):
         Logger.log_verbose("Writing audit results to file: %s" % output_file)
 

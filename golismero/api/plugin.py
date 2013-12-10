@@ -543,7 +543,11 @@ class ReportPlugin (Plugin):
         """
         Determine if this plugin supports the requested file format.
 
-        Tipically, here is where Report plugins examine the file extension.
+        Typically, here is where Report plugins examine the file extension.
+        The default implementation (that is, when not overridden by a plugin)
+        checks to see if the file extension matches that of a class variable
+        called "EXTENSION". If this variable is not defined in your plugin
+        class, then your plugin MUST override this method instead.
 
         :param output_file: Output file to generate.
         :type output_file: str
@@ -551,7 +555,11 @@ class ReportPlugin (Plugin):
         :returns: True if this plugin supports the format, False otherwise.
         :rtype: bool
         """
-        raise NotImplementedError("Plugins must implement this method!")
+        if hasattr(self, "EXTENSION"):
+            return output_file and output_file.lower().endswith(self.EXTENSION)
+        raise NotImplementedError(
+            "Plugins must either define the EXTENSION class variable"
+            " or override this method!")
 
 
     #--------------------------------------------------------------------------

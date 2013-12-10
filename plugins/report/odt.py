@@ -43,10 +43,7 @@ class ODTReport(rstext.RSTReport):
     Creates reports in OpenOffice document format (.odt).
     """
 
-
-    #--------------------------------------------------------------------------
-    def is_supported(self, output_file):
-        return output_file and output_file.lower().endswith(".odt")
+    EXTENSION = ".odt"
 
 
     #--------------------------------------------------------------------------

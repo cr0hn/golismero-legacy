@@ -47,10 +47,7 @@ class LatexReport(rstext.RSTReport):
     Creates reports in LaTeX format (.tex).
     """
 
-
-    #--------------------------------------------------------------------------
-    def is_supported(self, output_file):
-        return output_file and output_file.lower().endswith(".tex")
+    EXTENSION = ".tex"
 
 
     #--------------------------------------------------------------------------

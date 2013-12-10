@@ -56,10 +56,7 @@ class XMLOutput(ReportPlugin):
     Dumps the output in XML format.
     """
 
-
-    #--------------------------------------------------------------------------
-    def is_supported(self, output_file):
-        return output_file and output_file.lower().endswith(".xml")
+    EXTENSION = ".xml"
 
 
     #--------------------------------------------------------------------------

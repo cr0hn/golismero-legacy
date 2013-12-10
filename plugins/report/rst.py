@@ -51,10 +51,7 @@ class RSTReport(ReportPlugin):
     Creates reports in reStructured Text format.
     """
 
-
-    #--------------------------------------------------------------------------
-    def is_supported(self, output_file):
-        return output_file and output_file.lower().endswith(".rst")
+    EXTENSION = ".rst"
 
 
     #--------------------------------------------------------------------------
