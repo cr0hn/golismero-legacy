@@ -414,7 +414,7 @@ class WebServerFingerprint(Information):
             for v in sorted(self.others[k]):
                 others.append("  %s" % v)
         props = super(WebServerFingerprint, self).display_properties
-        props[""]["Others"] = "\n".join(others)
+        props["[DEFAULT]"]["Others"] = "\n".join(others)
         return props
 
 

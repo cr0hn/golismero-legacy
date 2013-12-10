@@ -83,17 +83,6 @@ class Hop (object):
 
 
     #--------------------------------------------------------------------------
-    def display_properties(self):
-        props = {
-            "IP Address":         self.__address,
-            "Round Trip Time": self.__rtt,
-        }
-        if self.__hostname:
-            props["Host Name"] = self.__hostname
-        return props
-
-
-    #--------------------------------------------------------------------------
     @property
     def address(self):
         """
@@ -191,8 +180,8 @@ class Traceroute(Information):
     @property
     def display_properties(self):
         props = super(Traceroute, self).display_properties
-        del props[""]["Hops"]
-        props[""]["Route"] = str(self)
+        del props["[DEFAULT]"]["Hops"]
+        props["[DEFAULT]"]["Route"] = str(self)
         return props
 
 

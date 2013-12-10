@@ -718,7 +718,7 @@ class Data(object):
 
             # Handle the vulnerability type.
             if propname == "vulnerability_type":
-                display[""]["Category"] = self.vulnerability_type
+                display["[DEFAULT]"]["Category"] = self.vulnerability_type
                 continue
 
             # Handle the vulnerability taxonomy types.
@@ -790,22 +790,18 @@ class Data(object):
 
             # Get the group.
             # More hardcoded hacks here... :(
+            group = "[DEFAULT]"
             if self.data_type == Data.TYPE_VULNERABILITY:
                 if propname in ("impact", "severity", "risk"):
                     group = "Risk"
                     value = Vulnerability.VULN_LEVELS[value].title()
                 elif propname.startswith("cvss"):
                     group = "Risk"
-                elif propname in ("title", "description", "solution", "references"):
+                elif propname in ("title", "description",
+                                  "solution", "references"):
                     group = "Description"
-                elif hasattr(Vulnerability, propname):
-                    group = ""
-                else:
+                elif not hasattr(Vulnerability, propname):
                     group = "Details"
-            elif self.data_type == Data.TYPE_RESOURCE:
-                group = ""
-            elif self.data_type == Data.TYPE_INFORMATION:
-                group = ""
 
             # Add the key and value to the dictionary.
             display[group][key] = value

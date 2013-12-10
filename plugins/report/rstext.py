@@ -59,7 +59,8 @@ class RSTReport(ReportPlugin):
 
     #--------------------------------------------------------------------------
     def generate_report(self, output_file):
-        Logger.log_verbose("Writing reStructured text report to file: %s" % output_file)
+        Logger.log_verbose(
+            "Writing reStructured text report to file: %s" % output_file)
 
         # Open the output file.
         with open(output_file, "w") as f:
@@ -310,7 +311,8 @@ class RSTReport(ReportPlugin):
                 print >>f, ""
 
                 # Collect the properties.
-                property_groups = data.display_properties
+                property_groups = defaultdict(dict)
+                property_groups.update(data.display_properties)
 
                 # Add the graph links.
                 linked_info = data.get_links(Data.TYPE_INFORMATION)
@@ -345,6 +347,9 @@ class RSTReport(ReportPlugin):
                 # Get the groups.
                 groups = property_groups.keys()
                 groups.sort()
+                if "[DEFAULT]" in groups:
+                    groups.remove("[DEFAULT]")
+                    groups.insert(0, "[DEFAULT]")
 
                 # Dump the data per group.
                 for group in groups:
@@ -377,7 +382,7 @@ class RSTReport(ReportPlugin):
                         if "Title" in names:
                             names.remove("Title")
                             names.insert(0, "Title")
-                    elif group == "":
+                    elif group == "[DEFAULT]":
                         if "Category" in names:
                             names.remove("Category")
                             names.insert(0, "Category")
@@ -401,7 +406,7 @@ class RSTReport(ReportPlugin):
                             w_values = max(w_values, len(x))
 
                     # Print the group header.
-                    if group:
+                    if group != "[DEFAULT]":
                         print >>f, group
                         print >>f, "*" * len(group)
                         print >>f, ""
