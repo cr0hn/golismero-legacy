@@ -114,6 +114,12 @@ class HTML(Information):
         super(HTML, self).__init__()
 
 
+    #--------------------------------------------------------------------------
+    @property
+    def display_name(self):
+        return "HTML Content"
+
+
     #----------------------------------------------------------------------
     @identity
     def raw_data(self):

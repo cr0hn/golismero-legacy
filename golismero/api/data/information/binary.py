@@ -77,6 +77,12 @@ class Binary(Information):
 
 
     #--------------------------------------------------------------------------
+    @property
+    def display_name(self):
+        return "Binary Data"
+
+
+    #--------------------------------------------------------------------------
     @identity
     def raw_data(self):
         """

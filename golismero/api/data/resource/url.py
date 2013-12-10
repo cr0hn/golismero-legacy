@@ -245,6 +245,12 @@ class Url(_AbstractUrl):
 
 
     #--------------------------------------------------------------------------
+    @property
+    def display_name(self):
+        return "URL"
+
+
+    #--------------------------------------------------------------------------
 
     @identity
     def method(self):
@@ -380,6 +386,12 @@ class BaseUrl(_AbstractUrl):
 
     #--------------------------------------------------------------------------
     @property
+    def display_name(self):
+        return "Base URL"
+
+
+    #--------------------------------------------------------------------------
+    @property
     def discovered(self):
         if self.is_in_scope():
             try:
@@ -486,6 +498,12 @@ class FolderUrl(_AbstractUrl):
 
         # Return the generated URLs.
         return [FolderUrl(x) for x in folder_urls]
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def display_name(self):
+        return "Folder URL"
 
 
     #--------------------------------------------------------------------------

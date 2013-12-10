@@ -75,11 +75,16 @@ class Hop (object):
     #--------------------------------------------------------------------------
     def to_dict(self):
         return {
-            "_class":   self.__class__.__name__,
             "address":  self.__address,
             "rtt":      self.__rtt,
             "hostname": self.__hostname,
         }
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def display_name(self):
+        return "Network Route"
 
 
     #--------------------------------------------------------------------------

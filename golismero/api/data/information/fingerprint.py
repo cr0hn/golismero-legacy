@@ -183,6 +183,12 @@ class OSFingerprint(Information):
 
 
     #--------------------------------------------------------------------------
+    @property
+    def display_name(self):
+        return "O.S. Fingerprint"
+
+
+    #--------------------------------------------------------------------------
     @identity
     def cpe(self):
         """

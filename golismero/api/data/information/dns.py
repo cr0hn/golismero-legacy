@@ -309,6 +309,15 @@ class DnsRegister(Information):
 
 
     #----------------------------------------------------------------------
+    @property
+    def display_name(self):
+        name = super(DnsRegister, self).display_name
+        if name.startswith("Dns "):
+            name = "DNS " + name[4:]
+        return name
+
+
+    #----------------------------------------------------------------------
     @identity
     def type(self):
         """

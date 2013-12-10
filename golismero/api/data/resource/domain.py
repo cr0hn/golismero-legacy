@@ -96,6 +96,12 @@ class Domain(Resource):
         return "<Domain name=%r>" % self.hostname
 
 
+    #--------------------------------------------------------------------------
+    @property
+    def display_name(self):
+        return "Domain Name"
+
+
     #----------------------------------------------------------------------
     def is_in_scope(self):
         return self.hostname in Config.audit_scope

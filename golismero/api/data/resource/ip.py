@@ -91,6 +91,12 @@ class IP(Resource):
         return "<IPv%s address=%r>" % (self.version, self.address)
 
 
+    #--------------------------------------------------------------------------
+    @property
+    def display_name(self):
+        return "IP Address"
+
+
     #----------------------------------------------------------------------
     @identity
     def address(self):

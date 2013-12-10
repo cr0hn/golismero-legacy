@@ -137,6 +137,12 @@ class Portscan(Information):
         return "\n".join("%-8s %-3s %d" % p for p in sorted(self.ports))
 
 
+    #--------------------------------------------------------------------------
+    @property
+    def display_name(self):
+        return "Port Scan Results"
+
+
     #----------------------------------------------------------------------
     @property
     def open_tcp_ports(self):

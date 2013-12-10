@@ -828,7 +828,7 @@ class Data(object):
         # This is the dictionary we'll build and return.
         # Always has the current class name.
         properties = {
-            "_class": self.__class__.__name__,
+            "class": self.__class__.__name__,
         }
 
         # Enumerate properties and filter them using different criteria.
