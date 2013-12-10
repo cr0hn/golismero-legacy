@@ -26,47 +26,31 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from golismero.api import VERSION
-from golismero.api.audit import get_audit_times, parse_audit_times
-from golismero.api.config import Config
-from golismero.api.data import Data
-from golismero.api.data.db import Database
-from golismero.api.external import run_external_tool
-from golismero.api.logger import Logger
-from golismero.api.plugin import ReportPlugin
-
-from datetime import datetime
-from pprint import pformat
-from shlex import split
-from warnings import warn
-
-import os.path
+import sys
+from os.path import abspath, split
+cwd = abspath(split(__file__)[0])
+sys.path.insert(0, cwd)
+try:
+    from json import JSONOutput
+finally:
+    sys.path.remove(cwd)
+del cwd
 
 # Lazy imports.
 umsgpack = None
 
 
 #------------------------------------------------------------------------------
-class MessagePackOutput(ReportPlugin):
+class MessagePackOutput(JSONOutput):
     """
     Dumps the output in MessagePack format.
     """
 
+    EXTENSION = ".msgpack"
+
 
     #--------------------------------------------------------------------------
     def is_supported(self, output_file):
-        return output_file and output_file.lower().endswith(".msgpack")
-
-
-    #--------------------------------------------------------------------------
-    def generate_report(self, output_file):
-        Logger.log_verbose("Writing audit results to file: %s" % output_file)
-
-        # Parse the audit times.
-        report_time = str(datetime.now())
-        start_time, stop_time = get_audit_times()
-        start_time, stop_time, run_time = parse_audit_times(
-            start_time, stop_time)
 
         # Load MessagePack.
         global umsgpack
@@ -78,182 +62,34 @@ class MessagePackOutput(ReportPlugin):
                     "MessagePack not installed!"
                     " You can get it from: http://msgpack.org/")
 
-        # Get the output mode.
-        mode = Config.plugin_config.get("mode", "nice")
-        mode = mode.replace(" ", "")
-        mode = mode.replace("\r", "")
-        mode = mode.replace("\n", "")
-        mode = mode.replace("\t", "")
-        mode = mode.lower()
-        if mode not in ("dump", "nice"):
-            warn("Invalid output mode: %s" % mode, RuntimeWarning)
-            mode = "nice"
-        self.__nicemode = (mode == "nice")
-        Logger.log_more_verbose("Output mode: %s" %
-                                ("nice" if self.__nicemode else "dump"))
+        # Call the superclass method.
+        return super(MessagePackOutput, self).is_supported(output_file)
 
-        # Create the root element.
-        root = dict()
 
-        # Add the GoLismero version property.
-        root["version"] = "GoLismero " + VERSION
+    #--------------------------------------------------------------------------
+    def generate_report(self, output_file):
 
-        # Add the report format property.
-        root["format"] = "nice" if self.__nicemode else "dump"
-
-        # Add the summary element.
-        root["summary"] = {
-            "audit_name":  Config.audit_name,
-            "start_time":  start_time,
-            "stop_time":   stop_time,
-            "run_time":    run_time,
-            "report_time": report_time,
-        }
-
-        # Create the audit scope element.
-        root["audit_scope"] = {
-            "addresses": Config.audit_scope.addresses,
-            "roots":     Config.audit_scope.roots,
-            "domains":   Config.audit_scope.domains,
-            "web_pages": Config.audit_scope.web_pages,
-        }
-
-        # Create the elements for the data.
-        root["vulnerabilities"] = dict()
-        root["resources"]       = dict()
-        root["informations"]    = dict()
-        root["false_positives"] = dict()
-
-        # Determine the report type.
-        self.__full_report = not Config.audit_config.only_vulns
-
-        # Collect the vulnerabilities that are not false positives.
-        datas = self.__collect_vulns(False)
-
-        # If we have vulnerabilities and/or it's a full report...
-        if datas or self.__full_report:
-
-            # Collect the false positives.
-            # In brief mode, this is used to eliminate the references to them.
-            fp = self.__collect_vulns(True)
-            self.__fp = set(fp)
-
+        # Load MessagePack.
+        global umsgpack
+        if umsgpack is None:
             try:
-                # Report the vulnerabilities.
-                if datas:
-                    self.__add_data(
-                        root["vulnerabilities"], datas,
-                        Data.TYPE_VULNERABILITY)
+                import umsgpack
+            except ImportError:
+                raise RuntimeError(
+                    "MessagePack not installed!"
+                    " You can get it from: http://msgpack.org/")
 
-                # This dictionary tracks which data to show
-                # and which not to in brief report mode.
-                self.__vulnerable = set()
+        # Call the superclass method.
+        super(MessagePackOutput, self).generate_report(output_file)
 
-                try:
 
-                    # Show the resources in the report.
-                    datas = self.__collect_data(Data.TYPE_RESOURCE)
-                    if datas:
-                        self.__add_data(
-                            root["resources"], datas,
-                            Data.TYPE_RESOURCE)
-
-                    # Show the informations in the report.
-                    datas = self.__collect_data(Data.TYPE_INFORMATION)
-                    if datas:
-                        self.__add_data(
-                            root["informations"], datas,
-                            Data.TYPE_INFORMATION)
-
-                finally:
-                    self.__vulnerable.clear()
-
-            finally:
-                self.__fp.clear()
-
-            # Show the false positives in the full report.
-            if self.__full_report and fp:
-                self.__add_data(
-                    root["false_positives"], fp,
-                    Data.TYPE_VULNERABILITY)
-
-        # Write the serialized data to disk.
-        root = umsgpack.packb(root)
+    #--------------------------------------------------------------------------
+    def serialize_report(self, output_file, report_data):
+        raw_data = umsgpack.packb(report_data)
         with open(output_file, "wb") as fp:
-            fp.write(root)
-
-        # Launch the build command, if any.
-        command = Config.plugin_config.get("command", "")
-        if command:
-            Logger.log_verbose("Launching command: %s" % command)
-            args = split(command)
-            for i in xrange(len(args)):
-                token = args[i]
-                p = token.find("$1")
-                while p >= 0:
-                    if p == 0 or (p > 0 and token[p-1] != "$"):
-                        token = token[:p] + output_file + token[p+2:]
-                    p = token.find("$1", p + len(output_file))
-                args[i] = token
-            cwd = os.path.split(output_file)[0]
-            log = lambda x: Logger.log_verbose(
-                x[:-1] if x.endswith("\n") else x)
-            run_external_tool(args[0], args[1:], cwd=cwd, callback=log)
+            fp.write(raw_data)
 
 
     #--------------------------------------------------------------------------
-    def __iterate_data(self, identities = None, data_type = None,
-                       data_subtype = None):
-        if identities is None:
-            identities = list(Database.keys(data_type))
-        if identities:
-            for page in xrange(0, len(identities), 100):
-                for data in Database.get_many(identities[page:page + 100],
-                                              data_type):
-                    yield data
-
-
-    #--------------------------------------------------------------------------
-    def __collect_data(self, data_type):
-        if self.__full_report:
-            datas = [
-                data.identity
-                for data in self.__iterate_data(data_type=data_type)
-            ]
-        else:
-            datas = [
-                data.identity
-                for data in self.__iterate_data(data_type=data_type)
-                if data.identity in self.__vulnerable
-            ]
-        datas.sort()
-        return datas
-
-
-    #--------------------------------------------------------------------------
-    def __collect_vulns(self, fp_filter):
-        vulns = [
-            vuln.identity
-            for vuln in self.__iterate_data(data_type=Data.TYPE_VULNERABILITY)
-            if bool(vuln.false_positive) == fp_filter
-        ]
-        vulns.sort()
-        return vulns
-
-
-    #--------------------------------------------------------------------------
-    def __add_data(self, parent, datas, data_type):
-        for data in self.__iterate_data(datas, data_type):
-            i = data.identity
-            d = i
-            try:
-                if self.__nicemode:
-                    d = data.display_properties
-                else:
-                    d = data.to_dict()
-                umsgpack.packb(d)
-            except Exception:
-                warn("Cannot serialize data:\n%s" % pformat(d),
-                     RuntimeWarning)
-                continue
-            parent[i] = d
+    def test_data_serialization(self, data):
+        umsgpack.packb(data)

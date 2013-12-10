@@ -62,15 +62,100 @@ class JSONOutput(ReportPlugin):
     Dumps the output in JSON format.
     """
 
+    EXTENSION = ".json"
+
 
     #--------------------------------------------------------------------------
     def is_supported(self, output_file):
-        return output_file and output_file.lower().endswith(".json")
+        return output_file and output_file.lower().endswith(self.EXTENSION)
 
 
     #--------------------------------------------------------------------------
     def generate_report(self, output_file):
         Logger.log_verbose("Writing audit results to file: %s" % output_file)
+
+        # Get the report data.
+        report_data = self.get_report_data()
+
+        # Save the report data to disk.
+        self.serialize_report(output_file, report_data)
+
+        # Free the memory.
+        del report_data
+
+        # Launch the build command, if any.
+        self.launch_command(output_file)
+
+
+    #--------------------------------------------------------------------------
+    def serialize_report(self, output_file, report_data):
+        """
+        Serialize the data given as a Python dictionary into the format
+        supported by this plugin.
+
+        :param output_file: Output file for this report plugin.
+        :type output_file: str
+
+        :param report_data: Report data returned by :ref:`get_report_data`().
+        :type report_data: dict(str -> *)
+        """
+        with open(output_file, "wb") as fp:
+            dump(report_data, fp)
+
+
+    #--------------------------------------------------------------------------
+    def test_data_serialization(self, data):
+        """
+        Serialize a single Data object converted into a Python dictionary
+        in the format supported by this plugin.
+
+        This allows the plugin to test if the given Data object would be
+        serialized correctly, allowing better error control.
+
+        :param data: Single Data object converted into a Python dictionary.
+        :type data: dict(str -> *)
+
+        :raises Exception: The data could not be serialized.
+        """
+        dumps(data)
+
+
+    #--------------------------------------------------------------------------
+    def launch_command(self, output_file):
+        """
+        Launch a build command, if any is defined in the plugin configuration.
+
+        :param output_file: Output file for this report plugin.
+        :type output_file: str
+        """
+        command = Config.plugin_config.get("command", "")
+        if command:
+            Logger.log_verbose("Launching command: %s" % command)
+            args = split(command)
+            for i in xrange(len(args)):
+                token = args[i]
+                p = token.find("$1")
+                while p >= 0:
+                    if p == 0 or (p > 0 and token[p-1] != "$"):
+                        token = token[:p] + output_file + token[p+2:]
+                    p = token.find("$1", p + len(output_file))
+                args[i] = token
+            cwd = os.path.split(output_file)[0]
+            log = lambda x: Logger.log_verbose(
+                x[:-1] if x.endswith("\n") else x)
+            run_external_tool(args[0], args[1:], cwd=cwd, callback=log)
+
+
+    #--------------------------------------------------------------------------
+    def get_report_data(self):
+        """
+        Get the data to be included in the report as a Python dictionary.
+        There are two supported modes: "nice" and "dump". The output mode is
+        taken directly from the plugin configuration.
+
+        :returns: Data to include in the report.
+        :rtype: dict(str -> *)
+        """
 
         # Parse the audit times.
         report_time = str(datetime.now())
@@ -177,31 +262,6 @@ class JSONOutput(ReportPlugin):
                     root["false_positives"], fp,
                     Data.TYPE_VULNERABILITY)
 
-        # Write the JSON data to disk.
-        with open(output_file, "wb") as fp:
-            dump(root, fp)
-
-        # Free the memory.
-        del root
-
-        # Launch the build command, if any.
-        command = Config.plugin_config.get("command", "")
-        if command:
-            Logger.log_verbose("Launching command: %s" % command)
-            args = split(command)
-            for i in xrange(len(args)):
-                token = args[i]
-                p = token.find("$1")
-                while p >= 0:
-                    if p == 0 or (p > 0 and token[p-1] != "$"):
-                        token = token[:p] + output_file + token[p+2:]
-                    p = token.find("$1", p + len(output_file))
-                args[i] = token
-            cwd = os.path.split(output_file)[0]
-            log = lambda x: Logger.log_verbose(
-                x[:-1] if x.endswith("\n") else x)
-            run_external_tool(args[0], args[1:], cwd=cwd, callback=log)
-
 
     #--------------------------------------------------------------------------
     def __iterate_data(self, identities = None, data_type = None, data_subtype = None):
@@ -251,7 +311,7 @@ class JSONOutput(ReportPlugin):
                     d = data.display_properties
                 else:
                     d = data.to_dict()
-                dumps(d)
+                self.test_data_serialization(d)
             except Exception:
                 from pprint import pformat
                 warn("Cannot serialize data:\n%s" % pformat(d),
