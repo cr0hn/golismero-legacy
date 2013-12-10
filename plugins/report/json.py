@@ -262,6 +262,9 @@ class JSONOutput(ReportPlugin):
                     root["false_positives"], fp,
                     Data.TYPE_VULNERABILITY)
 
+        # Return the data.
+        return root
+
 
     #--------------------------------------------------------------------------
     def __iterate_data(self, identities = None, data_type = None, data_subtype = None):
