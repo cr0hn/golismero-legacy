@@ -185,7 +185,7 @@ class Spider(TestingPlugin):
                 warn(format_exc(), RuntimeWarning)
             m_resource.add_resource(info)
             m_return.append(m_resource)
-        Logger.log(m_return)
+        
         # Send the results
         return m_return
 
