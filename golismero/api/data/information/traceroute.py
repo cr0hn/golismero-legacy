@@ -83,6 +83,17 @@ class Hop (object):
 
 
     #--------------------------------------------------------------------------
+    def display_properties(self):
+        props = {
+            "IP Address":         self.__address,
+            "Round Trip Time": self.__rtt,
+        }
+        if self.__hostname:
+            props["Host Name"] = self.__hostname
+        return props
+
+
+    #--------------------------------------------------------------------------
     @property
     def address(self):
         """
@@ -171,18 +182,18 @@ class Traceroute(Information):
 
     #--------------------------------------------------------------------------
     def to_dict(self):
-        return {
-            "_class":       self.__class__.__name__,
-            "identity":     self.identity,
-            "depth":        self.depth,
-            "data_type":    self.data_type,
-            "data_subtype": self.data_subtype,
-            "timestamp":    self.__timestamp,
-            "address":      self.__address,
-            "port":         self.__port,
-            "protocol":     self.__protocol,
-            "hops":         [h.to_dict() for h in self.__hops],
-        }
+        d = super(Traceroute, self).to_dict()
+        d["hops"] = [h.to_dict() for h in self.__hops]
+        return d
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def display_properties(self):
+        props = super(Traceroute, self).display_properties
+        del props[""]["Hops"]
+        props[""]["Route"] = str(self)
+        return props
 
 
     #----------------------------------------------------------------------

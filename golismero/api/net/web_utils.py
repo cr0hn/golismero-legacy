@@ -1670,7 +1670,7 @@ class HTMLParser(object):
 
     #--------------------------------------------------------------------------
     @property
-    def links(self):
+    def url_links(self):
         """
         :return: Get links from HTML as a list of HTMLElement objects
         :rtype: HTMLElement

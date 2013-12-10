@@ -400,21 +400,22 @@ class WebServerFingerprint(Information):
 
     #----------------------------------------------------------------------
     def to_dict(self):
-        related = list(self.related)
-        others = { k: list(v) for (k,v) in self.others.iteritems() }
-        return {
-            "_class":         self.__class__.__name__,
-            "identity":       self.identity,
-            "depth":          self.depth,
-            "data_type":      self.data_type,
-            "data_subtype":   self.data_subtype,
-            "name":           self.name,
-            "version":        self.version,
-            "banner":         self.banner,
-            "canonical_name": self.canonical_name,
-            "related":        related,
-            "others":         others,
-        }
+        d = super(WebServerFingerprint, self).to_dict()
+        d["others"] = { k: list(v) for (k,v) in self.others.iteritems() }
+        return d
+
+
+    #----------------------------------------------------------------------
+    @property
+    def display_properties(self):
+        others = []
+        for k in sorted(self.others.iterkeys()):
+            others.append("%s:" % k)
+            for v in sorted(self.others[k]):
+                others.append("  %s" % v)
+        props = super(WebServerFingerprint, self).display_properties
+        props[""]["Others"] = "\n".join(others)
+        return props
 
 
     #----------------------------------------------------------------------

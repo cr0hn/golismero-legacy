@@ -756,10 +756,34 @@ class Data(object):
                 key = "CVSS" + key[4:]
 
             # Get the property value.
-            # Values are preserved as-is, because we don't know how to parse
-            # them. Subclasses should override this method and change the
-            # values in the dictionary when needed.
             value = getattr(self, propname)
+
+            # Convert the value types that aren't safe to serialize.
+            # We don't need to be too careful here, because the purpose
+            # of this method isn't preserving all the information but
+            # merely showing it to the user.
+            if hasattr(value, "to_dict"):
+                value = value.to_dict()
+            elif isinstance(value, set):
+                value = list(value)
+            elif isinstance(value, frozenset):
+                value = tuple(value)
+            elif isinstance(value, dict):
+                value = dict(value)
+            elif isinstance(value, list):
+                value = list(value)
+            elif isinstance(value, tuple):
+                value = tuple(value)
+            elif isinstance(value, int):
+                value = int(value)
+            elif isinstance(value, long):
+                value = long(value)
+            elif isinstance(value, float):
+                value = float(value)
+            elif isinstance(value, unicode):
+                value = value.encode("utf-8", "replace")
+            else:
+                value = str(value)
 
             # Get the group.
             # More hardcoded hacks here... :(
@@ -784,7 +808,7 @@ class Data(object):
             display[group][key] = value
 
         # Return the dictionary.
-        return display
+        return dict(display)
 
 
     #--------------------------------------------------------------------------
@@ -818,7 +842,7 @@ class Data(object):
             # Whitelisted property names.
             if name not in (
                 "identity", "plugin_id", "depth", "links",
-                "data_type", "data_subtype",
+                "data_type", "data_subtype", "display_name",
             ):
 
                 # Ignore most of the properties defined in Data.
@@ -842,6 +866,22 @@ class Data(object):
                 value = list(value)
             elif isinstance(value, frozenset):
                 value = tuple(value)
+            elif isinstance(value, dict):
+                value = dict(value)
+            elif isinstance(value, list):
+                value = list(value)
+            elif isinstance(value, tuple):
+                value = tuple(value)
+            elif isinstance(value, int):
+                value = int(value)
+            elif isinstance(value, long):
+                value = long(value)
+            elif isinstance(value, float):
+                value = float(value)
+            elif isinstance(value, str):
+                value = str(value)
+            elif isinstance(value, unicode):
+                value = value.encode("utf-8", "replace")
 
             # Add the property name and value to the dictionary.
             properties[name] = value

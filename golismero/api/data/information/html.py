@@ -115,18 +115,6 @@ class HTML(Information):
 
 
     #----------------------------------------------------------------------
-    def to_dict(self):
-        return {
-            "_class":       self.__class__.__name__,
-            "identity":     self.identity,
-            "depth":        self.depth,
-            "data_type":    self.data_type,
-            "data_subtype": self.data_subtype,
-            "raw_data":     self.__raw_data,
-        }
-
-
-    #----------------------------------------------------------------------
     @identity
     def raw_data(self):
         """
@@ -168,12 +156,12 @@ class HTML(Information):
 
     #----------------------------------------------------------------------
     @property
-    def links(self):
+    def url_links(self):
         """
         :return: Link tags.
         :rtype: list(HTMLElement)
         """
-        return HTMLParser(self.raw_data).links
+        return HTMLParser(self.raw_data).url_links
 
 
     #----------------------------------------------------------------------

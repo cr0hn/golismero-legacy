@@ -36,36 +36,26 @@ from golismero.api.logger import Logger
 from golismero.api.plugin import ReportPlugin
 
 from datetime import datetime
+from pprint import pformat
 from shlex import split
 from warnings import warn
 
 import os.path
 
-try:
-    # The fastest JSON parser available for Python.
-    from cjson import encode
-    dumps = encode
-    def dump(obj, fp):
-        fp.write( encode(obj) )
-except ImportError:
-    try:
-        # Faster than the built-in module, usually found.
-        from simplejson import dump, dumps
-    except ImportError:
-        # Built-in module since Python 2.6, very very slow!
-        from json import dump, dumps
+# Lazy imports.
+umsgpack = None
 
 
 #------------------------------------------------------------------------------
-class JSONOutput(ReportPlugin):
+class MessagePackOutput(ReportPlugin):
     """
-    Dumps the output in JSON format.
+    Dumps the output in MessagePack format.
     """
 
 
     #--------------------------------------------------------------------------
     def is_supported(self, output_file):
-        return output_file and output_file.lower().endswith(".json")
+        return output_file and output_file.lower().endswith(".msgpack")
 
 
     #--------------------------------------------------------------------------
@@ -77,6 +67,16 @@ class JSONOutput(ReportPlugin):
         start_time, stop_time = get_audit_times()
         start_time, stop_time, run_time = parse_audit_times(
             start_time, stop_time)
+
+        # Load MessagePack.
+        global umsgpack
+        if umsgpack is None:
+            try:
+                import umsgpack
+            except ImportError:
+                raise RuntimeError(
+                    "MessagePack not installed!"
+                    " You can get it from: http://msgpack.org/")
 
         # Get the output mode.
         mode = Config.plugin_config.get("mode", "nice")
@@ -177,12 +177,10 @@ class JSONOutput(ReportPlugin):
                     root["false_positives"], fp,
                     Data.TYPE_VULNERABILITY)
 
-        # Write the JSON data to disk.
+        # Write the serialized data to disk.
+        root = umsgpack.packb(root)
         with open(output_file, "wb") as fp:
-            dump(root, fp)
-
-        # Free the memory.
-        del root
+            fp.write(root)
 
         # Launch the build command, if any.
         command = Config.plugin_config.get("command", "")
@@ -204,12 +202,14 @@ class JSONOutput(ReportPlugin):
 
 
     #--------------------------------------------------------------------------
-    def __iterate_data(self, identities = None, data_type = None, data_subtype = None):
+    def __iterate_data(self, identities = None, data_type = None,
+                       data_subtype = None):
         if identities is None:
             identities = list(Database.keys(data_type))
         if identities:
             for page in xrange(0, len(identities), 100):
-                for data in Database.get_many(identities[page:page + 100], data_type):
+                for data in Database.get_many(identities[page:page + 100],
+                                              data_type):
                     yield data
 
 
@@ -251,9 +251,8 @@ class JSONOutput(ReportPlugin):
                     d = data.display_properties
                 else:
                     d = data.to_dict()
-                dumps(d)
+                umsgpack.packb(d)
             except Exception:
-                from pprint import pformat
                 warn("Cannot serialize data:\n%s" % pformat(d),
                      RuntimeWarning)
                 continue
