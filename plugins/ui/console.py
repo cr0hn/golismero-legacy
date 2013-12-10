@@ -117,28 +117,34 @@ class ConsoleUIPlugin(UIPlugin):
             # A plugin has started.
             if message.message_code == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
 
-                # Create a simple ID for the plugin execution.
-                id_dict = self.current_plugins[Config.audit_name][message.plugin_id]
-                simple_id = len(id_dict)
-                id_dict[message.ack_identity] = simple_id
+                # Show this event in verbose mode.
+                if Console.level >= Console.VERBOSE:
 
-                # Show a message to the user.
-                m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
-                m_plugin_name = colorize(m_plugin_name, "informational")
-                m_text        = "[*] %s: Started." % m_plugin_name
-                Console.display(m_text)
+                    # Create a simple ID for the plugin execution.
+                    id_dict = self.current_plugins[Config.audit_name][message.plugin_id]
+                    simple_id = len(id_dict)
+                    id_dict[message.ack_identity] = simple_id
+
+                    # Show a message to the user.
+                    m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
+                    m_plugin_name = colorize(m_plugin_name, "informational")
+                    m_text        = "[*] %s: Started." % m_plugin_name
+                    Console.display(m_text)
 
             # A plugin has ended.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_END:
 
-                # Show a message to the user.
-                m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
-                m_plugin_name = colorize(m_plugin_name, "informational")
-                m_text        = "[*] %s: Finished." % m_plugin_name
-                Console.display(m_text)
+                # Show this event in verbose mode.
+                if Console.level >= Console.VERBOSE:
 
-                # Free the simple ID for the plugin execution.
-                del self.current_plugins[Config.audit_name][message.plugin_id][message.ack_identity]
+                    # Show a message to the user.
+                    m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
+                    m_plugin_name = colorize(m_plugin_name, "informational")
+                    m_text        = "[*] %s: Finished." % m_plugin_name
+                    Console.display(m_text)
+
+                    # Free the simple ID for the plugin execution.
+                    del self.current_plugins[Config.audit_name][message.plugin_id][message.ack_identity]
 
             # A plugin has advanced.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
@@ -175,7 +181,23 @@ class ConsoleUIPlugin(UIPlugin):
                     m_stage = colorize(m_stage, "high")
                     m_plugin_name = colorize("GoLismero", "informational")
                     m_text = "[*] %s: Current stage: %s"
-                    Console.display(m_text % (m_plugin_name, m_stage))
+                    m_text %= (m_plugin_name, m_stage)
+                    Console.display(m_text)
+
+                    # If on maximum verbosity level and entering report stage,
+                    # log the current report mode.
+                    if (
+                        Console.level >= Console.MORE_VERBOSE and
+                        message.message_info == "report"
+                    ):
+                        if Config.audit_config.only_vulns:
+                            m_report_type = "Brief"
+                        else:
+                            m_report_type = "Full"
+                        m_report_type = colorize(m_report_type, "yellow")
+                        m_text = "[*] %s: Report type: %s"
+                        m_text %= (m_plugin_name, m_report_type)
+                        Console.display(m_text)
 
             # When an audit is aborted, check if there are more running audits.
             # If there aren't any, stop the Orchestrator.
