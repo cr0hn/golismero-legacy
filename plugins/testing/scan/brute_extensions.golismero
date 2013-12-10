@@ -9,7 +9,7 @@ Copyright   = Copyright (C) 2011-2013 GoLismero Project
 License     = GNU Public License
 
 [Core]
-Module = url_bruteforcer.py
+Module = brute_url.py
 class = FileExtensionsDisclosureBruteforcer
 
 #
