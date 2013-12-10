@@ -52,7 +52,8 @@ from BeautifulSoup import BeautifulSoup
 from warnings import warn
 
 import re
-
+from codecs import decode
+from chardet import detect
 
 #------------------------------------------------------------------------------
 # URL detection regex, by John Gruber.
@@ -189,6 +190,66 @@ def extract_from_text(text, base_url = None, only_links = True):
 
 
 #------------------------------------------------------------------------------
+def extract_post_from_html(raw_html, base_url):
+    """
+    Extract forms info from HTML.
+
+    :param raw_html: Raw HTML data.
+    :type raw_html: str
+
+    :param base_url: Base URL for the current document.
+    :type base_url: str
+
+    :returns: Extracted form info.
+    :rtype: list((URL, METHOD, list({ "name" : PARAM_NAME, "value" : PARAM_VALUE, "type" : PARAM_TYPE})))
+    """
+
+    # Set where the URLs will be collected.
+    result = list()
+    result_append = result.append
+
+    # Remove the fragment from the base URL.
+    base_url = urldefrag(base_url)[0]
+
+    # Parse the raw HTML.
+    bs = BeautifulSoup(decode(raw_html, detect(raw_html)["encoding"]))
+
+    for form in bs.findAll("form"):
+        target = form.get("action", None)
+        method = form.get("method", "POST").upper()
+
+        if not target:
+            continue
+
+        try:
+            target = str(target)
+        except Exception:
+            warn("Unicode URLs not yet supported: %r" % target)
+            continue
+
+        # Canonicalize the URL.
+        try:
+            target = urljoin(base_url, target.strip())
+        except Exception:
+            continue
+
+        form_params = []
+        form_params_append = form_params.append
+        for params in form.findAll("input"):
+            if params.get("type") == "submit":
+                continue
+
+            form_params_append({
+                "name": params.get("name", "NAME"),
+                "value": params.get("value", "VALUE"),
+                "type": params.get("type", "TYPE")})
+
+        # Add to results
+        result_append((target, method, form_params))
+
+    return  result
+
+#------------------------------------------------------------------------------
 def extract_from_html(raw_html, base_url, only_links = True):
     """
     Extract URLs from HTML.
@@ -225,7 +286,7 @@ def extract_from_html(raw_html, base_url, only_links = True):
     base_url = urldefrag(base_url)[0]
 
     # Parse the raw HTML.
-    bs = BeautifulSoup(raw_html,
+    bs = BeautifulSoup(decode(raw_html, detect(raw_html)["encoding"]),
                        convertEntities = BeautifulSoup.ALL_ENTITIES)
 
     # Some sets of tags and attributes to look for.
