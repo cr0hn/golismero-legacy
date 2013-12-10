@@ -276,14 +276,14 @@ class WebUIPlugin(UIPlugin):
             elif message.message_code == MessageCode.MSG_STATUS_AUDIT_ABORTED:
 
                 # Notify the audit error.
-                (error, tb) = message.message_info
-                self.notify_audit_error(message.audit_name, error, tb)
+                (audit_name, error, tb) = message.message_info
+                self.notify_audit_error(audit_name, error, tb)
 
                 # Remember the failed audit name.
-                self.audit_error.add(message.audit_name)
+                self.audit_error.add(audit_name)
 
                 # Clean up information associated with the audit, if any.
-                self.cleanup_audit(message.audit_name)
+                self.cleanup_audit(audit_name)
 
 
     #----------------------------------------------------------------------

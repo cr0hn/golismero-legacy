@@ -180,7 +180,19 @@ class ConsoleUIPlugin(UIPlugin):
             # When an audit is aborted, check if there are more running audits.
             # If there aren't any, stop the Orchestrator.
             elif message.message_code == MessageCode.MSG_STATUS_AUDIT_ABORTED:
-                self.audit_is_dead(message.audit_name)
+                (audit_name, description, traceback) = message.message_info
+                try:
+                    try:
+                        m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
+                    except Exception:
+                        m_plugin_name = "GoLismero"
+                    text      = "[!] Plugin '%s' error: %s " % (m_plugin_name, str(description))
+                    text      = colorize(text, 'critical')
+                    traceback = colorize(traceback, 'critical')
+                    Console.display_error(text)
+                    Console.display_error_more_verbose(traceback)
+                finally:
+                    self.audit_is_dead(audit_name)
 
         # Process control messages.
         elif message.message_type == MessageType.MSG_TYPE_CONTROL:
@@ -255,7 +267,7 @@ class ConsoleUIPlugin(UIPlugin):
                 message_type = MessageType.MSG_TYPE_CONTROL,
                 message_code = MessageCode.MSG_CONTROL_STOP,
                 message_info = True,  # True for finished, False for user cancel
-                    priority = MessagePriority.MSG_PRIORITY_LOW
+                    priority = MessagePriority.MSG_PRIORITY_LOW,
             )
 
 

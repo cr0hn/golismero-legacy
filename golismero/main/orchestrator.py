@@ -310,9 +310,6 @@ class Orchestrator (object):
                 print (
                     "Internal error: dropped message for audit %r: %r"
                     % (message.audit_name, message))
-                #Logger.log_error_more_verbose(
-                    #"Internal error: dropped message for audit %r: %r"
-                    #% (message.audit_name, message))
                 return
 
             # If it's an RPC message...
