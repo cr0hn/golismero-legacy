@@ -81,12 +81,7 @@ m_make_brighter = ['blue', 'grey', 'red']
 #------------------------------------------------------------------------------
 def colorize_substring(text, substring, level_or_color):
     """
-    Colorize a substring in a text depending of the type of alert:
-    - Informational
-    - Low
-    - Middle
-    - Hight
-    - Critical
+    Colorize a substring within a text to be displayed on the console.
 
     :param text: Full text.
     :type text: str
@@ -94,8 +89,10 @@ def colorize_substring(text, substring, level_or_color):
     :param substring: Text to find and colorize.
     :type substring: str
 
-    :param level_or_color: May be an integer with level (0-4) or string with values: info, low, middle, high, critical.
-    :type level_or_color: int | str
+    :param level_or_color:
+        Color name or risk level name.
+        See the documentation for :ref:`colorize`() for more details.
+    :type level_or_color: str
 
     :returns: Colorized text.
     :rtype: str
@@ -146,20 +143,35 @@ def colorize_substring(text, substring, level_or_color):
 #------------------------------------------------------------------------------
 def colorize(text, level_or_color):
     """
-    Colorize a text depends of type of alert:
-    - Informational
-    - Low
-    - Middle
-    - High
-    - Critical
+    Colorize a text to be displayed on the console.
 
-    :param text: text to colorize.
-    :type text: int with level (0-4) or string with values: info, low, middle, high, critical.
+    The following color names may be used:
 
-    :param level_or_color: color name or integer with level selected.
-    :type level_or_color: str or integer (0-4).
+     - Blue
+     - Cyan
+     - Green
+     - Grey (or gray)
+     - Magenta
+     - Red
+     - Yellow
+     - White
 
-    :returns: str -- string with information to print.
+    The following risk levels may be used in lieu of colors:
+
+     - Informational (0)
+     - Low (1)
+     - Middle (2)
+     - High (3)
+     - Critical (4)
+
+    :param text: Text to colorize.
+    :type text: str
+
+    :param level_or_color: Color name or risk level name.
+    :type level_or_color: str
+
+    :returns: Colorized text.
+    :rtype: str
     """
 
     # Check if colors are enabled.
@@ -271,19 +283,19 @@ def _get_terminal_size_linux():
 #------------------------------------------------------------------------------
 class Console (object):
     """
-    Console I/O wrapper.
+    Console output wrapper.
     """
 
 
     #--------------------------------------------------------------------------
-    # Verbose levels
+    # Verbose levels.
 
     DISABLED     = Logger.DISABLED
     STANDARD     = Logger.STANDARD
     VERBOSE      = Logger.VERBOSE
     MORE_VERBOSE = Logger.MORE_VERBOSE
 
-    # Current verbose level
+    # Current verbose level.
     level = STANDARD
 
     # Use colors?
@@ -294,7 +306,7 @@ class Console (object):
     @classmethod
     def _display(cls, message):
         """
-        Write a message into output
+        Write a message to standard output.
 
         :param message: message to write
         :type message: str
@@ -303,14 +315,15 @@ class Console (object):
             sys.stdout.write("%s\n" % (message,))
             sys.stdout.flush()
         except Exception,e:
-            print "[!] Error while writing to output onsole: %s" % str(e)
+            print "[!] Error while writing to output console: %s" % str(e)
 
 
     #--------------------------------------------------------------------------
     @classmethod
     def display(cls, message):
         """
-        Write a message into output
+        Write a message to standard output, as long as the current log level
+        is at least STANDARD.
 
         :param message: message to write
         :type message: str
@@ -323,7 +336,8 @@ class Console (object):
     @classmethod
     def display_verbose(cls, message):
         """
-        Write a message into output with more verbosity
+        Write a message to standard output, as long as the current log level
+        is at least VERBOSE.
 
         :param message: message to write
         :type message: str
@@ -336,7 +350,8 @@ class Console (object):
     @classmethod
     def display_more_verbose(cls, message):
         """
-        Write a message into output with even more verbosity
+        Write a message to standard output, as long as the current log level
+        is at least MORE_VERBOSE.
 
         :param message: message to write
         :type message: str
@@ -349,7 +364,7 @@ class Console (object):
     @classmethod
     def _display_error(cls, message):
         """
-        Write a error message into output
+        Write a message to standard error.
 
         :param message: message to write
         :type message: str
@@ -366,7 +381,8 @@ class Console (object):
     @classmethod
     def display_error(cls, message):
         """
-        Write a error message into output
+        Write a message to standard error, as long as the current log level
+        is at least STANDARD.
 
         :param message: message to write
         :type message: str
@@ -379,7 +395,8 @@ class Console (object):
     @classmethod
     def display_error_verbose(cls, message):
         """
-        Write a error message into output with more verbosity
+        Write a message to standard error, as long as the current log level
+        is at least VERBOSE.
 
         :param message: message to write
         :type message: str
@@ -392,7 +409,8 @@ class Console (object):
     @classmethod
     def display_error_more_verbose(cls, message):
         """
-        Write a error message into output with more verbosity
+        Write a message to standard error, as long as the current log level
+        is at least MORE_VERBOSE.
 
         :param message: message to write
         :type message: str
