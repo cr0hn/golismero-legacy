@@ -128,7 +128,7 @@ class JSONOutput(ReportPlugin):
         :param output_file: Output file for this report plugin.
         :type output_file: str
         """
-        command = Config.plugin_config.get("command", "")
+        command = Config.plugin_args.get("command", "")
         if command:
             Logger.log_verbose("Launching command: %s" % command)
             args = split(command)
@@ -164,7 +164,7 @@ class JSONOutput(ReportPlugin):
             start_time, stop_time)
 
         # Get the output mode.
-        mode = Config.plugin_config.get("mode", "nice")
+        mode = Config.plugin_args.get("mode", "nice")
         mode = mode.replace(" ", "")
         mode = mode.replace("\r", "")
         mode = mode.replace("\n", "")

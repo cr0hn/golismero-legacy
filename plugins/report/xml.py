@@ -156,7 +156,7 @@ class XMLOutput(ReportPlugin):
         tree.write(output_file)
 
         # Launch the build command, if any.
-        command = Config.plugin_config.get("command", "")
+        command = Config.plugin_args.get("command", "")
         if command:
             Logger.log_verbose("Launching command: %s" % command)
             args = split(command)
