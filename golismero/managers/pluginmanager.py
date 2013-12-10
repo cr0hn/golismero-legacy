@@ -1114,11 +1114,18 @@ class PluginManager (object):
                 raise ImportError(
                     "Plugin class not found in file: %s" % source)
             if len(candidates) > 1:
-                msg = (
-                    "Error loading %r:"
-                    " can't decide which plugin class to load: %s"
-                ) % (source, ", ".join(c.__name__ for c in candidates))
-                raise ImportError(msg)
+                tmp = [
+                    c for c in candidates
+                    if c.__module__ == module.__name__
+                ]
+                if tmp:
+                    candidates = tmp
+                if len(candidates) > 1:
+                    msg = (
+                        "Error loading %r:"
+                        " can't decide which plugin class to load: %s"
+                    ) % (source, ", ".join(c.__name__ for c in candidates))
+                    raise ImportError(msg)
 
             # Get the plugin class.
             clazz = candidates.pop()
