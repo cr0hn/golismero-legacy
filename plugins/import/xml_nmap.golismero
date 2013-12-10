@@ -9,4 +9,3 @@ License     = GNU Public License
 
 [Core]
 Module = ../testing/scan/nmap.py
-Class  = NmapImportPlugin

@@ -9,4 +9,3 @@ License     = GNU Public License
 
 [Core]
 Module = ../testing/scan/openvas.py
-Class  = OpenVASImportPlugin

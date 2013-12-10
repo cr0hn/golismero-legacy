@@ -159,50 +159,73 @@ class JSONOutput(ReportPlugin):
             start_time, stop_time)
 
         # Get the output mode.
-        mode = Config.plugin_args.get("mode", "nice")
+        mode = Config.plugin_args.get("mode", "dump")
         mode = mode.replace(" ", "")
         mode = mode.replace("\r", "")
         mode = mode.replace("\n", "")
         mode = mode.replace("\t", "")
         mode = mode.lower()
         if mode not in ("dump", "nice"):
-            warn("Invalid output mode: %s" % mode, RuntimeWarning)
-            mode = "nice"
-        self.__nicemode = (mode == "nice")
+            Logger.log_error("Invalid output mode: %s" % mode)
+            mode = "dump"
+        self.__dumpmode = (mode == "dump")
         Logger.log_more_verbose("Output mode: %s" %
-                                ("nice" if self.__nicemode else "dump"))
+                                ("dump" if self.__dumpmode else "nice"))
 
         # Create the root element.
         root = dict()
 
         # Add the GoLismero version property.
-        root["version"] = "GoLismero " + VERSION
-
-        # Add the report format property.
-        root["format"] = "nice" if self.__nicemode else "dump"
+        if self.__dumpmode:
+            root["version"] = "GoLismero " + VERSION
+        else:
+            root["GoLismero Version"] = "GoLismero " + VERSION
 
         # Add the summary element.
-        root["summary"] = {
-            "audit_name":  Config.audit_name,
-            "start_time":  start_time,
-            "stop_time":   stop_time,
-            "run_time":    run_time,
-            "report_time": report_time,
-        }
+        if self.__dumpmode:
+            root["summary"] = {
+                "audit_name":  Config.audit_name,
+                "start_time":  start_time,
+                "stop_time":   stop_time,
+                "run_time":    run_time,
+                "report_time": report_time,
+            }
+        else:
+            root["Summary"] = {
+                "Audit Name":  Config.audit_name,
+                "Start Time":  start_time,
+                "Stop Time":   stop_time,
+                "Run Time":    run_time,
+                "Report Time": report_time,
+            }
 
         # Create the audit scope element.
-        root["audit_scope"] = {
-            "addresses": Config.audit_scope.addresses,
-            "roots":     Config.audit_scope.roots,
-            "domains":   Config.audit_scope.domains,
-            "web_pages": Config.audit_scope.web_pages,
-        }
+        if self.__dumpmode:
+            root["audit_scope"] = {
+                "addresses": Config.audit_scope.addresses,
+                "roots":     Config.audit_scope.roots,
+                "domains":   Config.audit_scope.domains,
+                "web_pages": Config.audit_scope.web_pages,
+            }
+        else:
+            domains = [ "*." + x for x in Config.audit_scope.roots ]
+            domains.extend(Config.audit_scope.domains)
+            domains.sort()
+            root["Audit Scope"] = {
+                "IP Addresses": Config.audit_scope.addresses,
+                "Domains":      domains,
+                "Web Pages":    Config.audit_scope.web_pages,
+            }
 
         # Create the elements for the data.
-        root["vulnerabilities"] = dict()
-        root["resources"]       = dict()
-        root["informations"]    = dict()
-        root["false_positives"] = dict()
+        key_vuln = "vulnerabilities" if self.__dumpmode else "Vulnerabilities"
+        key_res  = "resources"       if self.__dumpmode else "Assets"
+        key_info = "informations"    if self.__dumpmode else "Evidences"
+        key_fp   = "false_positives" if self.__dumpmode else "False Positives"
+        root[key_vuln] = dict()
+        root[key_res]  = dict()
+        root[key_info] = dict()
+        root[key_fp]   = dict()
 
         # Determine the report type.
         self.__full_report = not Config.audit_config.only_vulns
@@ -219,10 +242,11 @@ class JSONOutput(ReportPlugin):
             self.__fp = set(fp)
 
             try:
+
                 # Report the vulnerabilities.
                 if datas:
                     self.__add_data(
-                        root["vulnerabilities"], datas,
+                        root[key_vuln], datas,
                         Data.TYPE_VULNERABILITY)
 
                 # This dictionary tracks which data to show
@@ -235,14 +259,14 @@ class JSONOutput(ReportPlugin):
                     datas = self.__collect_data(Data.TYPE_RESOURCE)
                     if datas:
                         self.__add_data(
-                            root["resources"], datas,
+                            root[key_res], datas,
                             Data.TYPE_RESOURCE)
 
                     # Show the informations in the report.
                     datas = self.__collect_data(Data.TYPE_INFORMATION)
                     if datas:
                         self.__add_data(
-                            root["informations"], datas,
+                            root[key_info], datas,
                             Data.TYPE_INFORMATION)
 
                 finally:
@@ -254,7 +278,7 @@ class JSONOutput(ReportPlugin):
             # Show the false positives in the full report.
             if self.__full_report and fp:
                 self.__add_data(
-                    root["false_positives"], fp,
+                    root[key_fp], fp,
                     Data.TYPE_VULNERABILITY)
 
         # Return the data.
@@ -262,12 +286,14 @@ class JSONOutput(ReportPlugin):
 
 
     #--------------------------------------------------------------------------
-    def __iterate_data(self, identities = None, data_type = None, data_subtype = None):
+    def __iterate_data(self, identities = None, data_type = None,
+                       data_subtype = None):
         if identities is None:
             identities = list(Database.keys(data_type))
         if identities:
             for page in xrange(0, len(identities), 100):
-                for data in Database.get_many(identities[page:page + 100], data_type):
+                for data in Database.get_many(identities[page:page + 100],
+                                              data_type):
                     yield data
 
 
@@ -305,10 +331,10 @@ class JSONOutput(ReportPlugin):
             i = data.identity
             d = i
             try:
-                if self.__nicemode:
-                    d = data.display_properties
-                else:
+                if self.__dumpmode:
                     d = data.to_dict()
+                else:
+                    d = data.display_properties
                 self.test_data_serialization(d)
             except Exception:
                 from pprint import pformat
