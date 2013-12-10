@@ -36,21 +36,13 @@ from os.path import abspath, split
 from StringIO import StringIO
 
 from golismero.api.logger import Logger
+from golismero.api.plugin import import_plugin
 
-cwd = abspath(split(__file__)[0])
-sys.path.insert(0, cwd)
-try:
-    from rstext import RSTReport
-finally:
-    sys.path.remove(cwd)
-del cwd
-
-with warnings.catch_warnings(record=True):
-    from docutils.core import publish_file
+rstext = import_plugin("rst.py")
 
 
 #------------------------------------------------------------------------------
-class LatexReport(RSTReport):
+class LatexReport(rstext.RSTReport):
     """
     Creates reports in LaTeX format (.tex).
     """
@@ -89,6 +81,10 @@ class LatexReport(RSTReport):
     def __generate_report(self, output_file):
         Logger.log_verbose(
             "Writing LaTeX report to file: %s" % output_file)
+
+        # Load docutils.
+        with warnings.catch_warnings(record=True):
+            from docutils.core import publish_file
 
         # Generate the report in reStructured Text format.
         source = StringIO()

@@ -26,30 +26,15 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-# Horrible hack to load a class from another plugin.
-# TODO we really should put this as part of the API!
-import sys
-from os.path import abspath, split
-cwd = abspath(split(__file__)[0])
-sys.path.insert(0, cwd)
-old_mod = sys.modules.pop("json", None)
-try:
-    from json import JSONOutput
-finally:
-    sys.path.remove(cwd)
-    if "json" in sys.modules:
-        sys.modules["json_output_plugin"] = sys.modules["json"]
-        del sys.modules["json"]
-    if old_mod is not None:
-        sys.modules["json"] = old_mod
-del cwd
+from golismero.api.plugin import import_plugin
+json = import_plugin("json.py")
 
 # Lazy imports.
 umsgpack = None
 
 
 #------------------------------------------------------------------------------
-class MessagePackOutput(JSONOutput):
+class MessagePackOutput(json.JSONOutput):
     """
     Dumps the output in MessagePack format.
     """
