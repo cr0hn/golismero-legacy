@@ -32,7 +32,7 @@ from golismero.api.data.resource.email import Email
 from golismero.api.data.resource.url import Url
 from golismero.api.logger import Logger
 from golismero.api.net import NetworkException
-from golismero.api.net.scraper import extract_from_html, extract_from_text
+from golismero.api.net.scraper import extract_from_html, extract_from_text, extract_post_from_html
 from golismero.api.net.web_utils import download, parse_url
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist import WordListLoader
@@ -80,8 +80,10 @@ class Spider(TestingPlugin):
         # TODO: If it's a 301 response, get the Location header
 
         # Get links
+        m_forms = None
         if p.information_type == Information.INFORMATION_HTML:
             m_links = extract_from_html(p.raw_data, m_url)
+            m_forms = extract_post_from_html(p.raw_data, m_url)
             #m_links.update( extract_from_text(p.raw_data, m_url) )
         elif p.information_type == Information.INFORMATION_PLAIN_TEXT:
             m_links = extract_from_text(p.raw_data, m_url)
@@ -93,7 +95,8 @@ class Spider(TestingPlugin):
             pass
 
         # Do not follow URLs that contain certain keywords
-        m_forbidden = WordListLoader.get_wordlist(Config.plugin_config["wordlist_no_spider"])
+        m_forbidden = [x for x in WordListLoader.get_wordlist(Config.plugin_config["wordlist_no_spider"])]
+
         m_urls_allowed = [
             url for url in m_links if not any(x in url for x in m_forbidden)
         ]
@@ -137,6 +140,52 @@ class Spider(TestingPlugin):
             m_resource.add_resource(info)
             m_return.append(m_resource)
 
+        # Get forms info
+        m_forms_allowed = [
+            url for url in m_forms if not any(x in url[0] for x in m_forbidden)
+        ]
+
+        m_forms_not_allowed = set([x[0] for x in m_forms]).difference(set([x[0] for x in m_forms_allowed]))
+        if m_forms_not_allowed:
+            Logger.log_more_verbose("Skipped forbidden forms:\n    %s" % "\n    ".join(sorted(m_forms_not_allowed)))
+
+        # Do not follow forms out of scope
+        m_forms_in_scope = []
+        m_broken = []
+        for url in m_forms_allowed:
+            try:
+                if url[0] in Config.audit_scope:
+                    m_forms_in_scope.append(url)
+            except Exception:
+                m_broken.append(url[0])
+
+        if m_broken:
+            if len(m_broken) == 1:
+                Logger.log_more_verbose("Skipped uncrawlable forms: %s" % m_broken[0])
+            else:
+                Logger.log_more_verbose("Skipped uncrawlable forms:\n    %s" % "\n    ".join(sorted(m_broken)))
+        m_out_of_scope_count = len(m_forms_allowed) - len(m_forms_in_scope) - len(m_broken)
+        if m_out_of_scope_count:
+            Logger.log_more_verbose("Skipped %d forms out of scope." % m_out_of_scope_count)
+
+        if m_forms_in_scope:
+            Logger.log_verbose("Found %d forms in URL: %s" % (len(m_forms_in_scope), m_url))
+        else:
+            Logger.log_verbose("No forms found in URL: %s" % m_url)
+
+        # Convert to Url data type
+        for u in m_forms_in_scope:
+            try:
+                url = u[0]
+                method = u[1]
+                params = {x["name"]: x["value"] for x in u[2]}
+
+                m_resource = Url(url = url, referer = m_url, method=method, post_params=params)
+            except Exception:
+                warn(format_exc(), RuntimeWarning)
+            m_resource.add_resource(info)
+            m_return.append(m_resource)
+        Logger.log(m_return)
         # Send the results
         return m_return
 
