@@ -412,6 +412,8 @@ def parse_plugin_args(manager, plugin_args):
     parsed = {}
     for plugin_id, key, value in plugin_args:
         plugin_info = manager.guess_plugin_by_id(plugin_id)
+        if not plugin_info:
+            raise KeyError("Plugin not found: %s" % plugin_id)
         key = key.lower()
         if key not in plugin_info.plugin_args:
             raise KeyError(
