@@ -35,7 +35,7 @@ __all__ = ["PluginManager", "PluginInfo"]
 from .rpcmanager import implementor
 from ..api.config import Config
 from ..api.logger import Logger
-from ..api.plugin import UIPlugin, ImportPlugin, TestingPlugin, ReportPlugin
+from ..api.plugin import CATEGORIES, STAGES, load_plugin_class_from_info
 from ..common import Configuration, OrchestratorConfig, AuditConfig, \
     get_default_plugins_folder
 from ..managers.processmanager import PluginContext
@@ -311,18 +311,18 @@ class PluginInfo (object):
                 category = category.strip().lower()
                 subcategory = subcategory.strip().lower()
                 if category == "testing":
-                    self.__stage_number = PluginManager.STAGES[subcategory]
+                    self.__stage_number = STAGES[subcategory]
                 else:
                     self.__stage_number = 0
             except Exception:
                 self.__stage_number = 0
         else:
             try:
-                self.__stage_number = PluginManager.STAGES[stage.lower()]
+                self.__stage_number = STAGES[stage.lower()]
             except KeyError:
                 try:
                     self.__stage_number = int(stage)
-                    if self.__stage_number not in PluginManager.STAGES.values():
+                    if self.__stage_number not in STAGES.values():
                         raise ValueError()
                 except Exception:
                     msg = "Error parsing %r: invalid execution stage: %r"
@@ -655,24 +655,6 @@ class PluginManager (object):
     Plugin Manager.
     """
 
-
-    # Plugin categories and their base classes.
-    CATEGORIES = {
-        "import"  : ImportPlugin,
-        "testing" : TestingPlugin,
-        "report"  : ReportPlugin,
-        "ui"      : UIPlugin,
-    }
-
-    # Testing plugin execution stages by name.
-    STAGES = {
-        "recon"   : 1,    # Reconaissance stage.
-        "scan"    : 2,    # Scanning (non-intrusive) stage.
-        "attack"  : 3,    # Exploitation (intrusive) stage.
-        "intrude" : 4,    # Post-exploitation stage.
-        "cleanup" : 5,    # Cleanup stage.
-    }
-
     # Minimum and maximum stage numbers.
     min_stage = min(*STAGES.values())
     max_stage = max(*STAGES.values())
@@ -718,7 +700,7 @@ class PluginManager (object):
 
         :raise KeyError: Stage value not found.
         """
-        for name, val in cls.STAGES.iteritems():
+        for name, val in STAGES.iteritems():
             if value == val:
                 return name
         raise KeyError("Stage value not found: %r" % value)
@@ -776,7 +758,7 @@ class PluginManager (object):
         failure = list()
 
         # The first directory level is the category.
-        for current_category, _ in self.CATEGORIES.iteritems():
+        for current_category, _ in CATEGORIES.iteritems():
 
             # Get the folder for this category.
             category_folder = path.join(plugins_folder, current_category)
@@ -856,14 +838,14 @@ class PluginManager (object):
             return self.__plugins.copy()
 
         # If it's a category, get only the plugins that match the category.
-        if category in self.CATEGORIES:
+        if category in CATEGORIES:
             return { plugin_id: plugin_info
                      for plugin_id, plugin_info in self.__plugins.iteritems()
                      if plugin_info.category == category }
 
         # If it's a stage, get only the plugins that match the stage.
-        if category in self.STAGES:
-            stage_num = self.STAGES[category]
+        if category in STAGES:
+            stage_num = STAGES[category]
             return { plugin_id: plugin_info
                      for plugin_id, plugin_info in self.__plugins.iteritems()
                      if plugin_info.stage_number == stage_num }
@@ -1033,12 +1015,12 @@ class PluginManager (object):
 
 
     #--------------------------------------------------------------------------
-    def load_plugin_by_id(self, name):
+    def load_plugin_by_id(self, plugin_id):
         """
-        Load the requested plugin by name.
+        Load the requested plugin by ID.
 
-        :param name: Name of the plugin to load.
-        :type name: str
+        :param plugin_id: ID of the plugin to load.
+        :type plugin_id: str
 
         :returns: Plugin instance.
         :rtype: Plugin
@@ -1047,97 +1029,28 @@ class PluginManager (object):
         """
 
         # If the plugin was already loaded, return the instance from the cache.
-        instance = self.__cache.get(name, None)
+        instance = self.__cache.get(plugin_id, None)
         if instance is not None:
             return instance
 
         # Get the plugin info.
         try:
-            info = self.__plugins[name]
+            info = self.__plugins[plugin_id]
         except KeyError:
-            raise KeyError("Plugin not found: %r" % name)
+            raise KeyError("Plugin not found: %r" % plugin_id)
 
-        # Get the plugin module file.
-        source = info.plugin_module
+        # Load the plugin class.
+        clazz = load_plugin_class_from_info(info)
 
-        # Import the plugin module.
-        module_fake_name = "plugin_" + re.sub(r"\W|^(?=\d)", "_", name)
-        module = imp.load_source(module_fake_name, source)
-
-        # Get the plugin classname.
-        classname = info.plugin_class
-
-        # If we know the plugin classname, get the class.
-        if classname:
-            try:
-                clazz = getattr(module, classname)
-            except Exception:
-                raise ImportError(
-                    "Plugin class %s not found in file: %s" %
-                    (classname, source))
-
-        # If we don't know the plugin classname, we need to find it.
-        else:
-
-            # Get the plugin base class for its category.
-            base_class = self.CATEGORIES[ name[ : name.find("/") ] ]
-
-            # Get all public symbols from the module.
-            public_symbols = [
-                getattr(module, symbol)
-                for symbol in getattr(module, "__all__", [])
-            ]
-            if not public_symbols:
-                public_symbols = [
-                    value
-                    for (symbol, value) in module.__dict__.iteritems()
-                    if not symbol.startswith("_")
-                ]
-                if not public_symbols:
-                    raise ImportError(
-                        "Plugin class not found in file: %s" % source)
-
-            # Find all public classes that derive from the base class.
-            # NOTE: it'd be faster to stop on the first match,
-            #       but then we can't check for ambiguities (see below)
-            candidates = []
-            bases = self.CATEGORIES.values()
-            for value in public_symbols:
-                try:
-                    if issubclass(value, base_class) and value not in bases:
-                        candidates.append(value)
-                except TypeError:
-                    pass
-
-            # There should be only one candidate, if not raise an exception.
-            if not candidates:
-                raise ImportError(
-                    "Plugin class not found in file: %s" % source)
-            if len(candidates) > 1:
-                tmp = [
-                    c for c in candidates
-                    if c.__module__ == module.__name__
-                ]
-                if tmp:
-                    candidates = tmp
-                if len(candidates) > 1:
-                    msg = (
-                        "Error loading %r:"
-                        " can't decide which plugin class to load: %s"
-                    ) % (source, ", ".join(c.__name__ for c in candidates))
-                    raise ImportError(msg)
-
-            # Get the plugin class.
-            clazz = candidates.pop()
-
-            # Add the classname to the plugin info.
+        # If missing, add the classname to the plugin info.
+        if not info.plugin_class:
             info._fix_classname(clazz.__name__)
 
         # Instance the plugin class.
         instance = clazz()
 
         # Add it to the cache.
-        self.__cache[name] = instance
+        self.__cache[plugin_id] = instance
 
         # Return the instance.
         return instance
@@ -1400,7 +1313,7 @@ class AuditPluginManager (PluginManager):
                 if token in ("all", "testing"):
                     names = self.pluginManager.get_plugin_ids("testing")
                     overrides.append( (flag, names) )
-                elif token in self.STAGES:
+                elif token in STAGES:
                     names = self.pluginManager.get_plugin_ids(token)
                     overrides.append( (flag, names) )
                 elif token in all_plugins:
@@ -1476,14 +1389,14 @@ class AuditPluginManager (PluginManager):
         else:
 
             # Convert categories to plugin IDs.
-            for category in self.CATEGORIES:
+            for category in CATEGORIES:
                 if category in plugin_list:
                     plugin_list.remove(category)
                     plugin_list.update(
                         self.pluginManager.get_plugin_ids(category))
 
             # Convert stages to plugin IDs.
-            for stage in self.STAGES:
+            for stage in STAGES:
                 if stage in plugin_list:
                     plugin_list.remove(stage)
                     plugin_list.update(
@@ -1553,7 +1466,7 @@ class AuditPluginManager (PluginManager):
 
         # Add the implicit dependencies defined by the stages into the graph.
         # (We're creating dummy bridge nodes to reduce the number of edges.)
-        stage_numbers = sorted(self.STAGES.itervalues())
+        stage_numbers = sorted(STAGES.itervalues())
         for n in stage_numbers:
             this_stage = "* stage %d" % n
             next_stage = "* stage %d" % (n + 1)

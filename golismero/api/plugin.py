@@ -42,12 +42,19 @@ __all__ = [
     "PluginState", "get_plugin_info", "get_plugin_ids", "get_plugin_name",
     "get_stage_name", "get_stage_display_name",
     "get_plugin_type_display_name", "get_plugin_type_description",
+    "CATEGORIES", "STAGES", "load_plugin_class_from_info",
+    "load_plugin_class", "import_plugin",
 ]
 
 from .config import Config
 from .progress import Progress
 from .shared import SharedMap
 from ..messaging.codes import MessageCode
+
+import os.path
+import re
+import imp
+import inspect
 
 
 #------------------------------------------------------------------------------
@@ -559,3 +566,167 @@ class ReportPlugin (Plugin):
         :type output_file: str
         """
         raise NotImplementedError("Plugins must implement this method!")
+
+
+#------------------------------------------------------------------------------
+# Plugin class loader.
+
+# Plugin categories and their base classes.
+CATEGORIES = {
+    "import"  : ImportPlugin,
+    "testing" : TestingPlugin,
+    "report"  : ReportPlugin,
+    "ui"      : UIPlugin,
+}
+
+# Testing plugin execution stages by name.
+STAGES = {
+    "recon"   : 1,    # Reconaissance stage.
+    "scan"    : 2,    # Scanning (non-intrusive) stage.
+    "attack"  : 3,    # Exploitation (intrusive) stage.
+    "intrude" : 4,    # Post-exploitation stage.
+    "cleanup" : 5,    # Cleanup stage.
+}
+
+def load_plugin_class(plugin_id):
+    """
+    Loads a plugin class given the plugin ID.
+
+    :param plugin_id: Plugin ID.
+    :type plugin_id: str
+
+    :returns: Plugin class.
+    :rtype: class
+
+    :raises KeyError: The plugin was not found.
+    :raises ImportError: The plugin class could not be loaded.
+    """
+
+    # Get the plugin info. Raises exception on error.
+    plugin_info = get_plugin_info(plugin_id)
+
+    # Load the plugin from the plugin info object.
+    return load_plugin_class_from_info(plugin_info)
+
+def load_plugin_class_from_info(info):
+    """
+    Loads a plugin class given the plugin information.
+
+    :param info: Plugin information.
+    :type info: PluginInfo
+
+    :returns: Plugin class.
+    :rtype: class
+
+    :raises KeyError: The plugin was not found.
+    :raises ImportError: The plugin class could not be loaded.
+    """
+
+    # Get the plugin ID.
+    plugin_id = info.plugin_id
+
+    # Get the source code file.
+    source = info.plugin_module
+
+    # Import the plugin module.
+    module_fake_name = "plugin_" + re.sub(r"\W|^(?=\d)", "_", plugin_id)
+    module = imp.load_source(module_fake_name, source)
+
+    # Get the plugin class name.
+    class_name = info.plugin_class
+
+    # If we know the plugin class name, get the class.
+    if class_name:
+        try:
+            clazz = getattr(module, class_name)
+        except Exception:
+            raise ImportError(
+                "Plugin class %s not found in file: %s" %
+                (class_name, source))
+
+    # If we don't know the plugin class name, we need to find it.
+    else:
+
+        # Get the plugin base class for its category.
+        base_class = CATEGORIES[ plugin_id[ : plugin_id.find("/") ] ]
+
+        # Get all public symbols from the module.
+        public_symbols = [
+            getattr(module, symbol)
+            for symbol in getattr(module, "__all__", [])
+        ]
+        if not public_symbols:
+            public_symbols = [
+                value
+                for (symbol, value) in module.__dict__.iteritems()
+                if not symbol.startswith("_")
+            ]
+            if not public_symbols:
+                raise ImportError(
+                    "Plugin class not found in file: %s" % source)
+
+        # Find all public classes that derive from the base class.
+        # NOTE: it'd be faster to stop on the first match,
+        #       but then we can't check for ambiguities (see below)
+        candidates = []
+        bases = CATEGORIES.values()
+        for value in public_symbols:
+            try:
+                if issubclass(value, base_class) and value not in bases:
+                    candidates.append(value)
+            except TypeError:
+                pass
+
+        # If there are no candidates, raise an exception.
+        if not candidates:
+            raise ImportError(
+                "Plugin class not found in file: %s" % source)
+
+        # If there's more than one candidate, filter out those that
+        # weren't defined within this module (i.e. imported classes).
+        if len(candidates) > 1:
+            tmp = [
+                c for c in candidates
+                if c.__module__ == module.__name__
+            ]
+            if tmp:
+                candidates = tmp
+
+            # If we've still more than one candidate, raise an exception.
+            if len(candidates) > 1:
+                msg = (
+                    "Error loading %r:"
+                    " can't decide which plugin class to load: %s"
+                ) % (source, ", ".join(c.__name__ for c in candidates))
+                raise ImportError(msg)
+
+        # Get the plugin class.
+        clazz = candidates.pop()
+
+    # Return the plugin class.
+    return clazz
+
+def import_plugin(source):
+    """
+    Import a sibling plugin given the relative path to its source code.
+
+    :param source: Relative path to the source code.
+    :type source: str
+
+    :returns: Plugin module.
+    :type: module
+
+    :raises ImportError: The plugin module could not be loaded.
+    """
+
+    # Get the calling plugin module.
+    caller = inspect.getmodule(inspect.stack()[1][0])
+
+    # Get the target file relative to the calling plugin file.
+    filename = os.path.dirname(caller.__file__)
+    filename = os.path.join(filename, source)
+    filename = os.path.abspath(filename)
+
+    # Import the plugin module.
+    module_fake_name = "plugin_" + re.sub(r"\W|^(?=\d)", "_", filename)
+    return imp.load_source(module_fake_name, filename)
