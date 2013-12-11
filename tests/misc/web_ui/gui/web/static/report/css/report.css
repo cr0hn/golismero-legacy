@@ -11,6 +11,7 @@ body {
 }
 .navbar-inverse {
   background-color: #404040;
+  border-radius: 0px;
 }
 .navbar-inverse .logo {
   padding: 5px;
@@ -213,6 +214,10 @@ tr.vulnerabilityRow span.glyphicon {
   display: none;
   float: right;
 }
+#tableVulnerabilities .filter th,
+#tableTechnicalReport .filter th {
+  background: #f5cd2f;
+}
 #tableVulnerabilities td,
 #tableTechnicalReport td {
   border: 1px solid black;
@@ -257,6 +262,9 @@ tr.vulnerabilityRow span.glyphicon {
 }
 .item-form span.bold {
   margin-right: 10px;
+}
+.moreInfo {
+  text-decoration: underline;
 }
 /*tablets*/
 

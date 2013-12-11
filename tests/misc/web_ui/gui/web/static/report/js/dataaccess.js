@@ -100,7 +100,7 @@ DataAccess.prototype.getAuditScope = function(){
 }
 
 DataAccess.prototype.getTargetById = function(id){
-	var d = this.targetMap["id_"+id];
+	var d = this.targetMap[id];
 	switch(d.data_subtype){
 		case 2: return d.url;
 		case 4: return d.hostname;

@@ -23,6 +23,7 @@ body{
 
 .navbar-inverse{
 	background-color: @colorHead;
+	border-radius: 0px;
 	.logo{
 		padding:5px;
 	}
@@ -228,6 +229,7 @@ tr.targetRow, tr.resourceRow, tr.vulnerabilityRow,{
 }
 
 #tableVulnerabilities, #tableTechnicalReport{
+
 	th {
 		cursor: pointer;
 		background: @darkYellow;
@@ -238,6 +240,9 @@ tr.targetRow, tr.resourceRow, tr.vulnerabilityRow,{
 			display: none;
 			float:right;
 		}
+	}
+	.filter th{
+		background: @lightYellow;
 	}
 	td{
 		border:1px solid #000;
@@ -291,6 +296,10 @@ tr.targetRow, tr.resourceRow, tr.vulnerabilityRow,{
 	span.bold{
 		margin-right: 10px;
 	}
+}
+
+.moreInfo{
+	text-decoration: underline;
 }
 @tabletLandscape:    ~"only screen and (max-width: 1024px)";
 @tabletStandar:    ~"only screen and (max-width: 1024px)";

@@ -113,9 +113,9 @@
 					          <tr id="headVulnerability">
 					            <th style="width:15%" data-orderColumn="identity" data-orderDirection="asc" >ID <span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
 					            <th style="width:25%" data-orderColumn="domain_id" data-orderDirection="asc">Target<span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
-					            <th style="width:38%" data-orderColumn="display_name" data-orderDirection="asc">Vulnerability<span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
+					            <th style="width:36%" data-orderColumn="display_name" data-orderDirection="asc">Vulnerability<span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
 					            <th style="width:15%" data-orderColumn="level" data-orderDirection="asc" class="sort logicaldesc">Criticality<span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
-					            <th style="width:7%"></th>
+					            <th style="width:9%"></th>
 					          </tr>
 					          <tr class="filter">
 									<th></th>
@@ -194,7 +194,7 @@
 				<td>${obtainTarget(domain_id)}</td>
 				<td>${display_name}</td>
 				<td><span class="bold ${level}Vulnerability">${level}</span></td>
-				<td class="anchor" data-href="technical-${id}">More info</td>
+				<td class="anchor moreInfo" data-href="technical-${id}">More info...</td>
 			</tr>
 		</script>
 		<script type="text/template" id="expandedInfoTechnical">
