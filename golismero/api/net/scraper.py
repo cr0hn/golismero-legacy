@@ -190,7 +190,7 @@ def extract_from_text(text, base_url = None, only_links = True):
 
 
 #------------------------------------------------------------------------------
-def extract_post_from_html(raw_html, base_url):
+def extract_forms_from_html(raw_html, base_url):
     """
     Extract forms info from HTML.
 
