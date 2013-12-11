@@ -58,30 +58,69 @@ function jsSet() {
 
 
 function DataAccess(){
-	this.conection = "ra";
-	this.valorborrar = 0;
+	var vulnerabilitiesArray = new Array();
 
-	this.bbddVulnerabilities = TAFFY(vulnerabilitiesData);
-	
+	var targetsMap = new Array();
+	$.each(data.resources, function(key, val){
+		
+		targetsMap[key] = val;
+	});
+	this.targetMap = targetsMap;
+	this.bbddVulnerabilitiesSimple = TAFFY(data.vulnerabilities);
+	this.bbddInformations = TAFFY(data.informations);
+	this.auditScope = data.audit_scope;
 }
 
+DataAccess.prototype.getTargetTechnical = function(){
+	return data.vulnerabilities;
+}
+DataAccess.prototype.getAuditScope = function(){
+	var targetsScope = new Array();
+	if(this.auditScope.domains){
+		$.each(this.auditScope.domains, function(key, value){
+			targetsScope.push(value);
+		});
+	}
+	if(this.auditScope.web_pages){
+		$.each(this.auditScope.web_pages, function(key, value){
+			targetsScope.push(value);
+		});
+	}
+	if(this.auditScope.addresses){
+		$.each(this.auditScope.addresses, function(key, value){
+			targetsScope.push(value);
+		});
+	}
+	if(this.auditScope.roots){
+		$.each(this.auditScope.roots, function(key, value){
+			targetsScope.push(value);
+		});
+	}
+	return targetsScope;
+}
 
-DataAccess.prototype.getTargetTechnical = function() {
-	var bd = this.bbddVulnerabilities();
-	
-	return bd.get();
-	
-};
-DataAccess.prototype.getVulnerabilities = function(target, vulnerability, criticality, orderColumn, orderDirection) {
-	var bd = this.bbddVulnerabilities();
+DataAccess.prototype.getTargetById = function(id){
+	var d = this.targetMap["id_"+id];
+	switch(d.data_subtype){
+		case 2: return d.url;
+		case 4: return d.hostname;
+		case 5:
+		case 6:
+			return d.address;
+	}
+	return "";
+}
+
+DataAccess.prototype.getVulnerabilities = function(target, vulnerability, level, orderColumn, orderDirection) {
+	var bd = this.bbddVulnerabilitiesSimple();
 	if(target){
-		bd = bd.filter({'target':{'has':[target]}});
+		bd = bd.filter({'domain_id':target});
 	}
 	if(vulnerability){
-		bd = bd.filter({'type':vulnerability});
+		bd = bd.filter({'display_name':vulnerability});
 	}
-	if(criticality){
-		bd = bd.filter({'criticality':parseInt(criticality)});
+	if(level){
+		bd = bd.filter({'level':level});
 	}
 	if(orderColumn){
 		if(orderDirection=="asc")
@@ -89,37 +128,33 @@ DataAccess.prototype.getVulnerabilities = function(target, vulnerability, critic
 			orderDirection = ""
 		}
 		return bd.order(orderColumn +" " + orderDirection).get();
+	}else{
+		return bd.order("level logicaldesc").get();
 	}
-	return bd.get();
+	
 	
 };
-DataAccess.prototype.getVulnerabilitiesCount = function(target, vulnerability, criticality) {
-	var bd = this.bbddVulnerabilities();
+DataAccess.prototype.getVulnerabilitiesCount = function(target, vulnerability, level) {
+	var bd = this.bbddVulnerabilitiesSimple();
 	if(target){
-		bd = bd.filter({'target':{'has':[target]}});
+		bd = bd.filter({'domain_id':target});
 	}
 	if(vulnerability){
-		bd = bd.filter({'type':vulnerability});
+		bd = bd.filter({'display_name':vulnerability});
 	}
-	if(criticality){
-		bd = bd.filter({'criticality':parseInt(criticality)});
+	if(level){
+		bd = bd.filter({'level':level});
 	}
 	return bd.count();
 	
 };
 DataAccess.prototype.getTypeVulnerabilities = function() {
-	return this.bbddVulnerabilities().distinct("type");
+	return this.bbddVulnerabilitiesSimple().distinct("display_name");
 	
 };
 DataAccess.prototype.getTargets = function() {
-	var data= this.bbddVulnerabilities().distinct("target");
-	var set = new jsSet();
-	if(data){
-		for(d in data){
-			set.addAll(data[d]);
-		}
-	}
-	return set.list();
+	return this.bbddVulnerabilitiesSimple().distinct("domain_id");
+	
 };
 
 
