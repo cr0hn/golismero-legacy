@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-IP address type.
+IP address.
 """
 
 __license__ = """
