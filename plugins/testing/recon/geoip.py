@@ -63,6 +63,7 @@ class GeoIP(TestingPlugin):
     # http://linux.die.net/man/1/geoiplookup
     # https://github.com/ioerror/blockfinder
     # http://geoip2.readthedocs.org/en/latest/
+    # http://www.geonames.org/export/
 
 
     #--------------------------------------------------------------------------

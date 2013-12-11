@@ -169,6 +169,8 @@ class Geolocation(Information):
 
         # Simplified view of the geographic location.
         coords = "(%f, %f)" % (self.latitude, self.longitude)
+        if self.accuracy:
+            coords += " [~%dm]" % self.accuracy
         where = ""
         if self.street_addr:
             where = self.street_addr
