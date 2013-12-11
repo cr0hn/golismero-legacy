@@ -32,33 +32,43 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.data.information.geolocation import Geolocation
 from golismero.api.data.information.traceroute import Traceroute
+from golismero.api.data.resource.bssid import BSSID
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.logger import Logger
 from golismero.api.plugin import TestingPlugin
 from golismero.api.net.web_utils import json_decode
 
+from geopy import geocoders
+from shodan.wps import Skyhook
+
 import netaddr
 import requests
 import traceback
 
-from geopy import geocoders
+try:
+    import xml.etree.cElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
 
 
 #------------------------------------------------------------------------------
 class GeoIP(TestingPlugin):
     """
-    This plugin tries to geolocate all IP addresses and domain names.
+    This plugin tries to geolocate all IP addresses and BSSIDs.
+    It also enhances existing geolocation data from other sources.
     """
 
     # TODO: this could be useful as a fallback if freegeoip.net fails:
     # http://linux.die.net/man/1/geoiplookup
     # https://github.com/ioerror/blockfinder
+    # http://geoip2.readthedocs.org/en/latest/
+    # http://www.geonames.org/export/
 
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Domain, IP, Traceroute, Geolocation]
+        return [IP, BSSID, Traceroute, Geolocation]
 
 
     #--------------------------------------------------------------------------
@@ -77,19 +87,17 @@ class GeoIP(TestingPlugin):
                     #
                     # TODO: parse the street address
                     #
-                    Logger.log("(%s, %s) is in %s" % \
+                    Logger.log("Location (%s, %s) is in %s" % \
                                (info.latitude, info.longitude, street_addr))
             return
 
-        # Extract IPs and domains from traceroute results and geolocate them.
+        # Extract IPs from traceroute results and geolocate them.
         if info.is_instance(Traceroute):
             hops = []
             for hop in info.hops:
                 if hop is not None:
                     if hop.address:
                         hops.append( IP(hop.address) )
-                    elif hop.hostname:
-                        hops.append( Domain(hop.hostname) )
             results.extend(hops)
             for res in hops:
                 r = self.recv_info(res)
@@ -97,33 +105,49 @@ class GeoIP(TestingPlugin):
                     results.extend(r)
             return results
 
-        # Get the IP address or domain name.
-        # Skip unsupported targets.
+        # Geolocate IP addresses using Freegeoip.
         if info.is_instance(IP):
+
+            # Skip unsupported targets.
             if info.version != 4:
                 return
-            target = info.address
-            parsed = netaddr.IPAddress(target)
+            ip = info.address
+            parsed = netaddr.IPAddress(ip)
             if parsed.is_loopback() or \
                parsed.is_private()  or \
                parsed.is_link_local():
                 return
-        elif info.is_instance(Domain):
-            target = info.hostname
-            if "." not in target:
+
+            # Query the freegeoip.net service.
+            kwargs = self.query_freegeoip(ip)
+            if not kwargs:
                 return
+
+            # Translate the arguments for Geolocation().
+            address = kwargs.pop("ip")
+
+        # Geolocate BSSIDs using Skyhook.
+        elif info.is_instance(BSSID):
+            skyhook = self.query_skyhook(info.bssid)
+            if not skyhook:
+                return
+
+            # Translate the arguments for Geolocation().
+            kwargs = {
+                "latitude":     skyhook["latitude"],
+                "longitude":    skyhook["longitude"],
+                "accuracy":     skyhook["hpe"],
+                "country_name": skyhook["country"],
+                "country_code": skyhook["country_code"],
+                "region_code":  skyhook["state_code"],
+                "region_name":  skyhook["state"],
+            }
+
+        # Fail for other data types.
         else:
-            assert False, type(info)
+            assert False, "Internal error! Unexpected type: %r" % type(info)
 
-        # Query the freegeoip.net service.
-        kwargs = self.query_freegeoip(target)
-        if not kwargs:
-            return
-
-        # Remove the IP address from the response.
-        address = kwargs.pop("ip")
-
-        # Query the Google Geocoder.
+        # Query the Google Geocoder to get the street address.
         street_addr = self.query_google(
             kwargs["latitude"], kwargs["longitude"])
         if street_addr:
@@ -136,18 +160,13 @@ class GeoIP(TestingPlugin):
 
         # Log the location.
         try:
-            Logger.log_verbose("%s is in %s" % (target, geoip))
+            Logger.log_verbose(
+                "%s %s is located in %s"
+                % (info.display_name, info.address, geoip))
         except Exception, e:
             fmt = traceback.format_exc()
             Logger.log_error("Error: %s" % str(e))
             Logger.log_error_more_verbose(fmt)
-
-        # If we received a Domain object, create an IP object too.
-        if info.resource_type == Domain.resource_type:
-            ip = IP(address)
-            ip.add_resource(info)
-            ip.add_information(geoip)
-            results.append(ip)
 
         # Return the results.
         return results
@@ -155,15 +174,15 @@ class GeoIP(TestingPlugin):
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def query_freegeoip(target):
-        Logger.log_more_verbose("Querying freegeoip.net for: " + target)
+    def query_freegeoip(ip):
+        Logger.log_more_verbose("Querying freegeoip.net for: " + ip)
         try:
-            resp = requests.get("http://freegeoip.net/json/" + target)
+            resp = requests.get("http://freegeoip.net/json/" + ip)
             if resp.status_code == 200:
                 return json_decode(resp.content)
             Logger.log_more_verbose(
                 "Response from freegeoip.net for %s: %s" %
-                    (target, resp.content))
+                    (ip, resp.content))
         except Exception:
             raise RuntimeError(
                 "Freegeoip.net webservice is not available,"
@@ -182,6 +201,31 @@ class GeoIP(TestingPlugin):
             r = g.reverse(coordinates)
             if r:
                 return r[0][0].encode("UTF-8")
+        except Exception, e:
+            fmt = traceback.format_exc()
+            Logger.log_error_verbose("Error: %s" % str(e))
+            Logger.log_error_more_verbose(fmt)
+
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def query_skyhook(bssid):
+        Logger.log_more_verbose(
+            "Querying Skyhook for: %s" % bssid)
+        try:
+            r = Skyhook().locate(bssid)
+            if r:
+                xml = ET.fromstring(r)
+                ns = "{http://skyhookwireless.com/wps/2005}"
+                return {
+                    "latitude": float(xml.find(".//%slatitude" % ns).text),
+                    "longitude": float(xml.find(".//%slongitude" % ns).text),
+                    "hpe": float(xml.find(".//%shpe" % ns).text),
+                    "state": xml.find(".//%sstate" % ns).text,
+                    "state_code": xml.find(".//%sstate" % ns).get("code"),
+                    "country": xml.find(".//%scountry" % ns).text,
+                    "country_code": xml.find(".//%scountry" % ns).get("code"),
+                }
         except Exception, e:
             fmt = traceback.format_exc()
             Logger.log_error_verbose("Error: %s" % str(e))

@@ -201,9 +201,10 @@ class JSONOutput(ReportPlugin):
 
         # Create the audit scope element.
         if self.__dumpmode:
+            wildcards = [ "*." + x for x in Config.audit_scope.roots ]
             root["audit_scope"] = {
                 "addresses": Config.audit_scope.addresses,
-                "roots":     Config.audit_scope.roots,
+                "roots":     wildcards,
                 "domains":   Config.audit_scope.domains,
                 "web_pages": Config.audit_scope.web_pages,
             }
@@ -337,6 +338,7 @@ class JSONOutput(ReportPlugin):
                     d = data.display_properties
                 self.test_data_serialization(d)
             except Exception:
+                raise
                 from pprint import pformat
                 warn("Cannot serialize data:\n%s" % pformat(d),
                      RuntimeWarning)

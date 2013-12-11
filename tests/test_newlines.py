@@ -26,7 +26,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import sys
 import os
 from os import path
 
@@ -46,11 +45,15 @@ def test_newlines_and_tabs():
         golismero += path.sep
 
     # Recursively look for all .py files.
-    # Skip the third party libs folder.
+    # Skip the third party libs folder and tools folder.
     for root, directories, files in os.walk(golismero):
         if root.endswith(path.sep + "thirdparty_libs"):
             continue
         if (path.sep + "thirdparty_libs" + path.sep) in root:
+            continue
+        if root.endswith(path.sep + "tools"):
+            continue
+        if (path.sep + "tools" + path.sep) in root:
             continue
         for filename in files:
             if not filename.endswith(".py") and not filename.endswith(".golismero"):

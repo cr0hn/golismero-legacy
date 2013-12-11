@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-IP address.
+Wi-Fi BSSID.
 """
 
 __license__ = """
@@ -30,93 +30,88 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["IP"]
+__all__ = ["BSSID"]
 
 from . import Resource
-from .. import identity
-from .. import Config
+from .mac import MAC
+from .. import merge
 from ...text.text_utils import to_utf8
-
-from netaddr import IPAddress
 
 
 #------------------------------------------------------------------------------
-class IP(Resource):
+class BSSID(MAC):
     """
-    IP address.
+    Wi-Fi BSSID (MAC address of a wireless router).
     """
 
-    resource_type = Resource.RESOURCE_IP
+    resource_type = Resource.RESOURCE_BSSID
 
 
     #----------------------------------------------------------------------
-    def __init__(self, address):
+    def __init__(self, bssid, essid = None):
         """
-        :param address: IP address.
-        :type address: str
+        :param bssid: BSSID.
+        :type bssid: str
+
+        :param essid: (Optional) ESSID.
+        :type essid: str | None
         """
-
-        address = to_utf8(address)
-        if not isinstance(address, str):
-            raise TypeError("Expected str, got %r instead" % type(address))
-
-        try:
-            if address.startswith("[") and address.endswith("]"):
-                parsed  = IPAddress(address[1:-1], version=6)
-                address = address[1:-1]
-            else:
-                parsed  = IPAddress(address)
-            version = int( parsed.version )
-        except Exception:
-            raise ValueError("Invalid IP address: %s" % address)
-
-        # IP address and protocol version.
-        self.__address = address
-        self.__version = version
 
         # Parent constructor.
-        super(IP, self).__init__()
+        super(BSSID, self).__init__(bssid)
+
+        # Save the ESSID.
+        self.essid = essid
 
         # Reset the crawling depth.
         self.depth = 0
 
 
     #----------------------------------------------------------------------
-    def __str__(self):
-        return self.address
-
-
-    #----------------------------------------------------------------------
     def __repr__(self):
-        return "<IPv%s address=%r>" % (self.version, self.address)
+        return "<BSSID %s>" % self.bssid
 
 
     #--------------------------------------------------------------------------
     @property
     def display_name(self):
-        return "IP Address"
-
-
-    #----------------------------------------------------------------------
-    @identity
-    def address(self):
-        """
-        :return: IP address.
-        :rtype: str
-        """
-        return self.__address
+        return "Wi-Fi 802.11 BSSID"
 
 
     #----------------------------------------------------------------------
     @property
-    def version(self):
+    def bssid(self):
         """
-        :return: version of IP protocol: 4 or 6.
-        :rtype: int(4|6)
+        :return: BSSID.
+        :rtype: str
         """
-        return self.__version
+        return self.address
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.address in Config.audit_scope
+    @merge
+    def essid(self):
+        """
+        :return: ESSID.
+        :rtype: str | None
+        """
+        return self.__essid
+
+
+    #----------------------------------------------------------------------
+    @essid.setter
+    def essid(self, essid):
+        """
+        :param essid: ESSID.
+        :type essid: str
+        """
+        essid = to_utf8(essid)
+        if not isinstance(essid, basestring):
+            raise TypeError("Expected string, got %r instead" % type(essid))
+        self.__essid = essid
+
+
+    #----------------------------------------------------------------------
+    @property
+    def discovered(self):
+        return [ MAC(self.bssid) ]
