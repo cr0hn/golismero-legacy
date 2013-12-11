@@ -71,18 +71,6 @@ class HTMLReport(json.JSONOutput):
         ]
         del vulnerabilities
 
-        # Also, prepend the string "id_" to all the keys of the "resources"
-        # and "informations" dictionaries, so they can be accessed better
-        # from JavaScript.
-        report_data["resources"] = {
-            ("id_" + identity): data
-            for identity, data in report_data["resources"].iteritems()
-        }
-        report_data["informations"] = {
-            ("id_" + identity): data
-            for identity, data in report_data["informations"].iteritems()
-        }
-
         # Now, let's go through all Data objects and try to resolve the
         # plugin IDs to user-friendly plugin names.
         plugin_map = dict()
