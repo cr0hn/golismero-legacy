@@ -46,6 +46,11 @@ import sys
 import yaml
 
 try:
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
+
+try:
     from xml.etree import cElementTree as etree
 except ImportError:
     from xml.etree import ElementTree as etree
@@ -273,7 +278,8 @@ class OpenVASPlugin(TestingPlugin):
             CATEGORIES = {}
             if os.path.exists(openvas_yaml):
                 try:
-                    CATEGORIES = yaml.load( open(openvas_yaml, 'rU') )
+                    CATEGORIES = yaml.load( open(openvas_yaml, 'rU'),
+                                            Loader=Loader )
                 except Exception, e:
                     tb = format_exc()
                     Logger.log_error_verbose(

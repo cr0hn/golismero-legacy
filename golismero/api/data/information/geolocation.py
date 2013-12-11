@@ -52,7 +52,7 @@ class Geolocation(Information):
                  region_code = None, region_name = None,
                  city = None, zipcode = None,
                  metro_code = None, areacode = None,
-                 street_addr = None):
+                 street_addr = None, accuracy = None):
         """
         :param latitude: Latitude.
         :type latitude: float
@@ -66,7 +66,9 @@ class Geolocation(Information):
         :param country_name: Country name.
         :type country_name: str | None
 
-        :param region_code: Region code.
+        :param region_code:
+            Region code ("Region" means "State" in the USA, "County" in the
+            UK, "Province/Territory" in Canada, "Region" in Italy, etc).
         :type region_code: str | None
 
         :param region_name: Region name.
@@ -78,7 +80,7 @@ class Geolocation(Information):
         :param zipcode: Zipcode (postal code).
         :type zipcode: str | None
 
-        :param metro_code: Metropolitan area code.
+        :param metro_code: Metropolitan area (DMA) code.
         :type metro_code: str | None
 
         :param areacode: Area code.
@@ -86,17 +88,22 @@ class Geolocation(Information):
 
         :param street_addr: Street address.
         :type street_addr: str | None
+
+        :param accuracy: Accuracy in meters.
+        :type accuracy: float | None
         """
 
         # Validate the data types.
         try:
             latitude = float(latitude)
         except Exception:
-            raise TypeError("Expected float, got %r instead" % type(latitude))
+            raise TypeError(
+                "Expected float, got %r instead" % type(latitude))
         try:
             longitude = float(longitude)
         except Exception:
-            raise TypeError("Expected float, got %r instead" % type(longitude))
+            raise TypeError(
+                "Expected float, got %r instead" % type(longitude))
         country_code = to_utf8(country_code)
         country_name = to_utf8(country_name)
         region_code  = to_utf8(region_code)
@@ -106,28 +113,43 @@ class Geolocation(Information):
         metro_code   = to_utf8(metro_code)
         areacode     = to_utf8(areacode)
         street_addr  = to_utf8(street_addr)
+        if accuracy is not None:
+            accuracy = float(accuracy)
+            if accuracy < 0.0:
+                raise ValueError(
+                    "Accuracy cannot be a negative distance: %r" % accuracy)
         if country_code is not None and type(country_code) is not str:
-            raise TypeError("Expected string, got %r instead" % type(country_code))
+            raise TypeError(
+                "Expected string, got %r instead" % type(country_code))
         if country_name is not None and type(country_name) is not str:
-            raise TypeError("Expected string, got %r instead" % type(country_name))
+            raise TypeError(
+                "Expected string, got %r instead" % type(country_name))
         if region_code is not None and type(region_code) is not str:
-            raise TypeError("Expected string, got %r instead" % type(region_code))
+            raise TypeError(
+                "Expected string, got %r instead" % type(region_code))
         if region_name is not None and type(region_name) is not str:
-            raise TypeError("Expected string, got %r instead" % type(region_name))
+            raise TypeError(
+                "Expected string, got %r instead" % type(region_name))
         if city is not None and type(city) is not str:
-            raise TypeError("Expected string, got %r instead" % type(city))
+            raise TypeError(
+                "Expected string, got %r instead" % type(city))
         if zipcode is not None and type(zipcode) is not str:
-            raise TypeError("Expected string, got %r instead" % type(zipcode))
+            raise TypeError(
+                "Expected string, got %r instead" % type(zipcode))
         if metro_code is not None and type(metro_code) is not str:
-            raise TypeError("Expected string, got %r instead" % type(metro_code))
+            raise TypeError(
+                "Expected string, got %r instead" % type(metro_code))
         if areacode is not None and type(areacode) is not str:
-            raise TypeError("Expected string, got %r instead" % type(areacode))
+            raise TypeError(
+                "Expected string, got %r instead" % type(areacode))
         if street_addr is not None and type(street_addr) is not str:
-            raise TypeError("Expected string, got %r instead" % type(street_addr))
+            raise TypeError(
+                "Expected string, got %r instead" % type(street_addr))
 
         # Store the properties.
         self.__latitude     = latitude
         self.__longitude    = longitude
+        self.__accuracy     = accuracy
         self.__country_code = country_code or None
         self.__country_name = country_name or None
         self.__region_code  = region_code or None
@@ -147,6 +169,8 @@ class Geolocation(Information):
 
         # Simplified view of the geographic location.
         coords = "(%f, %f)" % (self.latitude, self.longitude)
+        if self.accuracy:
+            coords += " [~%dm]" % self.accuracy
         where = ""
         if self.street_addr:
             where = self.street_addr
@@ -182,13 +206,15 @@ class Geolocation(Information):
 
         # Print out all the details.
         return (
-            "<%s latitude=%f, longitude=%f, country_code=%s,"
-            " country_name=%s, region_code=%s, region_name=%s,"
-            " city=%s, zipcode=%s, metro_code=%s, areacode=%s>"
+            "<%s latitude=%f, longitude=%f, country_code=%r,"
+            " country_name=%r, region_code=%r, region_name=%r,"
+            " city=%r, zipcode=%r, metro_code=%r, areacode=%r,"
+            " street_addr=%r, accuracy=%f>"
             % (self.__class__.__name__,
             self.latitude, self.longitude, self.country_code,
             self.country_name, self.region_code, self.region_name,
-            self.city, self.zipcode, self.metro_code, self.areacode)
+            self.city, self.zipcode, self.metro_code, self.areacode,
+            self.street_addr, self.accuracy)
         )
 
 
@@ -229,6 +255,10 @@ class Geolocation(Information):
         :param country_code: Country code (for example: "ES" for Spain).
         :type country_code: str
         """
+        country_code = to_utf8(country_code)
+        if type(country_code) is not str:
+            raise TypeError(
+                "Expected string, got %r instead" % type(country_code))
         self.__country_code = country_code
 
 
@@ -249,6 +279,10 @@ class Geolocation(Information):
         :param country_name: Country name.
         :type country_name: str
         """
+        country_name = to_utf8(country_name)
+        if type(country_name) is not str:
+            raise TypeError(
+                "Expected string, got %r instead" % type(country_name))
         self.__country_name = country_name
 
 
@@ -269,6 +303,10 @@ class Geolocation(Information):
         :param region_code: Region code.
         :type region_code: str
         """
+        region_code = to_utf8(region_code)
+        if type(region_code) is not str:
+            raise TypeError(
+                "Expected string, got %r instead" % type(region_code))
         self.__region_code = region_code
 
 
@@ -289,6 +327,10 @@ class Geolocation(Information):
         :param region_name: Region name.
         :type region_name: str
         """
+        region_name = to_utf8(region_name)
+        if type(region_name) is not str:
+            raise TypeError(
+                "Expected string, got %r instead" % type(region_name))
         self.__region_name = region_name
 
 
@@ -309,6 +351,10 @@ class Geolocation(Information):
         :param city: City name.
         :type city: str
         """
+        city = to_utf8(city)
+        if type(city) is not str:
+            raise TypeError(
+                "Expected string, got %r instead" % type(city))
         self.__city = city
 
 
@@ -329,6 +375,10 @@ class Geolocation(Information):
         :param zipcode: Zipcode (postal code).
         :type zipcode: str
         """
+        zipcode = to_utf8(zipcode)
+        if type(zipcode) is not str:
+            raise TypeError(
+                "Expected string, got %r instead" % type(zipcode))
         self.__zipcode = zipcode
 
 
@@ -349,6 +399,10 @@ class Geolocation(Information):
         :param metro_code: Metropolitan area code.
         :type metro_code: str
         """
+        metro_code = to_utf8(metro_code)
+        if type(metro_code) is not str:
+            raise TypeError(
+                "Expected string, got %r instead" % type(metro_code))
         self.__metro_code = metro_code
 
 
@@ -369,6 +423,10 @@ class Geolocation(Information):
         :param areacode: Area name.
         :type areacode: str
         """
+        areacode = to_utf8(areacode)
+        if type(areacode) is not str:
+            raise TypeError(
+                "Expected string, got %r instead" % type(areacode))
         self.__areacode = areacode
 
 
@@ -389,4 +447,32 @@ class Geolocation(Information):
         :param street_addr: Street address.
         :type street_addr: str
         """
+        street_addr = to_utf8(street_addr)
+        if type(street_addr) is not str:
+            raise TypeError(
+                "Expected string, got %r instead" % type(street_addr))
         self.__street_addr = street_addr
+
+
+    #----------------------------------------------------------------------
+    @merge
+    def accuracy(self):
+        """
+        :returns: Street address.
+        :rtype: str | None
+        """
+        return self.__accuracy
+
+
+    #----------------------------------------------------------------------
+    @accuracy.setter
+    def accuracy(self, accuracy):
+        """
+        :param accuracy: Accuracy in meters.
+        :type accuracy: float
+        """
+        accuracy = float(accuracy)
+        if accuracy < 0.0:
+            raise ValueError(
+                "Accuracy cannot be a negative distance: %r" % accuracy)
+        self.__accuracy = accuracy

@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-Invalid SSL/TLS certificate detected.
-"""
-
-__license__= """
+__license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
@@ -30,16 +26,34 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["InvalidCert"]
+from golismero.api.plugin import import_plugin
+json = import_plugin("json.py")
 
-from . import SSLVulnerability
+from StringIO import StringIO
+
+from yaml import dump
+try:
+    from yaml import CDumper as Dumper
+except ImportError:
+    from yaml import Dumper
 
 
 #------------------------------------------------------------------------------
-class InvalidCert(SSLVulnerability):
+class YAMLOutput(json.JSONOutput):
     """
-    Invalid SSL/TLS certificate detected.
+    Dumps the output in YAML format.
     """
 
-    DEFAULTS = SSLVulnerability.DEFAULTS.copy()
-    DEFAULTS["level"] = "low"
+    EXTENSION = ".yaml"
+
+
+    #--------------------------------------------------------------------------
+    def serialize_report(self, output_file, report_data):
+        with open(output_file, "wb") as fp:
+            dump(report_data, fp, Dumper=Dumper)
+
+
+    #--------------------------------------------------------------------------
+    def test_data_serialization(self, data):
+        fp = StringIO()
+        dump(data, fp, Dumper=Dumper)

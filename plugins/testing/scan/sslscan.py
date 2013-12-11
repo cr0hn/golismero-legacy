@@ -30,9 +30,9 @@ from golismero.api.config import Config
 from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.vulnerability.ssl.insecure_algorithm import InsecureAlgorithm
-from golismero.api.data.vulnerability.ssl.invalid_cert import InvalidCert
+from golismero.api.data.vulnerability.ssl.invalid_certificate import InvalidCertificate
 from golismero.api.data.vulnerability.ssl.obsolete_protocol import ObsoleteProtocol
-from golismero.api.data.vulnerability.ssl.outdated_cert import OutdatedCert
+from golismero.api.data.vulnerability.ssl.outdated_certificate import OutdatedCertificate
 from golismero.api.data.vulnerability.ssl.weak_key import WeakKey
 from golismero.api.data.vulnerability.ssl.invalid_common_name import InvalidCommonName
 from golismero.api.external import run_external_tool, tempfile, find_binary_in_path
@@ -301,7 +301,7 @@ class SSLScanPlugin(TestingPlugin):
                     if m_t_pk is not None:
                         m_self_signed = m_t_pk.get("error")
                         if m_self_signed:
-                            results.append( InvalidCert(info) )
+                            results.append( InvalidCertificate(info) )
                             count += 1
 
                     # Valid CN?
@@ -326,7 +326,7 @@ class SSLScanPlugin(TestingPlugin):
                         m_valid_after_date = datetime.strptime(
                             m_valid_after, "%b %d %H:%M:%S %Y")
                         if m_valid_after_date < m_valid_before_date:
-                            results.append( OutdatedCert(info) )
+                            results.append( OutdatedCertificate(info) )
                             count += 1
 
                     # Get the ciphers.

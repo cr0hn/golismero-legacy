@@ -837,7 +837,7 @@ class AuditConfig (Configuration):
         "include_subdomains": (Configuration.boolean, True),
 
         # Subdomains as regular expression
-        "subdomain_regex": Configuration.string,
+        ##"subdomain_regex": Configuration.string,
 
         # Depth level for spider
         "depth": (Configuration.integer_or_none, 0),
@@ -1124,13 +1124,13 @@ class AuditConfig (Configuration):
             raise ValueError("Conflicting plugins selection, aborting execution.")
 
         # Validate the regular expresion.
-        if self.subdomain_regex:
-            import re
-
-            try:
-                re.compile(self.subdomain_regex)
-            except re.error, e:
-                raise ValueError("Regular expression not valid: %s." % str(e))
+        ##if self.subdomain_regex:
+        ##    import re
+        ##
+        ##    try:
+        ##        re.compile(self.subdomain_regex)
+        ##    except re.error, e:
+        ##        raise ValueError("Regular expression not valid: %s." % str(e))
 
         # Validate the recursion depth.
         if self.depth is not None and self.depth < 0:

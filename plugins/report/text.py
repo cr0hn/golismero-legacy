@@ -56,6 +56,9 @@ class TextReport(ReportPlugin):
 
     #--------------------------------------------------------------------------
     def is_supported(self, output_file):
+
+        # We need some custom logic here, because the same plugin is used for
+        # both text output to a file and text output to the console.
         return (
             not output_file
             or output_file == "-"

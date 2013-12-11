@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-IP address type.
+IP address.
 """
 
 __license__ = """
@@ -89,6 +89,12 @@ class IP(Resource):
     #----------------------------------------------------------------------
     def __repr__(self):
         return "<IPv%s address=%r>" % (self.version, self.address)
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def display_name(self):
+        return "IP Address"
 
 
     #----------------------------------------------------------------------

@@ -102,6 +102,7 @@ from thread import get_ident
 from golismero.api.config import Config
 from golismero.api.external import run_external_tool
 from golismero.api.logger import Logger
+from golismero.api.plugin import CATEGORIES, STAGES
 from golismero.common import OrchestratorConfig, AuditConfig, get_profile, \
      get_available_profiles, get_default_plugins_folder
 from golismero.main import launcher
@@ -229,7 +230,7 @@ def cmdline_parser():
                 return (prefix,)
             names = []
             base = get_default_plugins_folder()
-            for cat in PluginManager.CATEGORIES:
+            for cat in CATEGORIES:
                 for (_, _, filenames) in os.walk(path.join(base, cat)):
                     for filename in filenames:
                         if filename.startswith(prefix):
@@ -412,6 +413,8 @@ def parse_plugin_args(manager, plugin_args):
     parsed = {}
     for plugin_id, key, value in plugin_args:
         plugin_info = manager.guess_plugin_by_id(plugin_id)
+        if not plugin_info:
+            raise KeyError("Plugin not found: %s" % plugin_id)
         key = key.lower()
         if key not in plugin_info.plugin_args:
             raise KeyError(
@@ -582,7 +585,7 @@ def command_plugins(parser, P, cmdParams, auditParams):
     if testing_plugins:
         names = sorted(testing_plugins.keys())
         names = [x[8:] for x in names]
-        stages = [ (v,k) for (k,v) in manager.STAGES.iteritems() ]
+        stages = [ (v,k) for (k,v) in STAGES.iteritems() ]
         stages.sort()
         for _, stage in stages:
             s = stage + "/"

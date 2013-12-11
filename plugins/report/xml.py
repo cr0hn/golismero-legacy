@@ -41,7 +41,7 @@ try:
 except ImportError:
     from pickle import dumps
 
-from golismero.api.audit import get_audit_times
+from golismero.api.audit import get_audit_times, parse_audit_times
 from golismero.api.config import Config
 from golismero.api.data import Data
 from golismero.api.data.db import Database
@@ -56,10 +56,7 @@ class XMLOutput(ReportPlugin):
     Dumps the output in XML format.
     """
 
-
-    #--------------------------------------------------------------------------
-    def is_supported(self, output_file):
-        return output_file and output_file.lower().endswith(".xml")
+    EXTENSION = ".xml"
 
 
     #--------------------------------------------------------------------------
@@ -67,19 +64,21 @@ class XMLOutput(ReportPlugin):
         Logger.log_verbose("Writing audit results to file: %s" % output_file)
 
         # Parse the audit times.
+        report_time = str(datetime.now())
         start_time, stop_time = get_audit_times()
-        run_time = stop_time - start_time
+        start_time, stop_time, run_time = parse_audit_times(
+            start_time, stop_time)
 
         # Create the root element.
         xml = ET.Element("golismero")
-        xml.set("output_time", str(datetime.now()))
         xml.set("audit_name", Config.audit_name)
         if start_time:
-            xml.set("start_time", str(start_time))
+            xml.set("start_time", start_time)
         if stop_time:
-            xml.set("stop_time", str(stop_time))
+            xml.set("stop_time", stop_time)
         if run_time:
-            xml.set("run_time", str(run_time))
+            xml.set("run_time", run_time)
+        xml.set("report_time", report_time)
 
         # Create the audit scope element and subelements.
         xml_scope = ET.SubElement(xml, "audit_scope")
@@ -154,7 +153,7 @@ class XMLOutput(ReportPlugin):
         tree.write(output_file)
 
         # Launch the build command, if any.
-        command = Config.plugin_config.get("command", "")
+        command = Config.plugin_args.get("command", "")
         if command:
             Logger.log_verbose("Launching command: %s" % command)
             args = split(command)

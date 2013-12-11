@@ -1,6 +1,6 @@
 [Documentation]
 Name        = HTML Report
-Description = Writes HTML reports.
+Description = Writes reports as offline web pages.
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

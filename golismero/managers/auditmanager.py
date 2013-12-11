@@ -167,15 +167,11 @@ class AuditManager (object):
 
         # On error, abort.
         except Exception, e:
-            #trace = format_exc()
-            Logger.log_error("Failed to add new audit, reason: %s" % e)
-            #Logger.log_error_more_verbose(trace)
             try:
                 self.remove_audit(audit.name)
             except Exception:
                 pass
             raise AuditException("Failed to add new audit, reason: %s" % e)
-
 
 
     #--------------------------------------------------------------------------
@@ -301,9 +297,10 @@ class AuditManager (object):
                     message = Message(
                         message_type = MessageType.MSG_TYPE_STATUS,
                         message_code = MessageCode.MSG_STATUS_AUDIT_ABORTED,
-                        message_info = (str(e), tb),
+                        message_info = (message.message_info.audit_name,
+                                        str(e), tb),
                             priority = MessagePriority.MSG_PRIORITY_HIGH,
-                          audit_name = message.message_info.audit_name,
+                          audit_name = None,
                     )
                     self.orchestrator.enqueue_msg(message)
 

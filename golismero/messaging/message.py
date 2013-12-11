@@ -209,7 +209,8 @@ class Message (object):
         s %= (
             self.timestamp,
             MessageType.get_name_from_value(self.message_type),
-            MessageCode.get_name_from_value(self.message_code),
+            MessageCode.get_name_from_value_and_type(self.message_code,
+                                                     self.message_type),
             self.audit_name,
             self.plugin_id,
             self.message_info,

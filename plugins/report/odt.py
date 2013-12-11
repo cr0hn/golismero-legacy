@@ -28,43 +28,33 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["ODTReport"]
 
+from golismero.api.logger import Logger
+from golismero.api.plugin import import_plugin
 
-from os.path import abspath, split
-import sys
-cwd = abspath(split(__file__)[0])
-sys.path.insert(0, cwd)
-try:
-    from rstext import RSTReport
-finally:
-    sys.path.remove(cwd)
-del cwd
-
-import warnings
-with warnings.catch_warnings(record=True):
-    from docutils.core import publish_file
-    from docutils.writers.odf_odt import Writer, Reader
+rstext = import_plugin("rst.py")
 
 from StringIO import StringIO
-
-from golismero.api.logger import Logger
+from warnings import catch_warnings
 
 
 #------------------------------------------------------------------------------
-class ODTReport(RSTReport):
+class ODTReport(rstext.RSTReport):
     """
     Creates reports in OpenOffice document format (.odt).
     """
 
-
-    #--------------------------------------------------------------------------
-    def is_supported(self, output_file):
-        return output_file and output_file.lower().endswith(".odt")
+    EXTENSION = ".odt"
 
 
     #--------------------------------------------------------------------------
     def generate_report(self, output_file):
         Logger.log_verbose(
             "Writing OpenOffice report to file: %s" % output_file)
+
+        # Load docutils.
+        with catch_warnings(record=True):
+            from docutils.core import publish_file
+            from docutils.writers.odf_odt import Writer, Reader
 
         # Generate the report in reStructured Text format.
         source = StringIO()
@@ -74,7 +64,7 @@ class ODTReport(RSTReport):
         # Convert to OpenOffice format.
         writer = Writer()
         reader = Reader()
-        with warnings.catch_warnings(record=True):
+        with catch_warnings(record=True):
             with open(output_file, "wb") as destination:
                 publish_file(
                     source = source,

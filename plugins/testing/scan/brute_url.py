@@ -201,12 +201,12 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
         m_url = info.url
         m_url_parts = info.parsed_url
 
-        Logger.log_more_verbose("Bruteforcing URL: %s" % m_url)
-
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
             Logger.log_more_verbose("Skipping URL: %s" % m_url)
             return
+
+        Logger.log_more_verbose("Bruteforcing URL: %s" % m_url)
 
         #
         # Load wordlist for suffixes: index.php -> index_0.php
@@ -259,12 +259,12 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
         m_url = info.url
         m_url_parts = info.parsed_url
 
-        Logger.log_more_verbose("Bruteforcing URL: %s" % m_url)
-
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
             Logger.log_more_verbose("Skipping URL: %s" % m_url)
             return
+
+        Logger.log_more_verbose("Bruteforcing URL: %s" % m_url)
 
         #
         # Load wordlist for prefixes
@@ -318,12 +318,12 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
         m_url = info.url
         m_url_parts = info.parsed_url
 
-        Logger.log_more_verbose("Start to process URL: %s" % m_url)
-
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
             Logger.log_more_verbose("Skipping URL: %s" % m_url)
             return
+
+        Logger.log_more_verbose("Start to process URL: %s" % m_url)
 
         #
         # Load wordlist for changing extension of files
@@ -376,12 +376,12 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
         m_url = info.url
         m_url_parts = info.parsed_url
 
-        Logger.log_more_verbose("Bruteforcing URL: '%s'" % m_url)
-
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
             Logger.log_more_verbose("Skipping URL: %s" % m_url)
             return
+
+        Logger.log_more_verbose("Bruteforcing URL: '%s'" % m_url)
 
         #
         # Load wordlist for permutations
@@ -433,12 +433,12 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
         m_url = info.url
         m_url_parts = info.parsed_url
 
-        Logger.log_more_verbose("Bruteforcing URL: %s" % m_url)
-
         # If file is a javascript, css or image, do not run
         if info.parsed_url.extension[1:] in ('css', 'js', 'jpeg', 'jpg', 'png', 'gif', 'svg') or not m_url_parts.extension:
             Logger.log_more_verbose("Skipping URL: %s" % m_url)
             return
+
+        Logger.log_more_verbose("Bruteforcing URL: %s" % m_url)
 
         #
         # Load wordlist for changing directories

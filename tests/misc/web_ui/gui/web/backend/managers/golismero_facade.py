@@ -543,7 +543,7 @@ class GoLismeroFacadeAudit(object):
             #m_state = GoLismeroFacadeAuditPolling.get_state(audit_id)
 
             # If audit is running, cant' delete it.
-            if m_state == "running":
+            if m_audit.audit_state == "running":
                 raise GoLismeroFacadeAuditRunningException("Audit '%s' is running. Can't delete. Stop it first." % str(audit_id))
 
             m_audit.delete()

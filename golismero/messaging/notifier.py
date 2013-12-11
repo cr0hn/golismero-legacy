@@ -39,7 +39,7 @@ from .message import Message
 from .codes import MessageType, MessageCode, MessagePriority
 
 from collections import defaultdict
-##from traceback import format_exc
+from traceback import format_exc
 from warnings import warn
 
 
@@ -352,7 +352,7 @@ class AuditNotifier(AbstractNotifier):
                         msg = "Got an unexpected ACK for data ID %s from plugin %s"
                         warn(msg % (identity, plugin_id))
 
-                    # Notify the Orchestrator that the plugin has finished running.
+                    # Notify the Orchestrator that the plugin has finished.
                     if message.message_info: # 'do_notify_end' flag
                         msg = Message(
                             message_type = MessageType.MSG_TYPE_STATUS,
@@ -368,7 +368,8 @@ class AuditNotifier(AbstractNotifier):
 
                 # If the stage was finished, mark it so.
                 if self.__has_finished_stage(identity):
-                    self.database.mark_stage_finished(identity, self.current_stage)
+                    self.database.mark_stage_finished(identity,
+                                                      self.current_stage)
 
         # Send the plugin end notification for report and import plugins.
         elif (
@@ -445,7 +446,9 @@ class AuditNotifier(AbstractNotifier):
         :param stage: Current stage.
         :type stage: int
 
-        :returns: True if the stage has plugins that can handle the data, False otherwise.
+        :returns:
+            True if the stage has plugins that can handle the data,
+            False otherwise.
         :rtype: bool
         """
 
@@ -731,7 +734,8 @@ class OrchestratorNotifier(AbstractNotifier):
             except KeyError:
                 audit = None
             if not audit:
-                warn("Received a message from a finished audit! %s" % audit_name,
+                warn("Tried to run a plugin from a finished audit! %s"
+                     % audit_name,
                      RuntimeWarning)
                 return
 

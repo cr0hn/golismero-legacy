@@ -48,7 +48,6 @@ from ..messaging.message import Message
 from imp import load_source
 from multiprocessing import Manager
 from os import getpid
-from signal import signal, SIGINT, SIG_IGN
 from thread import get_ident
 from threading import Timer
 from traceback import format_exc, print_exc, format_exception_only, format_list
@@ -56,6 +55,10 @@ from warnings import catch_warnings, simplefilter
 
 import socket
 import sys
+
+# Make some runtime patches to the multiprocessing module.
+# Just importing this submodule does the magic!
+from ..patches import mp  # noqa
 
 # Imports needed to override the multiprocessing Process and Pool classes.
 from multiprocessing import Process as _Original_Process
@@ -394,33 +397,10 @@ def _plugin_killer(context):
 
 
 #------------------------------------------------------------------------------
-class _FakeFile(object):
-    """
-    Mimics a file object well enough to supress print messages.
-    Also faster than opening a file descriptor for /dev/null.
-    """
-
-    def write(self, s):
-        pass
-
-    def flush(self):
-        pass
-
-    def close(self):
-        pass
-
-
-#------------------------------------------------------------------------------
 def _init_worker():
     """
     Initializer for pooled processes.
     """
-
-    # Disable handling of KeyboardInterrupt.
-    # This way only the main process gets the signal.
-    # XXX FIXME doesn't seem to work on Windows!
-    ##signal(SIGINT, SIG_IGN)
-    signal(SIGINT, _suicide)
 
     # Try to lower the CPU usage priority as much as possible.
     try:
@@ -428,13 +408,6 @@ def _init_worker():
         posix.nice(99)
     except Exception:
         pass
-
-    # Disable standard output and standard error.
-    f = _FakeFile()
-    sys.stdout, sys.stderr = f, f
-
-def _suicide(signum, frame):
-    exit(1)
 
 
 #------------------------------------------------------------------------------

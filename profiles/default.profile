@@ -28,9 +28,6 @@ only_vulns = default
 # Include subdomains in the target scope.
 include_subdomains = yes
 
-# Filter subdomains using a regular expression.
-#subdomain_regex = ^.*\.example\.com$
-
 # Maximum spidering depth.
 depth = 0
 

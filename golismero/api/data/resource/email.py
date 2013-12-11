@@ -91,6 +91,12 @@ class Email(Resource):
         return "<Email address=%r name=%r>" % (self.address, self.name)
 
 
+    #--------------------------------------------------------------------------
+    @property
+    def display_name(self):
+        return "E-Mail Address"
+
+
     #----------------------------------------------------------------------
     def is_in_scope(self):
         return self.hostname in Config.audit_scope

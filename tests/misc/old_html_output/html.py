@@ -34,13 +34,13 @@ from golismero.api.data.resource import Resource
 from golismero.api.logger import Logger
 from golismero.api.plugin import ReportPlugin
 
-from collections import defaultdict
+from os.path import join, dirname
+from collections import Counter, defaultdict
 import datetime
-import simplejson
 
 
 #------------------------------------------------------------------------------
-class JSONReport(ReportPlugin):
+class HTMLReport(ReportPlugin):
     """
     Plugin to generate HTML reports.
     """
@@ -48,7 +48,7 @@ class JSONReport(ReportPlugin):
     # The main porperties of the resources
     MAIN_RESOURCES_PROPERTIES = {
         'URL'           : 'url',
-        'BASE_URL'      : 'url',
+        'BASEURL'      : 'url',
         'FOLDER_URL'    : 'url',
         'DOMAIN'        : 'hostname',
         'IP'            : 'address',
@@ -89,7 +89,8 @@ class JSONReport(ReportPlugin):
     #--------------------------------------------------------------------------
     def is_supported(self, output_file):
         return output_file and (
-            output_file.lower().endswith(".json")
+            output_file.lower().endswith(".html") or
+            output_file.lower().endswith(".htm")
         )
 
 
@@ -119,20 +120,36 @@ class JSONReport(ReportPlugin):
     def generate_report(self, output_file):
         Logger.log_verbose("Writing HTML report to file: %s" % output_file)
 
-        # Results
-        c = {}
+        #
+        # configure django
+        #
+
+        import django.conf
+        try:
+            django.conf.settings.configure(
+                TEMPLATE_DIRS = (join(dirname(__file__), './html_report'),)
+            )
+        except RuntimeError:
+            # Already configured django
+            pass
+
+        from django.template import Template, loader, Context
+        from django.conf import settings
+
+        c = Context()
+        t = loader.get_template(template_name="template.html")
 
         #
         # Fill the context
         #
 
         # Audit name
-        c['audit_name']       = Config.audit_name
+        c['audit_name'] = Config.audit_name
 
         # Start date
         start_time, stop_time = get_audit_times()
-        c['start_date']       = str(datetime.datetime.fromtimestamp(start_time)) if start_time else "Unknown"
-        c['end_date']         = str(datetime.datetime.fromtimestamp(stop_time))  if stop_time  else "Interrupted"
+        c['start_date']       = datetime.datetime.fromtimestamp(start_time) if start_time else "Unknown"
+        c['end_date']         = datetime.datetime.fromtimestamp(stop_time)  if stop_time  else "Interrupted"
 
         # Execution time
         if start_time and stop_time and start_time < stop_time:
@@ -151,7 +168,7 @@ class JSONReport(ReportPlugin):
         targets = [
             x.url for x in targets
                   if   x.data_type == x.TYPE_RESOURCE and
-                   (x.resource_type == x.RESOURCE_URL)
+                   x.resource_type == x.RESOURCE_URL
         ]
         c['targets'] = targets
 
@@ -167,11 +184,11 @@ class JSONReport(ReportPlugin):
         #
         # Write the output
         #
-        #m_rendered = t.render(c)
+        m_rendered = t.render(c)
 
-        with open(output_file, "w") as f:
-            simplejson.dump(c, f)
-
+        f = open(output_file, "w")
+        f.write("%s" % m_rendered.encode("utf-8"))
+        f.close()
 
     #----------------------------------------------------------------------
     def fill_summary_vulns(self, context):
@@ -182,17 +199,22 @@ class JSONReport(ReportPlugin):
         :type context: Context
         """
 
-        m_all_vulns = self.common_get_resources(data_type=Data.TYPE_VULNERABILITY)
+        m_all_vulns   = self.common_get_resources(data_type=Data.TYPE_VULNERABILITY)
+
+        m_results          = {}
+
+        # Total vulns
+        m_results['total'] = 0
 
         # Count each type of vuln
-        m_counter = {
-            "total": 0,
-            "critical": 0,
-            "high": 0,
-            "middle": 0,
-            "low": 0,
-            "informational": 0,
-        }
+        m_counter = Counter()
+
+        # Init
+        m_counter['critical']       = 0
+        m_counter['high']           = 0
+        m_counter['middle']         = 0
+        m_counter['low']            = 0
+        m_counter['informational']  = 0
 
         # Vulnerabilities by type
         for l_v in m_all_vulns:
@@ -206,7 +228,7 @@ class JSONReport(ReportPlugin):
         for k,v in m_counter.iteritems():
             m_results[k] = v
 
-        context['summary_vulns'] = m_results
+        context['summary_vulns']     = m_results
 
 
 
@@ -372,7 +394,7 @@ class JSONReport(ReportPlugin):
         :type context: Context
         """
 
-        m_results = defaultdict(list)
+        m_results        = defaultdict(list)
 
         # Get all type of resources
         m_all_resources = set([x for x in dir(Resource) if x.startswith("RESOURCE")])
@@ -438,14 +460,13 @@ class JSONReport(ReportPlugin):
         :rtype: list(dict())
         """
 
-        m_counter = {
-            "critical": 0,
-            "high": 0,
-            "middle": 0,
-            "low": 0,
-            "informational": 0,
-        }
-        m_total = 0
+        m_counter                   = Counter()
+        m_counter['critical']       = 0
+        m_counter['high']           = 0
+        m_counter['middle']         = 0
+        m_counter['low']            = 0
+        m_counter['informational']  = 0
+        m_total                     = 0
 
         for l_v in vuln:
             if not l_v.false_positive:

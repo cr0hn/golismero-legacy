@@ -718,7 +718,7 @@ class Data(object):
 
             # Handle the vulnerability type.
             if propname == "vulnerability_type":
-                display[""]["Category"] = self.vulnerability_type
+                display["[DEFAULT]"]["Category"] = self.vulnerability_type
                 continue
 
             # Handle the vulnerability taxonomy types.
@@ -756,35 +756,58 @@ class Data(object):
                 key = "CVSS" + key[4:]
 
             # Get the property value.
-            # Values are preserved as-is, because we don't know how to parse
-            # them. Subclasses should override this method and change the
-            # values in the dictionary when needed.
             value = getattr(self, propname)
+
+            # Convert the value types that aren't safe to serialize.
+            # We don't need to be too careful here, because the purpose
+            # of this method isn't preserving all the information but
+            # merely showing it to the user.
+            if hasattr(value, "to_dict"):
+                value = value.to_dict()
+            elif isinstance(value, set):
+                value = list(value)
+            elif isinstance(value, frozenset):
+                value = list(value)
+            elif isinstance(value, dict):
+                value = dict(value)
+            elif isinstance(value, list):
+                value = list(value)
+            elif isinstance(value, tuple):
+                value = list(value)
+            elif isinstance(value, int):
+                value = int(value)
+            elif isinstance(value, long):
+                try:
+                    value = int(value)
+                except Exception:
+                    value = long(value)
+            elif isinstance(value, float):
+                value = float(value)
+            elif isinstance(value, unicode):
+                value = value.encode("utf-8", "replace")
+            else:
+                value = str(value)
 
             # Get the group.
             # More hardcoded hacks here... :(
+            group = "[DEFAULT]"
             if self.data_type == Data.TYPE_VULNERABILITY:
                 if propname in ("impact", "severity", "risk"):
                     group = "Risk"
                     value = Vulnerability.VULN_LEVELS[value].title()
                 elif propname.startswith("cvss"):
                     group = "Risk"
-                elif propname in ("title", "description", "solution", "references"):
+                elif propname in ("title", "description",
+                                  "solution", "references"):
                     group = "Description"
-                elif hasattr(Vulnerability, propname):
-                    group = ""
-                else:
+                elif not hasattr(Vulnerability, propname):
                     group = "Details"
-            elif self.data_type == Data.TYPE_RESOURCE:
-                group = ""
-            elif self.data_type == Data.TYPE_INFORMATION:
-                group = ""
 
             # Add the key and value to the dictionary.
             display[group][key] = value
 
         # Return the dictionary.
-        return display
+        return dict(display)
 
 
     #--------------------------------------------------------------------------
@@ -805,7 +828,7 @@ class Data(object):
         # This is the dictionary we'll build and return.
         # Always has the current class name.
         properties = {
-            "_class": self.__class__.__name__,
+            "class": self.__class__.__name__,
         }
 
         # Enumerate properties and filter them using different criteria.
@@ -818,7 +841,7 @@ class Data(object):
             # Whitelisted property names.
             if name not in (
                 "identity", "plugin_id", "depth", "links",
-                "data_type", "data_subtype",
+                "data_type", "data_subtype", "display_name",
             ):
 
                 # Ignore most of the properties defined in Data.
@@ -841,7 +864,26 @@ class Data(object):
             elif isinstance(value, set):
                 value = list(value)
             elif isinstance(value, frozenset):
-                value = tuple(value)
+                value = list(value)
+            elif isinstance(value, dict):
+                value = dict(value)
+            elif isinstance(value, list):
+                value = list(value)
+            elif isinstance(value, tuple):
+                value = list(value)
+            elif isinstance(value, int):
+                value = int(value)
+            elif isinstance(value, long):
+                try:
+                    value = int(value)
+                except Exception:
+                    value = long(value)
+            elif isinstance(value, float):
+                value = float(value)
+            elif isinstance(value, str):
+                value = str(value)
+            elif isinstance(value, unicode):
+                value = value.encode("utf-8", "replace")
 
             # Add the property name and value to the dictionary.
             properties[name] = value

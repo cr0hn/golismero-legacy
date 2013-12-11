@@ -91,7 +91,7 @@ def generate_random_string(length = 30):
     - ASCII letters (both lowercase and uppercase).
     - Digits (0-9).
 
-    >>> from golismero.text.text_utils import generate_random_string
+    >>> from golismero.api.text.text_utils import generate_random_string
     >>> generate_random_string(10)
     Asi91Ujsn5
     >>> generate_random_string(30)
@@ -190,6 +190,8 @@ def to_utf8(s):
     """
     if isinstance(s, unicode):
         return s.encode("UTF-8")
+    if type(s) is not str and isinstance(s, str):
+        return str(s)
     return s
 
 
