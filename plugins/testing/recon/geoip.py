@@ -86,7 +86,7 @@ class GeoIP(TestingPlugin):
                     #
                     # TODO: parse the street address
                     #
-                    Logger.log("(%s, %s) is in %s" % \
+                    Logger.log("Location (%s, %s) is in %s" % \
                                (info.latitude, info.longitude, street_addr))
             return
 
@@ -160,7 +160,8 @@ class GeoIP(TestingPlugin):
         # Log the location.
         try:
             Logger.log_verbose(
-                "%s %s is in %s" % (info.display_name, info.address, geoip))
+                "%s %s is located in %s"
+                % (info.display_name, info.address, geoip))
         except Exception, e:
             fmt = traceback.format_exc()
             Logger.log_error("Error: %s" % str(e))
