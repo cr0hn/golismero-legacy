@@ -33,37 +33,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["BSSID"]
 
 from . import Resource
-from .. import identity, merge
-from .. import Config
+from .mac import MAC
+from .. import merge
 from ...text.text_utils import to_utf8
-
-import re
 
 
 #------------------------------------------------------------------------------
-class BSSID(Resource):
+class BSSID(MAC):
     """
-    Wi-Fi BSSID.
+    Wi-Fi BSSID (MAC address of a wireless router).
     """
 
     resource_type = Resource.RESOURCE_BSSID
-
-
-    #----------------------------------------------------------------------
-    # Regular expression to match BSSIDs.
-    __re_mac = re.compile(
-        r"[0-9A-Fa-f][0-9A-Fa-f]"
-        r"[ \:\-\.]?"
-        r"[0-9A-Fa-f][0-9A-Fa-f]"
-        r"[ \:\-\.]?"
-        r"[0-9A-Fa-f][0-9A-Fa-f]"
-        r"[ \:\-\.]?"
-        r"[0-9A-Fa-f][0-9A-Fa-f]"
-        r"[ \:\-\.]?"
-        r"[0-9A-Fa-f][0-9A-Fa-f]"
-        r"[ \:\-\.]?"
-        r"[0-9A-Fa-f][0-9A-Fa-f]"
-    )
 
 
     #----------------------------------------------------------------------
@@ -76,34 +57,14 @@ class BSSID(Resource):
         :type essid: str | None
         """
 
-        # Validate and normalize the BSSID.
-        address = to_utf8(bssid)
-        if not isinstance(bssid, str):
-            raise TypeError("Expected str, got %r instead" % type(bssid))
-        if not self.__re_mac.match(bssid):
-            raise ValueError("Invalid BSSID: %r" % bssid)
-        bssid = re.sub(r"[^0-9A-Fa-f]", "", bssid)
-        if not len(bssid) == 12:
-            raise ValueError("Invalid BSSID: %r" % bssid)
-        bssid = ":".join(
-            bssid[i:i+2]
-            for i in xrange(0, len(bssid) - 2, 2)
-        )
-
-        # Save the properties.
-        self.__bssid = bssid
-        self.essid = essid
-
         # Parent constructor.
-        super(BSSID, self).__init__()
+        super(BSSID, self).__init__(bssid)
+
+        # Save the ESSID.
+        self.essid = essid
 
         # Reset the crawling depth.
         self.depth = 0
-
-
-    #----------------------------------------------------------------------
-    def __str__(self):
-        return self.bssid
 
 
     #----------------------------------------------------------------------
@@ -118,13 +79,13 @@ class BSSID(Resource):
 
 
     #----------------------------------------------------------------------
-    @identity
+    @property
     def bssid(self):
         """
         :return: BSSID.
         :rtype: str
         """
-        return self.__bssid
+        return self.address
 
 
     #----------------------------------------------------------------------
@@ -148,3 +109,9 @@ class BSSID(Resource):
         if not isinstance(essid, basestring):
             raise TypeError("Expected string, got %r instead" % type(essid))
         self.__essid = essid
+
+
+    #----------------------------------------------------------------------
+    @property
+    def discovered(self):
+        return [ MAC(self.bssid) ]

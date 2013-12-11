@@ -34,7 +34,6 @@ __all__ = ["MAC"]
 
 from . import Resource
 from .. import identity
-from .. import Config
 from ...text.text_utils import to_utf8
 
 import re
@@ -65,10 +64,6 @@ class MAC(Resource):
         r"[0-9A-Fa-f][0-9A-Fa-f]"
         r"[ \:\-\.]?"
         r"[0-9A-Fa-f][0-9A-Fa-f]"
-        r"[ \:\-\.]?"
-        r"[0-9A-Fa-f][0-9A-Fa-f]"
-        r"[ \:\-\.]?"
-        r"[0-9A-Fa-f][0-9A-Fa-f]"
     )
 
 
@@ -84,10 +79,10 @@ class MAC(Resource):
         if not isinstance(address, str):
             raise TypeError("Expected str, got %r instead" % type(address))
         if not self.__re_mac.match(address):
-            raise ValueError("Invalid MAC address: %r" % address)
+            raise ValueError("Invalid %s: %r" % (self.display_name, address))
         address = re.sub(r"[^0-9A-Fa-f]", "", address)
-        if not len(address) == 16:
-            raise ValueError("Invalid MAC address: %r" % address)
+        if not len(address) == 12:
+            raise ValueError("Invalid %s: %r" % (self.display_name, address))
         address = ":".join(
             address[i:i+2]
             for i in xrange(0, len(address) - 2, 2)
@@ -101,6 +96,22 @@ class MAC(Resource):
 
         # Reset the crawling depth.
         self.depth = 0
+
+
+    #----------------------------------------------------------------------
+    @classmethod
+    def search(cls, text):
+        """
+        Extract MAC addresses from text input.
+        You can pass each one of them to the constructor of this class.
+
+        :param text: Text to scan.
+        :type text: str
+
+        :returns: MAC addresses found.
+        :rtype: list(str)
+        """
+        return cls.__re_mac.findall(text)
 
 
     #----------------------------------------------------------------------

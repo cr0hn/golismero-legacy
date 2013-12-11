@@ -131,7 +131,6 @@ class Domain(Resource):
 
 
     #----------------------------------------------------------------------
-
     @property
     def discovered(self):
         domain = self.hostname
