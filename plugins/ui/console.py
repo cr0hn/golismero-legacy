@@ -247,17 +247,11 @@ class ConsoleUIPlugin(UIPlugin):
                 Console.display_error_more_verbose(traceback)
 
             # Show plugin warnings.
-            # Only the description in verbose level,
-            # full traceback in more verbose level.
+            # Only in more verbose level.
             elif message.message_code == MessageCode.MSG_CONTROL_WARNING:
                 for w in message.message_info:
                     if Console.level >= Console.MORE_VERBOSE:
                         formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
-                    elif Console.level >= Console.VERBOSE:
-                        formatted = w.message
-                    else:
-                        formatted = None
-                    if formatted:
                         m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                         text = "[!] Plugin '%s' warning: %s " % (m_plugin_name, str(formatted))
                         text = colorize(text, 'low')
