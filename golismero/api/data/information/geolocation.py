@@ -46,7 +46,7 @@ class Geolocation(Information):
     information_type = Information.INFORMATION_GEOLOCATION
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, latitude, longitude,
                  country_code = None, country_name = None,
                  region_code = None, region_name = None,
@@ -114,7 +114,11 @@ class Geolocation(Information):
         areacode     = to_utf8(areacode)
         street_addr  = to_utf8(street_addr)
         if accuracy is not None:
-            accuracy = float(accuracy)
+            try:
+                accuracy = float(accuracy)
+            except TypeError:
+                raise TypeError(
+                    "Expected float, got %r instead" % type(accuracy))
             if accuracy < 0.0:
                 raise ValueError(
                     "Accuracy cannot be a negative distance: %r" % accuracy)
@@ -164,7 +168,7 @@ class Geolocation(Information):
         super(Geolocation, self).__init__()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __str__(self):
 
         # Simplified view of the geographic location.
@@ -201,7 +205,7 @@ class Geolocation(Information):
         return where
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __repr__(self):
 
         # Print out all the details.
@@ -218,7 +222,7 @@ class Geolocation(Information):
         )
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @identity
     def latitude(self):
         """
@@ -228,7 +232,7 @@ class Geolocation(Information):
         return self.__latitude
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @identity
     def longitude(self):
         """
@@ -238,7 +242,7 @@ class Geolocation(Information):
         return self.__longitude
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @merge
     def country_code(self):
         """
@@ -248,21 +252,22 @@ class Geolocation(Information):
         return self.__country_code
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @country_code.setter
     def country_code(self, country_code):
         """
         :param country_code: Country code (for example: "ES" for Spain).
         :type country_code: str
         """
-        country_code = to_utf8(country_code)
-        if type(country_code) is not str:
-            raise TypeError(
-                "Expected string, got %r instead" % type(country_code))
+        if country_code is not None:
+            country_code = to_utf8(country_code)
+            if type(country_code) is not str:
+                raise TypeError(
+                    "Expected string, got %r instead" % type(country_code))
         self.__country_code = country_code
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @merge
     def country_name(self):
         """
@@ -272,21 +277,22 @@ class Geolocation(Information):
         return self.__country_name
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @country_name.setter
     def country_name(self, country_name):
         """
         :param country_name: Country name.
         :type country_name: str
         """
-        country_name = to_utf8(country_name)
-        if type(country_name) is not str:
-            raise TypeError(
-                "Expected string, got %r instead" % type(country_name))
+        if country_name is not None:
+            country_name = to_utf8(country_name)
+            if type(country_name) is not str:
+                raise TypeError(
+                    "Expected string, got %r instead" % type(country_name))
         self.__country_name = country_name
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @merge
     def region_code(self):
         """
@@ -296,21 +302,22 @@ class Geolocation(Information):
         return self.__region_code
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @region_code.setter
     def region_code(self, region_code):
         """
         :param region_code: Region code.
         :type region_code: str
         """
-        region_code = to_utf8(region_code)
-        if type(region_code) is not str:
-            raise TypeError(
-                "Expected string, got %r instead" % type(region_code))
+        if region_code is not None:
+            region_code = to_utf8(region_code)
+            if type(region_code) is not str:
+                raise TypeError(
+                    "Expected string, got %r instead" % type(region_code))
         self.__region_code = region_code
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @merge
     def region_name(self):
         """
@@ -320,21 +327,22 @@ class Geolocation(Information):
         return self.__region_name
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @region_name.setter
     def region_name(self, region_name):
         """
         :param region_name: Region name.
         :type region_name: str
         """
-        region_name = to_utf8(region_name)
-        if type(region_name) is not str:
-            raise TypeError(
-                "Expected string, got %r instead" % type(region_name))
+        if region_name is not None:
+            region_name = to_utf8(region_name)
+            if type(region_name) is not str:
+                raise TypeError(
+                    "Expected string, got %r instead" % type(region_name))
         self.__region_name = region_name
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @merge
     def city(self):
         """
@@ -344,21 +352,22 @@ class Geolocation(Information):
         return self.__city
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @city.setter
     def city(self, city):
         """
         :param city: City name.
         :type city: str
         """
-        city = to_utf8(city)
-        if type(city) is not str:
-            raise TypeError(
-                "Expected string, got %r instead" % type(city))
+        if city is not None:
+            city = to_utf8(city)
+            if type(city) is not str:
+                raise TypeError(
+                    "Expected string, got %r instead" % type(city))
         self.__city = city
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @merge
     def zipcode(self):
         """
@@ -368,21 +377,22 @@ class Geolocation(Information):
         return self.__zipcode
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @zipcode.setter
     def zipcode(self, zipcode):
         """
         :param zipcode: Zipcode (postal code).
         :type zipcode: str
         """
-        zipcode = to_utf8(zipcode)
-        if type(zipcode) is not str:
-            raise TypeError(
-                "Expected string, got %r instead" % type(zipcode))
+        if zipcode is not None:
+            zipcode = to_utf8(zipcode)
+            if type(zipcode) is not str:
+                raise TypeError(
+                    "Expected string, got %r instead" % type(zipcode))
         self.__zipcode = zipcode
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @merge
     def metro_code(self):
         """
@@ -392,21 +402,22 @@ class Geolocation(Information):
         return self.__metro_code
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @metro_code.setter
     def metro_code(self, metro_code):
         """
         :param metro_code: Metropolitan area code.
         :type metro_code: str
         """
-        metro_code = to_utf8(metro_code)
-        if type(metro_code) is not str:
-            raise TypeError(
-                "Expected string, got %r instead" % type(metro_code))
+        if metro_code is not None:
+            metro_code = to_utf8(metro_code)
+            if type(metro_code) is not str:
+                raise TypeError(
+                    "Expected string, got %r instead" % type(metro_code))
         self.__metro_code = metro_code
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @merge
     def areacode(self):
         """
@@ -416,21 +427,22 @@ class Geolocation(Information):
         return self.__areacode
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @areacode.setter
     def areacode(self, areacode):
         """
         :param areacode: Area name.
         :type areacode: str
         """
-        areacode = to_utf8(areacode)
-        if type(areacode) is not str:
-            raise TypeError(
-                "Expected string, got %r instead" % type(areacode))
+        if areacode is not None:
+            areacode = to_utf8(areacode)
+            if type(areacode) is not str:
+                raise TypeError(
+                    "Expected string, got %r instead" % type(areacode))
         self.__areacode = areacode
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @merge
     def street_addr(self):
         """
@@ -440,21 +452,22 @@ class Geolocation(Information):
         return self.__street_addr
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @street_addr.setter
     def street_addr(self, street_addr):
         """
         :param street_addr: Street address.
         :type street_addr: str
         """
-        street_addr = to_utf8(street_addr)
-        if type(street_addr) is not str:
-            raise TypeError(
-                "Expected string, got %r instead" % type(street_addr))
+        if street_addr is not None:
+            street_addr = to_utf8(street_addr)
+            if type(street_addr) is not str:
+                raise TypeError(
+                    "Expected string, got %r instead" % type(street_addr))
         self.__street_addr = street_addr
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @merge
     def accuracy(self):
         """
@@ -464,15 +477,20 @@ class Geolocation(Information):
         return self.__accuracy
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @accuracy.setter
     def accuracy(self, accuracy):
         """
         :param accuracy: Accuracy in meters.
         :type accuracy: float
         """
-        accuracy = float(accuracy)
-        if accuracy < 0.0:
-            raise ValueError(
-                "Accuracy cannot be a negative distance: %r" % accuracy)
+        if accuracy is not None:
+            try:
+                accuracy = float(accuracy)
+            except TypeError:
+                raise TypeError(
+                    "Expected float, got %r instead" % type(accuracy))
+            if accuracy < 0.0:
+                raise ValueError(
+                    "Accuracy cannot be a negative distance: %r" % accuracy)
         self.__accuracy = accuracy
