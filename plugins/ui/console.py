@@ -116,13 +116,13 @@ class ConsoleUIPlugin(UIPlugin):
             # A plugin has started.
             if message.message_code == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
 
+                # Create a simple ID for the plugin execution.
+                id_dict = self.current_plugins[Config.audit_name][message.plugin_id]
+                simple_id = len(id_dict)
+                id_dict[message.ack_identity] = simple_id
+
                 # Show this event in verbose mode.
                 if Console.level >= Console.VERBOSE:
-
-                    # Create a simple ID for the plugin execution.
-                    id_dict = self.current_plugins[Config.audit_name][message.plugin_id]
-                    simple_id = len(id_dict)
-                    id_dict[message.ack_identity] = simple_id
 
                     # Show a message to the user.
                     m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
@@ -142,8 +142,8 @@ class ConsoleUIPlugin(UIPlugin):
                     m_text        = "[*] %s: Finished." % m_plugin_name
                     Console.display(m_text)
 
-                    # Free the simple ID for the plugin execution.
-                    del self.current_plugins[Config.audit_name][message.plugin_id][message.ack_identity]
+                # Free the simple ID for the plugin execution.
+                del self.current_plugins[Config.audit_name][message.plugin_id][message.ack_identity]
 
             # A plugin has advanced.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
@@ -203,10 +203,7 @@ class ConsoleUIPlugin(UIPlugin):
             elif message.message_code == MessageCode.MSG_STATUS_AUDIT_ABORTED:
                 (audit_name, description, traceback) = message.message_info
                 try:
-                    try:
-                        m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
-                    except Exception:
-                        m_plugin_name = "GoLismero"
+                    m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                     text      = "[!] Plugin '%s' error: %s " % (m_plugin_name, str(description))
                     text      = colorize(text, 'critical')
                     traceback = colorize(traceback, 'critical')
@@ -227,10 +224,7 @@ class ConsoleUIPlugin(UIPlugin):
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
                 (text, level, is_error) = message.message_info
                 if Console.level >= level:
-                    try:
-                        m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
-                    except Exception:
-                        m_plugin_name = "GoLismero"
+                    m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                     m_plugin_name = colorize(m_plugin_name, 'informational')
                     text = colorize(text, 'middle')
                     if is_error:
@@ -245,10 +239,7 @@ class ConsoleUIPlugin(UIPlugin):
             # full traceback in more verbose level.
             if message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 (description, traceback) = message.message_info
-                try:
-                    m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
-                except Exception:
-                    m_plugin_name = "GoLismero"
+                m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                 text      = "[!] Plugin '%s' error: %s " % (m_plugin_name, str(description))
                 text      = colorize(text, 'critical')
                 traceback = colorize(traceback, 'critical')
@@ -308,7 +299,7 @@ class ConsoleUIPlugin(UIPlugin):
 
         # Append the simple ID if it's greater than zero.
         if ack_identity:
-            simple_id = self.current_plugins[Config.audit_name][plugin_id][ack_identity]
+            simple_id = self.current_plugins[Config.audit_name][plugin_id].get(ack_identity)
             if simple_id:
                 plugin_name = "%s (%d)" % (plugin_name, simple_id + 1)
 
