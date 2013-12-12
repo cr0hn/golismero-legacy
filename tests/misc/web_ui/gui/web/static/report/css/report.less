@@ -18,11 +18,12 @@ body{
 	line-height: 23px;
 	background:@colorBase;  
 	color: black;
-	padding-top:80px;
+	
 }
 
 .navbar-inverse{
 	background-color: @colorHead;
+	border-radius: 0px;
 	.logo{
 		padding:5px;
 	}
@@ -41,6 +42,49 @@ body{
 
 }
 
+.lateralNavbar{
+	width: 20px;
+	height: 100%;
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	background: @colorHead;
+	z-index: 99999;
+	display:none;
+	ul{
+		list-style-type: none;
+		padding:0px;
+		display:none;
+		
+		li {
+			text-align: center;
+			span{
+				font-size: 25pt;
+				color:#999;				
+				&:hover{
+					color:#fff;
+				}
+			}
+		}
+
+	}
+	&.showLateralMenu{
+		ul{
+			display:block;
+		}
+		span.text{
+			display:none;
+		}
+	}
+	span.text{
+		margin-top: 20px;
+		color: #fff;
+		display:block;
+		-webkit-transform: rotate(-90deg); 
+		-moz-transform: rotate(-90deg);	
+	}
+}
+
 .quickInfo{
 	min-height: 130px;
 	.info-links{
@@ -50,6 +94,7 @@ body{
 			margin:0px;
 			li{
 				display: inline-block;
+				padding-right: 4px;
 			}
 		}
 	}
@@ -118,6 +163,7 @@ body{
 span{
 	&.bold{
 		font-weight: bold;
+		padding-right: 5px;
 	}
 	&.infoVulnerability{
 		color:@infoVulnerability;
@@ -181,6 +227,92 @@ tr.targetRow, tr.resourceRow, tr.vulnerabilityRow,{
 .headData, .anchor{
 	cursor: pointer;
 }
+
+#tableVulnerabilities, #tableTechnicalReport{
+
+	th {
+		cursor: pointer;
+		background: @darkYellow;
+		border:1px solid #000;
+		font-weight: bold;
+		font-size: 11pt;
+		.glyphicon-chevron-down,.glyphicon-chevron-up{
+			display: none;
+			float:right;
+		}
+	}
+	.filter th{
+		background: @lightYellow;
+	}
+	td{
+		border:1px solid #000;
+		background: white;	
+	}
+	th.sort.asc{
+		.glyphicon-chevron-down{
+			display:none;
+		}
+		.glyphicon-chevron-up{
+			display:block;
+		}
+	}
+	.sort.logicaldesc{
+		.glyphicon-chevron-down{
+			display:block;
+		}
+		.glyphicon-chevron-up{
+			display:none;
+		}
+	}
+}
+.headData{
+	&.contracted{
+		span.contracted{
+			display:block;
+		}
+		span.expanded{
+			display:none;
+		}
+	}
+	&.expanded{
+		span.expanded{
+			display:block;
+		}
+		span.contracted{
+			display:none;
+		}
+	}
+}
+
+#hideShowAll{
+	font-weight: bold;
+	cursor: pointer;
+	font-style: italic;
+}
+
+.item-form{
+	padding:5px;
+	margin:0px;
+	span.bold{
+		margin-right: 10px;
+	}
+}
+
+.moreInfo{
+	text-decoration: underline;
+}
+@tabletLandscape:    ~"only screen and (max-width: 1024px)";
+@tabletStandar:    ~"only screen and (max-width: 1024px)";
+
+/*tablets*/
+@media @tabletLandscape{
+	
+}
+
+@media @tabletStandar{
+	
+}
+
 @media print {
   	@page {
 		margin: 0.5cm;

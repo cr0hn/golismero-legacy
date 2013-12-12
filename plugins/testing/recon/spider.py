@@ -32,7 +32,7 @@ from golismero.api.data.resource.email import Email
 from golismero.api.data.resource.url import Url
 from golismero.api.logger import Logger
 from golismero.api.net import NetworkException
-from golismero.api.net.scraper import extract_from_html, extract_from_text, extract_post_from_html
+from golismero.api.net.scraper import extract_from_html, extract_from_text, extract_forms_from_html
 from golismero.api.net.web_utils import download, parse_url
 from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist import WordListLoader
@@ -83,7 +83,7 @@ class Spider(TestingPlugin):
         m_forms = None
         if p.information_type == Information.INFORMATION_HTML:
             m_links = extract_from_html(p.raw_data, m_url)
-            m_forms = extract_post_from_html(p.raw_data, m_url)
+            m_forms = extract_forms_from_html(p.raw_data, m_url)
             #m_links.update( extract_from_text(p.raw_data, m_url) )
         elif p.information_type == Information.INFORMATION_PLAIN_TEXT:
             m_links = extract_from_text(p.raw_data, m_url)
@@ -185,7 +185,7 @@ class Spider(TestingPlugin):
                 warn(format_exc(), RuntimeWarning)
             m_resource.add_resource(info)
             m_return.append(m_resource)
-        
+
         # Send the results
         return m_return
 
