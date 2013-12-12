@@ -26,7 +26,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from golismero.api.config import Config
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.injection.sql_injection import SQLInjection
@@ -38,7 +37,6 @@ from golismero.api.net.web_utils import parse_url
 
 import requests
 import traceback
-import warnings
 
 
 #------------------------------------------------------------------------------
@@ -64,7 +62,7 @@ class PunkSPIDER(TestingPlugin):
         host_id = info.hostname
         host_id = parse_url(host_id).hostname
         host_id = ".".join(reversed(host_id.split(".")))
-        d = self.query_punkspider_details(host_id)
+        d = self.query_punkspider(host_id)
 
         # Stop if we have no results.
         if not d:
@@ -140,19 +138,12 @@ class PunkSPIDER(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    # The PunkSPIDER search API.
+    # The PunkSPIDER API.
 
-    SUMMARY_URL = (
-        "http://punkspider.hyperiongray.com/service/search/domain/?"
-        "searchkey=url&"
-        "searchvalue=.%s/&"
-        "pagesize=10&"
-        "pagenumber=%d&"
-        "filtertype=AND"
-    )
-    DETAILS_URL = (
+    URL = (
         "http://punkspider.hyperiongray.com/service/search/detail/%s"
     )
+
     HEADERS = {
         "Accept": "*/*",
         "Referer": "http://punkspider.hyperiongray.com/",
@@ -162,9 +153,9 @@ class PunkSPIDER(TestingPlugin):
         "X-Requested-With": "XMLHttpRequest",
     }
 
-    def __query_punkspider(self, url):
+    def query_punkspider(self, host_id):
         try:
-            r = requests.get(url,
+            r = requests.get(self.URL % host_id,
                              headers = self.HEADERS)
             assert r.headers["Content-Type"].startswith("application/json"),\
                 "Response from server is not a JSON encoded object"
@@ -172,9 +163,3 @@ class PunkSPIDER(TestingPlugin):
         except requests.RequestException, e:
             Logger.log_error(
                 "Query to PunkSPIDER failed, reason: %s" % str(e))
-
-    def query_punkspider_search(self, domain, page = 1):
-        return self.__query_punkspider(self.SUMMARY_URL % (domain, page))
-
-    def query_punkspider_details(self, host_id):
-        return self.__query_punkspider(self.DETAILS_URL % host_id)
