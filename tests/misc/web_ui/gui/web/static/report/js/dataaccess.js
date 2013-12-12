@@ -61,12 +61,22 @@ function DataAccess(){
 	var vulnerabilitiesArray = new Array();
 
 	var targetsMap = new Array();
-	$.each(data.resources, function(key, val){
-		
+	$.each(data.resources, function(key, val){		
 		targetsMap[key] = val;
 	});
 	this.targetMap = targetsMap;
-	this.bbddVulnerabilitiesSimple = TAFFY(data.vulnerabilities);
+	var _self = this;
+	var vulnerabilitiesMap = new Array();
+	$.each(data.vulnerabilities, function(key, val){		
+		var o = new Object();
+		o["resource"] = _self.getTargetById(val.links[0]);
+		o["level"] = val.level;
+		o["display_name"] = val.display_name;
+		o["identity"] = val.identity;
+		vulnerabilitiesMap.push(o);
+	});
+
+	this.bbddVulnerabilitiesSimple = TAFFY(vulnerabilitiesMap);
 	this.bbddInformations = TAFFY(data.informations);
 	this.auditScope = data.audit_scope;
 }
@@ -100,13 +110,18 @@ DataAccess.prototype.getAuditScope = function(){
 }
 
 DataAccess.prototype.getTargetById = function(id){
-	var d = this.targetMap[id];
-	switch(d.data_subtype){
-		case 2: return d.url;
-		case 4: return d.hostname;
-		case 5:
-		case 6:
-			return d.address;
+	if(id){
+		var d = this.targetMap[id];
+		if(d){
+			switch(d.data_subtype){
+				case 1:
+				case 2: return d.url;
+				case 4: return d.hostname;
+				case 5:
+				case 6:
+					return d.address;
+			}
+		}
 	}
 	return "";
 }
@@ -114,7 +129,7 @@ DataAccess.prototype.getTargetById = function(id){
 DataAccess.prototype.getVulnerabilities = function(target, vulnerability, level, orderColumn, orderDirection) {
 	var bd = this.bbddVulnerabilitiesSimple();
 	if(target){
-		bd = bd.filter({'domain_id':target});
+		bd = bd.filter({'resource':{'left':target}});
 	}
 	if(vulnerability){
 		bd = bd.filter({'display_name':vulnerability});
@@ -137,7 +152,7 @@ DataAccess.prototype.getVulnerabilities = function(target, vulnerability, level,
 DataAccess.prototype.getVulnerabilitiesCount = function(target, vulnerability, level) {
 	var bd = this.bbddVulnerabilitiesSimple();
 	if(target){
-		bd = bd.filter({'domain_id':target});
+		bd = bd.filter({'links':{"has":target}});
 	}
 	if(vulnerability){
 		bd = bd.filter({'display_name':vulnerability});
@@ -153,8 +168,14 @@ DataAccess.prototype.getTypeVulnerabilities = function() {
 	
 };
 DataAccess.prototype.getTargets = function() {
-	return this.bbddVulnerabilitiesSimple().distinct("domain_id");
-	
+	var elements =  this.bbddVulnerabilitiesSimple().distinct("links");
+	var set = new jsSet();	
+	$.each(elements, function(key, val){
+		for(elem in val){
+			set.add(val[elem]);
+		}
+	});
+	return set.list();
 };
 
 

@@ -35,6 +35,7 @@ body {
   position: fixed;
   top: 0px;
   left: 0px;
+  cursor: pointer;
   background: #404040;
   z-index: 99999;
   display: none;
@@ -199,6 +200,13 @@ tr.vulnerabilityRow span.glyphicon {
 .anchor {
   cursor: pointer;
 }
+#tableTechnicalReport td {
+  word-wrap: break-word;
+}
+#tableVulnerabilities,
+#tableTechnicalReport {
+  table-layout: fixed;
+}
 #tableVulnerabilities th,
 #tableTechnicalReport th {
   cursor: pointer;
@@ -222,6 +230,19 @@ tr.vulnerabilityRow span.glyphicon {
 #tableTechnicalReport td {
   border: 1px solid black;
   background: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#tableVulnerabilities td p.large,
+#tableTechnicalReport td p.large {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#tableVulnerabilities td .tooltip-inner,
+#tableTechnicalReport td .tooltip-inner {
+  max-width: 80%;
 }
 #tableVulnerabilities th.sort.asc .glyphicon-chevron-down,
 #tableTechnicalReport th.sort.asc .glyphicon-chevron-down {

@@ -48,6 +48,7 @@ body{
 	position: fixed;
 	top: 0px;
 	left: 0px;
+	cursor: pointer;
 	background: @colorHead;
 	z-index: 99999;
 	display:none;
@@ -228,8 +229,14 @@ tr.targetRow, tr.resourceRow, tr.vulnerabilityRow,{
 	cursor: pointer;
 }
 
+#tableTechnicalReport{
+	
+	td{
+		word-wrap:break-word;	
+	}
+}
 #tableVulnerabilities, #tableTechnicalReport{
-
+	table-layout:fixed;
 	th {
 		cursor: pointer;
 		background: @darkYellow;
@@ -247,6 +254,18 @@ tr.targetRow, tr.resourceRow, tr.vulnerabilityRow,{
 	td{
 		border:1px solid #000;
 		background: white;	
+		white-space:nowrap;
+			overflow:hidden;
+			text-overflow: ellipsis; 
+		p.large{
+			white-space:nowrap;
+			overflow:hidden;
+			text-overflow: ellipsis; 
+			
+		}
+		.tooltip-inner{
+			max-width: 80%;
+		}
 	}
 	th.sort.asc{
 		.glyphicon-chevron-down{

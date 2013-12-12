@@ -111,11 +111,11 @@
 					  	<table class="table table-bordered" id="tableVulnerabilities">
 						    <thead>
 					          <tr id="headVulnerability">
-					            <th style="width:15%" data-orderColumn="identity" data-orderDirection="asc" >ID <span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
-					            <th style="width:25%" data-orderColumn="domain_id" data-orderDirection="asc">Target<span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
-					            <th style="width:36%" data-orderColumn="display_name" data-orderDirection="asc">Vulnerability<span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
-					            <th style="width:15%" data-orderColumn="level" data-orderDirection="asc" class="sort logicaldesc">Criticality<span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
-					            <th style="width:9%"></th>
+					            <th style="width:245px" data-orderColumn="identity" data-orderDirection="asc" >ID <span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
+					            <th style="width: 60%" data-orderColumn="resource" data-orderDirection="asc">Target<span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
+					            <th style="width: 40%" data-orderColumn="display_name" data-orderDirection="asc">Vulnerability<span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
+					            <th style="width:125px" data-orderColumn="level" data-orderDirection="asc" class="sort logicaldesc">Criticality<span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
+					            <th style="width:80px"></th>
 					          </tr>
 					          <tr class="filter">
 									<th></th>
@@ -154,14 +154,14 @@
 					<div class="table-responsive well">
 						<h3 data-anchor="technicalReportTable">Technical report</h3>
 						<span class="pull-right" id="hideShowAll" data-show="true">Hide all</span>
-					  	<table class="table table-bordered" id="tableTechnicalReport">
+					  	<table class="table table-bordered" id="tableTechnicalReport" >
 						   <tbody>
 								<tr id="headVulnerability">
-									<th style="width:5%" data-orderColumn="id" data-orderDirection="asc"></span></th>
-						            <th style="width:15%" data-orderColumn="id" data-orderDirection="asc">ID</span></th>
-						            <th style="width:25%" data-orderColumn="target" data-orderDirection="asc">Target</th>
-						            <th style="width:40%" data-orderColumn="type" data-orderDirection="asc">Vulnerability</th>
-						            <th style="width:15%" data-orderColumn="criticality" data-orderDirection="asc">Criticality</th>
+									<th style="width:30px" data-orderColumn="id" data-orderDirection="asc"></span></th>
+						            <th style="width:245px" data-orderColumn="id" data-orderDirection="asc">ID</span></th>
+						            <th style="width: 60%" data-orderColumn="target" data-orderDirection="asc">Target</th>
+						            <th style="width: 40%" data-orderColumn="type" data-orderDirection="asc">Vulnerability</th>
+						            <th style="width:80px" data-orderColumn="criticality" data-orderDirection="asc">Criticality</th>
 						          </tr>
 						   </tbody>
 					  	</table>
@@ -181,17 +181,16 @@
 	    <script type="text/javascript" src="js/jquery.jqplot.min.js"></script>
 	    <script type="text/javascript" src="js/jqplot.pieRenderer.min.js"></script>
 	    <script type="text/javascript" src="js/jquery.tmpl.min.js"></script>
-	    <script type="text/javascript" src="js/examplejson.js"></script>
-	    <script type="text/javascript" src="js/example.js"></script>
+	    <!--<script type="text/javascript" src="js/examplejson.js"></script>-->
+	    <script type="text/javascript" src="js/example2.js"></script>
 	    <script type="text/javascript" src="js/taffy-min.js"></script>
 	    <script type="text/javascript" src="js/dataaccess.js"></script>
-	    <script type="text/javascript" src="js/highlight.pack.js"></script>
-	    <script type="text/javascript" src="js/jquery.touchSwipe.min.js"></script>
+	    
 	    <!--plantillas para la generacion de codigo html-->
 	    <script type="text/template" id="rowVulnerabilityTemplate">
 			<tr>
 				<td>${identity}</td>
-				<td>${obtainTarget(domain_id)}</td>
+				<td><p class="large" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="${resource}">${resource}</p></td>				
 				<td>${display_name}</td>
 				<td><span class="bold ${level}Vulnerability">${level}</span></td>
 				<td class="anchor moreInfo" data-href="technical-${id}">More info...</td>
@@ -199,11 +198,13 @@
 		</script>
 		<script type="text/template" id="expandedInfoTechnical">
 			<div class="row">
-				<div class="col-sm-4">
-					<div class="item-form"><span class="bold">Target:</span>${obtainTarget(domain_id)}</div>
+				<div class="col-sm-12">
+					<div class="item-form"><span class="bold">Target:</span>${obtainTarget(links[0])}</div>
 				</div>
+			</div>
+			<div class="row">				
 				<div class="col-sm-4">
-					<div class="item-form"><span class="bold">Vulnerability:</span>${display_name}(${data_subtype}) </div>
+					<div class="item-form"><span class="bold">Vulnerability:</span>${display_name}&nbsp;(${data_subtype}) </div>
 				</div>
 				<div class="col-sm-4">
 					<div class="item-form"><span class="bold">Criticality:</span>${level} </div>
@@ -239,7 +240,7 @@
 			<tr data-anchor="technical-${id}" class="headData expanded" >
 				<td><span class="glyphicon glyphicon-plus contracted"></span> <span class="glyphicon glyphicon-minus expanded"></td>
 				<td>${identity}</td>
-				<td>${obtainTarget(domain_id)}</td>
+				<td><p class="large">${obtainTarget(links[0])}</p></td>
 				<td>${display_name}</td>
 				<td><span class="bold ${level}Vulnerability">${level}</span></td>
 			</tr>
@@ -360,6 +361,7 @@
     			
     			
     			updateAnchorTable();
+    			$("#tableVulnerabilities tbody").find("[data-toggle='tooltip']").tooltip();
 	    	}
 	    	function initTechnicalTable(){
 	    		var data = dataAccess.getTargetTechnical();
@@ -406,8 +408,8 @@
 	    		});
 	    		//targets
 	    		$('#targetFilterTable').append('<option value="">All</option>');
-	    		$(dataAccess.getTargets()).each(function(index,t){
-	    			$('#targetFilterTable').append('<option value="'+t+'">'+obtainTarget(t)+'</option>');
+	    		$(dataAccess.getAuditScope()).each(function(index,t){
+	    			$('#targetFilterTable').append('<option value="'+t+'">'+t+'</option>');
 	    		});
 	    		$('#targetFilterTable').change(function(e){
 	    			updateTable();
@@ -461,8 +463,7 @@
 
 	    	}
 	    	function obtainTarget(id){
-	    			return dataAccess.getTargetById(id);
-	    		
+				return dataAccess.getTargetById(id);	    		
 	    	}
 	    	
 	    	function initToTop(){
@@ -538,21 +539,7 @@
 					    }
 					  });
 	    		}
-	    		$("body").swipe( {
-			        //Generic swipe handler for all directions
-			        swipeLeft:function(event, direction, distance, duration, fingerCount) {
-			        	if($("body").scrollTop()>80){
-			         		hideLateralMenu();	
-			         	}
-			        },
-			        swipeRight:function(event, direction, distance, duration, fingerCount) {
-			         	if($("body").scrollTop()>80){
-			         		showLateralMenu();	         		
-			         	}
-			        },
-			        //Default is 75px, set to 0 for demo so any distance triggers swipe
-			        threshold:0
-			      });
+	    		
 	    	}
 	    	var dataAccess;
 	    	var indexVulnerabilities = 0;
