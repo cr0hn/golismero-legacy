@@ -60,136 +60,71 @@ class PunkSPIDER(TestingPlugin):
         # Get the hostname to search for.
         target = info.hostname
 
-        # Make the first query.
-        page = 1
-        r = self.query_punkspider_search(target, page)
+        # Query PunkSPIDER.
+        host_id = info.hostname
+        host_id = parse_url(host_id).hostname
+        host_id = ".".join(reversed(host_id.split(".")))
+        d = self.query_punkspider_details(host_id)
 
         # Stop if we have no results.
-        if not r:
+        if not d:
+            Logger.log("No results found for host: %s" % info.hostname)
             return
-
-        # Get the summary.
-        r = r["data"]
-
-        # Get the total number of pages.
-        total_pages = r["numberOfPages"]
-        Logger.log("Found %d pages of search results." % total_pages)
-
-        # Tell GoLismero how many pages we have to process.
-        self.progress.set_total(total_pages)
-        self.progress.min_delta = 1
 
         # This is where we'll collect the data we'll return.
         results = []
 
-        # For each page in the response...
-        while r:
+        # For each vulnerability...
+        for v in d["data"]:
+            try:
 
-            # For each result in the page...
-            for x in r.get("domainSummaryDTOs", []):
-                try:
+                # Future-proof checks.
+                if v["protocol"] not in ("http", "https"):
+                    Logger.log_more_verbose(
+                        "Skipped non-web vulnerability: %s"
+                        % to_utf8(v["id"]))
+                    continue
+                if v["bugType"] not in ("xss", "sqli", "bsqli"):
+                    Logger.log_more_verbose(
+                        "Skipped unknown vulnerability type: %s"
+                        % to_utf8(v["bugType"]))
+                    continue
 
-                    # Skip if the result domain is in scope.
-                    url = to_utf8(x["url"])
-                    if url not in Config.audit_scope:
-                        continue
+                # Get the vulnerable URL, parameter and payload.
+                url = to_utf8(v["vulnerabilityUrl"])
+                param = to_utf8(v["parameter"])
+                parsed = parse_url(url)
+                payload = parsed.query_params[param]
 
-                    # Skip if not exploitable.
-                    if not x["exploitabilityLevel"]:
-                        Logger.log_verbose(
-                            "No known vulnerabilities found for: %s" % url)
-                        continue
+                # Get the level.
+                level = to_utf8(v["level"])
 
-                    # Log how many vulnerabilities were found.
-                    m = "Known vulnerabilities found for %r: " % url
-                    if x["xss"]:
-                        m += "%d XSS, " % x["xss"]
-                    if x["sqli"]:
-                        m += "%d SQL injections, " % x["sqli"]
-                    if x["bsqli"]:
-                        m += "%d blind SQL injections, " % x["bsqli"]
-                    if m.endswith(", "):
-                        m = m[:-2] + "."
-                    Logger.log(m)
+                # Create the Url object.
+                url_o = Url(url)
+                results.append(url_o)
 
-                    # Get the details.
-                    host_id = to_utf8(x["id"])
-                    host_id = parse_url(host_id).hostname
-                    host_id = ".".join(reversed(host_id.split(".")))
-                    d = self.query_punkspider_details(host_id)
+                # Get the vulnerability class.
+                if v["bugType"] == "xss":
+                    clazz = XSS
+                else:
+                    clazz = SQLInjection
 
-                    # For each vulnerability...
-                    for v in d["data"]:
-                        try:
+                # Create the Vulnerability object.
+                vuln = clazz(
+                    url = url_o,
+                    vulnerable_params = { param: payload },
+                    injection_point = clazz.INJECTION_POINT_URL,
+                    injection_type = to_utf8(v["bugType"]), # FIXME
+                    level = level,
+                    tool_id = to_utf8(v["id"]),
+                )
+                results.append(vuln)
 
-                            # Skip if the protocol isn't "http".
-                            # We don't know how to handle those (yet).
-                            if v["protocol"] != "http":
-                                Logger.log_more_verbose(
-                                    "Skipped non-HTTP vulnerability: %s"
-                                    % to_utf8(v["id"]))
-                                continue
-
-                            # Get the vulnerable URL and parameter.
-                            url = to_utf8(v["vulnerabilityUrl"])
-                            param = to_utf8(v["parameter"])
-
-                            # Parse the URL.
-                            parsed = parse_url(url)
-
-                            # Get the payload.
-                            payload = parsed.query_params[param]
-
-                            # Get the level.
-                            level = to_utf8(v["level"])
-
-                            # Create the Url object.
-                            url_o = Url(url)
-                            results.append(url_o)
-
-                            # Get the vulnerability class.
-                            if v["bugType"] == "xss":
-                                clazz = XSS
-                            else:
-                                clazz = SQLInjection
-
-                            # Create the Vulnerability object.
-                            vuln = clazz(
-                                url = url_o,
-                                vulnerable_params = { param: payload },
-                                injection_point = clazz.INJECTION_POINT_URL,
-                                injection_type = to_utf8(v["bugType"]), # FIXME
-                                level = level,
-                                tool_id = to_utf8(v["id"]),
-                            )
-                            results.append(vuln)
-
-                        # Log errors.
-                        except Exception, e:
-                            tb = traceback.format_exc()
-                            Logger.log_error_verbose(str(e))
-                            Logger.log_error_more_verbose(tb)
-
-                # Log errors.
-                except Exception, e:
-                    tb = traceback.format_exc()
-                    Logger.log_error_verbose(str(e))
-                    Logger.log_error_more_verbose(tb)
-
-            # Tell GoLismero we finished a result page.
-            self.progress.add_completed(1)
-
-            # Get the next page.
-            page += 1
-            if page >= total_pages:
-                break
-            r = self.query_punkspider_search(target, page)
-
-        # If we couldn't get all the pages, something went wrong.
-        if page < total_pages:
-            Logger.log_error("Only got %d pages (from a total of %d),"
-                             " some results may have been lost!"
-                             % (page, total_pages))
+            # Log errors.
+            except Exception, e:
+                tb = traceback.format_exc()
+                Logger.log_error_verbose(str(e))
+                Logger.log_error_more_verbose(tb)
 
         # Log how many vulnerabilities we found.
         count = int(len(results) / 2)
@@ -205,7 +140,7 @@ class PunkSPIDER(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    # The PunkSPIDER API.
+    # The PunkSPIDER search API.
 
     SUMMARY_URL = (
         "http://punkspider.hyperiongray.com/service/search/domain/?"
@@ -238,8 +173,8 @@ class PunkSPIDER(TestingPlugin):
             Logger.log_error(
                 "Query to PunkSPIDER failed, reason: %s" % str(e))
 
-    def query_punkspider_search(self, hostname, page = 1):
-        return self.__query_punkspider(self.SUMMARY_URL % (hostname, page))
+    def query_punkspider_search(self, domain, page = 1):
+        return self.__query_punkspider(self.SUMMARY_URL % (domain, page))
 
     def query_punkspider_details(self, host_id):
         return self.__query_punkspider(self.DETAILS_URL % host_id)
