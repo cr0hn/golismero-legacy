@@ -57,9 +57,12 @@ class PunkSPIDER(TestingPlugin):
     #--------------------------------------------------------------------------
     def recv_info(self, info):
 
+        # Get the hostname to search for.
+        target = info.hostname
+
         # Make the first query.
         page = 1
-        r = self.query_punkspider_summary(info.hostname, page)
+        r = self.query_punkspider_search(target, page)
 
         # Stop if we have no results.
         if not r:
@@ -70,9 +73,11 @@ class PunkSPIDER(TestingPlugin):
 
         # Get the total number of pages.
         total_pages = r["numberOfPages"]
+        Logger.log("Found %d pages of search results." % total_pages)
 
         # Tell GoLismero how many pages we have to process.
         self.progress.set_total(total_pages)
+        self.progress.min_delta = 1
 
         # This is where we'll collect the data we'll return.
         results = []
@@ -86,7 +91,7 @@ class PunkSPIDER(TestingPlugin):
 
                     # Skip if the result domain is in scope.
                     url = to_utf8(x["url"])
-                    if url not in Config.audit_scope and not self.DEBUG:
+                    if url not in Config.audit_scope:
                         continue
 
                     # Skip if not exploitable.
@@ -94,9 +99,6 @@ class PunkSPIDER(TestingPlugin):
                         Logger.log_verbose(
                             "No known vulnerabilities found for: %s" % url)
                         continue
-
-                    # Log the title.
-                    Logger.log_more_verbose("Title: %s" % to_utf8(x["title"]))
 
                     # Log how many vulnerabilities were found.
                     m = "Known vulnerabilities found for %r: " % url
@@ -112,8 +114,8 @@ class PunkSPIDER(TestingPlugin):
 
                     # Get the details.
                     host_id = to_utf8(x["id"])
-                    if host_id.startswith("http"):
-                        host_id = parse_url(host_id).hostname
+                    host_id = parse_url(host_id).hostname
+                    host_id = ".".join(reversed(host_id.split(".")))
                     d = self.query_punkspider_details(host_id)
 
                     # For each vulnerability...
@@ -181,7 +183,7 @@ class PunkSPIDER(TestingPlugin):
             page += 1
             if page >= total_pages:
                 break
-            r = self.query_punkspider_summary(info.hostname, page)
+            r = self.query_punkspider_search(target, page)
 
         # If we couldn't get all the pages, something went wrong.
         if page < total_pages:
@@ -189,15 +191,21 @@ class PunkSPIDER(TestingPlugin):
                              " some results may have been lost!"
                              % (page, total_pages))
 
+        # Log how many vulnerabilities we found.
+        count = int(len(results) / 2)
+        if count == 0:
+            Logger.log("No vulnerabilities found.")
+        elif count == 1:
+            Logger.log("Found one vulnerability.")
+        else:
+            Logger.log("Found %d vulnerabilities." % count)
+
         # Return the results.
         return results
 
 
     #--------------------------------------------------------------------------
     # The PunkSPIDER API.
-
-    DEBUG = False
-    DEBUG = True
 
     SUMMARY_URL = (
         "http://punkspider.hyperiongray.com/service/search/domain/?"
@@ -221,24 +229,16 @@ class PunkSPIDER(TestingPlugin):
 
     def __query_punkspider(self, url):
         try:
-            if self.DEBUG:
-                Logger.log(url)
             r = requests.get(url,
                              headers = self.HEADERS)
-            if self.DEBUG:
-                Logger.log(repr(r.text))
             assert r.headers["Content-Type"].startswith("application/json"),\
                 "Response from server is not a JSON encoded object"
-            j = r.json()
-            if self.DEBUG:
-                from pprint import pformat
-                Logger.log(pformat(j))
-            return j
+            return r.json()
         except requests.RequestException, e:
             Logger.log_error(
                 "Query to PunkSPIDER failed, reason: %s" % str(e))
 
-    def query_punkspider_summary(self, hostname, page = 1):
+    def query_punkspider_search(self, hostname, page = 1):
         return self.__query_punkspider(self.SUMMARY_URL % (hostname, page))
 
     def query_punkspider_details(self, host_id):
