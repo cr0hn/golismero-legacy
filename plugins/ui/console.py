@@ -98,12 +98,11 @@ class ConsoleUIPlugin(UIPlugin):
         self.already_seen_info[Config.audit_name].add(info.identity)
 
         # Print newly discovered vulnerabilities.
-        text = "%s Vulnerability '%s' dicovered by plugin '%s'. Risk level: %s"
+        text = "<!> %s vulnerability dicovered by %s. Level: %s"
         text %= (
-            colorize("<!>", info.risk),
-            colorize(info.vulnerability_type, info.risk),
-            colorize(self.get_plugin_name(info.plugin_id, None), info.risk),
-            colorize(str(info.risk), info.risk)
+            colorize(info.display_name, info.level),
+            colorize(self.get_plugin_name(info.plugin_id, None), "blue"),
+            colorize(info.level, info.level)
         )
         Console.display(text)
 

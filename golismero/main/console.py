@@ -63,8 +63,8 @@ m_colors = {
     'informational' : 'blue',
     'low'           : 'cyan',
     'middle'        : None,
-    'high'          : 'red',
-    'critical'      : 'yellow',
+    'high'          : 'magenta',
+    'critical'      : 'red',
 
     # Integer log levels to color names.
     0 : 'blue',
