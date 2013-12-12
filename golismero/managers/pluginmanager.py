@@ -602,23 +602,26 @@ class PluginInfo (object):
             elif ":" in section:
                 a, b = section.split(":", 1)
                 a, b = a.strip(), b.strip()
-                if a in (section_prefix, section_prefix_short):
+                if a not in (section_prefix, section_prefix_short):
+                    continue
 
-                    # Override the arguments.
-                    # Same as just using the plugin ID.
-                    if b == "Arguments":
-                        target = self.__plugin_args
+                # Override the arguments.
+                # Same as just using the plugin ID.
+                if b == "Arguments":
+                    target = self.__plugin_args
 
-                    # Override the configuration.
-                    elif b == "Configuration":
-                        target = self.__plugin_config
+                # Override the configuration.
+                elif b == "Configuration":
+                    target = self.__plugin_config
 
-                    # Special sections Core and Documentation can't
-                    # be overridden by config files.
-                    elif b in ("Core", "Documentation"):
-                        msg = "Ignored section [%s] of file %s"
-                        warnings.warn(msg % (section, config_file))
-                        continue
+                # Special sections Core and Documentation can't
+                # be overridden by config files.
+                elif b in ("Core", "Documentation"):
+                    msg = "Ignored section [%s] of file %s"
+                    warnings.warn(msg % (section, config_file))
+                    continue
+
+                else:
 
                     # Override the plugin extra configuration.
                     try:
