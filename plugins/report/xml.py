@@ -63,6 +63,9 @@ class XMLOutput(ReportPlugin):
     def generate_report(self, output_file):
         Logger.log_verbose("Writing audit results to file: %s" % output_file)
 
+        # Determine the report type.
+        self.__full_report = not Config.audit_config.only_vulns
+
         # Parse the audit times.
         report_time = str(datetime.now())
         start_time, stop_time = get_audit_times()
@@ -104,15 +107,12 @@ class XMLOutput(ReportPlugin):
             for s in sorted(STAGES.itervalues()):
                 stage = get_stage_name(s)
                 xml_stage = ET.SubElement(xml_stages, stage)
-                xml_stage.set("order", s)
+                xml_stage.set("order", str(s))
                 xml_stage.set("enabled", "true"
                     if s in stats["stages_enabled"]
                     else "false")
-                xml_stage.set("executed", stats["stage_cycles"].get(s, 0))
+                xml_stage.set("executed", str(stats["stage_cycles"].get(s, 0)))
                 xml_stage.set("description", get_stage_display_name(stage))
-
-        # Determine the report type.
-        self.__full_report = not Config.audit_config.only_vulns
 
         # Collect the vulnerabilities that are not false positives.
         datas = self.__collect_vulns(False)
@@ -166,7 +166,7 @@ class XMLOutput(ReportPlugin):
 
         # Write the XML data to disk.
         tree = ET.ElementTree(xml)
-        tree.write(output_file)
+        tree.write(output_file, encoding="utf-8")
 
         # Launch the build command, if any.
         command = Config.plugin_args.get("command", "")
@@ -231,7 +231,23 @@ class XMLOutput(ReportPlugin):
             for name, value in data.to_dict().iteritems():
                 if value is None:
                     continue
-                if type(value) in (str, unicode, bool, int, float):
+                if isinstance(value, unicode):
+                    if name.startswith("raw_"):
+                        value = value.encode("utf-8").encode("base64")
+                    else:
+                        try:
+                            value = value.encode("ascii")
+                        except Exception:
+                            value = value.encode("utf-8").encode("base64")
+                elif isinstance(value, str):
+                    if name.startswith("raw_"):
+                        value = value.encode("base64")
+                    else:
+                        try:
+                            value = str(value.decode("ascii"))
+                        except Exception:
+                            value = value.encode("base64")
+                elif type(value) in (bool, int, float):
                     value = str(value)
                 else:
                     value = dumps(value, protocol=0).encode("base64")

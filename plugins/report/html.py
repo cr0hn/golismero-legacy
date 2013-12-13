@@ -27,11 +27,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
+from golismero.api.logger import Logger
 from golismero.api.plugin import import_plugin, get_plugin_name
 
 json = import_plugin("json.py")
 
-from os.path import split, join, splitext
+from os.path import splitext
 
 
 #------------------------------------------------------------------------------
@@ -55,12 +56,16 @@ class HTMLReport(json.JSONOutput):
     #--------------------------------------------------------------------------
     def generate_report(self, output_file):
 
+        Logger.log_more_verbose("Generating JSON database...")
+
         # Hardcode the arguments for the JSON plugin.
         Config.plugin_args["mode"] = "dump"
         Config.plugin_args["command"] = ""
 
         # Get the report data.
         report_data = self.get_report_data()
+
+        Logger.log_more_verbose("Postprocessing JSON database...")
 
         # Remove the false positives, if any.
         del report_data["false_positives"]
@@ -127,5 +132,12 @@ class HTMLReport(json.JSONOutput):
         output_json = splitext(output_file)[0] + "_data.json"
         self.serialize_report(output_json, report_data)
 
+        Logger.log_more_verbose("Generating HTML content...")
+
         # Save the report HTML skeleton.
+        # TODO
+
+        Logger.log_more_verbose("Compressing HTML content...")
+
+        # Bundle everything into a single file.
         # TODO
