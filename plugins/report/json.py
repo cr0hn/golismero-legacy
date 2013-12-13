@@ -33,7 +33,7 @@ from golismero.api.data import Data
 from golismero.api.data.db import Database
 from golismero.api.external import run_external_tool
 from golismero.api.logger import Logger
-from golismero.api.plugin import ReportPlugin, get_stage_name, get_stage_display_name
+from golismero.api.plugin import ReportPlugin, get_stage_name, get_stage_display_name, STAGES
 
 from datetime import datetime
 from shlex import split
@@ -231,32 +231,34 @@ class JSONOutput(ReportPlugin):
         stats = get_audit_stats()
         if stats:
             if self.__dumpmode:
-                stages_enabled = [
-                    get_stage_name(s) for s in stats["stages_enabled"]
-                ]
-                stage_cycles = {
-                    get_stage_name(s): n
-                    for s, n in stats["stage_cycles"].iteritems()
-                }
-                root["statistics"] = {
-                    "stages_enabled": stages_enabled,
-                    "stage_cycles":   stage_cycles,
-                }
+                stage_stats = []
+                for s in sorted(STAGES.itervalues()):
+                    stage = get_stage_name(s)
+                    stage_stats.append({
+                        "name": stage,
+                        "description": get_stage_display_name(stage),
+                        "enabled": 1 if s in stats["stages_enabled"] else 0,
+                        "executed": stats["stage_cycles"][s]
+                    })
+                root["stages"] = stage_stats
             else:
-                stages_enabled = [
-                    get_stage_display_name( get_stage_name(s) )
-                    for s in stats["stages_enabled"]
-                ]
-                stage_cycles = {
-                    get_stage_display_name( get_stage_name(s) ):
-                        ("Executed %d times." % n if n else "Not executed.")
-                    for s, n in stats["stage_cycles"].iteritems()
-                }
-                root["Statistics"] = {
-                    "Enabled Stages":   stages_enabled,
-                    "Completed Stages": stage_cycles,
-                }
-
+                stage_stats = []
+                for s in sorted(STAGES.itervalues()):
+                    stage = get_stage_display_name( get_stage_name(s) )
+                    stage = "Stage: " + stage
+                    if s not in stats["stages_enabled"]:
+                        status = "Disabled for this audit."
+                    elif s in stats["stage_cycles"]:
+                        count = stats["stage_cycles"]
+                        if count == 0:
+                            status = "Not executed."
+                        elif count == 1:
+                            status = "Executed once."
+                        else:
+                            status = "Executed %d times." % count
+                    stage_stats.append({ stage: status })
+                root["Stages"] = stage_stats
+ 
         # Create the elements for the data.
         key_vuln = "vulnerabilities" if self.__dumpmode else "Vulnerabilities"
         key_res  = "resources"       if self.__dumpmode else "Assets"

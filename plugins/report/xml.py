@@ -26,10 +26,18 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import os.path
+from golismero.api.audit import get_audit_times, parse_audit_times, get_audit_stats
+from golismero.api.config import Config
+from golismero.api.data import Data
+from golismero.api.data.db import Database
+from golismero.api.external import run_external_tool
+from golismero.api.logger import Logger
+from golismero.api.plugin import ReportPlugin, get_stage_name, STAGES, get_stage_display_name
 
 from datetime import datetime
 from shlex import split
+
+import os.path
 
 try:
     import xml.etree.cElementTree as ET
@@ -40,14 +48,6 @@ try:
     from cPickle import dumps
 except ImportError:
     from pickle import dumps
-
-from golismero.api.audit import get_audit_times, parse_audit_times, get_audit_stats
-from golismero.api.config import Config
-from golismero.api.data import Data
-from golismero.api.data.db import Database
-from golismero.api.external import run_external_tool
-from golismero.api.logger import Logger
-from golismero.api.plugin import ReportPlugin, get_stage_name, STAGES
 
 
 #------------------------------------------------------------------------------
@@ -102,12 +102,14 @@ class XMLOutput(ReportPlugin):
         if stats:
             xml_stages = ET.SubElement(xml_stats, "stages")
             for s in sorted(STAGES.itervalues()):
-                xml_stage = ET.SubElement(xml_stages, get_stage_name(s))
+                stage = get_stage_name(s)
+                xml_stage = ET.SubElement(xml_stages, stage)
                 xml_stage.set("order", s)
                 xml_stage.set("enabled", "true"
                     if s in stats["stages_enabled"]
                     else "false")
-                xml_stage.set("completed", stats["stage_cycles"][s])
+                xml_stage.set("executed", stats["stage_cycles"][s])
+                xml_stage.set("description", get_stage_display_name(stage))
 
         # Determine the report type.
         self.__full_report = not Config.audit_config.only_vulns
