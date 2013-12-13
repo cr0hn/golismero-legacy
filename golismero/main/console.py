@@ -312,6 +312,8 @@ class Console (object):
         :type message: str
         """
         try:
+            ##if sys.platform in ("win32", "cygwin"):
+            ##    message = message.decode("utf-8").encode("latin-1")
             sys.stdout.write("%s\n" % (message,))
             sys.stdout.flush()
         except Exception,e:

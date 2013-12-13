@@ -322,8 +322,8 @@ class GeoIP(TestingPlugin):
                             discard_data(geoip)
                             where = str(geoip)
                             when = datetime.date(*timestamp)
-                            msg = "Host %s used to be located at %s the %s."
-                            msg %= (ip, where, when.strftime("%d, %b %Y"))
+                            msg = "Host %s used to be located at %s on %s."
+                            msg %= (ip, where, when.strftime("%B %d, %Y"))
                             Logger.log_verbose(msg)
 
             except Exception:
