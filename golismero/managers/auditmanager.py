@@ -40,6 +40,7 @@ from ..api.data import Data
 from ..api.data.resource import Resource
 from ..api.config import Config
 from ..api.logger import Logger
+from ..api.plugin import STAGES
 from ..common import AuditConfig
 from ..database.auditdb import AuditDB
 from ..main.scope import AuditScope, DummyScope
@@ -379,6 +380,7 @@ class Audit (object):
         self.__stage_cycles = defaultdict(int) # stage -> counter
         self.__processed_count = 0
         self.__total_count = 0
+        self.__stages_enabled = tuple()
 
         # Initialize the managers to None.
         self.__notifier = None
@@ -502,13 +504,16 @@ class Audit (object):
         """
         :returns: Dictionary with runtime statistics
             with at least the following keys:
-             - "current_stage": [int] Current stage number.
-             - "total_count": [int] Total number of data objects to process
-               in this stage.
-             - "processed_count": [int] Number of data objects already
-               processed in this stage.
-             - "stage_cycles": [dict(int -> int)] Map of stage numbers and
-               times each stage ran.
+             - "current_stage": [int]
+               Current stage number.
+             - "total_count": [int]
+               Total number of data objects to process in this stage.
+             - "processed_count": [int]
+               Number of data objects already processed in this stage.
+             - "stage_cycles": [dict(int -> int)]
+               Map of stage numbers and times each stage ran.
+             - "stages_enabled": [tuple(int)]
+               Stages enabled for this audit.
         Future versions of GoLismero may include more keys.
         :rtype: dict(str -> \\*)
         """
@@ -517,6 +522,7 @@ class Audit (object):
             "total_count":       self.__total_count,
             "processed_count":   self.__processed_count,
             "stage_cycles":      dict(self.__stage_cycles),
+            "stages_enabled":    self.__stages_enabled,
         }
 
 
@@ -563,6 +569,13 @@ class Audit (object):
 
             # Register the testing plugins with the notifier.
             self.__notifier.add_multiple_plugins(testing_plugins)
+
+            # Determine which stages are enabled for this audit.
+            self.__stages_enabled = sorted(
+                stage_num
+                for stage, stage_num in STAGES.iteritems()
+                if self.pluginManager.load_plugins(stage)
+            )
 
             # Create the import manager.
             self.__import_manager = ImportManager(self.orchestrator, self)

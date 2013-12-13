@@ -41,13 +41,13 @@ try:
 except ImportError:
     from pickle import dumps
 
-from golismero.api.audit import get_audit_times, parse_audit_times
+from golismero.api.audit import get_audit_times, parse_audit_times, get_audit_stats
 from golismero.api.config import Config
 from golismero.api.data import Data
 from golismero.api.data.db import Database
 from golismero.api.external import run_external_tool
 from golismero.api.logger import Logger
-from golismero.api.plugin import ReportPlugin
+from golismero.api.plugin import ReportPlugin, get_stage_name, STAGES
 
 
 #------------------------------------------------------------------------------
@@ -79,6 +79,7 @@ class XMLOutput(ReportPlugin):
         if run_time:
             xml.set("run_time", run_time)
         xml.set("report_time", report_time)
+        xml.set("report_type", "full" if self.__full_report else "brief")
 
         # Create the audit scope element and subelements.
         xml_scope = ET.SubElement(xml, "audit_scope")
@@ -94,6 +95,19 @@ class XMLOutput(ReportPlugin):
         for web_page in Config.audit_scope.web_pages:
             xml_web = ET.SubElement(xml_scope, "web_page")
             xml_web.text = web_page
+
+        # Add the runtime statistics element and subelements.
+        xml_stats = ET.SubElement(xml, "runtime_stats")
+        stats = get_audit_stats()
+        if stats:
+            xml_stages = ET.SubElement(xml_stats, "stages")
+            for s in sorted(STAGES.itervalues()):
+                xml_stage = ET.SubElement(xml_stages, get_stage_name(s))
+                xml_stage.set("order", s)
+                xml_stage.set("enabled", "true"
+                    if s in stats["stages_enabled"]
+                    else "false")
+                xml_stage.set("completed", stats["stage_cycles"][s])
 
         # Determine the report type.
         self.__full_report = not Config.audit_config.only_vulns

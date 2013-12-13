@@ -62,14 +62,50 @@ class HTMLReport(json.JSONOutput):
         # Get the report data.
         report_data = self.get_report_data()
 
+        # Remove the false positives, if any.
+        del report_data["false_positives"]
+
         # It's easier for the JavaScript code in the report to access the
         # vulnerabilities as an array instead of a map, so let's fix that.
         vulnerabilities = report_data["vulnerabilities"]
+        sort_keys = [
+            (data["display_name"], data["title"], data["identity"])
+            for data in vulnerabilities.itervalues()
+        ]
+        sort_keys.sort()
         report_data["vulnerabilities"] = [
             vulnerabilities[identity]
-            for identity in sorted(vulnerabilities.iterkeys())
+            for _, _, identity in sort_keys
         ]
-        del vulnerabilities
+        vulnerabilities.clear()
+
+        # Remove a bunch of data that won't be shown in the report anyway.
+        for identity, data in report_data["informations"].items():
+            if (
+                data["class"].startswith("DnsRegister") or
+                any(k.startswith("raw_") for k in data)
+            ):
+                del report_data["informations"][identity]
+
+        # Remove any dangling links we may have.
+        links = set()
+        for iterator in (
+            report_data["resources"].itervalues(),
+            report_data["informations"].itervalues(),
+            report_data["vulnerabilities"]
+        ):
+            links.update(data["identity"] for data in iterator)
+        for iterator in (
+            report_data["resources"].itervalues(),
+            report_data["informations"].itervalues(),
+            report_data["vulnerabilities"]
+        ):
+            for data in iterator:
+                tmp = set(data["links"])
+                tmp.intersection_update(links)
+                data["links"] = sorted(tmp)
+                tmp.clear()
+        links.clear()
 
         # Now, let's go through all Data objects and try to resolve the
         # plugin IDs to user-friendly plugin names.
@@ -85,7 +121,7 @@ class HTMLReport(json.JSONOutput):
                     if plugin_id not in plugin_map:
                         plugin_map[plugin_id] = get_plugin_name(plugin_id)
                     data["plugin_name"] = plugin_map[plugin_id]
-        del plugin_map
+        plugin_map.clear()
 
         # Save the report data to disk in JSON format.
         output_json = splitext(output_file)[0] + "_data.json"

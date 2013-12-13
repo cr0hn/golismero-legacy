@@ -27,13 +27,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api import VERSION
-from golismero.api.audit import get_audit_times, parse_audit_times
+from golismero.api.audit import get_audit_times, parse_audit_times, get_audit_stats
 from golismero.api.config import Config
 from golismero.api.data import Data
 from golismero.api.data.db import Database
 from golismero.api.external import run_external_tool
 from golismero.api.logger import Logger
-from golismero.api.plugin import ReportPlugin
+from golismero.api.plugin import ReportPlugin, get_stage_name, get_stage_display_name
 
 from datetime import datetime
 from shlex import split
@@ -152,6 +152,9 @@ class JSONOutput(ReportPlugin):
         :rtype: dict(str -> *)
         """
 
+        # Determine the report type.
+        self.__full_report = not Config.audit_config.only_vulns
+
         # Parse the audit times.
         report_time = str(datetime.now())
         start_time, stop_time = get_audit_times()
@@ -181,6 +184,12 @@ class JSONOutput(ReportPlugin):
         else:
             root["GoLismero Version"] = "GoLismero " + VERSION
 
+        # Add the report type property.
+        if self.__dumpmode:
+            root["report_type"] = "full" if self.__full_report else "brief"
+        else:
+            root["Report Type"] = "Full" if self.__full_report else "Brief"
+
         # Add the summary element.
         if self.__dumpmode:
             root["summary"] = {
@@ -199,7 +208,7 @@ class JSONOutput(ReportPlugin):
                 "Report Time": report_time,
             }
 
-        # Create the audit scope element.
+        # Add the audit scope element.
         if self.__dumpmode:
             wildcards = [ "*." + x for x in Config.audit_scope.roots ]
             root["audit_scope"] = {
@@ -218,6 +227,36 @@ class JSONOutput(ReportPlugin):
                 "Web Pages":    Config.audit_scope.web_pages,
             }
 
+        # Add the runtime statistics element.
+        stats = get_audit_stats()
+        if stats:
+            if self.__dumpmode:
+                stages_enabled = [
+                    get_stage_name(s) for s in stats["stages_enabled"]
+                ]
+                stage_cycles = {
+                    get_stage_name(s): n
+                    for s, n in stats["stage_cycles"].iteritems()
+                }
+                root["statistics"] = {
+                    "stages_enabled": stages_enabled,
+                    "stage_cycles":   stage_cycles,
+                }
+            else:
+                stages_enabled = [
+                    get_stage_display_name( get_stage_name(s) )
+                    for s in stats["stages_enabled"]
+                ]
+                stage_cycles = {
+                    get_stage_display_name( get_stage_name(s) ):
+                        ("Executed %d times." % n if n else "Not executed.")
+                    for s, n in stats["stage_cycles"].iteritems()
+                }
+                root["Statistics"] = {
+                    "Enabled Stages":   stages_enabled,
+                    "Completed Stages": stage_cycles,
+                }
+
         # Create the elements for the data.
         key_vuln = "vulnerabilities" if self.__dumpmode else "Vulnerabilities"
         key_res  = "resources"       if self.__dumpmode else "Assets"
@@ -227,9 +266,6 @@ class JSONOutput(ReportPlugin):
         root[key_res]  = dict()
         root[key_info] = dict()
         root[key_fp]   = dict()
-
-        # Determine the report type.
-        self.__full_report = not Config.audit_config.only_vulns
 
         # Collect the vulnerabilities that are not false positives.
         datas = self.__collect_vulns(False)

@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["ODTReport"]
 
+from golismero.api.external import tempfile
 from golismero.api.logger import Logger
 from golismero.api.plugin import import_plugin
 
@@ -56,20 +57,25 @@ class ODTReport(rstext.RSTReport):
             from docutils.core import publish_file
             from docutils.writers.odf_odt import Writer, Reader
 
-        # Generate the report in reStructured Text format.
-        source = StringIO()
-        self.write_report_to_open_file(source)
-        source.seek(0)
+        # Create a temporary file for the reStructured Text report.
+        with tempfile(suffix=".rst") as filename:
 
-        # Convert to OpenOffice format.
-        writer = Writer()
-        reader = Reader()
-        with catch_warnings(record=True):
-            with open(output_file, "wb") as destination:
-                publish_file(
-                    source = source,
-                    destination = destination,
-                    destination_path = output_file,
-                    reader = reader,
-                    writer = writer,
-                )
+            # Generate the report in reStructured Text format.
+            Logger.log_more_verbose("Writing temporary file in rST format...")
+            with open(filename, "w") as source:
+                self.write_report_to_open_file(source)
+
+            # Convert to OpenOffice format.
+            Logger.log_more_verbose("Converting to OpenOffice format...")
+            with open(filename, "rU") as source:
+                writer = Writer()
+                reader = Reader()
+                with catch_warnings(record=True):
+                    with open(output_file, "wb") as destination:
+                        publish_file(
+                            source = source,
+                            destination = destination,
+                            destination_path = output_file,
+                            reader = reader,
+                            writer = writer,
+                        )

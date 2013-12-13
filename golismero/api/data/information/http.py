@@ -736,6 +736,10 @@ class HTTP_Raw_Request (Information):
     #--------------------------------------------------------------------------
     @identity
     def raw_request(self):
+        """
+        :returns: Raw HTTP request.
+        :rtype: str
+        """
         return self.__raw_request
 
 

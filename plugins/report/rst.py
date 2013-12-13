@@ -35,13 +35,13 @@ from pprint import pformat
 from textwrap import wrap
 from shlex import split
 
-from golismero.api.audit import get_audit_times, parse_audit_times
+from golismero.api.audit import get_audit_times, parse_audit_times, get_audit_stats
 from golismero.api.config import Config
 from golismero.api.data import Data
 from golismero.api.data.db import Database
 from golismero.api.external import run_external_tool
 from golismero.api.logger import Logger
-from golismero.api.plugin import ReportPlugin
+from golismero.api.plugin import ReportPlugin, STAGES, get_stage_name, get_stage_display_name
 from golismero.api.text.text_utils import hexdump
 
 
@@ -92,6 +92,9 @@ class RSTReport(ReportPlugin):
         :type f: file
         """
 
+        # Determine the report type.
+        self.__full_report = not Config.audit_config.only_vulns
+
         # Print the main header.
         print >>f, "GoLismero Report"
         print >>f, "================"
@@ -114,6 +117,8 @@ class RSTReport(ReportPlugin):
         print >>f, "- Start date: " + start_time
         print >>f, "- End date: " + stop_time
         print >>f, "- Execution time: " + run_time
+        print >>f, "- Report type: " + (
+            "Full" if self.__full_report else "Brief")
         print >>f, ""
 
         # Print the audit scope.
@@ -133,8 +138,27 @@ class RSTReport(ReportPlugin):
             print >>f, "  + " + self.__format_rst(url)
         print >>f, ""
 
-        # Determine the report type.
-        self.__full_report = not Config.audit_config.only_vulns
+        # Print the runtime statistics.
+        stats = get_audit_stats()
+        if stats:
+            print >>f, "Completed Stages"
+            print >>f, "----------------"
+            print >>f, ""
+            for s in sorted(STAGES.itervalues()):
+                stage = get_stage_display_name( get_stage_name(s) )
+                if s not in stats["stages_enabled"]:
+                    status = "Disabled for this audit."
+                elif s in stats["stage_cycles"]:
+                    count = stats["stage_cycles"]
+                    if count == 0:
+                        status = "Not executed."
+                    elif count == 1:
+                        status = "Executed once."
+                    else:
+                        status = "Executed %d times." % count
+                print >>f, "%s:" % stage
+                print >>f, (" " * len("%s:" % stage)) + status
+            print >>f, ""
 
         # Collect the vulnerabilities that are not false positives.
         datas = self.__collect_vulns(False)
