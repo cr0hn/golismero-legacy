@@ -115,7 +115,7 @@
 					            <th style="width: 60%" data-orderColumn="resource" data-orderDirection="asc">Target<span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
 					            <th style="width: 40%" data-orderColumn="display_name" data-orderDirection="asc">Vulnerability<span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
 					            <th style="width:125px" data-orderColumn="level" data-orderDirection="asc" class="sort logicaldesc">Criticality<span class="glyphicon glyphicon-chevron-down"></span> <span class="glyphicon glyphicon-chevron-up"></span></th>
-					            <th style="width:80px"></th>
+					            <th style="width:58px"></th>
 					          </tr>
 					          <tr class="filter">
 									<th></th>
@@ -193,7 +193,7 @@
 				<td><p class="large" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="${resource}">${resource}</p></td>				
 				<td>${display_name}</td>
 				<td><span class="bold ${level}Vulnerability">${level}</span></td>
-				<td class="anchor moreInfo" data-href="technical-${id}">More info...</td>
+				<td class="anchor moreInfo" data-href="technical-${identity}">Details</td>
 			</tr>
 		</script>
 		<script type="text/template" id="expandedInfoTechnical">
@@ -237,7 +237,7 @@
 			<div><a href="${$data}" target="_blank">${$data}</a></div>
 		</script>
 		<script type="text/template" id="tableVulnerabilitiesTechnicalTable">
-			<tr data-anchor="technical-${id}" class="headData expanded" >
+			<tr data-anchor="technical-${identity}" class="headData expanded" >
 				<td><span class="glyphicon glyphicon-plus contracted"></span> <span class="glyphicon glyphicon-minus expanded"></td>
 				<td>${identity}</td>
 				<td><p class="large">${obtainTarget(links[0])}</p></td>
