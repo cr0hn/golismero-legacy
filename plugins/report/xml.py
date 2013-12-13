@@ -99,21 +99,6 @@ class XMLOutput(ReportPlugin):
             xml_web = ET.SubElement(xml_scope, "web_page")
             xml_web.text = web_page
 
-        # Add the runtime statistics element and subelements.
-        xml_stats = ET.SubElement(xml, "runtime_stats")
-        stats = get_audit_stats()
-        if stats:
-            xml_stages = ET.SubElement(xml_stats, "stages")
-            for s in sorted(STAGES.itervalues()):
-                stage = get_stage_name(s)
-                xml_stage = ET.SubElement(xml_stages, stage)
-                xml_stage.set("order", str(s))
-                xml_stage.set("enabled", "true"
-                    if s in stats["stages_enabled"]
-                    else "false")
-                xml_stage.set("executed", str(stats["stage_cycles"].get(s, 0)))
-                xml_stage.set("description", get_stage_display_name(stage))
-
         # Collect the vulnerabilities that are not false positives.
         datas = self.__collect_vulns(False)
 

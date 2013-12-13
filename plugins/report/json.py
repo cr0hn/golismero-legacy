@@ -227,38 +227,6 @@ class JSONOutput(ReportPlugin):
                 "Web Pages":    Config.audit_scope.web_pages,
             }
 
-        # Add the runtime statistics element.
-        stats = get_audit_stats()
-        if stats:
-            if self.__dumpmode:
-                stage_stats = []
-                for s in sorted(STAGES.itervalues()):
-                    stage = get_stage_name(s)
-                    stage_stats.append({
-                        "name": stage,
-                        "description": get_stage_display_name(stage),
-                        "enabled": 1 if s in stats["stages_enabled"] else 0,
-                        "executed": stats["stage_cycles"].get(s, 0)
-                    })
-                root["stages"] = stage_stats
-            else:
-                stage_stats = []
-                for s in sorted(STAGES.itervalues()):
-                    stage = get_stage_display_name( get_stage_name(s) )
-                    stage = "Stage: " + stage
-                    if s not in stats["stages_enabled"]:
-                        status = "Disabled for this audit."
-                    elif s in stats["stage_cycles"]:
-                        count = stats["stage_cycles"]
-                        if count == 0:
-                            status = "Not executed."
-                        elif count == 1:
-                            status = "Executed once."
-                        else:
-                            status = "Executed %d times." % count
-                    stage_stats.append({ stage: status })
-                root["Stages"] = stage_stats
-
         # Create the elements for the data.
         key_vuln = "vulnerabilities" if self.__dumpmode else "Vulnerabilities"
         key_res  = "resources"       if self.__dumpmode else "Assets"

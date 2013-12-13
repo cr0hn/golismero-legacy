@@ -570,11 +570,11 @@ class Audit (object):
             # Register the testing plugins with the notifier.
             self.__notifier.add_multiple_plugins(testing_plugins)
 
-            # Determine which stages are enabled for this audit.
+            # Determine which stages are enabled for this run.
             self.__stages_enabled = sorted(
                 stage_num
                 for stage, stage_num in STAGES.iteritems()
-                if self.pluginManager.load_plugins(stage)
+                if self.pluginManager.get_plugins(stage)
             )
 
             # Create the import manager.

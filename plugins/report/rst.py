@@ -138,28 +138,6 @@ class RSTReport(ReportPlugin):
             print >>f, "  + " + self.__format_rst(url)
         print >>f, ""
 
-        # Print the runtime statistics.
-        stats = get_audit_stats()
-        if stats:
-            print >>f, "Completed Stages"
-            print >>f, "----------------"
-            print >>f, ""
-            for s in sorted(STAGES.itervalues()):
-                stage = get_stage_display_name( get_stage_name(s) )
-                if s not in stats["stages_enabled"]:
-                    status = "Disabled for this audit."
-                elif s in stats["stage_cycles"]:
-                    count = stats["stage_cycles"]
-                    if count == 0:
-                        status = "Not executed."
-                    elif count == 1:
-                        status = "Executed once."
-                    else:
-                        status = "Executed %d times." % count
-                print >>f, "%s:" % stage
-                print >>f, (" " * len("%s:" % stage)) + status
-            print >>f, ""
-
         # Collect the vulnerabilities that are not false positives.
         datas = self.__collect_vulns(False)
 
