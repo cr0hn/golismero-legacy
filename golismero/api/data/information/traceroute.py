@@ -177,7 +177,10 @@ class Traceroute(Information):
     #--------------------------------------------------------------------------
     def to_dict(self):
         d = super(Traceroute, self).to_dict()
-        d["hops"] = [h.to_dict() for h in self.__hops]
+        d["hops"] = [
+            (h.to_dict() if h is not None else None)
+            for h in self.__hops
+        ]
         return d
 
 

@@ -127,11 +127,12 @@ class PunkSPIDER(TestingPlugin):
         # Log how many vulnerabilities we found.
         count = int(len(results) / 2)
         if count == 0:
-            Logger.log("No vulnerabilities found.")
+            Logger.log("No vulnerabilities found for host: " + info.hostname)
         elif count == 1:
-            Logger.log("Found one vulnerability.")
+            Logger.log("Found one vulnerability for host: " + info.hostname)
         else:
-            Logger.log("Found %d vulnerabilities." % count)
+            Logger.log("Found %d vulnerabilities for host: %s"
+                       % (count, info.hostname))
 
         # Return the results.
         return results

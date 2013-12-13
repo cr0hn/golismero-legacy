@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from golismero.api.data.information.banner import Banner
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -29,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.config import Config
 from golismero.api.data import discard_data
+from golismero.api.data.information.banner import Banner
 from golismero.api.data.information.geolocation import Geolocation
 from golismero.api.data.information.html import HTML
 from golismero.api.data.resource.domain import Domain
@@ -47,7 +47,7 @@ import traceback
 #------------------------------------------------------------------------------
 class GeoIP(TestingPlugin):
     """
-    This plugin tries to performe passive reconnaissance on a target using
+    This plugin tries to perform passive reconnaissance on a target using
     the Shodan web API.
     """
 
@@ -322,8 +322,8 @@ class GeoIP(TestingPlugin):
                             discard_data(geoip)
                             where = str(geoip)
                             when = datetime.date(*timestamp)
-                            msg = "Host %s used to be located at %s the %s."
-                            msg %= (ip, where, when.strftime("%d, %b %Y"))
+                            msg = "Host %s used to be located at %s on %s."
+                            msg %= (ip, where, when.strftime("%B %d, %Y"))
                             Logger.log_verbose(msg)
 
             except Exception:
