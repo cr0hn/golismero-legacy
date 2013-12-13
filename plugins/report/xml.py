@@ -108,7 +108,7 @@ class XMLOutput(ReportPlugin):
                 xml_stage.set("enabled", "true"
                     if s in stats["stages_enabled"]
                     else "false")
-                xml_stage.set("executed", stats["stage_cycles"][s])
+                xml_stage.set("executed", stats["stage_cycles"].get(s, 0))
                 xml_stage.set("description", get_stage_display_name(stage))
 
         # Determine the report type.

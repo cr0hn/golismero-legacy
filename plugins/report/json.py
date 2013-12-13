@@ -238,7 +238,7 @@ class JSONOutput(ReportPlugin):
                         "name": stage,
                         "description": get_stage_display_name(stage),
                         "enabled": 1 if s in stats["stages_enabled"] else 0,
-                        "executed": stats["stage_cycles"][s]
+                        "executed": stats["stage_cycles"].get(s, 0)
                     })
                 root["stages"] = stage_stats
             else:
@@ -258,7 +258,7 @@ class JSONOutput(ReportPlugin):
                             status = "Executed %d times." % count
                     stage_stats.append({ stage: status })
                 root["Stages"] = stage_stats
- 
+
         # Create the elements for the data.
         key_vuln = "vulnerabilities" if self.__dumpmode else "Vulnerabilities"
         key_res  = "resources"       if self.__dumpmode else "Assets"
