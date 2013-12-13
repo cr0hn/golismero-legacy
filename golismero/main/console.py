@@ -63,8 +63,8 @@ m_colors = {
     'informational' : 'blue',
     'low'           : 'cyan',
     'middle'        : None,
-    'high'          : 'red',
-    'critical'      : 'yellow',
+    'high'          : 'magenta',
+    'critical'      : 'red',
 
     # Integer log levels to color names.
     0 : 'blue',
@@ -312,6 +312,8 @@ class Console (object):
         :type message: str
         """
         try:
+            ##if sys.platform in ("win32", "cygwin"):
+            ##    message = message.decode("utf-8").encode("latin-1")
             sys.stdout.write("%s\n" % (message,))
             sys.stdout.flush()
         except Exception,e:

@@ -98,12 +98,11 @@ class ConsoleUIPlugin(UIPlugin):
         self.already_seen_info[Config.audit_name].add(info.identity)
 
         # Print newly discovered vulnerabilities.
-        text = "%s Vulnerability '%s' dicovered by plugin '%s'. Risk level: %s"
+        text = "<!> %s vulnerability dicovered by %s. Level: %s"
         text %= (
-            colorize("<!>", info.risk),
-            colorize(info.vulnerability_type, info.risk),
-            colorize(self.get_plugin_name(info.plugin_id, None), info.risk),
-            colorize(str(info.risk), info.risk)
+            colorize(info.display_name, info.level),
+            colorize(self.get_plugin_name(info.plugin_id, None), "blue"),
+            colorize(info.level, info.level)
         )
         Console.display(text)
 
@@ -117,13 +116,13 @@ class ConsoleUIPlugin(UIPlugin):
             # A plugin has started.
             if message.message_code == MessageCode.MSG_STATUS_PLUGIN_BEGIN:
 
+                # Create a simple ID for the plugin execution.
+                id_dict = self.current_plugins[Config.audit_name][message.plugin_id]
+                simple_id = len(id_dict)
+                id_dict[message.ack_identity] = simple_id
+
                 # Show this event in verbose mode.
                 if Console.level >= Console.VERBOSE:
-
-                    # Create a simple ID for the plugin execution.
-                    id_dict = self.current_plugins[Config.audit_name][message.plugin_id]
-                    simple_id = len(id_dict)
-                    id_dict[message.ack_identity] = simple_id
 
                     # Show a message to the user.
                     m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
@@ -143,8 +142,8 @@ class ConsoleUIPlugin(UIPlugin):
                     m_text        = "[*] %s: Finished." % m_plugin_name
                     Console.display(m_text)
 
-                    # Free the simple ID for the plugin execution.
-                    del self.current_plugins[Config.audit_name][message.plugin_id][message.ack_identity]
+                # Free the simple ID for the plugin execution.
+                del self.current_plugins[Config.audit_name][message.plugin_id][message.ack_identity]
 
             # A plugin has advanced.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:
@@ -204,10 +203,7 @@ class ConsoleUIPlugin(UIPlugin):
             elif message.message_code == MessageCode.MSG_STATUS_AUDIT_ABORTED:
                 (audit_name, description, traceback) = message.message_info
                 try:
-                    try:
-                        m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
-                    except Exception:
-                        m_plugin_name = "GoLismero"
+                    m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                     text      = "[!] Plugin '%s' error: %s " % (m_plugin_name, str(description))
                     text      = colorize(text, 'critical')
                     traceback = colorize(traceback, 'critical')
@@ -228,10 +224,7 @@ class ConsoleUIPlugin(UIPlugin):
             elif message.message_code == MessageCode.MSG_CONTROL_LOG:
                 (text, level, is_error) = message.message_info
                 if Console.level >= level:
-                    try:
-                        m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
-                    except Exception:
-                        m_plugin_name = "GoLismero"
+                    m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                     m_plugin_name = colorize(m_plugin_name, 'informational')
                     text = colorize(text, 'middle')
                     if is_error:
@@ -246,10 +239,7 @@ class ConsoleUIPlugin(UIPlugin):
             # full traceback in more verbose level.
             if message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 (description, traceback) = message.message_info
-                try:
-                    m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
-                except Exception:
-                    m_plugin_name = "GoLismero"
+                m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                 text      = "[!] Plugin '%s' error: %s " % (m_plugin_name, str(description))
                 text      = colorize(text, 'critical')
                 traceback = colorize(traceback, 'critical')
@@ -257,17 +247,11 @@ class ConsoleUIPlugin(UIPlugin):
                 Console.display_error_more_verbose(traceback)
 
             # Show plugin warnings.
-            # Only the description in verbose level,
-            # full traceback in more verbose level.
+            # Only in more verbose level.
             elif message.message_code == MessageCode.MSG_CONTROL_WARNING:
                 for w in message.message_info:
                     if Console.level >= Console.MORE_VERBOSE:
                         formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
-                    elif Console.level >= Console.VERBOSE:
-                        formatted = w.message
-                    else:
-                        formatted = None
-                    if formatted:
                         m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
                         text = "[!] Plugin '%s' warning: %s " % (m_plugin_name, str(formatted))
                         text = colorize(text, 'low')
@@ -284,7 +268,7 @@ class ConsoleUIPlugin(UIPlugin):
             del self.current_plugins[audit_name]
         except KeyError:
             pass
-        if get_audit_count() == 1:  # this is the last one
+        if get_audit_count() <= 1:  # this is the last one
             Config._context.send_msg(  # XXX FIXME hide this from plugins!
                 message_type = MessageType.MSG_TYPE_CONTROL,
                 message_code = MessageCode.MSG_CONTROL_STOP,
@@ -309,7 +293,7 @@ class ConsoleUIPlugin(UIPlugin):
 
         # Append the simple ID if it's greater than zero.
         if ack_identity:
-            simple_id = self.current_plugins[Config.audit_name][plugin_id][ack_identity]
+            simple_id = self.current_plugins[Config.audit_name][plugin_id].get(ack_identity)
             if simple_id:
                 plugin_name = "%s (%d)" % (plugin_name, simple_id + 1)
 

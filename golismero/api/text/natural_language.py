@@ -37,7 +37,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 
-__all__ = ["get_words", "detect_language", "calculate_language_scores"]
+__all__ = [
+    "get_words", "detect_language", "calculate_language_scores",
+    "number_to_words",
+]
 
 from nltk import wordpunct_tokenize
 from nltk.corpus import stopwords
@@ -121,3 +124,44 @@ def detect_language(text):
     """
     scores = calculate_language_scores(text)
     return max(scores, key=scores.get)
+
+
+#----------------------------------------------------------------------
+def number_to_words(n, locale = "EN", num_type = "cardinal"):
+    """
+    Convert an integer numeric value into natural language text.
+
+    :param n: Number to convert.
+    :type n: int
+
+    :param locale:
+        Language to convert to. Currently supported values:
+         - "DE"
+         - "EN"
+         - "EN_GB"
+         - "ES"
+         - "FR"
+    :type locale: str
+
+    :param num_type:
+        Type of number. Must be one of the following values:
+         - "cardinal"
+         - "ordinal"
+         - "currency"
+         - "year"
+
+    :returns: Natural language text.
+    :rtype: str
+
+    :raise ValueError: Language or number type not supported.
+    """
+    try:
+        module = "num2word_" + locale
+        n2wmod = __import__(module)
+        n2w = n2wmod.n2w(n)
+        method = "to_" + num_type
+        return getattr(n2w, method)()
+    except ImportError:
+        raise ValueError("Language not supported: %s" % locale)
+    except AttributeError:
+        raise ValueError("Number type not supported: %s" % num_type)

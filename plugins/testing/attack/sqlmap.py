@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.data.resource.url import Url
-from golismero.api.data.vulnerability.injection.sql_injection import SQLInjection
+from golismero.api.data.vulnerability.injection.sql import SQLInjection
 from golismero.api.external import run_external_tool, find_binary_in_path, tempdir
 from golismero.api.logger import Logger
 from golismero.api.net import ConnectionSlot
