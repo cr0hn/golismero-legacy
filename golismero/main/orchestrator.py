@@ -477,7 +477,7 @@ class Orchestrator (object):
                 except Exception:
                     Logger.log_error(
                         "Error processing message!\n%s" % format_exc())
-                    raise   # XXX FIXME
+                    ##raise   # XXX FIXME
 
         finally:
 
