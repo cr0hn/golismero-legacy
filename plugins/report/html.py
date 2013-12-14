@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
+from golismero.api.data.vulnerability import Vulnerability
 from golismero.api.logger import Logger
 from golismero.api.plugin import import_plugin, get_plugin_name
 
@@ -127,6 +128,11 @@ class HTMLReport(json.JSONOutput):
                         plugin_map[plugin_id] = get_plugin_name(plugin_id)
                     data["plugin_name"] = plugin_map[plugin_id]
         plugin_map.clear()
+
+        # We also want to tell the HTML report which of the vulnerability
+        # properties are part of the taxonomy. This saves us from having to
+        # change the HTML code every time we add a new taxonomy property.
+        report_data["supported_taxonomies"] = Vulnerability.TAXONOMY_NAMES
 
         # Save the report data to disk in JSON format.
         output_json = splitext(output_file)[0] + "_data.json"
