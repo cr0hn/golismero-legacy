@@ -115,7 +115,7 @@ from golismero.managers.processmanager import PluginContext
 #------------------------------------------------------------------------------
 # Custom argparse actions
 
-class CustomArgumentParser(argparse.ArgumentParser):
+class ArgumentParserWithBanner(argparse.ArgumentParser):
     must_show_banner = True
     def error(self, message):
         if self.must_show_banner:
@@ -123,7 +123,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
             show_banner()
         self.usage = None
         message += "\n\nUse -h or --help to show the full help text."
-        return super(CustomArgumentParser, self).error(message)
+        return super(ArgumentParserWithBanner, self).error(message)
 
 # --enable-plugin
 class EnablePluginAction(argparse.Action):
@@ -187,7 +187,7 @@ class SetPluginArgumentAction(argparse.Action):
 
 
 #------------------------------------------------------------------------------
-# Command line parser using argparse
+# Command line parser using argparse.
 
 COMMANDS = (
 
@@ -221,13 +221,15 @@ def cmdline_parser():
         autocomplete_enabled = True
     except ImportError:
         autocomplete_enabled = False
-
     if autocomplete_enabled:
         def profiles_completer(prefix, **kwargs):
-            return (v for v in get_available_profiles() if v.startswith(prefix))
+            return [
+                v for v in get_available_profiles()
+                  if v.startswith(prefix)
+            ]
         def plugins_completer(prefix, **kwargs):
             if ":" in prefix:
-                return (prefix,)
+                return [prefix,]
             names = []
             base = get_default_plugins_folder()
             for cat in CATEGORIES:
@@ -239,7 +241,7 @@ def cmdline_parser():
                                 names.append(name)
             return names
 
-    parser = CustomArgumentParser(fromfile_prefix_chars="@")
+    parser = ArgumentParserWithBanner(fromfile_prefix_chars="@")
 
     cmd = parser.add_argument("command", metavar="COMMAND", help="action to perform")
     if autocomplete_enabled:
@@ -439,7 +441,11 @@ def build_config_from_cmdline():
         envcfg = getenv("GOLISMERO_SETTINGS")
         if envcfg:
             args = parser.convert_arg_line_to_args(envcfg) + args
-        P = parser.parse_args(args)
+        P, V = parser.parse_known_args(args)
+        if P.targets:
+            P.targets += V
+        else:
+            P.targets = V
         P.plugin_args = {}
         command = P.command.upper()
         if command in COMMANDS:
