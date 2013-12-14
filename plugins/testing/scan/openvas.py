@@ -31,7 +31,7 @@ from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.vulnerability import UncategorizedVulnerability
-from golismero.api.data.vulnerability.infrastructure.outdated_software import * # noqa
+from golismero.api.data.vulnerability.infrastructure.outdated_platform import * # noqa
 from golismero.api.logger import Logger
 from golismero.api.net.scraper import extract_from_text
 from golismero.api.plugin import TestingPlugin, ImportPlugin
