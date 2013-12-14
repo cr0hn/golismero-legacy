@@ -47,14 +47,17 @@ __all__ = [
 ]
 
 from .config import Config
+from .external import run_external_tool
+from .logger import Logger
 from .progress import Progress
 from .shared import SharedMap
 from ..messaging.codes import MessageCode
 
-import os.path
-import re
 import imp
 import inspect
+import os.path
+import re
+import shlex
 
 
 #------------------------------------------------------------------------------
@@ -574,6 +577,32 @@ class ReportPlugin (Plugin):
         :type output_file: str
         """
         raise NotImplementedError("Plugins must implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def launch_command(self, output_file):
+        """
+        Launch a build command, if any is defined in the plugin configuration.
+
+        :param output_file: Output file for this report plugin.
+        :type output_file: str
+        """
+        command = Config.plugin_args.get("command", "")
+        if command:
+            Logger.log_verbose("Launching command: %s" % command)
+            args = shlex.split(command)
+            for i in xrange(len(args)):
+                token = args[i]
+                p = token.find("$1")
+                while p >= 0:
+                    if p == 0 or (p > 0 and token[p-1] != "$"):
+                        token = token[:p] + output_file + token[p+2:]
+                    p = token.find("$1", p + len(output_file))
+                args[i] = token
+            cwd = os.path.split(output_file)[0]
+            log = lambda x: Logger.log_verbose(
+                x[:-1] if x.endswith("\n") else x)
+            run_external_tool(args[0], args[1:], cwd=cwd, callback=log)
 
 
 #------------------------------------------------------------------------------

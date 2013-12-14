@@ -27,13 +27,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api import VERSION
-from golismero.api.audit import get_audit_times, parse_audit_times, get_audit_stats
+from golismero.api.audit import get_audit_times, parse_audit_times
 from golismero.api.config import Config
 from golismero.api.data import Data
 from golismero.api.data.db import Database
 from golismero.api.external import run_external_tool
 from golismero.api.logger import Logger
-from golismero.api.plugin import ReportPlugin, get_stage_name, get_stage_display_name, STAGES
+from golismero.api.plugin import ReportPlugin
 
 from datetime import datetime
 from shlex import split
@@ -113,32 +113,6 @@ class JSONOutput(ReportPlugin):
         :raises Exception: The data could not be serialized.
         """
         dumps(data)
-
-
-    #--------------------------------------------------------------------------
-    def launch_command(self, output_file):
-        """
-        Launch a build command, if any is defined in the plugin configuration.
-
-        :param output_file: Output file for this report plugin.
-        :type output_file: str
-        """
-        command = Config.plugin_args.get("command", "")
-        if command:
-            Logger.log_verbose("Launching command: %s" % command)
-            args = split(command)
-            for i in xrange(len(args)):
-                token = args[i]
-                p = token.find("$1")
-                while p >= 0:
-                    if p == 0 or (p > 0 and token[p-1] != "$"):
-                        token = token[:p] + output_file + token[p+2:]
-                    p = token.find("$1", p + len(output_file))
-                args[i] = token
-            cwd = os.path.split(output_file)[0]
-            log = lambda x: Logger.log_verbose(
-                x[:-1] if x.endswith("\n") else x)
-            run_external_tool(args[0], args[1:], cwd=cwd, callback=log)
 
 
     #--------------------------------------------------------------------------

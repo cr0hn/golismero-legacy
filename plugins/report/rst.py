@@ -26,23 +26,20 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import os.path
-import re
+from golismero.api.audit import get_audit_times, parse_audit_times
+from golismero.api.config import Config
+from golismero.api.data import Data
+from golismero.api.data.db import Database
+from golismero.api.logger import Logger
+from golismero.api.plugin import ReportPlugin
+from golismero.api.text.text_utils import hexdump
 
 from collections import defaultdict
 from datetime import datetime
 from pprint import pformat
 from textwrap import wrap
-from shlex import split
 
-from golismero.api.audit import get_audit_times, parse_audit_times, get_audit_stats
-from golismero.api.config import Config
-from golismero.api.data import Data
-from golismero.api.data.db import Database
-from golismero.api.external import run_external_tool
-from golismero.api.logger import Logger
-from golismero.api.plugin import ReportPlugin, STAGES, get_stage_name, get_stage_display_name
-from golismero.api.text.text_utils import hexdump
+import re
 
 
 #------------------------------------------------------------------------------
@@ -66,21 +63,7 @@ class RSTReport(ReportPlugin):
             self.write_report_to_open_file(f)
 
         # Launch the build command, if any.
-        command = Config.plugin_args.get("command", "")
-        if command:
-            Logger.log_verbose("Launching command: %s" % command)
-            args = split(command)
-            for i in xrange(len(args)):
-                token = args[i]
-                p = token.find("$1")
-                while p >= 0:
-                    if p == 0 or (p > 0 and token[p-1] != "$"):
-                        token = token[:p] + output_file + token[p+2:]
-                    p = token.find("$1", p + len(output_file))
-                args[i] = token
-            cwd = os.path.split(output_file)[0]
-            log = lambda x: Logger.log_verbose(x[:-1] if x.endswith("\n") else x)
-            run_external_tool(args[0], args[1:], cwd=cwd, callback=log)
+        self.launch_command(output_file)
 
 
     #--------------------------------------------------------------------------
