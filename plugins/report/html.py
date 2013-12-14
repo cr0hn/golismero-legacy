@@ -75,7 +75,7 @@ class HTMLReport(json.JSONOutput):
         # vulnerabilities as an array instead of a map, so let's fix that.
         vulnerabilities = report_data["vulnerabilities"]
         sort_keys = [
-            (data["display_name"], data["title"], data["identity"])
+            (data["display_name"], data["plugin_id"], data["identity"])
             for data in vulnerabilities.itervalues()
         ]
         sort_keys.sort()
