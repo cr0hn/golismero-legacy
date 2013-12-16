@@ -318,7 +318,7 @@ class JSONOutput(ReportPlugin):
                     d = data.display_properties
                 self.test_data_serialization(d)
             except Exception:
-                raise
+                ##raise  # XXX DEBUG
                 from pprint import pformat
                 warn("Cannot serialize data:\n%s" % pformat(d),
                      RuntimeWarning)

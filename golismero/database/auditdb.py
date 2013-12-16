@@ -50,7 +50,14 @@ import md5
 import sqlite3
 import threading
 import time
+import urlparse
 import warnings
+
+# Lazy imports
+pymongo  = None
+binary   = None
+objectid = None
+Error    = None
 
 
 #----------------------------------------------------------------------
@@ -2158,6 +2165,17 @@ class AuditMongoDB(BaseAuditDB):
     #--------------------------------------------------------------------------
     def __init__(self, audit_config):
         super(AuditMongoDB,self).__init__(audit_config)
+
+        global pymongo
+        if pymongo is None:
+            global binary
+            global objectid
+            global Error
+            from bson import binary
+            from bson import objectid
+            from xdg.Exceptions import Error
+            import pymongo
+
         # format mongo://ip:port@rereplicaset/databasename
         self.setMongoInfo(audit_config)
         #self.__mongoadress = "localhost"
@@ -2323,7 +2341,7 @@ class AuditMongoDB(BaseAuditDB):
 
         # Tell SQLite the encoded data is a BLOB and not a TEXT.
         #return sqlite3.Binary(data)
-        return Binary(data,0)
+        return binary.Binary(data,0)
 
 
     #--------------------------------------------------------------------------
@@ -2694,7 +2712,7 @@ class AuditMongoDB(BaseAuditDB):
         plugin_id_set= {str(row['plugin_id']) for row in self._c_history.find({'identity':identity},{'_id':0,'plugin_id':1})}
         plugin_name_set = set()
         for plugin_id in plugin_id_set:
-            plugin_name_set.update({str(row['name']) for row in self._c_plugin.find({'_id':ObjectId(plugin_id)},{'_id':0,'name':1})})
+            plugin_name_set.update({str(row['name']) for row in self._c_plugin.find({'_id':objectid.ObjectId(plugin_id)},{'_id':0,'name':1})})
         return plugin_name_set
 
 
