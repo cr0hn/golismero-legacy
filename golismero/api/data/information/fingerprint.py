@@ -488,7 +488,7 @@ class WebServerFingerprint(Information):
                 to_utf8(k): float(v)
                 for k,v in others.iteritems()
             }
-            for k, v in others.iteritems():
+            for k in others.iterkeys():
                 if not isinstance(k, str):
                     raise TypeError("Expected str, got %r instead" % type(k))
         else:
