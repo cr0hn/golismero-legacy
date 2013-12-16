@@ -2640,7 +2640,7 @@ class AuditMongoDB(BaseAuditDB):
 
         plugin_id = self.__get_pluginid(plugin_id)
         if not plugin_id:
-            raise Error("Fetal Error, can not save data to mongodb in collection 'history'")
+            raise Error("Fatal Error, can not save data to mongodb in collection 'history'")
 
         self._c_history.update({"plugin_id":plugin_id,
                                 "identity":identity
@@ -2803,7 +2803,7 @@ class AuditMongoDB(BaseAuditDB):
             raise TypeError("Expected str, got %s" % type(shared_id))
 
 
-        keys = [str(key) for key, value in items]
+        keys = [str(key) for key, _ in items]
         old_values = self.get_mapped_values(shared_id, keys)
         self.put_mapped_values(shared_id, items)
 
@@ -2886,7 +2886,7 @@ class AuditMongoDB(BaseAuditDB):
         else:
             items = [(str(row["_id"]),row["value"]) for row in self._c_shared_heap.find({"shared_id":shared_id},{"_id":1,"value":1})]
         result = tuple(self.decode(value) for _, value in items)
-        for rowid,value in items:
+        for rowid, _ in items:
             self._c_shared_heap.remove({"_id":rowid})
 
         return result

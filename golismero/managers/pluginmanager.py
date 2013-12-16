@@ -48,7 +48,6 @@ from os import path, walk
 
 import re
 import fnmatch
-import imp
 import traceback
 import warnings
 

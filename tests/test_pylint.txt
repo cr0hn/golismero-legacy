@@ -24,6 +24,8 @@ golismero/api/data/__init__.py:466: Warning (W, custom.do_merge): Arguments numb
 golismero/api/data/__init__.py:676: Warning (W, Data.display_properties): Using global for 'Vulnerability' but no assignment is done
 golismero/api/data/__init__.py:678: Warning (W, Data.display_properties): Redefining name 'Vulnerability' from outer scope (line 70)
 golismero/api/data/__init__.py:696: Error (E, Data.display_properties): Instance of 'Data' has no 'vulnerability_type' member
+golismero/api/data/__init__.py:782: Warning (W, Data.display_properties): Catching too general exception Exception
+golismero/api/data/__init__.py:879: Warning (W, Data.to_dict): Catching too general exception Exception
 golismero/api/data/__init__.py:964: Warning (W, Data._merge_links): Access to a protected member __linked of a client class
 golismero/api/data/__init__.py:964: Warning (W, Data._merge_links): Access to a protected member __linked of a client class
 golismero/api/data/__init__.py:964: Warning (W, Data._merge_links): Access to a protected member __linked of a client class
@@ -62,6 +64,7 @@ golismero/api/data/db.py:290: Warning (W, Database.get_plugin_history): Access t
 golismero/api/data/information/__init__.py:39: Warning (W, Information): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/auth.py:41: Warning (W, Username): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/auth.py:72: Warning (W, Password): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/information/banner.py:44: Warning (W, Banner): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/binary.py:40: Warning (W, Binary): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/dns.py:130: Warning (W, DnsRegister): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/dns.py:333: Warning (W, DnsRegister.name2id): Redefining built-in 'id'
@@ -110,15 +113,20 @@ golismero/api/data/information/fingerprint.py:297: Warning (W, OSFingerprint.gen
 golismero/api/data/information/fingerprint.py:302: Error (E, OSFingerprint.family): An attribute affected in golismero.api.data.information.fingerprint line 163 hide this method
 golismero/api/data/information/fingerprint.py:321: Warning (W, OSFingerprint.family): Attribute '__family' defined outside __init__
 golismero/api/data/information/fingerprint.py:325: Warning (W, WebServerFingerprint): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/information/fingerprint.py:469: Error (E, WebServerFingerprint.others): An attribute affected in golismero.api.data.information.fingerprint line 387 hide this method
+golismero/api/data/information/fingerprint.py:496: Warning (W, WebServerFingerprint.others): Attribute '__others' defined outside __init__
+golismero/api/data/information/fingerprint.py:501: Error (E, WebServerFingerprint.related): An attribute affected in golismero.api.data.information.fingerprint line 386 hide this method
+golismero/api/data/information/fingerprint.py:525: Warning (W, WebServerFingerprint.related): Attribute '__related' defined outside __init__
 golismero/api/data/information/geolocation.py:41: Warning (W, Geolocation): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/html.py:42: Warning (W, HTML): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/http.py:405: Warning (W, HTTP_Request): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/http.py:471: Warning (W, HTTP_Request.__init__): Catching too general exception Exception
+golismero/api/data/information/http.py:524: Error (E, HTTP_Request.__init__): Instance of 'str' has no 'items' member (but some types could not be inferred)
 golismero/api/data/information/http.py:655: Warning (W, HTTP_Request.content_length): Catching too general exception Exception
 golismero/api/data/information/http.py:709: Warning (W, HTTP_Raw_Request): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/http.py:734: Warning (W, HTTP_Response): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/http.py:758: Warning (W, HTTP_Response.__init__): Catching too general exception Exception
-golismero/api/data/information/http.py:876: Error (E, HTTP_Response.elapsed): An attribute affected in golismero.api.data.information.http line 850 hide this method
+golismero/api/data/information/http.py:880: Error (E, HTTP_Response.elapsed): An attribute affected in golismero.api.data.information.http line 854 hide this method
 golismero/api/data/information/http.py:913: Warning (W, HTTP_Response.content_length): Catching too general exception Exception
 golismero/api/data/information/http.py:985: Warning (W, HTTP_Response.__parse_raw_response): Catching too general exception Exception
 golismero/api/data/information/http.py:985: Warning (W, HTTP_Response.__parse_raw_response): Catching too general exception Exception
@@ -133,23 +141,28 @@ golismero/api/data/information/portscan.py:43: Warning (W, Portscan): Method 'fr
 golismero/api/data/information/text.py:41: Warning (W, Text): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/traceroute.py:106: Warning (W, Traceroute): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/resource/__init__.py:39: Warning (W, Resource): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/resource/bssid.py:42: Warning (W, BSSID): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/resource/bssid.py:93: Error (E, BSSID.essid): An attribute affected in golismero.api.data.resource.bssid line 64 hide this method
+golismero/api/data/resource/bssid.py:111: Warning (W, BSSID.essid): Attribute '__essid' defined outside __init__
 golismero/api/data/resource/domain.py:45: Warning (W, Domain): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/resource/domain.py:71: Warning (W, Domain.__init__): Catching too general exception Exception
 golismero/api/data/resource/email.py:43: Warning (W, Email): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/resource/ip.py:44: Warning (W, IP): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/resource/mac.py:43: Warning (W, MAC): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/resource/url.py:45: Warning (W, _AbstractUrl): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/resource/url.py:149: Warning (W, Url): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/resource/url.py:307: Warning (W, BaseUrl): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/resource/url.py:371: Warning (W, FolderUrl): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/__init__.py:49: Warning (W, Vulnerability): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/__init__.py:255: Warning (W, Vulnerability.__get_default_text): Catching too general exception Exception
+golismero/api/data/vulnerability/__init__.py:326: Warning (W, Vulnerability.__get_default_texts_from_docstring): Catching too general exception Exception
 golismero/api/data/vulnerability/__init__.py:357: Warning (W, Vulnerability.plugin_id): Catching too general exception Exception
 golismero/api/data/vulnerability/__init__.py:359: Warning (W, Vulnerability.plugin_id): Attribute '__plugin_id' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:384: Warning (W, Vulnerability.level): Attribute '__level' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:392: Error (E, Vulnerability.plugin_id): An attribute affected in golismero.api.data.vulnerability line 216 hide this method
 golismero/api/data/vulnerability/__init__.py:408: Warning (W, Vulnerability.impact): Attribute '__impact' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:428: Warning (W, Vulnerability.bid): Attribute '__bid' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:428: Warning (W, Vulnerability.tool_id): Attribute '__tool_id' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:440: Error (E, Vulnerability.plugin_id): An attribute affected in golismero.api.data.vulnerability line 230 hide this method
 golismero/api/data/vulnerability/__init__.py:448: Warning (W, Vulnerability.ca): Attribute '__ca' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:468: Warning (W, Vulnerability.capec): Attribute '__capec' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:488: Warning (W, Vulnerability.cve): Attribute '__cve' defined outside __init__
@@ -172,8 +185,8 @@ golismero/api/data/vulnerability/__init__.py:771: Warning (W, Vulnerability.solu
 golismero/api/data/vulnerability/__init__.py:794: Warning (W, Vulnerability.references): Attribute '__references' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:883: Error (E, UrlVulnerability): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/__init__.py:927: Warning (W, UncategorizedVulnerability): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/__init__.py:934: Error (E, Vulnerability.references): An attribute affected in golismero.api.data.vulnerability line 250 hide this method
 golismero/api/data/vulnerability/__init__.py:939: Warning (W, UrlVulnerability): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/__init__.py:982: Error (E, Vulnerability.references): An attribute affected in golismero.api.data.vulnerability line 266 hide this method
 golismero/api/data/vulnerability/__init__.py:1043: Warning (W, UrlVulnerability._sanitize_url): Static method with 'self' as first argument
 golismero/api/data/vulnerability/__init__.py:1057: Warning (W, UrlVulnerability._sanitize_url): Catching too general exception Exception
 golismero/api/data/vulnerability/authentication/broken_captcha.py:38: Warning (W, BrokenCaptcha): Method 'from_dict' is abstract in class 'Data' but is not overridden
@@ -199,29 +212,29 @@ golismero/api/data/vulnerability/information_disclosure/source_code_disclosure.p
 golismero/api/data/vulnerability/information_disclosure/unhandled_errors.py:40: Warning (W, UnhandledErrors): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/information_disclosure/unhandled_errors.py:63: Error (E, UnhandledErrors): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/information_disclosure/url_disclosure.py:41: Warning (W, UrlDisclosure): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:35: Warning (W, OutdatedPlatform): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:48: Warning (W, OutdatedPlatformMandriva): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:59: Warning (W, OutdatedPlatformWindows): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:70: Warning (W, OutdatedPlatformDebian): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:81: Warning (W, OutdatedPlatformMacOSX): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:92: Warning (W, OutdatedPlatformVMwareESX): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:103: Warning (W, OutdatedPlatformUbuntu): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:114: Warning (W, OutdatedPlatformHPUX): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:125: Warning (W, OutdatedPlatformSuSE): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:136: Warning (W, OutdatedPlatformFreeBSD): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:147: Warning (W, OutdatedPlatformJunos): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:158: Warning (W, OutdatedPlatformScientificLinux): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:169: Warning (W, OutdatedPlatformSlackware): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:180: Warning (W, OutdatedPlatformSolaris): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:191: Warning (W, OutdatedPlatformRedHat): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:202: Warning (W, OutdatedPlatformAmazonLinux): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:213: Warning (W, OutdatedPlatformAIX): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:224: Warning (W, OutdatedPlatformGentoo): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:235: Warning (W, OutdatedPlatformCentOS): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:246: Warning (W, OutdatedPlatformOracleLinux): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/infrastructure/outdated_platform.py:257: Warning (W, OutdatedPlatformFedora): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/infrastructure/outdated_software.py:41: Warning (W, OutdatedSoftware): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/infrastructure/outdated_software.py:78: Error (E, OutdatedSoftware): Method '__init__' has no '__doc__' member
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:122: Warning (W, OutdatedPlatform): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:135: Warning (W, OutdatedPlatformMandrivaLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:143: Warning (W, OutdatedPlatformWindowsMicrosoftBulletins): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:151: Warning (W, OutdatedPlatformDebianLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:159: Warning (W, OutdatedPlatformMacOSXLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:167: Warning (W, OutdatedPlatformVMwareESXLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:175: Warning (W, OutdatedPlatformUbuntuLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:183: Warning (W, OutdatedPlatformHPUXLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:191: Warning (W, OutdatedPlatformSuSELocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:199: Warning (W, OutdatedPlatformFreeBSDLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:207: Warning (W, OutdatedPlatformJunosLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:215: Warning (W, OutdatedPlatformScientificLinuxLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:223: Warning (W, OutdatedPlatformSlackwareLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:231: Warning (W, OutdatedPlatformSolarisLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:239: Warning (W, OutdatedPlatformRedHatLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:247: Warning (W, OutdatedPlatformAmazonLinuxLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:255: Warning (W, OutdatedPlatformAIXLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:263: Warning (W, OutdatedPlatformGentooLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:271: Warning (W, OutdatedPlatformCentOSLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:279: Warning (W, OutdatedPlatformOracleLinuxLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/infrastructure/outdated_software.py:287: Warning (W, OutdatedPlatformFedoraLocal): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/infrastructure/vulnerable_service.py:41: Warning (W, VulnerableService): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/infrastructure/vulnerable_service.py:88: Error (E, VulnerableService): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/infrastructure/vulnerable_webapp.py:37: Warning (W, VulnerableWebApp): Method 'from_dict' is abstract in class 'Data' but is not overridden
@@ -229,10 +242,12 @@ golismero/api/data/vulnerability/injection/__init__.py:38: Warning (W, Injection
 golismero/api/data/vulnerability/injection/__init__.py:95: Error (E, Injection): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/injection/__init__.py:144: Warning (W, HTTPInjection): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/injection/__init__.py:200: Warning (W, HTTPInjection.__init__): Access to a protected member _sanitize_url of a client class
-golismero/api/data/vulnerability/injection/sql_injection.py:35: Warning (W, SQLInjection): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/injection/sql.py:34: Warning (W, SQLInjection): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/injection/xss.py:35: Warning (W, XSS): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/malware/__init__.py:43: Warning (W, Malware): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/malware/__init__.py:144: Error (E, Malware): Method '__init__' has no '__doc__' member
+golismero/api/data/vulnerability/malware/backdoor.py:37: Warning (W, Backdoor): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/malware/backdoor.py:74: Error (E, Backdoor): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/malware/botnet.py:37: Warning (W, Botnet): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/malware/dns_poisoning.py:46: Warning (W, DNSPoisoning): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/malware/trojan.py:37: Warning (W, Trojan): Method 'from_dict' is abstract in class 'Data' but is not overridden
@@ -241,13 +256,13 @@ golismero/api/data/vulnerability/ssl/__init__.py:40: Warning (W, SSLVulnerabilit
 golismero/api/data/vulnerability/ssl/__init__.py:66: Error (E, SSLVulnerability): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/ssl/insecure_algorithm.py:41: Warning (W, InsecureAlgorithm): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/ssl/insecure_algorithm.py:64: Error (E, InsecureAlgorithm): Method '__init__' has no '__doc__' member
-golismero/api/data/vulnerability/ssl/invalid_cert.py:39: Warning (W, InvalidCert): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/ssl/invalid_certificate.py:35: Warning (W, InvalidCertificate): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/ssl/invalid_common_name.py:40: Warning (W, InvalidCommonName): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/ssl/invalid_common_name.py:63: Error (E, InvalidCommonName): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/ssl/no_ssl.py:39: Warning (W, NoSSL): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/ssl/obsolete_protocol.py:41: Warning (W, ObsoleteProtocol): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/ssl/obsolete_protocol.py:64: Error (E, ObsoleteProtocol): Method '__init__' has no '__doc__' member
-golismero/api/data/vulnerability/ssl/outdated_cert.py:39: Warning (W, OutdatedCert): Method 'from_dict' is abstract in class 'Data' but is not overridden
+golismero/api/data/vulnerability/ssl/outdated_certificate.py:35: Warning (W, OutdatedCertificate): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/ssl/weak_key.py:39: Warning (W, WeakKey): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/ssl/weak_key.py:72: Error (E, WeakKey): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/suspicious/cookie.py:42: Warning (W, SuspiciousCookie): Method 'from_dict' is abstract in class 'Data' but is not overridden
@@ -338,6 +353,8 @@ golismero/api/net/scraper.py:115: Warning (W, is_link): Catching too general exc
 golismero/api/net/scraper.py:165: Warning (W, extract_from_text): Catching too general exception Exception
 golismero/api/net/scraper.py:165: Warning (W, extract_from_text): Catching too general exception Exception
 golismero/api/net/scraper.py:165: Warning (W, extract_from_text): Catching too general exception Exception
+golismero/api/net/scraper.py:226: Warning (W, extract_forms_from_html): Catching too general exception Exception
+golismero/api/net/scraper.py:226: Warning (W, extract_forms_from_html): Catching too general exception Exception
 golismero/api/net/scraper.py:277: Warning (W, extract_from_html): Catching too general exception Exception
 golismero/api/net/scraper.py:277: Warning (W, extract_from_html): Catching too general exception Exception
 golismero/api/net/scraper.py:277: Warning (W, extract_from_html): Catching too general exception Exception
@@ -378,6 +395,7 @@ golismero/api/plugin.py:187: Warning (W, Plugin.__new__): Access to a protected 
 golismero/api/plugin.py:229: Error (E): Function 'get_plugin_type_description' has no '__doc__' member
 golismero/api/plugin.py:369: Warning (W, TestingPlugin): Method 'get_accepted_info' is abstract in class '_InformationPlugin' but is not overridden
 golismero/api/plugin.py:369: Warning (W, TestingPlugin): Method 'recv_info' is abstract in class '_InformationPlugin' but is not overridden
+golismero/api/plugin.py:562: Error (E, ReportPlugin.is_supported): Instance of 'ReportPlugin' has no 'EXTENSION' member
 golismero/api/progress.py:270: Error (E, Progress): Method 'begin_subtask' has no '__doc__' member
 golismero/api/progress.py:325: Warning (W, TaskProgress.__init__): Access to a protected member _lock of a client class
 golismero/api/progress.py:332: Error (E, TaskProgress): Method '__init__' has no '__doc__' member
@@ -425,8 +443,6 @@ golismero/common.py:877: Error (E, AuditConfig.check_params): Instance of 'Audit
 golismero/common.py:879: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'disable_plugins' member
 golismero/common.py:884: Warning (W, AuditConfig.from_dictionary): Access to a protected member _load_profile of a client class
 golismero/common.py:885: Warning (W, AuditConfig.from_dictionary): Access to a protected member _load_plugin_args of a client class
-golismero/common.py:887: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'subdomain_regex' member
-golismero/common.py:887: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'subdomain_regex' member
 golismero/common.py:892: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'depth' member
 golismero/common.py:892: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'depth' member
 golismero/common.py:892: Error (E, AuditConfig.check_params): Instance of 'AuditConfig' has no 'depth' member
@@ -441,6 +457,37 @@ golismero/database/auditdb.py:1411: Warning (W, AuditSQLiteDB._atom): Used * or 
 golismero/database/auditdb.py:1429: Warning (W, AuditSQLiteDB._transaction): Used * or ** magic
 golismero/database/auditdb.py:1581: Warning (W, AuditSQLiteDB.__get_audit_name_from_database): Catching too general exception Exception
 golismero/database/auditdb.py:1847: Warning (W, AuditSQLiteDB.append_log_line): Catching too general exception Exception
+golismero/database/auditdb.py:2169: Warning (W, AuditMongoDB.__init__): Using global for 'pymongo' but no assignment is done
+golismero/database/auditdb.py:2171: Warning (W, AuditMongoDB.__init__): Using global for 'binary' but no assignment is done
+golismero/database/auditdb.py:2172: Warning (W, AuditMongoDB.__init__): Using global for 'objectid' but no assignment is done
+golismero/database/auditdb.py:2173: Warning (W, AuditMongoDB.__init__): Using global for 'Error' but no assignment is done
+golismero/database/auditdb.py:2174: Warning (W, AuditMongoDB.__init__): Redefining name 'binary' from outer scope (line 58)
+golismero/database/auditdb.py:2174: Warning (W, AuditMongoDB.__init__): Unused variable 'binary'
+golismero/database/auditdb.py:2174: [F, AuditMongoDB.__init__] Unable to import 'bson'
+golismero/database/auditdb.py:2174: [F, AuditMongoDB.__init__] Unable to import 'bson'
+golismero/database/auditdb.py:2175: Warning (W, AuditMongoDB.__init__): Redefining name 'objectid' from outer scope (line 59)
+golismero/database/auditdb.py:2175: Warning (W, AuditMongoDB.__init__): Unused variable 'objectid'
+golismero/database/auditdb.py:2176: Warning (W, AuditMongoDB.__init__): Redefining name 'Error' from outer scope (line 60)
+golismero/database/auditdb.py:2176: Warning (W, AuditMongoDB.__init__): Unused variable 'Error'
+golismero/database/auditdb.py:2176: [F, AuditMongoDB.__init__] Unable to import 'xdg.Exceptions'
+golismero/database/auditdb.py:2177: Warning (W, AuditMongoDB.__init__): Redefining name 'pymongo' from outer scope (line 57)
+golismero/database/auditdb.py:2177: [F, AuditMongoDB.__init__] Unable to import 'pymongo'
+golismero/database/auditdb.py:2198: Warning (W, AuditMongoDB.setMongoInfo): Attribute '__mongoadress' defined outside __init__
+golismero/database/auditdb.py:2204: Warning (W, AuditMongoDB.setMongoInfo): Attribute '__replicasetname' defined outside __init__
+golismero/database/auditdb.py:2207: Warning (W, AuditMongoDB.setMongoInfo): Attribute '__mongoport' defined outside __init__
+golismero/database/auditdb.py:2209: Warning (W, AuditMongoDB.setMongoInfo): Attribute '__mongodatabasename' defined outside __init__
+golismero/database/auditdb.py:2226: Warning (W, AuditMongoDB._connectdb): Attribute '_c_golismero' defined outside __init__
+golismero/database/auditdb.py:2227: Warning (W, AuditMongoDB._connectdb): Attribute '_c_information' defined outside __init__
+golismero/database/auditdb.py:2228: Warning (W, AuditMongoDB._connectdb): Attribute '_c_resource' defined outside __init__
+golismero/database/auditdb.py:2229: Warning (W, AuditMongoDB._connectdb): Attribute '_c_vulnerability' defined outside __init__
+golismero/database/auditdb.py:2230: Warning (W, AuditMongoDB._connectdb): Attribute '_c_plugin' defined outside __init__
+golismero/database/auditdb.py:2231: Warning (W, AuditMongoDB._connectdb): Attribute '_c_history' defined outside __init__
+golismero/database/auditdb.py:2232: Warning (W, AuditMongoDB._connectdb): Attribute '_c_stages' defined outside __init__
+golismero/database/auditdb.py:2233: Warning (W, AuditMongoDB._connectdb): Attribute '_c_shared_map' defined outside __init__
+golismero/database/auditdb.py:2234: Warning (W, AuditMongoDB._connectdb): Attribute '_c_shared_heap' defined outside __init__
+golismero/database/auditdb.py:2266: Warning (W, AuditMongoDB.close): Attribute '__privatedb' defined outside __init__
+golismero/database/auditdb.py:2268: Warning (W, AuditMongoDB.close): Attribute '__connection' defined outside __init__
+golismero/database/auditdb.py:2319: Warning (W, AuditMongoDB.encode): Arguments number differs from overridden method
 golismero/database/auditdb.py:2323: Warning (W, AuditSQLiteDB.close): Catching too general exception Exception
 golismero/database/auditdb.py:2328: Warning (W, AuditDB): Method '_atom' is abstract in class 'BaseDB' but is not overridden
 golismero/database/auditdb.py:2328: Warning (W, AuditDB): Method '_transaction' is abstract in class 'BaseDB' but is not overridden
@@ -487,6 +534,7 @@ golismero/database/auditdb.py:2328: Warning (W, AuditDB): Method 'set_audit_time
 golismero/database/auditdb.py:2328: Warning (W, AuditDB): Method 'swap_mapped_values' is abstract in class 'BaseAuditDB' but is not overridden
 golismero/database/auditdb.py:2485: Warning (W, AuditDB): Method 'append_log_line' is abstract in class 'BaseAuditDB' but is not overridden
 golismero/database/auditdb.py:2485: Warning (W, AuditDB): Method 'get_log_lines' is abstract in class 'BaseAuditDB' but is not overridden
+golismero/database/auditdb.py:2643: Error (E, AuditMongoDB.mark_plugin_finished): Error is not callable
 golismero/database/cachedb.py:163: Warning (W, VolatileNetworkCache): Method '_atom' is abstract in class 'BaseDB' but is not overridden
 golismero/database/cachedb.py:163: Warning (W, VolatileNetworkCache): Method '_transaction' is abstract in class 'BaseDB' but is not overridden
 golismero/database/cachedb.py:229: Warning (W, PersistentNetworkCache.__init__): Using global for 'sqlite3' but no assignment is done
@@ -538,6 +586,7 @@ golismero/main/orchestrator.py:371: Warning (W, Orchestrator.enqueue_msg): Catch
 golismero/main/orchestrator.py:401: Warning (W, Orchestrator.build_plugin_context): Access to a protected member _orchestrator_pid of a client class
 golismero/main/orchestrator.py:402: Warning (W, Orchestrator.build_plugin_context): Access to a protected member _orchestrator_tid of a client class
 golismero/main/orchestrator.py:423: Warning (W, Orchestrator.run): Attribute '__old_signal_action' defined outside __init__
+golismero/main/orchestrator.py:442: Warning (W, Orchestrator.run): Catching too general exception Exception
 golismero/main/orchestrator.py:442: Warning (W, Orchestrator.run): Catching too general exception Exception
 golismero/main/orchestrator.py:442: Warning (W, Orchestrator.run): Catching too general exception Exception
 golismero/main/orchestrator.py:510: Warning (W, Orchestrator.close): Access to a protected member _context of a client class
@@ -689,7 +738,7 @@ golismero/managers/pluginmanager.py:1555: Warning (W, AuditPluginManager.__check
 golismero/managers/pluginmanager.py:1560: Warning (W, AuditPluginManager.__check_plugin_params): Catching too general exception Exception
 golismero/managers/pluginmanager.py:1605: Warning (W, AuditPluginManager.__check_plugin_params): Access to a protected member _orchestrator_pid of a client class
 golismero/managers/pluginmanager.py:1606: Warning (W, AuditPluginManager.__check_plugin_params): Access to a protected member _orchestrator_tid of a client class
-golismero/managers/processmanager.py:51: Warning (W): Unused import SIG_IGN
+golismero/managers/processmanager.py:61: Warning (W): Unused import mp
 golismero/managers/processmanager.py:73: Warning (W, Process.daemon): Arguments number differs from overridden method
 golismero/managers/processmanager.py:73: Warning (W, Process.daemon): Arguments number differs from overridden method
 golismero/managers/processmanager.py:82: Warning (W, Pool): Method '__reduce__' is abstract in class 'Pool' but is not overridden
@@ -716,8 +765,6 @@ golismero/managers/processmanager.py:351: Warning (W, _bootstrap_inner): Catchin
 golismero/managers/processmanager.py:391: Warning (W, _plugin_killer): Access to a protected member _depth of a client class
 golismero/managers/processmanager.py:428: [F, _init_worker] Unable to import 'posix'
 golismero/managers/processmanager.py:430: Warning (W, _init_worker): Catching too general exception Exception
-golismero/managers/processmanager.py:436: Warning (W, _suicide): Unused argument 'frame'
-golismero/managers/processmanager.py:436: Warning (W, _suicide): Unused argument 'signum'
 golismero/managers/processmanager.py:576: Warning (W, PluginContext.send_msg): Used * or ** magic
 golismero/managers/processmanager.py:613: Warning (W, PluginContext.send_raw_msg): No exception type(s) specified
 golismero/managers/processmanager.py:631: Error (E, PluginContext.remote_call): Instance of 'SyncManager' has no 'Queue' member
@@ -750,3 +797,12 @@ golismero/messaging/message.py:39: Warning (W): Wildcard import codes
 golismero/messaging/notifier.py:729: Warning (W, OrchestratorNotifier.__run_plugin): Access to a protected member _context of a client class
 golismero/messaging/notifier.py:729: Warning (W, OrchestratorNotifier.__run_plugin): Access to a protected member _context of a client class
 golismero/messaging/notifier.py:729: Warning (W, OrchestratorNotifier.__run_plugin): Access to a protected member _context of a client class
+golismero/messaging/notifier.py:758: Warning (W, OrchestratorNotifier.__run_plugin): Catching too general exception Exception
+golismero/patches/mp.py:53: Warning (W, __suicide): Unused argument 'frame'
+golismero/patches/mp.py:53: Warning (W, __suicide): Unused argument 'signum'
+golismero/patches/mp.py:132: Warning (W, main): Redefining name 'Process' from outer scope (line 145)
+golismero/patches/mp.py:133: Warning (W, main): Access to a protected member _bootstrap of a client class
+golismero/patches/mp.py:133: Warning (W, main): Access to a protected member _bootstrap of a client class
+golismero/patches/mp.py:133: Warning (W, main): Redefining name '__original_bootstrap' from outer scope (line 146)
+golismero/patches/mp.py:146: Warning (W): Access to a protected member _bootstrap of a client class
+golismero/patches/mp.py:146: Warning (W): Access to a protected member _bootstrap of a client class
