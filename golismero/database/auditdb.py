@@ -1850,10 +1850,12 @@ class AuditSQLiteDB (BaseAuditDB):
 
         # Build the query.
         query = (
-            "SELECT plugin.name, log.rowid,"
-            "       log.text, log.level, log.is_error, log.timestamp"
+            "SELECT"
+            " plugin.name, log.identity, log.text,"
+            " log.level, log.is_error, log.timestamp"
             " FROM plugin, log"
-            " WHERE plugin.rowid = log.plugin_id")
+            " WHERE plugin.rowid = log.plugin_id"
+        )
         params = []
         if filter_by_plugin:
             plugin_rowid = self.__get_or_create_plugin_rowid(filter_by_plugin)
@@ -1868,12 +1870,13 @@ class AuditSQLiteDB (BaseAuditDB):
         if filter_by_data:
             query += " AND log.ack_id = ?"
             params.append(filter_by_data)
+        query += " ORDER BY log.timestamp"
         if (
             page_num is not None and page_num >= 0 and
             per_page is not None and per_page > 0
         ):
-            query += " OFFSET %d LIMIT %d" % (page_num + per_page, per_page)
-        query += " ORDER BY log.timestamp;"
+            query += " LIMIT %d, %d" % (page_num * per_page, per_page)
+        query += ";"
 
         # Run the query.
         self.__cursor.execute(query, tuple(params))
