@@ -9,6 +9,7 @@ Changelog
 - New report formats: OpenOffice, LaTeX, JSON, XML, YAML, MsgPack.
 - Added support for MongoDB.
 - Many improvements to the reports and the vulnerability descriptions.
+- Fixes and improvements to the OpenVAS plugin.
 - Added vulnerability standards:
   * Microsoft Bulletin ID
   * Microsoft Knowledge Base ID
