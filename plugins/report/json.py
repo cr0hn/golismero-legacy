@@ -26,6 +26,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["JSONOutput"]
+
 from golismero.api import VERSION
 from golismero.api.audit import get_audit_times, parse_audit_times
 from golismero.api.config import Config

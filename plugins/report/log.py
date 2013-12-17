@@ -26,6 +26,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["TextLogger"]
+
 from golismero.api.audit import get_audit_log_lines
 from golismero.api.config import Config
 from golismero.api.logger import Logger
