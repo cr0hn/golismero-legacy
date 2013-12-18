@@ -629,6 +629,18 @@ class Data(object):
 
 
     #--------------------------------------------------------------------------
+    ##def __new__(cls, *args, **kwargs):
+    ##
+    ##    # Reuse old instances when possible.
+    ##    new_obj = super(Data, cls).__new__(*args, **kwargs)
+    ##    old_obj = LocalDataCache.get(new_obj.identity)
+    ##    if old_obj is not None:
+    ##        old_obj.merge(new_obj)
+    ##        new_obj = old_obj
+    ##    return old_obj
+
+
+    #--------------------------------------------------------------------------
     def __init__(self):
 
         # Linked Data objects.
