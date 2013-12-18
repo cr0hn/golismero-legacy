@@ -33,6 +33,7 @@ from golismero.api.data.information.portscan import Portscan
 from golismero.api.data.information.traceroute import Traceroute, Hop
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
+from golismero.api.data.resource.mac import MAC
 from golismero.api.external import run_external_tool, tempfile, find_binary_in_path
 from golismero.api.logger import Logger
 from golismero.api.net import ConnectionSlot
@@ -204,6 +205,9 @@ class NmapScanPlugin(TestingPlugin):
         :rtype: list(Data)
         """
 
+        # File format details can be found here:
+        # https://svn.nmap.org/nmap/docs/nmap.dtd
+
         # Get the timestamp.
         timestamp = host.get("endtime")
         if timestamp:
@@ -236,6 +240,19 @@ class NmapScanPlugin(TestingPlugin):
                         ip_1.add_resource(ip_2)
         ips_visited.clear()
 
+        # Get all the MAC addresses.
+        mac_addresses = []
+        seen_macs = set()
+        for node in host.findall(".//address"):
+            if node.get("addrtype", "") != "mac":
+                continue
+            address = node.get("addr")
+            if not address:
+                continue
+            if address not in seen_macs:
+                seen_macs.add(address)
+            mac_addresses.append( MAC(address) )
+
         # Get all the hostnames.
         domain_names = []
         for node in host.findall(".//hostname"):
@@ -251,8 +268,13 @@ class NmapScanPlugin(TestingPlugin):
             for ip in ip_addresses:
                 name.add_resource(ip)
 
+        # Link all MAC addresses to all IP addresses.
+        for mac in mac_addresses:
+            for ip in ip_addresses:
+                mac.add_resource(ip)
+
         # Abort if no resources were found.
-        if not ip_addresses and not domain_names:
+        if not ip_addresses and not domain_names and not mac_addresses:
             return []
 
         # Get the portscan results.
@@ -330,7 +352,7 @@ class NmapScanPlugin(TestingPlugin):
                      RuntimeWarning)
 
         # This is where we'll gather all the results.
-        results = ip_addresses + domain_names
+        results = ip_addresses + domain_names + mac_addresses
 
         # Link the portscan results to the IP addresses.
         for ip in ip_addresses:

@@ -47,7 +47,8 @@ class MAC(Resource):
 
     resource_type = Resource.RESOURCE_MAC
 
-    # TODO add a database of MAC address prefixes and manufacturers
+    # TODO add a database of MAC address prefixes and manufacturers,
+    #      that way we can autodiscover BSSIDs from MACs
 
 
     #----------------------------------------------------------------------
