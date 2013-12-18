@@ -2942,11 +2942,11 @@ class AuditDB (BaseAuditDB):
         :param audit_config: Audit configuration.
         :type audit_config: AuditConfig
         """
-        if (
-            audit_config.audit_db and
-            audit_config.audit_db.strip().lower().startswith("mongo://")
-        ):
-            return AuditMongoDB(audit_config)
+        ##if (
+        ##    audit_config.audit_db and
+        ##    audit_config.audit_db.strip().lower().startswith("mongo://")
+        ##):
+        ##    return AuditMongoDB(audit_config)
         return AuditSQLiteDB(audit_config)
 
 
@@ -2956,8 +2956,8 @@ class AuditDB (BaseAuditDB):
         if audit_db == ":memory:":
             raise ValueError(
                 "Operation not supported for in-memory database!")
-        if audit_db.strip().lower().startswith("mongo://"):
-            return AuditMongoDB.get_config_from_closed_database(
-                audit_db, audit_name)
+        ##if audit_db.strip().lower().startswith("mongo://"):
+        ##    return AuditMongoDB.get_config_from_closed_database(
+        ##        audit_db, audit_name)
         return AuditSQLiteDB.get_config_from_closed_database(
             audit_db, audit_name)

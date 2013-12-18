@@ -7,7 +7,6 @@ Changelog
 - Integration with SSLScan, SQLMap, XSSer, Shodan and PunkSPIDER.
 - Completely rewritten HTML report.
 - New report formats: OpenOffice, LaTeX, JSON, BSON, XML, YAML, MsgPack.
-- Added support for MongoDB.
 - Many improvements to the reports and the vulnerability descriptions.
 - Fixes and improvements to the OpenVAS plugin.
 - Added vulnerability standards:
