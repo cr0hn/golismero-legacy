@@ -45,7 +45,7 @@ import traceback
 
 
 #------------------------------------------------------------------------------
-class GeoIP(TestingPlugin):
+class ShodanPlugin(TestingPlugin):
     """
     This plugin tries to perform passive reconnaissance on a target using
     the Shodan web API.
