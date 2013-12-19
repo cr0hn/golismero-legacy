@@ -31,18 +31,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import sys
 import os
 from os import path
-try:
-    _FIXED_PATH_
-except NameError:
-    here = path.split(path.abspath(__file__))[0]
-    if not here:  # if it fails use cwd instead
-        here = path.abspath(os.getcwd())
-    golismero = path.join(here, "..")
-    thirdparty_libs = path.join(golismero, "thirdparty_libs")
-    if path.exists(thirdparty_libs):
-        sys.path.insert(0, thirdparty_libs)
-        sys.path.insert(0, golismero)
-    _FIXED_PATH_ = True
+here = path.split(path.abspath(__file__))[0]
+if not here:  # if it fails use cwd instead
+    here = path.abspath(os.getcwd())
+golismero = path.join(here, "..")
+thirdparty_libs = path.join(golismero, "thirdparty_libs")
+if path.exists(thirdparty_libs):
+    sys.path.insert(0, thirdparty_libs)
+    sys.path.insert(0, golismero)
 
 
 from golismero.api.data.vulnerability.vuln_utils import extract_vuln_ids, \
@@ -56,6 +52,7 @@ Testing CA with 2 samples - CA-1990-01 and CA-2004-01. This should NOT match: CA
 Testing CAPEC with 2 samples: CAPEC-3 and CAPEC: 1.
 Testing CVE with CVE-1234-4321 and CVE-1234-12345, the new format.
 Testing CWE with CWE-123.
+Testing Exploit-DB with EDB-ID: 100 and EDB-200. Should not match EDB 300, EDB-ID 400 nor ExploitDB ID 500.
 Testing MS with MS01-023, MS04-011 and MS13-067.
 Testing MSKB with MSKB: 1, KB:2, MSKB-3 and KB-4. Should not match KB - 5.
 Testing NESSUS with NESSUS-23649 and NESSUS: 23650.
@@ -101,12 +98,14 @@ And now let's put some duplicates to see if they're being filtered:
 CVE-1234-4321 CVE-1234-4321 CVE-1234-4321 CVE-1234-4321 CVE-1234-4321
 """
 
+
 _test_case_extract_solution = {
     "bid": ["BID-1234", "BID-12345", "BID-321", "BID-4321", "BID-456", "BID-4567", "BID-45678", "BID-999"],
     "ca": ["CA-1990-01", "CA-2004-01"],
     "capec": ["CAPEC-1", "CAPEC-3"],
     "cve": ["CVE-1234-12345", "CVE-1234-4321"],
     "cwe": ["CWE-123"],
+    "edb": ["EDB-100", "EDB-200"],
     "ms": ["MS01-023", "MS04-011", "MS13-067"],
     "mskb": ["MSKB-1", "MSKB-2", "MSKB-3", "MSKB-4"],
     "nessus": ["NESSUS-23649", "NESSUS-23650"],
@@ -116,6 +115,7 @@ _test_case_extract_solution = {
     "vu": ["VU-826463", "VU-826464"],
     "xf": ["XF-11", "XF-123", "XF-321", "XF-55", "XF-66"],
 }
+
 
 _test_case_url = """
 
@@ -143,6 +143,9 @@ http://web.nvd.nist.gov/view/vuln/detail?vulnId=4444-4444
 
 https://cwe.mitre.org/data/definitions/123.html
 http://cwe.mitre.org/data/definitions/124.html
+
+http://www.exploit-db.com/exploits/100/
+http://www.exploit-db.com/exploits/200
 
 http://www.microsoft.com/technet/security/bulletin/MS01-023.asp
 https://www.microsoft.com/technet/security/bulletin/MS01-022.asp
@@ -186,6 +189,7 @@ http://www.kb.cert.org/vuls/id/911678
 http://xforce.iss.net/xforce/xfdb/11
 
 """
+
 
 def test_vuln_id_parser():
     DEBUG = False
