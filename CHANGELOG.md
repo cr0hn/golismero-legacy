@@ -10,6 +10,7 @@ Changelog
 - Many improvements to the reports and the vulnerability descriptions.
 - Fixes and improvements to the OpenVAS plugin.
 - Added vulnerability standards:
+  * Exploit-DB ID
   * Microsoft Bulletin ID
   * Microsoft Knowledge Base ID
   * Nessus Plugin ID
