@@ -228,7 +228,13 @@ class AbstractNotifier (object):
         if data.data_type == Data.TYPE_VULNERABILITY:
             for requested, plugin_ids \
              in self._notification_info_map.iteritems():
-                if subtype == requested or subtype.startswith(requested + "/"):
+                if type(requested) is not str:
+                    continue
+                if (
+                    subtype == "abstract" or
+                    subtype == requested or
+                    subtype.startswith(requested + "/")
+                ):
                     plugins_to_notify.update(plugin_ids)
         else:
             if subtype in self._notification_info_map:

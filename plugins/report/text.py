@@ -324,7 +324,7 @@ class TextReport(ReportPlugin):
                         table.add_row(("Taxonomy", "\n".join(taxonomy)))
                     if vuln.references:
                         table.add_row(("References", "\n".join(sorted(vuln.references))))
-                    details = vuln.display_properties["Details"]
+                    details = vuln.display_properties.get("Details")
                     if details:
                         props = details.keys()
                         props.sort()

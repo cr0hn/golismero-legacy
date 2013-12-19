@@ -30,6 +30,7 @@ from golismero.api.config import Config
 from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
+from golismero.api.data.vulnerability import Vulnerability # noqa
 from golismero.api.data.vulnerability import UncategorizedVulnerability
 from golismero.api.data.vulnerability.infrastructure.outdated_platform import * # noqa
 from golismero.api.logger import Logger
