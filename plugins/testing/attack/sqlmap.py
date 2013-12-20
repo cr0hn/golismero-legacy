@@ -43,7 +43,6 @@ import re
 #------------------------------------------------------------------------------
 class SQLMapTestingPlugin(TestingPlugin):
 
-
     #--------------------------------------------------------------------------
     def check_params(self):
         if not find_binary_in_path("sqlmap.py"):
@@ -51,11 +50,9 @@ class SQLMapTestingPlugin(TestingPlugin):
                 "SQLMap not found!"
                 " You can download it from: http://sqlmap.org/")
 
-
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
-
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
@@ -85,11 +82,11 @@ class SQLMapTestingPlugin(TestingPlugin):
             #
             if info.has_url_params:
 
-                args = [
+                args.extend([
                     "-p",
                     ",".join(info.url_params),
-                ]
-
+                ])
+                Logger.log(args)
                 r = self.make_injection(info.url, args)
                 if r:
                     results.extend(self.parse_sqlmap_results(info, output_dir))
@@ -98,11 +95,11 @@ class SQLMapTestingPlugin(TestingPlugin):
             # POST Parameters injection
             #
             if info.has_post_params:
-
-                args = [
+                Logger.log(args)
+                args.extend([
                     "--data",
-                    "&".join([ "%s=%s" % (k, v) for k, v in info.post_params.iteritems()])
-                ]
+                    "&".join(["%s=%s" % (k, v) for k, v in info.post_params.iteritems()])
+                ])
 
                 r = self.make_injection(info.url, args)
                 if r:
@@ -114,7 +111,6 @@ class SQLMapTestingPlugin(TestingPlugin):
             Logger.log("No SQL injection vulnerabilities found.")
 
         return results
-
 
     #----------------------------------------------------------------------
     def make_injection(self, target, args):
