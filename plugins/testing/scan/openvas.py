@@ -31,7 +31,7 @@ from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.vulnerability import UncategorizedVulnerability
-from golismero.api.data.vulnerability.infrastructure.outdated_platform import * # noqa
+from golismero.api.data.vulnerability.infrastructure.outdated_platform import *  # noqa
 from golismero.api.logger import Logger
 from golismero.api.net.scraper import extract_from_text
 from golismero.api.plugin import TestingPlugin, ImportPlugin
@@ -74,6 +74,7 @@ class OpenVASProgress(object):
     def __init__(self, func):
         self.func = func
         self.previous = None
+
     def __call__(self, progress):
         if self.previous != progress:
             self.previous = progress
@@ -82,7 +83,6 @@ class OpenVASProgress(object):
 
 #------------------------------------------------------------------------------
 class OpenVASPlugin(TestingPlugin):
-
 
     #--------------------------------------------------------------------------
     def check_params(self):
@@ -116,11 +116,9 @@ class OpenVASPlugin(TestingPlugin):
         except VulnscanException, e:
             raise RuntimeError(str(e))
 
-
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [IP]
-
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
@@ -158,10 +156,9 @@ class OpenVASPlugin(TestingPlugin):
                     "Connecting to OpenVAS server at %s:%d" % (m_host, m_port))
                 m_scanner = VulnscanManager(
                     m_host, m_user, m_password, m_port, m_timeout)
-            except VulnscanException, e:
+            except VulnscanException,e:
                 t = format_exc()
                 Logger.log_error("Error connecting to OpenVAS, aborting scan!")
-                #Logger.log_error_verbose(str(e))
                 Logger.log_error_more_verbose(t)
 
                 # Set the openvas connection as down and remember it.
@@ -213,7 +210,6 @@ class OpenVASPlugin(TestingPlugin):
 
         # Convert the scan results to the GoLismero data model.
         return self.parse_results(m_openvas_results, info)
-
 
     #--------------------------------------------------------------------------
     @staticmethod
@@ -411,7 +407,6 @@ class OpenVASPlugin(TestingPlugin):
 #------------------------------------------------------------------------------
 class OpenVASImportPlugin(ImportPlugin):
 
-
     #--------------------------------------------------------------------------
     def is_supported(self, input_file):
         if input_file and input_file.lower().endswith(".xml"):
@@ -423,7 +418,6 @@ class OpenVASImportPlugin(ImportPlugin):
                     warn("OpenVAS plugin not initialized, please run setup.py")
                 return True
         return False
-
 
     #--------------------------------------------------------------------------
     def import_results(self, input_file):

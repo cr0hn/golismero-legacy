@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"OpenVas Data Structures."
+"""OpenVas Data Structures."""
 
 __license__ = """
 OpenVAS connector for OMPv4.
