@@ -72,11 +72,9 @@ severity_vectors = {
 #----------------------------------------------------------------------
 class PredictablesDisclosureBruteforcer(TestingPlugin):
 
-
     #----------------------------------------------------------------------
     def get_accepted_info(self):
         return [FolderUrl]
-
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
@@ -91,58 +89,45 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
         m_webserver_finger = info.get_associated_informations_by_category(WebServerFingerprint.information_type)
 
         m_wordlist = set()
+
+        # Common wordlists
+        try:
+            w = Config.plugin_extra_config["common"]
+            m_wordlist.update([l_w for l_w in w.itervalues()])
+        except KeyError:
+            Logger.log_error("Can't load common wordlists")
+
         # There is fingerprinting information?
         if m_webserver_finger:
 
             m_webserver_finger = m_webserver_finger.pop()
 
             m_server_canonical_name = m_webserver_finger.canonical_name
-            m_servers_related       = m_webserver_finger.related # Set with related web servers
+            m_servers_related = m_webserver_finger.related # Set with related web servers
 
             #
             # Load wordlists
             #
-            m_wordlist_update  = m_wordlist.update
-
-            # Common wordlist
-            try:
-                w = Config.plugin_extra_config["common"]
-                m_wordlist_update([l_w for l_w in w.itervalues()])
-            except KeyError:
-                Logger.log_error("Can't load wordlists")
-
+            m_wordlist_update = m_wordlist.update
 
             # Wordlist of server name
             try:
                 w = Config.plugin_extra_config["%s_predictables" % m_server_canonical_name]
                 m_wordlist_update([l_w for l_w in w.itervalues()])
             except KeyError:
-                Logger.log_error("Can't load wordlists")
+                Logger.log_error("Can't load predictables wordlists for server: '%s'." % m_server_canonical_name)
 
             # Wordlist of related with the server found
             try:
                 for l_servers_related in m_servers_related:
-                    w = Config.plugin_extra_config["%s_predictables" % m_server_canonical_name]
+                    w = Config.plugin_extra_config["%s_predictables" % l_servers_related]
                     m_wordlist_update([l_w for l_w in w.itervalues()])
-            except KeyError:
-                Logger.log_error("Can't load wordlists")
-
-        else:
-
-            # Common wordlists
-            try:
-                w = Config.plugin_extra_config["common"]
-                m_wordlist.update([l_w for l_w in w.itervalues()])
-            except KeyError:
-                Logger.log_error("Can't load wordlists")
-
+            except KeyError, e:
+                Logger.log_error("Can't load wordlists predictables wordlists for related webserver: '%s'" % e)
 
         # Load content of wordlists
-        m_urls           = set()
-        m_urls_update    = m_urls.update
-
-        # Fixed Url
-        #m_url_fixed      = m_url if m_url.endswith("/") else "%s/" % m_url
+        m_urls = set()
+        m_urls_update = m_urls.add
 
         for l_w in m_wordlist:
             # Use a copy of wordlist to avoid modify the original source
@@ -150,11 +135,15 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
 
             for l_wo in l_loaded_wordlist:
                 try:
-                    tmp_u = urljoin(m_url, l_wo[1:] if l_wo.startswith("/") else l_wo)
-                except ValueError:
+                    l_wo = l_wo[1:] if l_wo.startswith("/") else l_wo
+                    tmp_u = urljoin(m_url, l_wo)
+                except ValueError, e:
+                    Logger.log_error("Failed to parse key, from wordlist, '%s'" % tmp_u)
                     continue
 
                 m_urls_update(tmp_u)
+
+        Logger.log_verbose("Loaded %s URLs to test." % len(m_urls))
 
         # Generates the error page
         m_error_response = get_error_page(m_url)
@@ -162,8 +151,8 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
         # Create the matching analyzer
         try:
             m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
-        except ValueError:
-            # Thereis not information
+        except ValueError, e:
+            Logger.log("There is not information for analyze when creating the matcher: '%s'" % e)
             return
 
         # Create the partial funs
@@ -188,11 +177,9 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
     Testing suffixes: index.php -> index_0.php
     """
 
-
     #----------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
-
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
@@ -220,8 +207,8 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
         # Create the matching analyzer
         try:
             m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
-        except ValueError:
-            # Thereis not information
+        except ValueError, e:
+            Logger.log("There is not information for analyze when creating the matcher: '%s'" % e)
             return
 
         # Create the partial funs
@@ -246,11 +233,9 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
     Testing changing extension of files
     """
 
-
     #----------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
-
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
@@ -278,8 +263,8 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
         # Create the matching analyzer
         try:
             m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
-        except ValueError:
-            # Thereis not information
+        except ValueError, e:
+            Logger.log("There is not information for analyze when creating the matcher: '%s'" % e)
             return
 
         # Create the partial funs
@@ -294,7 +279,6 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
         for i, l_url in enumerate(m_urls):
             _f((i, l_url))
 
-
         # Generate and return the results.
         return generate_results(m_store_info.unique_texts)
 
@@ -305,11 +289,9 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
     Testing changing extension of files
     """
 
-
     #----------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
-
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
@@ -338,7 +320,7 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
         try:
             m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
         except ValueError:
-            # Thereis not information
+            Logger.log("There is not information for analyze when creating the matcher: '%s'" % e)
             return
 
         # Create the partial funs
@@ -363,11 +345,9 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
     Testing filename permutations
     """
 
-
     #----------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
-
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
@@ -395,8 +375,8 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
         # Create the matching analyzer
         try:
             m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
-        except ValueError:
-            # Thereis not information
+        except ValueError, e:
+            Logger.log("There is not information for analyze when creating the matcher: '%s'" % e)
             return
 
         # Create the partial funs
@@ -420,11 +400,9 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
     Testing changing directories of files
     """
 
-
     #----------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
-
 
     #----------------------------------------------------------------------
     def recv_info(self, info):
@@ -452,8 +430,8 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
         # Create the matching analyzer
         try:
             m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
-        except ValueError:
-            # Thereis not information
+        except ValueError, e:
+            Logger.log("There is not information for analyze when creating the matcher: '%s'" % e)
             return
 
         # Create the partial funs
@@ -499,7 +477,7 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
     i, url = url
 
     updater_func((float(i) * 100.0) / float(total_urls))
-    Logger.log_more_verbose("Trying to discover URL %s" % url)
+    # Logger.log_more_verbose("Trying to discover URL %s" % url)
 
     # Get URL
     p = None
@@ -637,12 +615,16 @@ def get_error_page(url):
     # Generate an error in server to get an error page, using a random string
     #
     # Make the URL
-    m_error_url      = "%s%s" % (url, generate_random_string())
+    m_error_url = "%s%s" % (url, generate_random_string())
 
     # Get the request
-    m_error_response = HTTP.get_url(m_error_url)  # FIXME handle exceptions!
+    try:
+        m_error_response = HTTP.get_url(m_error_url)  # FIXME handle exceptions!
+    except:
+        raise ValueError("Can't get error page.")
+
     discard_data(m_error_response)
-    m_error_response = m_error_response.data
+    return m_error_response.data
 
 
 #----------------------------------------------------------------------
