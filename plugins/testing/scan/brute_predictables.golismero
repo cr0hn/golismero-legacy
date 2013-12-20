@@ -13,7 +13,10 @@ Module = brute_url.py
 Class = PredictablesDisclosureBruteforcer
 
 [common]
-w1 = fuzzdb/Discovery/PredictableRes/CGI_XPlatform.fuzz.txt
+w2 = fuzzdb/Discovery/PredictableRes/Logins.fuzz.txt
+w3 = fuzzdb/Discovery/PredictableRes/Passwords.fuzz.txt
+w4 = fuzzdb/Discovery/PredictableRes/proxy-conf.fuzz.txt
+w5 = fuzzdb/Discovery/PredictableRes/Randomfiles.fuzz.txt
 
 #
 # Predictables by Web server
