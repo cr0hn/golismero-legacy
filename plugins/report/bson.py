@@ -26,65 +26,67 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["MessagePackOutput"]
+__all__ = ["BSONOutput"]
 
+from golismero.api.logger import Logger
 from golismero.api.plugin import import_plugin
 json = import_plugin("json.py")
 
 # Lazy imports.
-umsgpack = None
+BSON = None
 
 
 #------------------------------------------------------------------------------
-class MessagePackOutput(json.JSONOutput):
+class BSONOutput(json.JSONOutput):
     """
-    Dumps the output in MessagePack format.
+    Dumps the output in BSON (Binary JSON) format.
     """
 
-    EXTENSION = ".msgpack"
+    EXTENSION = ".bson"
 
 
     #--------------------------------------------------------------------------
     def is_supported(self, output_file):
-
-        # Load MessagePack.
-        global umsgpack
-        if umsgpack is None:
+        if super(BSONOutput, self).is_supported(output_file):
             try:
-                import umsgpack
+                self.load_bson()
             except ImportError:
-                raise RuntimeError(
-                    "MessagePack not installed!"
-                    " You can get it from: http://msgpack.org/")
-
-        # Call the superclass method.
-        return super(MessagePackOutput, self).is_supported(output_file)
+                Logger.log_error(
+                    "BSON encoder not found!\n"
+                    "Get it from:\n"
+                    "    https://github.com/mongodb/mongo-python-driver\n"
+                    "Or alternatively from:\n"
+                    "    https://github.com/martinkou/bson"
+                )
+                return False
+            return True
+        return False
 
 
     #--------------------------------------------------------------------------
-    def generate_report(self, output_file):
-
-        # Load MessagePack.
-        global umsgpack
-        if umsgpack is None:
+    @staticmethod
+    def load_bson():
+        global BSON
+        if BSON is None:
             try:
-                import umsgpack
+                from pymongo.bson import BSON
             except ImportError:
-                raise RuntimeError(
-                    "MessagePack not installed!"
-                    " You can get it from: http://msgpack.org/")
-
-        # Call the superclass method.
-        super(MessagePackOutput, self).generate_report(output_file)
+                from bson import dumps
+                class BSON(object):
+                    @staticmethod
+                    def encode(obj, *args, **kwargs):
+                        return dumps(obj)
 
 
     #--------------------------------------------------------------------------
     def serialize_report(self, output_file, report_data):
-        raw_data = umsgpack.packb(report_data)
+        self.load_bson()
+        bson_data = BSON.encode(report_data, check_keys=True)
         with open(output_file, "wb") as fp:
-            fp.write(raw_data)
+            fp.write(bson_data)
 
 
     #--------------------------------------------------------------------------
     def test_data_serialization(self, data):
-        umsgpack.packb(data)
+        self.load_bson()
+        BSON.encode(data, check_keys=True)

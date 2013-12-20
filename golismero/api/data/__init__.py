@@ -629,6 +629,18 @@ class Data(object):
 
 
     #--------------------------------------------------------------------------
+    ##def __new__(cls, *args, **kwargs):
+    ##
+    ##    # Reuse old instances when possible.
+    ##    new_obj = super(Data, cls).__new__(*args, **kwargs)
+    ##    old_obj = LocalDataCache.get(new_obj.identity)
+    ##    if old_obj is not None:
+    ##        old_obj.merge(new_obj)
+    ##        new_obj = old_obj
+    ##    return old_obj
+
+
+    #--------------------------------------------------------------------------
     def __init__(self):
 
         # Linked Data objects.
@@ -1532,23 +1544,20 @@ class Data(object):
     #--------------------------------------------------------------------------
     def is_instance(self, clazz):
         """
-        Checks if this Data object belongs to the given class.
+        Checks if this Data object belongs to the given Data class.
 
-        :param clazz: Data subclass to check.
-        :type clazz: class
+        :param clazz: Subclass to check.
+        :type clazz: type
 
         :returns: True if the data object belongs to the class,
             False otherwise.
         :rtype: bool
-
-        :raises TypeError: Not a Data subclass.
         """
         try:
             data_type    = clazz.data_type
             data_subtype = clazz.data_subtype
         except AttributeError:
-            raise TypeError(
-                "Expected Data subclass, got %r instead" % type(clazz))
+            return False
         return self.data_type    == data_type    and \
                self.data_subtype == data_subtype
 

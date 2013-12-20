@@ -26,6 +26,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["TextReport"]
+
 import sys
 
 from collections import defaultdict
@@ -192,6 +194,8 @@ class TextReport(ReportPlugin):
             for ip in self.__iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_IP):
                 table = Texttable()
                 self.__add_related(table, ip, Data.TYPE_RESOURCE, Resource.RESOURCE_DOMAIN, "Domain Name")
+                self.__add_related(table, ip, Data.TYPE_RESOURCE, Resource.RESOURCE_MAC, "MAC Address")
+                self.__add_related(table, ip, Data.TYPE_RESOURCE, Resource.RESOURCE_BSSID, "WiFi 802.11 BSSID")
                 self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_GEOLOCATION, "Location")
                 self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_WEB_SERVER_FINGERPRINT, "Web Server")
                 self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_OS_FINGERPRINT, "OS Fingerprint")
@@ -320,7 +324,7 @@ class TextReport(ReportPlugin):
                         table.add_row(("Taxonomy", "\n".join(taxonomy)))
                     if vuln.references:
                         table.add_row(("References", "\n".join(sorted(vuln.references))))
-                    details = vuln.display_properties["Details"]
+                    details = vuln.display_properties.get("Details")
                     if details:
                         props = details.keys()
                         props.sort()

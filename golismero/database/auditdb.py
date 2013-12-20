@@ -50,7 +50,14 @@ import md5
 import sqlite3
 import threading
 import time
+import urlparse
 import warnings
+
+# Lazy imports
+pymongo  = None
+binary   = None
+objectid = None
+Error    = None
 
 
 #----------------------------------------------------------------------
@@ -1850,10 +1857,12 @@ class AuditSQLiteDB (BaseAuditDB):
 
         # Build the query.
         query = (
-            "SELECT plugin.name, log.rowid,"
-            "       log.text, log.level, log.is_error, log.timestamp"
+            "SELECT"
+            " plugin.name, log.identity, log.text,"
+            " log.level, log.is_error, log.timestamp"
             " FROM plugin, log"
-            " WHERE plugin.rowid = log.plugin_id")
+            " WHERE plugin.rowid = log.plugin_id"
+        )
         params = []
         if filter_by_plugin:
             plugin_rowid = self.__get_or_create_plugin_rowid(filter_by_plugin)
@@ -1868,12 +1877,13 @@ class AuditSQLiteDB (BaseAuditDB):
         if filter_by_data:
             query += " AND log.ack_id = ?"
             params.append(filter_by_data)
+        query += " ORDER BY log.timestamp"
         if (
             page_num is not None and page_num >= 0 and
             per_page is not None and per_page > 0
         ):
-            query += " OFFSET %d LIMIT %d" % (page_num + per_page, per_page)
-        query += " ORDER BY log.timestamp;"
+            query += " LIMIT %d, %d" % (page_num * per_page, per_page)
+        query += ";"
 
         # Run the query.
         self.__cursor.execute(query, tuple(params))
@@ -2155,6 +2165,17 @@ class AuditMongoDB(BaseAuditDB):
     #--------------------------------------------------------------------------
     def __init__(self, audit_config):
         super(AuditMongoDB,self).__init__(audit_config)
+
+        global pymongo
+        if pymongo is None:
+            global binary
+            global objectid
+            global Error
+            from bson import binary
+            from bson import objectid
+            from xdg.Exceptions import Error
+            import pymongo
+
         # format mongo://ip:port@rereplicaset/databasename
         self.setMongoInfo(audit_config)
         #self.__mongoadress = "localhost"
@@ -2320,7 +2341,7 @@ class AuditMongoDB(BaseAuditDB):
 
         # Tell SQLite the encoded data is a BLOB and not a TEXT.
         #return sqlite3.Binary(data)
-        return Binary(data,0)
+        return binary.Binary(data,0)
 
 
     #--------------------------------------------------------------------------
@@ -2619,7 +2640,7 @@ class AuditMongoDB(BaseAuditDB):
 
         plugin_id = self.__get_pluginid(plugin_id)
         if not plugin_id:
-            raise Error("Fetal Error, can not save data to mongodb in collection 'history'")
+            raise Error("Fatal Error, can not save data to mongodb in collection 'history'")
 
         self._c_history.update({"plugin_id":plugin_id,
                                 "identity":identity
@@ -2691,7 +2712,7 @@ class AuditMongoDB(BaseAuditDB):
         plugin_id_set= {str(row['plugin_id']) for row in self._c_history.find({'identity':identity},{'_id':0,'plugin_id':1})}
         plugin_name_set = set()
         for plugin_id in plugin_id_set:
-            plugin_name_set.update({str(row['name']) for row in self._c_plugin.find({'_id':ObjectId(plugin_id)},{'_id':0,'name':1})})
+            plugin_name_set.update({str(row['name']) for row in self._c_plugin.find({'_id':objectid.ObjectId(plugin_id)},{'_id':0,'name':1})})
         return plugin_name_set
 
 
@@ -2782,7 +2803,7 @@ class AuditMongoDB(BaseAuditDB):
             raise TypeError("Expected str, got %s" % type(shared_id))
 
 
-        keys = [str(key) for key, value in items]
+        keys = [str(key) for key, _ in items]
         old_values = self.get_mapped_values(shared_id, keys)
         self.put_mapped_values(shared_id, items)
 
@@ -2865,7 +2886,7 @@ class AuditMongoDB(BaseAuditDB):
         else:
             items = [(str(row["_id"]),row["value"]) for row in self._c_shared_heap.find({"shared_id":shared_id},{"_id":1,"value":1})]
         result = tuple(self.decode(value) for _, value in items)
-        for rowid,value in items:
+        for rowid, _ in items:
             self._c_shared_heap.remove({"_id":rowid})
 
         return result
@@ -2921,11 +2942,11 @@ class AuditDB (BaseAuditDB):
         :param audit_config: Audit configuration.
         :type audit_config: AuditConfig
         """
-        if (
-            audit_config.audit_db and
-            audit_config.audit_db.strip().lower().startswith("mongo://")
-        ):
-            return AuditMongoDB(audit_config)
+        ##if (
+        ##    audit_config.audit_db and
+        ##    audit_config.audit_db.strip().lower().startswith("mongo://")
+        ##):
+        ##    return AuditMongoDB(audit_config)
         return AuditSQLiteDB(audit_config)
 
 
@@ -2935,8 +2956,8 @@ class AuditDB (BaseAuditDB):
         if audit_db == ":memory:":
             raise ValueError(
                 "Operation not supported for in-memory database!")
-        if audit_db.strip().lower().startswith("mongo://"):
-            return AuditMongoDB.get_config_from_closed_database(
-                audit_db, audit_name)
+        ##if audit_db.strip().lower().startswith("mongo://"):
+        ##    return AuditMongoDB.get_config_from_closed_database(
+        ##        audit_db, audit_name)
         return AuditSQLiteDB.get_config_from_closed_database(
             audit_db, audit_name)

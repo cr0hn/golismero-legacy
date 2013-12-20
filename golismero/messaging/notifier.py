@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["AuditNotifier", "OrchestratorNotifier"]
 
 from ..api.config import Config
+from ..api.data import Data
 ##from ..api.logger import Logger
 from ..api.plugin import Plugin
 from .message import Message
@@ -217,16 +218,29 @@ class AbstractNotifier (object):
         :returns: set(str) -- Set of plugin IDs.
         """
 
-        m_plugins_to_notify = set()
+        plugins_to_notify = set()
 
         # Plugins that expect all types of info.
-        m_plugins_to_notify.update(self._notification_info_all)
+        plugins_to_notify.update(self._notification_info_all)
 
         # Plugins that expect this type of info.
-        m_type = data.data_subtype
-        if m_type in self._notification_info_map:
-            m_plugins_to_notify.update(self._notification_info_map[m_type])
-        return m_plugins_to_notify
+        subtype = data.data_subtype
+        if data.data_type == Data.TYPE_VULNERABILITY:
+            for requested, plugin_ids \
+             in self._notification_info_map.iteritems():
+                if type(requested) is not str:
+                    continue
+                if (
+                    subtype == "abstract" or
+                    subtype == requested or
+                    subtype.startswith(requested + "/")
+                ):
+                    plugins_to_notify.update(plugin_ids)
+        else:
+            if subtype in self._notification_info_map:
+                plugins_to_notify.update(self._notification_info_map[subtype])
+
+        return plugins_to_notify
 
 
     #--------------------------------------------------------------------------

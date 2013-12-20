@@ -3,8 +3,8 @@
 
 ---
 
-What's GoLismero 2.0?
-=====================
+What's GoLismero?
+=================
 
 GoLismero is an open source framework for security testing. It's currently geared towards web security, but it can easily be expanded to other kinds of scans.
 
@@ -22,7 +22,7 @@ The most interesting features of the framework are:
 Quick help
 ==========
 
-Using GoLismero 2.0 is very easy. Below are some basic commands to start to using it:
+Using GoLismero is very easy. Below are some basic commands to start to using it:
 
 Installing
 ----------
