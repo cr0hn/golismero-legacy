@@ -26,18 +26,21 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+import shlex
+import re
+
+from os.path import join
+from time import time
+from traceback import format_exc
+
+from golismero.api.config import Config
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.injection.sql import SQLInjection
 from golismero.api.external import run_external_tool, find_binary_in_path, tempdir
 from golismero.api.logger import Logger
 from golismero.api.net import ConnectionSlot
+from golismero.api.net.web_utils import WEB_SERVERS_VARS
 from golismero.api.plugin import TestingPlugin
-
-from os.path import join, abspath, dirname, isfile
-from time import time
-from traceback import format_exc
-
-import re
 
 
 #------------------------------------------------------------------------------
@@ -62,20 +65,25 @@ class SQLMapTestingPlugin(TestingPlugin):
                 "URL %r has no parameters, skipping" % info.url)
             return
 
+        # Result info
         results = []
+
+        # Get user args
+        user_args = shlex.split(Config.plugin_args["args"])
+
         with tempdir() as output_dir:
 
             # Basic command line
             args = [
                 "-u",
                 info.url,
-                "-b",
                 "--batch",
                 "--output-dir",
-                output_dir,
-                "-u",
-                info.url,
+                output_dir
             ]
+
+            # Add the user args
+            args.extend(user_args)
 
             #
             # GET Parameters injection
@@ -84,9 +92,9 @@ class SQLMapTestingPlugin(TestingPlugin):
 
                 args.extend([
                     "-p",
-                    ",".join(info.url_params),
+                    ",".join([x for x in info.url_params if x not in WEB_SERVERS_VARS]),
                 ])
-                Logger.log(args)
+
                 r = self.make_injection(info.url, args)
                 if r:
                     results.extend(self.parse_sqlmap_results(info, output_dir))
@@ -98,7 +106,7 @@ class SQLMapTestingPlugin(TestingPlugin):
                 Logger.log(args)
                 args.extend([
                     "--data",
-                    "&".join(["%s=%s" % (k, v) for k, v in info.post_params.iteritems()])
+                    "&".join(["%s=%s" % (k, v) for k, v in info.post_params.iteritems() if k not in WEB_SERVERS_VARS])
                 ])
 
                 r = self.make_injection(info.url, args)
@@ -132,7 +140,9 @@ class SQLMapTestingPlugin(TestingPlugin):
 
         with ConnectionSlot(target):
             t1 = time()
-            code = run_external_tool("sqlmap.py", args,
+            # Find one of the paths to the binary
+            command = find_binary_in_path("sqlmap.py")[0]
+            code = run_external_tool(command, args,
                                      callback=Logger.log_verbose)
             t2 = time()
 
