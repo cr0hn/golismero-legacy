@@ -96,6 +96,18 @@ __user_agents = (
     "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-us) AppleWebKit/534.16+ (KHTML, like Gecko) Version/5.0.3 Safari/533.19.4",
     "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25"
 )
+
+# This var contains names of vars uses by most commont web servers. This will be used by
+# all of injection tools, that can skip these vars.
+WEB_SERVERS_VARS = ["__utma",
+                    "__utmb",
+                    "__utmc",
+                    "__utmz",
+                    "JSESSIONID",
+                    "PHPSESSID",
+                    "ASPSESSIONID"]
+
+
 def generate_user_agent():
     """
     :returns: A valid user agent string, randomly chosen from a predefined list.
