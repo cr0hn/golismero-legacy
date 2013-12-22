@@ -32,7 +32,8 @@ from golismero.api.config import Config
 from golismero.api.text.wordlist import WordListLoader, WordlistNotFound
 from golismero.api.crypto import calculate_shannon_entropy
 from golismero.api.data.resource.url import Url
-from golismero.api.data.vulnerability.suspicious.url import SuspiciousURL, SuspiciousURLPath
+from golismero.api.data.vulnerability.suspicious.url import SuspiciousURLPath
+from golismero.api.data.vulnerability.malware.malicious_url import MaliciousUrl
 from golismero.api.plugin import TestingPlugin
 from golismero.api.net import NetworkException
 from golismero.api.net.scraper import extract_from_html, extract_from_text
@@ -160,13 +161,7 @@ class SuspiciousURLPlugin(TestingPlugin):
             # Out url
             u = Url(url = l_malware_site, referer = info.url)
 
-            v = SuspiciousURL(url         = u,
-                              title       = "Posible links to malware found",
-                              description = "The URL '%s' could contains output links to malware site or software.",
-                              solution    = "You should review your website and ensure that your site was not compromised by a security intrusion.",
-                              severity    = 2,
-                              level       = "middle",
-                              risk        = 2)
+            v = MaliciousUrl(u)
             v.add_resource(info)
 
             m_results.append(v)
