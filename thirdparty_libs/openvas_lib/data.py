@@ -4,7 +4,7 @@
 """OpenVas Data Structures."""
 
 __license__ = """
-OpenVAS connector for OMPv4.
+OpenVAS connector for OMP protocol.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -21,13 +21,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+__all__ = ["OpenVASPort", "OpenVASNVT", "OpenVASOverride", "OpenVASNotes", "OpenVASResult"]
+
 
 #------------------------------------------------------------------------------
 class OpenVASPort(object):
     """
     Port definition.
     """
-
 
     #----------------------------------------------------------------------
     def __init__(self, port_name, number, proto):
@@ -44,18 +45,19 @@ class OpenVASPort(object):
         if not isinstance(port_name, basestring):
             raise TypeError("Expected string, got %r instead" % type(port_name))
 
-        if isinstance(number, int):
-            if not (0 < number < 65535):
-                raise ValueError("port must be between ranges: [0-65535]")
-        else:
-            raise TypeError("Expected int, got %r instead" % type(number))
+        if number:
+            if isinstance(number, int):
+                if not (0 < number < 65535):
+                    raise ValueError("port must be between ranges: [0-65535]")
+            else:
+                raise TypeError("Expected int, got %r instead" % type(number))
 
         if not isinstance(proto, basestring):
             raise TypeError("Expected string, got %r instead" % type(proto))
 
-        self.__port_name             = port_name
-        self.__number                = number
-        self.__proto                 = proto
+        self.__port_name = port_name
+        self.__number = number
+        self.__proto = proto
 
     #----------------------------------------------------------------------
     @property
@@ -70,8 +72,8 @@ class OpenVASPort(object):
     @property
     def number(self):
         """
-        :return: port number
-        :rtype: int
+        :return: port number. None if not available.
+        :rtype: int|None
         """
         return self.__number
 
@@ -91,7 +93,6 @@ class OpenVASNVT(object):
     OpenVas NVT structure.
     """
 
-
     #----------------------------------------------------------------------
     def __init__(self):
         self.__oid             = None
@@ -109,7 +110,6 @@ class OpenVASNVT(object):
         self.__xrefs           = None
         self.__fingerprints    = None
         self.__tags            = None
-
 
     #----------------------------------------------------------------------
     @classmethod
