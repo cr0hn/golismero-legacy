@@ -63,7 +63,7 @@ def test_pylint():
         print "Cleaning up the PyLint log..."
         if not golismero.endswith(path.sep):
             golismero += path.sep
-        false_pos = []
+        false_pos = set()
         with open("_tmp_pylint.log", "r") as log:
             with open("pylint.log", "w") as output:
                 for line in log:
@@ -96,7 +96,7 @@ def test_pylint():
                             fn = int( false[ fp + 1 : fq ] )
                             if f == ff and d == fd: ## and (fn - 10) <= n <= (fn + 10):
                                 found = True
-                                false_pos.append( (ff, fn, fd) )
+                                false_pos.add( (ff, fn, fd) )
                                 break
                         if found:
                             continue
@@ -108,9 +108,8 @@ def test_pylint():
 
         # Update the false positives.
         if false_pos:
-            false_pos.sort()
             with open(path.join(here, "test_pylint.txt"), "w") as out:
-                for (ff, fn, fd) in false_pos:
+                for (ff, fn, fd) in sorted(false_pos):
                     false = "%s:%d%s\n" % (ff, fn, fd)
                     out.write(false)
 
