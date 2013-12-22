@@ -8,7 +8,6 @@ find . -name "*.pyo" -delete > /dev/null 2> /dev/null
 
 for f in $(cat _tmp.txt);
 do
-    echo $f
     cython $f >> tests/cython.log
 done
 

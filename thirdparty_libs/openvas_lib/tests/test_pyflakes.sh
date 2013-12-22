@@ -1,5 +1,6 @@
-OLD_PWD=`pwd`
 rm pyflakes-out.log pyflakes-err.log > /dev/null 2> /dev/null
+
+OLD_PWD=`pwd`
 
 cd ..
 find `pwd` -name "*.py" > _tmp.txt
