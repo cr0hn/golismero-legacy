@@ -528,7 +528,7 @@ class VulnscanManager(object):
     #
     #----------------------------------------------------------------------
     @staticmethod
-    def transform(xml_results, version=4):
+    def transform(xml_results, version="4.0"):
         """
         Transform the XML results of OpenVAS into GoLismero structures.
 
@@ -536,14 +536,14 @@ class VulnscanManager(object):
         :type xml_results: Element
 
         :param version: OpenVAS result version.
-        :type version: int
+        :type version: str
 
         :return: Results in GoLismero format.
         :rtype: list(OpenVASResult)
 
         :raises: ValueError, VulnscanVersionError
         """
-        if version == 4:
+        if version == "4.0":
             return _OMPv4.transform(xml_results)
         else:
             raise VulnscanVersionError()
