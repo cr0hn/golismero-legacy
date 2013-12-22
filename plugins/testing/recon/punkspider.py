@@ -55,9 +55,6 @@ class PunkSPIDER(TestingPlugin):
     #--------------------------------------------------------------------------
     def recv_info(self, info):
 
-        # Get the hostname to search for.
-        target = info.hostname
-
         # Query PunkSPIDER.
         host_id = info.hostname
         host_id = parse_url(host_id).hostname

@@ -33,15 +33,11 @@ from golismero.api.audit import get_audit_times, parse_audit_times
 from golismero.api.config import Config
 from golismero.api.data import Data
 from golismero.api.data.db import Database
-from golismero.api.external import run_external_tool
 from golismero.api.logger import Logger
 from golismero.api.plugin import ReportPlugin
 
 from datetime import datetime
-from shlex import split
 from warnings import warn
-
-import os.path
 
 try:
     # The fastest JSON parser available for Python.

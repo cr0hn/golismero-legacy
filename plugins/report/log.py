@@ -34,7 +34,6 @@ from golismero.api.logger import Logger
 from golismero.api.plugin import ReportPlugin, get_plugin_info
 
 from collections import namedtuple, defaultdict
-from functools import partial
 from time import asctime, gmtime
 
 

@@ -32,7 +32,6 @@ import warnings
 import sys
 
 from os.path import abspath, split
-from StringIO import StringIO
 
 from golismero.api.external import tempfile
 from golismero.api.logger import Logger

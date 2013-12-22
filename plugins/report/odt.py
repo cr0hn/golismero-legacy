@@ -34,7 +34,6 @@ from golismero.api.plugin import import_plugin
 
 rstext = import_plugin("rst.py")
 
-from StringIO import StringIO
 from warnings import catch_warnings
 
 

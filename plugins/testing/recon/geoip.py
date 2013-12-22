@@ -33,7 +33,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.data.information.geolocation import Geolocation
 from golismero.api.data.information.traceroute import Traceroute
 from golismero.api.data.resource.bssid import BSSID
-from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
 from golismero.api.logger import Logger
 from golismero.api.plugin import TestingPlugin
@@ -124,7 +123,7 @@ class GeoIP(TestingPlugin):
                 return
 
             # Translate the arguments for Geolocation().
-            address = kwargs.pop("ip")
+            kwargs.pop("ip")
 
         # Geolocate BSSIDs using Skyhook.
         elif info.is_instance(BSSID):
