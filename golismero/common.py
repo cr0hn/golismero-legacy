@@ -94,7 +94,7 @@ from keyword import iskeyword
 from os import path
 
 import os
-import random
+import random  #noqa
 import sys
 
 
@@ -150,7 +150,9 @@ def get_user_settings_folder():
 #------------------------------------------------------------------------------
 def get_default_config_file():
     """
-    :returns: Pathname of the default configuration file, or None if it doesn't exist.
+    :returns:
+        Pathname of the default configuration file,
+        or None if it doesn't exist.
     :rtype: str | None
     """
     config_file = path.join(get_user_settings_folder(), "golismero.conf")
@@ -399,7 +401,8 @@ class Configuration (object):
 
     @staticmethod
     def integer_or_none(x):
-        if x is None or (hasattr(x, "lower") and x.lower() in ("", "none", "inf", "infinite")):
+        if x is None or (hasattr(x, "lower") and
+                                 x.lower() in ("", "none", "inf", "infinite")):
             return None
         return Configuration.integer(x)
 
@@ -445,7 +448,8 @@ class Configuration (object):
         if x in (None, True, False):
             return x
         if not hasattr(x, "lower"):
-            raise ValueError("Trinary values only accept True, False and None")
+            raise ValueError(
+                "Trinary values only accept True, False and None")
         try:
             return {
                 "enabled": True,        # True
@@ -520,7 +524,8 @@ class Configuration (object):
         """
         Check if parameters are valid. Raises an exception otherwise.
 
-        This method only checks the validity of the arguments, it won't modify them.
+        This method only checks the validity of the arguments,
+        it won't modify them.
 
         :raises ValueError: The parameters are incorrect.
         """
@@ -545,12 +550,17 @@ class Configuration (object):
         """
         Get the settings from the attributes of a Python object.
 
-        :param args: Python object, for example the command line arguments parsed by argparse.
+        :param args:
+            Python object,
+            for example the command line arguments parsed by argparse.
         :type args: object
         """
 
         # Builds a dictionary with the object's public attributes.
-        args = { k : getattr(args, k) for k in dir(args) if not k.startswith("_") }
+        args = {
+            k : getattr(args, k)
+            for k in dir(args) if not k.startswith("_")
+        }
 
         # Remove all attributes whose values are None.
         args = { k:v for k,v in args.iteritems() if v is not None }
@@ -628,7 +638,7 @@ class Configuration (object):
         """
         Copy the settings to a JSON encoded dictionary.
 
-        :retruns: Settings as a JSON encoded dictionary.
+        :returns: Settings as a JSON encoded dictionary.
         :rtype: str
         """
 
@@ -639,7 +649,7 @@ class Configuration (object):
 #------------------------------------------------------------------------------
 class OrchestratorConfig (Configuration):
     """
-    Orchestator configuration object.
+    Orchestrator configuration object.
     """
 
 
@@ -679,7 +689,8 @@ class OrchestratorConfig (Configuration):
         "plugins_folder": Configuration.string,
 
         # Maximum number plugins to execute concurrently.
-        "max_concurrent": (Configuration.integer, 4 if path.sep == "\\" else 20),
+        "max_concurrent": (Configuration.integer,
+                           4 if path.sep == "\\" else 20),
 
         #
         # Network options.
@@ -757,17 +768,22 @@ class OrchestratorConfig (Configuration):
 
         # Validate the network connections limit.
         if self.max_connections < 1:
-            raise ValueError("Number of connections must be greater than 0, got %i." % self.max_connections)
+            raise ValueError(
+                "Number of connections must be greater than 0,"
+                " got %i." % self.max_connections)
 
         # Validate the number of concurrent processes.
         if self.max_concurrent < 0:
-            raise ValueError("Number of processes cannot be a negative number, got %i." % self.max_concurrent)
+            raise ValueError(
+                "Number of processes cannot be a negative number,"
+                " got %i." % self.max_concurrent)
 
         # Validate the list of plugins.
         if not self.enable_plugins:
             raise ValueError("No plugins selected for execution.")
         if set(self.enable_plugins).intersection(self.disable_plugins):
-            raise ValueError("Conflicting plugins selection, aborting execution.")
+            raise ValueError(
+                "Conflicting plugins selection, aborting execution.")
 
 
 #------------------------------------------------------------------------------
@@ -836,11 +852,8 @@ class AuditConfig (Configuration):
         # Include subdomains?
         "include_subdomains": (Configuration.boolean, True),
 
-        # Subdomains as regular expression
-        ##"subdomain_regex": Configuration.string,
-
         # Depth level for spider
-        "depth": (Configuration.integer_or_none, 0),
+        "depth": (Configuration.integer_or_none, 1),
 
         # Limits
         "max_links" : (Configuration.integer, 0), # 0 -> infinite
@@ -848,7 +861,8 @@ class AuditConfig (Configuration):
         # Follow redirects
         "follow_redirects": (Configuration.boolean, True),
 
-        # Follow a redirection on the target URL itself, regardless of "follow_redirects"
+        # Follow a redirection on the target URL itself,
+        # regardless of "follow_redirects"
         "follow_first_redirect": (Configuration.boolean, True),
 
         # Proxy options
@@ -1063,13 +1077,16 @@ class AuditConfig (Configuration):
                 # Prepare cookie.
                 cookie = cookie.replace(" ", "").replace("=", ":")
                 # Remove 'Cookie:' start, if exits.
-                cookie = cookie[len("Cookie:"):] if cookie.startswith("Cookie:") else cookie
+                if cookie.startswith("Cookie:"):
+                    cookie = cookie[len("Cookie:"):]
                 # Split.
                 cookie = cookie.split(";")
                 # Parse.
                 cookie = { c.split(":")[0]:c.split(":")[1] for c in cookie}
             except ValueError:
-                raise ValueError("Invalid cookie format specified. Use this format: 'Key=value; key=value'.")
+                raise ValueError(
+                    "Invalid cookie format specified."
+                    " Use this format: 'Key=value; key=value'.")
         else:
             cookie = None
         self._cookie = cookie
@@ -1119,22 +1136,19 @@ class AuditConfig (Configuration):
 
         # Validate the list of plugins.
         if not self.enable_plugins:
-            raise ValueError("No plugins selected for execution.")
+            raise ValueError(
+                "No plugins selected for execution.")
         if set(self.enable_plugins).intersection(self.disable_plugins):
-            raise ValueError("Conflicting plugins selection, aborting execution.")
-
-        # Validate the regular expresion.
-        ##if self.subdomain_regex:
-        ##    import re
-        ##
-        ##    try:
-        ##        re.compile(self.subdomain_regex)
-        ##    except re.error, e:
-        ##        raise ValueError("Regular expression not valid: %s." % str(e))
+            raise ValueError(
+                "Conflicting plugins selection, aborting execution.")
 
         # Validate the recursion depth.
         if self.depth is not None and self.depth < 0:
-            raise ValueError("Spidering depth can't be negative: %r" % self.depth)
+            raise ValueError(
+                "Spidering depth can't be negative: %r" % self.depth)
+        if self.depth is not None and self.depth == 0:
+            raise ValueError(
+                "Spidering depth can't be zero (nothing would be done!)")
 
 
     #--------------------------------------------------------------------------

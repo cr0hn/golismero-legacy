@@ -62,14 +62,25 @@ class Spider(TestingPlugin):
 
         Logger.log_verbose("Spidering URL: %s" % m_url)
 
-        # Check if need follow first redirect
+        # Check we're not right before the limit of the recursion depth.
+        # We don't want to spider the leaf nodes.
+        if (
+            Config.audit_config.depth is not None and # should be == but let's
+            info.depth >= Config.audit_config.depth   # be extra careful :)
+        ):
+            Logger.log_verbose("Maximum recursion depth reached: %s" % m_url)
+            return m_return
+
+        # Check if need follow first redirect, then follow the link.
         p = None
         try:
             allow_redirects = Config.audit_config.follow_redirects or \
-                             (info.depth == 0 and Config.audit_config.follow_first_redirect)
-            p = download(m_url, self.check_download, allow_redirects=allow_redirects)
-        except NetworkException,e:
-            Logger.log_more_verbose("Error while processing %r: %s" % (m_url, str(e)))
+                (info.depth == 0 and Config.audit_config.follow_first_redirect)
+            p = download(m_url, self.check_download,
+                         allow_redirects=allow_redirects)
+        except NetworkException, e:
+            Logger.log_error_verbose(
+                "Error while processing %r: %s" % (m_url, str(e)))
 
         if not p:
             return m_return

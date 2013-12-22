@@ -28,8 +28,8 @@ only_vulns = default
 # Include subdomains in the target scope.
 include_subdomains = yes
 
-# Maximum spidering depth.
-depth = 0
+# Maximum spidering depth. Defaults to 1.
+depth = 1
 
 # Maximum number of links to analyze (0 => infinite).
 max_links = 0

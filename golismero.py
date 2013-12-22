@@ -291,7 +291,7 @@ def cmdline_parser():
     ##gr_net.add_argument("--subdomain-regex", metavar="REGEX", help="filter subdomains using a regular expression")
     cmd = gr_net.add_argument("-r", "--depth", help="maximum spidering depth (use \"infinite\" for no limit)")
     if autocomplete_enabled:
-        cmd.completer = ChoicesCompleter(("infinite",))
+        cmd.completer = ChoicesCompleter(("1", "200", "infinite",))
     gr_net.add_argument("-l", "--max-links", type=int, default=None, help="maximum number of links to analyze (0 => infinite)")
     gr_net.add_argument("--follow-redirects", action="store_true", default=None, dest="follow_redirects", help="follow redirects")
     gr_net.add_argument("--no-follow-redirects", action="store_false", default=None, dest="follow_redirects", help="do not follow redirects")
