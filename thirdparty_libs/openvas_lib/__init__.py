@@ -35,8 +35,6 @@ import threading
 import os
 import sys
 
-from select import  select
-
 cwd = os.path.abspath(os.path.split(__file__)[0])
 cwd = os.path.join(cwd, ".")
 sys.path.insert(0, cwd)
