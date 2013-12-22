@@ -32,14 +32,8 @@ import socket
 import ssl
 import re
 import threading
-import os
-import sys
 
-cwd = os.path.abspath(os.path.split(__file__)[0])
-cwd = os.path.join(cwd, ".")
-sys.path.insert(0, cwd)
-
-from .data import OpenVASPort, OpenVASNVT, OpenVASOverride, OpenVASNotes, OpenVASResult
+from .data import *
 from collections import Iterable
 
 try:
