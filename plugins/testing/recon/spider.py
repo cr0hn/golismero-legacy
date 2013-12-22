@@ -62,15 +62,6 @@ class Spider(TestingPlugin):
 
         Logger.log_verbose("Spidering URL: %s" % m_url)
 
-        # Check we're not right before the limit of the recursion depth.
-        # We don't want to spider the leaf nodes.
-        if (
-            Config.audit_config.depth is not None and # should be == but let's
-            info.depth >= Config.audit_config.depth   # be extra careful :)
-        ):
-            Logger.log_verbose("Maximum recursion depth reached: %s" % m_url)
-            return m_return
-
         # Check if need follow first redirect, then follow the link.
         p = None
         try:

@@ -34,7 +34,6 @@ __all__ = ["AuditNotifier", "OrchestratorNotifier"]
 
 from ..api.config import Config
 from ..api.data import Data
-##from ..api.logger import Logger
 from ..api.plugin import Plugin
 from .message import Message
 from .codes import MessageType, MessageCode, MessagePriority
@@ -363,7 +362,8 @@ class AuditNotifier(AbstractNotifier):
                     try:
                         self.__processing[identity].remove(plugin_id)
                     except KeyError:
-                        msg = "Got an unexpected ACK for data ID %s from plugin %s"
+                        msg = "Got an unexpected ACK" \
+                              " for data ID %s from plugin %s"
                         warn(msg % (identity, plugin_id))
 
                     # Notify the Orchestrator that the plugin has finished.
@@ -549,6 +549,35 @@ class AuditNotifier(AbstractNotifier):
 
             # Get the payload identity hash.
             ack_identity = payload.identity
+
+            # Check the maximum recursion depth.
+            # We don't want to spider the leaf nodes, so we need a special
+            # case for the Spider plugin.
+            depth = audit.config.depth
+            if depth is not None and payload.depth >= depth:
+                skip_run = True
+                if payload.depth == depth:
+                    plugin_id = audit.pluginManager.\
+                                    get_plugin_info_from_instance(plugin)[0]
+                    if plugin_id != "testing/recon/spider":
+                        skip_run = False
+                if skip_run:
+
+                    # If we reached the limit, send a fake ACK message.
+                    # This keeps the Orchestrator and the Audit happy.
+                    self.__processing[ack_identity].add(plugin_id)
+                    orchestrator.enqueue_msg(Message(
+                        message_type = MessageType.MSG_TYPE_CONTROL,
+                        message_code = MessageCode.MSG_CONTROL_ACK,
+                        message_info = False, # do not notify end of execution
+                          audit_name = audit.name,
+                           plugin_id = plugin_id,
+                        ack_identity = ack_identity,
+                            priority = MessagePriority.MSG_PRIORITY_LOW,
+                    ))
+
+                    # Skip execution of this plugin.
+                    return
 
             # Prepare the context for the OOP observer.
             context = orchestrator.build_plugin_context(
