@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import argparse
 import re
 import os
-from collections import Counter, defaultdict
+from collections import defaultdict
 from functools import partial
 
 # Get the param from a function: script_id(value) -> value
@@ -39,11 +39,18 @@ REG_FUNCTION = r"([\w\W]*%s[\s]*\()([\[\]\.\da-zA-Z\-:\'\"\s]+)(\);[\w\W]*)"
 #REG_FUNCTION = r"([\w\W]*%s[\s]*\()([\[\]\.\da-zA-Z\-:\'\"\s]+)(\);[\w\W]*)"
 
 # Get value asignated to one array: array['key'] = value -> value
-REG_ARRAY   = r"([\W\w\s]*%s[\s]*\[[\"\'][\.\da-zA-Z\-:\s]*\"\][\s]*\=[\s]*[\'\"])([\-a-zA-Z\s:\.0-9]+)(\";[\w\W]*)"
+REG_ARRAY = r"([\W\w\s]*%s[\s]*\[[\"\'][\.\da-zA-Z\-:\s]*\"\][\s]*\=[\s]*[\'\"])([\-a-zA-Z\s:\.0-9]+)(\";[\w\W]*)"
 
 # Get value from a string like: 'english: "Some text"' -> Some text
 REG_FILTER_PLUGIN_FAMILIES = r"([\w\W\s]*:[\w\W\s]*\"|\')([\w\W\s]*)([\w\W\s]*\"|\'[\w\W\s]*)"
 REG_FILTER_REMOVE_QUOTES = r"([\"\']*)([a-zA-Z0-9\-]+)([\"\']*)"
+
+
+# New regexs
+SCRIPT_ID = r"(script_id[\s]*\()([\d]+)([\s]*\))"  # Group 2 -> ID
+GENERIC_FUNC = r"(%s[\s]*\([\"\']*)([a-zA-Z0-9\:\.\:\- ]+)([\s]*[\"\']*\))"  # Group 2 -> Function value
+
+
 
 
 #----------------------------------------------------------------------
@@ -94,7 +101,6 @@ def config_bbdd(path_bbdd):
         #family           = models.ForeignKey(Families)
 
 
-
 #----------------------------------------------------------------------
 #
 # Aux functions
@@ -120,6 +126,7 @@ def get_function_value(text, function_name):
         return r.group(2)
 
     return None
+
 
 #----------------------------------------------------------------------
 def get_array_value(text, array_name):
@@ -170,6 +177,7 @@ def get_nasl_files_list(path):
 
     return m_return
 
+
 #----------------------------------------------------------------------
 def get_nasl_files(path):
     """
@@ -190,7 +198,6 @@ def get_nasl_files(path):
                     yield os.path.join(root, l_file)
     else:
         raise ValueError("Path can't be empty.")
-
 
 
 #----------------------------------------------------------------------
@@ -349,6 +356,7 @@ def parse_files(path_in, path_out, debug=False):
 
     return m_correlation
 
+
 #----------------------------------------------------------------------
 def store_in_bbdd(info, debug=False):
     """
@@ -388,6 +396,7 @@ def store_in_bbdd(info, debug=False):
 
 
     return True
+
 
 #----------------------------------------------------------------------
 def get_plugin_info(f_name):
@@ -491,6 +500,7 @@ def run_tests(path):
 
     plugin1 = os.path.join(path, "/Users/Dani/Downloads/openvas-nvt-feed-current/FormMail_detect.nasl")
     print get_plugin_info(plugin1)
+
 
 #----------------------------------------------------------------------
 def main(args):
