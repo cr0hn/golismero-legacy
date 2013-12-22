@@ -319,8 +319,8 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
         # Create the matching analyzer
         try:
             m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
-        except ValueError:
-            Logger.log("There is not information for analyze when creating the matcher: '%s'" % e)
+        except ValueError, e:
+            Logger.log("There is not enough information for analyze when creating the matcher: '%s'" % e)
             return
 
         # Create the partial funs
