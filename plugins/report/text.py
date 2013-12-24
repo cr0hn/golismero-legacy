@@ -30,6 +30,7 @@ __all__ = ["TextReport"]
 
 import sys
 
+from codecs import decode
 from collections import defaultdict
 from texttable import Texttable
 
@@ -303,8 +304,8 @@ class TextReport(ReportPlugin):
                         table.add_row(("Locations", "\n".join(targets)))
                     else:
                         table.add_row(("Location", targets[0]))
-                    table.add_row(("Description", vuln.description))
-                    table.add_row(("Solution", vuln.solution))
+                    table.add_row(("Description", decode(vuln.description, "UTF-8")))
+                    table.add_row(("Solution", decode(vuln.solution, "UTF-8")))
                     taxonomy = []
                     if vuln.bid:
                         taxonomy.extend(vuln.bid)
