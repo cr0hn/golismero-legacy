@@ -91,12 +91,12 @@ class OpenVASPlugin(TestingPlugin):
 
         # Check the parameters.
         try:
-            m_user      = Config.plugin_args["user"]
-            m_password  = Config.plugin_args["password"]
-            m_host      = Config.plugin_args["host"]
-            m_port      = int( Config.plugin_args["port"] )
-            m_timeout   = Config.plugin_args["timeout"]
-            m_profile   = Config.plugin_args["profile"]
+            m_user = Config.plugin_args["user"]
+            m_password = Config.plugin_args["password"]
+            m_host = Config.plugin_args["host"]
+            m_port = int(Config.plugin_args["port"])
+            m_timeout = Config.plugin_args["timeout"]
+            m_profile = Config.plugin_args["profile"]
 
             assert m_user,     "Missing username"
             assert m_password, "Missing password"
@@ -277,11 +277,11 @@ class OpenVASPlugin(TestingPlugin):
 
         # Map of OpenVAS levels to GoLismero levels.
         OPV_LEVELS_TO_GLM_LEVELS = {
-            'debug' : 'informational',
-            'log'   : 'informational',
-            'low'   : "low",
+            'debug': 'informational',
+            'log': 'informational',
+            'low': "low",
             'medium': 'middle',
-            'high'  : "high",
+            'high': "high",
         }
 
         # Do we have the OpenVAS plugin database?
@@ -359,10 +359,10 @@ class OpenVASPlugin(TestingPlugin):
                     level = "informational"
 
                 # Get the metadata.
-                nvt  = opv.nvt
+                nvt = opv.nvt
                 cvss = nvt.cvss_base
-                cve  = nvt.cve.split(", ") if nvt.cve else []
-                oid  = nvt.oid
+                cve = nvt.cve.split(", ") if nvt.cve else []
+                oid = nvt.oid
                 name = nvt.name
 
                 # Get the vulnerability description.
