@@ -31,7 +31,7 @@ __all__ = ["VulnscanManager"]
 import socket
 import ssl
 import re
-import threading
+from threading import RLock
 
 from .data import *
 from collections import Iterable
@@ -119,6 +119,7 @@ except ImportError:
                 # This is another function to be executed
                 # in a different thread to simulate setInterval
                 def inner_wrap():
+                    raise ValueError("inner")
                     i = 0
                     while i != times and not stop.isSet():
                         stop.wait(interval)
@@ -203,6 +204,11 @@ class VulnscanScanError(VulnscanException):
 
 #------------------------------------------------------------------------------
 class VulnscanVersionError(VulnscanException):
+    """Wrong version of OpenVAS server."""
+
+
+#------------------------------------------------------------------------------
+class VulnscanTaskNotFinishedError(VulnscanException):
     """Wrong version of OpenVAS server."""
 
 
@@ -386,9 +392,9 @@ class VulnscanManager(object):
         # Callback is set?
         if call_back_end or call_back_progress:
             # schedule a function to run each 10 seconds to check the estate in the server
-            self.__function_handle = self._callback(call_back_end, call_back_progress)
-            self.__task_id  = m_task_id
+            self.__task_id = m_task_id
             self.__target_id = m_target_id
+            self.__function_handle = self._callback(call_back_end, call_back_progress)
 
         return m_task_id, m_target_id
 
@@ -447,8 +453,11 @@ class VulnscanManager(object):
         if not isinstance(task_id, basestring):
             raise TypeError("Expected string, got %r instead" % type(task_id))
 
+        if self.__manager.is_task_running(task_id):
+            raise VulnscanTaskNotFinishedError("Task is currently running. Until it not finished, you can't obtain the results.")
+
         try:
-            m_response = self.__manager.make_xml_request('<get_results task_id="%s"/>' % task_id, xml_result=True)
+            m_response = self.__manager.get_results(task_id)
         except ServerError, e:
             raise VulnscanServerError("Can't get the results for the task %s. Error: %s" % (task_id, e.message))
 
@@ -554,11 +563,9 @@ class VulnscanManager(object):
         :param func_status: Function called for update task status.
         :type func_status: funtion pointer
         """
-
         # Check if audit was finished
         try:
-            if self.__task_id in self.__manager.get_tasks_ids_by_status(status="Done").values():
-
+            if not self.__manager.is_task_running(self.task_id):
                 # Task is finished. Stop the callback interval
                 self.__function_handle.set()
 
@@ -569,23 +576,27 @@ class VulnscanManager(object):
                 # Reset error counter
                 self.__error_counter = 0
 
-        except (ClientError, ServerError):
+        except (ClientError, ServerError), e:
             self.__error_counter += 1
 
             # Checks for error number
             if self.__error_counter >= 5:
+                # Stop the callback interval
+                self.__function_handle.set()
+
                 func_end()
 
         if func_status:
             try:
-                t = self.get_progress(self.__task_id)
+                t = self.get_progress(self.task_id)
 
                 # Save old progress
                 self.__old_progress = t
 
-                func_status(t)
+                func_status(1.0 if t == 0.0 else t)
 
-            except (ClientError, ServerError):
+            except (ClientError, ServerError), e:
+
                 func_status(self.__old_progress)
 
 
@@ -736,7 +747,7 @@ class _ConnectionManager(object):
 
         # Synchronizes access to the socket,
         # which is shared by all threads in this plugin
-        self.__socket_lock = threading.RLock()
+        self.__socket_lock = RLock()
         self.socket = None
 
         # Make the connection
@@ -841,7 +852,6 @@ class _ConnectionManager(object):
 
         :raises: ServerError
         """
-
         # Make sure the data is a string.
         if etree.iselement(in_data):
             in_data = etree.dump(in_data)
@@ -879,7 +889,8 @@ class _ConnectionManager(object):
                 raise ServerError("Can't receive info from the server: %s" % e)
 
             # if tree is None:
-            tree = etree.fromstring(data)
+            if tree is None:
+                tree = etree.fromstring(data)
 
             # Return the parsed response.
             return tree
@@ -1168,6 +1179,36 @@ class _OMP(object):
         raise NotImplementedError()
 
     #----------------------------------------------------------------------
+    def get_task_status(self, task_id):
+        """
+        Get task status
+
+        :param task_id: ID of task to start.
+        :type task_id: str
+
+        :return: string with status text.
+        :rtype: str
+
+        :raises: ClientError, ServerError
+        """
+        raise NotImplementedError()
+
+    #----------------------------------------------------------------------
+    def is_task_running(self, task_id):
+        """
+        Return true if task is running
+
+        :param task_id: ID of task to start.
+        :type task_id: str
+
+        :return: bool
+        :rtype: bool
+
+        :raises: ClientError, ServerError
+        """
+        raise NotImplementedError()
+
+    #----------------------------------------------------------------------
     def get_results(self, task_id=None):
         """
         Get the results associated to the scan ID.
@@ -1431,6 +1472,27 @@ class _OMPv4(_OMP):
             return self._manager.make_xml_request("<get_tasks />", xml_result=True)
 
     #----------------------------------------------------------------------
+    def is_task_running(self, task_id):
+        """
+        Return true if task is running
+
+        :param task_id: ID of task to start.
+        :type task_id: str
+
+        :return: bool
+        :rtype: bool
+
+        :raises: ClientError, ServerError
+        """
+        # Get status with xpath
+        status = self.get_tasks().find('.//task[@id="%s"]/status' % task_id)
+
+        if status is None:
+            raise ServerError("Task not found")
+
+        return status.text in ("Running", "Requested")
+
+    #----------------------------------------------------------------------
     def get_tasks_ids(self, name=None):
         """
         Get IDs of tasks of the server.
@@ -1456,6 +1518,26 @@ class _OMPv4(_OMP):
             return m_return
 
     #----------------------------------------------------------------------
+    def get_task_status(self, task_id):
+        """
+        Get task status
+
+        :param task_id: ID of task to start.
+        :type task_id: str
+
+        :raises: ClientError, ServerError
+        """
+        if not isinstance(task_id, basestring):
+            raise TypeError("Expected string, got %r instead" % type(task_id))
+
+        status = self.get_tasks().find('.//task[@id="%s"]/status' % task_id)
+
+        if status is None:
+            raise ServerError("Task not found")
+
+        return status.text
+
+    #----------------------------------------------------------------------
     def get_tasks_progress(self, task_id):
         """
         Get the progress of the task.
@@ -1474,20 +1556,22 @@ class _OMPv4(_OMP):
         m_sum_progress = 0.0  # Partial progress
         m_progress_len = 0.0  # All of tasks
 
-        for x in self.get_tasks().findall("task"):
-            if x.get("id") == task_id:
-                # Looking for each task for each target
-                l_status = x.find("status").text
-                if l_status == "Running":
+        # Get status with xpath
+        tasks = self.get_tasks()
+        status = tasks.find('.//task[@id="%s"]/status' % task_id)
 
-                    for l_p in x.findall("progress"):
-                        for l_hp in l_p.findall("host_progress"):
-                            for r in  l_hp.findall("host"):
-                                q = etree.tostring(r)
-                                if q:
-                                    v = q[q.rfind(">") + 1:]
-                                    m_progress_len += 1.0
-                                    m_sum_progress += float(v)
+        if status is None:
+            raise ServerError("Task not found")
+
+        if status.text in ("Running", "Pause Requested", "Paused"):
+            h = tasks.findall('.//task[@id="%s"]/progress/host_progress/host' % task_id)
+
+            if h is not None:
+                m_progress_len += float(len(h))
+                m_sum_progress += sum([float(x.tail) for x in h])
+
+        elif status.text in ("Delete Requested", "Done", "Stop Requested", "Stopped", "Internal Error"):
+            return 100.0  # Task finished
 
         try:
             return m_sum_progress/m_progress_len
@@ -1603,11 +1687,11 @@ class _OMPv4(_OMP):
                     l_port = port_regex_specific.search(l_val.text)
                     if l_port:
                             l_service = l_port.group(1)
-                            l_port = int(l_port.group(2))
+                            l_number = int(l_port.group(2))
                             l_proto = l_port.group(3)
 
                             l_partial_result.port = OpenVASPort(l_service,
-                                                                l_port,
+                                                                l_number,
                                                                 l_proto)
                     else:
                         # Looking for port as format: general/tcp
@@ -1648,8 +1732,10 @@ class _OMPv4(_OMP):
 
                     # Add to the NVT Object
                     l_partial_result.nvt = l_nvt_object
+
                 else:
-                    raise ValueError("Unrecognised tag '%s'" % l_tag)
+                    # "Unrecognised tag
+                    pass
 
             # Add to the return values
             m_return_append(l_partial_result)
