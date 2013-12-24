@@ -26,25 +26,15 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from golismero.api.config import Config
-from golismero.api.data.db import Database
-from golismero.api.data.resource.domain import Domain
-from golismero.api.data.resource.ip import IP
-from golismero.api.data.vulnerability import Vulnerability # noqa
-from golismero.api.data.vulnerability import UncategorizedVulnerability
-from golismero.api.data.vulnerability.infrastructure.outdated_platform import *  # noqa
-from golismero.api.logger import Logger
-from golismero.api.net.scraper import extract_from_text
-from golismero.api.plugin import TestingPlugin, ImportPlugin
+import os.path
+import sys
+import yaml
 
 from functools import partial
 from threading import Event
 from traceback import format_exc
 from warnings import warn
-
-import os.path
-import sys
-import yaml
+from time import sleep
 
 try:
     from yaml import CLoader as Loader
@@ -58,6 +48,17 @@ except ImportError:
 
 from openvas_lib import VulnscanManager, VulnscanException, VulnscanVersionError
 from openvas_lib.data import OpenVASResult
+
+
+from golismero.api.config import Config
+from golismero.api.data.db import Database
+from golismero.api.data.resource.domain import Domain
+from golismero.api.data.resource.ip import IP
+from golismero.api.data.vulnerability import UncategorizedVulnerability, Vulnerability
+from golismero.api.data.vulnerability.infrastructure.outdated_platform import *  # noqa
+from golismero.api.logger import Logger
+from golismero.api.net.scraper import extract_from_text
+from golismero.api.plugin import TestingPlugin, ImportPlugin
 
 
 #------------------------------------------------------------------------------
@@ -192,11 +193,7 @@ class OpenVASPlugin(TestingPlugin):
                 # Get the scan results.
                 m_openvas_results = m_scanner.get_results(m_scan_id)
 
-                # Clear the info
-                m_scanner.delete_scan(m_scan_id)
-                m_scanner.delete_target(m_target_id)
-
-            except Exception,e:
+            except Exception, e:
                 t = format_exc()
                 Logger.log_error_verbose(
                     "Error parsing OpenVAS results: %s" % str(e))
@@ -207,28 +204,58 @@ class OpenVASPlugin(TestingPlugin):
 
                 # Clean up.
                 if m_scan_id:
-                    try:
-                        m_scanner.stop_audit(m_scan_id)
-                    except Exception:
-                        Logger.log_error_more_verbose("Error while stopping scan ID: %s" % str(m_scan_id))
+                    # Stop the scan
+                    for i in xrange(3):
+                        try:
 
-                    try:
-                        m_scanner.delete_scan(m_scan_id)
-                    except Exception:
-                        Logger.log_error_more_verbose("Error while deleting scan ID: %s" % str(m_scan_id))
+                            # Clear the info
+                            m_scanner.stop_audit(m_scan_id)
+
+                            # If not error, break
+                            break
+                        except Exception:
+                            sleep(0.1)
+                            Logger.log_error_more_verbose("Error while stopping scan ID: %s. Attempt %s" %
+                                                          (str(m_scan_id), str(i)))
+                            continue
+
+                    # Delete the scan
+                    for i in xrange(3):
+                        try:
+
+                            # Clear the info
+                            m_scanner.delete_scan(m_scan_id)
+
+                            # If not error, break
+                            break
+                        except Exception:
+                            sleep(0.1)
+                            Logger.log_error_more_verbose("Error while deleting scan ID: %s. Attempt %s" %
+                                                          (str(m_scan_id), str(i)))
+                            continue
 
                 if m_target_id:
-                    try:
-                        m_scanner.delete_target(m_target_id)
-                    except Exception:
-                        Logger.log_error_more_verbose("Error while deleting target ID: %s" % str(m_target_id))
+                    # Remove the target
+                    for i in xrange(3):
+                        try:
+
+                            # Clear the info
+                            m_scanner.delete_target(m_target_id)
+
+                            # If not error, break
+                            break
+                        except Exception:
+                            sleep(0.1)
+                            Logger.log_error_more_verbose("Error while deleting target ID: %s. Attempt %s." %
+                                                          (str(m_target_id), str(i)))
+                            continue
 
         # Convert the scan results to the GoLismero data model.
         return self.parse_results(m_openvas_results, info)
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def parse_results(openvas_results, ip = None):
+    def parse_results(openvas_results, ip=None):
         """
         Convert the OpenVAS scan results to the GoLismero data model.
 
@@ -357,11 +384,11 @@ class OpenVASPlugin(TestingPlugin):
 
                 # Prepare the vulnerability properties.
                 kwargs = {
-                    "level"       : OPV_LEVELS_TO_GLM_LEVELS[level.lower()],
-                    "description" : description,
-                    "references"  : references,
-                    "cvss_base"   : cvss,
-                    "cve"         : cve,
+                    "level": OPV_LEVELS_TO_GLM_LEVELS[level.lower()],
+                    "description": description,
+                    "references": references,
+                    "cvss_base_vector": cvss,
+                    "cve": cve,
                 }
                 if name:
                     kwargs["title"] = name
@@ -374,17 +401,17 @@ class OpenVASPlugin(TestingPlugin):
                 if use_openvas_db and oid:
                     oid_spt = oid.split(".")
                     if len(oid_spt) > 0:
-                        l_plugin_id       = oid_spt[-1]
+                        l_plugin_id = oid_spt[-1]
                         kwargs["tool_id"] = l_plugin_id
                         try:
                             l_family = Plugin.objects.get(plugin_id = l_plugin_id).family_id
                             l_family = l_family.strip()
 
                             if l_plugin_id in CATEGORIES:
-                                clazz = globals()[ CATEGORIES[l_plugin_id] ]
+                                clazz = globals()[CATEGORIES[l_plugin_id]]
 
                             elif l_family in CATEGORIES:
-                                clazz = globals()[ CATEGORIES[l_family] ]
+                                clazz = globals()[CATEGORIES[l_family]]
                         except Exception, e:
                             # FIXME: When message system works well, display logger.
                             #
@@ -437,9 +464,9 @@ class OpenVASImportPlugin(ImportPlugin):
     #--------------------------------------------------------------------------
     def import_results(self, input_file):
         try:
-            xml_results       = etree.parse(input_file)
-            xml_root          = xml_results.getroot()
-            openvas_results   = VulnscanManager.transform(xml_root)
+            xml_results = etree.parse(input_file)
+            xml_root = xml_results.getroot()
+            openvas_results = VulnscanManager.transform(xml_root)
             golismero_results = OpenVASPlugin.parse_results(openvas_results)
             if golismero_results:
                 Database.async_add_many(golismero_results)
