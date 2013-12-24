@@ -284,6 +284,15 @@ class OpenVASPlugin(TestingPlugin):
             'high': "high",
         }
 
+        RISKS = {
+            'debug': 0,
+            'log': 0,
+            'low': 1,
+            'medium': 2,
+            'high': 3,
+            'critical': 4
+        }
+
         # Do we have the OpenVAS plugin database?
         use_openvas_db = os.path.exists(openvas_db)
         if not use_openvas_db:
@@ -340,6 +349,9 @@ class OpenVASPlugin(TestingPlugin):
                 # Get the host.
                 host = opv.host
 
+                if host is None:
+                    continue
+
                 # Get or create the vulnerable resource.
                 target = ip
                 if host in hosts_seen:
@@ -364,6 +376,7 @@ class OpenVASPlugin(TestingPlugin):
                 cve = nvt.cve.split(", ") if nvt.cve else []
                 oid = nvt.oid
                 name = nvt.name
+                risk = RISKS.get(nvt.risk_factor.lower(), 0)
 
                 # Get the vulnerability description.
                 description = opv.description
@@ -389,6 +402,7 @@ class OpenVASPlugin(TestingPlugin):
                     "references": references,
                     "cvss_base_vector": cvss,
                     "cve": cve,
+                    "risk": risk
                 }
                 if name:
                     kwargs["title"] = name
