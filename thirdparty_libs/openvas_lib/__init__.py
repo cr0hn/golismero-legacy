@@ -119,7 +119,6 @@ except ImportError:
                 # This is another function to be executed
                 # in a different thread to simulate setInterval
                 def inner_wrap():
-                    raise ValueError("inner")
                     i = 0
                     while i != times and not stop.isSet():
                         stop.wait(interval)
@@ -357,8 +356,8 @@ class VulnscanManager(object):
             raise TypeError("Expected string, got %r instead" % type(profile))
 
         # Generate the random names used
-        m_target_name = "golismero_target_%s" % generate_random_string(20)
-        m_job_name = "golismero_scan_%s" % generate_random_string(20)
+        m_target_name = "golismero_target_%s_%s" % (target, generate_random_string(20))
+        m_job_name = "golismero_scan_%s_%s" % (target, generate_random_string(20))
 
         # Create the target
         try:
@@ -1669,7 +1668,8 @@ class _OMPv4(_OMP):
             l_partial_result = OpenVASResult.make_empty_object()
 
             # Ignore log/debug messages, only get the results
-            if l_results.find("threat").text in ("Log", "Debug"):
+            threat = l_results.find("threat")
+            if threat and threat.text in ("Log", "Debug"):
                 continue
 
             # For each result
@@ -1723,10 +1723,10 @@ class _OMPv4(_OMP):
                                 setattr(l_nvt_object, l_nvt_tag, "")
 
                     # Get CVSS
-                    cvss_candidate = l_val.find("tags").text
-                    if cvss_candidate:
+                    cvss_candidate = l_val.find("tags")
+                    if cvss_candidate and cvss_candidate.text:
                         # Extract data
-                        cvss_tmp = cvss_regex.search(cvss_candidate)
+                        cvss_tmp = cvss_regex.search(cvss_candidate.text)
                         if cvss_tmp:
                             l_nvt_object.cvss_base = cvss_tmp.group(2)
 
