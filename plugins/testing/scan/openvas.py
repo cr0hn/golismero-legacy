@@ -46,7 +46,7 @@ try:
 except ImportError:
     from xml.etree import ElementTree as etree
 
-from openvas_lib import VulnscanManager, VulnscanException, VulnscanVersionError
+from openvas_lib import VulnscanManager, VulnscanException, VulnscanVersionError, VulnscanAuditNotFoundError
 from openvas_lib.data import OpenVASResult
 
 
@@ -115,6 +115,10 @@ class OpenVASPlugin(TestingPlugin):
         # Connect to the scanner.
         try:
             VulnscanManager(m_host, m_user, m_password, m_port, m_timeout)
+        except VulnscanVersionError:
+            raise RuntimeError(
+                "Remote host is running an unsupported version of OpenVAS. Only OpenVAS 6 is currently supported.")
+
         except VulnscanException, e:
             raise RuntimeError(str(e))
 
@@ -160,7 +164,8 @@ class OpenVASPlugin(TestingPlugin):
                     m_host, m_user, m_password, m_port, m_timeout)
 
             except VulnscanVersionError:
-                Logger.log_error("Remote host has INVALID VERSION of OpenVAS server. Only OpenVAS is supported!")
+                Logger.log_error(
+                    "Remote host is running an unsupported version of OpenVAS. Only OpenVAS 6 is currently supported.")
 
                 # Set the openvas connection as down and remember it.
                 self.state.put("connection_down", True)
@@ -213,10 +218,12 @@ class OpenVASPlugin(TestingPlugin):
 
                             # If not error, break
                             break
-                        except Exception:
+                        except VulnscanAuditNotFoundError:
+                            break
+                        except Exception, e:
                             sleep(0.1)
-                            Logger.log_error_more_verbose("Error while stopping scan ID: %s. Attempt %s" %
-                                                          (str(m_scan_id), str(i)))
+                            Logger.log_error_more_verbose("Error while stopping scan ID: %s. Attempt %s. Error: %s" %
+                                                          (str(m_scan_id), str(i)), e.message)
                             continue
 
                     # Delete the scan
@@ -228,10 +235,10 @@ class OpenVASPlugin(TestingPlugin):
 
                             # If not error, break
                             break
-                        except Exception:
+                        except Exception, e:
                             sleep(0.1)
-                            Logger.log_error_more_verbose("Error while deleting scan ID: %s. Attempt %s" %
-                                                          (str(m_scan_id), str(i)))
+                            Logger.log_error_more_verbose("Error while deleting scan ID: %s. Attempt %s. Error: %s" %
+                                                          (str(m_scan_id), str(i)), e.message)
                             continue
 
                 if m_target_id:
@@ -244,10 +251,10 @@ class OpenVASPlugin(TestingPlugin):
 
                             # If not error, break
                             break
-                        except Exception:
+                        except Exception, e:
                             sleep(0.1)
-                            Logger.log_error_more_verbose("Error while deleting target ID: %s. Attempt %s." %
-                                                          (str(m_target_id), str(i)))
+                            Logger.log_error_more_verbose("Error while deleting target ID: %s. Attempt %s. Error: %s" %
+                                                          (str(m_target_id), str(i)), e.message)
                             continue
 
         # Convert the scan results to the GoLismero data model.
@@ -373,6 +380,7 @@ class OpenVASPlugin(TestingPlugin):
                 # Get the metadata.
                 nvt = opv.nvt
                 cvss = nvt.cvss_base
+                cvss_vector = nvt.cvss_base_vector
                 cve = nvt.cve.split(", ") if nvt.cve else []
                 oid = nvt.oid
                 name = nvt.name
@@ -400,7 +408,8 @@ class OpenVASPlugin(TestingPlugin):
                     "level": OPV_LEVELS_TO_GLM_LEVELS[level.lower()],
                     "description": description,
                     "references": references,
-                    "cvss_base_vector": cvss,
+                    "cvss_base": cvss,
+                    "cvss_base_vector": cvss_vector,
                     "cve": cve,
                     "risk": risk
                 }

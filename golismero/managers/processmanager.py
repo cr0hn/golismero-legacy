@@ -273,8 +273,7 @@ def _bootstrap_inner(context, func, args, kwargs):
 
         # Abort if the data is out of scope
         # for the current audit.
-        if not input_data.is_in_scope():
-            return
+        assert input_data.is_in_scope(), "Data out of scope!"
 
         # Save the current crawling depth.
         if hasattr(input_data, "depth"):
@@ -282,11 +281,15 @@ def _bootstrap_inner(context, func, args, kwargs):
 
             # Check we didn't exceed the maximum depth.
             max_depth = context.audit_config.depth
-            if max_depth is not None and context._depth > max_depth:
-                return
+            assert max_depth is None or max_depth >= context._depth, \
+                "Maximum crawling depth exceeded!"
 
     # Set the default socket timeout.
-    socket.setdefaulttimeout(5.0)
+    # Note: due to a known bug in Python versions prior to 2.7.5 we can't set
+    # a default timeline because it makes the multiprocessing module
+    # misbehave. See: http://hg.python.org/cpython/rev/4e85e4743757
+    if sys.version_info[:3] >= (2,7,5):
+        socket.setdefaulttimeout(5.0)
 
     # Initialize the private file API.
     LocalFile._update_plugin_path()
