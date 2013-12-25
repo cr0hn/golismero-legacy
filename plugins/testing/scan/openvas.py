@@ -402,7 +402,7 @@ class OpenVASPlugin(TestingPlugin):
 
                 # Get the reference URLs.
                 references = extract_from_text(description)
-                print cvss_vector
+
                 # Prepare the vulnerability properties.
                 kwargs = {
                     "level": OPV_LEVELS_TO_GLM_LEVELS[level.lower()],
