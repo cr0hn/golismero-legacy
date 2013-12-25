@@ -183,7 +183,7 @@ def to_utf8(s):
     So this function can be used as a filter to normalize string arguments.
 
     :param s: Unicode string to convert.
-    :type s: unicode | str
+    :type s: basestring
 
     :returns: Converted string.
     :rtype: str
