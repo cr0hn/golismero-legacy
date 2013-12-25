@@ -117,7 +117,7 @@ class OpenVASPlugin(TestingPlugin):
             VulnscanManager(m_host, m_user, m_password, m_port, m_timeout)
         except VulnscanVersionError:
             raise RuntimeError(
-                "Remote host has INVALID VERSION of OpenVAS server. Only ---> OpenVAS 6 <-- is supported currently!")
+                "Remote host is running an unsupported version of OpenVAS. Only OpenVAS 6 is currently supported.")
 
         except VulnscanException, e:
             raise RuntimeError(str(e))
@@ -165,7 +165,7 @@ class OpenVASPlugin(TestingPlugin):
 
             except VulnscanVersionError:
                 Logger.log_error(
-                    "Remote host has INVALID VERSION of OpenVAS server. Only ---> OpenVAS 6 <-- is supported currently!")
+                    "Remote host is running an unsupported version of OpenVAS. Only OpenVAS 6 is currently supported.")
 
                 # Set the openvas connection as down and remember it.
                 self.state.put("connection_down", True)
