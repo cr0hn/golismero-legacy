@@ -304,8 +304,22 @@ class TextReport(ReportPlugin):
                         table.add_row(("Locations", "\n".join(targets)))
                     else:
                         table.add_row(("Location", targets[0]))
-                    table.add_row(("Description", decode(vuln.description, "UTF-8")))
-                    table.add_row(("Solution", decode(vuln.solution, "UTF-8")))
+                    # Force conversion to UTF-8, or Latin-1 on failure.
+                    # This prevents XML parsing errors.
+                    try:
+                        m_description = vuln.description.encode("utf-8")
+                    except UnicodeDecodeError:
+                        m_description = vuln.description.decode("latin-1").encode("utf-8")
+
+                    try:
+                        m_solution = vuln.solution.encode("utf-8")
+                    except UnicodeDecodeError:
+                        m_solution = vuln.solution.decode("latin-1").encode("utf-8")
+
+                    # table.add_row(("Description", decode(vuln.description, "UTF-8")))
+                    table.add_row(("Description", m_description))
+                    # table.add_row(("Solution", decode(vuln.solution, "UTF-8")))
+                    table.add_row(("Solution", m_solution))
                     taxonomy = []
                     if vuln.bid:
                         taxonomy.extend(vuln.bid)
