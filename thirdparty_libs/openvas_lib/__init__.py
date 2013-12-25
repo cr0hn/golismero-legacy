@@ -212,6 +212,17 @@ class VulnscanTaskNotFinishedError(VulnscanException):
 
 
 #------------------------------------------------------------------------------
+class VulnscanAuditNotRunningError(VulnscanException):
+    """Wrong version of OpenVAS server."""
+
+
+#------------------------------------------------------------------------------
+class VulnscanAuditNotFoundError(VulnscanException):
+    """Wrong version of OpenVAS server."""
+
+
+
+#------------------------------------------------------------------------------
 #
 # High level interface
 #
@@ -422,8 +433,13 @@ class VulnscanManager(object):
 
         :param task_id: Scan ID.
         :type task_id: str
+
+        :raises: VulnscanAuditNotFoundError
         """
-        self.__manager.delete_task(task_id)
+        try:
+            self.__manager.delete_task(task_id)
+        except AuditNotRunningError, e:
+            raise VulnscanAuditNotFoundError(e)
 
     #----------------------------------------------------------------------
     def delete_target(self, target_id):
@@ -485,8 +501,13 @@ class VulnscanManager(object):
 
         :param task_id: Scan ID.
         :type task_id: str
+
+        :raises: VulnscanAuditNotFoundError
         """
-        self.__manager.stop_task(self.task_id)
+        try:
+            self.__manager.stop_task(self.task_id)
+        except AuditNotRunningError, e:
+            raise VulnscanAuditNotFoundError(e)
 
     #----------------------------------------------------------------------
     @property
@@ -651,6 +672,14 @@ class AuthFailedError(Error):
 
 class RemoteVersionError(Error):
     """Authentication failed."""
+
+
+class AuditNotRunningError(Error):
+    """Audit is not running."""
+
+
+class AuditNotFoundError(Error):
+    """Audit not found."""
 
 
 #------------------------------------------------------------------------------
@@ -1303,12 +1332,14 @@ class _OMPv4(_OMP):
         :param task_id: task id
         :type task_id: str
 
-        :raises: ClientError, ServerError
+        :raises: AuditNotFoundError, ServerError
         """
+        request = """<delete_task task_id="%s" />""" % task_id
 
-        request = """<stop_task task_id="%s" />""" % task_id
-
-        self._manager.make_xml_request(request, xml_result=True)
+        try:
+            self._manager.make_xml_request(request, xml_result=True)
+        except ClientError:
+            raise AuditNotFoundError()
 
     #----------------------------------------------------------------------
     def stop_task(self, task_id):
@@ -1318,11 +1349,14 @@ class _OMPv4(_OMP):
         :param task_id: task id
         :type task_id: str
 
-        :raises: ClientError, ServerError
+        :raises: ServerError, AuditNotFoundError
         """
-        request = """<delete_task task_id="%s" />""" % task_id
 
-        self._manager.make_xml_request(request, xml_result=True)
+        request = """<stop_task task_id="%s" />""" % task_id
+        try:
+            self._manager.make_xml_request(request, xml_result=True)
+        except ClientError:
+            raise AuditNotFoundError()
 
     #----------------------------------------------------------------------
     def create_task(self, name, target, config=None, comment=""):
@@ -1460,13 +1494,14 @@ class _OMPv4(_OMP):
         :param task_id: task id to get
         :type task_id: str
 
-        :return: `ElementTree`
+        :return: `ElementTree` | None
 
         :raises: ClientError, ServerError
         """
         # Recover all config from OpenVAS
         if task_id:
-            return self._manager.make_xml_request('<get_tasks id="%s"/>' % task_id, xml_result=True)
+            return self._manager.make_xml_request('<get_tasks id="%s"/>' % task_id,
+                                                  xml_result=True).find('.//task[@id="%s"]' % task_id)
         else:
             return self._manager.make_xml_request("<get_tasks />", xml_result=True)
 
@@ -1669,7 +1704,9 @@ class _OMPv4(_OMP):
 
             # Ignore log/debug messages, only get the results
             threat = l_results.find("threat")
-            if threat and threat.text in ("Log", "Debug"):
+            if threat is None:
+                continue
+            if threat.text in ("Log", "Debug"):
                 continue
 
             # For each result
