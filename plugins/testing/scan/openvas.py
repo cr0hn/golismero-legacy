@@ -380,6 +380,7 @@ class OpenVASPlugin(TestingPlugin):
                 # Get the metadata.
                 nvt = opv.nvt
                 cvss = nvt.cvss_base
+                cvss_vector = nvt.cvss_base_vector
                 cve = nvt.cve.split(", ") if nvt.cve else []
                 oid = nvt.oid
                 name = nvt.name
@@ -401,13 +402,14 @@ class OpenVASPlugin(TestingPlugin):
 
                 # Get the reference URLs.
                 references = extract_from_text(description)
-
+                print cvss_vector
                 # Prepare the vulnerability properties.
                 kwargs = {
                     "level": OPV_LEVELS_TO_GLM_LEVELS[level.lower()],
                     "description": description,
                     "references": references,
-                    "cvss_base_vector": cvss,
+                    "cvss_base": cvss,
+                    "cvss_base_vector": cvss_vector,
                     "cve": cve,
                     "risk": risk
                 }

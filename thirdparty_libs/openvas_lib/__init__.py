@@ -1761,11 +1761,11 @@ class _OMPv4(_OMP):
 
                     # Get CVSS
                     cvss_candidate = l_val.find("tags")
-                    if cvss_candidate and cvss_candidate.text:
+                    if cvss_candidate is not None and cvss_candidate.text:
                         # Extract data
                         cvss_tmp = cvss_regex.search(cvss_candidate.text)
                         if cvss_tmp:
-                            l_nvt_object.cvss_base = cvss_tmp.group(2)
+                            l_nvt_object.cvss_base_vector = cvss_tmp.group(2)
 
                     # Add to the NVT Object
                     l_partial_result.nvt = l_nvt_object
