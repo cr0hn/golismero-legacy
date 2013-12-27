@@ -852,6 +852,9 @@ class AuditConfig (Configuration):
         # Include subdomains?
         "include_subdomains": (Configuration.boolean, True),
 
+        # Include parent folders?
+        "allow_parent": (Configuration.boolean, True),
+
         # Depth level for spider
         "depth": (Configuration.integer_or_none, 1),
 
