@@ -122,7 +122,7 @@ class ArgumentParserWithBanner(argparse.ArgumentParser):
             self.must_show_banner = False
             show_banner()
         self.usage = None
-        message += "\n\nUse -h or --help to show the full help text."
+        message += "\n\nUse -h to see the quick help, or --help to show the full help text."
         return super(ArgumentParserWithBanner, self).error(message)
 
 # --enable-plugin
@@ -185,6 +185,15 @@ class SetPluginArgumentAction(argparse.Action):
         except Exception:
             parser.error("invalid plugin argument: %s" % values)
 
+# -h
+class QuickHelpAction(argparse._HelpAction):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if parser.must_show_banner:
+            parser.must_show_banner = False
+            show_banner()
+        parser._print_message(parser.quick_help)
+        parser.exit()
+
 
 #------------------------------------------------------------------------------
 # Command line parser using argparse.
@@ -241,12 +250,15 @@ def cmdline_parser():
                                 names.append(name)
             return names
 
-    parser = ArgumentParserWithBanner(fromfile_prefix_chars="@")
+    parser = ArgumentParserWithBanner(fromfile_prefix_chars="@", add_help=False)
 
     cmd = parser.add_argument("command", metavar="COMMAND", help="action to perform")
     if autocomplete_enabled:
         cmd.completer = ChoicesCompleter(COMMANDS + tuple(x.lower() for x in COMMANDS))
     parser.add_argument("targets", metavar="TARGET", nargs="*", help="zero or more arguments, meaning depends on command")
+
+    parser.add_argument("-h", action=QuickHelpAction, default=argparse.SUPPRESS, help="show this help message and exit")
+    parser.add_argument("--help", action='help', default=argparse.SUPPRESS, help="show this help message and exit")
 
     gr_main = parser.add_argument_group("main options")
     cmd = gr_main.add_argument("-f", "--file", metavar="FILE", action=LoadListFromFileAction, help="load a list of targets from a plain text file")
@@ -329,10 +341,8 @@ def cmdline_parser():
     if autocomplete_enabled:
         autocomplete(parser)
 
-    parser.usage = parser.format_usage()[7:] + (
+    quick_help = (
         ################################################################################
-        "\n"
-        "available commands:\n"
         "\n"
         "  SCAN:\n"
         "    Perform a vulnerability scan on the given targets. Optionally import\n"
@@ -391,6 +401,12 @@ def cmdline_parser():
         "\n"
         ################################################################################
     )
+
+    parser.usage = parser.format_usage()[7:] + \
+                   "\navailable commands:\n" + quick_help
+    parser.quick_help = (
+        "usage: %(prog)s COMMAND [TARGETS...] [--options]\n" \
+        + quick_help) % {"prog": parser.prog}
 
     return parser
 
