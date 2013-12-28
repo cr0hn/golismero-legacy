@@ -855,8 +855,7 @@ class Audit (object):
                 if not pluginManager.stages[stage]:
 
                     # Mark all data as having finished this stage.
-                    for identity in pending:
-                        database.mark_stage_finished(identity, stage)
+                    database.mark_stage_finished_many(pending, stage)
 
                     # Skip to the next stage.
                     continue
@@ -875,6 +874,18 @@ class Audit (object):
                 ### XXX DEBUG
                 ##with open("orchestrator-%d.log" % getpid(), "a") as f:
                 ##    f.write("[%s] Filtering data for stage %s...\n\n" % (ctime(), stage))
+
+                # Filter out data out of scope.
+                data_ok = []
+                data_not_ok = []
+                for data in datalist:
+                    if data.is_in_scope(self.scope):
+                        data_ok.append(data)
+                    else:
+                        data_not_ok.append(data.identity)
+                if data_not_ok:
+                    database.mark_stage_finished_many(data_not_ok, stage)
+                datalist = data_ok
 
                 # If we don't have any suitable plugins...
                 if not self.__notifier.is_runnable_stage(datalist, stage):
