@@ -168,10 +168,13 @@ class AuditManager (object):
 
         # On error, abort.
         except Exception, e:
+            tb = format_exc()
             try:
                 self.remove_audit(audit.name)
             except Exception:
                 pass
+            Logger.log_error(str(e))
+            Logger.log_error_more_verbose(tb)
             raise AuditException("Failed to add new audit, reason: %s" % e)
 
 
