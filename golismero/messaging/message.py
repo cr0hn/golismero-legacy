@@ -205,7 +205,10 @@ class Message (object):
 
     #----------------------------------------------------------------------
     def __repr__(self):
-        s  = "<Message timestamp=%r, type=%s, code=%s, audit=%r, plugin=%r, info=%r>"
+        s  = (
+            "<Message timestamp=%r, type=%s, code=%s, audit=%r, plugin=%r, "
+            "ack=%r, info=%r>"
+        )
         s %= (
             self.timestamp,
             MessageType.get_name_from_value(self.message_type),
@@ -213,6 +216,7 @@ class Message (object):
                                                      self.message_type),
             self.audit_name,
             self.plugin_id,
+            self.ack_identity,
             self.message_info,
         )
         return s

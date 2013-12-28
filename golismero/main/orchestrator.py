@@ -453,6 +453,10 @@ class Orchestrator (object):
             while True:
                 try:
 
+                    ### XXX DEBUG
+                    ##with open("orchestrator-%d.log" % getpid(), "a") as f:
+                    ##    f.write("[%s] Waiting for message...\n\n" % ctime())
+
                     # Wait for a message to arrive.
                     try:
                         message = self.__queue.get()
