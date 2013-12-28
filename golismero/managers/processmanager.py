@@ -276,8 +276,8 @@ def _bootstrap_inner(context, func, args, kwargs):
         # Abort if the data is out of scope
         # for the current audit.
         if not input_data.is_in_scope():
-            Logger.log_error_more_verbose(
-                "Skipped data out of scope: %s" % input_data.identity)
+            ##Logger.log_error_more_verbose(
+            ##    "Skipped data out of scope: %s" % input_data.identity)
             return
 
         # Save the current crawling depth.
