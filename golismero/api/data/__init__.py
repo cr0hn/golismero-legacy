@@ -1513,12 +1513,16 @@ class Data(object):
 
 
     #--------------------------------------------------------------------------
-    def is_in_scope(self):
+    def is_in_scope(self, scope = None):
         """
         Determines if this Data object is within the scope of the current audit.
 
         .. warning: This method is used by GoLismero itself.
                     Plugins do not need to call it.
+
+        :param scope: (Optional) Scope to test again. Defaults to the current
+            audit scope.
+        :type scope: Scope
 
         :return: True if within scope, False otherwise.
         :rtype: bool

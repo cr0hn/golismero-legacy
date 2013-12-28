@@ -562,8 +562,10 @@ class HTTP_Request (Information):
 
 
     #--------------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.url in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.url in scope
 
 
     #--------------------------------------------------------------------------

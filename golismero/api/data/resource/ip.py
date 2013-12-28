@@ -118,5 +118,7 @@ class IP(Resource):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.address in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.address in scope

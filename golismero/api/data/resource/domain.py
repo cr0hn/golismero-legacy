@@ -103,8 +103,10 @@ class Domain(Resource):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.hostname in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.hostname in scope
 
 
     #----------------------------------------------------------------------
