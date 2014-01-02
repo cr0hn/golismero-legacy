@@ -199,6 +199,7 @@ class TextReport(ReportPlugin):
                 self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_GEOLOCATION, "Location")
                 self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_WEB_SERVER_FINGERPRINT, "Web Server")
                 self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_OS_FINGERPRINT, "OS Fingerprint")
+                self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_SERVICE_FINGERPRINT, "Service")
                 self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_PORTSCAN, "Port Scan")
                 self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_TRACEROUTE, "Network Route")
                 if table._rows:

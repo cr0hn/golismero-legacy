@@ -5,6 +5,7 @@
 Fingerprint information.
 
  - OSFingerprint: for a particular operating system of a host.
+ - ServiceFingerprint: for a particular host and service.
  - WebServerFingerprint: for a particular host and web server.
 """
 
@@ -35,7 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = [
     "OSFingerprint", "get_os_fingerprint", "get_all_os_fingerprints",
-    "WebServerFingerprint",
+    "ServiceFingerprint", "WebServerFingerprint",
 ]
 
 from . import Information
@@ -229,7 +230,8 @@ class OSFingerprint(Information):
         if name is not None:
             name = to_utf8(name)
             if type(name) is not str:
-                raise TypeError("Expected string, got %r instead" % type(name))
+                raise TypeError(
+                    "Expected string, got %r instead" % type(name))
         self.__name = name
 
 
@@ -253,7 +255,8 @@ class OSFingerprint(Information):
         if vendor is not None:
             vendor = to_utf8(vendor)
             if type(vendor) is not str:
-                raise TypeError("Expected string, got %r instead" % type(vendor))
+                raise TypeError(
+                    "Expected string, got %r instead" % type(vendor))
         self.__vendor = vendor
 
 
@@ -277,7 +280,8 @@ class OSFingerprint(Information):
         if os_type is not None:
             os_type = to_utf8(os_type)
             if type(os_type) is not str:
-                raise TypeError("Expected string, got %r instead" % type(os_type))
+                raise TypeError(
+                    "Expected string, got %r instead" % type(os_type))
         self.__type = os_type
 
 
@@ -330,6 +334,91 @@ class OSFingerprint(Information):
 
 
 #------------------------------------------------------------------------------
+class ServiceFingerprint(Information):
+    """
+    Service fingerprint.
+    """
+
+    information_type = Information.INFORMATION_SERVICE_FINGERPRINT
+
+
+    #--------------------------------------------------------------------------
+    def __init__(self, name, port, protocol="TCP"):
+        """
+        :param name: Service name, as assigned by IANA.
+        :type name: str
+
+        :param port: Port number.
+        :type port: int
+
+        :param protocol: TCP, UDP or SSL.
+        :type protocol: str
+        """
+
+        # Sanitize the arguments.
+        if type(name) is not str:
+            raise TypeError("Expected str, got %r instead" % type(name))
+        port = int(port)
+        if port <= 0 or port > 65535:
+            raise ValueError("Invalid port number: %d" % port)
+        if type(protocol) is not str:
+            raise TypeError("Expected str, got %r instead" % type(protocol))
+        protocol = protocol.strip().upper()
+        if protocol not in ("TCP", "UDP", "SSL"):
+            raise ValueError("Unsupported protocol: %s" % protocol)
+
+        # Save the identity properties.
+        self.__name           = name
+        self.__port           = port
+        self.__protocol       = protocol
+
+        # Parent constructor.
+        super(ServiceFingerprint, self).__init__()
+
+
+    #--------------------------------------------------------------------------
+    def __str__(self):
+        return "%s (%s port %d)" % (self.name, self.protocol, self.port)
+
+
+    #--------------------------------------------------------------------------
+    def __repr__(self):
+        return "<%s name=%s port=%d protocol=%s" % (
+            self.__class__.__name__, self.name, self.port, self.protocol
+        )
+
+
+    #--------------------------------------------------------------------------
+    @identity
+    def name(self):
+        """
+        :returns: Service name, as assigned by IANA.
+        :rtype: str
+        """
+        return self.__name
+
+
+    #--------------------------------------------------------------------------
+    @identity
+    def port(self):
+        """
+        :returns: Port number.
+        :rtype: int
+        """
+        return self.__port
+
+
+    #--------------------------------------------------------------------------
+    @identity
+    def protocol(self):
+        """
+        :returns: TCP, UDP or SSL.
+        :rtype: str
+        """
+        return self.__protocol
+
+
+#------------------------------------------------------------------------------
 class WebServerFingerprint(Information):
     """
     Fingerprint information for a particular host and web server.
@@ -338,19 +427,23 @@ class WebServerFingerprint(Information):
     information_type = Information.INFORMATION_WEB_SERVER_FINGERPRINT
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, name, version, banner, canonical_name, related = None, others = None):
         """
-        :param name: Web server name as raw format. The name is taken from a raw banner with internal filters, and It can has errors with unusual servers. If you want to ensure that this is correct, use name_canonical instead. I.E: "Ricoh Aficio 1045 5.23 Web-Server 3.0" -> name = "Ricoh Aficio 1045 5.23 Web-Server"
+        :param name: Web server name. Example: "Apache".
         :type name: str
 
-        :param version: Web server version. Example: "2.4"
+        :param version: Web server version. Example: "2.2.23".
         :type version: str
 
-        :param banner: Complete description for web server. Example: "Apache 2.2.23 ((Unix) mod_ssl/2.2.23 OpenSSL/1.0.1e-fips)"
+        :param banner: Web server banner. Example:
+            "Apache 2.2.23 ((Unix) mod_ssl/2.2.23 OpenSSL/1.0.1e-fips)".
         :type banner: str
 
-        :param canonical_name: Web server name, at lowcase. The name will be one of the the file: 'wordlist/fingerprint/webservers_keywords.txt'. Example: "Apache"
+        :param canonical_name: Web server name, in lowercase.
+            The name will be one of the file:
+            'wordlist/fingerprint/webservers_keywords.txt'.
+            Example: "apache".
         :type canonical_name: str
 
         :param related: Alternative brands for this web server.
@@ -390,7 +483,7 @@ class WebServerFingerprint(Information):
         super(WebServerFingerprint, self).__init__()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __repr__(self):
         return "<WebServerFingerprint server='%s-%s' banner='%s'>" % (
             self.__name,
@@ -399,19 +492,19 @@ class WebServerFingerprint(Information):
         )
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __str__(self):
         return self.__banner
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def to_dict(self):
         d = super(WebServerFingerprint, self).to_dict()
         d["others"] = { k: list(v) for (k,v) in self.others.iteritems() }
         return d
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def display_properties(self):
         others = []
@@ -424,61 +517,67 @@ class WebServerFingerprint(Information):
         return props
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @identity
     def name(self):
         """
-        :return: Web server name.
+        :return: Web server name. Example: "Apache".
         :rtype: str
         """
         return self.__name
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @identity
     def version(self):
         """
-        :return: Web server version.
+        :return: Web server version. Example: "2.2.3".
         :rtype: str
         """
         return self.__version
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @identity
     def banner(self):
         """
-        :return: Web server banner.
+        :return: Web server banner. Example:
+            "Apache 2.2.23 ((Unix) mod_ssl/2.2.23 OpenSSL/1.0.1e-fips)".
         :rtype: str
         """
         return self.__banner
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @identity
     def canonical_name(self):
         """
-        :return: Web server name, at lowcase. The name will be one of the the file: 'wordlist/fingerprint/webservers_keywords.txt'. Example: "apache"
+        :return: Web server name, in lowercase.
+            The full list of names is taken from the file:
+            'wordlist/fingerprint/webservers_keywords.txt'.
+            Example: "apache".
         :rtype: str
         """
         return self.__canonical_name
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @merge
     def others(self):
         """
-        :return: Map of other possible web servers by name and their probabilities of being correct [0.0 ~ 1.0].
+        :return: Map of other possible web servers by name and their
+            probabilities of being correct [0.0 ~ 1.0].
         :rtype: dict( str -> float )
         """
         return self.__others
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @others.setter
     def others(self, others):
         """
-        :param others: Map of other possible web servers by name and their probabilities of being correct [0.0 ~ 1.0].
+        :param others: Map of other possible web servers by name and their
+            probabilities of being correct [0.0 ~ 1.0].
         :type others: dict( str -> float )
         """
         if others:
@@ -496,7 +595,7 @@ class WebServerFingerprint(Information):
         self.__others = others
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @merge
     def related(self):
         """
@@ -506,7 +605,7 @@ class WebServerFingerprint(Information):
         return self.__related
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @related.setter
     def related(self, related):
         """

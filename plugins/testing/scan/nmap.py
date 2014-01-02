@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.config import Config
 from golismero.api.data.db import Database
-from golismero.api.data.information.fingerprint import OSFingerprint
+from golismero.api.data.information.fingerprint import OSFingerprint, ServiceFingerprint
 from golismero.api.data.information.portscan import Portscan
 from golismero.api.data.information.traceroute import Traceroute, Hop
 from golismero.api.data.resource.domain import Domain
@@ -277,8 +277,9 @@ class NmapScanPlugin(TestingPlugin):
         if not ip_addresses and not domain_names and not mac_addresses:
             return []
 
-        # Get the portscan results.
+        # Get the port scan results.
         ports = set()
+        services = set()
         for node in host.findall(".//port"):
             try:
                 portid   = node.get("portid")
@@ -293,8 +294,21 @@ class NmapScanPlugin(TestingPlugin):
                 if state not in ("open", "closed", "filtered"):
                     continue
                 ports.add( (state, protocol, port) )
+                if state == "open":
+                    serv_node = node.find("service")
+                    if serv_node is not None:
+                        service = serv_node.get("name")
+                        if service:
+                            if service == "https":
+                                service  = "http"
+                                protocol = "SSL"
+                            elif serv_node.get("tunnel") == "ssl":
+                                protocol = "SSL"
+                            else:
+                                protocol = protocol.upper()
+                            services.add( (service, port, protocol) )
             except Exception:
-                warn("Error parsing portscan results: %s" % format_exc(),
+                warn("Error parsing port scan results: %s" % format_exc(),
                      RuntimeWarning)
 
         # Get the traceroute results.
@@ -348,13 +362,13 @@ class NmapScanPlugin(TestingPlugin):
                         name, vendor, os_type, generation, family
                     ) )
             except Exception:
-                warn("Error parsing portscan results: %s" % format_exc(),
+                warn("Error parsing OS fingerprint results: %s" % format_exc(),
                      RuntimeWarning)
 
         # This is where we'll gather all the results.
         results = ip_addresses + domain_names + mac_addresses
 
-        # Link the portscan results to the IP addresses.
+        # Link the port scan results to the IP addresses.
         for ip in ip_addresses:
             try:
                 portscan = Portscan(ip, ports, timestamp)
@@ -362,6 +376,17 @@ class NmapScanPlugin(TestingPlugin):
                 warn(format_exc(), RuntimeWarning)
                 continue
             results.append(portscan)
+
+        # Link the service identification results to the IP addresses.
+        for service, port, protocol in services:
+            try:
+                sfp = ServiceFingerprint(service, port, protocol)
+            except Exception:
+                warn(format_exc(), RuntimeWarning)
+                continue
+            for ip in ip_addresses:
+                ip.add_information(sfp)
+            results.append(sfp)
 
         # Link the traceroute results to the IP addresses.
         for ip in ip_addresses:
