@@ -556,11 +556,10 @@ class AuditNotifier(AbstractNotifier):
             depth = audit.config.depth
             if depth is not None and payload.depth >= depth:
                 skip_run = True
-                if payload.depth == depth:
-                    plugin_id = audit.pluginManager.\
-                                    get_plugin_info_from_instance(plugin)[0]
-                    if plugin_id != "testing/recon/spider":
-                        skip_run = False
+                plugin_id = audit.pluginManager.\
+                                get_plugin_info_from_instance(plugin)[0]
+                if payload.depth == depth and plugin_id != "testing/recon/spider":
+                    skip_run = False
                 if skip_run:
 
                     # If we reached the limit, send a fake ACK message.

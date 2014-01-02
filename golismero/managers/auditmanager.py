@@ -50,7 +50,8 @@ from ..messaging.notifier import AuditNotifier
 
 from collections import defaultdict
 from warnings import catch_warnings, warn
-from time import time
+from os import getpid
+from time import time, ctime
 from traceback import format_exc
 
 
@@ -168,10 +169,13 @@ class AuditManager (object):
 
         # On error, abort.
         except Exception, e:
+            tb = format_exc()
             try:
                 self.remove_audit(audit.name)
             except Exception:
                 pass
+            Logger.log_error(str(e))
+            Logger.log_error_more_verbose(tb)
             raise AuditException("Failed to add new audit, reason: %s" % e)
 
 
@@ -843,15 +847,22 @@ class Audit (object):
                 if not pending:
                     continue
 
+                ### XXX DEBUG
+                ##with open("orchestrator-%d.log" % getpid(), "a") as f:
+                ##    f.write("[%s] Evaluating stage %s...\n\n" % (ctime(), stage))
+
                 # If the stage is empty...
                 if not pluginManager.stages[stage]:
 
                     # Mark all data as having finished this stage.
-                    for identity in pending:
-                        database.mark_stage_finished(identity, stage)
+                    database.mark_stage_finished_many(pending, stage)
 
                     # Skip to the next stage.
                     continue
+
+                ### XXX DEBUG
+                ##with open("orchestrator-%d.log" % getpid(), "a") as f:
+                ##    f.write("[%s] Getting data for stage %s...\n\n" % (ctime(), stage))
 
                 # Get the pending data.
                 # XXX FIXME possible performance problem here!
@@ -860,15 +871,38 @@ class Audit (object):
                 if not datalist:
                     continue
 
+                ### XXX DEBUG
+                ##with open("orchestrator-%d.log" % getpid(), "a") as f:
+                ##    f.write("[%s] Filtering data for stage %s...\n\n" % (ctime(), stage))
+
+                # Filter out data out of scope.
+                data_ok = []
+                data_not_ok = []
+                for data in datalist:
+                    if data.is_in_scope(self.scope):
+                        data_ok.append(data)
+                    else:
+                        data_not_ok.append(data.identity)
+                if data_not_ok:
+                    database.mark_stage_finished_many(data_not_ok, stage)
+                datalist = data_ok
+
                 # If we don't have any suitable plugins...
                 if not self.__notifier.is_runnable_stage(datalist, stage):
 
+                    ### XXX DEBUG
+                    ##with open("orchestrator-%d.log" % getpid(), "a") as f:
+                    ##    f.write("[%s] Discarded stage %s...\n\n" % (ctime(), stage))
+
                     # Mark all data as having finished this stage.
-                    for identity in pending:
-                        database.mark_stage_finished(identity, stage)
+                    database.mark_stage_finished_many(pending, stage)
 
                     # Skip to the next stage.
                     continue
+
+                ### XXX DEBUG
+                ##with open("orchestrator-%d.log" % getpid(), "a") as f:
+                ##    f.write("[%s] Chosen stage %s...\n\n" % (ctime(), stage))
 
                 # Update the stage statistics.
                 self.__stage_cycles[self.__current_stage] += 1

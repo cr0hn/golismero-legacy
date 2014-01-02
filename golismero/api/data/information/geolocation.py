@@ -213,7 +213,7 @@ class Geolocation(Information):
             "<%s latitude=%f, longitude=%f, country_code=%r,"
             " country_name=%r, region_code=%r, region_name=%r,"
             " city=%r, zipcode=%r, metro_code=%r, areacode=%r,"
-            " street_addr=%r, accuracy=%f>"
+            " street_addr=%r, accuracy=%s>"
             % (self.__class__.__name__,
             self.latitude, self.longitude, self.country_code,
             self.country_name, self.region_code, self.region_name,

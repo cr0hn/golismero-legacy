@@ -590,6 +590,21 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
+    def mark_stage_finished_many(self, identities, stage):
+        """
+        Mark the data as having completed the stage.
+
+        :param identities: Identity hashes.
+        :type identities: set(str)
+
+        :param stage: Stage.
+        :type stage: int
+        """
+        for identity in identities:
+            self.mark_stage_finished(identity, stage)
+
+
+    #--------------------------------------------------------------------------
     def clear_stage_mark(self, identity):
         """
         Clear the completed stages mark for the given data.
@@ -1745,6 +1760,19 @@ class AuditSQLiteDB (BaseAuditDB):
             raise TypeError("Expected string, got %s" % type(identity))
         if type(stage) is not int:
             raise TypeError("Expected integer, got %s" % type(stage))
+        self.__mark_stage_finished(identity, stage)
+
+    @transactional
+    def mark_stage_finished_many(self, identities, stage):
+        if type(stage) is not int:
+            raise TypeError("Expected integer, got %s" % type(stage))
+        for identity in identities:
+            if type(identity) is not str:
+                raise TypeError("Expected string, got %s" % type(identity))
+        for identity in identities:
+            self.__mark_stage_finished(identity, stage)
+
+    def __mark_stage_finished(self, identity, stage):
 
         # Get the previous value of the last completed stage for this data.
         self.__cursor.execute(
@@ -1753,17 +1781,23 @@ class AuditSQLiteDB (BaseAuditDB):
             )
         row = self.__cursor.fetchone()
         if row:
+            do_insert = True
             prev_stage = int(row[0])
         else:
+            do_insert = False
             prev_stage = 0
 
         # If the new stage is greater than the old one...
         if stage > prev_stage:
 
             # Update the last completed stage value for this data.
-            self.__cursor.execute(
-                "INSERT INTO stages VALUES (NULL, ?, ?);",
-                (identity, stage))
+            if do_insert:
+                query = "INSERT INTO stages VALUES (NULL, ?, ?);"
+                params = (identity, stage)
+            else:
+                query = "UPDATE stages SET stage = ? WHERE identity = ?;"
+                params = (stage, identity)
+            self.__cursor.execute(query, params)
 
 
     #--------------------------------------------------------------------------

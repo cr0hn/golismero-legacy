@@ -456,8 +456,10 @@ class DnsRegisterA(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.address in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.address in scope
 
 
 #------------------------------------------------------------------------------
@@ -501,8 +503,10 @@ class DnsRegisterAAAA(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.address in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.address in scope
 
 
 #------------------------------------------------------------------------------
@@ -562,8 +566,10 @@ class DnsRegisterAFSDB(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.hostname in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.hostname in scope
 
 
 #------------------------------------------------------------------------------
@@ -741,8 +747,10 @@ class DnsRegisterCNAME(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.target in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.target in scope
 
 
 #------------------------------------------------------------------------------
@@ -1212,8 +1220,10 @@ class DnsRegisterMX(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.exchange in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.exchange in scope
 
 
 #------------------------------------------------------------------------------
@@ -1320,8 +1330,10 @@ class DnsRegisterNAPTR(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.replacement in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.replacement in scope
 
 
 #------------------------------------------------------------------------------
@@ -1365,8 +1377,10 @@ class DnsRegisterNS(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.target in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.target in scope
 
 
 #------------------------------------------------------------------------------
@@ -1411,8 +1425,10 @@ class DnsRegisterNSAP(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.address in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.address in scope
 
 
 #------------------------------------------------------------------------------
@@ -1456,8 +1472,10 @@ class DnsRegisterNSEC(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.next in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.next in scope
 
 
 #------------------------------------------------------------------------------
@@ -1635,8 +1653,10 @@ class DnsRegisterPTR(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.target in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.target in scope
 
 
 #------------------------------------------------------------------------------
@@ -1708,8 +1728,10 @@ class DnsRegisterRP(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.mbox in Config.audit_scope or self.txt in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.mbox in scope or self.txt in scope
 
 
 #------------------------------------------------------------------------------
@@ -1931,8 +1953,10 @@ class DnsRegisterSOA(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.mname in Config.audit_scope or self.rname in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.mname in scope or self.rname in scope
 
 
 #------------------------------------------------------------------------------
@@ -2112,8 +2136,10 @@ class DnsRegisterSRV(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.target in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.target in scope
 
 
 #------------------------------------------------------------------------------
@@ -2190,8 +2216,10 @@ class DnsRegisterWKS(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.address in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.address in scope
 
 
 #------------------------------------------------------------------------------
@@ -2236,5 +2264,7 @@ class DnsRegisterX25(DnsRegister):
 
 
     #----------------------------------------------------------------------
-    def is_in_scope(self):
-        return self.address in Config.audit_scope
+    def is_in_scope(self, scope = None):
+        if scope is None:
+            scope = Config.audit_scope
+        return self.address in scope

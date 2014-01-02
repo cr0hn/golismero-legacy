@@ -28,6 +28,9 @@ only_vulns = default
 # Include subdomains in the target scope.
 include_subdomains = yes
 
+# Include parent folders in the target scope.
+allow_parent = yes
+
 # Maximum spidering depth. Defaults to 1.
 depth = 1
 

@@ -611,6 +611,7 @@ class ParsedURL (object):
     Is broken down to the following properties:
 
     + url          = 'http://user:pass@www.site.com/folder/index.php?param1=val1&b#anchor'
+    + base_url     = 'http://user:pass@www.site.com'
     + request_uri  = '/folder/index.php?b=&param1=val1
     + scheme       = 'http'
     + host         = 'www.site.com'
@@ -1084,10 +1085,17 @@ class ParsedURL (object):
         fragment = self.__fragment
         request_uri = self.request_uri
         if scheme:
-            scheme = scheme + "://"
+            scheme += "://"
         if fragment:
             request_uri = "%s#%s" % (request_uri, quote(fragment, safe=''))
         return "%s%s%s" % (scheme, self.netloc, request_uri)
+
+    @property
+    def base_url(self):
+        scheme = self.__scheme
+        if scheme:
+            scheme += "://"
+        return scheme + self.netloc
 
     @property
     def request_uri(self):

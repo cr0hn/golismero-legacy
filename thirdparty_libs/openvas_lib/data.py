@@ -95,27 +95,28 @@ class OpenVASNVT(object):
 
     #----------------------------------------------------------------------
     def __init__(self):
-        self.__oid             = None
-        self.__name            = None
-        self.__cvss_base       = None
-        self.__risk_factor     = None
-        self.__category        = None
-        self.__summary         = None
-        self.__description     = None
-        self.__family          = None
+        self.__oid              = None
+        self.__name             = None
+        self.__cvss_base        = None
+        self.__cvss_base_vector = None
+        self.__risk_factor      = None
+        self.__category         = None
+        self.__summary          = None
+        self.__description      = None
+        self.__family           = None
 
-        self.__cve             = None
-        self.__bid             = None
-        self.__bugtraq         = None
-        self.__xrefs           = None
-        self.__fingerprints    = None
-        self.__tags            = None
+        self.__cve              = None
+        self.__bid              = None
+        self.__bugtraq          = None
+        self.__xrefs            = None
+        self.__fingerprints     = None
+        self.__tags             = None
 
     #----------------------------------------------------------------------
     @classmethod
     def make_object(cls, oid, name, cvss_base, risk_factor,
                     summary, description, family=None, category=None,
-                    cve=None, bid=None, bugtraq=None, xrefs=None, fingerprints=None, tags=None):
+                    cve=None, bid=None, bugtraq=None, xrefs=None, fingerprints=None, tags=None, cvss_base_vector=None):
         """
         :type oid: str
         :type name: str
@@ -131,6 +132,7 @@ class OpenVASNVT(object):
         :type xrefs: str
         :type fingerprints: str
         :type tags: str
+        :type cvss_base_vector: str
         """
 
         if not isinstance(oid, basestring):
@@ -145,6 +147,10 @@ class OpenVASNVT(object):
             raise TypeError("Expected string, got %r instead" % type(summary))
         if not isinstance(description, basestring):
             raise TypeError("Expected string, got %r instead" % type(description))
+
+        if cvss_base_vector:
+            if not isinstance(cvss_base_vector, str):
+                raise TypeError("Expected string, got %r instead" % type(cvss_base_vector))
 
         if family:
             if not isinstance(family, basestring):
@@ -177,22 +183,23 @@ class OpenVASNVT(object):
             if not isinstance(tags, basestring):
                 raise TypeError("Expected string, got %r instead" % type(tags))
 
-        cls                   = OpenVASNVT()
-        cls.__oid             = oid
-        cls.__name            = name
-        cls.__cvss_base       = cvss_base
-        cls.__risk_factor     = risk_factor
-        cls.__category        = category
-        cls.__summary         = summary
-        cls.__description     = description
-        cls.__family          = family
+        cls                    = OpenVASNVT()
+        cls.__oid              = oid
+        cls.__name             = name
+        cls.__cvss_base        = cvss_base
+        cls.__cvss_base_vector = cvss_base_vector
+        cls.__risk_factor      = risk_factor
+        cls.__category         = category
+        cls.__summary          = summary
+        cls.__description      = description
+        cls.__family           = family
 
-        cls.__cve             = cve
-        cls.__bid             = bid
-        cls.__bugtraq         = bugtraq
-        cls.__xrefs           = xrefs
-        cls.__fingerprints    = fingerprints
-        cls.__tags            = tags
+        cls.__cve              = cve
+        cls.__bid              = bid
+        cls.__bugtraq          = bugtraq
+        cls.__xrefs            = xrefs
+        cls.__fingerprints     = fingerprints
+        cls.__tags             = tags
 
         return cls
 
@@ -249,6 +256,29 @@ class OpenVASNVT(object):
             raise TypeError("Expected string, got %r instead" % type(val))
 
         self.__name = val
+
+
+    #----------------------------------------------------------------------
+    @property
+    def cvss_base_vector(self):
+        """
+        :return: CVSS Base calculated
+        :rtype: str
+        """
+        return self.__cvss_base_vector
+
+
+    #----------------------------------------------------------------------
+    @cvss_base_vector.setter
+    def cvss_base_vector(self, val):
+        """
+        :param val: CVSS Base calculated
+        :type val: str
+        """
+        if not isinstance(val, basestring):
+            raise TypeError("Expected string, got %r instead" % type(val))
+
+        self.__cvss_base_vector = val
 
 
     #----------------------------------------------------------------------

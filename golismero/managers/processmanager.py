@@ -40,6 +40,7 @@ __all__ = ["ProcessManager", "PluginContext"]
 from ..api.config import Config
 from ..api.data import LocalDataCache
 from ..api.localfile import LocalFile
+from ..api.logger import Logger
 from ..api.net.cache import NetworkCache
 from ..api.net.http import HTTP
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
@@ -48,6 +49,7 @@ from ..messaging.message import Message
 from imp import load_source
 from multiprocessing import Manager
 from os import getpid
+from time import ctime
 from thread import get_ident
 from threading import Timer
 from traceback import format_exc, print_exc, format_exception_only, format_list
@@ -274,6 +276,8 @@ def _bootstrap_inner(context, func, args, kwargs):
         # Abort if the data is out of scope
         # for the current audit.
         if not input_data.is_in_scope():
+            ##Logger.log_error_more_verbose(
+            ##    "Skipped data out of scope: %s" % input_data.identity)
             return
 
         # Save the current crawling depth.
@@ -282,11 +286,18 @@ def _bootstrap_inner(context, func, args, kwargs):
 
             # Check we didn't exceed the maximum depth.
             max_depth = context.audit_config.depth
-            if max_depth is not None and context._depth > max_depth:
+            if max_depth is not None and max_depth < context._depth:
+                Logger.log_error_more_verbose(
+                    "Maximum crawling depth exceeded! Skipped: %s" %
+                    input_data.identity)
                 return
 
     # Set the default socket timeout.
-    socket.setdefaulttimeout(5.0)
+    # Note: due to a known bug in Python versions prior to 2.7.5 we can't set
+    # a default timeline because it makes the multiprocessing module
+    # misbehave. See: http://hg.python.org/cpython/rev/4e85e4743757
+    if sys.version_info[:3] >= (2,7,5):
+        socket.setdefaulttimeout(5.0)
 
     # Initialize the private file API.
     LocalFile._update_plugin_path()
@@ -693,6 +704,10 @@ class PluginContext (object):
         :param message: Message to send.
         :type message: Message
         """
+
+        ### XXX DEBUG
+        ##with open("message-%d.log" % getpid(), "a") as f:
+        ##    f.write("[%s] Got %r\n\n" % (ctime(), message))
 
         # Hack for urgent messages: if we're in the same process
         # as the Orchestrator, skip the queue and dispatch them now.

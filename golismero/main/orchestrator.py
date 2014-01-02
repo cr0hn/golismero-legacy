@@ -50,6 +50,7 @@ from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 
 from os import getpid
+from time import ctime
 from thread import get_ident
 from traceback import format_exc, print_exc
 from signal import signal, SIGINT, SIG_DFL
@@ -298,7 +299,8 @@ class Orchestrator (object):
                 "Expected Message, got %r instead" % type(message))
 
         ### XXX DEBUG
-        ##print message
+        ##with open("orchestrator-%d.log" % getpid(), "a") as f:
+        ##    f.write("[%s] Got %r\n\n" % (ctime(), message))
 
         try:
 
@@ -451,6 +453,10 @@ class Orchestrator (object):
             while True:
                 try:
 
+                    ### XXX DEBUG
+                    ##with open("orchestrator-%d.log" % getpid(), "a") as f:
+                    ##    f.write("[%s] Waiting for message...\n\n" % ctime())
+
                     # Wait for a message to arrive.
                     try:
                         message = self.__queue.get()
@@ -459,18 +465,8 @@ class Orchestrator (object):
                         # But let KeyboardInterrupt and SystemExit through.
                         exit(1)
 
-                    try:
-                        # Dispatch the message.
-                        self.dispatch_msg(message)
-                    except AuditException, e:
-                        message = Message(
-                            message_type = MessageType.MSG_TYPE_CONTROL,
-                            message_code = MessageCode.MSG_CONTROL_ERROR,
-                            message_info = ("Error starting audit", str(e)),
-                                priority = MessagePriority.MSG_PRIORITY_HIGH,
-                        )
-                        self.dispatch_msg(message)
-
+                    # Dispatch the message.
+                    self.dispatch_msg(message)
 
                 # If an exception is raised during message processing,
                 # just log the exception and continue.

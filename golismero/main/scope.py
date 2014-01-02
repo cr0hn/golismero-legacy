@@ -275,6 +275,12 @@ class AuditScope (AbstractScope):
                         # Keep the URL.
                         self.__web_pages.add(url)
 
+                        # If we allow parent folders...
+                        if audit_config.allow_parent:
+
+                            # Add the base URL too.
+                            self.__web_pages.add(parsed_url.base_url)
+
                         # Extract the domain or IP address.
                         host = parsed_url.host
                         try:
@@ -382,6 +388,7 @@ class AuditScope (AbstractScope):
         if parsed_url is not None:
 
             # Extract the host and use it as target.
+            # We'll be doing some extra checks later on, though.
             target = parsed_url.host
 
         # If it's an IP address...
@@ -397,17 +404,17 @@ class AuditScope (AbstractScope):
         if address is not None:
 
             # Test if it's one of the target IP addresses.
-            return address in self.__addresses
+            in_scope =  address in self.__addresses
 
         # If it's a domain name...
-        if self._re_is_domain.match(target):
+        elif self._re_is_domain.match(target):
 
             # Convert the target to lowercase.
             target = target.lower()
 
             # Test if the domain is one of the targets. If subdomains are
             # allowed, check if it's a subdomain of a target domain.
-            return (
+            in_scope = (
                 target in self.__domains or
                 any(
                     target.endswith("." + domain)
@@ -416,10 +423,29 @@ class AuditScope (AbstractScope):
             )
 
         # We don't know what this is, so we'll consider it out of scope.
-        warn(
-            "Can't determine if this is out of scope or not: %r" % original,
-            stacklevel=2
-        )
+        else:
+            warn(
+                "Can't determine if this is out of scope or not: %r" % original,
+                stacklevel=2
+            )
+            return False
+
+        # If it's in scope...
+        if in_scope:
+
+            # If it's an URL, check the path as well.
+            # If not within the allowed paths, it's out of scope.
+            if parsed_url is not None:
+                url = parsed_url.url
+                for base_url in self.__web_pages:
+                    if url.startswith(base_url):
+                        return True
+                return False
+
+            # Return True if in scope.
+            return True
+
+        # Return False if out of scope.
         return False
 
 
