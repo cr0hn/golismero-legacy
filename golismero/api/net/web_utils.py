@@ -487,23 +487,27 @@ def detect_auth_method(url):
 
     :return: (scheme, realm) if auth required. None otherwise.
     """
+
     url = to_utf8(url)
     req = Request(url=url)
-    p = req.prepare()
 
+    p = req.prepare()
     s = Session()
     r = s.send(p)
 
     if 'www-authenticate' in r.headers:
         authline = r.headers['www-authenticate']
-        authobj = re.compile(r'''(?:\s*www-authenticate\s*:)?\s*(\w*)\s+realm=['"]([^'"]+)['"]''',re.IGNORECASE)
+        authobj  = re.compile(
+            r'''(?:\s*www-authenticate\s*:)?\s*(\w*)\s+realm=['"]([^'"]+)['"]''',
+            re.IGNORECASE)
         matchobj = authobj.match(authline)
-        if not matchobj:
-            return None, None
-        scheme = matchobj.group(1)
-        realm = matchobj.group(2)
 
-    return scheme, realm
+        if matchobj:
+            scheme = matchobj.group(1)
+            realm  = matchobj.group(2)
+            return scheme, realm
+
+    return None, None
 
 
 #------------------------------------------------------------------------------
