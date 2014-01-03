@@ -315,6 +315,11 @@ class NmapScanPlugin(TestingPlugin):
         traces = []
         for node in host.findall(".//trace"):
             try:
+                if node.get("port") is None or node.get("proto") is None:
+                    # This happens for trivial cases like empty traceroute
+                    # result tags. Example: trying to traceroute a host that's
+                    # only one hop away from you, like your home router.
+                    continue
                 port   = int( node.get("port") )
                 proto  = node.get("proto")
                 hops   = {}
