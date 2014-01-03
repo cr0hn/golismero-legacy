@@ -60,6 +60,7 @@ Testing OSVDB: using 4 examples. The first being OSVDB: 1 and the second being O
   and the fourth is OSVDB ID: 3.
 Testing SA: with 6 IDs, namely: SA-7, SA:1, SA: 2, SECUNIA-3, SECUNIA:4 and SECUNIA: 5.
 Testing SECTRACK: try 4 samples: SECTRACK-0, SECTRACK: 1, SECTRACK:2 and SECTRACK ID: 3.
+Testing USN: try 4 samples: USN-740-1, USN-2048-1, USN:2048-2 and USN: 2076-1.
 Testing VU: using 2 examples. VU#826463 and VU-826464.
 Testing XF: we have 5 samples now. XF:this-is-valid(123), XF: this-is-valid-too (321), XF: (55), XF:(66) and XF-11.
   These should not match: XF: 6 nor XF: this is not valid (7).
@@ -83,6 +84,9 @@ SA:
 
 SECTRACK:
 9876
+
+USN:
+2076-2
 
 XF:
 this-is-broken (10)
@@ -112,6 +116,7 @@ _test_case_extract_solution = {
     "osvdb": ["OSVDB-1", "OSVDB-2", "OSVDB-3", "OSVDB-5"],
     "sa": ["SA-1", "SA-2", "SA-3", "SA-4", "SA-5", "SA-7"],
     "sectrack": ["SECTRACK-0", "SECTRACK-1", "SECTRACK-2", "SECTRACK-3"],
+    "usn": ["USN-2048-1", "USN-2048-2", "USN-2076-1", "USN-740-1"],
     "vu": ["VU-826463", "VU-826464"],
     "xf": ["XF-11", "XF-123", "XF-321", "XF-55", "XF-66"],
 }
@@ -182,6 +187,9 @@ http://www.securitytracker.com/id/4
 http://securitytracker.com/id/6
 http://www.securitytracker.com/alerts/2004/Jul/1010645.html
 http://securitytracker.com/alerts/2004/Jul/1010644.html
+
+http://www.ubuntu.com/usn/USN-740-1/
+http://www.ubuntu.com/usn/USN-2076-1
 
 https://www.kb.cert.org/vuls/id/826463
 http://www.kb.cert.org/vuls/id/911678
