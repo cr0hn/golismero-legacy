@@ -797,6 +797,8 @@ class Data(object):
                 value = float(value)
             elif isinstance(value, unicode):
                 value = value.encode("utf-8", "replace")
+            elif value is None:
+                value = ""
             else:
                 value = str(value)
 
