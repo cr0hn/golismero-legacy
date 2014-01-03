@@ -231,6 +231,11 @@ class GeoIP(TestingPlugin):
             if r:
                 xml = ET.fromstring(r)
                 ns = "{http://skyhookwireless.com/wps/2005}"
+                err = xml.find(".//%serror" % ns)
+                if err is not None:
+                    Logger.log_error_verbose(
+                        "Response from Skyhook: %s" % err.text)
+                    return
                 return {
                     "latitude": float(xml.find(".//%slatitude" % ns).text),
                     "longitude": float(xml.find(".//%slongitude" % ns).text),
