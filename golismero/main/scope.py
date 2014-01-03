@@ -375,7 +375,7 @@ class AuditScope (AbstractScope):
         if not isinstance(target, str):
             if not isinstance(target, unicode):
                 raise TypeError("Expected str, got %r instead" % type(target))
-            target = str(target)
+            target = to_utf8(target)
 
         # Keep the original string for error reporting.
         original = target
@@ -386,10 +386,13 @@ class AuditScope (AbstractScope):
         except Exception:
             parsed_url = None
         if parsed_url is not None:
+            if not parsed_url.scheme:
+                parsed_url = None
+            else:
 
-            # Extract the host and use it as target.
-            # We'll be doing some extra checks later on, though.
-            target = parsed_url.host
+                # Extract the host and use it as target.
+                # We'll be doing some extra checks later on, though.
+                target = parsed_url.host
 
         # If it's an IP address...
         try:
@@ -404,7 +407,7 @@ class AuditScope (AbstractScope):
         if address is not None:
 
             # Test if it's one of the target IP addresses.
-            in_scope =  address in self.__addresses
+            in_scope = address in self.__addresses
 
         # If it's a domain name...
         elif self._re_is_domain.match(target):
