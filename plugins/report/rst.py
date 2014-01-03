@@ -33,8 +33,9 @@ from golismero.api.config import Config
 from golismero.api.data import Data
 from golismero.api.data.db import Database
 from golismero.api.logger import Logger
+from golismero.api.net.web_utils import parse_url
 from golismero.api.plugin import ReportPlugin
-from golismero.api.text.text_utils import hexdump
+from golismero.api.text.text_utils import hexdump, to_utf8
 
 from collections import defaultdict
 from datetime import datetime
@@ -194,8 +195,15 @@ class RSTReport(ReportPlugin):
         s = s.replace("\t", " " * 8)
         s = s.replace("\r\n", "\n")
         s = s.replace("\r", "\n")
-        s = self.__re_escape_rst.sub(r"\\\1", s)
         s = self.__re_unindent.sub("", s)
+        try:
+            u = parse_url(s)
+        except Exception:
+            u = None
+        if u is not None and u.scheme in ("http", "https", "ftp", "mailto"):
+            s = "`%s <%s>`_" % (self.__re_escape_rst.sub(r"\\\1", s), u.url)
+        else:
+            s = self.__re_escape_rst.sub(r"\\\1", s)
         return s
 
 
@@ -215,7 +223,9 @@ class RSTReport(ReportPlugin):
             (isinstance(obj, list) or isinstance(obj, tuple)) and
             all(isinstance(x, basestring) for x in obj)
         ):
-            return "\n".join("- " + self.__escape_rst(pformat(x)) for x in obj)
+            return "\n".join("- " + self.__escape_rst(
+                to_utf8(x) if isinstance(x, basestring) else pformat(x)
+            ) for x in obj)
         if isinstance(obj, dict):
             return "\n".join(
                 self.__escape_rst("%s: %s" % (k,v))
@@ -349,6 +359,12 @@ class RSTReport(ReportPlugin):
                         for key, value in properties.iteritems()
                         if value
                     }
+
+                    # Remove ID properties.
+                    for key, value in properties.items():
+                        if key.endswith(" ID") and len(value) == 1 and \
+                                len(value[0]) == 32 and value[0].isalnum():
+                            del properties[key]
 
                     # Skip this group if we have no properties left to show.
                     if not properties:
