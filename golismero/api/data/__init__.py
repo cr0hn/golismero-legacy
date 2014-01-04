@@ -67,7 +67,7 @@ from uuid import uuid4
 from warnings import warn
 
 # Lazy imports.
-Vulnerability = None
+TAXONOMY_NAMES = None
 
 
 #------------------------------------------------------------------------------
@@ -710,9 +710,9 @@ class Data(object):
         # a lot of hardcoded hacks in here.
 
         # Lazy import of the Vulnerability class.
-        global Vulnerability
-        if Vulnerability is None:
-            from .vulnerability import Vulnerability
+        global TAXONOMY_NAMES
+        if TAXONOMY_NAMES is None:
+            from .vulnerability.vuln_utils import TAXONOMY_NAMES
 
         # This is the dictionary we'll build and return.
         display = defaultdict(dict)
@@ -734,8 +734,8 @@ class Data(object):
                 continue
 
             # Handle the vulnerability taxonomy types.
-            if propname in Vulnerability.TAXONOMY_NAMES:
-                key   = Vulnerability.TAXONOMY_NAMES[propname]
+            if propname in TAXONOMY_NAMES:
+                key   = TAXONOMY_NAMES[propname]
                 value = getattr(self, propname)
                 if value:
                     display["Taxonomy"][key] = ", ".join(value)

@@ -156,6 +156,22 @@ http://web.nvd.nist.gov/view/vuln/detail?vulnId=4444-4444
 https://cwe.mitre.org/data/definitions/123.html
 http://cwe.mitre.org/data/definitions/124.html
 
+http://www.debian.org/security/2001/dsa-095
+http://www.debian.org/security/2013/dsa-2831
+http://www.debian.org/security/dsa-2139
+https://www.security-database.com/detail.php?alert=DSA-2834
+
+http://www.debian.org/security/2000/20001129
+http://www.debian.org/security/2000/20001130
+http://www.debian.org/security/2000/20001201
+http://www.debian.org/security/2000/20001217
+http://www.debian.org/security/2000/20001217a
+http://www.debian.org/security/2000/20001219
+http://www.debian.org/security/2000/20001220
+http://www.debian.org/security/2000/20001225
+http://www.debian.org/security/2000/20001225a
+http://www.debian.org/security/2000/20001225b
+
 http://www.exploit-db.com/exploits/100/
 http://www.exploit-db.com/exploits/200
 
