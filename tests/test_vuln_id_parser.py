@@ -226,6 +226,11 @@ http://securitytracker.com/alerts/2004/Jul/1010644.html
 http://www.ubuntu.com/usn/USN-740-1/
 http://www.ubuntu.com/usn/USN-2076-1
 
+http://www.vmware.com/security/advisories/VMSA-2013-0004.html
+https://www.vmware.com/security/advisories/VMSA-2013-0005.html
+https://www.security-database.com/detail.php?alert=VMSA-2013-0006
+https://www.security-database.com/cvss.php?alert=VMSA-2013-0007
+
 https://www.kb.cert.org/vuls/id/826463
 http://www.kb.cert.org/vuls/id/911678
 
