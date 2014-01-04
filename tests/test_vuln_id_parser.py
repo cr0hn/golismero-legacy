@@ -43,7 +43,7 @@ if path.exists(thirdparty_libs):
 
 from golismero.api.data.vulnerability import Vulnerability #noqa
 from golismero.api.data.vulnerability.vuln_utils import extract_vuln_ids, \
-     convert_references_to_vuln_ids, convert_vuln_ids_to_references
+     convert_references_to_vuln_ids, convert_vuln_ids_to_references, CVSS, CVSS_Base
 
 
 _test_case_extract = """
@@ -274,5 +274,37 @@ def test_vuln_id_parser():
             requests.get(url, headers=headers)
 
 
+def test_cvss_calculator():
+    print "Testing the CVSS calculator..."
+
+    # Unit test based on Wikipedia examples.
+    cvss = CVSS_Base("AV:N/AC:L/Au:N/C:P/I:P/A:C")
+    assert ("%.1f" % cvss.base_exploitability) == "10.0", cvss.base_exploitability
+    assert ("%.1f" % cvss.impact) == "8.5", cvss.impact
+    assert cvss.base_score == "9.0", cvss.base_score
+    assert cvss.score == "9.0", cvss.score
+    assert cvss.vector == "AV:N/AC:L/Au:N/C:P/I:P/A:C", cvss.vector
+    cvss = CVSS("AV:N/AC:L/Au:N/C:P/I:P/A:C/E:P/RL:U/RC:UC")
+    assert cvss.temporal_score == "7.3", cvss.temporal_score
+    cvss = CVSS("C:P/I:P/A:C/E:P/RL:U/RC:UC")
+    assert cvss.temporal_score == "7.3", cvss.temporal_score
+    assert "AV:N/AC:L/Au:N/C:P/I:P/A:C" in cvss.vector
+    cvss.RC = cvss.CONFIRMED
+    assert cvss.temporal_score == "8.1", cvss.temporal_score
+    cvss.RL = cvss.TEMPORARY_FIX
+    assert cvss.temporal_score == "7.3", cvss.temporal_score
+    cvss.RL = cvss.OFFICIAL_FIX
+    assert cvss.temporal_score == "7.0", cvss.temporal_score
+    cvss = CVSS("AV:N/AC:L/Au:N/C:P/I:P/A:C/E:P/RL:T/RC:UC/CDP:MH/TD:H/CR:H/IR:H/AR:L")
+    assert cvss.base_score == "9.0", cvss.base_score
+    assert ("%.1f" % cvss.base_exploitability) == "10.0", cvss.base_exploitability
+    assert ("%.1f" % cvss.impact) == "8.5", cvss.impact
+    assert cvss.temporal_score == "6.6", cvss.temporal_score
+    assert cvss.environmental_score == "7.8", cvss.environmental_score
+    assert ("%.1f" % cvss.adjusted_impact) == "8.0", cvss.adjusted_impact
+    assert cvss.score == "7.8", cvss.score
+
+
 if __name__ == "__main__":
+    test_cvss_calculator()
     test_vuln_id_parser()
