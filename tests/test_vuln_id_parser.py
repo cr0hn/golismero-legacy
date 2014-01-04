@@ -133,6 +133,8 @@ http://www.cert.org/advisories/CA-2004-01.html
 
 https://capec.mitre.org/data/definitions/1.html
 http://capec.mitre.org/data/definitions/3.html
+https://www.security-database.com/capec.php?name=CAPEC-2
+http://www.security-database.com/capec.php?name=CAPEC-4
 
 http://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-20131009-fwsm
 http://www.security-database.com/detail.php?alert=cisco-sa-20131009-asa
@@ -155,6 +157,8 @@ http://web.nvd.nist.gov/view/vuln/detail?vulnId=4444-4444
 
 https://cwe.mitre.org/data/definitions/123.html
 http://cwe.mitre.org/data/definitions/124.html
+https://www.security-database.com/cwe.php?name=CWE-125
+http://www.security-database.com/cwe.php?name=CWE-126
 
 http://www.debian.org/security/2001/dsa-095
 http://www.debian.org/security/2013/dsa-2831
