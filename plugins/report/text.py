@@ -297,8 +297,10 @@ class TextReport(ReportPlugin):
                     q = len(table.draw())
                     if vuln.cvss_base:
                         table.add_row(("CVSS Base", vuln.cvss_base))
-                    if vuln.cvss_base_vector:
-                        table.add_row(("CVSS Base Vector", vuln.cvss_base_vector))
+                    if vuln.cvss_score:
+                        table.add_row(("CVSS Score", vuln.cvss_score))
+                    if vuln.cvss_vector:
+                        table.add_row(("CVSS Vector", vuln.cvss_vector))
                     if len(targets) > 1:
                         targets.sort()
                         table.add_row(("Locations", "\n".join(targets)))

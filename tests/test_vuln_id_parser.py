@@ -134,6 +134,12 @@ http://www.cert.org/advisories/CA-2004-01.html
 https://capec.mitre.org/data/definitions/1.html
 http://capec.mitre.org/data/definitions/3.html
 
+http://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-20131009-fwsm
+http://www.security-database.com/detail.php?alert=cisco-sa-20131009-asa
+https://www.security-database.com/detail.php?alert=cisco-sa-20130925-rsvp
+http://www.security-database.com/cvss.php?alert=cisco-sa-20130925-nat
+https://www.security-database.com/cvss.php?alert=cisco-sa-20130918-pc
+
 https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-1234-12345
 http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-1234-4321
 https://nvd.nist.gov/nvd.cfm?cvename=CVE-1234-1234

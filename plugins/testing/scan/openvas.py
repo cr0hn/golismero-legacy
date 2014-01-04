@@ -408,11 +408,13 @@ class OpenVASPlugin(TestingPlugin):
                     "level": OPV_LEVELS_TO_GLM_LEVELS[level.lower()],
                     "description": description,
                     "references": references,
-                    "cvss_base": cvss,
-                    "cvss_base_vector": cvss_vector,
                     "cve": cve,
                     "risk": risk
                 }
+                if cvss_vector:
+                    kwargs["cvss_vector"] = cvss_vector
+                elif cvss:
+                    kwargs["cvss_base"] = cvss
                 if name:
                     kwargs["title"] = name
 
