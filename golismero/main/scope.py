@@ -438,10 +438,13 @@ class AuditScope (AbstractScope):
 
             # If it's an URL, check the path as well.
             # If not within the allowed paths, it's out of scope.
-            if parsed_url is not None:
-                url = parsed_url.url
+            if parsed_url is not None and \
+                            parsed_url.scheme in ("http", "https", "ftp"):
+                path = parsed_url.path
                 for base_url in self.__web_pages:
-                    if url.startswith(base_url):
+                    parsed_url = ParsedURL(base_url)
+                    if path.startswith(parsed_url.path) and \
+                                    parsed_url.scheme in ("http", "https", "ftp"):
                         return True
                 return False
 
