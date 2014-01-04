@@ -67,6 +67,7 @@ from uuid import uuid4
 from warnings import warn
 
 # Lazy imports.
+Vulnerability = None
 TAXONOMY_NAMES = None
 
 
@@ -709,7 +710,10 @@ class Data(object):
         # It's hard to figure out how, though. So for now we'll have
         # a lot of hardcoded hacks in here.
 
-        # Lazy import of the Vulnerability class.
+        # Lazy import of the vulnerability submodule.
+        global Vulnerability
+        if Vulnerability is None:
+            from .vulnerability import Vulnerability
         global TAXONOMY_NAMES
         if TAXONOMY_NAMES is None:
             from .vulnerability.vuln_utils import TAXONOMY_NAMES
