@@ -182,6 +182,12 @@ https://security.gentoo.org/glsa/glsa-201312-12.xml
 http://www.security-database.com/detail.php?alert=GLSA-201312-16
 https://www.security-database.com/detail.php?alert=GLSA-201312-10
 
+http://www.mandriva.com/security/advisories?name=MDVSA-2013:298
+https://www.security-database.com/detail.php?alert=MDVSA-2013:299
+https://www.mandriva.com/en/support/security/advisories/advisory/MDVSA-2013:300/?name=MDVSA-2013:300
+https://www.mandriva.com/en/support/security/advisories/advisory/MDVSA-2013:301
+https://www.mandriva.com/support/security/advisories/advisory/MDVSA-2013:302
+
 http://www.microsoft.com/technet/security/bulletin/MS01-023.asp
 https://www.microsoft.com/technet/security/bulletin/MS01-022.asp
 http://microsoft.com/technet/security/bulletin/MS01-021.asp
