@@ -46,6 +46,7 @@ from golismero.api.plugin import TestingPlugin
 #------------------------------------------------------------------------------
 class SQLMapTestingPlugin(TestingPlugin):
 
+
     #--------------------------------------------------------------------------
     def check_params(self):
         if not find_binary_in_path("sqlmap.py"):
@@ -53,9 +54,11 @@ class SQLMapTestingPlugin(TestingPlugin):
                 "SQLMap not found!"
                 " You can download it from: http://sqlmap.org/")
 
+
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
+
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
@@ -120,6 +123,7 @@ class SQLMapTestingPlugin(TestingPlugin):
 
         return results
 
+
     #----------------------------------------------------------------------
     def make_injection(self, target, args):
         """
@@ -140,9 +144,7 @@ class SQLMapTestingPlugin(TestingPlugin):
 
         with ConnectionSlot(target):
             t1 = time()
-            # Find one of the paths to the binary
-            command = find_binary_in_path("sqlmap.py")[0]
-            code = run_external_tool(command, args,
+            code = run_external_tool("sqlmap.py", args,
                                      callback=Logger.log_verbose)
             t2 = time()
 
