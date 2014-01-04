@@ -191,6 +191,11 @@ https://osvdb.org/show/osvdb/2
 http://www.osvdb.org/show/osvdb/3
 https://www.osvdb.org/show/osvdb/4
 
+https://rhn.redhat.com/errata/RHSA-2000-043.html
+https://rhn.redhat.com/errata/RHSA-2013-1852.html
+https://www.security-database.com/cvss.php?alert=RHSA-2013:1801
+https://www.security-database.com/detail.php?alert=RHSA-2013:1823
+
 http://www.secunia.com/advisories/1
 https://secunia.com/advisories/2
 http://secunia.com/advisories/3
