@@ -40,7 +40,7 @@ from .scope import DummyScope
 from ..api.config import Config
 from ..api.logger import Logger
 from ..database.cachedb import PersistentNetworkCache, VolatileNetworkCache
-from ..managers.auditmanager import AuditManager, AuditException
+from ..managers.auditmanager import AuditManager
 from ..managers.pluginmanager import PluginManager
 from ..managers.uimanager import UIManager
 from ..managers.rpcmanager import RPCManager
@@ -50,7 +50,6 @@ from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 
 from os import getpid
-from time import ctime
 from thread import get_ident
 from traceback import format_exc, print_exc
 from signal import signal, SIGINT, SIG_DFL

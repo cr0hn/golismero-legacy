@@ -50,8 +50,7 @@ from ..messaging.notifier import AuditNotifier
 
 from collections import defaultdict
 from warnings import catch_warnings, warn
-from os import getpid
-from time import time, ctime
+from time import time
 from traceback import format_exc
 
 

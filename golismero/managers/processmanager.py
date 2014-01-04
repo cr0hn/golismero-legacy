@@ -49,7 +49,6 @@ from ..messaging.message import Message
 from imp import load_source
 from multiprocessing import Manager
 from os import getpid
-from time import ctime
 from thread import get_ident
 from threading import Timer
 from traceback import format_exc, print_exc, format_exception_only, format_list
