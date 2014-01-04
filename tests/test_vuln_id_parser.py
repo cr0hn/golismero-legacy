@@ -41,6 +41,7 @@ if path.exists(thirdparty_libs):
     sys.path.insert(0, golismero)
 
 
+from golismero.api.data.vulnerability import Vulnerability #noqa
 from golismero.api.data.vulnerability.vuln_utils import extract_vuln_ids, \
      convert_references_to_vuln_ids, convert_vuln_ids_to_references
 
@@ -151,6 +152,13 @@ http://cwe.mitre.org/data/definitions/124.html
 
 http://www.exploit-db.com/exploits/100/
 http://www.exploit-db.com/exploits/200
+
+http://www.gentoo.org/security/en/glsa/glsa-201312-14.xml
+https://www.gentoo.org/security/en/glsa/glsa-201312-15.xml
+http://security.gentoo.org/glsa/glsa-201312-11.xml
+https://security.gentoo.org/glsa/glsa-201312-12.xml
+http://www.security-database.com/detail.php?alert=GLSA-201312-16
+https://www.security-database.com/detail.php?alert=GLSA-201312-10
 
 http://www.microsoft.com/technet/security/bulletin/MS01-023.asp
 https://www.microsoft.com/technet/security/bulletin/MS01-022.asp
