@@ -444,7 +444,7 @@ class AuditScope (AbstractScope):
                 for base_url in self.__web_pages:
                     parsed_url = ParsedURL(base_url)
                     if path.startswith(parsed_url.path) and \
-                                    parsed_url.scheme in ("http", "https", "ftp"):
+                                parsed_url.scheme in ("http", "https", "ftp"):
                         return True
                 return False
 
