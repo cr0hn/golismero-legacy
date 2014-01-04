@@ -309,11 +309,11 @@ def test_vuln_id_parser():
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.62 Safari/537.36"}
     for url in refs:
         print "--> " + url
-        requests.get(url, headers=headers)
+        requests.get(url, headers=headers, verify=False)
     for url in urls:
         if url not in refs:
             print "--> " + url
-            requests.get(url, headers=headers)
+            requests.get(url, headers=headers, verify=False)
 
 
 def test_cvss_calculator():
