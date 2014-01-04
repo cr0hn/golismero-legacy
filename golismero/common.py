@@ -97,6 +97,20 @@ import os
 import random  #noqa
 import sys
 
+# Remove the docstrings. This prevents errors when generating the API docs.
+try:
+    json_encode.__doc__ = ""
+except Exception:
+    _orig_json_encode = json_encode
+    def json_encode(*args, **kwargs):
+        return _orig_json_encode(*args, **kwargs)
+try:
+    json_decode.__doc__ = ""
+except Exception:
+    _orig_json_decode = json_decode
+    def json_decode(*args, **kwargs):
+        return _orig_json_decode(*args, **kwargs)
+
 
 #------------------------------------------------------------------------------
 _user_settings_folder = None

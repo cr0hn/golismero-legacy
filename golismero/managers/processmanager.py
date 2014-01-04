@@ -509,10 +509,11 @@ class PluginContext (object):
     @property
     def ack_identity(self):
         """"
-        :returns: Identity hash of the current input data,
-            or None if not running a plugin.
+        :returns: Identity hash of the current input data, or None if not running a plugin.
         :rtype: str | None
         """
+        # do not break the line in this docstring: due to a bug in Sphinx,
+        # we can't break lines in a :returns: tag.
         return self.__ack_identity
 
     @property
@@ -535,10 +536,11 @@ class PluginContext (object):
     @property
     def plugin_module(self):
         """"
-        :returns: Module where the plugin is to be loaded from,
-            or None if not running a plugin.
+        :returns: Module where the plugin is to be loaded from, or None if not running a plugin.
         :rtype: str | None
         """
+        # do not break the line in this docstring: due to a bug in Sphinx,
+        # we can't break lines in a :returns: tag.
         if self.__plugin_info:
             return self.__plugin_info.plugin_module
 
