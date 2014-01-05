@@ -31,7 +31,6 @@ __all__ = ["TextReport"]
 import sys
 
 from collections import defaultdict
-from texttable import Texttable
 
 from golismero.api.audit import get_audit_times, parse_audit_times
 from golismero.api.config import Config
@@ -47,6 +46,18 @@ from golismero.api.data.vulnerability import Vulnerability
 
 # XXX HACK
 from golismero.main.console import Console, colorize, colorize_substring, get_terminal_size
+
+
+#------------------------------------------------------------------------------
+from texttable import Texttable as orig_Texttable
+
+class Texttable(orig_Texttable):
+    def _str(self, i, x):
+        if x is None:
+            return ""
+        if isinstance(x, unicode):
+            return x.encode("UTF-8")
+        return str(x)
 
 
 #------------------------------------------------------------------------------
