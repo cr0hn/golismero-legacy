@@ -326,9 +326,16 @@ def test_cvss_calculator():
     assert cvss.base_score == "9.0", cvss.base_score
     assert cvss.score == "9.0", cvss.score
     assert cvss.vector == "AV:N/AC:L/Au:N/C:P/I:P/A:C", cvss.vector
-    cvss = CVSS("AV:N/AC:L/Au:N/C:P/I:P/A:C/E:P/RL:U/RC:UC")
+    cvss = CVSS("AV:N/AC:L/Au:N/C:P/I:P/A:C")
+    assert ("%.1f" % cvss.base_exploitability) == "10.0", cvss.base_exploitability
+    assert ("%.1f" % cvss.impact) == "8.5", cvss.impact
+    assert cvss.base_score == "9.0", cvss.base_score
+    assert cvss.score == "9.0", cvss.score
+    assert cvss.base_vector == "AV:N/AC:L/Au:N/C:P/I:P/A:C", cvss.base_vector
+    assert cvss.vector == "AV:N/AC:L/Au:N/C:P/I:P/A:C/E:ND/RL:U/RC:C/CDP:ND/TD:ND/CR:M/IR:M/AR:M", cvss.vector
+    cvss = CVSS("AV:N/AC:L/Au:N/C:P/I:P/A:C/E:POC/RL:U/RC:UC")
     assert cvss.temporal_score == "7.3", cvss.temporal_score
-    cvss = CVSS("C:P/I:P/A:C/E:P/RL:U/RC:UC")
+    cvss = CVSS("C:P/I:P/A:C/E:POC/RL:U/RC:UC")
     assert cvss.temporal_score == "7.3", cvss.temporal_score
     assert "AV:N/AC:L/Au:N/C:P/I:P/A:C" in cvss.vector
     cvss.RC = cvss.CONFIRMED
@@ -337,7 +344,7 @@ def test_cvss_calculator():
     assert cvss.temporal_score == "7.3", cvss.temporal_score
     cvss.RL = cvss.OFFICIAL_FIX
     assert cvss.temporal_score == "7.0", cvss.temporal_score
-    cvss = CVSS("AV:N/AC:L/Au:N/C:P/I:P/A:C/E:P/RL:T/RC:UC/CDP:MH/TD:H/CR:H/IR:H/AR:L")
+    cvss = CVSS("AV:N/AC:L/Au:N/C:P/I:P/A:C/E:POC/RL:TF/RC:UC/CDP:MH/TD:H/CR:H/IR:H/AR:L")
     assert cvss.base_score == "9.0", cvss.base_score
     assert ("%.1f" % cvss.base_exploitability) == "10.0", cvss.base_exploitability
     assert ("%.1f" % cvss.impact) == "8.5", cvss.impact
