@@ -113,7 +113,8 @@ class _HTTP(Singleton):
 
     #--------------------------------------------------------------------------
     def get_url(self, url, method = "GET", callback = None,
-                     timeout = 10.0, use_cache = None, allow_redirects = True):
+                     timeout = 10.0, use_cache = None, allow_redirects = True,
+                     allow_out_of_scope = False):
         """
         Send a simple HTTP request to the server and get the response back.
 
@@ -140,6 +141,9 @@ class _HTTP(Singleton):
         :param allow_redirects: True to follow redirections, False otherwise.
         :type allow_redirects: bool
 
+        :param allow_out_of_scope: True to allow requests out of scope, False otherwise.
+        :type allow_out_of_scope: bool
+
         :returns: HTTP response, or None if the request was cancelled.
         :rtype: HTTP_Response | None
 
@@ -153,13 +157,15 @@ class _HTTP(Singleton):
         LocalDataCache.on_autogeneration(request)
         return self.make_request(request, callback = callback,
                                  timeout = timeout, use_cache = use_cache,
-                                 allow_redirects = allow_redirects)
+                                 allow_redirects = allow_redirects,
+                                 allow_out_of_scope = allow_out_of_scope)
 
 
     #--------------------------------------------------------------------------
     def make_request(self, request, callback = None,
                      timeout = 10.0, use_cache = None,
-                     allow_redirects = True):
+                     allow_redirects = True,
+                     allow_out_of_scope = False):
         """
         Send an HTTP request to the server and get the response back.
 
@@ -182,6 +188,9 @@ class _HTTP(Singleton):
 
         :param allow_redirects: True to follow redirections, False otherwise.
         :type allow_redirects: bool
+
+        :param allow_out_of_scope: True to allow requests out of scope, False otherwise.
+        :type allow_out_of_scope: bool
 
         :returns: HTTP response, or None if the request was cancelled.
         :rtype: HTTP_Response | None
@@ -206,7 +215,7 @@ class _HTTP(Singleton):
             raise TypeError("Expected bool or None, got %r instead" % type(use_cache))
 
         # Check the request scope.
-        if not request.is_in_scope():
+        if not request.is_in_scope() and allow_out_of_scope is False:
             raise NetworkOutOfScope("URL out of scope: %s" % request.url)
 
         # Sanitize the timeout value.

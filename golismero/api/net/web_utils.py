@@ -117,7 +117,69 @@ def generate_user_agent():
 
 
 #------------------------------------------------------------------------------
-def download(url, callback = None, timeout = 10.0, allow_redirects = True):
+def data_from_http_response(response):
+    """
+    Extracts data from an HTTP response.
+
+    :param response: HTTP response.
+    :type response: HTTP_Response
+
+    :returns: Extracted data, or None if no data was found.
+    :rtype: Data | None
+    """
+
+    # If we have no data, return None.
+    if not response.data:
+        return None
+
+    # Get the MIME content type.
+    content_type = response.content_type
+
+    # Strip the content type modifiers.
+    if ";" in content_type:
+        content_type = content_type[:content_type.find(";")]
+
+    # Sanitize the content type.
+    content_type = content_type.strip().lower()
+    if "/" not in content_type:
+        return None
+
+    # Parse the data.
+    data = None
+    try:
+
+        # HTML pages.
+        if content_type == "text/html":
+            from ..data.information.html import HTML
+            data = HTML(response.data)
+
+        # Plain text data.
+        elif content_type.startswith("text/"):
+            from ..data.information.text import Text
+            data = Text(response.data, response.content_type)
+
+        # Image files.
+        elif content_type.startswith("image/"):
+            from ..data.information.image import Image
+            data = Image(response.data, response.content_type)
+
+    # Catch errors and throw warnings instead.
+    except Exception, e:
+        ##raise # XXX DEBUG
+        warn(str(e), RuntimeWarning)
+
+    # Anything we don't know how to parse we treat as binary.
+    if data is None:
+        from ..data.information.binary import Binary
+        data = Binary(response.data, response.content_type)
+
+    # Associate the data to the response.
+    data.add_information(response)
+
+    # Return the data.
+    return data
+#------------------------------------------------------------------------------
+def download(url, callback = None, timeout = 10.0, allow_redirects = True, allow_out_of_scope = False):
     """
     Download the file pointed to by the given URL.
 
@@ -184,6 +246,9 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True):
     :param allow_redirects: True to follow redirections, False otherwise.
     :type allow_redirects: bool
 
+    :param allow_out_of_scope: True to allow download of URLs out of scope, False otherwise.
+    :type allow_out_of_scope: bool
+
     :returns: Downloaded data as an object of the GoLismero data model,
               or None if cancelled.
     :rtype: Data | None
@@ -216,7 +281,7 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True):
         raise NotImplementedError("Protocol not supported: %s" % scheme)
 
     # Validate the scope.
-    if not url.is_in_scope():
+    if not url.is_in_scope() and allow_out_of_scope is False:
         raise NetworkOutOfScope("URL out of scope: %s" % url.url)
 
     # Autogenerate the HTTP request object.
@@ -256,7 +321,8 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True):
     response = HTTP.make_request(request,
                                  callback = temp_callback,
                                  timeout = timeout,
-                                 allow_redirects = allow_redirects)
+                                 allow_redirects = allow_redirects,
+                                 allow_out_of_scope = allow_out_of_scope)
 
     # If not aborted...
     if response:
@@ -278,68 +344,7 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True):
         return data
 
 
-#------------------------------------------------------------------------------
-def data_from_http_response(response):
-    """
-    Extracts data from an HTTP response.
 
-    :param response: HTTP response.
-    :type response: HTTP_Response
-
-    :returns: Extracted data, or None if no data was found.
-    :rtype: Data | None
-    """
-
-    # If we have no data, return None.
-    if not response.data:
-        return None
-
-    # Get the MIME content type.
-    content_type = response.content_type
-
-    # Strip the content type modifiers.
-    if ";" in content_type:
-        content_type = content_type[:content_type.find(";")]
-
-    # Sanitize the content type.
-    content_type = content_type.strip().lower()
-    if "/" not in content_type:
-        return None
-
-    # Parse the data.
-    data = None
-    try:
-
-        # HTML pages.
-        if content_type == "text/html":
-            from ..data.information.html import HTML
-            data = HTML(response.data)
-
-        # Plain text data.
-        elif content_type.startswith("text/"):
-            from ..data.information.text import Text
-            data = Text(response.data, response.content_type)
-
-        # Image files.
-        elif content_type.startswith("image/"):
-            from ..data.information.image import Image
-            data = Image(response.data, response.content_type)
-
-    # Catch errors and throw warnings instead.
-    except Exception, e:
-        ##raise # XXX DEBUG
-        warn(str(e), RuntimeWarning)
-
-    # Anything we don't know how to parse we treat as binary.
-    if data is None:
-        from ..data.information.binary import Binary
-        data = Binary(response.data, response.content_type)
-
-    # Associate the data to the response.
-    data.add_information(response)
-
-    # Return the data.
-    return data
 
 
 #------------------------------------------------------------------------------
