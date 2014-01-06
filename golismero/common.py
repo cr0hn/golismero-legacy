@@ -43,6 +43,7 @@ __all__ = [
 
     # Helper classes and decorators.
     "Singleton", "decorator", "export_methods_as_functions",
+    "EmptyNewStyleClass",
 
     # Configuration objects.
     "OrchestratorConfig", "AuditConfig"
@@ -110,6 +111,12 @@ except Exception:
     _orig_json_decode = json_decode
     def json_decode(*args, **kwargs):
         return _orig_json_decode(*args, **kwargs)
+
+
+#------------------------------------------------------------------------------
+# Helper class for instance creation without calling __init__().
+class EmptyNewStyleClass (object):
+    pass
 
 
 #------------------------------------------------------------------------------

@@ -84,7 +84,7 @@ class Password(Asset):
         :type password: str
         """
         if not isinstance(password, basestring):
-            raise TypeError("Expected string, got %r instead" % type(password))
+            raise TypeError("Expected str, got %r instead" % type(password))
         self.__password = to_utf8(password)
         super(Password, self).__init__()
 

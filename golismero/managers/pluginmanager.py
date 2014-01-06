@@ -37,7 +37,7 @@ from ..api.config import Config
 from ..api.logger import Logger
 from ..api.plugin import CATEGORIES, STAGES, load_plugin_class_from_info
 from ..common import Configuration, OrchestratorConfig, AuditConfig, \
-    get_default_plugins_folder
+    get_default_plugins_folder, EmptyNewStyleClass
 from ..managers.processmanager import PluginContext
 from ..messaging.codes import MessageCode
 
@@ -50,12 +50,6 @@ import re
 import fnmatch
 import traceback
 import warnings
-
-
-#------------------------------------------------------------------------------
-# Helpers for instance creation without calling __init__().
-class _EmptyNewStyleClass (object):
-    pass
 
 
 #------------------------------------------------------------------------------
@@ -453,7 +447,7 @@ class PluginInfo (object):
     def __deepcopy__(self):
 
         # Create a new empty object.
-        instance = _EmptyNewStyleClass()
+        instance = EmptyNewStyleClass()
         instance.__class__ = self.__class__
 
         # Copy the properties.

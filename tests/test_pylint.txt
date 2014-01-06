@@ -695,7 +695,7 @@ golismero/managers/pluginmanager.py:449: Warning (W, PluginInfo.__deepcopy__): A
 golismero/managers/pluginmanager.py:449: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_extra_config' defined outside __init__
 golismero/managers/pluginmanager.py:476: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_passwd_args of a client class
 golismero/managers/pluginmanager.py:476: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_passwd_args' defined outside __init__
-golismero/managers/pluginmanager.py:477: Error (E, PluginInfo.customize_for_audit): Instance of '_EmptyNewStyleClass' has no '__read_config_file' member
+golismero/managers/pluginmanager.py:477: Error (E, PluginInfo.customize_for_audit): Instance of 'EmptyNewStyleClass' has no '__read_config_file' member
 golismero/managers/pluginmanager.py:477: Warning (W, PluginInfo.customize_for_audit): Access to a protected member __read_config_file of a client class
 golismero/managers/pluginmanager.py:597: Warning (W, PluginManager): Used * or ** magic
 golismero/managers/pluginmanager.py:729: Warning (W, PluginManager.find_plugins): Catching too general exception Exception
