@@ -122,6 +122,7 @@ class ShodanPlugin(TestingPlugin):
                     Logger.log_error_more_verbose(tb)
                 seen_host[hostname] = host
                 results.append(host)
+                domain = host
             domain.add_resource(info)
 
         # Get the OS fingerprint, if available.
