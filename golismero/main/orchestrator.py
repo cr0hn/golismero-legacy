@@ -297,10 +297,6 @@ class Orchestrator (object):
             raise TypeError(
                 "Expected Message, got %r instead" % type(message))
 
-        ### XXX DEBUG
-        ##with open("orchestrator-%d.log" % getpid(), "a") as f:
-        ##    f.write("[%s] Got %r\n\n" % (ctime(), message))
-
         try:
 
             # Check the audit exists, drop the message otherwise.
@@ -451,10 +447,6 @@ class Orchestrator (object):
             # Message loop.
             while True:
                 try:
-
-                    ### XXX DEBUG
-                    ##with open("orchestrator-%d.log" % getpid(), "a") as f:
-                    ##    f.write("[%s] Waiting for message...\n\n" % ctime())
 
                     # Wait for a message to arrive.
                     try:

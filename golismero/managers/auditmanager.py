@@ -850,10 +850,6 @@ class Audit (object):
                 if not pending:
                     continue
 
-                ### XXX DEBUG
-                ##with open("orchestrator-%d.log" % getpid(), "a") as f:
-                ##    f.write("[%s] Evaluating stage %s...\n\n" % (ctime(), stage))
-
                 # If the stage is empty...
                 if not pluginManager.stages[stage]:
 
@@ -863,20 +859,12 @@ class Audit (object):
                     # Skip to the next stage.
                     continue
 
-                ### XXX DEBUG
-                ##with open("orchestrator-%d.log" % getpid(), "a") as f:
-                ##    f.write("[%s] Getting data for stage %s...\n\n" % (ctime(), stage))
-
                 # Get the pending data.
                 # XXX FIXME possible performance problem here!
                 # Maybe we should fetch the types only...
                 datalist = database.get_many_data(pending)
                 if not datalist:
                     continue
-
-                ### XXX DEBUG
-                ##with open("orchestrator-%d.log" % getpid(), "a") as f:
-                ##    f.write("[%s] Filtering data for stage %s...\n\n" % (ctime(), stage))
 
                 # Filter out data out of scope.
                 data_ok = []
@@ -893,19 +881,11 @@ class Audit (object):
                 # If we don't have any suitable plugins...
                 if not self.__notifier.is_runnable_stage(datalist, stage):
 
-                    ### XXX DEBUG
-                    ##with open("orchestrator-%d.log" % getpid(), "a") as f:
-                    ##    f.write("[%s] Discarded stage %s...\n\n" % (ctime(), stage))
-
                     # Mark all data as having finished this stage.
                     database.mark_stage_finished_many(pending, stage)
 
                     # Skip to the next stage.
                     continue
-
-                ### XXX DEBUG
-                ##with open("orchestrator-%d.log" % getpid(), "a") as f:
-                ##    f.write("[%s] Chosen stage %s...\n\n" % (ctime(), stage))
 
                 # Update the stage statistics.
                 self.__stage_cycles[self.__current_stage] += 1
