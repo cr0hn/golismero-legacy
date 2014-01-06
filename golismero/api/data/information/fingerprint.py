@@ -39,7 +39,7 @@ __all__ = [
     "ServiceFingerprint", "WebServerFingerprint",
 ]
 
-from . import Information
+from . import Fingerprint
 from .. import identity, merge, keep_newer
 from ...text.text_utils import to_utf8
 
@@ -83,19 +83,19 @@ def get_all_os_fingerprints(data):
 
     # Get all OS fingerprints associated with the given Data object.
     fingerprints = data.get_associated_informations_by_category(
-        Information.INFORMATION_OS_FINGERPRINT)
+        Fingerprint.INFORMATION_OS_FINGERPRINT)
 
     # Sort them by accuracy, more accurate fingerprints first.
     return sorted(fingerprints, key=(lambda x: 100.0 - x.accuracy))
 
 
 #------------------------------------------------------------------------------
-class OSFingerprint(Information):
+class OSFingerprint(Fingerprint):
     """
     Fingerprint information for a particular operating system.
     """
 
-    information_type = Information.INFORMATION_OS_FINGERPRINT
+    information_type = Fingerprint.INFORMATION_OS_FINGERPRINT
 
 
     #--------------------------------------------------------------------------
@@ -334,12 +334,12 @@ class OSFingerprint(Information):
 
 
 #------------------------------------------------------------------------------
-class ServiceFingerprint(Information):
+class ServiceFingerprint(Fingerprint):
     """
     Service fingerprint.
     """
 
-    information_type = Information.INFORMATION_SERVICE_FINGERPRINT
+    information_type = Fingerprint.INFORMATION_SERVICE_FINGERPRINT
 
 
     #--------------------------------------------------------------------------
@@ -419,12 +419,12 @@ class ServiceFingerprint(Information):
 
 
 #------------------------------------------------------------------------------
-class WebServerFingerprint(Information):
+class WebServerFingerprint(Fingerprint):
     """
     Fingerprint information for a particular host and web server.
     """
 
-    information_type = Information.INFORMATION_WEB_SERVER_FINGERPRINT
+    information_type = Fingerprint.INFORMATION_WEB_SERVER_FINGERPRINT
 
 
     #--------------------------------------------------------------------------

@@ -32,18 +32,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Geolocation"]
 
-from . import Information
+from . import Fingerprint
 from .. import identity, merge
 from ...text.text_utils import to_utf8
 
 
 #------------------------------------------------------------------------------
-class Geolocation(Information):
+class Geolocation(Fingerprint):
     """
     Geolocation data.
     """
 
-    information_type = Information.INFORMATION_GEOLOCATION
+    information_type = Fingerprint.INFORMATION_GEOLOCATION
 
 
     #--------------------------------------------------------------------------

@@ -32,18 +32,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Username", "Password"]
 
-from . import Information
+from . import Asset
 from .. import identity
 from ...text.text_utils import to_utf8
 
 
 #------------------------------------------------------------------------------
-class Username(Information):
+class Username(Asset):
     """
     Username.
     """
 
-    information_type = Information.INFORMATION_USERNAME
+    information_type = Asset.INFORMATION_USERNAME
 
 
     #--------------------------------------------------------------------------
@@ -69,12 +69,12 @@ class Username(Information):
 
 
 #------------------------------------------------------------------------------
-class Password(Information):
+class Password(Asset):
     """
     Password.
     """
 
-    information_type = Information.INFORMATION_PASSWORD
+    information_type = Asset.INFORMATION_PASSWORD
 
 
     #--------------------------------------------------------------------------

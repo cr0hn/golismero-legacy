@@ -32,14 +32,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["HTML"]
 
-from . import Information
+from . import File
 from .. import identity
 from ...net.web_utils import HTMLParser
 from ...text.text_utils import to_utf8
 
 
 #------------------------------------------------------------------------------
-class HTML(Information):
+class HTML(File):
     """
     HTML document.
 
@@ -97,7 +97,7 @@ class HTML(Information):
         ''
     """
 
-    information_type = Information.INFORMATION_HTML
+    information_type = File.INFORMATION_HTML
 
 
     #----------------------------------------------------------------------

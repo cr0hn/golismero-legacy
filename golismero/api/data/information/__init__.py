@@ -30,7 +30,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["Information"]
+__all__ = ["Information", "File", "Asset", "Capture", "Fingerprint"]
 
 from .. import Data
 
@@ -41,6 +41,13 @@ class Information(Data):
     Base class for informational results.
     """
 
+    # Categories of informational data.
+    CATEGORY_UNKNOWN     = 0    # Not a real value!
+    CATEGORY_FILE        = 1
+    CATEGORY_ASSET       = 2
+    CATEGORY_CAPTURE     = 3
+    CATEGORY_FINGERPRINT = 4
+
 
     #--------------------------------------------------------------------------
     #
@@ -50,7 +57,7 @@ class Information(Data):
 
     INFORMATION_UNKNOWN = 0  # Not a real value!
 
-    # Data
+    # File Data: raw file contents.
     INFORMATION_HTML             = 1000  # HTML source code
     INFORMATION_FORM             = 1001  # HTML form
     INFORMATION_PLAIN_TEXT       = 1002  # Text file
@@ -62,18 +69,18 @@ class Information(Data):
     ##INFORMATION_FLASH            = 1008  # Flash file
     ##INFORMATION_DOCUMENT         = 1009  # Document file (various formats)
 
-    # Assets
+    # Assets: sensitive information captured from the targets.
     INFORMATION_USERNAME         = 1100  # Username
     INFORMATION_PASSWORD         = 1101  # Password
     ##INFORMATION_DATABASE_DUMP    = 1102  # Database dump in SQL format
 
-    # Protocol captures
+    # Protocol captures: raw network protocol dumps.
     INFORMATION_HTTP_REQUEST     = 1200  # HTTP request
     INFORMATION_HTTP_RAW_REQUEST = 1201  # Raw HTTP request
     INFORMATION_HTTP_RESPONSE    = 1202  # HTTP response
     INFORMATION_DNS_REGISTER     = 1212  # DNS responses
 
-    # Fingerprints
+    # Fingerprints: reconnaissance results.
     INFORMATION_WEB_SERVER_FINGERPRINT = 1300  # HTTP server fingerprint
     ##INFORMATION_WEB_APP_FINGERPRINT    = 1301  # Web application fingerprint
     INFORMATION_SERVICE_FINGERPRINT    = 1302  # Network service fingerprint
@@ -88,3 +95,40 @@ class Information(Data):
 
     data_type = Data.TYPE_INFORMATION
     information_type = INFORMATION_UNKNOWN
+    information_category = CATEGORY_UNKNOWN
+
+
+#------------------------------------------------------------------------------
+class File(Information):
+    """
+    Base class for file data.
+    """
+
+    information_category = Information.CATEGORY_FILE
+
+
+#------------------------------------------------------------------------------
+class Asset(Information):
+    """
+    Base class for assets.
+    """
+
+    information_category = Information.CATEGORY_ASSET
+
+
+#------------------------------------------------------------------------------
+class Capture(Information):
+    """
+    Base class for protocol captures.
+    """
+
+    information_category = Information.CATEGORY_CAPTURE
+
+
+#------------------------------------------------------------------------------
+class Fingerprint(Information):
+    """
+    Base class for fingerprints.
+    """
+
+    information_category = Information.CATEGORY_FINGERPRINT

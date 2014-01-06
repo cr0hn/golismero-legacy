@@ -32,7 +32,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Text"]
 
-from . import Information
 from .binary import Binary
 from ...text.text_utils import to_utf8
 
@@ -43,7 +42,7 @@ class Text(Binary):
     Plain text data.
     """
 
-    information_type = Information.INFORMATION_PLAIN_TEXT
+    information_type = Binary.INFORMATION_PLAIN_TEXT
 
 
     #----------------------------------------------------------------------

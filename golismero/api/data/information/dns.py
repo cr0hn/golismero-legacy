@@ -35,7 +35,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from . import Information
+from . import Capture
 from .text import Text
 from .. import identity
 from ..resource.domain import Domain
@@ -127,12 +127,12 @@ class DnsSEC(object):
 
 
 #------------------------------------------------------------------------------
-class DnsRegister(Information):
+class DnsRegister(Capture):
     """
     Base class for DNS Registers.
     """
 
-    information_type = Information.INFORMATION_DNS_REGISTER
+    information_type = Capture.INFORMATION_DNS_REGISTER
 
 
     # Types of registers

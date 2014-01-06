@@ -32,17 +32,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Binary"]
 
-from . import Information
+from . import File
 from .. import identity
 
 
 #------------------------------------------------------------------------------
-class Binary(Information):
+class Binary(File):
     """
     Binary data.
     """
 
-    information_type = Information.INFORMATION_BINARY
+    information_type = File.INFORMATION_BINARY
 
 
     #--------------------------------------------------------------------------
