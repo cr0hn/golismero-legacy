@@ -859,32 +859,47 @@ class Audit (object):
                     # Skip to the next stage.
                     continue
 
-                # Get the pending data.
-                # XXX FIXME possible performance problem here!
-                # Maybe we should fetch the types only...
-                datalist = database.get_many_data(pending)
-                if not datalist:
-                    continue
+                # Process the pending data in batches.
+                # This reduces the memory footprint for large databases.
+                candidates = list(pending)
+                pending.clear()
+                for i in xrange(0, len(candidates), 10):
 
-                # Filter out data out of scope.
-                data_ok = []
-                data_not_ok = []
-                for data in datalist:
-                    if data.is_in_scope(self.scope):
-                        data_ok.append(data)
-                    else:
-                        data_not_ok.append(data.identity)
-                if data_not_ok:
-                    database.mark_stage_finished_many(data_not_ok, stage)
-                datalist = data_ok
+                    # Get this batch.
+                    batch_ids = set(candidates[i:i+10])
+                    batch = database.get_many_data(batch_ids)
+                    if not batch:
+                        database.mark_stage_finished_many(batch_ids, stage)
+                        continue
 
-                # If we don't have any suitable plugins...
-                if not self.__notifier.is_runnable_stage(datalist, stage):
+                    # Filter out data out of scope.
+                    data_ok = []
+                    ids_ok = set()
+                    ids_not_ok = set()
+                    for data in batch:
+                        if data.is_in_scope(self.scope):
+                            ids_ok.add(data.identity)
+                            data_ok.append(data)
+                        else:
+                            ids_not_ok.add(data.identity)
+                    if ids_not_ok:
+                        database.mark_stage_finished_many(ids_not_ok, stage)
+                    batch_ids = ids_ok
+                    batch = data_ok
+                    if not batch:
+                        continue
 
-                    # Mark all data as having finished this stage.
-                    database.mark_stage_finished_many(pending, stage)
+                    # Filter out data that won't be processed in this stage.
+                    if not self.__notifier.is_runnable_stage(batch, stage):
+                        database.mark_stage_finished_many(batch_ids, stage)
+                        continue
 
-                    # Skip to the next stage.
+                    # Keep the filtered IDs.
+                    pending.update(batch_ids)
+                    batch = []
+
+                # If no data survived the filter, skip to the next stage.
+                if not pending:
                     continue
 
                 # Update the stage statistics.
@@ -905,11 +920,14 @@ class Audit (object):
                 )
 
                 # Send the pending data to the Orchestrator.
-                self.send_msg(
-                    message_type = MessageType.MSG_TYPE_DATA,
-                    message_code = MessageCode.MSG_DATA_REQUEST,
-                    message_info = datalist,
-                )
+                to_send = list(pending)
+                for i in xrange(0, len(to_send), 10):
+                    datalist = database.get_many_data(to_send[i:i+10])
+                    self.send_msg(
+                        message_type = MessageType.MSG_TYPE_DATA,
+                        message_code = MessageCode.MSG_DATA_REQUEST,
+                        message_info = datalist,
+                    )
 
                 # We're done, return.
                 return
