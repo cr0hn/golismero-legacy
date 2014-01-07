@@ -33,9 +33,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = [
     "download", "data_from_http_response", "generate_user_agent",
     "fix_url", "check_auth", "get_auth_obj", "detect_auth_method",
-    "split_hostname", "generate_error_page_url", "ParsedURL",
-    "parse_url", "urlparse", "urldefrag", "urljoin", "json_decode",
-    "json_encode",
+    "split_hostname", "generate_error_page_url", "get_error_page",
+    "ParsedURL", "parse_url", "urlparse", "urldefrag", "urljoin",
+    "json_decode", "json_encode",
 ]
 
 
@@ -251,7 +251,7 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True, allow
 
     :returns: Downloaded data as an object of the GoLismero data model,
               or None if cancelled.
-    :rtype: Data | None
+    :rtype: File | None
 
     :raises NetworkOutOfScope: The resource is out of the audit scope.
     :raises NetworkException: A network error occurred during download.
@@ -551,7 +551,7 @@ def generate_error_page_url(url):
 
     Example:
 
-    >>> from golismero.api.web_utils import generate_error_page_url
+    >>> from golismero.api.net.web_utils import generate_error_page_url
     >>> generate_error_page_url("http://www.site.com/index.php")
     'http://www.site.com/index.php.19ds_8vjX'
 
@@ -564,6 +564,41 @@ def generate_error_page_url(url):
     m_parsed_url = ParsedURL(url)
     m_parsed_url.path = m_parsed_url.path + generate_random_string()
     return m_parsed_url.url
+
+
+#----------------------------------------------------------------------
+def get_error_page(url):
+    """
+    Takes an URL to an existing document and generates a random URL
+    to a nonexisting document, then uses it to trigger a server error.
+    Returns the error page as a File object (typically this would be
+    an HTML object, but it may be something else).
+
+    :param url: Original URL. It must point to an existing document.
+    :type  url: str
+
+    :returns: Downloaded data as an object of the GoLismero data model,
+              or None on error.
+    :rtype: File | None
+
+    :raises: ValueError
+    """
+
+    # Make the URL.
+    m_error_url = generate_error_page_url(url)
+
+    # Get the error page.
+    try:
+        m_error_response = download(m_error_url)
+    except Exception:
+        raise ValueError("Can't get error page.")
+
+    # Mark the error page as discarded. Most likely the plugin won't need to
+    # send this back as a result.
+    discard_data(m_error_response)
+
+    # Return the error page.
+    return m_error_response
 
 
 #------------------------------------------------------------------------------
@@ -1823,33 +1858,3 @@ class HTMLParser(object):
             self.__html_objects = m_result
 
         return self.__html_objects
-
-
-#----------------------------------------------------------------------
-def get_error_page(url):
-    """
-    Generates an error page an get their content.
-
-    :param url: string with the base Url.
-    :type url: str
-
-    :return: a string with the content of response.
-    :rtype: str
-
-    :raises: ValueError
-    """
-
-    #
-    # Generate an error in server to get an error page, using a random string
-    #
-    # Make the URL
-    m_error_url = "%s%s" % (url, generate_random_string())
-
-    # Get the request
-    try:
-        m_error_response = download(m_error_url)  # FIXME handle exceptions!
-    except:
-        raise ValueError("Can't get error page.")
-
-    discard_data(m_error_response)
-    return m_error_response
