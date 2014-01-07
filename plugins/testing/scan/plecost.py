@@ -216,15 +216,10 @@ class PlecostPlugin(TestingPlugin):
         :type: list(list())
         """
         results = []
-        urls_to_test = [
-            "readme.txt",
-            "README.txt",
-            # "readme.html",
-            # "README.html"
-        ]
-
-        # Regex to find plugin version
-        plugin_version_regex = re.compile(r"(Stable tag:[\svV]*)([0-9\.]+)")
+        urls_to_test = {
+            "readme.txt": r"(Stable tag:[\svV]*)([0-9\.]+)",
+            "README.txt": r"(Stable tag:[\svV]*)([0-9\.]+)",
+        }
 
         # Generates the error page
         error_response = get_error_page(url).raw_data
@@ -258,7 +253,7 @@ class PlecostPlugin(TestingPlugin):
             partial_plugin_url = "%s/%s" % (url, "wp-content/plugins/%s" % plugin_URI)
 
             # Test each URL with possible plugin version info
-            for target in urls_to_test:
+            for target, regex in urls_to_test.iteritems():
 
                 plugin_url = "%s/%s" % (partial_plugin_url, target)
 
@@ -283,7 +278,7 @@ class PlecostPlugin(TestingPlugin):
                     if get_diff_ratio(error_response, p.raw_response) < 0.52:
 
                         # Find the version
-                        tmp_version = plugin_version_regex.search(p.raw_response)
+                        tmp_version = re.search(regex, p.raw_response)
 
                         if tmp_version is not None:
                             plugin_installed_version = tmp_version.group(2)
@@ -352,6 +347,14 @@ class PlecostPlugin(TestingPlugin):
         :return: a tuple with (CURRENT_VERSION, LAST_AVAILABLE_VERSION)
         :type: tuple(str, str)
         """
+        url_version = {
+            # Generic
+            "wp-login.php": r"(;ver=)([0-9\.]+)([\-a-z]*)",
+
+            # For WordPress 3.8
+            "wp-admin/css/wp-admin-rtl.css": r"(Version[\s]+)([0-9\.]+)",
+            "wp-admin/css/wp-admin.css": r"(Version[\s]+)([0-9\.]+)"
+        }
 
         #
         # Get current version
@@ -404,6 +407,20 @@ class PlecostPlugin(TestingPlugin):
                 current_version = current_version_method1
         else:
             current_version = "unknown"
+
+        # If Current version not found
+        if current_version == "unknown":
+            for url_pre, regex in url_version.iteritems():
+                # URL to find wordpress version
+                url_current_version = urljoin(url, url_pre)
+                current_version_content = download(url_current_version)
+
+                # Find the version
+                tmp_version = re.search(regex, current_version_content.raw_data)
+
+                if tmp_version is not None:
+                    current_version = tmp_version.group(2)
+                    break  # Found -> stop search
 
         #
         # Get last version
