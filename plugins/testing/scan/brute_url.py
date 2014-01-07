@@ -508,7 +508,7 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
 
         # Append for analyze and display info if is accepted
         if matcher.analyze(p.raw_response, url=url, risk=risk_level):
-            Logger.log_more_verbose(text="Discovered partial url: '%s'" % url)
+            Logger.log_more_verbose("Discovered partial url: '%s'" % url)
 
 
 #----------------------------------------------------------------------
