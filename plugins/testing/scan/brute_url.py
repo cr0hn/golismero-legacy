@@ -33,10 +33,9 @@ from golismero.api.data.resource.url import FolderUrl, Url
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.logger import Logger
 from golismero.api.net.http import HTTP
-from golismero.api.net.web_utils import ParsedURL, urljoin
+from golismero.api.net.web_utils import ParsedURL, urljoin, get_error_page
 from golismero.api.text.matching_analyzer import MatchingAnalyzer, get_diff_ratio
 from golismero.api.text.wordlist import WordListLoader
-from golismero.api.text.text_utils import generate_random_string
 
 from golismero.api.plugin import TestingPlugin
 from functools import partial
@@ -597,34 +596,6 @@ def HTTP_response_headers_analyzer(response_header_1, response_header_2):
     m_res2 = ''.join([ "%s:%s" % (k,v) for k,v in response_header_2.iteritems() if k not in m_invalid_headers ])
 
     return get_diff_ratio(m_res1, m_res2)
-
-
-#----------------------------------------------------------------------
-def get_error_page(url):
-    """
-    Generates an error page an get their content.
-
-    :param url: string with the base Url.
-    :type url: str
-
-    :return: a string with the content of response.
-    :rtype: str
-    """
-
-    #
-    # Generate an error in server to get an error page, using a random string
-    #
-    # Make the URL
-    m_error_url = "%s%s" % (url, generate_random_string())
-
-    # Get the request
-    try:
-        m_error_response = HTTP.get_url(m_error_url)  # FIXME handle exceptions!
-    except:
-        raise ValueError("Can't get error page.")
-
-    discard_data(m_error_response)
-    return m_error_response.data
 
 
 #----------------------------------------------------------------------
