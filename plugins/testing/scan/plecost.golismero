@@ -1,7 +1,9 @@
 [Documentation]
 Name        = Plecost
-Description = WordPress vulnerabilities analyzer, completely rewritten for GoLismero, based on the original
-              idea of Plecost (https://code.google.com/p/plecost/) and their team: @ffranz and @ggdaniel
+Description =
+ WordPress vulnerabilities analyzer, completely rewritten for GoLismero,
+ based on the original idea of Plecost (https://code.google.com/p/plecost/)
+ and their team: @ffranz and @ggdaniel
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero
