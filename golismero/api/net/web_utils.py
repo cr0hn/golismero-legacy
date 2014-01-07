@@ -522,7 +522,7 @@ def split_hostname(hostname):
 
     For example:
 
-    >>> from golismero.api.web_utils import ParsedURL
+    >>> from golismero.api.net.web_utils import ParsedURL
     >>> d = ParsedURL("http://www.example.com/")
     >>> d.split_hostname()
     ('www', 'example', 'com')
@@ -691,7 +691,7 @@ class ParsedURL (object):
 
     Example:
 
-    >>> from golismero.api.web_utils import ParsedURL
+    >>> from golismero.api.net.web_utils import ParsedURL
     >>> url="http://user:pass@www.site.com/folder/index.php?param1=val1&b#anchor"
     >>> r = ParsedURL(url)
     >>> r.scheme
@@ -925,7 +925,7 @@ class ParsedURL (object):
 
         By default every component of the path is tested:
 
-        >>> from golismero.api.web_utils import ParsedURL
+        >>> from golismero.api.net.web_utils import ParsedURL
         >>> d = ParsedURL("http://www.example.com/download.php/filename/file.pdf")
         >>> d.match_extension(".php")
         True
@@ -936,7 +936,7 @@ class ParsedURL (object):
 
         However you can set the 'directory_allowed' to False to check only the last component:
 
-        >>> from golismero.api.web_utils import ParsedURL
+        >>> from golismero.api.net.web_utils import ParsedURL
         >>> d = ParsedURL("http://www.example.com/download.php/filename/file.pdf")
         >>> d.match_extension(".php", directory_allowed = True)
         True
@@ -945,7 +945,7 @@ class ParsedURL (object):
 
         Double extension is supported, as it can come in handy when analyzing malware URLs:
 
-        >>> from golismero.api.web_utils import ParsedURL
+        >>> from golismero.api.net.web_utils import ParsedURL
         >>> d = ParsedURL("http://www.example.com/malicious.pdf.exe")
         >>> d.filebase
         'malicious.pdf'
@@ -958,7 +958,7 @@ class ParsedURL (object):
 
         The double extension support can be disabled by setting the 'double_allowed' argument to False:
 
-        >>> from golismero.api.web_utils import ParsedURL
+        >>> from golismero.api.net.web_utils import ParsedURL
         >>> d = ParsedURL("http://www.example.com/malicious.pdf.exe")
         >>> d.match_extension(".pdf", double_allowed = True)
         True
@@ -967,7 +967,7 @@ class ParsedURL (object):
 
         String comparisons are case insensitive by default:
 
-        >>> from golismero.api.web_utils import ParsedURL
+        >>> from golismero.api.net.web_utils import ParsedURL
         >>> d = ParsedURL("http://www.example.com/index.html")
         >>> d.match_extension(".html")
         True
@@ -976,7 +976,7 @@ class ParsedURL (object):
 
         This too can be configured, just set 'case_insensitive' to False:
 
-        >>> from golismero.api.web_utils import ParsedURL
+        >>> from golismero.api.net.web_utils import ParsedURL
         >>> d = ParsedURL("http://www.example.com/index.html")
         >>> d.match_extension(".HTML", case_insensitive = True)
         True
@@ -1032,14 +1032,14 @@ class ParsedURL (object):
 
         By default every component of the path is parsed:
 
-        >>> from golismero.api.web_utils import ParsedURL
+        >>> from golismero.api.net.web_utils import ParsedURL
         >>> d = ParsedURL("http://www.example.com/download.php/filename/file.pdf")
         >>> d.get_all_extensions()
         ['.php', '.pdf']
 
         However you can set the 'directory_allowed' to False to parse only the last component:
 
-        >>> from golismero.api.web_utils import ParsedURL
+        >>> from golismero.api.net.web_utils import ParsedURL
         >>> d = ParsedURL("http://www.example.com/download.php/filename/file.pdf")
         >>> d.get_all_extensions(directory_allowed = False)
         ['.pdf']
@@ -1048,7 +1048,7 @@ class ParsedURL (object):
 
         Double extension is supported, as it can come in handy when analyzing malware URLs:
 
-        >>> from golismero.api.web_utils import ParsedURL
+        >>> from golismero.api.net.web_utils import ParsedURL
         >>> d = ParsedURL("http://www.example.com/malicious.pdf.exe")
         >>> d.filebase
         'malicious.pdf'
@@ -1059,7 +1059,7 @@ class ParsedURL (object):
 
         The double extension support can be disabled by setting the 'double_allowed' argument to False:
 
-        >>> from golismero.api.web_utils import ParsedURL
+        >>> from golismero.api.net.web_utils import ParsedURL
         >>> d = ParsedURL("http://www.example.com/malicious.pdf.exe")
         >>> d.get_all_extensions(double_allowed = False)
         ['.exe']
@@ -1100,7 +1100,7 @@ class ParsedURL (object):
 
         For example:
 
-        >>> from golismero.api.web_utils import ParsedURL
+        >>> from golismero.api.net.web_utils import ParsedURL
         >>> d = ParsedURL("http://www.example.com/")
         >>> d.split_hostname()
         ('www', 'example', 'com')
@@ -1335,7 +1335,7 @@ class ParsedURL (object):
 
         Example:
 
-        >>> from golismero.api.web_utils import ParsedURL
+        >>> from golismero.api.net.web_utils import ParsedURL
         >>> d = ParsedURL("http://www.example.com/malicious.pdf.exe")
         >>> d.filename
         'malicious.pdf.exe'
