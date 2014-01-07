@@ -143,11 +143,18 @@ class Spider(TestingPlugin):
             m_return.append(m_resource)
 
         # Get forms info
-        m_forms_allowed = [
-            url for url in m_forms if not any(x in url[0] for x in m_forbidden)
-        ]
+        if m_forms:
+            m_forms_allowed = [
+                url for url in m_forms
+                if not any(x in url[0] for x in m_forbidden)
+            ]
+            m_forms_not_allowed = {
+                x[0] for x in m_forms
+            }.difference(x[0] for x in m_forms_allowed)
+        else:
+            m_forms_allowed = []
+            m_forms_not_allowed = set()
 
-        m_forms_not_allowed = set([x[0] for x in m_forms]).difference(set([x[0] for x in m_forms_allowed]))
         if m_forms_not_allowed:
             Logger.log_more_verbose("Skipped forbidden forms:\n    %s" % "\n    ".join(sorted(m_forms_not_allowed)))
 
