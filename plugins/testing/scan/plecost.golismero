@@ -1,0 +1,13 @@
+[Documentation]
+Name        = Plecost
+Description = Plecost plugin: WordPress vulnerabilities analyzer, completly rewritten for GoLismero.
+Author      = GoLismero project team
+Version     = 0.1
+Website     = https://github.com/golismero
+Copyright   = Copyright (C) 2011-2013 GoLismero Project
+License     = GNU Public License
+
+[Arguments]
+plugin_list   =
+find_vulns = True
+wordpress_urls = golismero/wordpress_detector.txt
