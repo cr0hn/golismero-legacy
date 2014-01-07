@@ -138,13 +138,14 @@ class PlecostPlugin(TestingPlugin):
         Logger.log("WordPress installation version found: %s (lastest: %s)" % (current_version, last_verstion))
 
         # Outdated version of WordPress?
-        if version_cmp(current_version, last_verstion) == -1:
-            s = OutdatedSoftware(info,
-                                 "cpe:/a:wordpress:wordpress:%s" % current_version,
-                                 title="Outdated version of WordPress (%s)" % current_version,
-                                 description="Outdated version of wordpress found. Installed version found: %s. Lastest version available: %s"
-                                             % (current_version, last_verstion))
-            results.append(s)
+        if current_version != "unknown":
+            if version_cmp(current_version, last_verstion) == -1:
+                s = OutdatedSoftware(info,
+                                     "cpe:/a:wordpress:wordpress:%s" % current_version,
+                                     title="Outdated version of WordPress (%s)" % current_version,
+                                     description="Outdated version of wordpress found. Installed version found: %s. Lastest version available: %s"
+                                                 % (current_version, last_verstion))
+                results.append(s)
 
         #
         # Get WordPress version
@@ -378,7 +379,7 @@ class PlecostPlugin(TestingPlugin):
         current_version_content_2 = download(url)
 
         # Try to find the info
-        current_version_method2 = re.search(r"(<meta name=\"generator\" content=\"WordPress[\s]*)([0-9\.]+)",
+        current_version_method2 = re.search(r"(<meta name=\"generator\" content=\"WordPress[\s]+)([0-9\.]+)",
                                             current_version_content_2.raw_data)
         if current_version_method2 is None:
             current_version_method2 = None
@@ -389,6 +390,7 @@ class PlecostPlugin(TestingPlugin):
                 current_version_method2 = current_version_method2.group(2)
 
         # Match versions of the diffentents methods
+        current_version = "unknown"
         if current_version_method1 is None and current_version_method2 is None:
             current_version = "unknown"
         elif current_version_method1 is None and current_version_method2 is not None:
