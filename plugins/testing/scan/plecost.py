@@ -290,7 +290,7 @@ class PlecostPlugin(TestingPlugin):
 
                 # Store info
                 if plugin_installed_version is not None:
-                    Logger.log_more_verbose("Discovered plugin: '%s (installed version: %s)' (lastest version: %s)" %
+                    Logger.log("Discovered plugin: '%s (installed version: %s)' (lastest version: %s)" %
                                             (plugin_name, plugin_installed_version, plugin_last_version))
                     results.append([
                         plugin_name,
