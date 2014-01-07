@@ -40,7 +40,7 @@ __all__ = [
 
 
 from . import NetworkOutOfScope
-from ..data import LocalDataCache
+from ..data import LocalDataCache, discard_data
 from ..text.text_utils import generate_random_string, split_first, to_utf8
 from ...common import json_decode, json_encode
 
@@ -1820,3 +1820,33 @@ class HTMLParser(object):
             self.__html_objects = m_result
 
         return self.__html_objects
+
+
+#----------------------------------------------------------------------
+def get_error_page(url):
+    """
+    Generates an error page an get their content.
+
+    :param url: string with the base Url.
+    :type url: str
+
+    :return: a string with the content of response.
+    :rtype: str
+
+    :raises: ValueError
+    """
+
+    #
+    # Generate an error in server to get an error page, using a random string
+    #
+    # Make the URL
+    m_error_url = "%s%s" % (url, generate_random_string())
+
+    # Get the request
+    try:
+        m_error_response = download(m_error_url)  # FIXME handle exceptions!
+    except:
+        raise ValueError("Can't get error page.")
+
+    discard_data(m_error_response)
+    return m_error_response
