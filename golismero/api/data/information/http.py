@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["HTTP_Request", "HTTP_Response"]
 
-from . import Information
+from . import Capture
 from .. import identity, keep_newer
 from ...config import Config
 from ...text.text_utils import to_utf8
@@ -402,12 +402,12 @@ class HTTP_Headers (object):
 
 
 #------------------------------------------------------------------------------
-class HTTP_Request (Information):
+class HTTP_Request (Capture):
     """
     HTTP request information.
     """
 
-    information_type = Information.INFORMATION_HTTP_REQUEST
+    information_type = Capture.INFORMATION_HTTP_REQUEST
 
 
     #
@@ -717,12 +717,12 @@ class HTTP_Request (Information):
 
 
 #------------------------------------------------------------------------------
-class HTTP_Raw_Request (Information):
+class HTTP_Raw_Request (Capture):
     """
     Raw HTTP request information.
     """
 
-    information_type = Information.INFORMATION_HTTP_RAW_REQUEST
+    information_type = Capture.INFORMATION_HTTP_RAW_REQUEST
 
 
     #--------------------------------------------------------------------------
@@ -746,7 +746,7 @@ class HTTP_Raw_Request (Information):
 
 
 #------------------------------------------------------------------------------
-class HTTP_Response (Information):
+class HTTP_Response (Capture):
     """
     HTTP response information.
 
@@ -754,7 +754,7 @@ class HTTP_Response (Information):
     but receive them from the HTTP API.
     """
 
-    information_type = Information.INFORMATION_HTTP_RESPONSE
+    information_type = Capture.INFORMATION_HTTP_RESPONSE
     min_informations = 1
 
 

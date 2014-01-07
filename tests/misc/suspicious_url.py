@@ -33,14 +33,15 @@ from golismero.api.text.wordlist import WordListLoader, WordlistNotFound
 from golismero.api.crypto import calculate_shannon_entropy
 from golismero.api.data import Data
 from golismero.api.data.information.html import HTML
+from golismero.api.data.information.text import Text
 from golismero.api.data.resource import Resource
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.suspicious.url import SuspiciousURLPath
 from golismero.api.data.vulnerability.malware.malicious_url import MaliciousUrl
 from golismero.api.plugin import TestingPlugin
-from golismero.api.net import NetworkException
 from golismero.api.net.scraper import extract_from_html, extract_from_text
-from golismero.api.net.web_utils import download, parse_url
+
+from traceback import format_exc
 
 
 #------------------------------------------------------------------------------
@@ -52,7 +53,7 @@ class SuspiciousURLPlugin(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url, HTML]
+        return [Url, HTML, Text]
 
 
     #--------------------------------------------------------------------------
@@ -117,19 +118,29 @@ class SuspiciousURLPlugin(TestingPlugin):
         #----------------------------------------------------------------------
         # Get malware suspicious links.
 
-        # Load the subdomains wordlist.
+        Logger.log_more_verbose("Processing HTML: %s" % info.identity)
+
+        # Load the malware wordlist.
+        wordlist_filename = Config.plugin_config["malware_sites"]
         try:
-            wordlist = WordListLoader.get_advanced_wordlist_as_list(Config.plugin_config["malware_sites"])
+            wordlist = WordListLoader.get_advanced_wordlist_as_list(
+                wordlist_filename)
         except WordlistNotFound:
-            Logger.log_error_verbose("Wordlist '%s' not found.." % Config.plugin_config["malware_sites"])
+            Logger.log_error("Wordlist '%s' not found.." % wordlist_filename)
             return
         except TypeError:
-            Logger.log_error_verbose("Wordlist '%s' is not a file." % Config.plugin_config["malware_sites"])
+            Logger.log_error(
+                "Wordlist '%s' is not a file." % wordlist_filename)
             return
+        if not wordlist:
+            Logger.log_error("Wordlist '%s' is empty." % wordlist_filename)
+
+        Logger.log("1")
 
         # Get links
         base_urls = set()
-        for url in info.find_linked_data(Data.TYPE_RESOURCE, Resource.RESOURCE_URL):
+        for url in info.find_linked_data(Data.TYPE_RESOURCE,
+                                         Resource.RESOURCE_URL):
             m_url = url.url
             base_urls.add(m_url)
             if info.information_type == Information.INFORMATION_HTML:
@@ -138,34 +149,49 @@ class SuspiciousURLPlugin(TestingPlugin):
             elif info.information_type == Information.INFORMATION_PLAIN_TEXT:
                 m_links = extract_from_text(info.raw_data, m_url)
             else:
-                return
+                raise Exception("Internal error!")
         m_links.difference_update(base_urls)
+
+        Logger.log("2")
 
         # If we have no links, abort now
         if not m_links:
+            Logger.log_verbose("No output links found.")
             return
 
         # Do not follow URLs that contain certain keywords
-        m_forbidden = WordListLoader.get_wordlist(Config.plugin_config["wordlist_no_spider"])
-        m_urls_allowed = [
-            url for url in m_links if not any(x in url for x in m_forbidden)
-        ]
+        m_forbidden = WordListLoader.get_wordlist(
+            Config.plugin_config["wordlist_no_spider"])
+        m_urls_allowed = {
+            url for url in m_links
+            if url and not any(x in url for x in m_forbidden)
+        }
+
+        Logger.log("3")
 
         # Get only output links
-        m_output_links        = []
+        m_output_links = []
         for url in m_urls_allowed:
             try:
                 if url not in Config.audit_scope:
                     m_output_links.append(url)
-            except Exception:
-                pass
+            except Exception, e:
+                Logger.log_error_more_verbose(format_exc())
 
-        wordlist_filtered     = set((x for x in wordlist if not x.startswith("#") and not x.startswith("[")))
-        output_links_filtered = set(m_urls_allowed)
+        Logger.log("4")
+
+        wordlist_filtered = {
+            x for x in wordlist
+            if x and not x.startswith("#") and not x.startswith("[")
+        }
+
+        Logger.log("5")
 
         m_results = []
-        for l_malware_site in output_links_filtered.intersection(wordlist_filtered):
-            Logger.log("Found an outputlink to possible malware site: %s" % l_malware_site)
+        l_malware_sites_found = m_urls_allowed.intersection(wordlist_filtered)
+        Logger.log_more_verbose("Found links to possible malware sites:\n%s"
+            % "\n".join(" - " + x for x in sorted(l_malware_sites_found)))
+        for l_malware_site in l_malware_sites_found:
 
             # Out url
             u = Url(url = l_malware_site, referer = info.url)
@@ -176,8 +202,11 @@ class SuspiciousURLPlugin(TestingPlugin):
             m_results.append(v)
             m_results.append(u)
 
+        Logger.log("6")
+
         if m_results:
-            Logger.log_verbose("Discovered %s links to malware sites." % len(m_results))
+            Logger.log_verbose("Discovered %s links to malware sites."
+                               % len(m_results))
         else:
             Logger.log_verbose("No output links to malware sites found.")
 

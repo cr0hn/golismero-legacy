@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from golismero.api.data.information import Information
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -30,6 +31,7 @@ __all__ = ["HTMLReport"]
 
 from golismero.api.config import Config
 from golismero.api.data.vulnerability import Vulnerability
+from golismero.api.data.vulnerability.vuln_utils import TAXONOMY_NAMES
 from golismero.api.logger import Logger
 from golismero.api.plugin import import_plugin, get_plugin_name
 
@@ -89,9 +91,9 @@ class HTMLReport(json.JSONOutput):
 
         # Remove a bunch of data that won't be shown in the report anyway.
         for identity, data in report_data["informations"].items():
-            if (
-                data["class"].startswith("DnsRegister") or
-                any(k.startswith("raw_") for k in data)
+            if data["information_category"] not in (
+                Information.INFORMATION_CATEGORY_ASSET,
+                Information.INFORMATION_CATEGORY_FINGERPRINT,
             ):
                 del report_data["informations"][identity]
 
@@ -134,7 +136,7 @@ class HTMLReport(json.JSONOutput):
         # We also want to tell the HTML report which of the vulnerability
         # properties are part of the taxonomy. This saves us from having to
         # change the HTML code every time we add a new taxonomy property.
-        report_data["supported_taxonomies"] = Vulnerability.TAXONOMY_NAMES
+        report_data["supported_taxonomies"] = TAXONOMY_NAMES
 
         # Save the report data to disk in JSON format.
         output_json = splitext(output_file)[0] + "_data.json"

@@ -40,7 +40,7 @@ from .scope import DummyScope
 from ..api.config import Config
 from ..api.logger import Logger
 from ..database.cachedb import PersistentNetworkCache, VolatileNetworkCache
-from ..managers.auditmanager import AuditManager, AuditException
+from ..managers.auditmanager import AuditManager
 from ..managers.pluginmanager import PluginManager
 from ..managers.uimanager import UIManager
 from ..managers.rpcmanager import RPCManager
@@ -50,7 +50,6 @@ from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
 
 from os import getpid
-from time import ctime
 from thread import get_ident
 from traceback import format_exc, print_exc
 from signal import signal, SIGINT, SIG_DFL
@@ -298,10 +297,6 @@ class Orchestrator (object):
             raise TypeError(
                 "Expected Message, got %r instead" % type(message))
 
-        ### XXX DEBUG
-        ##with open("orchestrator-%d.log" % getpid(), "a") as f:
-        ##    f.write("[%s] Got %r\n\n" % (ctime(), message))
-
         try:
 
             # Check the audit exists, drop the message otherwise.
@@ -452,10 +447,6 @@ class Orchestrator (object):
             # Message loop.
             while True:
                 try:
-
-                    ### XXX DEBUG
-                    ##with open("orchestrator-%d.log" % getpid(), "a") as f:
-                    ##    f.write("[%s] Waiting for message...\n\n" % ctime())
 
                     # Wait for a message to arrive.
                     try:

@@ -34,6 +34,7 @@ from golismero.api.data.information.geolocation import Geolocation
 from golismero.api.data.information.traceroute import Traceroute
 from golismero.api.data.resource.bssid import BSSID
 from golismero.api.data.resource.ip import IP
+from golismero.api.data.resource.mac import MAC
 from golismero.api.logger import Logger
 from golismero.api.plugin import TestingPlugin
 from golismero.api.net.web_utils import json_decode
@@ -67,7 +68,7 @@ class GeoIP(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [IP, BSSID, Traceroute, Geolocation]
+        return [IP, MAC, BSSID, Traceroute, Geolocation]
 
 
     #--------------------------------------------------------------------------
@@ -92,16 +93,26 @@ class GeoIP(TestingPlugin):
 
         # Extract IPs from traceroute results and geolocate them.
         if info.is_instance(Traceroute):
-            hops = []
+            addr_to_ip = {}
             for hop in info.hops:
                 if hop is not None:
-                    if hop.address:
-                        hops.append( IP(hop.address) )
-            results.extend(hops)
-            for res in hops:
+                    if hop.address and hop.address not in addr_to_ip:
+                        addr_to_ip[hop.address] = IP(hop.address)
+            results.extend( addr_to_ip.itervalues() )
+            coords_to_geoip = {}
+            for res in addr_to_ip.itervalues():
                 r = self.recv_info(res)
                 if r:
-                    results.extend(r)
+                    for x in r:
+                        if not x.is_instance(Geolocation):
+                            results.append(x)
+                        else:
+                            key = (x.latitude, x.longitude)
+                            if key not in coords_to_geoip:
+                                coords_to_geoip[key] = x
+                                results.append(x)
+                            else:
+                                coords_to_geoip[key].merge(x)
             return results
 
         # Geolocate IP addresses using Freegeoip.
@@ -126,8 +137,8 @@ class GeoIP(TestingPlugin):
             kwargs.pop("ip")
 
         # Geolocate BSSIDs using Skyhook.
-        elif info.is_instance(BSSID):
-            skyhook = self.query_skyhook(info.bssid)
+        elif info.is_instance(BSSID) or info.is_instance(MAC):
+            skyhook = self.query_skyhook(info.address)
             if not skyhook:
                 return
 
@@ -179,9 +190,13 @@ class GeoIP(TestingPlugin):
             resp = requests.get("http://freegeoip.net/json/" + ip)
             if resp.status_code == 200:
                 return json_decode(resp.content)
-            Logger.log_more_verbose(
-                "Response from freegeoip.net for %s: %s" %
-                    (ip, resp.content))
+            if resp.status_code == 404:
+                Logger.log_more_verbose(
+                    "No results from freegeoip.net for IP: " + ip)
+            else:
+                Logger.log_more_verbose(
+                    "Response from freegeoip.net for %s: %s" %
+                        (ip, resp.content))
         except Exception:
             raise RuntimeError(
                 "Freegeoip.net webservice is not available,"
@@ -216,6 +231,11 @@ class GeoIP(TestingPlugin):
             if r:
                 xml = ET.fromstring(r)
                 ns = "{http://skyhookwireless.com/wps/2005}"
+                err = xml.find(".//%serror" % ns)
+                if err is not None:
+                    Logger.log_error_verbose(
+                        "Response from Skyhook: %s" % err.text)
+                    return
                 return {
                     "latitude": float(xml.find(".//%slatitude" % ns).text),
                     "longitude": float(xml.find(".//%slongitude" % ns).text),

@@ -278,7 +278,7 @@ class PluginTester(object):
         """
         Run the requested plugin. You can test both data and messages.
 
-        It's the caller's resposibility to check the input message queue of
+        It's the caller's responsibility to check the input message queue of
         the Orchestrator instance if the plugin sends any messages.
 
         :param plugin_id: ID of the plugin to test.
@@ -317,6 +317,7 @@ class PluginTester(object):
 
                 # If the data is out of scope, don't run the plugin.
                 if not data.is_in_scope():
+                    print "Out of scope: skipped"
                     return []
 
                 # Make sure the plugin can actually process this type of data.

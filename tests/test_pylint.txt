@@ -17,9 +17,11 @@ golismero/api/data/__init__.py:153: Warning (W, merge.is_mergeable_property): St
 golismero/api/data/__init__.py:330: Warning (W, keep_true.do_merge): Catching too general exception Exception
 golismero/api/data/__init__.py:388: Warning (W, keep_false.do_merge): Catching too general exception Exception
 golismero/api/data/__init__.py:466: Warning (W, custom.do_merge): Arguments number differs from overridden method
-golismero/api/data/__init__.py:676: Warning (W, Data.display_properties): Using global for 'Vulnerability' but no assignment is done
-golismero/api/data/__init__.py:678: Warning (W, Data.display_properties): Redefining name 'Vulnerability' from outer scope (line 70)
 golismero/api/data/__init__.py:696: Error (E, Data.display_properties): Instance of 'Data' has no 'vulnerability_type' member
+golismero/api/data/__init__.py:713: Warning (W, Data.display_properties): Using global for 'TAXONOMY_NAMES' but no assignment is done
+golismero/api/data/__init__.py:714: Warning (W, Data.display_properties): Using global for 'Vulnerability' but no assignment is done
+golismero/api/data/__init__.py:716: Warning (W, Data.display_properties): Redefining name 'Vulnerability' from outer scope (line 70)
+golismero/api/data/__init__.py:719: Warning (W, Data.display_properties): Redefining name 'TAXONOMY_NAMES' from outer scope (line 71)
 golismero/api/data/__init__.py:782: Warning (W, Data.display_properties): Catching too general exception Exception
 golismero/api/data/__init__.py:879: Warning (W, Data.to_dict): Catching too general exception Exception
 golismero/api/data/__init__.py:964: Warning (W, Data._merge_links): Access to a protected member __linked of a client class
@@ -27,7 +29,7 @@ golismero/api/data/__init__.py:1076: Warning (W, Data.resolve): Access to a prot
 golismero/api/data/__init__.py:1098: Warning (W, Data.resolve_links): Access to a protected member _enabled of a client class
 golismero/api/data/__init__.py:1123: Warning (W, Data.add_link): Access to a protected member _can_link of a client class
 golismero/api/data/__init__.py:1124: Warning (W, Data.add_link): Access to a protected member _add_link of a client class
-golismero/api/data/__init__.py:1160: Warning (W, Data.resolve): Redefining name 'identity' from outer scope (line 99)
+golismero/api/data/__init__.py:1234: Warning (W, Data.resolve): Redefining name 'identity' from outer scope (line 100)
 golismero/api/data/__init__.py:1402: Warning (W, _LocalDataCache.__cleanup): Access to a protected member _context of a client class
 golismero/api/data/__init__.py:1404: Warning (W, _LocalDataCache.__cleanup): Attribute '_enabled' defined outside __init__
 golismero/api/data/__init__.py:1407: Warning (W, _LocalDataCache.__cleanup): Attribute '__new_data' defined outside __init__
@@ -35,8 +37,9 @@ golismero/api/data/__init__.py:1413: Warning (W, _LocalDataCache.__cleanup): Att
 golismero/api/data/__init__.py:1416: Warning (W, _LocalDataCache.__cleanup): Attribute '__autogen' defined outside __init__
 golismero/api/data/__init__.py:1454: Warning (W, _LocalDataCache.update): Attribute '__fresh' defined outside __init__
 golismero/api/data/__init__.py:1470: Error (E, Data.is_instance): Instance of 'Data' has no 'data_subtype' member
+golismero/api/data/__init__.py:1518: Warning (W, Data.is_in_scope): Unused argument 'scope'
 golismero/api/data/__init__.py:1618: Warning (W, _LocalDataCache.on_finish): Catching too general exception Exception
-golismero/api/data/__init__.py:1850: Warning (W, _LocalDataCache.on_finish): Redefining name 'identity' from outer scope (line 99)
+golismero/api/data/__init__.py:1925: Warning (W, _LocalDataCache.on_finish): Redefining name 'identity' from outer scope (line 100)
 golismero/api/data/db.py:59: Warning (W, Database.add): Access to a protected member _context of a client class
 golismero/api/data/db.py:72: Warning (W, Database.async_add): Access to a protected member _context of a client class
 golismero/api/data/db.py:85: Warning (W, Database.async_add_many): Access to a protected member _context of a client class
@@ -89,21 +92,22 @@ golismero/api/data/information/dns.py:2111: Warning (W, DnsRegisterWKS): Method 
 golismero/api/data/information/dns.py:2189: Warning (W, DnsRegisterX25): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/fingerprint.py:92: Warning (W, OSFingerprint): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/fingerprint.py:103: Warning (W, OSFingerprint.__init__): Redefining built-in 'type'
-golismero/api/data/information/fingerprint.py:206: Error (E, OSFingerprint.name): An attribute affected in golismero.api.data.information.fingerprint line 159 hide this method
+golismero/api/data/information/fingerprint.py:215: Error (E, OSFingerprint.name): An attribute affected in golismero.api.data.information.fingerprint line 160 hide this method
 golismero/api/data/information/fingerprint.py:225: Warning (W, OSFingerprint.name): Attribute '__name' defined outside __init__
-golismero/api/data/information/fingerprint.py:230: Error (E, OSFingerprint.vendor): An attribute affected in golismero.api.data.information.fingerprint line 160 hide this method
+golismero/api/data/information/fingerprint.py:240: Error (E, OSFingerprint.vendor): An attribute affected in golismero.api.data.information.fingerprint line 161 hide this method
 golismero/api/data/information/fingerprint.py:249: Warning (W, OSFingerprint.vendor): Attribute '__vendor' defined outside __init__
-golismero/api/data/information/fingerprint.py:254: Error (E, OSFingerprint.type): An attribute affected in golismero.api.data.information.fingerprint line 161 hide this method
+golismero/api/data/information/fingerprint.py:265: Error (E, OSFingerprint.type): An attribute affected in golismero.api.data.information.fingerprint line 162 hide this method
 golismero/api/data/information/fingerprint.py:273: Warning (W, OSFingerprint.type): Attribute '__type' defined outside __init__
-golismero/api/data/information/fingerprint.py:278: Error (E, OSFingerprint.generation): An attribute affected in golismero.api.data.information.fingerprint line 162 hide this method
+golismero/api/data/information/fingerprint.py:290: Error (E, OSFingerprint.generation): An attribute affected in golismero.api.data.information.fingerprint line 163 hide this method
 golismero/api/data/information/fingerprint.py:297: Warning (W, OSFingerprint.generation): Attribute '__generation' defined outside __init__
-golismero/api/data/information/fingerprint.py:302: Error (E, OSFingerprint.family): An attribute affected in golismero.api.data.information.fingerprint line 163 hide this method
+golismero/api/data/information/fingerprint.py:314: Error (E, OSFingerprint.family): An attribute affected in golismero.api.data.information.fingerprint line 164 hide this method
 golismero/api/data/information/fingerprint.py:321: Warning (W, OSFingerprint.family): Attribute '__family' defined outside __init__
 golismero/api/data/information/fingerprint.py:325: Warning (W, WebServerFingerprint): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/information/fingerprint.py:469: Error (E, WebServerFingerprint.others): An attribute affected in golismero.api.data.information.fingerprint line 387 hide this method
+golismero/api/data/information/fingerprint.py:337: Warning (W, ServiceFingerprint): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/fingerprint.py:496: Warning (W, WebServerFingerprint.others): Attribute '__others' defined outside __init__
-golismero/api/data/information/fingerprint.py:501: Error (E, WebServerFingerprint.related): An attribute affected in golismero.api.data.information.fingerprint line 386 hide this method
 golismero/api/data/information/fingerprint.py:525: Warning (W, WebServerFingerprint.related): Attribute '__related' defined outside __init__
+golismero/api/data/information/fingerprint.py:566: Error (E, WebServerFingerprint.others): An attribute affected in golismero.api.data.information.fingerprint line 480 hide this method
+golismero/api/data/information/fingerprint.py:600: Error (E, WebServerFingerprint.related): An attribute affected in golismero.api.data.information.fingerprint line 479 hide this method
 golismero/api/data/information/geolocation.py:41: Warning (W, Geolocation): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/html.py:42: Warning (W, HTML): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/http.py:405: Warning (W, HTTP_Request): Method 'from_dict' is abstract in class 'Data' but is not overridden
@@ -113,7 +117,7 @@ golismero/api/data/information/http.py:655: Warning (W, HTTP_Request.content_len
 golismero/api/data/information/http.py:709: Warning (W, HTTP_Raw_Request): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/http.py:734: Warning (W, HTTP_Response): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/information/http.py:758: Warning (W, HTTP_Response.__init__): Catching too general exception Exception
-golismero/api/data/information/http.py:880: Error (E, HTTP_Response.elapsed): An attribute affected in golismero.api.data.information.http line 854 hide this method
+golismero/api/data/information/http.py:882: Error (E, HTTP_Response.elapsed): An attribute affected in golismero.api.data.information.http line 856 hide this method
 golismero/api/data/information/http.py:913: Warning (W, HTTP_Response.content_length): Catching too general exception Exception
 golismero/api/data/information/http.py:985: Warning (W, HTTP_Response.__parse_raw_response): Catching too general exception Exception
 golismero/api/data/information/image.py:48: Warning (W, Image): Method 'from_dict' is abstract in class 'Data' but is not overridden
@@ -148,10 +152,10 @@ golismero/api/data/vulnerability/__init__.py:384: Warning (W, Vulnerability.leve
 golismero/api/data/vulnerability/__init__.py:408: Warning (W, Vulnerability.impact): Attribute '__impact' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:428: Warning (W, Vulnerability.bid): Attribute '__bid' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:428: Warning (W, Vulnerability.tool_id): Attribute '__tool_id' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:440: Error (E, Vulnerability.plugin_id): An attribute affected in golismero.api.data.vulnerability line 230 hide this method
 golismero/api/data/vulnerability/__init__.py:448: Warning (W, Vulnerability.ca): Attribute '__ca' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:468: Warning (W, Vulnerability.capec): Attribute '__capec' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:488: Warning (W, Vulnerability.cve): Attribute '__cve' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:501: Error (E, Vulnerability.plugin_id): An attribute affected in golismero.api.data.vulnerability line 269 hide this method
 golismero/api/data/vulnerability/__init__.py:508: Warning (W, Vulnerability.cwe): Attribute '__cwe' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:528: Warning (W, Vulnerability.osvdb): Attribute '__osvdb' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:548: Warning (W, Vulnerability.sa): Attribute '__sa' defined outside __init__
@@ -163,18 +167,27 @@ golismero/api/data/vulnerability/__init__.py:612: Warning (W, Vulnerability.ms):
 golismero/api/data/vulnerability/__init__.py:632: Warning (W, Vulnerability.mskb): Attribute '__mskb' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:632: Warning (W, Vulnerability.severity): Attribute '__severity' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:656: Warning (W, Vulnerability.risk): Attribute '__risk' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:679: Warning (W, Vulnerability.cvss_base): Attribute '__cvss_base' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:702: Warning (W, Vulnerability.cvss_base_vector): Attribute '__cvss_base_vector' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:725: Warning (W, Vulnerability.title): Attribute '__title' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:748: Warning (W, Vulnerability.description): Attribute '__description' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:771: Warning (W, Vulnerability.solution): Attribute '__solution' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:664: Error (E, Vulnerability.title): Instance of 'Vulnerability' has no '__title' member
+golismero/api/data/vulnerability/__init__.py:685: Error (E, Vulnerability.description): Instance of 'Vulnerability' has no '__description' member
+golismero/api/data/vulnerability/__init__.py:707: Error (E, Vulnerability.solution): Instance of 'Vulnerability' has no '__solution' member
+golismero/api/data/vulnerability/__init__.py:722: Error (E, Vulnerability.references): An attribute affected in golismero.api.data.vulnerability line 318 hide this method
 golismero/api/data/vulnerability/__init__.py:794: Warning (W, Vulnerability.references): Attribute '__references' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:849: Warning (W, Vulnerability.cvss_vector): Attribute '__cvss_base' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:850: Warning (W, Vulnerability.cvss_vector): Attribute '__cvss_score' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:853: Warning (W, Vulnerability.cvss_vector): Attribute '__cvss_vector' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:883: Error (E, UrlVulnerability): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/__init__.py:927: Warning (W, UncategorizedVulnerability): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/__init__.py:939: Warning (W, UrlVulnerability): Method 'from_dict' is abstract in class 'Data' but is not overridden
-golismero/api/data/vulnerability/__init__.py:982: Error (E, Vulnerability.references): An attribute affected in golismero.api.data.vulnerability line 266 hide this method
+golismero/api/data/vulnerability/__init__.py:949: Warning (W, Vulnerability.cisco): Attribute '__cisco' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:1009: Warning (W, Vulnerability.dsa): Attribute '__dsa' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:1029: Warning (W, Vulnerability.edb): Attribute '__edb' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:1043: Warning (W, UrlVulnerability._sanitize_url): Static method with 'self' as first argument
+golismero/api/data/vulnerability/__init__.py:1049: Warning (W, Vulnerability.glsa): Attribute '__glsa' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:1057: Warning (W, UrlVulnerability._sanitize_url): Catching too general exception Exception
+golismero/api/data/vulnerability/__init__.py:1069: Warning (W, Vulnerability.mdvsa): Attribute '__mdvsa' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:1169: Warning (W, Vulnerability.rhsa): Attribute '__rhsa' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:1229: Warning (W, Vulnerability.usn): Attribute '__usn' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:1249: Warning (W, Vulnerability.vmsa): Attribute '__vmsa' defined outside __init__
 golismero/api/data/vulnerability/authentication/broken_captcha.py:38: Warning (W, BrokenCaptcha): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/authentication/weak_credentials.py:44: Warning (W, WeakCredentials): Method 'from_dict' is abstract in class 'Data' but is not overridden
 golismero/api/data/vulnerability/authentication/weak_credentials.py:93: Error (E, WeakCredentials): Method '__init__' has no '__doc__' member
@@ -261,6 +274,44 @@ golismero/api/data/vulnerability/suspicious/url.py:66: Warning (W, SuspiciousURL
 golismero/api/data/vulnerability/suspicious/url.py:68: Error (E, SuspiciousURL): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/suspicious/url.py:99: Error (E, SuspiciousURLPath): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/vuln_utils.py:250: Error (E): Function 'convert_references_to_vuln_ids' has no '__doc__' member
+golismero/api/data/vulnerability/vuln_utils.py:446: Error (E): Function 'extract_vuln_ids' has no '__doc__' member
+golismero/api/data/vulnerability/vuln_utils.py:530: Error (E): Function 'convert_vuln_ids_to_references' has no '__doc__' member
+golismero/api/data/vulnerability/vuln_utils.py:708: Warning (W, CVSS_Base.vector): Catching too general exception Exception
+golismero/api/data/vulnerability/vuln_utils.py:717: Warning (W, CVSS_Base.vector): Statement seems to have no effect
+golismero/api/data/vulnerability/vuln_utils.py:725: Error (E, CVSS_Base.base_exploitability): Instance of 'CVSS_Base' has no 'AC' member
+golismero/api/data/vulnerability/vuln_utils.py:725: Error (E, CVSS_Base.base_exploitability): Instance of 'CVSS_Base' has no 'AV' member
+golismero/api/data/vulnerability/vuln_utils.py:725: Error (E, CVSS_Base.base_exploitability): Instance of 'CVSS_Base' has no 'Au' member
+golismero/api/data/vulnerability/vuln_utils.py:729: Error (E, CVSS_Base.impact): Instance of 'CVSS_Base' has no 'A' member
+golismero/api/data/vulnerability/vuln_utils.py:729: Error (E, CVSS_Base.impact): Instance of 'CVSS_Base' has no 'C' member
+golismero/api/data/vulnerability/vuln_utils.py:729: Error (E, CVSS_Base.impact): Instance of 'CVSS_Base' has no 'I' member
+golismero/api/data/vulnerability/vuln_utils.py:757: Error (E): Class 'CVSS_Base' has no 'AV' member
+golismero/api/data/vulnerability/vuln_utils.py:758: Error (E): Class 'CVSS_Base' has no 'AC' member
+golismero/api/data/vulnerability/vuln_utils.py:759: Error (E): Class 'CVSS_Base' has no 'Au' member
+golismero/api/data/vulnerability/vuln_utils.py:760: Error (E): Class 'CVSS_Base' has no 'C' member
+golismero/api/data/vulnerability/vuln_utils.py:761: Error (E): Class 'CVSS_Base' has no 'I' member
+golismero/api/data/vulnerability/vuln_utils.py:762: Error (E): Class 'CVSS_Base' has no 'A' member
+golismero/api/data/vulnerability/vuln_utils.py:848: Error (E, CVSS.temporal_score): Instance of 'CVSS' has no 'E' member
+golismero/api/data/vulnerability/vuln_utils.py:848: Error (E, CVSS.temporal_score): Instance of 'CVSS' has no 'RC' member
+golismero/api/data/vulnerability/vuln_utils.py:848: Error (E, CVSS.temporal_score): Instance of 'CVSS' has no 'RL' member
+golismero/api/data/vulnerability/vuln_utils.py:854: Error (E, CVSS.adjusted_impact): Instance of 'CVSS' has no 'A' member
+golismero/api/data/vulnerability/vuln_utils.py:854: Error (E, CVSS.adjusted_impact): Instance of 'CVSS' has no 'AR' member
+golismero/api/data/vulnerability/vuln_utils.py:854: Error (E, CVSS.adjusted_impact): Instance of 'CVSS' has no 'C' member
+golismero/api/data/vulnerability/vuln_utils.py:854: Error (E, CVSS.adjusted_impact): Instance of 'CVSS' has no 'CR' member
+golismero/api/data/vulnerability/vuln_utils.py:854: Error (E, CVSS.adjusted_impact): Instance of 'CVSS' has no 'I' member
+golismero/api/data/vulnerability/vuln_utils.py:854: Error (E, CVSS.adjusted_impact): Instance of 'CVSS' has no 'IR' member
+golismero/api/data/vulnerability/vuln_utils.py:870: Error (E, CVSS.adjusted_temporal_score): Instance of 'CVSS' has no 'E' member
+golismero/api/data/vulnerability/vuln_utils.py:870: Error (E, CVSS.adjusted_temporal_score): Instance of 'CVSS' has no 'RC' member
+golismero/api/data/vulnerability/vuln_utils.py:870: Error (E, CVSS.adjusted_temporal_score): Instance of 'CVSS' has no 'RL' member
+golismero/api/data/vulnerability/vuln_utils.py:877: Error (E, CVSS.environmental_score): Instance of 'CVSS' has no 'CDP' member
+golismero/api/data/vulnerability/vuln_utils.py:877: Error (E, CVSS.environmental_score): Instance of 'CVSS' has no 'TD' member
+golismero/api/data/vulnerability/vuln_utils.py:882: Error (E): Class 'CVSS' has no 'E' member
+golismero/api/data/vulnerability/vuln_utils.py:883: Error (E): Class 'CVSS' has no 'RL' member
+golismero/api/data/vulnerability/vuln_utils.py:884: Error (E): Class 'CVSS' has no 'RC' member
+golismero/api/data/vulnerability/vuln_utils.py:885: Error (E): Class 'CVSS' has no 'CDP' member
+golismero/api/data/vulnerability/vuln_utils.py:886: Error (E): Class 'CVSS' has no 'TD' member
+golismero/api/data/vulnerability/vuln_utils.py:887: Error (E): Class 'CVSS' has no 'CR' member
+golismero/api/data/vulnerability/vuln_utils.py:888: Error (E): Class 'CVSS' has no 'IR' member
+golismero/api/data/vulnerability/vuln_utils.py:889: Error (E): Class 'CVSS' has no 'AR' member
 golismero/api/external.py:64: Warning (W, WindowsError): Redefining built-in 'WindowsError'
 golismero/api/external.py:637: Warning (W, tempdir): Catching too general exception Exception
 golismero/api/logger.py:82: Warning (W, Logger._log): Access to a protected member _context of a client class
@@ -644,7 +695,7 @@ golismero/managers/pluginmanager.py:449: Warning (W, PluginInfo.__deepcopy__): A
 golismero/managers/pluginmanager.py:449: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_extra_config' defined outside __init__
 golismero/managers/pluginmanager.py:476: Warning (W, PluginInfo.__deepcopy__): Access to a protected member __plugin_passwd_args of a client class
 golismero/managers/pluginmanager.py:476: Warning (W, PluginInfo.__deepcopy__): Attribute '__plugin_passwd_args' defined outside __init__
-golismero/managers/pluginmanager.py:477: Error (E, PluginInfo.customize_for_audit): Instance of '_EmptyNewStyleClass' has no '__read_config_file' member
+golismero/managers/pluginmanager.py:477: Error (E, PluginInfo.customize_for_audit): Instance of 'EmptyNewStyleClass' has no '__read_config_file' member
 golismero/managers/pluginmanager.py:477: Warning (W, PluginInfo.customize_for_audit): Access to a protected member __read_config_file of a client class
 golismero/managers/pluginmanager.py:597: Warning (W, PluginManager): Used * or ** magic
 golismero/managers/pluginmanager.py:729: Warning (W, PluginManager.find_plugins): Catching too general exception Exception

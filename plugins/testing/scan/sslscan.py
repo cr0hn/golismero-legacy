@@ -28,7 +28,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from golismero.api.config import Config
 from golismero.api.data.db import Database
+from golismero.api.data.information.fingerprint import ServiceFingerprint
 from golismero.api.data.resource.domain import Domain
+from golismero.api.data.resource.ip import IP
+from golismero.api.data.resource.url import BaseUrl
 from golismero.api.data.vulnerability.ssl.insecure_algorithm import InsecureAlgorithm
 from golismero.api.data.vulnerability.ssl.invalid_certificate import InvalidCertificate
 from golismero.api.data.vulnerability.ssl.obsolete_protocol import ObsoleteProtocol
@@ -185,31 +188,100 @@ class SSLScanPlugin(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Domain]
+        return [BaseUrl, ServiceFingerprint]
 
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
 
-        # Get the hostname to test.
-        m_host = info.hostname
+        # If it's an URL...
+        if info.is_instance(BaseUrl):
 
-        # Workaround for a bug in SSLScan: if the target port doesn't answer
-        # back the SSL handshake (i.e. if port 443 is open but another protocol
-        # is being used) then SSLScan just blocks indefinitely.
+            # Get the hostname to test.
+            hostname = info.hostname
+
+            # If it's HTTPS, use the port number from the URL.
+            if info.is_https:
+                port = info.parsed_url.port
+
+            # Otherwise, assume the port is 443.
+            else:
+                port = 443
+
+            # Test this port.
+            return self.launch_sslscan(hostname, port)
+
+        # If it's a service fingerprint...
+        elif info.is_instance(ServiceFingerprint):
+
+            # Ignore if the port does not support SSL.
+            if info.protocol != "SSL":
+                Logger.log_error_more_verbose(
+                    "No SSL services found in fingerprint [%s], aborting."
+                    % info)
+                return
+
+            # Get the associated IPs for this fingerprint.
+            ip_addresses = info.find_linked_data(
+                IP.data_type, IP.data_subtype)
+
+            # Get the associated domains for the IPs.
+            domains = set()
+            for ip in ip_addresses:
+                domains.update(
+                    ip.find_linked_data(Domain.data_type, Domain.data_subtype)
+                )
+
+            # Scan each domain.
+            results = []
+            for domain in domains:
+                r = self.launch_sslscan(domain.hostname, info.port)
+                if r:
+                    results.extend(r)
+            return results
+
+        # Internal error!
+        else:
+            assert False, "Unexpected data type received: %s" % type(info)
+
+
+    #--------------------------------------------------------------------------
+    def launch_sslscan(self, hostname, port):
+        """
+        Launch SSLScan against the specified hostname and port.
+
+        :param hostname: Hostname to test.
+        :type hostname: str
+
+        :param port: TCP port to test.
+        :type port: int
+        """
+
+        # Don't scan the same host and port twice.
+        if self.state.put("%s:%d" % (hostname, port), True):
+            Logger.log_error_more_verbose(
+                "Host %s:%d already scanned, skipped."
+                % (hostname, port))
+            return
+
+        # Workaround for a bug in SSLScan: if the target port doesn't
+        # answer back the SSL handshake (i.e. if port 443 is open but
+        # another protocol is being used) then SSLScan just blocks
+        # indefinitely.
         try:
-            with ConnectionSlot(m_host):
+            with ConnectionSlot(hostname):
                 s = socket(AF_INET, SOCK_STREAM)
                 try:
                     s.settimeout(4.0)
-                    s.connect( (m_host, 443) )
+                    s.connect( (hostname, port) )
                     s = wrap_socket(s)
                     s.shutdown(2)
                 finally:
                     s.close()
         except Exception:
             Logger.log_error_more_verbose(
-                "Host %r doesn't seem to support SSL, aborting." % m_host)
+                "Host %s:%d doesn't seem to support SSL, aborting."
+                % (hostname, port))
             return
 
         # Create a temporary output file.
@@ -219,22 +291,23 @@ class SSLScanPlugin(TestingPlugin):
             args = [
                 "--no-failed",
                 "--xml=" + output,  # non standard cmdline parsing :(
-                m_host
+                "%s:%d" % (hostname, port),
             ]
 
             # Run SSLScan and capture the text output.
-            Logger.log("Launching SSLScan against: %s" % m_host)
+            Logger.log("Launching SSLScan against: %s" % hostname)
             Logger.log_more_verbose("SSLScan arguments: %s" % " ".join(args))
-            with ConnectionSlot(m_host):
+            with ConnectionSlot(hostname):
                 t1 = time()
-                code = run_external_tool("sslscan", args, callback=Logger.log_verbose)
+                code = run_external_tool("sslscan", args,
+                                         callback=Logger.log_verbose)
                 t2 = time()
             if code:
                 Logger.log_error(
                     "SSLScan execution failed, status code: %d" % code)
             else:
                 Logger.log("SSLScan scan finished in %s seconds for target: %s"
-                           % (t2 - t1, m_host))
+                           % (t2 - t1, hostname))
 
             # Parse and return the results.
             r, v = self.parse_sslscan_results(output)
@@ -258,6 +331,7 @@ class SSLScanPlugin(TestingPlugin):
         :returns: Results from the SSLScan scan, and the vulnerability count.
         :rtype: list(Domain|Vulnerability), int
         """
+
         Ciphers = cls.Ciphers
         results = []
         count   = 0
@@ -318,9 +392,11 @@ class SSLScanPlugin(TestingPlugin):
                     m_t_after  = t.find(".//not-valid-after")
                     if m_t_before is not None and m_t_after is not None:
                         m_valid_before = re.search(
-                            "([a-zA-Z:0-9\s]+)( GMT)", m_t_before.text).group(1)
+                            "([a-zA-Z:0-9\s]+)( GMT)",
+                            m_t_before.text).group(1)
                         m_valid_after = re.search(
-                            "([a-zA-Z:0-9\s]+)( GMT)", m_t_after.text).group(1)
+                            "([a-zA-Z:0-9\s]+)( GMT)",
+                            m_t_after.text).group(1)
                         m_valid_before_date = datetime.strptime(
                             m_valid_before, "%b %d %H:%M:%S %Y")
                         m_valid_after_date = datetime.strptime(

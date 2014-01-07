@@ -72,7 +72,7 @@ def test_auditdb_interfaces():
             missing = {
                 name for name in dir(cls) if (
                     name[0] != "_" and
-                    name not in ("audit_name", "compact", "dump", "decode", "encode", "generate_audit_name", "get_config_from_closed_database") and
+                    name not in ("audit_name", "compact", "dump", "decode", "encode", "generate_audit_name", "get_config_from_closed_database", "mark_stage_finished_many") and
                     name not in cls.__dict__
                 )
             }

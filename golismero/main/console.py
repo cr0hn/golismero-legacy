@@ -91,7 +91,7 @@ def colorize_substring(text, substring, level_or_color):
 
     :param level_or_color:
         Color name or risk level name.
-        See the documentation for :ref:`colorize`() for more details.
+        See the documentation for colorize() for more details.
     :type level_or_color: str
 
     :returns: Colorized text.

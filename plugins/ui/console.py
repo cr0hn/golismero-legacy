@@ -143,7 +143,10 @@ class ConsoleUIPlugin(UIPlugin):
                     Console.display(m_text)
 
                 # Free the simple ID for the plugin execution.
-                del self.current_plugins[Config.audit_name][message.plugin_id][message.ack_identity]
+                try:
+                    del self.current_plugins[Config.audit_name][message.plugin_id][message.ack_identity]
+                except KeyError:
+                    pass
 
             # A plugin has advanced.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_STEP:

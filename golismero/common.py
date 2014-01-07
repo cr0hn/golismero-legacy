@@ -43,6 +43,7 @@ __all__ = [
 
     # Helper classes and decorators.
     "Singleton", "decorator", "export_methods_as_functions",
+    "EmptyNewStyleClass",
 
     # Configuration objects.
     "OrchestratorConfig", "AuditConfig"
@@ -96,6 +97,26 @@ from os import path
 import os
 import random  #noqa
 import sys
+
+# Remove the docstrings. This prevents errors when generating the API docs.
+try:
+    json_encode.__doc__ = ""
+except Exception:
+    _orig_json_encode = json_encode
+    def json_encode(*args, **kwargs):
+        return _orig_json_encode(*args, **kwargs)
+try:
+    json_decode.__doc__ = ""
+except Exception:
+    _orig_json_decode = json_decode
+    def json_decode(*args, **kwargs):
+        return _orig_json_decode(*args, **kwargs)
+
+
+#------------------------------------------------------------------------------
+# Helper class for instance creation without calling __init__().
+class EmptyNewStyleClass (object):
+    pass
 
 
 #------------------------------------------------------------------------------

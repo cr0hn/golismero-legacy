@@ -41,8 +41,9 @@ if path.exists(thirdparty_libs):
     sys.path.insert(0, golismero)
 
 
+from golismero.api.data.vulnerability import Vulnerability #noqa
 from golismero.api.data.vulnerability.vuln_utils import extract_vuln_ids, \
-     convert_references_to_vuln_ids, convert_vuln_ids_to_references
+     convert_references_to_vuln_ids, convert_vuln_ids_to_references, CVSS, CVSS_Base
 
 
 _test_case_extract = """
@@ -60,6 +61,7 @@ Testing OSVDB: using 4 examples. The first being OSVDB: 1 and the second being O
   and the fourth is OSVDB ID: 3.
 Testing SA: with 6 IDs, namely: SA-7, SA:1, SA: 2, SECUNIA-3, SECUNIA:4 and SECUNIA: 5.
 Testing SECTRACK: try 4 samples: SECTRACK-0, SECTRACK: 1, SECTRACK:2 and SECTRACK ID: 3.
+Testing USN: try 4 samples: USN-740-1, USN-2048-1, USN:2048-2 and USN: 2076-1.
 Testing VU: using 2 examples. VU#826463 and VU-826464.
 Testing XF: we have 5 samples now. XF:this-is-valid(123), XF: this-is-valid-too (321), XF: (55), XF:(66) and XF-11.
   These should not match: XF: 6 nor XF: this is not valid (7).
@@ -83,6 +85,9 @@ SA:
 
 SECTRACK:
 9876
+
+USN:
+2076-2
 
 XF:
 this-is-broken (10)
@@ -112,6 +117,7 @@ _test_case_extract_solution = {
     "osvdb": ["OSVDB-1", "OSVDB-2", "OSVDB-3", "OSVDB-5"],
     "sa": ["SA-1", "SA-2", "SA-3", "SA-4", "SA-5", "SA-7"],
     "sectrack": ["SECTRACK-0", "SECTRACK-1", "SECTRACK-2", "SECTRACK-3"],
+    "usn": ["USN-2048-1", "USN-2048-2", "USN-2076-1", "USN-740-1"],
     "vu": ["VU-826463", "VU-826464"],
     "xf": ["XF-11", "XF-123", "XF-321", "XF-55", "XF-66"],
 }
@@ -127,6 +133,14 @@ http://www.cert.org/advisories/CA-2004-01.html
 
 https://capec.mitre.org/data/definitions/1.html
 http://capec.mitre.org/data/definitions/3.html
+https://www.security-database.com/capec.php?name=CAPEC-2
+http://www.security-database.com/capec.php?name=CAPEC-4
+
+http://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-20131009-fwsm
+http://www.security-database.com/detail.php?alert=cisco-sa-20131009-asa
+https://www.security-database.com/detail.php?alert=cisco-sa-20130925-rsvp
+http://www.security-database.com/cvss.php?alert=cisco-sa-20130925-nat
+https://www.security-database.com/cvss.php?alert=cisco-sa-20130918-pc
 
 https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-1234-12345
 http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-1234-4321
@@ -143,9 +157,40 @@ http://web.nvd.nist.gov/view/vuln/detail?vulnId=4444-4444
 
 https://cwe.mitre.org/data/definitions/123.html
 http://cwe.mitre.org/data/definitions/124.html
+https://www.security-database.com/cwe.php?name=CWE-125
+http://www.security-database.com/cwe.php?name=CWE-126
+
+http://www.debian.org/security/2001/dsa-095
+http://www.debian.org/security/2013/dsa-2831
+http://www.debian.org/security/dsa-2139
+https://www.security-database.com/detail.php?alert=DSA-2834
+
+http://www.debian.org/security/2000/20001129
+http://www.debian.org/security/2000/20001130
+http://www.debian.org/security/2000/20001201
+http://www.debian.org/security/2000/20001217
+http://www.debian.org/security/2000/20001217a
+http://www.debian.org/security/2000/20001219
+http://www.debian.org/security/2000/20001220
+http://www.debian.org/security/2000/20001225
+http://www.debian.org/security/2000/20001225a
+http://www.debian.org/security/2000/20001225b
 
 http://www.exploit-db.com/exploits/100/
 http://www.exploit-db.com/exploits/200
+
+http://www.gentoo.org/security/en/glsa/glsa-201312-14.xml
+https://www.gentoo.org/security/en/glsa/glsa-201312-15.xml
+http://security.gentoo.org/glsa/glsa-201312-11.xml
+https://security.gentoo.org/glsa/glsa-201312-12.xml
+http://www.security-database.com/detail.php?alert=GLSA-201312-16
+https://www.security-database.com/detail.php?alert=GLSA-201312-10
+
+http://www.mandriva.com/security/advisories?name=MDVSA-2013:298
+https://www.security-database.com/detail.php?alert=MDVSA-2013:299
+https://www.mandriva.com/en/support/security/advisories/advisory/MDVSA-2013:300/?name=MDVSA-2013:300
+https://www.mandriva.com/en/support/security/advisories/advisory/MDVSA-2013:301
+https://www.mandriva.com/support/security/advisories/advisory/MDVSA-2013:302
 
 http://www.microsoft.com/technet/security/bulletin/MS01-023.asp
 https://www.microsoft.com/technet/security/bulletin/MS01-022.asp
@@ -172,6 +217,11 @@ https://osvdb.org/show/osvdb/2
 http://www.osvdb.org/show/osvdb/3
 https://www.osvdb.org/show/osvdb/4
 
+https://rhn.redhat.com/errata/RHSA-2000-043.html
+https://rhn.redhat.com/errata/RHSA-2013-1852.html
+https://www.security-database.com/cvss.php?alert=RHSA-2013:1801
+https://www.security-database.com/detail.php?alert=RHSA-2013:1823
+
 http://www.secunia.com/advisories/1
 https://secunia.com/advisories/2
 http://secunia.com/advisories/3
@@ -182,6 +232,14 @@ http://www.securitytracker.com/id/4
 http://securitytracker.com/id/6
 http://www.securitytracker.com/alerts/2004/Jul/1010645.html
 http://securitytracker.com/alerts/2004/Jul/1010644.html
+
+http://www.ubuntu.com/usn/USN-740-1/
+http://www.ubuntu.com/usn/USN-2076-1
+
+http://www.vmware.com/security/advisories/VMSA-2013-0004.html
+https://www.vmware.com/security/advisories/VMSA-2013-0005.html
+https://www.security-database.com/detail.php?alert=VMSA-2013-0006
+https://www.security-database.com/cvss.php?alert=VMSA-2013-0007
 
 https://www.kb.cert.org/vuls/id/826463
 http://www.kb.cert.org/vuls/id/911678
@@ -251,12 +309,51 @@ def test_vuln_id_parser():
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.62 Safari/537.36"}
     for url in refs:
         print "--> " + url
-        requests.get(url, headers=headers)
+        requests.get(url, headers=headers, verify=False)
     for url in urls:
         if url not in refs:
             print "--> " + url
-            requests.get(url, headers=headers)
+            requests.get(url, headers=headers, verify=False)
+
+
+def test_cvss_calculator():
+    print "Testing the CVSS calculator..."
+
+    # Unit test based on Wikipedia examples.
+    cvss = CVSS_Base("AV:N/AC:L/Au:N/C:P/I:P/A:C")
+    assert ("%.1f" % cvss.base_exploitability) == "10.0", cvss.base_exploitability
+    assert ("%.1f" % cvss.impact) == "8.5", cvss.impact
+    assert cvss.base_score == "9.0", cvss.base_score
+    assert cvss.score == "9.0", cvss.score
+    assert cvss.vector == "AV:N/AC:L/Au:N/C:P/I:P/A:C", cvss.vector
+    cvss = CVSS("AV:N/AC:L/Au:N/C:P/I:P/A:C")
+    assert ("%.1f" % cvss.base_exploitability) == "10.0", cvss.base_exploitability
+    assert ("%.1f" % cvss.impact) == "8.5", cvss.impact
+    assert cvss.base_score == "9.0", cvss.base_score
+    assert cvss.score == "9.0", cvss.score
+    assert cvss.base_vector == "AV:N/AC:L/Au:N/C:P/I:P/A:C", cvss.base_vector
+    assert cvss.vector == "AV:N/AC:L/Au:N/C:P/I:P/A:C/E:ND/RL:U/RC:C/CDP:ND/TD:ND/CR:M/IR:M/AR:M", cvss.vector
+    cvss = CVSS("AV:N/AC:L/Au:N/C:P/I:P/A:C/E:POC/RL:U/RC:UC")
+    assert cvss.temporal_score == "7.3", cvss.temporal_score
+    cvss = CVSS("C:P/I:P/A:C/E:POC/RL:U/RC:UC")
+    assert cvss.temporal_score == "7.3", cvss.temporal_score
+    assert "AV:N/AC:L/Au:N/C:P/I:P/A:C" in cvss.vector
+    cvss.RC = cvss.CONFIRMED
+    assert cvss.temporal_score == "8.1", cvss.temporal_score
+    cvss.RL = cvss.TEMPORARY_FIX
+    assert cvss.temporal_score == "7.3", cvss.temporal_score
+    cvss.RL = cvss.OFFICIAL_FIX
+    assert cvss.temporal_score == "7.0", cvss.temporal_score
+    cvss = CVSS("AV:N/AC:L/Au:N/C:P/I:P/A:C/E:POC/RL:TF/RC:UC/CDP:MH/TD:H/CR:H/IR:H/AR:L")
+    assert cvss.base_score == "9.0", cvss.base_score
+    assert ("%.1f" % cvss.base_exploitability) == "10.0", cvss.base_exploitability
+    assert ("%.1f" % cvss.impact) == "8.5", cvss.impact
+    assert cvss.temporal_score == "6.6", cvss.temporal_score
+    assert cvss.environmental_score == "7.8", cvss.environmental_score
+    assert ("%.1f" % cvss.adjusted_impact) == "8.0", cvss.adjusted_impact
+    assert cvss.score == "7.8", cvss.score
 
 
 if __name__ == "__main__":
+    test_cvss_calculator()
     test_vuln_id_parser()

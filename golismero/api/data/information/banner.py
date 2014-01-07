@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Banner"]
 
-from . import Information
+from . import Fingerprint
 from .. import identity
 from ..resource.ip import IP
 from ...text.text_utils import to_utf8
@@ -41,12 +41,12 @@ from warnings import warn
 
 
 #------------------------------------------------------------------------------
-class Banner(Information):
+class Banner(Fingerprint):
     """
     Service banner.
     """
 
-    information_type = Information.INFORMATION_BANNER
+    information_type = Fingerprint.INFORMATION_BANNER
     min_resources = 1
 
 

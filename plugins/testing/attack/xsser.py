@@ -1,4 +1,4 @@
-#!/user/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 __license__ = """
@@ -51,6 +51,7 @@ except ImportError:
 #------------------------------------------------------------------------------
 class XSSerPlugin(TestingPlugin):
 
+
     #--------------------------------------------------------------------------
     def check_params(self):
         if not find_binary_in_path("xsser.py"):
@@ -58,9 +59,11 @@ class XSSerPlugin(TestingPlugin):
                 "XSSer not found! You can download it from: "
                 "http://xsser.sourceforge.net/")
 
+
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
+
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
@@ -168,9 +171,7 @@ class XSSerPlugin(TestingPlugin):
 
         with ConnectionSlot(hostname):
             t1 = time()
-            # Find one of the paths to the binary
-            command = find_binary_in_path("xsser.py")[0]
-            code = run_external_tool(command, args, callback=Logger.log_verbose)
+            code = run_external_tool("xsser.py", args, callback=Logger.log_verbose)
             t2 = time()
 
         if code:

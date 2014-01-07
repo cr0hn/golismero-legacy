@@ -31,7 +31,6 @@ __all__ = ["TextReport"]
 import sys
 
 from collections import defaultdict
-from texttable import Texttable
 
 from golismero.api.audit import get_audit_times, parse_audit_times
 from golismero.api.config import Config
@@ -47,6 +46,18 @@ from golismero.api.data.vulnerability import Vulnerability
 
 # XXX HACK
 from golismero.main.console import Console, colorize, colorize_substring, get_terminal_size
+
+
+#------------------------------------------------------------------------------
+from texttable import Texttable as orig_Texttable
+
+class Texttable(orig_Texttable):
+    def _str(self, i, x):
+        if x is None:
+            return ""
+        if isinstance(x, unicode):
+            return x.encode("UTF-8")
+        return str(x)
 
 
 #------------------------------------------------------------------------------
@@ -297,8 +308,10 @@ class TextReport(ReportPlugin):
                     q = len(table.draw())
                     if vuln.cvss_base:
                         table.add_row(("CVSS Base", vuln.cvss_base))
-                    if vuln.cvss_base_vector:
-                        table.add_row(("CVSS Base Vector", vuln.cvss_base_vector))
+                    if vuln.cvss_score:
+                        table.add_row(("CVSS Score", vuln.cvss_score))
+                    if vuln.cvss_vector:
+                        table.add_row(("CVSS Vector", vuln.cvss_vector))
                     if len(targets) > 1:
                         targets.sort()
                         table.add_row(("Locations", "\n".join(targets)))

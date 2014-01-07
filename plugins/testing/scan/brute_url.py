@@ -151,7 +151,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
         try:
             m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
         except ValueError, e:
-            Logger.log("There is not information for analyze when creating the matcher: '%s'" % e)
+            Logger.log_error("There is not information for analyze when creating the matcher: '%s'" % e)
             return
 
         # Create the partial funs
@@ -207,7 +207,7 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
         try:
             m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
         except ValueError, e:
-            Logger.log("There is not information for analyze when creating the matcher: '%s'" % e)
+            Logger.log_error("There is not information for analyze when creating the matcher: '%s'" % e)
             return
 
         # Create the partial funs
@@ -263,7 +263,7 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
         try:
             m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
         except ValueError, e:
-            Logger.log("There is not information for analyze when creating the matcher: '%s'" % e)
+            Logger.log_error("There is not information for analyze when creating the matcher: '%s'" % e)
             return
 
         # Create the partial funs
@@ -319,7 +319,7 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
         try:
             m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
         except ValueError, e:
-            Logger.log("There is not enough information to analyze when creating the matcher: '%s'" % e)
+            Logger.log_error("There is not enough information to analyze when creating the matcher: '%s'" % e)
             return
 
         # Create the partial funs
@@ -375,7 +375,7 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
         try:
             m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
         except ValueError, e:
-            Logger.log("There is not information for analyze when creating the matcher: '%s'" % e)
+            Logger.log_error("There is not information for analyze when creating the matcher: '%s'" % e)
             return
 
         # Create the partial funs
@@ -430,7 +430,7 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
         try:
             m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
         except ValueError, e:
-            Logger.log("There is not information for analyze when creating the matcher: '%s'" % e)
+            Logger.log_error("There is not information for analyze when creating the matcher: '%s'" % e)
             return
 
         # Create the partial funs
@@ -485,7 +485,7 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
         if p:
             discard_data(p)
     except Exception, e:
-        Logger.log_more_verbose("Error while processing: '%s': %s" % (url, str(e)))
+        Logger.log_error_more_verbose("Error while processing: '%s': %s" % (url, str(e)))
 
     # Check if the url is acceptable by comparing
     # the result content.
@@ -503,11 +503,11 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
                 if p:
                     discard_data(p)
             except Exception, e:
-                Logger.log_more_verbose("Error while processing: '%s': %s" % (url, str(e)))
+                Logger.log_error_more_verbose("Error while processing: '%s': %s" % (url, str(e)))
 
         # Append for analyze and display info if is accepted
         if matcher.analyze(p.raw_response, url=url, risk=risk_level):
-            updater_func(text="Discovered partial url: '%s'" % url)
+            Logger.log_more_verbose("Discovered partial url: '%s'" % url)
 
 
 #----------------------------------------------------------------------

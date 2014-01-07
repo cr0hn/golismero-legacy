@@ -143,11 +143,18 @@ class Spider(TestingPlugin):
             m_return.append(m_resource)
 
         # Get forms info
-        m_forms_allowed = [
-            url for url in m_forms if not any(x in url[0] for x in m_forbidden)
-        ]
+        if m_forms:
+            m_forms_allowed = [
+                url for url in m_forms
+                if not any(x in url[0] for x in m_forbidden)
+            ]
+            m_forms_not_allowed = {
+                x[0] for x in m_forms
+            }.difference(x[0] for x in m_forms_allowed)
+        else:
+            m_forms_allowed = []
+            m_forms_not_allowed = set()
 
-        m_forms_not_allowed = set([x[0] for x in m_forms]).difference(set([x[0] for x in m_forms_allowed]))
         if m_forms_not_allowed:
             Logger.log_more_verbose("Skipped forbidden forms:\n    %s" % "\n    ".join(sorted(m_forms_not_allowed)))
 
@@ -195,9 +202,10 @@ class Spider(TestingPlugin):
     #--------------------------------------------------------------------------
     def check_download(self, url, name, content_length, content_type):
 
-        # Check the file type is text.
+        # Only accept content when the content type header is present.
         if not content_type:
-            Logger.log_more_verbose("Skipping URL, missing content type: %s" % url)
+            Logger.log_more_verbose(
+                "Skipping URL, missing content type: %s" % url)
             return False
 
         # Is the content length present?
@@ -205,17 +213,22 @@ class Spider(TestingPlugin):
 
             # Check the file doesn't have 0 bytes.
             if content_length <= 0:
-                Logger.log_more_verbose("Skipping URL, empty content: %s" % url)
+                Logger.log_more_verbose(
+                    "Skipping URL, empty content: %s" % url)
                 return False
 
             # Check the file is not too big.
             if content_type.strip().lower().startswith("text/"):
                 if content_length > 100000:
-                    Logger.log_more_verbose("Skipping URL, content too large (%d bytes): %s" % (content_length, url))
+                    Logger.log_more_verbose(
+                        "Skipping URL, content too large (%d bytes): %s"
+                        % (content_length, url))
                     return False
             else:
                 if content_length > 5000000:
-                    Logger.log_more_verbose("Skipping URL, content too large (%d bytes): %s" % (content_length, url))
+                    Logger.log_more_verbose(
+                        "Skipping URL, content too large (%d bytes): %s"
+                        % (content_length, url))
                     return False
 
             # Approved!
@@ -224,21 +237,29 @@ class Spider(TestingPlugin):
         # Content length absent but likely points to a directory index.
         parsed_url = parse_url(url)
         if not parsed_url.filename:
+
             # Approved!
             return True
 
+        # Extension absent.
         if not parsed_url.extension:
+
+            # Approved!
             return True
 
-        # List from wikipedia: http://en.wikipedia.org/wiki/List_of_file_formats#Webpage
-        if parsed_url.extension not in (".xml", ".html", ".htm", ".xhtml", ".xht", \
-                                        ".mht", ".mhtml", ".maff", ".asp", ".aspx", ".bml", \
-                                        ".cfm", ".cgi", ".ihtml", ".jsp", ".las", ".lasso", \
-                                        ".lassoapp", ".pl", ".php", ".php3", ".phtml", \
-                                        ".rna", ".r", ".rnx", ".shtml", ".stm", ".atom", \
-                                        ".xml", ".eml", ".jsonld", ".metalink", ".met", \
-                                        ".rss", ".xml", ".markdown"):
-            return False
+        # Match against a known list of valid HTML extensions.
+        # See: http://en.wikipedia.org/wiki/List_of_file_formats#Webpage
+        if parsed_url.extension in (
+                ".xml", ".html", ".htm", ".xhtml", ".xht",
+                ".mht", ".mhtml", ".maff", ".asp", ".aspx", ".bml",
+                ".cfm", ".cgi", ".ihtml", ".jsp", ".las", ".lasso",
+                ".lassoapp", ".pl", ".php", ".php3", ".phtml",
+                ".rna", ".r", ".rnx", ".shtml", ".stm", ".atom",
+                ".xml", ".eml", ".jsonld", ".metalink", ".met",
+                ".rss", ".xml", ".markdown"):
 
-        # Approved!
-        return True
+            # Approved!
+            return True
+
+        # Failed!
+        return False

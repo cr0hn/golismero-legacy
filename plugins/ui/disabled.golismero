@@ -1,6 +1,6 @@
 [Documentation]
 Name        = NO UI
-Description = Empty user interface. Used when running in daemon mode.
+Description = Empty user interface. Used by some unit tests.
 Author      = GoLismero project team
 Version     = 0.1
 Website     = https://github.com/golismero

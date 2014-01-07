@@ -58,16 +58,18 @@ __all__ = [
 from .db import Database
 from ..config import Config
 from ..text.text_utils import uncamelcase
-from ...common import pickle, Singleton
+from ...common import pickle, Singleton, EmptyNewStyleClass
 
 from collections import defaultdict
 from functools import partial
 from hashlib import md5
+from inspect import getmro
 from uuid import uuid4
 from warnings import warn
 
 # Lazy imports.
 Vulnerability = None
+TAXONOMY_NAMES = None
 
 
 #------------------------------------------------------------------------------
@@ -709,10 +711,13 @@ class Data(object):
         # It's hard to figure out how, though. So for now we'll have
         # a lot of hardcoded hacks in here.
 
-        # Lazy import of the Vulnerability class.
+        # Lazy import of the vulnerability submodule.
         global Vulnerability
         if Vulnerability is None:
             from .vulnerability import Vulnerability
+        global TAXONOMY_NAMES
+        if TAXONOMY_NAMES is None:
+            from .vulnerability.vuln_utils import TAXONOMY_NAMES
 
         # This is the dictionary we'll build and return.
         display = defaultdict(dict)
@@ -734,8 +739,8 @@ class Data(object):
                 continue
 
             # Handle the vulnerability taxonomy types.
-            if propname in Vulnerability.TAXONOMY_NAMES:
-                key   = Vulnerability.TAXONOMY_NAMES[propname]
+            if propname in TAXONOMY_NAMES:
+                key   = TAXONOMY_NAMES[propname]
                 value = getattr(self, propname)
                 if value:
                     display["Taxonomy"][key] = ", ".join(value)
@@ -797,6 +802,8 @@ class Data(object):
                 value = float(value)
             elif isinstance(value, unicode):
                 value = value.encode("utf-8", "replace")
+            elif value is None:
+                value = ""
             else:
                 value = str(value)
 
@@ -917,9 +924,36 @@ class Data(object):
         :rtype: Data
         """
 
-        # There's no generic way of implementing this,
-        # so it has to be an abstract method.
+        # Make sure the user is trying to deserialize the correct class.
+        if properties.get("class") != cls.__name__:
+            raise TypeError("Expected %s, got %s instead" %
+                        (cls.__name__, properties.get("class", "<unknown>")))
+
+        # No generic implementation for now. Some changes have to be done to
+        # the data model for that to work.
         raise NotImplementedError()
+
+        # # The default implementation assumes all properties have a private
+        # # method named after them. Classes that don't follow this interface
+        # # must override this method and implement their own deserializer.
+        # # Note that no validation of any kind is done on the data: that alone
+        # # could be another reason why you may want to override this method.
+        # # Also note that methods that were not found in this class or any of
+        # # its subclasses will be set as ordinary properties. This facilitates
+        # # the job of subclasses overriding this method.
+        # instance = EmptyNewStyleClass()
+        # instance.__class__ = cls
+        # inheritance = getmro(cls)
+        # for name, value in properties.iteritems():
+        #     if name not in (
+        #         "class", "links", "data_type", "data_subtype", "display_name",
+        #     ):
+        #         for parent in inheritance:
+        #             if hasattr(parent, name):
+        #                 name = "_%s__%s" % (parent.__name__, name)
+        #                 break
+        #         setattr(instance, name, value)
+        # return instance
 
 
     #--------------------------------------------------------------------------

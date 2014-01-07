@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Traceroute", "Hop"]
 
-from . import Information
+from . import Fingerprint
 from .. import identity
 from ..resource.ip import IP
 from ..resource.domain import Domain
@@ -118,12 +118,12 @@ class Hop (object):
 
 
 #------------------------------------------------------------------------------
-class Traceroute(Information):
+class Traceroute(Fingerprint):
     """
     Traceroute results.
     """
 
-    information_type = Information.INFORMATION_TRACEROUTE
+    information_type = Fingerprint.INFORMATION_TRACEROUTE
 
 
     #--------------------------------------------------------------------------

@@ -1100,7 +1100,10 @@ class ParsedURL (object):
         scheme = self.__scheme
         if scheme:
             scheme += "://"
-        return scheme + self.netloc
+        base_url = scheme + self.netloc
+        if scheme != "mailto":
+            base_url += "/"
+        return base_url
 
     @property
     def request_uri(self):

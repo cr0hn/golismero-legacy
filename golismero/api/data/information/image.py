@@ -32,7 +32,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["Image"]
 
-from . import Information
 from .binary import Binary
 from .geolocation import Geolocation
 
@@ -50,7 +49,7 @@ class Image(Binary):
     Image file.
     """
 
-    information_type = Information.INFORMATION_IMAGE
+    information_type = Binary.INFORMATION_IMAGE
 
 
     #--------------------------------------------------------------------------

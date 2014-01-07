@@ -375,7 +375,7 @@ class AuditScope (AbstractScope):
         if not isinstance(target, str):
             if not isinstance(target, unicode):
                 raise TypeError("Expected str, got %r instead" % type(target))
-            target = str(target)
+            target = to_utf8(target)
 
         # Keep the original string for error reporting.
         original = target
@@ -386,10 +386,13 @@ class AuditScope (AbstractScope):
         except Exception:
             parsed_url = None
         if parsed_url is not None:
+            if not parsed_url.scheme:
+                parsed_url = None
+            else:
 
-            # Extract the host and use it as target.
-            # We'll be doing some extra checks later on, though.
-            target = parsed_url.host
+                # Extract the host and use it as target.
+                # We'll be doing some extra checks later on, though.
+                target = parsed_url.host
 
         # If it's an IP address...
         try:
@@ -404,7 +407,7 @@ class AuditScope (AbstractScope):
         if address is not None:
 
             # Test if it's one of the target IP addresses.
-            in_scope =  address in self.__addresses
+            in_scope = address in self.__addresses
 
         # If it's a domain name...
         elif self._re_is_domain.match(target):
@@ -435,10 +438,13 @@ class AuditScope (AbstractScope):
 
             # If it's an URL, check the path as well.
             # If not within the allowed paths, it's out of scope.
-            if parsed_url is not None:
-                url = parsed_url.url
+            if parsed_url is not None and \
+                            parsed_url.scheme in ("http", "https", "ftp"):
+                path = parsed_url.path
                 for base_url in self.__web_pages:
-                    if url.startswith(base_url):
+                    parsed_url = ParsedURL(base_url)
+                    if path.startswith(parsed_url.path) and \
+                                parsed_url.scheme in ("http", "https", "ftp"):
                         return True
                 return False
 
