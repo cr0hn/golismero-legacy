@@ -52,7 +52,7 @@ from golismero.api.plugin import TestingPlugin
 # Plecost plugin extra files.
 base_dir = os.path.split(os.path.abspath(__file__))[0]
 plecost_dir = os.path.join(base_dir, "plecost_plugin")
-plecost_plugin_list = os.path.join(plecost_dir, "plugin_list.txt")
+plecost_plugin_list = os.path.join(plecost_dir, "plugin_list_500.txt")
 plecost_cve_data = os.path.join(plecost_dir, "cve.dat")
 
 del base_dir
