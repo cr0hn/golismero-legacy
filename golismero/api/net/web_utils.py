@@ -359,7 +359,7 @@ def fix_url(url, base_url=None):
 
     Example:
 
-    >>> from golismero.net.web_utils import fix_url
+    >>> from golismero.api.net.web_utils import fix_url
     >>> fix_url("www.site.com")
     http://www.site.com
     >>> fix_url(url="/contact", base_url="www.site.com")
