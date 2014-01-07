@@ -139,8 +139,8 @@ class PlecostPlugin(TestingPlugin):
             s = OutdatedSoftware(info,
                                  "cpe:/a:wordpress:wordpress:%s" % current_version,
                                  title="Outdated version of WordPress (%s)" % current_version,
-                                 description="""Outdated version of wordpress found. Installed version found: %s.
-                                                Lastest version available: %s""" % (current_version, last_verstion))
+                                 description="Outdated version of wordpress found. Installed version found: %s. Lastest version available: %s"
+                                             % (current_version, last_verstion))
             results.append(s)
 
         #
@@ -167,7 +167,7 @@ class PlecostPlugin(TestingPlugin):
                 plugin_installed_version = plugin[2]
                 plugin_last_version = plugin[3]
                 plugin_CVEs = plugin[4]
-                plugin_installed_version = "0.1"
+
                 # Check for outdated plugins
                 if plugin_installed_version != "unknown":
 
@@ -185,7 +185,7 @@ class PlecostPlugin(TestingPlugin):
                                 info,
                                 "cpe:/a:wordpress:wordpress:-",
                                 title="Outdated version of WordPress plugin '%s'" % plugin_name,
-                                description="Outdated version of wordpress found in URL: \n'%s'\n\n. %s"
+                                description="Outdated version of wordpress found in URL: \n'%s'.\n\n%s"
                                             % (plugin_URL, "\n".join(cve_descriptions)))
 
                         results.append(s)
