@@ -83,6 +83,7 @@ def version_cmp(version1, version2):
 #------------------------------------------------------------------------------
 class PlecostPlugin(TestingPlugin):
 
+
     #--------------------------------------------------------------------------
     def check_params(self):
 
@@ -94,9 +95,11 @@ class PlecostPlugin(TestingPlugin):
         if not os.path.exists(plugin_list):
             raise IOError("Plugin list file not exits: '%s'" % plugin_list)
 
+
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [FolderUrl]
+
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
@@ -191,6 +194,7 @@ class PlecostPlugin(TestingPlugin):
                         results.append(s)
 
         return results
+
 
     #----------------------------------------------------------------------
     def __find_plugins(self, url, plugins_wordlist, update_func):
@@ -300,6 +304,7 @@ class PlecostPlugin(TestingPlugin):
 
         return results
 
+
     #----------------------------------------------------------------------
     def __detect_wordpress_installation(self, url, wordpress_urls):
         """
@@ -332,6 +337,7 @@ class PlecostPlugin(TestingPlugin):
             return False
         else:
             return True
+
 
     #----------------------------------------------------------------------
     def __get_wordpress_version(self, url):
