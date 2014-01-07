@@ -107,7 +107,6 @@ WEB_SERVERS_VARS = ["__utma",
                     "PHPSESSID",
                     "ASPSESSIONID"]
 
-
 def generate_user_agent():
     """
     :returns: A valid user agent string, randomly chosen from a predefined list.
@@ -178,8 +177,11 @@ def data_from_http_response(response):
 
     # Return the data.
     return data
+
+
 #------------------------------------------------------------------------------
-def download(url, callback = None, timeout = 10.0, allow_redirects = True, allow_out_of_scope = False):
+def download(url, callback = None, timeout = 10.0, allow_redirects = True,
+             allow_out_of_scope = False):
     """
     Download the file pointed to by the given URL.
 
@@ -246,7 +248,8 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True, allow
     :param allow_redirects: True to follow redirections, False otherwise.
     :type allow_redirects: bool
 
-    :param allow_out_of_scope: True to allow download of URLs out of scope, False otherwise.
+    :param allow_out_of_scope: True to allow download of URLs out of scope,
+                               False otherwise.
     :type allow_out_of_scope: bool
 
     :returns: Downloaded data as an object of the GoLismero data model,
@@ -342,9 +345,6 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True, allow
 
         # Return the data.
         return data
-
-
-
 
 
 #------------------------------------------------------------------------------
