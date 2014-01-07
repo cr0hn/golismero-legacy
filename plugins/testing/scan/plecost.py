@@ -135,7 +135,7 @@ class PlecostPlugin(TestingPlugin):
         # Get WordPress version
         #
         current_version, last_verstion = self.__get_wordpress_version(url)
-        Logger.log("WordPress installation version found: %s (lastest: %s)" % (current_version, last_verstion))
+        Logger.log("WordPress installation version found: %s (latest: %s)" % (current_version, last_verstion))
 
         # Outdated version of WordPress?
         if version_cmp(current_version, last_verstion) == -1:
@@ -289,7 +289,7 @@ class PlecostPlugin(TestingPlugin):
 
                 # Store info
                 if plugin_installed_version is not None:
-                    Logger.log_more_verbose("Discovered plugin: '%s (installed version: %s)' (lastest version: %s)" %
+                    Logger.log_more_verbose("Discovered plugin: '%s (installed version: %s)' (latest version: %s)" %
                                             (plugin_name, plugin_installed_version, plugin_last_version))
                     results.append([
                         plugin_name,
