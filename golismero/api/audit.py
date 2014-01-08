@@ -128,22 +128,20 @@ def parse_audit_times(start_time, stop_time):
                 (days, hours, minutes, seconds)
         else:
             run_time = "Interrupted"
-        start_time = str(start_time)
-        stop_time  = str(stop_time)
+        start_time = "%s UTC" % start_time
+        stop_time  = "%s UTC" % stop_time
     else:
         if start_time:
+            start_time = "%s UTC" % start_time
             run_time   = "Interrupted"
         else:
-            run_time   = "Unknown"
-        if start_time:
-            start_time = str(start_time)
-        else:
             start_time = "Unknown"
+            run_time   = "Unknown"
         if stop_time:
-            stop_time  = str(stop_time)
+            stop_time  = "%s UTC" % stop_time
         else:
             stop_time  = "Interrupted"
-    return (start_time, stop_time, run_time)
+    return start_time, stop_time, run_time
 
 
 #------------------------------------------------------------------------------

@@ -128,7 +128,7 @@ class JSONOutput(ReportPlugin):
         self.__full_report = not Config.audit_config.only_vulns
 
         # Parse the audit times.
-        report_time = str(datetime.now())
+        report_time = str(datetime.utcnow())
         start_time, stop_time = get_audit_times()
         start_time, stop_time, run_time = parse_audit_times(
             start_time, stop_time)

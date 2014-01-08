@@ -76,7 +76,7 @@ def run(options, *audits):
     Console.use_colors = options.color
 
     # Show the start message.
-    Console.display("GoLismero started at %s" % datetime.datetime.now())
+    Console.display("GoLismero started at %s UTC" % datetime.datetime.utcnow())
     try:
 
         # Launch GoLismero.
@@ -85,14 +85,14 @@ def run(options, *audits):
     # Show the cancel message if cancelled.
     except KeyboardInterrupt:
         Console.display(
-            "GoLismero cancelled by the user at %s" % datetime.datetime.now())
+            "GoLismero cancelled by the user at %s UTC" % datetime.datetime.utcnow())
         return 1
     except SystemExit, e:
-        Console.display("GoLismero stopped at %s" % datetime.datetime.now())
+        Console.display("GoLismero stopped at %s UTC" % datetime.datetime.utcnow())
         return e.code
 
     # Show the exit message.
-    Console.display("GoLismero finished at %s" % datetime.datetime.now())
+    Console.display("GoLismero finished at %s UTC" % datetime.datetime.utcnow())
     return return_code
 
 def _run(options, *audits):
