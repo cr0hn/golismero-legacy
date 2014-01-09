@@ -87,7 +87,7 @@ class RSTReport(ReportPlugin):
         print >>f, ""
         print >>f, ".. title:: %s - GoLismero" % self.__format_rst(Config.audit_name)
         print >>f, ""
-        print >>f, ".. footer:: Report generation date: %s" % datetime.now()
+        print >>f, ".. footer:: Report generation date: %s UTC" % datetime.utcnow()
         print >>f, ""
         print >>f, ".. contents:: Table of Contents"
         print >>f, "   :depth: 3"
