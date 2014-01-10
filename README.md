@@ -19,19 +19,45 @@ The most interesting features of the framework are:
 - Integration with standards: CWE, CVE and OWASP.
 - Designed for cluster deployment in mind (not available yet).
 
+Installing
+==========
+
+Debian/Ubuntu
+-------------
+
+The following commands will install GoLismero on your system. This requires root privileges.
+
+```sudo apt-get install python2.7 python2.7-dev python-pip git perl nmap sslscan
+cd ~
+git clone https://github.com/golismero/golismero.git
+cd golismero
+pip install -r requirements.txt
+pip install -r requirements_unix.txt```
+
+Windows
+-------
+
+On Windows, you'll have to install each tool separately. You can download them from here:
+- [Python 2.7](http://python.org/download/releases/2.7.6/)
+- [Git](https://code.google.com/p/msysgit/downloads/list)
+- [Perl](http://www.perl.org/get.html#win32)
+- [Nmap](http://nmap.org/download.html#windows)
+- [SSLScan](https://code.google.com/p/sslscan-win/)
+
+It's usually a good idea to install Visual Studio 2008 SP1 as well. This enables the compilation of C extensions, which can speed up Python.
+
+After installing the tools, open a console and run the following commands:
+
+```git clone https://github.com/golismero/golismero.git
+cd golismero
+pip install -r requirements.txt```
+
+Finally, you may have to add the tools to the PATH environment variable so GoLismero can find them. You can also add GoLismero itself to the PATH.
+
 Quick help
 ==========
 
 Using GoLismero is very easy. Below are some basic commands to start to using it:
-
-Installing
-----------
-
-Just [download](https://github.com/golismero/golismero/archive/master.zip) and extract the compressed file anywhere you like. GoLismero already ships all of its dependencies, with the exception of the Python interpreter itself.
-
-You can also get the latest version using Git:
-
-```git clone https://github.com/golismero/golismero.git```
 
 Basic usage
 -----------
