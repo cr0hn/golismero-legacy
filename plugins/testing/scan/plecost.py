@@ -330,7 +330,21 @@ class PlecostPlugin(TestingPlugin):
 
         # If Oks > 85% continue
         if (urls_found / float(total_urls)) < 0.85:
-            return False
+
+            # If all fails, make another last test
+            url_wp_admin = urljoin(url, "wp-admin/")
+
+            try:
+                p = HTTP.get_url(url_wp_admin, use_cache=False, allow_redirects=False)
+                if p:
+                    discard_data(p)
+            except Exception, e:
+                return False
+
+            if p.status == "302" and "wp-login.php?redirect_to=" in p.headers.get("Location", ""):
+                return True
+            else:
+                return False
         else:
             return True
 
@@ -414,6 +428,7 @@ class PlecostPlugin(TestingPlugin):
                 # URL to find wordpress version
                 url_current_version = urljoin(url, url_pre)
                 current_version_content = download(url_current_version)
+                discard_data(current_version_content)
 
                 # Find the version
                 tmp_version = re.search(regex, current_version_content.raw_data)
