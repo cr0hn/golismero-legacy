@@ -1,0 +1,45 @@
+@import "variables.less";
+
+body{
+	background: @colorBase;
+}
+
+.rounded-corners (@radius: 5px) {
+  -webkit-border-radius: @radius;
+  -moz-border-radius: @radius;
+  -ms-border-radius: @radius;
+  -o-border-radius: @radius;
+  border-radius: @radius;
+}
+
+
+.login-panel{
+	.rounded-corners();
+	padding: 10px;
+	float:right;
+	width: 600px;
+	height: auto;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-left: -300px;
+	margin-top: -200px;
+	
+	img {
+		float:left;
+		margin-top:45px;
+		margin-left:20px;
+	}
+}
+
+.hero-unit{
+	font-size: 15px;
+	font-weight: 200;
+	line-height: 22px
+}
+.alert{
+	margin-bottom: 10px;
+}
+
+
+

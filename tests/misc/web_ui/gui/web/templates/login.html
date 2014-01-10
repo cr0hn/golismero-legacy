@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta charset="utf-8">
+
+		<title>Golismero - Login</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="description" content="">
+		<meta name="keywords" content="">
+		<meta name="author" content="">
+		
+
+		<link href="/static/style/bootstrap.css" rel="stylesheet">
+		<link href="/static/style/bootstrap-responsive.css" rel="stylesheet">
+		
+		<link rel="stylesheet/less" type="text/css" href="/static/style/login.less" />
+		<link rel="stylesheet" type="text/css" href="/static/style/jquery.validity.css"/>
+		<script src="/static/js/jquery.js"></script>
+		<script src="/static/js/less-1.4.1.min.js" type="text/javascript"></script>
+
+		<!-- HTML5 Support for IE -->
+		<!--[if lt IE 9]>
+		<script src="js/html5shim.js"></script>
+		<![endif]-->
+
+
+		<link rel="shortcut icon" href="/static/img/favicon.png">
+	</head>
+
+	<body>
+				
+		<div class="hero-unit login-panel">
+			<div class="row-fluid">
+				<div class="span6">
+					<img src="/static/img/banner_golismero.gif"/>
+				</div>
+				<div class="span6">
+					<fieldset>
+						<legend data-i18n="[html]login.title">Login</legend>
+						<div class="alert alert-error hide" id="errorform">
+						  
+						</div>
+						<form id="loginform">
+							<div class="row-fluid">
+								<div class="span12">
+									<label data-i18n="[html]login.username"></label>
+									<input id="username" type="text" data-i18n="[placeholder]login.username;[title]login.username" placeholder="" />							
+								</div>
+							</div>
+							<div class="row-fluid">
+								<div class="span12">
+									<label data-i18n="[html]login.password"></label>
+									<input id="password" type="password"  data-i18n="[placeholder]login.password;[title]login.password" placeholder=""/>							
+								</div>	
+							</div>
+						</form>
+						<button type="button" id="btnLogin" class="btn pull-right" data-i18n="[html]login.accept" ></button>
+					</fieldset>
+				</div>
+			</div>
+		</div>
+		
+	
+		<script src="/static/js/bootstrap.js"></script> <!-- Bootstrap -->
+		<script src="/static/js/i18next-1.6.3.min.js"></script>
+		<script src="/static/js/jquery.storageapi.min.js"></script>
+		<script src="/static/js/jquery.validity.min.js"></script>
+		<script src="/static/js/config.js"></script>
+		<script type="text/javascript" src="/static/js/login.js"></script>
+	</body>
+</html>
