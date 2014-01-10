@@ -25,14 +25,38 @@ Installing
 Debian/Ubuntu
 -------------
 
-The following commands will install GoLismero on your system. This requires root privileges.
+The following commands will download and install GoLismero on your system. This requires root privileges, so you will be prompted for your password when you run the first command.
 
-```sudo apt-get install python2.7 python2.7-dev python-pip git perl nmap sslscan
-cd ~
+```sudo bash
+apt-get install python2.7 python2.7-dev python-pip python-docutils git perl nmap sslscan
+cd /opt
 git clone https://github.com/golismero/golismero.git
 cd golismero
 pip install -r requirements.txt
-pip install -r requirements_unix.txt```
+pip install -r requirements_unix.txt
+ln -s /opt/golismero/golismero.py /usr/bin/golismero
+exit```
+
+Strictly speaking, GoLismero doesn't require installation - only its dependencies. So if you want to use it on a system where you don't have root privileges, you can ask the system administrator to install them for you, and just run the "git checkout" command on your home folder.
+
+If you have an API key for Shodan, or an OpenVAS server you want to integrate with GoLismero, run the following commands:
+
+```mkdir ~/.golismero
+cp /opt/golismero/golismero.conf ~/.golismero/
+chmod 600 ~/.golismero/golismero.conf
+nano ~/.golismero/golismero.conf```
+
+At the editor, add the following sections to the end of the file, as appropriate:
+
+```
+[shodan:Configuration]
+apikey = <INSERT YOUR SHODAN API KEY HERE>
+
+[openvas]
+host = <INSERT THE OPENVAS HOST HERE>
+user = <INSERT THE OPENVAS USERNAME HERE>
+*password = <INSERT THE OPENVAS PASSWORD HERE>
+```
 
 Windows
 -------
@@ -48,11 +72,31 @@ It's usually a good idea to install Visual Studio 2008 SP1 as well. This enables
 
 After installing the tools, open a console and run the following commands:
 
-```git clone https://github.com/golismero/golismero.git
+```cd %HOME%
+git clone https://github.com/golismero/golismero.git
 cd golismero
 pip install -r requirements.txt```
 
 Finally, you may have to add the tools to the PATH environment variable so GoLismero can find them. You can also add GoLismero itself to the PATH.
+
+If you have an API key for Shodan, or an OpenVAS server you want to integrate with GoLismero, run the following commands:
+
+```cd %HOME%
+mkdir .golismero
+python -c "open('.golismero\\golismero.conf','w').write(open('golismero\\golismero.conf','rU').read())"
+notepad .golismero\golismero.conf```
+
+At the editor, add the following sections to the end of the file, as appropriate:
+
+```
+[shodan:Configuration]
+apikey = <INSERT YOUR SHODAN API KEY HERE>
+
+[openvas]
+host = <INSERT THE OPENVAS HOST HERE>
+user = <INSERT THE OPENVAS USERNAME HERE>
+*password = <INSERT THE OPENVAS PASSWORD HERE>
+```
 
 Quick help
 ==========
