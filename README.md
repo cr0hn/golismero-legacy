@@ -37,7 +37,7 @@ pip install -r requirements_unix.txt
 ln -s /opt/golismero/golismero.py /usr/bin/golismero
 exit```
 
-Strictly speaking, GoLismero doesn't require installation - only its dependencies. So if you want to use it on a system where you don't have root privileges, you can ask the system administrator to install them for you, and just run the "git checkout" command on your home folder.
+Strictly speaking, GoLismero doesn't require installation - only its dependencies do. So if you want to use it on a system where you don't have root privileges, you can ask the system administrator to install them for you, and just run the "git checkout" command on your home folder.
 
 If you have an API key for Shodan, or an OpenVAS server you want to integrate with GoLismero, run the following commands:
 
@@ -108,43 +108,43 @@ Basic usage
 
 This command will launch GoLismero with all default options and show the report on standard output:
 
-```python golismero.py scan <target>```
+```golismero scan <target>```
 
 If you omit the default command "scan" GoLismero is smart enough to figure out what you're trying to do, so this works too:
 
-```python golismero.py <target>```
+```golismero <target>```
 
 You can also set a name for your audit with --audit-name:
 
-```python golismero.py scan <target> --audit-name <name>```
+```golismero scan <target> --audit-name <name>```
 
 And you can produce reports in different file formats. The format is guessed from the file extension, and you can write as many files as you want:
 
-```python golismero.py scan <target> -o <output file name>```
+```golismero scan <target> -o <output file name>```
 
 ![Run example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/run_mac.png "Run example")
 
 Additionally, you can import results from other tools with the -i option. You can use -i several times to import multiple files.
 
-```python golismero.py import -i nikto_output.csv -i nmap_output.xml -db database.db```
+```golismero import -i nikto_output.csv -i nmap_output.xml -db database.db```
 
 All results are automatically stored in a database file. You can prevent this with the -nd option:
 
-```python golismero.py <target> -nd```
+```golismero <target> -nd```
 
 ![No database example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/no_db_mint.png "No database example")
 
 This allows you to scan the target in one step, and generating the report later. For example, to scan without generating a report:
 
-```python golismero.py scan <target> -db database.db -no```
+```golismero scan <target> -db database.db -no```
 
 And then generate the report from the database at a later time (or from a different machine!):
 
-```python golismero.py report -db database.db -o report.html```
+```golismero report -db database.db -o report.html```
 
 You can also specify multiple output files by repeating the -o option:
 
-```python golismero.py report -db database.db -o report.html -o report.rst -o report.txt```
+```golismero report -db database.db -o report.html -o report.rst -o report.txt```
 
 ![Report example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_win.png "Report example")
 
@@ -153,13 +153,13 @@ Available plugins
 
 To display the list of available plugins:
 
-```python golismero.py plugins```
+```golismero plugins```
 
 ![Plugin list example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/plugin_list_mac_2.png "Plugin list example")
 
 You can also query more information about specific plugins:
 
-```python golismero.py info <plugin>```
+```golismero info <plugin>```
 
 ![Plugin info example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/plugin_info_mint.png "Plugin list example")
 
@@ -170,11 +170,11 @@ Select a specific plugin
 
 Use the -e option to enable only some specific plugins, and -d to disable plugins (you can use -e and -d many times):
 
-```python golismero.py <target> -e <plugin>```
+```golismero <target> -e <plugin>```
 
 You can also select multiple plugins using wildcards. For example, you can select all bruteforce plugins like this:
 
-```python golismero.py <target> -e brute*```
+```golismero <target> -e brute*```
 
 ![Run plugin example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/run_plugin_mac_2.png "Run plugin example")
 
@@ -185,7 +185,7 @@ GoLismero currently produces reports on the console, in plain text files, in reS
 
 If no output files are specified, GoLismero reports on the console by default. But you can choose both at the same time too! For example, let's write an HTML report and also see the output on the console, using the special filename "-":
 
-```python golismero.py scan <target> -o - -o report.html```
+```golismero scan <target> -o - -o report.html```
 
 Here's what the HTML report summary looks like:
 
@@ -200,17 +200,17 @@ Putting it all together
 
 In this example we'll put everything we've seen above into practice in a single command. We'll import results from an Nmap scan, run a scan of our own but using only the DNS analysis plugins, save the results in a database file of our choosing and produce reports in HTML and reStructured text format.
 
-```python golismero.py -i nmap_output.xml -e dns* -db database.db -o report.rst -o report.html```
+```golismero -i nmap_output.xml -e dns* -db database.db -o report.rst -o report.html```
 
 Notice how the default "scan" command was ommitted but GoLismero figured it out on its own.
 
 This is how you'd do it if you want to break it into multiple commands instead:
 
 ```
-python golismero.py scan 127.0.0.1/24 -e dns* -no
-python golismero.py import -db database.db -i nmap_output.xml
-python golismero.py scan -db database.db -e dns* -no
-python golismero.py report -db database.db -o report.rst -o report.html
+golismero scan 127.0.0.1/24 -e dns* -no
+golismero import -db database.db -i nmap_output.xml
+golismero scan -db database.db -e dns* -no
+golismero report -db database.db -o report.rst -o report.html
 ```
 
 Notice how the second command uses the "-no" switch to prevent the default console report from kicking in.
@@ -218,11 +218,11 @@ Notice how the second command uses the "-no" switch to prevent the default conso
 What will be the next features?
 ===============================
 
-The next features of golismero will be:
+The next features of GoLismero will be:
 
-- Integration with SQLMap, ZAP, Metasploit, Shodan and many other tools.
+- Integration with Metasploit, w3af, ZAP and many other free tools.
 - Web UI. We all know true h4xx0rs only use the console, but sometimes drag&drop does come in handy. ;)
-- Export results in PDF format.
+- Export results in PDF and MS Word format, to keep the boss happy.
 - And more plugins of course!
 
 Not enough? Roll your own!
