@@ -42,11 +42,11 @@ Strictly speaking, GoLismero doesn't require installation - only its dependencie
 If you have an API key for Shodan, or an OpenVAS server you want to integrate with GoLismero, run the following commands:
 
 ```mkdir ~/.golismero
-cp /opt/golismero/golismero.conf ~/.golismero/
-chmod 600 ~/.golismero/golismero.conf
-nano ~/.golismero/golismero.conf```
+touch ~/.golismero/user.conf
+chmod 600 ~/.golismero/user.conf
+nano ~/.golismero/user.conf```
 
-At the editor, add the following sections to the end of the file, as appropriate:
+At the editor, add the following sections to the file, as appropriate:
 
 ```
 [shodan:Configuration]
@@ -79,14 +79,7 @@ pip install -r requirements.txt```
 
 Finally, you may have to add the tools to the PATH environment variable so GoLismero can find them. You can also add GoLismero itself to the PATH.
 
-If you have an API key for Shodan, or an OpenVAS server you want to integrate with GoLismero, run the following commands:
-
-```cd %HOME%
-mkdir .golismero
-python -c "open('.golismero\\golismero.conf','w').write(open('golismero\\golismero.conf','rU').read())"
-notepad .golismero\golismero.conf```
-
-At the editor, add the following sections to the end of the file, as appropriate:
+If you have an API key for Shodan, or an OpenVAS server you want to integrate with GoLismero, create a new file called "user.conf" where you installed GoLismero and add the following sections to the file, as appropriate:
 
 ```
 [shodan:Configuration]
