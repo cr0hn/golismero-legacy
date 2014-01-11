@@ -267,6 +267,9 @@ def cmdline_parser():
     cmd = gr_main.add_argument("--config", metavar="FILE", help="global configuration file")
     if autocomplete_enabled:
         cmd.completer = FilesCompleter(allowednames=(".conf",), directories=False)
+    cmd = gr_main.add_argument("--user-config", metavar="FILE", help="per-user configuration file")
+    if autocomplete_enabled:
+        cmd.completer = FilesCompleter(allowednames=(".conf",), directories=False)
     cmd = gr_main.add_argument("-p", "--profile", metavar="NAME", help="profile to use")
     if autocomplete_enabled:
         cmd.completer = profiles_completer
@@ -477,9 +480,18 @@ def build_config_from_cmdline():
         if P.config:
             cmdParams.config_file = path.abspath(P.config)
             if not path.isfile(cmdParams.config_file):
-                raise ValueError("File not found: %r" % cmdParams.config_file)
+                raise ValueError("File not found: %s" % cmdParams.config_file)
         if cmdParams.config_file:
-            cmdParams.from_config_file(cmdParams.config_file, allow_profile = True)
+            cmdParams.from_config_file(cmdParams.config_file,
+                                       allow_profile = True)
+        if P.user_config:
+            cmdParams.user_config_file = path.abspath(P.user_config)
+            if not path.isfile(cmdParams.user_config_file):
+                raise ValueError(
+                    "File not found: %s" % cmdParams.user_config_file)
+        if cmdParams.user_config_file:
+            cmdParams.from_config_file(cmdParams.user_config_file,
+                                       allow_profile = True)
         if P.profile:
             cmdParams.profile = P.profile
             cmdParams.profile_file = get_profile(cmdParams.profile)
@@ -498,11 +510,14 @@ def build_config_from_cmdline():
 
         # Load the target audit options.
         auditParams = AuditConfig()
-        auditParams.profile = cmdParams.profile
-        auditParams.profile_file = cmdParams.profile_file
-        auditParams.config_file = cmdParams.config_file
+        auditParams.profile          = cmdParams.profile
+        auditParams.profile_file     = cmdParams.profile_file
+        auditParams.config_file      = cmdParams.config_file
+        auditParams.user_config_file = cmdParams.user_config_file
         if auditParams.config_file:
             auditParams.from_config_file(auditParams.config_file)
+        if auditParams.user_config_file:
+            auditParams.from_config_file(auditParams.user_config_file)
         if auditParams.profile_file:
             auditParams.from_config_file(auditParams.profile_file)
         auditParams.from_object(P)

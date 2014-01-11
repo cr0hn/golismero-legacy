@@ -435,6 +435,7 @@ class PluginInfo (object):
 
         # Override the plugin configuration from the global config file(s).
         self.__read_config_file(global_config.config_file)
+        self.__read_config_file(global_config.user_config_file)
         self.__read_config_file(global_config.profile_file)
 
 
@@ -557,6 +558,7 @@ class PluginInfo (object):
         # Make a customized copy and return it.
         new_instance = self.__deepcopy__()
         new_instance.__read_config_file(audit_config.config_file)
+        new_instance.__read_config_file(audit_config.user_config_file)
         new_instance.__read_config_file(audit_config.profile_file)
         return new_instance
 

@@ -35,7 +35,8 @@ __all__ = ["run"]
 from .console import Console
 from .orchestrator import Orchestrator
 from ..api.net.web_utils import detect_auth_method, check_auth
-from ..common import OrchestratorConfig, AuditConfig, get_default_config_file
+from ..common import OrchestratorConfig, AuditConfig, get_default_config_file,\
+    get_default_user_config_file
 
 import datetime
 import traceback
@@ -208,6 +209,8 @@ def _sanitize_config(options, audits):
         options.profile_file = None
     if not hasattr(options, "config_file"):
         options.config_file = get_default_config_file()
+    if not hasattr(options, "user_config_file"):
+        options.user_config_file = get_default_user_config_file()
     if not hasattr(options, "plugin_load_overrides"):
         options.plugin_load_overrides = []
     options.check_params()
@@ -225,6 +228,8 @@ def _sanitize_config(options, audits):
             params.profile_file = options.profile_file
         if not hasattr(params, "config_file"):
             params.config_file = options.config_file
+        if not hasattr(params, "user_config_file"):
+            params.user_config_file = options.user_config_file
         if not hasattr(params, "plugin_load_overrides"):
             params.plugin_load_overrides = options.plugin_load_overrides
         if not hasattr(params, "targets") or not params.targets:

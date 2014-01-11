@@ -37,9 +37,10 @@ __all__ = [
 
     # Helper functions.
     "get_user_settings_folder", "get_default_config_file",
-    "get_profiles_folder", "get_profile", "get_available_profiles",
-    "get_default_plugins_folder", "get_data_folder", "get_wordlists_folder",
+    "get_default_user_config_file", "get_default_plugins_folder",
+    "get_data_folder", "get_wordlists_folder",
     "get_install_folder", "get_tools_folder",
+    "get_profiles_folder", "get_profile", "get_available_profiles",
 
     # Helper classes and decorators.
     "Singleton", "decorator", "export_methods_as_functions",
@@ -176,16 +177,32 @@ def get_default_config_file():
         or None if it doesn't exist.
     :rtype: str | None
     """
-    config_file = path.join(get_user_settings_folder(), "golismero.conf")
+    config_file = path.split(path.abspath(__file__))[0]
+    config_file = path.join(config_file, "..", "golismero.conf")
+    config_file = path.abspath(config_file)
+    if not path.isfile(config_file):
+        if path.sep == "/" and path.isfile("/etc/golismero.conf"):
+            config_file = "/etc/golismero.conf"
+        else:
+            config_file = None
+    return config_file
+
+
+#------------------------------------------------------------------------------
+def get_default_user_config_file():
+    """
+    :returns:
+        Pathname of the default per-user configuration file,
+        or None if it doesn't exist.
+    :rtype: str | None
+    """
+    config_file = path.join(get_user_settings_folder(), "user.conf")
     if not path.isfile(config_file):
         config_file = path.split(path.abspath(__file__))[0]
-        config_file = path.join(config_file, "..", "golismero.conf")
+        config_file = path.join(config_file, "..", "user.conf")
         config_file = path.abspath(config_file)
         if not path.isfile(config_file):
-            if path.sep != "\\" and path.isfile("/etc/golismero.conf"):
-                config_file = "/etc/golismero.conf"
-            else:
-                config_file = None
+            config_file = None
     return config_file
 
 
@@ -677,9 +694,9 @@ class OrchestratorConfig (Configuration):
     #--------------------------------------------------------------------------
     # The options definitions, they will be read from the config file:
     #
-    _forbidden_ = set(("ui_mode",))  # except for the UI mode!
-    _forbidden = set((  # except for these:
-        "config_file", "profile_file", "plugin_args", "ui_mode",
+    _forbidden_ = set((  # except for these:
+        "config_file", "user_config_file",
+        "profile_file", "plugin_args", "ui_mode",
     ))
     _settings_ = {
 
@@ -734,7 +751,10 @@ class OrchestratorConfig (Configuration):
     # Options that are only set in runtime, not loaded from the config file.
 
     # Configuration files.
-    config_file  = get_default_config_file()
+    config_file      = get_default_config_file()
+    user_config_file = get_default_user_config_file()
+
+    # Profile.
     profile      = None
     profile_file = None
 
@@ -770,17 +790,19 @@ class OrchestratorConfig (Configuration):
             self.plugin_args = plugin_args
 
     def from_dictionary(self, args):
-        # Security note: do not copy config_file or profile_file!
+        # Security note: do not copy config filenames!
+        # See the _forbidden_ property.
         super(OrchestratorConfig, self).from_dictionary(args)
         self._load_profile(self, args)      # "self" is twice on purpose!
         self._load_plugin_args(self, args)  # don't change it or it breaks
 
     def to_dictionary(self):
         result = super(OrchestratorConfig, self).to_dictionary()
-        result["config_file"]  = self.config_file
-        result["profile"]      = self.profile
-        result["profile_file"] = self.profile_file
-        result["plugin_args"]  = self.plugin_args
+        result["config_file"]      = self.config_file
+        result["user_config_file"] = self.user_config_file
+        result["profile"]          = self.profile
+        result["profile_file"]     = self.profile_file
+        result["plugin_args"]      = self.plugin_args
         return result
 
 
@@ -818,7 +840,7 @@ class AuditConfig (Configuration):
     # The options definitions, they will be read from the config file:
     #
     _forbidden = set(( # except for these:
-        "config_file", "profile_file", "plugin_args",
+        "config_file", "user_config_file", "profile_file", "plugin_args",
         "plugin_load_overrides", "command",
     ))
     _settings_ = {
@@ -907,12 +929,15 @@ class AuditConfig (Configuration):
     # Options that are only set in runtime, not loaded from the config file.
 
     # Configuration files.
-    config_file  = get_default_config_file()
+    config_file      = get_default_config_file()
+    user_config_file = get_default_user_config_file()
+
+    # Profiles.
     profile      = None
     profile_file = None
 
     # Plugin arguments.
-    plugin_args  = None   # list of (plugin_id, key, value)
+    plugin_args = None   # list of (plugin_id, key, value)
 
     # Plugin load overrides.
     plugin_load_overrides = None
@@ -924,9 +949,10 @@ class AuditConfig (Configuration):
     #--------------------------------------------------------------------------
     def from_dictionary(self, args):
 
-        # Security note: do not copy config_file or profile_file!
+        # Security note: do not copy config filenames!
+        # See the _forbidden_ property.
         super(AuditConfig, self).from_dictionary(args)
-        OrchestratorConfig._load_profile(self, args)
+        OrchestratorConfig._load_profile(self, args) # not a filename
         OrchestratorConfig._load_plugin_args(self, args)
 
         # Load the "command" property.
@@ -946,11 +972,12 @@ class AuditConfig (Configuration):
     #--------------------------------------------------------------------------
     def to_dictionary(self):
         result = super(AuditConfig, self).to_dictionary()
-        result["config_file"]  = self.config_file
-        result["profile"]      = self.profile
-        result["profile_file"] = self.profile_file
-        result["plugin_args"]  = self.plugin_args
-        result["command"]      = self.command
+        result["config_file"]           = self.config_file
+        result["user_config_file"]      = self.user_config_file
+        result["profile"]               = self.profile
+        result["profile_file"]          = self.profile_file
+        result["plugin_args"]           = self.plugin_args
+        result["command"]               = self.command
         result["plugin_load_overrides"] = self.plugin_load_overrides
         return result
 
