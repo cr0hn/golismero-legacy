@@ -31,18 +31,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import sys
 import os
 from os import path
-try:
-    _FIXED_PATH_
-except NameError:
-    here = path.split(path.abspath(__file__))[0]
-    if not here:  # if it fails use cwd instead
-        here = path.abspath(os.getcwd())
-    golismero = path.join(here, "..")
-    thirdparty_libs = path.join(golismero, "thirdparty_libs")
-    if path.exists(thirdparty_libs):
-        sys.path.insert(0, thirdparty_libs)
-        sys.path.insert(0, golismero)
-    _FIXED_PATH_ = True
+here = path.split(path.abspath(__file__))[0]
+if not here:  # if it fails use cwd instead
+    here = path.abspath(os.getcwd())
+golismero = path.join(here, "..")
+thirdparty_libs = path.join(golismero, "thirdparty_libs")
+if path.exists(thirdparty_libs):
+    sys.path.insert(0, thirdparty_libs)
+    sys.path.insert(0, golismero)
 
 
 from golismero.api.data import Data
@@ -130,11 +126,11 @@ def test_import():
     with PluginTester(orchestrator_config, audit_config) as t:
         t.run_plugin("import/xml_openvas", path.join(here, "test_openvas.xml"))
         results = Database.get_many( Database.keys(), Data.TYPE_VULNERABILITY )
-        assert len(results) == 1
+        assert len(results) == 1, len(results)
         v = results[0]
-        assert v.level == "low"
-        assert v.plugin_id == "import/xml_openvas"
-        assert "Remote web server does not reply with 404 error code." in v.description
+        assert v.level == "informational", v.level
+        assert v.plugin_id == "import/xml_openvas", v.plugin_id
+        assert "Remote web server does not reply with 404 error code." in v.description, v.description
 
 
 #----------------------------------------------------------------------
