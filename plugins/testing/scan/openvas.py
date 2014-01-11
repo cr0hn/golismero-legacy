@@ -123,6 +123,10 @@ class OpenVASPlugin(TestingPlugin):
         except VulnscanException, e:
             raise RuntimeError(str(e))
 
+        # Check the plugin database exists.
+        if not os.path.exists(openvas_db):
+            warn("OpenVAS plugin not initialized, please run setup.py")
+
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
@@ -515,7 +519,7 @@ class OpenVASImportPlugin(ImportPlugin):
                 data_count = len(golismero_results)
                 vuln_count = sum(
                     1 for x in golismero_results
-                    if isinstance(x, Vulnerability)
+                    if x.is_instance(Vulnerability)
                 )
                 if vuln_count == 0:
                     vuln_msg = ""

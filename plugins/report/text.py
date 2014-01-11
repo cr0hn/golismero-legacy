@@ -296,9 +296,7 @@ class TextReport(ReportPlugin):
                     table.header(("Occurrence ID", vuln.identity))
                     w = len(table.draw())
                     table.add_row(("Title", vuln.title))
-                    targets = [str(x) for x in vuln.associated_resources]
-                    for info in vuln.associated_informations:
-                        targets.extend(str(x) for x in info.associated_resources)
+                    targets = self.__gather_vulnerable_resources(vuln)
                     table.add_row(("Found By", get_plugin_name(vuln.plugin_id)))
                     p = len(table.draw())
                     table.add_row(("Level", vuln.level))
@@ -315,7 +313,7 @@ class TextReport(ReportPlugin):
                     if len(targets) > 1:
                         targets.sort()
                         table.add_row(("Locations", "\n".join(targets)))
-                    else:
+                    elif targets:
                         table.add_row(("Location", targets[0]))
                     table.add_row(("Description", vuln.description))
                     table.add_row(("Solution", vuln.solution))
@@ -358,3 +356,21 @@ class TextReport(ReportPlugin):
         else:
             print >>self.__fd, self.__colorize("No vulnerabilities found.", "green")
             print >>self.__fd, ""
+
+
+    #--------------------------------------------------------------------------
+    def __gather_vulnerable_resources(self, vuln):
+        vulnerable = []
+        visited = set()
+        queue = [vuln]
+        while queue:
+            data = queue.pop()
+            identity = data.identity
+            if identity not in visited:
+                visited.add(identity)
+                if data.data_type == Data.TYPE_RESOURCE:
+                    vulnerable.append(str(data))
+                else:
+                    queue.extend(data.linked_data)
+        visited.clear()
+        return vulnerable

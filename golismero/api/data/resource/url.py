@@ -37,7 +37,7 @@ from .domain import Domain
 from .ip import IP
 from .. import identity
 from ...config import Config
-from ...net.web_utils import ParsedURL
+from ...net.web_utils import parse_url
 from ...text.text_utils import to_utf8
 
 from urllib import quote
@@ -64,7 +64,7 @@ class _AbstractUrl(Resource):
 
         # Parse, verify and canonicalize the URL.
         # TODO: if relative, make it absolute using the referer when available.
-        parsed = ParsedURL(url)
+        parsed = parse_url(url)
         if not parsed.host or not parsed.scheme:
             raise ValueError("Only absolute URLs must be used! Got: %r" % url)
         if parsed.scheme == "mailto":
@@ -230,7 +230,7 @@ class Url(_AbstractUrl):
         self.__method      = method
         self.__post_data   = post_data
         self.__post_params = post_params
-        self.__referer     = referer
+        self.__referer     = parse_url(referer).url if referer else None
 
         # Call the parent constructor.
         super(Url, self).__init__(url)
@@ -367,7 +367,7 @@ class BaseUrl(_AbstractUrl):
         """
 
         # Parse, verify and canonicalize the URL.
-        parsed = ParsedURL(url)
+        parsed = parse_url(url)
         if not parsed.host or not parsed.scheme:
             raise ValueError("Only absolute URLs must be used! Got: %r" % url)
 
@@ -449,7 +449,7 @@ class FolderUrl(_AbstractUrl):
         """
 
         # Parse, verify and canonicalize the URL.
-        parsed = ParsedURL(url)
+        parsed = parse_url(url)
         if not parsed.host or not parsed.scheme:
             raise ValueError("Only absolute URLs must be used! Got: %r" % url)
         if not parsed.path.endswith("/"):
@@ -474,7 +474,7 @@ class FolderUrl(_AbstractUrl):
         assert isinstance(url, basestring)
 
         # Parse, verify and canonicalize the URL.
-        parsed = ParsedURL(url)
+        parsed = parse_url(url)
         if not parsed.host or not parsed.scheme:
             raise ValueError("Only absolute URLs must be used! Got: %r" % url)
 

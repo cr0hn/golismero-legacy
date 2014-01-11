@@ -34,6 +34,7 @@ __all__ = ["Banner"]
 
 from . import Fingerprint
 from .. import identity
+from ..resource.domain import Domain
 from ..resource.ip import IP
 from ...text.text_utils import to_utf8
 
@@ -51,10 +52,10 @@ class Banner(Fingerprint):
 
 
     #----------------------------------------------------------------------
-    def __init__(self, ip, banner, port):
+    def __init__(self, host, banner, port):
         """
-        :param ip: IP address where the banner was found.
-        :type ip: IP
+        :param host: IP address or domain name where the banner was found.
+        :type host: IP | Domain
 
         :param banner: Banner of the service.
         :type banner: str
@@ -64,13 +65,18 @@ class Banner(Fingerprint):
         """
 
         # Sanitize the properties.
-        if not isinstance(ip, IP):
-            ip = to_utf8(ip)
-            if isinstance(ip, basestring):
-                warn("Expected IP, got string instead", RuntimeWarning)
-                ip = IP(ip)
+        if not isinstance(host, IP) and not isinstance(host, Domain):
+            host = to_utf8(host)
+            if isinstance(host, basestring):
+                warn("Expected IP or Domain, got string instead",
+                     RuntimeWarning)
+                try:
+                    host = IP(host)
+                except Exception:
+                    host = Domain(host)
             else:
-                raise TypeError("Expected IP, got %r instead" % type(ip))
+                raise TypeError(
+                    "Expected IP or Domain, got %r instead" % type(host))
         banner = to_utf8(banner)
         if type(banner) is not str:
             raise TypeError("Expected str, got %r instead" % type(banner))
@@ -85,8 +91,8 @@ class Banner(Fingerprint):
         # Parent constructor.
         super(Banner, self).__init__()
 
-        # Link the banner to the IP address.
-        ip.add_information(self)
+        # Link the banner to the host.
+        host.add_information(self)
 
 
     #----------------------------------------------------------------------
@@ -120,3 +126,27 @@ class Banner(Fingerprint):
             for ip in self.get_associated_resources_by_category(
                           IP.resource_type)
         }
+
+
+    #----------------------------------------------------------------------
+    def get_domains(self):
+        """
+        :returns: Set of domains where this banner was found.
+        :rtype: set(str)
+        """
+        return {
+            domain.name
+            for domain in self.get_associated_resources_by_category(
+                          Domain.resource_type)
+        }
+
+
+    #----------------------------------------------------------------------
+    def get_hosts(self):
+        """
+        :returns: Set of IP addresses and domains where this banner was found.
+        :rtype: set(str)
+        """
+        s = self.get_ip_addresses()
+        s.update(self.get_domains())
+        return s
