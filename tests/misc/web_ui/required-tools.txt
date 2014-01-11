@@ -1,3 +1,0 @@
-# This file specifies additional software required to be installed in machine that runs GoLismero.
-nmap
-sslscan
