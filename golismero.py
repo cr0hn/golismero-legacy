@@ -817,8 +817,15 @@ def command_update(parser, P, cmdParams, auditParams):
         run_external_tool("git", ["pull"], cwd = here,
             callback = Logger.log if cmdParams.verbose else lambda x: x)
 
+        # Update the TLD names.
+        if cmdParams.verbose:
+            Logger.log("Updating list of TLD names...")
+        import tldextract
+        tldextract.TLDExtract().update(True)
+
         # Done!
-        Logger.log("Update complete.")
+        if cmdParams.verbose:
+            Logger.log("Update complete.")
         exit(0)
 
 
