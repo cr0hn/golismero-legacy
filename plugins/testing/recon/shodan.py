@@ -204,6 +204,7 @@ class ShodanPlugin(TestingPlugin):
 
         # Process the latest results.
         seen_isp_or_org = set()
+        seen_html = set()
         for _, data in latest.values():
 
             # Extract all domains, but don't link them.
@@ -238,15 +239,18 @@ class ShodanPlugin(TestingPlugin):
             # Get the HTML content, if available.
             raw_html = to_utf8( data.get("html") )
             if raw_html:
-                try:
-                    html = HTML(raw_html)
-                except Exception:
-                    html = None
-                    tb = traceback.format_exc()
-                    Logger.log_error_more_verbose(tb)
-                if html:
-                    html.add_resource(info)
-                    results.append(html)
+                hash_raw_html = hash(raw_html)
+                if hash_raw_html not in seen_html:
+                    seen_html.add(hash_raw_html)
+                    try:
+                        html = HTML(raw_html)
+                    except Exception:
+                        html = None
+                        tb = traceback.format_exc()
+                        Logger.log_error_more_verbose(tb)
+                    if html:
+                        html.add_resource(info)
+                        results.append(html)
 
             # Get the banner, if available.
             raw_banner = to_utf8( data.get("banner") )
