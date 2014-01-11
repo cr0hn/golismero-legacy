@@ -86,6 +86,7 @@ class OpenVASProgress(object):
 #------------------------------------------------------------------------------
 class OpenVASPlugin(TestingPlugin):
 
+
     #--------------------------------------------------------------------------
     def check_params(self):
 
@@ -117,14 +118,16 @@ class OpenVASPlugin(TestingPlugin):
             VulnscanManager(m_host, m_user, m_password, m_port, m_timeout)
         except VulnscanVersionError:
             raise RuntimeError(
-                "Remote host is running an unsupported version of OpenVAS. Only OpenVAS 6 is currently supported.")
-
+                "Remote host is running an unsupported version of OpenVAS."
+                " Only OpenVAS 6 is currently supported.")
         except VulnscanException, e:
             raise RuntimeError(str(e))
+
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [IP]
+
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
@@ -165,7 +168,8 @@ class OpenVASPlugin(TestingPlugin):
 
             except VulnscanVersionError:
                 Logger.log_error(
-                    "Remote host is running an unsupported version of OpenVAS. Only OpenVAS 6 is currently supported.")
+                    "Remote host is running an unsupported version of OpenVAS."
+                    " Only OpenVAS 6 is currently supported.")
 
                 # Set the openvas connection as down and remember it.
                 self.state.put("connection_down", True)
@@ -222,8 +226,10 @@ class OpenVASPlugin(TestingPlugin):
                             break
                         except Exception, e:
                             sleep(0.1)
-                            Logger.log_error_more_verbose("Error while stopping scan ID: %s. Attempt %s. Error: %s" %
-                                                          (str(m_scan_id), str(i)), e.message)
+                            Logger.log_error_more_verbose(
+                                "Error while stopping scan ID: %s. "
+                                "Attempt %s. Error: %s" %
+                                (str(m_scan_id), str(i)), e.message)
                             continue
 
                     # Delete the scan
@@ -237,8 +243,10 @@ class OpenVASPlugin(TestingPlugin):
                             break
                         except Exception, e:
                             sleep(0.1)
-                            Logger.log_error_more_verbose("Error while deleting scan ID: %s. Attempt %s. Error: %s" %
-                                                          (str(m_scan_id), str(i)), e.message)
+                            Logger.log_error_more_verbose(
+                                "Error while deleting scan ID: %s. "
+                                "Attempt %s. Error: %s" %
+                                (str(m_scan_id), str(i)), e.message)
                             continue
 
                 if m_target_id:
@@ -253,12 +261,15 @@ class OpenVASPlugin(TestingPlugin):
                             break
                         except Exception, e:
                             sleep(0.1)
-                            Logger.log_error_more_verbose("Error while deleting target ID: %s. Attempt %s. Error: %s" %
-                                                          (str(m_target_id), str(i)), e.message)
+                            Logger.log_error_more_verbose(
+                                "Error while deleting target ID: %s. "
+                                "Attempt %s. Error: %s" %
+                                (str(m_target_id), str(i)), e.message)
                             continue
 
         # Convert the scan results to the GoLismero data model.
         return self.parse_results(m_openvas_results, info)
+
 
     #--------------------------------------------------------------------------
     @staticmethod
@@ -429,7 +440,8 @@ class OpenVASPlugin(TestingPlugin):
                         l_plugin_id = oid_spt[-1]
                         kwargs["tool_id"] = l_plugin_id
                         try:
-                            l_family = Plugin.objects.get(plugin_id = l_plugin_id).family_id
+                            l_family = Plugin.objects.get(
+                                plugin_id = l_plugin_id).family_id
                             l_family = l_family.strip()
 
                             if l_plugin_id in CATEGORIES:
@@ -438,16 +450,11 @@ class OpenVASPlugin(TestingPlugin):
                             elif l_family in CATEGORIES:
                                 clazz = globals()[CATEGORIES[l_family]]
                         except Exception, e:
-                            # FIXME: When message system works well, display logger.
-                            #
-                            # No family found
-                            pass
-
-                            #tb = format_exc()
-                            #Logger.log_error_verbose(
-                                #"Failed to find category %r, reason: %s" %
-                                #(l_plugin_id, str(e)))
-                            #Logger.log_error_more_verbose(tb)
+                            tb = format_exc()
+                            Logger.log_error_verbose(
+                                "Failed to find category %r, reason: %s" %
+                                (l_plugin_id, str(e)))
+                            Logger.log_error_more_verbose(tb)
 
                 # Create the vulnerability instance.
                 vuln = clazz(**kwargs)
@@ -474,6 +481,7 @@ class OpenVASPlugin(TestingPlugin):
 #------------------------------------------------------------------------------
 class OpenVASImportPlugin(ImportPlugin):
 
+
     #--------------------------------------------------------------------------
     def is_supported(self, input_file):
         if input_file and input_file.lower().endswith(".xml"):
@@ -485,6 +493,7 @@ class OpenVASImportPlugin(ImportPlugin):
                     warn("OpenVAS plugin not initialized, please run setup.py")
                 return True
         return False
+
 
     #--------------------------------------------------------------------------
     def import_results(self, input_file):
