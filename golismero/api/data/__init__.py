@@ -861,6 +861,7 @@ class Data(object):
             if name not in (
                 "identity", "plugin_id", "depth", "links",
                 "data_type", "data_subtype", "display_name",
+                "information_category",
             ):
 
                 # Ignore most of the properties defined in Data.

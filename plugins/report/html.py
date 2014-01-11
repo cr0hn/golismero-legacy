@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from golismero.api.data.information import Information
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -29,15 +28,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["HTMLReport"]
 
+from golismero import __version__ as VERSION
 from golismero.api.config import Config
-from golismero.api.data.vulnerability import Vulnerability
+from golismero.api.data.information import Information
 from golismero.api.data.vulnerability.vuln_utils import TAXONOMY_NAMES
+from golismero.api.external import tempfile
 from golismero.api.logger import Logger
 from golismero.api.plugin import import_plugin, get_plugin_name
 
-json = import_plugin("json.py")
+from zipfile import ZipFile, ZIP_DEFLATED
 
-from os.path import splitext
+import os
+import os.path
+
+json = import_plugin("json.py")
 
 
 #------------------------------------------------------------------------------
@@ -46,16 +50,18 @@ class HTMLReport(json.JSONOutput):
     Writes reports as offline web pages.
     """
 
+    EXTENSION = ".zip"
+
 
     #--------------------------------------------------------------------------
-    def is_supported(self, output_file):
-        if not output_file:
-            return False
-        output_file = output_file.lower()
-        return (
-            output_file.endswith(".html") or
-            output_file.endswith(".htm")
-        )
+    # def is_supported(self, output_file):
+    #     if not output_file:
+    #         return False
+    #     output_file = output_file.lower()
+    #     return (
+    #         output_file.endswith(".html") or
+    #         output_file.endswith(".htm")
+    #     )
 
 
     #--------------------------------------------------------------------------
@@ -92,8 +98,8 @@ class HTMLReport(json.JSONOutput):
         # Remove a bunch of data that won't be shown in the report anyway.
         for identity, data in report_data["informations"].items():
             if data["information_category"] not in (
-                Information.INFORMATION_CATEGORY_ASSET,
-                Information.INFORMATION_CATEGORY_FINGERPRINT,
+                Information.CATEGORY_ASSET,
+                Information.CATEGORY_FINGERPRINT,
             ):
                 del report_data["informations"][identity]
 
@@ -138,16 +144,28 @@ class HTMLReport(json.JSONOutput):
         # change the HTML code every time we add a new taxonomy property.
         report_data["supported_taxonomies"] = TAXONOMY_NAMES
 
-        # Save the report data to disk in JSON format.
-        output_json = splitext(output_file)[0] + "_data.json"
-        self.serialize_report(output_json, report_data)
-
-        Logger.log_more_verbose("Generating HTML content...")
-
-        # Save the report HTML skeleton.
-        # TODO
-
-        Logger.log_more_verbose("Compressing HTML content...")
-
-        # Bundle everything into a single file.
-        # TODO
+        # Save the report data to disk.
+        Logger.log_more_verbose("Writing report to disk...")
+        inner_dir = os.path.splitext(os.path.basename(output_file))[0]
+        with tempfile(suffix=".json") as output_json:
+            self.serialize_report(output_json, report_data)
+            with ZipFile(output_file, mode="w", compression=ZIP_DEFLATED,
+                         allowZip64=True) as zip:
+                zip.comment = "Report generated with GoLismero %s at %s UTC\n"\
+                            % (VERSION, report_data["summary"]["report_time"])
+                html_report = os.path.dirname(__file__)
+                html_report = os.path.join(html_report, "html_report")
+                html_report = os.path.abspath(html_report)
+                found = False
+                for root, directories, files in os.walk(html_report):
+                    for basename in files:
+                        filename = os.path.join(root, basename)
+                        arcname = filename[len(html_report):]
+                        arcname = os.path.join(inner_dir, arcname)
+                        if basename == "database.js":
+                            filename = output_json
+                            found = True
+                        zip.write(filename, arcname)
+                if not found:
+                    arcname = os.path.join(inner_dir, "js", "database.js")
+                    zip.write(output_json, arcname)
