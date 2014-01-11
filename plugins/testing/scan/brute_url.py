@@ -149,7 +149,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
 
         # Create the matching analyzer
         try:
-            m_store_info = MatchingAnalyzer(m_error_response, min_ratio=0.65)
+            m_store_info = MatchingAnalyzer(m_error_response.raw_data, min_ratio=0.65)
         except ValueError, e:
             Logger.log_error("There is not information for analyze when creating the matcher: '%s'" % e)
             return

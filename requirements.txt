@@ -1,3 +1,4 @@
 docutils
 pymongo
+simplejson
 python_cjson

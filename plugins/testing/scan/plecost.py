@@ -95,11 +95,9 @@ class PlecostPlugin(TestingPlugin):
         if not os.path.exists(plugin_list):
             raise IOError("Plugin list file not exits: '%s'" % plugin_list)
 
-
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [FolderUrl]
-
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
@@ -196,7 +194,6 @@ class PlecostPlugin(TestingPlugin):
 
         return results
 
-
     #----------------------------------------------------------------------
     def __find_plugins(self, url, plugins_wordlist, update_func):
         """
@@ -286,7 +283,7 @@ class PlecostPlugin(TestingPlugin):
                 # Store info
                 if plugin_installed_version is not None:
                     Logger.log("Discovered plugin: '%s (installed version: %s)' (latest version: %s)" %
-                                            (plugin_name, plugin_installed_version, plugin_last_version))
+                                (plugin_name, plugin_installed_version, plugin_last_version))
                     results.append([
                         plugin_name,
                         plugin_url,
