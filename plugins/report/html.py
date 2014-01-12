@@ -159,6 +159,8 @@ class HTMLReport(json.JSONOutput):
                 found = False
                 for root, directories, files in os.walk(html_report):
                     for basename in files:
+                        if basename == "index-orig.html":
+                            continue
                         filename = os.path.join(root, basename)
                         arcname = filename[len(html_report):]
                         arcname = os.path.join(inner_dir, arcname)
