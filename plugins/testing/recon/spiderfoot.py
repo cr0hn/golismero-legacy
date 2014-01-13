@@ -1,11 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from golismero.api.data.information.portscan import Portscan
-from golismero.api.data.resource.email import Email
-from golismero.api.data.resource.ip import IP
-from golismero.api.data.vulnerability.malware.defaced import DefacedUrl, DefacedDomain, DefacedIP
-from golismero.api.data.vulnerability.malware.malicious import MaliciousIP, MaliciousUrl, MaliciousDomain
-from golismero.api.data.vulnerability.ssl.outdated_certificate import OutdatedCertificate
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -33,7 +27,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from collections import defaultdict
-from requests import get
+from csv import reader
+from requests import get, post
+from StringIO import StringIO
+from time import sleep
 from traceback import format_exc
 from warnings import warn
 
@@ -43,13 +40,23 @@ from golismero.api.data.information.auth import Password
 from golismero.api.data.information.banner import Banner
 from golismero.api.data.information.html import HTML
 from golismero.api.data.information.http import HTTP_Request, HTTP_Response
+from golismero.api.data.information.portscan import Portscan
 from golismero.api.data.resource.domain import Domain
+from golismero.api.data.resource.email import Email
+from golismero.api.data.resource.ip import IP
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability import Vulnerability
-from golismero.api.data.vulnerability.ssl.invalid_certificate import InvalidCertificate
+from golismero.api.data.vulnerability.malware.defaced import DefacedUrl, \
+    DefacedDomain, DefacedIP
+from golismero.api.data.vulnerability.malware.malicious import MaliciousIP, \
+    MaliciousUrl, MaliciousDomain
+from golismero.api.data.vulnerability.ssl.invalid_certificate import \
+    InvalidCertificate
+from golismero.api.data.vulnerability.ssl.outdated_certificate import \
+    OutdatedCertificate
 from golismero.api.data.vulnerability.suspicious.header import SuspiciousHeader
 from golismero.api.logger import Logger
-from golismero.api.net.web_utils import parse_url
+from golismero.api.net.web_utils import parse_url, urljoin
 from golismero.api.plugin import TestingPlugin, ImportPlugin
 
 
@@ -62,14 +69,17 @@ class SpiderFootPlugin(TestingPlugin):
 
         # Check the parameters.
         try:
-            url = Config.plugin_args["url"]
-            assert url, "Missing URL"
+            raw_url = Config.plugin_args["url"]
+            assert raw_url, "Missing URL"
+            url = parse_url(raw_url)
+            assert url.scheme, "Invalid URL"
+            assert url.host, "Invalid URL"
         except Exception, e:
             raise ValueError(str(e))
 
         # Connect to the scanner.
         try:
-            get(url)
+            get(raw_url)
         except Exception, e:
             raise RuntimeError(
                 "Cannot connect to SpiderFoot, reason: %s" % e)
@@ -82,7 +92,155 @@ class SpiderFootPlugin(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
-        raise NotImplementedError()
+
+        # Get the base URL to the SpiderFoot API.
+        base_url = Config.plugin_args["url"]
+
+        # Find out if we should delete the scan when we're done.
+        must_delete = Config.audit_config.boolean(
+                            Config.plugin_args.get("delete", "y"))
+
+        # We need to catch SystemExit in order to stop and delete the scan.
+        scan_id = None
+        try:
+
+            # Create a new scan.
+            resp = post(urljoin(base_url, "startscan"), {
+                "scanname": Config.audit_name,
+                "scantarget": info.hostname,
+                "modulelist": self.get_list("modulelist", "module_"),
+                "typelist": self.get_list("typelist", "type_"),
+            })
+            if resp.status_code != 200:
+                r = resp.content
+                p = r.find("<div class=\"alert alert-error\">")
+                if p >= 0:
+                    p = r.find("<h4>", p) + 4
+                    q = r.find("</h4>", p)
+                    m = r[p:q].strip()
+                    raise RuntimeError("Could not start scan, reason: " + m)
+
+            # Wait until the scan is finished.
+            try:
+                interval = float(Config.plugin_args.get("interval", "5.0"))
+            except Exception:
+                interval = 5.0
+            url_scanlist = urljoin(base_url, "scanlist")
+            last_msg = ""
+            is_created = False
+            scan_id = None
+            while True:
+                resp = get(url_scanlist)
+                if resp.status_code != 200:
+                    status = "ERROR-FAILED"
+                    break
+                scanlist = resp.json()
+                found = False
+                for scan in scanlist:
+                    scan_id, scan_name = scan[:2]
+                    status, count = scan[-2:]
+                    if scan_name == Config.audit_name:
+                        found = True
+                        break
+                if found:
+                    is_created = True
+                    is_finished = status in ("FINISHED", "ABORTED", "ERROR-FAILED")
+                    msg = "Status: %s (%s elements%s)" % (
+                        status, count,
+                        " so far" if not is_finished else ""
+                    )
+                    if msg != last_msg:
+                        last_msg = msg
+                        Logger.log_verbose(msg)
+                    if is_finished:
+                        break
+                else:
+                    if not is_created:
+                        Logger.log_verbose("Status: CREATING")
+                    else:
+                        Logger.log_verbose("Status: DELETED")
+                        Logger.log_error(
+                            "Scan deleted from the SpiderFoot UI, aborting!")
+                        return
+                sleep(interval)
+
+            # Tell the user if the scan didn't finish correctly.
+            results = None
+            try:
+                has_partial = is_created and int(count) > 0
+            except Exception:
+                has_partial = is_created
+
+            try:
+
+                # Get the scan results.
+                if has_partial:
+                    Logger.log_error("Scan didn't finish correctly!")
+                    Logger.log("Attempting to load partial results...")
+                    parser = SpiderFootImportPlugin()
+                    url = parse_url("scaneventresultexport", base_url)
+                    url.query_params = {"id": scan_id, "type": "ALL"}
+                    resp = get(url.url)
+                    if resp.status_code != 200:
+                        Logger.log_error(
+                            "Could not get scan results, error code: %s"
+                            % resp.status_code)
+                    else:
+                        results = parser.parse_results(StringIO(resp.content))
+                        if results:
+                            if len(results) == 1:
+                                Logger.log("Loaded 1 result.")
+                            else:
+                                Logger.log("Loaded %d results." % len(results))
+                        else:
+                            Logger.log("No results loaded.")
+                else:
+                    Logger.log_error("Scan didn't finish correctly, aborting!")
+
+            finally:
+
+                # Delete the scan.
+                try:
+                    if is_created and must_delete:
+                        url = parse_url("scandelete", base_url)
+                        url.query_params = {"id": scan_id, "confirm": "1"}
+                        get(url.url)
+                        ##if resp.status_code != 200:
+                        ##    Logger.log_error_more_verbose(
+                        ##        "Could not delete scan, error code: %s"
+                        ##        % resp.status_code)
+                except Exception, e:
+                    tb = format_exc()
+                    Logger.log_error_verbose(str(e))
+                    Logger.log_error_more_verbose(tb)
+
+            # Return the results.
+            return results
+
+        # If we caught SystemExit, that means GoLismero is shutting down.
+        # Just stop and delete the scan in SpiderFoot without logging
+        # anything nor calling the GoLismero API (it won't work anymore).
+        except SystemExit:
+            if scan_id is not None:
+                try:
+                    url = parse_url("stopscan", base_url)
+                    url.query_params = {"id": scan_id}
+                    get(url.url)
+                finally:
+                    if must_delete:
+                        url = parse_url("scandelete", base_url)
+                        url.query_params = {"id": scan_id, "confirm": "1"}
+                        get(url.url)
+            raise
+
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def get_list(name, prefix):
+        return ",".join(
+            prefix + token.strip()
+            for token in Config.plugin_args.get(name, "").split(",")
+        )
 
 
 #------------------------------------------------------------------------------
@@ -93,7 +251,7 @@ class SpiderFootImportPlugin(ImportPlugin):
     def is_supported(self, input_file):
         if input_file and input_file.lower().endswith(".csv"):
             with open(input_file, "rU") as fd:
-                row = self.__parse_line(fd.readline())
+                row = reader(fd).next()
                 return row == [
                     "Updated", "Type", "Module", "Source", "Data"
                 ]
@@ -136,7 +294,7 @@ class SpiderFootImportPlugin(ImportPlugin):
 
 
     #--------------------------------------------------------------------------
-    def parse_results(self, iterable):
+    def parse_results(self, fd):
 
         # Most of the data is extracted directly from each row in the CSV file.
         # Each data type from SpiderFoot is matched to a method in this class.
@@ -155,17 +313,17 @@ class SpiderFootImportPlugin(ImportPlugin):
         self.allow_subdomains = Config.audit_config.include_subdomains
         warn_data_lost = True
 
+        # Load the parser.
+        iterable = reader(fd)
+
         # Make sure the file format is correct.
-        assert self.__parse_line(iterable.next()) == [
+        assert iterable.next() == [
             "Updated", "Type", "Module", "Source", "Data"
         ], "Unsupported file format!"
 
-        # For each line...
-        for line in iterable:
+        # For each row...
+        for row in iterable:
             try:
-
-                # Parse the line into a row.
-                row = self.__parse_line(line)
                 if not row:
                     continue
 
@@ -234,18 +392,6 @@ class SpiderFootImportPlugin(ImportPlugin):
         imported = self.results.values()
         self.results.clear()
         return imported
-
-
-    #--------------------------------------------------------------------------
-    def __parse_line(self, line):
-
-        # Unfortunately we can't use a standard CSV parser, because the CSV
-        # files generated by SpiderFoot are malformed (the control characters
-        # inside fields are not properly escaped). Our custom parser assumes
-        # there won't be any control character injection in any field but the
-        # last one, all fields are surrounded by double quotes regardless of
-        # their contents, and there's always the same number of fields.
-        return [token[1:-1] for token in line.strip().split(",", 4)]
 
 
     #--------------------------------------------------------------------------
@@ -339,12 +485,6 @@ class SpiderFootImportPlugin(ImportPlugin):
 
 
     #--------------------------------------------------------------------------
-    def sf_CO_HOSTED_SITE(self, sf_module, source, raw_data):
-        if self.allow_external:
-            return Url(raw_data, referer=source)
-
-
-    #--------------------------------------------------------------------------
     def sf_PROVIDER_JAVASCRIPT(self, sf_module, source, raw_data):
         return Url(raw_data, referer=source)
 
@@ -362,6 +502,12 @@ class SpiderFootImportPlugin(ImportPlugin):
 
     #--------------------------------------------------------------------------
     def sf_AFFILIATE_DOMAIN(self, sf_module, source, raw_data):
+        if self.allow_external:
+            return Domain(raw_data)
+
+
+    #--------------------------------------------------------------------------
+    def sf_CO_HOSTED_SITE(self, sf_module, source, raw_data):
         if self.allow_external:
             return Domain(raw_data)
 
