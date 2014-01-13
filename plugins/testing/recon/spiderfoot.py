@@ -507,6 +507,7 @@ class SpiderFootImportPlugin(ImportPlugin):
 
     #--------------------------------------------------------------------------
     def sf_INITIAL_TARGET(self, sf_module, source, raw_data):
+        # TODO: use this to reconstruct the original scope
         return Domain(raw_data)
 
 
@@ -589,6 +590,12 @@ class SpiderFootImportPlugin(ImportPlugin):
 
 
     #--------------------------------------------------------------------------
+    def sf_TCP_PORT_OPEN_BANNER(self, sf_module, source, raw_data):
+        # not clear how to match these with their port...
+        pass
+
+
+    #--------------------------------------------------------------------------
     def sf_HTTP_CODE(self, sf_module, source, raw_data):
         self.reconstruct_http_code[source] = raw_data
         if source in self.reconstruct_http_headers and \
@@ -618,8 +625,17 @@ class SpiderFootImportPlugin(ImportPlugin):
 
     #--------------------------------------------------------------------------
     def sf_RAW_DATA(self, sf_module, source, raw_data):
-        if sf_module in ("sfp_spider", "sfp_xref"):
+        if sf_module in ("sfp_spider", "sfp_xref", "sfp_googleseach",
+                         "sfp_bingsearch"):
             return self.sf_TARGET_WEB_CONTENT(sf_module, source, raw_data)
+        if sf_module == "sfp_dns":
+            return self.sf_RAW_DNS_DATA(sf_module, source, raw_data)
+        if sf_module == "sfp_ripe":
+            return self.sf_RAW_RIR_DATA(sf_module, source, raw_data)
+        if sf_module == "sfp_portscan_basic":
+            return self.sf_TCP_PORT_OPEN_BANNER(sf_module, source, raw_data)
+        if sf_module == "sfp_sslcert":
+            return self.sf_SSL_CERTIFICATE_RAW(sf_module, source, raw_data)
 
 
     #--------------------------------------------------------------------------
@@ -635,6 +651,89 @@ class SpiderFootImportPlugin(ImportPlugin):
     def sf_AFFILIATE_WEB_CONTENT(self, sf_module, source, raw_data):
         if self.allow_external and sf_module == "sfp_crossref":
             return self.sf_TARGET_WEB_CONTENT(sf_module, source, raw_data)
+
+
+    #--------------------------------------------------------------------------
+    def sf_SOCIAL_MEDIA(self, sf_module, source, raw_data):
+        # not yet supported by GoLismero
+        # "raw_data" should contain the social media site name, followed by
+        # a semicolon, and then teh social media ID (where the ID is really
+        # extracted from an URL using a regular expression, so some extra
+        # sanitization may be needed). The social media site may be one of the
+        # following: "LinkedIn (Individual)", "LinkedIn (Company)", "Google+",
+        # "Facebook", "YouTube", "Twitter", "SlideShare".
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def sf_WEBSERVER_TECHNOLOGY(self, sf_module, source, raw_data):
+        # not yet supported by GoLismero
+        # "raw_data" should contain the value of the X-Powered-By header,
+        # or one of the following values: "PHP", "Java/JSP", "ASP.NET".
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def sf_URL_JAVASCRIPT_FRAMEWORK(self, sf_module, source, raw_data):
+        # not yet supported by GoLismero
+        # "raw_data" should contain one of the following values: "jQuery",
+        # "YUI", "Prototype", "ZURB Foundation", "Bootstrap", "ExtJS",
+        # "Mootools", "Dojo".
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def sf_NETBLOCK(self, sf_module, source, raw_data):
+        # not yet supported by GoLismero
+        # "raw_data" should contain an IP range
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def sf_BGP_AS(self, sf_module, source, raw_data):
+        # not yet supported by GoLismero
+        # "raw_data" should contain a BGP ASN
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def sf_RAW_RIR_DATA(self, sf_module, source, raw_data):
+        # not yet supported by GoLismero
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def sf_RAW_DNS_DATA(self, sf_module, source, raw_data):
+        # not yet supported by GoLismero
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def sf_PROVIDER_INTERNET(self, sf_module, source, raw_data):
+        # not yet supported by GoLismero
+        # "raw_data" should contain the ISP name
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def sf_SSL_CERTIFICATE_ISSUED(self, sf_module, source, raw_data):
+        # not yet supported by GoLismero
+        # "raw_data" should contain the date
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def sf_SSL_CERTIFICATE_ISSUER(self, sf_module, source, raw_data):
+        # not yet supported by GoLismero
+        # "raw_data" should contain the issuer name
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def sf_SSL_CERTIFICATE_RAW(self, sf_module, source, raw_data):
+        # not yet supported by GoLismero
+        # "raw_data" should contain the certificate itself
+        pass
 
 
     #--------------------------------------------------------------------------
@@ -655,6 +754,8 @@ class SpiderFootImportPlugin(ImportPlugin):
             tool_id = sf_module,
         )
         return domain, vulnerability
+
+    # TODO: not sure what's the difference with SSL_CERTIFICATE_EXPIRING yet
 
 
     #--------------------------------------------------------------------------
@@ -751,6 +852,12 @@ class SpiderFootImportPlugin(ImportPlugin):
                 tool_id = sf_module,
             )
             return url, vulnerability
+
+
+    #--------------------------------------------------------------------------
+    def sf_MALICIOUS_ASN(self, sf_module, source, raw_data):
+        # not yet supported by GoLismero
+        pass
 
 
     #--------------------------------------------------------------------------
