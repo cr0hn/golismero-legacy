@@ -912,7 +912,7 @@ class AuditSQLiteDB (BaseAuditDB):
     """
 
     # The current schema version.
-    SCHEMA_VERSION = 1
+    SCHEMA_VERSION = 2
 
 
     #--------------------------------------------------------------------------
@@ -2193,7 +2193,7 @@ class AuditMongoDB(BaseAuditDB):
     """
 
     # The current schema version.
-    SCHEMA_VERSION = 1
+    SCHEMA_VERSION = AuditSQLiteDB.SCHEMA_VERSION
 
 
     #--------------------------------------------------------------------------
