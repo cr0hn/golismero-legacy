@@ -77,9 +77,25 @@ class SpiderFootPlugin(TestingPlugin):
         except Exception, e:
             raise ValueError(str(e))
 
-        # Connect to the scanner.
+        # Connect to the scanner and check the version number.
         try:
-            get(raw_url)
+            resp = get(raw_url)
+            assert resp.status_code == 200, \
+                "HTTP error code %d" % resp.status_code
+            content = resp.content
+            p = content.find("<div id=\"aboutmodal\"")
+            assert p >= 0, "Cannot determine SpiderFoot version."
+            p = content.find("<p>You are running version <b>", p)
+            assert p >= 0, "Cannot determine SpiderFoot version."
+            p += len("<p>You are running version <b>")
+            q = content.find("</b>", p)
+            assert q > p, "Cannot determine SpiderFoot version."
+            version = content[p:q]
+            assert map(int, version.split(".")) >= (2, 1, 1), \
+                "GoLismero requires SpiderFoot 2.1.1 or newer," \
+                " found version %s instead." % version
+        except AssertionError:
+            raise
         except Exception, e:
             raise RuntimeError(
                 "Cannot connect to SpiderFoot, reason: %s" % e)
