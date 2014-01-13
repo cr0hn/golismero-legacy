@@ -228,12 +228,12 @@ class ConsoleUIPlugin(UIPlugin):
                 (text, level, is_error) = message.message_info
                 if Console.level >= level:
                     m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
-                    m_plugin_name = colorize(m_plugin_name, 'informational')
-                    text = colorize(text, 'middle')
                     if is_error:
                         text = "[!] %s: %s" % (m_plugin_name, text)
+                        text = colorize(text, 'critical')
                         Console.display_error(text)
                     else:
+                        m_plugin_name = colorize(m_plugin_name, 'informational')
                         text = "[*] %s: %s" % (m_plugin_name, text)
                         Console.display(text)
 
@@ -243,7 +243,7 @@ class ConsoleUIPlugin(UIPlugin):
             if message.message_code == MessageCode.MSG_CONTROL_ERROR:
                 (description, traceback) = message.message_info
                 m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
-                text      = "[!] Plugin '%s' error: %s " % (m_plugin_name, str(description))
+                text      = "[!] %s: Error: %s " % (m_plugin_name, str(description))
                 text      = colorize(text, 'critical')
                 traceback = colorize(traceback, 'critical')
                 Console.display_error(text)
@@ -256,7 +256,7 @@ class ConsoleUIPlugin(UIPlugin):
                     if Console.level >= Console.MORE_VERBOSE:
                         formatted = warnings.formatwarning(w.message, w.category, w.filename, w.lineno, w.line)
                         m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
-                        text = "[!] Plugin '%s' warning: %s " % (m_plugin_name, str(formatted))
+                        text = "[!] %s: Warning: %s " % (m_plugin_name, str(formatted))
                         text = colorize(text, 'low')
                         Console.display_error(text)
 
