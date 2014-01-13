@@ -144,30 +144,50 @@ class HTMLReport(json.JSONOutput):
         # change the HTML code every time we add a new taxonomy property.
         report_data["supported_taxonomies"] = TAXONOMY_NAMES
 
+        # Generate the ZIP file comment.
+        comment = "Report generated with GoLismero %s at %s UTC\n"\
+                  % (VERSION, report_data["summary"]["report_time"])
+
+        # Serialize the data and cleanup the unserialized version.
+        serialized_data = json.dumps(report_data)
+        del report_data
+
         # Save the report data to disk.
         Logger.log_more_verbose("Writing report to disk...")
         inner_dir = os.path.splitext(os.path.basename(output_file))[0]
-        with tempfile(suffix=".json") as output_json:
-            self.serialize_report(output_json, report_data)
-            with ZipFile(output_file, mode="w", compression=ZIP_DEFLATED,
-                         allowZip64=True) as zip:
-                zip.comment = "Report generated with GoLismero %s at %s UTC\n"\
-                            % (VERSION, report_data["summary"]["report_time"])
-                html_report = os.path.dirname(__file__)
-                html_report = os.path.join(html_report, "html_report")
-                html_report = os.path.abspath(html_report)
-                found = False
-                for root, directories, files in os.walk(html_report):
-                    for basename in files:
-                        if basename == "index-orig.html":
-                            continue
-                        filename = os.path.join(root, basename)
-                        arcname = filename[len(html_report):]
-                        arcname = os.path.join(inner_dir, arcname)
-                        if basename == "database.js":
-                            filename = output_json
-                            found = True
-                        zip.write(filename, arcname)
-                if not found:
-                    arcname = os.path.join(inner_dir, "js", "database.js")
-                    zip.write(output_json, arcname)
+        with ZipFile(output_file, mode="w", compression=ZIP_DEFLATED,
+                     allowZip64=True) as zip:
+
+            # Save the ZIP file comment.
+            zip.comment = comment
+
+            # Get the directory where we can find our template.
+            html_report = os.path.dirname(__file__)
+            html_report = os.path.join(html_report, "html_report")
+            html_report = os.path.abspath(html_report)
+
+            # Save the JSON data.
+            arcname = os.path.join(inner_dir, "js", "database.js")
+            filename = os.path.join(html_report, "js", "database.js")
+            with open(filename, "rU") as fd:
+                template_json = fd.read()
+                if "%DATA%" in template_json:
+                    serialized_data = template_json.replace(
+                        "%DATA%", serialized_data)
+                else:
+                    serialized_data = "data = " + serialized_data
+            del template_json
+            zip.writestr(arcname, serialized_data)
+            del serialized_data
+
+            # Copy the template files.
+            for root, directories, files in os.walk(html_report):
+                for basename in files:
+                    if basename == "index-orig.html":
+                        continue
+                    filename = os.path.join(root, basename)
+                    arcname = filename[len(html_report):]
+                    arcname = os.path.join(inner_dir, arcname)
+                    if basename == "database.js":
+                        continue
+                    zip.write(filename, arcname)
