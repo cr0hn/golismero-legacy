@@ -167,17 +167,24 @@ class HTMLReport(json.JSONOutput):
             html_report = os.path.abspath(html_report)
 
             # Save the JSON data.
-            arcname = os.path.join(inner_dir, "js", "database.js")
-            filename = os.path.join(html_report, "js", "database.js")
+            arcname = os.path.join(inner_dir, "index.html")
+            filename = os.path.join(html_report, "index.html")
+            found = False
             with open(filename, "rU") as fd:
-                template_json = fd.read()
-                if "%DATA%" in template_json:
-                    serialized_data = template_json.replace(
+                template = fd.read()
+                if "%DATA%" in template:
+                    serialized_data = template.replace(
                         "%DATA%", serialized_data)
-                else:
-                    serialized_data = "data = " + serialized_data
-            del template_json
-            zip.writestr(arcname, serialized_data)
+                    found = True
+            if found:
+                del template
+                zip.writestr(arcname, serialized_data)
+            else:
+                zip.writestr(arcname, template)
+                del template
+                arcname = os.path.join(inner_dir, "js", "database.js")
+                serialized_data = "data = " + serialized_data
+                zip.writestr(arcname, serialized_data)
             del serialized_data
 
             # Copy the template files.
@@ -188,6 +195,8 @@ class HTMLReport(json.JSONOutput):
                     filename = os.path.join(root, basename)
                     arcname = filename[len(html_report):]
                     arcname = os.path.join(inner_dir, arcname)
+                    if basename == "index.html" and found:
+                        continue
                     if basename == "database.js":
                         continue
                     zip.write(filename, arcname)
