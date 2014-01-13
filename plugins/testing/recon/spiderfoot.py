@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from golismero.api.data.information.portscan import Portscan
+from golismero.api.data.resource.email import Email
+from golismero.api.data.resource.ip import IP
+from golismero.api.data.vulnerability.malware.defaced import DefacedUrl, DefacedDomain, DefacedIP
+from golismero.api.data.vulnerability.malware.malicious import MaliciousIP, MaliciousUrl, MaliciousDomain
+from golismero.api.data.vulnerability.ssl.outdated_certificate import OutdatedCertificate
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -33,11 +39,12 @@ from warnings import warn
 
 from golismero.api.config import Config
 from golismero.api.data import Database
+from golismero.api.data.information.auth import Password
 from golismero.api.data.information.banner import Banner
 from golismero.api.data.information.html import HTML
 from golismero.api.data.information.http import HTTP_Request, HTTP_Response
 from golismero.api.data.resource.domain import Domain
-from golismero.api.data.resource.url import BaseUrl, Url
+from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability import Vulnerability
 from golismero.api.data.vulnerability.ssl.invalid_certificate import InvalidCertificate
 from golismero.api.data.vulnerability.suspicious.header import SuspiciousHeader
@@ -70,7 +77,7 @@ class SpiderFootPlugin(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [BaseUrl]
+        return [Domain]
 
 
     #--------------------------------------------------------------------------
@@ -137,12 +144,15 @@ class SpiderFootImportPlugin(ImportPlugin):
         # whole file, since a single row may not have enough information.
 
         # Variables.
-        results = {}
+        self.results = {}
         self.reconstruct_http_code = {}
         self.reconstruct_http_headers = {}
         self.reconstruct_http_data = {}
         self.reconstructed_http = {}
-        self.__strange_headers = defaultdict(set)
+        self.strange_headers = defaultdict(set)
+        self.port_scan = defaultdict(set)
+        self.allow_external = Config.audit_scope.has_scope
+        self.allow_subdomains = Config.audit_config.include_subdomains
         warn_data_lost = True
 
         # Make sure the file format is correct.
@@ -167,7 +177,7 @@ class SpiderFootImportPlugin(ImportPlugin):
                 partial_results = method(sf_module, source, raw_data)
 
                 # If we have new data, add it to the results.
-                self.__add_partial_results(results, partial_results)
+                self.__add_partial_results(partial_results)
 
             # On error, log the exception and move to the next row.
             except Exception, e:
@@ -176,19 +186,24 @@ class SpiderFootImportPlugin(ImportPlugin):
                 Logger.log_error_more_verbose(tb)
 
         # Reconstruct the suspicious header vulnerabilities.
-        for url, headers in self.__strange_headers.iteritems():
-            if url in self.reconstructed_http:
-                identity = self.reconstructed_http[url]
-                resp = results[identity]
-                for name, value in headers:
-                    vulnerability = SuspiciousHeader(resp, name, value)
-                    results[vulnerability.identity] = vulnerability
-            elif warn_data_lost:
-                warn("Missing information in SpiderFoot results,"
-                     " some data may be lost", RuntimeError)
-                warn_data_lost = False
+        for url, headers in self.strange_headers.iteritems():
+            try:
+                if url in self.reconstructed_http:
+                    identity = self.reconstructed_http[url]
+                    resp = self.results[identity]
+                    for name, value in headers:
+                        vulnerability = SuspiciousHeader(resp, name, value)
+                        self.__add_partial_results((vulnerability,))
+                elif warn_data_lost:
+                    warn("Missing information in SpiderFoot results,"
+                         " some data may be lost", RuntimeError)
+                    warn_data_lost = False
+            except Exception, e:
+                tb = format_exc()
+                Logger.log_error_verbose(str(e))
+                Logger.log_error_more_verbose(tb)
             headers.clear()
-        self.__strange_headers.clear()
+        self.strange_headers.clear()
 
         # Check if we have incomplete HTTP information.
         if warn_data_lost and (
@@ -204,8 +219,21 @@ class SpiderFootImportPlugin(ImportPlugin):
         self.reconstruct_http_data.clear()
         self.reconstructed_http.clear()
 
+        # Reconstruct the port scans.
+        for address, ports in self.port_scan:
+            try:
+                ip = IP(address)
+                ps = Portscan(ip, (("OPEN", "TCP", port) for port in ports))
+                self.__add_partial_results((ip, ps))
+            except Exception, e:
+                tb = format_exc()
+                Logger.log_error_verbose(str(e))
+                Logger.log_error_more_verbose(tb)
+
         # Return the imported results.
-        return results.values()
+        imported = self.results.values()
+        self.results.clear()
+        return imported
 
 
     #--------------------------------------------------------------------------
@@ -221,7 +249,7 @@ class SpiderFootImportPlugin(ImportPlugin):
 
 
     #--------------------------------------------------------------------------
-    def __add_partial_results(self, results, partial_results):
+    def __add_partial_results(self, partial_results):
         if partial_results:
             try:
                 iterator = iter(partial_results)
@@ -229,10 +257,10 @@ class SpiderFootImportPlugin(ImportPlugin):
                 iterator = [partial_results]
             for data in iterator:
                 identity = data.identity
-                if identity in results:
-                    results[identity].merge(data)
+                if identity in self.results:
+                    self.results[identity].merge(data)
                 else:
-                    results[identity] = data
+                    self.results[identity] = data
 
 
     #--------------------------------------------------------------------------
@@ -267,16 +295,91 @@ class SpiderFootImportPlugin(ImportPlugin):
 
 
     #--------------------------------------------------------------------------
+    def sf_URL_FORM(self, sf_module, source, raw_data):
+        return Url(raw_data, referer=source, method="POST")
+
+
+    #--------------------------------------------------------------------------
+    def sf_URL_UPLOAD(self, sf_module, source, raw_data):
+        return Url(raw_data, referer=source, method="POST")
+
+
+    #--------------------------------------------------------------------------
+    def sf_URL_PASSWORD(self, sf_module, source, raw_data):
+        url = Url(source)
+        password = Password(raw_data)
+        url.add_information(password)
+        return url, password
+
+
+    #--------------------------------------------------------------------------
+    def sf_URL_JAVASCRIPT(self, sf_module, source, raw_data):
+        return Url(raw_data, referer=source)
+
+
+    #--------------------------------------------------------------------------
+    def sf_URL_JAVA_APPLET(self, sf_module, source, raw_data):
+        return Url(raw_data, referer=source)
+
+
+    #--------------------------------------------------------------------------
+    def sf_URL_FLASH(self, sf_module, source, raw_data):
+        return Url(raw_data, referer=source)
+
+
+    #--------------------------------------------------------------------------
     def sf_LINKED_URL_INTERNAL(self, sf_module, source, raw_data):
         return Url(raw_data, referer=source)
 
 
     #--------------------------------------------------------------------------
     def sf_LINKED_URL_EXTERNAL(self, sf_module, source, raw_data):
-        ##return Url(raw_data, referer=source)
-        pass  # ignoring, we can't know for sure if they're in scope,
-              # and it may cause problems when starting a new audit
-              # purely from imported files
+        if self.allow_external:
+            return Url(raw_data, referer=source)
+
+
+    #--------------------------------------------------------------------------
+    def sf_CO_HOSTED_SITE(self, sf_module, source, raw_data):
+        if self.allow_external:
+            return Url(raw_data, referer=source)
+
+
+    #--------------------------------------------------------------------------
+    def sf_PROVIDER_JAVASCRIPT(self, sf_module, source, raw_data):
+        return Url(raw_data, referer=source)
+
+
+    #--------------------------------------------------------------------------
+    def sf_INITIAL_TARGET(self, sf_module, source, raw_data):
+        return Domain(raw_data)
+
+
+    #--------------------------------------------------------------------------
+    def sf_SUBDOMAIN(self, sf_module, source, raw_data):
+        if self.allow_subdomains:
+            return Domain(raw_data)
+
+
+    #--------------------------------------------------------------------------
+    def sf_AFFILIATE_DOMAIN(self, sf_module, source, raw_data):
+        if self.allow_external:
+            return Domain(raw_data)
+
+
+    #--------------------------------------------------------------------------
+    def sf_PROVIDER_DNS(self, sf_module, source, raw_data):
+        try:
+            return IP(raw_data)
+        except ValueError:
+            return Domain(raw_data)
+
+
+    #--------------------------------------------------------------------------
+    def sf_PROVIDER_MAIL(self, sf_module, source, raw_data):
+        try:
+            return IP(raw_data)
+        except ValueError:
+            return Domain(raw_data)
 
 
     #--------------------------------------------------------------------------
@@ -286,11 +389,41 @@ class SpiderFootImportPlugin(ImportPlugin):
 
 
     #--------------------------------------------------------------------------
+    def sf_IP_ADDRESS(self, sf_module, source, raw_data):
+        return IP(raw_data)
+
+
+    #--------------------------------------------------------------------------
+    def sf_AFFILIATE_IPADDR(self, sf_module, source, raw_data):
+        if self.allow_external:
+            return IP(raw_data)
+
+
+    #--------------------------------------------------------------------------
+    def sf_GEOINFO(self, sf_module, source, raw_data):
+        # ignore, information is too primitive to be of any use
+        pass
+
+
+    #--------------------------------------------------------------------------
+    def sf_EMAILADDR(self, sf_module, source, raw_data):
+        return Email(raw_data)
+
+
+    #--------------------------------------------------------------------------
     def sf_WEBSERVER_BANNER(self, sf_module, source, raw_data):
         parsed = parse_url(source)
         domain = Domain(parsed.host)
         banner = Banner(domain, raw_data, parsed.port)
         return domain, banner
+
+
+    #--------------------------------------------------------------------------
+    def sf_TCP_PORT_OPEN(self, sf_module, source, raw_data):
+        ip, port = raw_data.split(":")
+        ip = ip.strip()
+        port = int(port.strip())
+        self.port_scan[ip].add(port)
 
 
     #--------------------------------------------------------------------------
@@ -322,6 +455,27 @@ class SpiderFootImportPlugin(ImportPlugin):
 
 
     #--------------------------------------------------------------------------
+    def sf_RAW_DATA(self, sf_module, source, raw_data):
+        if sf_module in ("sfp_spider", "sfp_xref"):
+            return self.sf_TARGET_WEB_CONTENT(sf_module, source, raw_data)
+
+
+    #--------------------------------------------------------------------------
+    def sf_AFFILIATE(self, sf_module, source, raw_data):
+        if self.allow_external:
+            if sf_module in ("sfp_dns", "sfp_ripe"):
+                return self.sf_PROVIDER_DNS(sf_module, source, raw_data)
+            if sf_module in ("sfp_crossref", "sfp_xref"):
+                return self.sf_LINKED_URL_INTERNAL(sf_module, source, raw_data)
+
+
+    #--------------------------------------------------------------------------
+    def sf_AFFILIATE_WEB_CONTENT(self, sf_module, source, raw_data):
+        if self.allow_external and sf_module == "sfp_crossref":
+            return self.sf_TARGET_WEB_CONTENT(sf_module, source, raw_data)
+
+
+    #--------------------------------------------------------------------------
     def sf_SSL_CERTIFICATE_MISMATCH(self, sf_module, source, raw_data):
         domain = Domain(parse_url(source).host)
         vulnerability = InvalidCertificate(  # XXX or is it InvalidCommonName?
@@ -332,8 +486,135 @@ class SpiderFootImportPlugin(ImportPlugin):
 
 
     #--------------------------------------------------------------------------
+    def sf_SSL_CERTIFICATE_EXPIRED(self, sf_module, source, raw_data):
+        domain = Domain(parse_url(source).host)
+        vulnerability = OutdatedCertificate(
+            domain = domain,
+            tool_id = sf_module,
+        )
+        return domain, vulnerability
+
+
+    #--------------------------------------------------------------------------
+    def sf_BLACKLISTED_IPADDR(self, sf_module, source, raw_data):
+        ip = IP(source)
+        vulnerability = MaliciousIP(
+            ip = ip,
+            tool_id = sf_module,
+        )
+        return ip, vulnerability
+
+
+    #--------------------------------------------------------------------------
+    def sf_BLACKLISTED_AFFILIATE_IPADDR(self, sf_module, source, raw_data):
+        if self.allow_external:
+            ip = IP(source)
+            vulnerability = MaliciousIP(
+                ip = ip,
+                tool_id = sf_module,
+            )
+            return ip, vulnerability
+
+
+    #--------------------------------------------------------------------------
+    def sf_DEFACED(self, sf_module, source, raw_data):
+        url = Url(source)
+        vulnerability = DefacedUrl(
+            url = url,
+            tool_id = sf_module,
+        )
+        return url, vulnerability
+
+
+    #--------------------------------------------------------------------------
+    def sf_DEFACED_COHOST(self, sf_module, source, raw_data):
+        if self.allow_external:
+            url = Url(source)
+            vulnerability = DefacedUrl(
+                url = url,
+                tool_id = sf_module,
+            )
+            return url, vulnerability
+
+
+    #--------------------------------------------------------------------------
+    def sf_DEFACED_AFFILIATE(self, sf_module, source, raw_data):
+        if self.allow_external:
+            domain = Domain(source)
+            vulnerability = DefacedDomain(
+                domain = domain,
+                tool_id = sf_module,
+            )
+            return domain, vulnerability
+
+
+    #--------------------------------------------------------------------------
+    def sf_DEFACED_AFFILIATE_IPADDR(self, sf_module, source, raw_data):
+        if self.allow_external:
+            ip = IP(source)
+            vulnerability = DefacedIP(
+                ip = ip,
+                tool_id = sf_module,
+            )
+            return ip, vulnerability
+
+
+    #--------------------------------------------------------------------------
+    def sf_MALICIOUS_SUBDOMAIN(self, sf_module, source, raw_data):
+        domain = Domain(source)
+        vulnerability = MaliciousDomain(
+            domain = domain,
+            tool_id = sf_module,
+        )
+        return domain, vulnerability
+
+
+    #--------------------------------------------------------------------------
+    def sf_MALICIOUS_AFFILIATE(self, sf_module, source, raw_data):
+        if self.allow_external:
+            domain = Domain(source)
+            vulnerability = MaliciousDomain(
+                domain = domain,
+                tool_id = sf_module,
+            )
+            return domain, vulnerability
+
+
+    #--------------------------------------------------------------------------
+    def sf_MALICIOUS_COHOST(self, sf_module, source, raw_data):
+        if self.allow_external:
+            url = Url(source)
+            vulnerability = MaliciousUrl(
+                url = url,
+                tool_id = sf_module,
+            )
+            return url, vulnerability
+
+
+    #--------------------------------------------------------------------------
+    def sf_MALICIOUS_IPADDR(self, sf_module, source, raw_data):
+        ip = IP(source)
+        vulnerability = MaliciousIP(
+            ip = ip,
+            tool_id = sf_module,
+        )
+        return ip, vulnerability
+
+
+    #--------------------------------------------------------------------------
+    def sf_MALICIOUS_AFFILIATE_IPADDR(self, sf_module, source, raw_data):
+        if self.allow_external:
+            ip = IP(source)
+            vulnerability = MaliciousIP(
+                ip = ip,
+                tool_id = sf_module,
+            )
+            return ip, vulnerability
+
+
+    #--------------------------------------------------------------------------
     def sf_WEBSERVER_STRANGEHEADER(self, sf_module, source, raw_data):
         name, value = raw_data.split(":")
         name = name.strip()
         value = value.strip()
-        self.__strange_headers[source].add((name, value))
+        self.strange_headers[source].add((name, value))
