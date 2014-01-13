@@ -344,6 +344,8 @@ class SpiderFootImportPlugin(ImportPlugin):
                     continue
 
                 # Split the row into its columns.
+                assert len(row) == 5, "Broken CSV file! " \
+                    "This may happen when using an old version of SpiderFoot."
                 _, sf_type, sf_module, source, raw_data = row
 
                 # Call the parser method for this data type, if any.
