@@ -60,6 +60,12 @@ class AbstractScope (object):
 
     #--------------------------------------------------------------------------
     @property
+    def has_scope(self):
+        raise NotImplementedError()
+
+
+    #--------------------------------------------------------------------------
+    @property
     def addresses(self):
         raise NotImplementedError()
 
@@ -171,6 +177,12 @@ class AuditScope (AbstractScope):
         # Add the targets from the audit config if given.
         if audit_config is not None:
             self.add_targets(audit_config)
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def has_scope(self):
+        return True
 
 
     #--------------------------------------------------------------------------
@@ -463,6 +475,10 @@ class DummyScope (AbstractScope):
 
     def __init__(self):
         pass
+
+    @property
+    def has_scope(self):
+        return False
 
     @property
     def addresses(self):
