@@ -218,8 +218,11 @@ def colorize_traceback(traceback):
         assert lines[-1] == ""
         exc_line = lines[-2]
         p = exc_line.find(":")
-        assert p > 0
-        lines[-2] = "%s: %s" % (colorize(exc_line[:p], "red"), exc_line[p+2:])
+        if p > 0:
+            lines[-2] = "%s: %s" % (
+                colorize(exc_line[:p], "red"), exc_line[p+2:])
+        else:
+            lines[-2] = colorize(exc_line, "red")
         for i in xrange(1, len(lines) - 2, 2):
             file_line = lines[i]
             assert file_line.startswith("  File \""), repr(file_line)
