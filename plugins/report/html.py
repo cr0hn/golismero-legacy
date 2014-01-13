@@ -50,18 +50,17 @@ class HTMLReport(json.JSONOutput):
     Writes reports as offline web pages.
     """
 
-    EXTENSION = ".zip"
-
 
     #--------------------------------------------------------------------------
-    # def is_supported(self, output_file):
-    #     if not output_file:
-    #         return False
-    #     output_file = output_file.lower()
-    #     return (
-    #         output_file.endswith(".html") or
-    #         output_file.endswith(".htm")
-    #     )
+    def is_supported(self, output_file):
+        if not output_file:
+            return False
+        output_file = output_file.lower()
+        return (
+            output_file.endswith(".html") or
+            output_file.endswith(".htm") or
+            output_file.endswith(".zip")
+        )
 
 
     #--------------------------------------------------------------------------
@@ -152,51 +151,47 @@ class HTMLReport(json.JSONOutput):
         serialized_data = json.dumps(report_data)
         del report_data
 
+        # Get the directory where we can find our template.
+        html_report = os.path.dirname(__file__)
+        html_report = os.path.join(html_report, "html_report")
+        html_report = os.path.abspath(html_report)
+        if not html_report.endswith(os.path.sep):
+            html_report += os.path.sep
+
         # Save the report data to disk.
         Logger.log_more_verbose("Writing report to disk...")
-        inner_dir = os.path.splitext(os.path.basename(output_file))[0]
-        with ZipFile(output_file, mode="w", compression=ZIP_DEFLATED,
-                     allowZip64=True) as zip:
 
-            # Save the ZIP file comment.
-            zip.comment = comment
+        # Save it as a zip file.
+        if output_file.endswith(".zip"):
+            with ZipFile(output_file, mode="w", compression=ZIP_DEFLATED,
+                         allowZip64=True) as zip:
 
-            # Get the directory where we can find our template.
-            html_report = os.path.dirname(__file__)
-            html_report = os.path.join(html_report, "html_report")
-            html_report = os.path.abspath(html_report)
+                # Save the zip file comment.
+                zip.comment = comment
 
-            # Save the JSON data.
-            arcname = os.path.join(inner_dir, "index.html")
-            filename = os.path.join(html_report, "index.html")
-            found = False
-            with open(filename, "rU") as fd:
-                template = fd.read()
-                if "%DATA%" in template:
-                    serialized_data = template.replace(
-                        "%DATA%", serialized_data)
-                    found = True
-            if found:
-                del template
-                zip.writestr(arcname, serialized_data)
-            else:
-                zip.writestr(arcname, template)
-                del template
-                arcname = os.path.join(inner_dir, "js", "database.js")
+                # Save the JSON data.
+                arcname = os.path.join("js", "database.js")
                 serialized_data = "data = " + serialized_data
                 zip.writestr(arcname, serialized_data)
-            del serialized_data
+                del serialized_data
 
-            # Copy the template files.
-            for root, directories, files in os.walk(html_report):
-                for basename in files:
-                    if basename == "index-orig.html":
-                        continue
-                    filename = os.path.join(root, basename)
-                    arcname = filename[len(html_report):]
-                    arcname = os.path.join(inner_dir, arcname)
-                    if basename == "index.html" and found:
-                        continue
-                    if basename == "database.js":
-                        continue
-                    zip.write(filename, arcname)
+                # Copy the template dependencies into the zip file.
+                for root, directories, files in os.walk(html_report):
+                    for basename in files:
+                        if basename in ("index.html", "database.js"):
+                            continue
+                        filename = os.path.join(root, basename)
+                        arcname = filename[len(html_report):]
+                        if arcname == "index-orig.html":
+                            arcname = "index.html"
+                        zip.write(filename, arcname)
+
+        # Save it as an HTML file with no dependencies.
+        else:
+            with open(os.path.join(html_report, "index.html"), "rb") as fd:
+                template = fd.read()
+            assert "%DATA%" in template
+            serialized_data = template.replace("%DATA%", serialized_data)
+            del template
+            with open(output_file, "wb") as fd:
+                fd.write(serialized_data)
