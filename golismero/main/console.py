@@ -30,7 +30,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-__all__ = ["Console", "colorize", "colorize_substring", "get_terminal_size"]
+__all__ = ["Console",
+           "colorize", "colorize_traceback", "colorize_substring",
+           "get_terminal_size"]
 
 from ..api.logger import Logger
 
@@ -194,6 +196,50 @@ def colorize(text, level_or_color):
 
     # Return the text.
     return text
+
+
+#------------------------------------------------------------------------------
+def colorize_traceback(traceback):
+    """
+    Colorize a Python traceback to be displayed on the console.
+
+    :param traceback: Traceback to colorize.
+    :type traceback: str
+
+    :returns: Colorized traceback.
+    :rtype: str
+    """
+    if not traceback or not traceback.startswith("Traceback (most recent call last):"):
+        return traceback
+    lines = traceback.split("\n")
+    assert lines[-1] == ""
+    exc_line = lines[-2]
+    p = exc_line.find(":")
+    assert p > 0
+    lines[-2] = "%s: %s" % (colorize(exc_line[:p], "red"), exc_line[p+2:])
+    for i in xrange(1, len(lines) - 2, 2):
+        file_line = lines[i]
+        assert file_line.startswith("  File \""), repr(file_line)
+        p = 8
+        q = file_line.find('"', p)
+        assert q > p, (p, q)
+        filename = file_line[p:q]
+        r = q + 8
+        assert file_line[q:r] == "\", line ", (q, r, file_line[q:r])
+        s = file_line.find(",", r)
+        line_num = int(file_line[r:s])
+        t = s + 5
+        assert file_line[s:t] == ", in ", (s, t, file_line[s:t])
+        function = file_line[t:]
+        filename = os.path.join(
+            os.path.dirname(filename),
+            colorize(os.path.basename(filename), "cyan"))
+        line_num = colorize(str(line_num), "cyan")
+        function = colorize(function, "cyan")
+        lines[i] = "  File \"%s\", line %s, in %s" % \
+                   (filename, line_num, function)
+        lines[i + 1] = colorize(lines[i + 1], "yellow")
+    return "\n".join(lines)
 
 
 #------------------------------------------------------------------------------
