@@ -886,7 +886,7 @@ class AuditConfig (Configuration):
         "disable_plugins": (Configuration.comma_separated_list, []),
 
         # Plugin execution timeout
-        "plugin_timeout": (Configuration.float, 300.0),
+        "plugin_timeout": (Configuration.float, 3600.0),
 
         #
         # Network options
