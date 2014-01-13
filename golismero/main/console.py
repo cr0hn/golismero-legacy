@@ -43,6 +43,7 @@ import atexit
 import os.path
 
 from colorizer import colored
+from warnings import warn
 
 
 #------------------------------------------------------------------------------
@@ -209,37 +210,42 @@ def colorize_traceback(traceback):
     :returns: Colorized traceback.
     :rtype: str
     """
-    if not traceback or not traceback.startswith("Traceback (most recent call last):"):
+    if not traceback or not traceback.startswith(
+            "Traceback (most recent call last):"):
         return traceback
-    lines = traceback.split("\n")
-    assert lines[-1] == ""
-    exc_line = lines[-2]
-    p = exc_line.find(":")
-    assert p > 0
-    lines[-2] = "%s: %s" % (colorize(exc_line[:p], "red"), exc_line[p+2:])
-    for i in xrange(1, len(lines) - 2, 2):
-        file_line = lines[i]
-        assert file_line.startswith("  File \""), repr(file_line)
-        p = 8
-        q = file_line.find('"', p)
-        assert q > p, (p, q)
-        filename = file_line[p:q]
-        r = q + 8
-        assert file_line[q:r] == "\", line ", (q, r, file_line[q:r])
-        s = file_line.find(",", r)
-        line_num = int(file_line[r:s])
-        t = s + 5
-        assert file_line[s:t] == ", in ", (s, t, file_line[s:t])
-        function = file_line[t:]
-        filename = os.path.join(
-            os.path.dirname(filename),
-            colorize(os.path.basename(filename), "cyan"))
-        line_num = colorize(str(line_num), "cyan")
-        function = colorize(function, "cyan")
-        lines[i] = "  File \"%s\", line %s, in %s" % \
-                   (filename, line_num, function)
-        lines[i + 1] = colorize(lines[i + 1], "yellow")
-    return "\n".join(lines)
+    try:
+        lines = traceback.split("\n")
+        assert lines[-1] == ""
+        exc_line = lines[-2]
+        p = exc_line.find(":")
+        assert p > 0
+        lines[-2] = "%s: %s" % (colorize(exc_line[:p], "red"), exc_line[p+2:])
+        for i in xrange(1, len(lines) - 2, 2):
+            file_line = lines[i]
+            assert file_line.startswith("  File \""), repr(file_line)
+            p = 8
+            q = file_line.find('"', p)
+            assert q > p, (p, q)
+            filename = file_line[p:q]
+            r = q + 8
+            assert file_line[q:r] == "\", line ", (q, r, file_line[q:r])
+            s = file_line.find(",", r)
+            line_num = int(file_line[r:s])
+            t = s + 5
+            assert file_line[s:t] == ", in ", (s, t, file_line[s:t])
+            function = file_line[t:]
+            filename = os.path.join(
+                os.path.dirname(filename),
+                colorize(os.path.basename(filename), "cyan"))
+            line_num = colorize(str(line_num), "cyan")
+            function = colorize(function, "cyan")
+            lines[i] = "  File \"%s\", line %s, in %s" % \
+                       (filename, line_num, function)
+            lines[i + 1] = colorize(lines[i + 1], "yellow")
+        return "\n".join(lines)
+    except Exception, e:
+        warn(str(e), RuntimeWarning)
+        return traceback
 
 
 #------------------------------------------------------------------------------
