@@ -215,7 +215,8 @@ class AuditScope (AbstractScope):
         # Validate the arguments.
         if dns_resolution not in (0, 1, 2):
             raise ValueError(
-                "Argument 'dns_resolution' can only be 0, 1 or 2, got %r instead" % dns_resolution)
+                "Argument 'dns_resolution' can only be 0, 1 or 2,"
+                " got %r instead" % dns_resolution)
 
         # Remember if subdomains are allowed.
         include_subdomains = audit_config.include_subdomains
@@ -439,8 +440,12 @@ class AuditScope (AbstractScope):
 
         # We don't know what this is, so we'll consider it out of scope.
         else:
+            ##raise ValueError(
+            ##    "Can't determine if this is out of scope or not: %r"
+            ##    % original)
             warn(
-                "Can't determine if this is out of scope or not: %r" % original,
+                "Can't determine if this is out of scope or not: %r"
+                    % original,
                 stacklevel=2
             )
             return False
