@@ -45,27 +45,62 @@ class ASN(Information):
 
     resource_type = Information.INFORMATION_ASN
 
+    AS_FIRST   = 0
+    AS_LAST_16 = 65535
+    AS_LAST_32 = 4294967295
+    AS_TRANS   = 23456
+
+    # TODO: maybe add a property for the AS type?
+
 
     #--------------------------------------------------------------------------
     def __init__(self, asn, isp = None):
         """
         :param asn: Autonomous System Number (ASN).
-        :type asn: str
+                    Both *asplain* and *asdot* notations are supported.
+        :type asn: str | int
 
         :param isp: (Optional) ISP name.
         :type isp: str
         """
 
+        # Check the data types.
         asn = to_utf8(asn)
         if not isinstance(asn, str):
-            raise TypeError("Expected str, got %r instead" % type(asn))
-
+            try:
+                asn = str(int(asn))
+            except Exception:
+                raise TypeError(
+                    "Expected str or int, got %r instead" % type(asn))
         if isp:
             isp = to_utf8(isp)
             if not isinstance(isp, str):
                 raise TypeError("Expected str, got %r instead" % type(isp))
         else:
             isp = None
+
+        # Validate the ASN.
+        try:
+            if "." in asn:
+                high, low = map(int, asn.split("."))
+                asn = "%d.%d" % (high, low)
+                assert 65535 >= high >= 0
+                assert 65535 >= low >= 0
+                assert ((high << 16) + low) != self.AS_LAST_32
+                if high == 0:
+                    assert low != self.AS_TRANS
+            else:
+                only = int(asn)
+                assert only >= 0
+                if only > 65535:
+                    asn = "%d.%d" % (only >> 16, only & 0xFFFF)
+                else:
+                    asn = "0.%d" % only
+                assert only != self.AS_TRANS
+                assert only != self.AS_FIRST
+                assert only != self.AS_LAST_16
+        except Exception:
+            raise ValueError("Invalid ASN: %r" % asn)
 
         # Save the properties.
         self.__asn = asn
@@ -97,7 +132,7 @@ class ASN(Information):
     @identity
     def asn(self):
         """
-        :return: Autonomous System Number (ASN).
+        :return: Autonomous System Number (ASN), in *asdot* notation.
         :rtype: str
         """
         return self.__asn
@@ -127,3 +162,47 @@ class ASN(Information):
         else:
             isp = None
         self.__isp = isp
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def asdot(self):
+        """
+        :return: Autonomous System Number (ASN), in *asdot* notation.
+        :rtype: str
+        """
+        return self.asn
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def asplain(self):
+        """
+        :return: Autonomous System Number (ASN), in *asplain* notation.
+        :rtype: str
+        """
+        high, low = map(int, self.asn.split("."))
+        return str((high << 16) + low)
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def is_private(self):
+        """
+        :returns: True if the ASN is private, False if it's public.
+        :rtype: bool
+        """
+        high, low = map(int, self.asn.split("."))
+        if high == 0:
+            return 64512 <= low <= 65534
+        return 4200000000 <= ((high << 16) + low) <= 4294967294
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def is_public(self):
+        """
+        :returns: True if the ASN is public, False if it's private.
+        :rtype: bool
+        """
+        return not self.is_private
