@@ -116,7 +116,7 @@ class _DNS(Singleton):
     ]
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def check_tcp_dns(self, address, dns_port=53):
         """
         Function to check if a server is listening at port 53 TCP. This
@@ -153,7 +153,7 @@ class _DNS(Singleton):
             s.close()
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def resolve(self, target, type, nameservers=None):
         """
         Function for performing general resolution types.
@@ -176,7 +176,7 @@ class _DNS(Singleton):
         return self._make_request(type, target, nameservers)
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_a(self, host, nameservers=None, also_CNAME=False):
         """
         Resolve the A records for a given host.
@@ -215,7 +215,7 @@ class _DNS(Singleton):
             return r
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_aaaa(self, host, nameservers=None, also_CNAME=False):
         """
         Resolve the A Record for a given host.
@@ -255,7 +255,7 @@ class _DNS(Singleton):
             return r
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_mx(self, host, nameservers=None):
         """
         Resolve the MX records for a given host.
@@ -272,7 +272,7 @@ class _DNS(Singleton):
         return self._make_request("MX", host, nameservers)
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_ns(self, host, nameservers=None):
         """
         Returns all NS records. Also returns the IP
@@ -290,7 +290,7 @@ class _DNS(Singleton):
         return self._make_request("NS", host, nameservers)
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_soa(self, host, nameservers=None):
         """
         Returns all SOA records. Also returns the IP
@@ -308,7 +308,7 @@ class _DNS(Singleton):
         return self._make_request("SOA", host, nameservers)
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_spf(self, host, nameservers=None):
         """
         Resolve SPF records.
@@ -325,7 +325,7 @@ class _DNS(Singleton):
         return self._make_request("SPF", host, nameservers)
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_txt(self, host, nameservers=None):
         """
         Resolve TXT records.
@@ -342,7 +342,7 @@ class _DNS(Singleton):
         return self._make_request("TXT", host, nameservers)
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_ptr(self, ipaddress, nameservers=None):
         """
         Resolve PTR records given it's IPv4 or IPv6 address.
@@ -381,7 +381,7 @@ class _DNS(Singleton):
             return []
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_srv(self, host, nameservers=None):
         """
         Function for resolving SRV Records.
@@ -398,7 +398,7 @@ class _DNS(Singleton):
         return self._make_request("SRV", host, nameservers)
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_nsec(self, host, nameservers=None):
         """
         Function for querying for a NSEC record and retriving the rdata object.
@@ -416,7 +416,7 @@ class _DNS(Singleton):
         return self._make_request("NSEC", host, nameservers)
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def zone_transfer(self, domain, nameservers = None, ns_allowed_zone_transfer=False):
         """
         Function for testing for zone transfers on a given Domain.
@@ -634,11 +634,11 @@ class _DNS(Singleton):
             return zone_records
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     #
     # Helpers
     #
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     #
     # This method has been taken directly (with some changes) from dns recon project
     #
@@ -674,7 +674,7 @@ class _DNS(Singleton):
         return z
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_ips(self, register):
         """
         Get the list of IPs associated the register as parameter.
@@ -737,7 +737,7 @@ class _DNS(Singleton):
     }
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def _dnslib2register(self, type, answer_in):
         """
         Creates a DnsRegister from a dnslib register.
@@ -778,7 +778,7 @@ class _DNS(Singleton):
         return m_return
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __dnsregister2golismeroregister(self, register_type, answer):
         """
         Transform a dnslib register into a DnsRegister.
@@ -936,7 +936,7 @@ class _DNS(Singleton):
         return m_return
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def _make_request(self, register_type, host, nameservers=None, auto_resolve=True):
         """
         Make a request using dnslib, and return a DNS register.

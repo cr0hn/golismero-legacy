@@ -1113,7 +1113,6 @@ class AuditConfig (Configuration):
             self._user_agent = None
 
 
-
     #--------------------------------------------------------------------------
 
     @property

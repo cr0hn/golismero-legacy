@@ -95,7 +95,6 @@ class AuditException(Exception):
     """Exception for audits"""
 
 
-
 #------------------------------------------------------------------------------
 class AuditManager (object):
     """

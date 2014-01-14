@@ -124,7 +124,7 @@ class SQLMapTestingPlugin(TestingPlugin):
         return results
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def make_injection(self, target, args):
         """
         Run SQLMap against the given target.

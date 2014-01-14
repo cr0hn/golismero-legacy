@@ -1988,6 +1988,6 @@ class _LocalDataCache(Singleton):
             self.__cleanup()
 
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Temporary storage for newly created objects.
 LocalDataCache = _LocalDataCache()

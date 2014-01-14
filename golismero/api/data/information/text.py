@@ -45,6 +45,6 @@ class Text(Binary):
     information_type = Binary.INFORMATION_PLAIN_TEXT
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, data, content_type = "text/plain"):
         super(Text, self).__init__(to_utf8(data), content_type)

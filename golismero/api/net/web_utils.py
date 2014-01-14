@@ -566,7 +566,7 @@ def generate_error_page_url(url):
     return m_parsed_url.url
 
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def get_error_page(url):
     """
     Takes an URL to an existing document and generates a random URL

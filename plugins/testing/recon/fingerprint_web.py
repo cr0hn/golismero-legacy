@@ -243,11 +243,11 @@ class ServerFingerprinting(TestingPlugin):
         return m_return
 
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #
 # Web server detection
 #
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def http_simple_analyzer(main_url, update_status_func, number_of_entries=4):
     """Simple method to get fingerprint server info
 
@@ -816,7 +816,7 @@ def http_analyzers(main_url, update_status_func, number_of_entries=4):
     return parse_analyzer_results(m_counters, m_banners_counter, number_of_entries)
 
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def parse_analyzer_results(analyzer, banner_counter, number_of_entries=4):
     """
     Parse analyzer results and gets the values:
@@ -901,12 +901,11 @@ def parse_analyzer_results(analyzer, banner_counter, number_of_entries=4):
     return m_server_family, m_server_version, m_server_canonical_name, m_server_complete, m_server_related, m_other_servers_prob
 
 
-
 #------------------------------------------------------------------------------
 class HTTPAnalyzer(object):
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, debug = False):
 
         self.__HTTP_fields_weight = {
@@ -987,7 +986,7 @@ class HTTPAnalyzer(object):
         self.__determinator_complete = defaultdict(lambda: defaultdict(set))
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def inc(self, test_lists, method, method_weight, types, message = ""):
         """
         Increment values associated with the fields as parameters.
@@ -1045,8 +1044,7 @@ class HTTPAnalyzer(object):
                 self.__determinator_complete[l_full_server_name][l_types].add(method)
 
 
-
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def simple_inc(self, server_name, method, method_weight, message = ""):
         """
         Increment values associated with the fields as parameters.
@@ -1085,59 +1083,59 @@ class HTTPAnalyzer(object):
             self.__results_related[l_server].update(l_server_splited[3])
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def results_score(self):
         return self.__results_score
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def results_score_complete(self):
         return self.__results_score_complete
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def results_count(self):
         return self.__results_count
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def results_count_complete(self):
         return self.__results_count_complete
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def results_determinator(self):
         return self.__determinator
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def related_webservers(self):
         return self.__results_related
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def canonical_webserver_name(self):
         return self.__results_canonical
 
 
-    #---------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def results_determinator_complete(self):
         return self.__determinator_complete
 
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #
 # Aux functions
 #
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def check_raw_response(request, response):
 
     # Returns True to continue, False to cancel.
@@ -1239,7 +1237,7 @@ def calculate_server_track(server_name):
     return (m_server_name, m_server_version, m_server_canonical_name, m_servers_related)
 
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def nindex(str_in, substr, nth):
     """
     From and string get nth ocurrence of substr
@@ -1263,7 +1261,7 @@ def nindex(str_in, substr, nth):
     return m_return
 
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def get_fingerprinting_wordlist(wordlist):
     """
     Load the wordlist of fingerprints and prepare the info in a dict.
@@ -1289,7 +1287,7 @@ def get_fingerprinting_wordlist(wordlist):
     return (m_webservers_keys, related)
 
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def extend_items(all_items, already_parsed, related, ref = None):
     """
     Recursive function to walk the tree of fingerprinting keywords.
