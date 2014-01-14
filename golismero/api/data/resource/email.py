@@ -48,7 +48,7 @@ class Email(Resource):
     resource_type = Resource.RESOURCE_EMAIL
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, address, name = None):
         """
         :param address: Email address.
@@ -67,8 +67,10 @@ class Email(Resource):
             raise TypeError("Expected string, got %r instead", type(name))
 
         # Do a very rudimentary validation of the email address.
-        # This will at least keep users from confusing the order of the arguments.
-        if "@" not in address or not address[0].isalnum() or not address[-1].isalnum():
+        # This will at least keep users from confusing the order
+        # of the arguments.
+        if "@" not in address or not address[0].isalnum() or \
+                not address[-1].isalnum():
             raise ValueError("Invalid email address: %s" % address)
 
         # Email address.
@@ -81,12 +83,12 @@ class Email(Resource):
         super(Email, self).__init__()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __str__(self):
         return self.address
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __repr__(self):
         return "<Email address=%r name=%r>" % (self.address, self.name)
 
@@ -97,14 +99,14 @@ class Email(Resource):
         return "E-Mail Address"
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def is_in_scope(self, scope = None):
         if scope is None:
             scope = Config.audit_scope
         return self.hostname in scope
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @identity
     def address(self):
         """
@@ -114,7 +116,7 @@ class Email(Resource):
         return self.__address
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def name(self):
         """
@@ -124,7 +126,7 @@ class Email(Resource):
         return self.__name
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def url(self):
         """
@@ -134,7 +136,7 @@ class Email(Resource):
         return "mailto://" + self.__address
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def username(self):
         """
@@ -144,7 +146,7 @@ class Email(Resource):
         return self.__address.split("@", 1)[0].strip().lower()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def hostname(self):
         """
@@ -154,7 +156,7 @@ class Email(Resource):
         return self.__address.split("@", 1)[1].strip().lower()
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @property
     def discovered(self):
         if self.is_in_scope():
