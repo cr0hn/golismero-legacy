@@ -88,6 +88,7 @@ class Information(Data):
     INFORMATION_TRACEROUTE             = 1306  # Traceroute results
     INFORMATION_GEOLOCATION            = 1307  # Geographic location
     INFORMATION_BANNER                 = 1308  # Service banner
+    INFORMATION_ASN                    = 1309  # ASN (ISP)
 
 
     #--------------------------------------------------------------------------

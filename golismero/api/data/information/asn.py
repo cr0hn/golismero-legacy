@@ -33,8 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["IP"]
 
 from . import Information
-from .. import identity
-from .. import Config
+from .. import identity, merge
 from ...text.text_utils import to_utf8
 
 
@@ -105,7 +104,7 @@ class ASN(Information):
 
 
     #--------------------------------------------------------------------------
-    @property
+    @merge
     def isp(self):
         """
         :return: ISP name.
@@ -128,10 +127,3 @@ class ASN(Information):
         else:
             isp = None
         self.__isp = isp
-
-
-    #--------------------------------------------------------------------------
-    def is_in_scope(self, scope = None):
-        if scope is None:
-            scope = Config.audit_scope
-        return self.address in scope
