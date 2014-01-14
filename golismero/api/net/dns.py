@@ -47,15 +47,9 @@ from netaddr.core import AddrFormatError
 
 
 #------------------------------------------------------------------------------
-#
-# DNS
-#
-#------------------------------------------------------------------------------
-#
-# Some code borrowed from the dnsrecon project:
-# https://github.com/darkoperator/dnsrecon
-#
 class _DNS(Singleton):
+    # Some code borrowed from the dnsrecon project:
+    # https://github.com/darkoperator/dnsrecon
 
     REQUEST_TIMEOUT = 2.0 # In seconds
 
@@ -644,8 +638,6 @@ class _DNS(Singleton):
     #
     # Helpers
     #
-
-
     #---------------------------------------------------------------------------
     #
     # This method has been taken directly (with some changes) from dns recon project

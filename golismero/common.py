@@ -409,13 +409,13 @@ class Configuration (object):
     #
     # Example:
     #    class MySettings(Configuration):
-    #        _settings_  = {
-    #            "verbose": (int, 0), # A complete definition.
-    #            "output_file": str,  # Omitting the default value (None is used).
-    #            "data": None,        # Omitting the parser too.
-    #        }
+    #      _settings_  = {
+    #         "verbose": (int, 0), # A complete definition.
+    #         "output_file": str,  # Omitting the default value (None is used).
+    #         "data": None,        # Omitting the parser too.
+    #      }
     #
-    _settings_  = dict()
+    _settings_ = dict()
 
     # This is a set of properties that may not be loaded from a config file.
     # They will still be loaded from objects, dictionaries, JSON, etc.
