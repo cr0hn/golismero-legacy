@@ -1,6 +1,3 @@
-[Core]
-Recursive = yes
-
 [Documentation]
 Name        = Directory listing
 Description = Searches for directory listing enabled folders.
@@ -9,3 +6,7 @@ Version     = 0.1
 Website     = https://github.com/golismero
 Copyright   = Copyright (C) 2011-2014 GoLismero Project
 License     = GNU Public License
+
+[Core]
+Dependencies = testing/recon/spider
+Recursive = yes
