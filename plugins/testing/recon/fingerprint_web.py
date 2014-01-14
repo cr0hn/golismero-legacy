@@ -1084,6 +1084,7 @@ class HTTPAnalyzer(object):
             # Stores the related servers to this web server
             self.__results_related[l_server].update(l_server_splited[3])
 
+
     #---------------------------------------------------------------------------
     @property
     def results_score(self):

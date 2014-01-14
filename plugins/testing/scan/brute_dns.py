@@ -40,6 +40,7 @@ from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist import WordListLoader, WordlistNotFound
 from golismero.api.data.vulnerability.information_disclosure.domain_disclosure import DomainDisclosure
 
+
 #-------------------------------------------------------------------------------
 class DNSBruteforcer(TestingPlugin):
 

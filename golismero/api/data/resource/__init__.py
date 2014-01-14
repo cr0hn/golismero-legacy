@@ -41,10 +41,13 @@ class Resource(Data):
     Base class for resources.
     """
 
+
     #--------------------------------------------------------------------------
     #
     # Types of Infomation results
     #
+
+
     #--------------------------------------------------------------------------
     RESOURCE_UNKNOWN       = 0    # Not a real value!
     RESOURCE_URL           = 1    # URL

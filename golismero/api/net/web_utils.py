@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 #-------------------------------------------------------------------------------
 # Web utilities API
 #-------------------------------------------------------------------------------
@@ -709,10 +710,13 @@ class ParsedURL (object):
        Unicode is currently *NOT* supported.
     """
 
+
     #--------------------------------------------------------------------------
     # TODO: for the time being we're using the buggy quote and unquote
     # implementations from urllib, but we'll have to roll our own to
     # properly support Unicode (urllib does a mess of it!).
+
+
     #--------------------------------------------------------------------------
 
 

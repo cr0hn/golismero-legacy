@@ -48,6 +48,7 @@ import warnings
 # More verbose: Verbose + errors with tracebacks, unimportant actions of plugins
 #
 
+
 #------------------------------------------------------------------------------
 class ConsoleUIPlugin(UIPlugin):
     """

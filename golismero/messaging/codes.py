@@ -38,6 +38,7 @@ __all__ = ["MessageType", "MessageCode", "MessagePriority",
 
 from ..common import Singleton
 
+
 #------------------------------------------------------------------------------
 #
 # The message protocol per type is the following:
@@ -189,6 +190,8 @@ class MessageCode(MessageConstants):
 
     #--------------------------------------------------------------------------
     # Data message codes
+
+
     #--------------------------------------------------------------------------
 
     # All data messages use the same code
@@ -198,6 +201,8 @@ class MessageCode(MessageConstants):
 
     #--------------------------------------------------------------------------
     # Control message codes
+
+
     #--------------------------------------------------------------------------
 
     # Basic signaling
@@ -223,6 +228,8 @@ class MessageCode(MessageConstants):
 
     #--------------------------------------------------------------------------
     # RPC message codes
+
+
     #--------------------------------------------------------------------------
 
     # Bulk requests
@@ -283,6 +290,8 @@ class MessageCode(MessageConstants):
 
     #--------------------------------------------------------------------------
     # Status message codes
+
+
     #--------------------------------------------------------------------------
 
     MSG_STATUS_STAGE_UPDATE        = 0

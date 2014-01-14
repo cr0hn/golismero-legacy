@@ -109,14 +109,27 @@ def test_newlines_and_tabs():
             warned = False
             fixed = []
             for line in fake:
-                if separator.match(line) and len(line) < 80:
-                    if not warned:
-                        print "+ found file with broken separators: %s" \
-                              % relative
-                        warned = True
-                    line = line.rstrip()
-                    line += "-" * (80 - len(line))
-                    line += "\n"
+                if separator.match(line):
+                    if len(line) < 80:
+                        if not warned:
+                            print "+ found file with broken separators: %s" \
+                                  % relative
+                            warned = True
+                        line = line.rstrip()
+                        line += "-" * (80 - len(line))
+                        line += "\n"
+                    if (len(fixed) < 2 or \
+                            fixed[-1] != "\n" or fixed[-2] != "\n") and \
+                                    fixed[-1][0] != "#":
+                        if not warned:
+                            print "+ found file with broken separators: %s" \
+                                  % relative
+                            warned = True
+                        if fixed[-1] != "\n":
+                            fixed.append("\n")
+                            fixed.append("\n")
+                        elif fixed[-2] != "\n":
+                            fixed.append("\n")
                 fixed.append(line)
             if warned and AUTO_FIX:
                 data = "".join(fixed)

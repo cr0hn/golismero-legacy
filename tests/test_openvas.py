@@ -58,6 +58,7 @@ profile      = "Full and fast"
 
 global sem
 
+
 #-------------------------------------------------------------------------------
 def test_launch_scan():
     print "Testing launching an OpenVAS scan..."
@@ -101,6 +102,7 @@ def test_callback():
     sem.acquire()
 
     print "Finished callback test!"
+
 
 #-------------------------------------------------------------------------------
 def callback_step(a):

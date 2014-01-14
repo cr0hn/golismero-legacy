@@ -2865,6 +2865,7 @@ class AuditMongoDB(BaseAuditDB):
         for key in keys:
             self._c_shared_map.remove({"shared_id":shared_id, "key_hash":self.get_hash(key)})
 
+
     #--------------------------------------------------------------------------
     def get_mapped_keys(self, shared_id):
         if type(shared_id) is not str:
@@ -2936,6 +2937,7 @@ class AuditMongoDB(BaseAuditDB):
             self._c_shared_heap.update({"shared_id":shared_id,"value_hash":value_hash},
                                        {"shared_id":shared_id,"value_hash":value_hash,"value":self.encode(value)},
                                        True)
+
 
     #--------------------------------------------------------------------------
     def remove_shared_values(self, shared_id, values):

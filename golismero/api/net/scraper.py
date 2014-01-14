@@ -55,6 +55,7 @@ import re
 from codecs import decode
 from chardet import detect
 
+
 #------------------------------------------------------------------------------
 # URL detection regex, by John Gruber.
 # http://daringfireball.net/2010/07/improved_regex_for_matching_urls
@@ -248,6 +249,7 @@ def extract_forms_from_html(raw_html, base_url):
         result_append((target, method, form_params))
 
     return  result
+
 
 #------------------------------------------------------------------------------
 def extract_from_html(raw_html, base_url, only_links = True):

@@ -644,6 +644,8 @@ class _DNS(Singleton):
     #
     # Helpers
     #
+
+
     #---------------------------------------------------------------------------
     #
     # This method has been taken directly (with some changes) from dns recon project

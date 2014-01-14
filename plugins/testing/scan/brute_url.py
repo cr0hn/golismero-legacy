@@ -71,9 +71,11 @@ severity_vectors = {
 #-------------------------------------------------------------------------------
 class PredictablesDisclosureBruteforcer(TestingPlugin):
 
+
     #---------------------------------------------------------------------------
     def get_accepted_info(self):
         return [FolderUrl]
+
 
     #---------------------------------------------------------------------------
     def recv_info(self, info):
@@ -176,9 +178,11 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
     Testing suffixes: index.php -> index_0.php
     """
 
+
     #---------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
+
 
     #---------------------------------------------------------------------------
     def recv_info(self, info):
@@ -232,9 +236,11 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
     Testing changing extension of files
     """
 
+
     #---------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
+
 
     #---------------------------------------------------------------------------
     def recv_info(self, info):
@@ -288,9 +294,11 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
     Testing changing extension of files
     """
 
+
     #---------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
+
 
     #---------------------------------------------------------------------------
     def recv_info(self, info):
@@ -344,9 +352,11 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
     Testing filename permutations
     """
 
+
     #---------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
+
 
     #---------------------------------------------------------------------------
     def recv_info(self, info):
@@ -399,9 +409,11 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
     Testing changing directories of files
     """
 
+
     #---------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
+
 
     #---------------------------------------------------------------------------
     def recv_info(self, info):

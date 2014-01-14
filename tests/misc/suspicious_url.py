@@ -72,6 +72,7 @@ class SuspiciousURLPlugin(TestingPlugin):
 
         Logger.log_more_verbose("Processing URL: %s" % m_parsed_url)
 
+
         #----------------------------------------------------------------------
         # Find suspicious URLs by matching against known substrings.
 
@@ -90,6 +91,7 @@ class SuspiciousURLPlugin(TestingPlugin):
         m_results.extend([SuspiciousURLPath(info, x)
                           for x in m_wordlist_extensions
                           if m_parsed_url.extension == x])
+
 
         #----------------------------------------------------------------------
         # Find suspicious URLs by calculating the Shannon entropy of the hostname.
@@ -114,6 +116,7 @@ class SuspiciousURLPlugin(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def analyze_html(self, info):
+
 
         #----------------------------------------------------------------------
         # Get malware suspicious links.

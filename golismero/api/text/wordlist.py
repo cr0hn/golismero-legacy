@@ -43,6 +43,7 @@ import copy
 from ..logger import Logger
 from ...common import Singleton, get_wordlists_folder
 
+
 #------------------------------------------------------------------------------
 class WordlistNotFound(Exception):
     "Class when wordlist not found"

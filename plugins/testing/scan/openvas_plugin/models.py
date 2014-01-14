@@ -31,9 +31,11 @@ __all__ = ["Families", "Plugin"]
 
 from standalone import models
 
+
 #------------------------------------------------------------------------------
 class Families(models.StandaloneModel):
     family_name      = models.CharField(max_length=250, primary_key=True)
+
 
 #------------------------------------------------------------------------------
 class Plugin(models.StandaloneModel):

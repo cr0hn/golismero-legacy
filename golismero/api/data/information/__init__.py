@@ -53,6 +53,8 @@ class Information(Data):
     #
     # Types of Infomation results
     #
+
+
     #--------------------------------------------------------------------------
 
     INFORMATION_UNKNOWN = 0  # Not a real value!

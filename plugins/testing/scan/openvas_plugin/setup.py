@@ -209,6 +209,7 @@ def get_nasl_files(path):
 class SharedInfo(object):
     """"""
 
+
     #---------------------------------------------------------------------------
     def __init__(self):
         """Constructor"""

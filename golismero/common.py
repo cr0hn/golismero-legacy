@@ -384,6 +384,7 @@ class Configuration (object):
     Generic configuration class.
     """
 
+
     #--------------------------------------------------------------------------
     # The logic in configuration classes is always:
     # - Checking options without fixing them is done in check_params().
@@ -391,6 +392,7 @@ class Configuration (object):
     # - For each source, there's a "from_*" method. They add to the
     #   current options rather than overwriting them completely.
     #   This allows options to be read from multiple sources.
+
 
     #--------------------------------------------------------------------------
     # Here's where subclasses define the options.
