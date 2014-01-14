@@ -28,12 +28,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
 from os import path
+import re
+from StringIO import StringIO
 
 AUTO_FIX = False
 ##AUTO_FIX = True
 
 def test_newlines_and_tabs():
     print "Testing the source code format..."
+
+    # Regexp to detect separator lines.
+    separator = re.compile(r"^ *\#\-+ *\n$")
 
     # Get the GoLismero folder.
     here = path.split(path.abspath(__file__))[0]
@@ -56,7 +61,8 @@ def test_newlines_and_tabs():
         if (path.sep + "tools" + path.sep) in root:
             continue
         for filename in files:
-            if not filename.endswith(".py") and not filename.endswith(".golismero"):
+            if not filename.endswith(".py") and \
+                    not filename.endswith(".golismero"):
                 continue
             filename = path.join(root, filename)
             filename = path.abspath(filename)
@@ -97,6 +103,25 @@ def test_newlines_and_tabs():
                     data += "\n"
                     with open(filename, "wb") as fd:
                         fd.write(data)
+
+            # If broken separators are found, warn about it.
+            fake = StringIO(data)
+            warned = False
+            fixed = []
+            for line in fake:
+                if separator.match(line) and len(line) < 80:
+                    if not warned:
+                        print "+ found file with broken separators: %s" \
+                              % relative
+                        warned = True
+                    line = line.rstrip()
+                    line += "-" * (80 - len(line))
+                    line += "\n"
+                fixed.append(line)
+            if warned and AUTO_FIX:
+                data = "".join(fixed)
+                with open(filename, "wb") as fd:
+                    fd.write(data)
 
     # Done!
     print "...done!"

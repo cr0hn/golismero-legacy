@@ -60,7 +60,7 @@ objectid = None
 Error    = None
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # RPC implementors for the database API.
 
 @implementor(MessageCode.MSG_RPC_DATA_ADD)
@@ -2387,7 +2387,7 @@ class AuditMongoDB(BaseAuditDB):
         return None,None
 
 
-    #-------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def set_audit_times(self, start_time, stop_time):
         #testdb.go.update({},{"$set":{'starttime':14}})
         self._c_golismero.update({},{"$set":{"start_time":start_time,"stop_time":stop_time}})

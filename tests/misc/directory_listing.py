@@ -35,20 +35,20 @@ from golismero.api.data.resource.url import FolderUrl, Url
 from golismero.api.plugin import TestingPlugin
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 class DirectoryListingPlugin(TestingPlugin):
     """
     This plugin detect and try to discover directory listing in folders and Urls.
     """
 
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def get_accepted_info(self):
 
         return [FolderUrl, Url]
 
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def recv_info(self, info):
 
         # XXX TO DO

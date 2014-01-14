@@ -75,7 +75,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.plugin import TestingPlugin
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 class TemplatePlugin(TestingPlugin):
 
     # Don't forget to change your class name!
@@ -83,7 +83,7 @@ class TemplatePlugin(TestingPlugin):
     # as it derives from TestingPlugin.
 
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def get_accepted_info(self):
         #
         # Here you must specify which data types
@@ -96,7 +96,7 @@ class TemplatePlugin(TestingPlugin):
         return None  # Returning None causes all data to be received.
 
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def recv_info(self, info):
         #
         #

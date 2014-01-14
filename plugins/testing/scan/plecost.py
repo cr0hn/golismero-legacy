@@ -194,7 +194,7 @@ class PlecostPlugin(TestingPlugin):
 
         return results
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def __find_plugins(self, url, plugins_wordlist, update_func):
         """
         Try to find available plugins
@@ -298,7 +298,7 @@ class PlecostPlugin(TestingPlugin):
         return results
 
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def __detect_wordpress_installation(self, url, wordpress_urls):
         """
         Try to detect a wordpress instalation in the current path.
@@ -346,7 +346,7 @@ class PlecostPlugin(TestingPlugin):
             return True
 
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def __get_wordpress_version(self, url):
         """
         This function get the current version of wordpress and the last version

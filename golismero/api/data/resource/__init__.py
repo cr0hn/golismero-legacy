@@ -57,7 +57,7 @@ class Resource(Data):
     RESOURCE_BSSID         = 8    # Wi-Fi BSSID
 
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
 
     data_type = Data.TYPE_RESOURCE
     resource_type = RESOURCE_UNKNOWN

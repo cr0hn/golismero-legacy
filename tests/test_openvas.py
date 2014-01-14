@@ -58,7 +58,7 @@ profile      = "Full and fast"
 
 global sem
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def test_launch_scan():
     print "Testing launching an OpenVAS scan..."
     sem = Semaphore(0)
@@ -102,12 +102,12 @@ def test_callback():
 
     print "Finished callback test!"
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def callback_step(a):
     print "OpenVAS status: %s" % str(a)
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def test_status():
     manager = VulnscanManager(host, user, password)
 
@@ -115,7 +115,7 @@ def test_status():
     print manager.get_progress("4aa8df2f-3b35-4c1e-8c26-74202f02dd12")
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def test_import():
     print "Testing OpenVAS importer..."
     orchestrator_config = OrchestratorConfig()
@@ -133,7 +133,7 @@ def test_import():
         assert "Remote web server does not reply with 404 error code." in v.description, v.description
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 if __name__ == "__main__":
     test_import()
     test_callback()

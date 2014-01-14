@@ -91,7 +91,7 @@ class Information(Data):
     INFORMATION_BANNER                 = 1308  # Service banner
 
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
 
     data_type = Data.TYPE_INFORMATION
     information_type = INFORMATION_UNKNOWN

@@ -55,7 +55,7 @@ __doc__ = """
 """
 
 
-#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 # Impact vectors. Available values: 0 - 4.
 severity_vectors = {
@@ -68,14 +68,14 @@ severity_vectors = {
 }
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 class PredictablesDisclosureBruteforcer(TestingPlugin):
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def get_accepted_info(self):
         return [FolderUrl]
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def recv_info(self, info):
 
         m_url = info.url
@@ -170,17 +170,17 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
         return generate_results(m_store_info.unique_texts)
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 class SuffixesDisclosureBruteforcer(TestingPlugin):
     """
     Testing suffixes: index.php -> index_0.php
     """
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def recv_info(self, info):
 
         # Parse original URL
@@ -226,17 +226,17 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
         return generate_results(m_store_info.unique_texts)
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 class PrefixesDisclosureBruteforcer(TestingPlugin):
     """
     Testing changing extension of files
     """
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def recv_info(self, info):
 
         # Parse original URL
@@ -282,17 +282,17 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
         return generate_results(m_store_info.unique_texts)
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 class FileExtensionsDisclosureBruteforcer(TestingPlugin):
     """
     Testing changing extension of files
     """
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def recv_info(self, info):
 
         # Parse original URL
@@ -338,17 +338,17 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
         return generate_results(m_store_info.unique_texts)
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 class PermutationsDisclosureBruteforcer(TestingPlugin):
     """
     Testing filename permutations
     """
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def recv_info(self, info):
 
         # Parse original URL
@@ -393,17 +393,17 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
         return generate_results(m_store_info.unique_texts)
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 class DirectoriesDisclosureBruteforcer(TestingPlugin):
     """
     Testing changing directories of files
     """
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Url]
 
-    #----------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def recv_info(self, info):
 
         # Parse original URL
@@ -449,7 +449,7 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
         return generate_results(m_store_info.unique_texts)
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def process_url(risk_level, method, matcher, updater_func, total_urls, url):
     """
     Checks if an URL exits.
@@ -510,11 +510,11 @@ def process_url(risk_level, method, matcher, updater_func, total_urls, url):
             Logger.log_more_verbose("Discovered partial url: '%s'" % url)
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #
 # Aux functions
 #
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def load_wordlists(wordlists):
     """
     Load the with names pased as parameter.
@@ -545,7 +545,7 @@ def load_wordlists(wordlists):
     return m_return
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def get_http_method(url):
     """
     This function determinates if the method HEAD is available. To do that, compare between two responses:
@@ -598,7 +598,7 @@ def HTTP_response_headers_analyzer(response_header_1, response_header_2):
     return get_diff_ratio(m_res1, m_res2)
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def generate_results(unique_texts):
     """
     Generates a list of results from a list of URLs as string format.
@@ -629,11 +629,11 @@ def generate_results(unique_texts):
     return m_results
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #
 # Mutation functions
 #
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def make_url_with_prefixes(wordlist, url_parts):
     """
     Creates a set of URLs with prefixes.
@@ -671,7 +671,7 @@ def make_url_with_prefixes(wordlist, url_parts):
     return m_return
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def make_url_with_suffixes(wordlist, url_parts):
     """
     Creates a set of URLs with suffixes.
@@ -709,7 +709,7 @@ def make_url_with_suffixes(wordlist, url_parts):
     return m_return
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def make_url_mutate_filename(url_parts):
     """
     Creates a set of URLs with mutated filenames.
@@ -748,7 +748,7 @@ def make_url_mutate_filename(url_parts):
     return m_return
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def make_url_changing_folder_name(url_parts):
     """
     Creates a set of URLs with prefixes.
@@ -780,7 +780,7 @@ def make_url_changing_folder_name(url_parts):
         return set()
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def make_url_with_files_or_folder(wordlist, url_parts):
     """
     Creates a set of URLs with guessed files and subfolders.
@@ -849,7 +849,7 @@ def make_url_with_files_or_folder(wordlist, url_parts):
     return m_return
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def make_url_changing_extensions(wordlist, url_parts):
     """
     Creates a set of URLs with alternative file extensions.
@@ -881,7 +881,7 @@ def make_url_changing_extensions(wordlist, url_parts):
     return m_return
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def is_folder_url(url_parts):
     """
     Determine if the given URL points to a folder or a file:
@@ -908,7 +908,7 @@ def is_folder_url(url_parts):
     return url_parts.path.endswith('/') and not url_parts.query_char == '/'
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def get_list_from_wordlist(wordlist):
     """
     Load the content of the wordlist and return a set with the content.
