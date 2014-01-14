@@ -28,7 +28,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import os
-import csv
 
 try:
     import cPickle as Pickle
@@ -37,7 +36,7 @@ except ImportError:
 
 
 #------------------------------------------------------------------------------
-signatures = {                       # TODO: move the signatures to a data file
+signatures = {
 
 "Internet Information Server (IIS)":
 
