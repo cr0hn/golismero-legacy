@@ -230,7 +230,7 @@ the <a href="mailto:admin@localhost">webmaster</a>.
 }
 
 
-#----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 def main():
     signatures_file = os.path.join(os.path.split(__file__)[0], "signatures.dat")
 

@@ -140,7 +140,7 @@ def test_newlines_and_tabs():
                         line += "\n"
                     if (len(fixed) < 2 or \
                             fixed[-1] != "\n" or fixed[-2] != "\n") and \
-                                    fixed[-1].lstrip()[0] != "#":
+                                    not fixed[-1].lstrip().startswith("#"):
                         if not warned:
                             print "+ found file with broken separators: %s" \
                                   % relative

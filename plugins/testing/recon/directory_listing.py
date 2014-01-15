@@ -48,6 +48,7 @@ plugin_data = os.path.join(plugin_dir, "signatures.dat")
 
 del base_dir
 
+
 #------------------------------------------------------------------------------
 class DirectoryListingPlugin(TestingPlugin):
     """
