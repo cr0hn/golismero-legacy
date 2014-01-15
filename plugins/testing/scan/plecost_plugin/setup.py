@@ -54,7 +54,7 @@ REGEX_PLUGIN_NAME = re.compile(r"(http://wordpress.org/plugins/)([a-zA-Z0-9\\\s_
 REGEX_PLUGIN_VERSION = re.compile(r"(Version</span>[\sa-zA-Z]*)([0-9\.]+)", re.I)  # -> Group 2
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def load_cve_info():
     """
     Generate the CVE with WordPress vulns related DB and return a dict with the CVE and their description.
@@ -92,7 +92,7 @@ def load_cve_info():
     return results
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def generate_plugin_db(args):
     """"""
     file_out = args.OUTPUT_FILE
@@ -227,10 +227,10 @@ def generate_plugin_db(args):
                     return
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def main(args):
     generate_plugin_db(args)
-    
+
 
 if __name__ == '__main__':
 

@@ -51,7 +51,7 @@ class Banner(Fingerprint):
     min_resources = 1
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __init__(self, host, banner, port):
         """
         :param host: IP address or domain name where the banner was found.
@@ -95,7 +95,7 @@ class Banner(Fingerprint):
         host.add_information(self)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @identity
     def banner(self):
         """
@@ -105,7 +105,7 @@ class Banner(Fingerprint):
         return self.__banner
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     @identity
     def port(self):
         """
@@ -115,7 +115,7 @@ class Banner(Fingerprint):
         return self.__port
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_ip_addresses(self):
         """
         :returns: Set of IP addresses where this banner was found.
@@ -128,7 +128,7 @@ class Banner(Fingerprint):
         }
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_domains(self):
         """
         :returns: Set of domains where this banner was found.
@@ -141,7 +141,7 @@ class Banner(Fingerprint):
         }
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_hosts(self):
         """
         :returns: Set of IP addresses and domains where this banner was found.

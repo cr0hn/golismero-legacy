@@ -41,11 +41,9 @@ class Resource(Data):
     Base class for resources.
     """
 
+
     #--------------------------------------------------------------------------
-    #
-    # Types of Infomation results
-    #
-    #--------------------------------------------------------------------------
+
     RESOURCE_UNKNOWN       = 0    # Not a real value!
     RESOURCE_URL           = 1    # URL
     RESOURCE_BASE_URL      = 2    # Base URL
@@ -57,7 +55,7 @@ class Resource(Data):
     RESOURCE_BSSID         = 8    # Wi-Fi BSSID
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     data_type = Data.TYPE_RESOURCE
     resource_type = RESOURCE_UNKNOWN

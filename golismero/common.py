@@ -384,6 +384,7 @@ class Configuration (object):
     Generic configuration class.
     """
 
+
     #--------------------------------------------------------------------------
     # The logic in configuration classes is always:
     # - Checking options without fixing them is done in check_params().
@@ -391,6 +392,7 @@ class Configuration (object):
     # - For each source, there's a "from_*" method. They add to the
     #   current options rather than overwriting them completely.
     #   This allows options to be read from multiple sources.
+
 
     #--------------------------------------------------------------------------
     # Here's where subclasses define the options.
@@ -407,13 +409,13 @@ class Configuration (object):
     #
     # Example:
     #    class MySettings(Configuration):
-    #        _settings_  = {
-    #            "verbose": (int, 0), # A complete definition.
-    #            "output_file": str,  # Omitting the default value (None is used).
-    #            "data": None,        # Omitting the parser too.
-    #        }
+    #      _settings_  = {
+    #         "verbose": (int, 0), # A complete definition.
+    #         "output_file": str,  # Omitting the default value (None is used).
+    #         "data": None,        # Omitting the parser too.
+    #      }
     #
-    _settings_  = dict()
+    _settings_ = dict()
 
     # This is a set of properties that may not be loaded from a config file.
     # They will still be loaded from objects, dictionaries, JSON, etc.
@@ -1109,7 +1111,6 @@ class AuditConfig (Configuration):
             self._user_agent = user_agent
         else:
             self._user_agent = None
-
 
 
     #--------------------------------------------------------------------------

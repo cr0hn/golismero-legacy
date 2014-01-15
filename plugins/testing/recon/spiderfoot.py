@@ -36,6 +36,7 @@ from warnings import warn
 
 from golismero.api.config import Config
 from golismero.api.data import Database
+from golismero.api.data.information.asn import ASN
 from golismero.api.data.information.auth import Password
 from golismero.api.data.information.banner import Banner
 from golismero.api.data.information.html import HTML
@@ -49,7 +50,7 @@ from golismero.api.data.vulnerability import Vulnerability
 from golismero.api.data.vulnerability.malware.defaced import DefacedUrl, \
     DefacedDomain, DefacedIP
 from golismero.api.data.vulnerability.malware.malicious import MaliciousIP, \
-    MaliciousUrl, MaliciousDomain
+    MaliciousUrl, MaliciousDomain, MaliciousASN
 from golismero.api.data.vulnerability.ssl.invalid_certificate import \
     InvalidCertificate
 from golismero.api.data.vulnerability.ssl.outdated_certificate import \
@@ -193,7 +194,7 @@ class SpiderFootPlugin(TestingPlugin):
                 if has_partial:
                     Logger.log_error("Scan didn't finish correctly!")
                     Logger.log("Attempting to load partial results...")
-                    parser = SpiderFootImportPlugin()
+                    parser = SpiderFootParser()
                     url = parse_url("scaneventresultexport", base_url)
                     url.query_params = {"id": scan_id, "type": "ALL"}
                     resp = get(url.url)
@@ -202,7 +203,7 @@ class SpiderFootPlugin(TestingPlugin):
                             "Could not get scan results, error code: %s"
                             % resp.status_code)
                     else:
-                        results = parser.parse_results(StringIO(resp.content))
+                        results = parser.parse(StringIO(resp.content))
                         if results:
                             if len(results) == 1:
                                 Logger.log("Loaded 1 result.")
@@ -278,7 +279,7 @@ class SpiderFootImportPlugin(ImportPlugin):
     def import_results(self, input_file):
         try:
             with open(input_file, "rU") as fd:
-                results = self.parse_results(fd)
+                results = SpiderFootParser().parse(fd)
             if results:
                 Database.async_add_many(results)
         except Exception, e:
@@ -309,8 +310,15 @@ class SpiderFootImportPlugin(ImportPlugin):
                 Logger.log_error("No results found in file: %s" % input_file)
 
 
+#------------------------------------------------------------------------------
+class SpiderFootParser(object):
+    """
+    Parses the CSV output of SpiderFoot.
+    """
+
+
     #--------------------------------------------------------------------------
-    def parse_results(self, fd):
+    def parse(self, fd):
 
         # Most of the data is extracted directly from each row in the CSV file.
         # Each data type from SpiderFoot is matched to a method in this class.
@@ -693,9 +701,7 @@ class SpiderFootImportPlugin(ImportPlugin):
 
     #--------------------------------------------------------------------------
     def sf_BGP_AS(self, sf_module, source, raw_data):
-        # not yet supported by GoLismero
-        # "raw_data" should contain a BGP ASN
-        pass
+        return ASN(raw_data)
 
 
     #--------------------------------------------------------------------------
@@ -858,8 +864,12 @@ class SpiderFootImportPlugin(ImportPlugin):
 
     #--------------------------------------------------------------------------
     def sf_MALICIOUS_ASN(self, sf_module, source, raw_data):
-        # not yet supported by GoLismero
-        pass
+        asn = ASN(raw_data)
+        vulnerability = MaliciousASN(
+            asn = asn,
+            tool_id = sf_module,
+        )
+        return asn, vulnerability
 
 
     #--------------------------------------------------------------------------

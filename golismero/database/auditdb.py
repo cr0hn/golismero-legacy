@@ -60,7 +60,7 @@ objectid = None
 Error    = None
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # RPC implementors for the database API.
 
 @implementor(MessageCode.MSG_RPC_DATA_ADD)
@@ -2387,7 +2387,7 @@ class AuditMongoDB(BaseAuditDB):
         return None,None
 
 
-    #-------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def set_audit_times(self, start_time, stop_time):
         #testdb.go.update({},{"$set":{'starttime':14}})
         self._c_golismero.update({},{"$set":{"start_time":start_time,"stop_time":stop_time}})
@@ -2865,6 +2865,7 @@ class AuditMongoDB(BaseAuditDB):
         for key in keys:
             self._c_shared_map.remove({"shared_id":shared_id, "key_hash":self.get_hash(key)})
 
+
     #--------------------------------------------------------------------------
     def get_mapped_keys(self, shared_id):
         if type(shared_id) is not str:
@@ -2936,6 +2937,7 @@ class AuditMongoDB(BaseAuditDB):
             self._c_shared_heap.update({"shared_id":shared_id,"value_hash":value_hash},
                                        {"shared_id":shared_id,"value_hash":value_hash,"value":self.encode(value)},
                                        True)
+
 
     #--------------------------------------------------------------------------
     def remove_shared_values(self, shared_id, values):

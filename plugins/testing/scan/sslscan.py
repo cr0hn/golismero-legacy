@@ -216,7 +216,7 @@ class SSLScanPlugin(TestingPlugin):
 
             # Ignore if the port does not support SSL.
             if info.protocol != "SSL":
-                Logger.log_error_more_verbose(
+                Logger.log_more_verbose(
                     "No SSL services found in fingerprint [%s], aborting."
                     % info)
                 return
@@ -259,7 +259,7 @@ class SSLScanPlugin(TestingPlugin):
 
         # Don't scan the same host and port twice.
         if self.state.put("%s:%d" % (hostname, port), True):
-            Logger.log_error_more_verbose(
+            Logger.log_more_verbose(
                 "Host %s:%d already scanned, skipped."
                 % (hostname, port))
             return

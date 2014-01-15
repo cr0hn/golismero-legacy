@@ -40,16 +40,17 @@ from golismero.api.plugin import TestingPlugin
 from golismero.api.text.wordlist import WordListLoader, WordlistNotFound
 from golismero.api.data.vulnerability.information_disclosure.domain_disclosure import DomainDisclosure
 
-#--------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
 class DNSBruteforcer(TestingPlugin):
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [Domain]
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def recv_info(self, info):
 
         # Get the root domain only.

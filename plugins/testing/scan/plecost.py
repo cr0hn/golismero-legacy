@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __license__ = """
-GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
+GoLismero 2.0 - The web knife - Copyright (C) 2011-2014
 
 Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
@@ -95,9 +95,11 @@ class PlecostPlugin(TestingPlugin):
         if not os.path.exists(plugin_list):
             raise IOError("Plugin list file not exits: '%s'" % plugin_list)
 
+
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [FolderUrl]
+
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
@@ -194,7 +196,8 @@ class PlecostPlugin(TestingPlugin):
 
         return results
 
-    #----------------------------------------------------------------------
+
+    #--------------------------------------------------------------------------
     def __find_plugins(self, url, plugins_wordlist, update_func):
         """
         Try to find available plugins
@@ -298,7 +301,7 @@ class PlecostPlugin(TestingPlugin):
         return results
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __detect_wordpress_installation(self, url, wordpress_urls):
         """
         Try to detect a wordpress instalation in the current path.
@@ -346,7 +349,7 @@ class PlecostPlugin(TestingPlugin):
             return True
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def __get_wordpress_version(self, url):
         """
         This function get the current version of wordpress and the last version
