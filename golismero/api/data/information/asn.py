@@ -43,7 +43,7 @@ class ASN(Information):
     Autonomous System Number (ASN) for BGP routing.
     """
 
-    resource_type = Information.INFORMATION_ASN
+    information_type = Information.INFORMATION_ASN
 
     AS_FIRST   = 0
     AS_LAST_16 = 65535
