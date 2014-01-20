@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from collections import Counter
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -142,6 +143,21 @@ class HTMLReport(json.JSONOutput):
         # properties are part of the taxonomy. This saves us from having to
         # change the HTML code every time we add a new taxonomy property.
         report_data["supported_taxonomies"] = TAXONOMY_NAMES
+
+        # Calculate some statistics, so the JavaScript code doesn't have to.
+        report_data["stats"] = {
+            "resources":       len(report_data["resources"]),
+            "informations":    len(report_data["informations"]),
+            "vulnerabilities": len(report_data["vulnerabilities"]),
+            "vulns_by_level":  {
+                k.title(): v for k, v in Counter(
+                    v["level"] for v in report_data["vulnerabilities"]
+                ).iteritems()
+            },
+            "vulns_by_type":   dict(Counter(
+                v["display_name"] for v in report_data["vulnerabilities"]
+            )),
+        }
 
         # Generate the ZIP file comment.
         comment = "Report generated with GoLismero %s at %s UTC\n"\
