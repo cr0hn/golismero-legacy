@@ -75,7 +75,9 @@ On Windows, you'll have to install each tool separately. You can download them f
 - [Nmap](http://nmap.org/download.html#windows)
 - [SSLScan](https://code.google.com/p/sslscan-win/)
 
-It's usually a good idea to install Visual Studio 2008 SP1 as well. This enables the compilation of C extensions, which can speed up Python.
+SSLScan for Windows has a bug that causes crashes when writing XML output, which is the one required by GoLismero. The issue has been [unfixed since 2010](https://code.google.com/p/sslscan-win/issues/detail?id=2), so it's not likely to change soon, but there's a workaround: simply upgrade OpenSSL to a newer version. You can get an OpenSSL build from here: [Win32OpenSSL](https://slproweb.com/products/Win32OpenSSL.html).
+
+It's usually a good idea to install Visual Studio 2008 SP1 as well. This enables the compilation of C extensions, which can speed up some Python modules.
 
 After installing the tools, open a console and run the following commands:
 
