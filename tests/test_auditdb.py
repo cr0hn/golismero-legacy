@@ -31,18 +31,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import sys
 import os
 from os import path
-try:
-    _FIXED_PATH_
-except NameError:
-    here = path.split(path.abspath(__file__))[0]
-    if not here:  # if it fails use cwd instead
-        here = path.abspath(os.getcwd())
-    golismero = path.join(here, "..")
-    thirdparty_libs = path.join(golismero, "thirdparty_libs")
-    if path.exists(thirdparty_libs):
-        sys.path.insert(0, thirdparty_libs)
-        sys.path.insert(0, golismero)
-    _FIXED_PATH_ = True
+here = path.split(path.abspath(__file__))[0]
+if not here:  # if it fails use cwd instead
+    here = path.abspath(os.getcwd())
+golismero = path.join(here, "..")
+thirdparty_libs = path.join(golismero, "thirdparty_libs")
+if path.exists(thirdparty_libs):
+    sys.path.insert(0, thirdparty_libs)
+    sys.path.insert(0, golismero)
 
 
 # Imports.
@@ -386,7 +382,7 @@ def helper_test_auditdb_data_consistency(db, key, data):
     assert d3p.links == d3.links
 
     # Test get_data_types().
-    assert db.get_data_types((d1.identity, d2.identity, d3.identity)) == {(d1.data_type, d1.resource_type), (d2.data_type, d2.information_type), (d3.data_type, d3.vulnerability_type)}
+    assert db.get_data_types((d1.identity, d2.identity, d3.identity)) == {(d1.data_type, d1.resource_type), (d2.data_type, d2.information_type), (d3.data_type, d3.vulnerability_type)}, (db.get_data_types((d1.identity, d2.identity, d3.identity)), {(d1.data_type, d1.resource_type), (d2.data_type, d2.information_type), (d3.data_type, d3.vulnerability_type)})
 
     # Test get_data_count().
     assert db.get_data_count() == 3

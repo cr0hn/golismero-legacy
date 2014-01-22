@@ -925,6 +925,9 @@ class AuditSQLiteDB (BaseAuditDB):
         # Create the lock to make this class thread safe.
         self.__lock = threading.RLock()
 
+        # Create the data subtypes cache.
+        self.__data_subtype_cache = {}
+
         # Get the filename from the connection string.
         filename = self.__parse_connection_string(
             audit_config.audit_db, audit_config.audit_name)
@@ -1015,6 +1018,9 @@ class AuditSQLiteDB (BaseAuditDB):
         # Create or validate the database schema.
         # This raises an exception on error.
         self.__create(audit_config)
+
+        # Load any existing data subtypes into the cache.
+        self.__load_data_subtype_cache()
 
 
     #--------------------------------------------------------------------------
@@ -1224,6 +1230,9 @@ class AuditSQLiteDB (BaseAuditDB):
             self.__cursor.executescript(
             """
 
+            -- Enable foreign keys support.
+            PRAGMA foreign_keys = ON;
+
             ----------------------------------------------------------
             -- Table to store the file information.
             -- There must only be one row in it.
@@ -1242,25 +1251,33 @@ class AuditSQLiteDB (BaseAuditDB):
             -- Tables to store the data.
             ----------------------------------------------------------
 
+            CREATE TABLE types (
+                rowid INTEGER PRIMARY KEY,
+                name STRING UNIQUE NOT NULL
+            );
+
             CREATE TABLE information (
                 rowid INTEGER PRIMARY KEY,
                 identity STRING UNIQUE NOT NULL,
                 type INTEGER NOT NULL,
-                data BLOB NOT NULL
+                data BLOB NOT NULL,
+                FOREIGN KEY(type) REFERENCES types(rowid)
             );
 
             CREATE TABLE resource (
                 rowid INTEGER PRIMARY KEY,
                 identity STRING UNIQUE NOT NULL,
                 type INTEGER NOT NULL,
-                data BLOB NOT NULL
+                data BLOB NOT NULL,
+                FOREIGN KEY(type) REFERENCES types(rowid)
             );
 
             CREATE TABLE vulnerability (
                 rowid INTEGER PRIMARY KEY,
                 identity STRING UNIQUE NOT NULL,
-                type STRING NOT NULL,
-                data BLOB NOT NULL
+                type INTEGER NOT NULL,
+                data BLOB NOT NULL,
+                FOREIGN KEY(type) REFERENCES types(rowid)
             );
 
             ----------------------------------------------------------
@@ -1332,6 +1349,15 @@ class AuditSQLiteDB (BaseAuditDB):
 
     #--------------------------------------------------------------------------
     @transactional
+    def __load_data_subtype_cache(self):
+        self.__cursor.execute("SELECT name, rowid FROM types;")
+        self.__data_subtype_cache.update(
+            self.__cursor.fetchall()
+        )
+
+
+    #--------------------------------------------------------------------------
+    @transactional
     def __get_audit_name_from_database(self):
         try:
             self.__cursor.execute("SELECT audit_name FROM golismero LIMIT 1;")
@@ -1341,48 +1367,39 @@ class AuditSQLiteDB (BaseAuditDB):
 
 
     #--------------------------------------------------------------------------
+    def __get_or_create_type(self, data_subtype):
+        if data_subtype is not None:
+            data_subtype = str(data_subtype)
+            try:
+                return self.__data_subtype_cache[data_subtype]
+            except KeyError:
+                rowid = self.__create_type(data_subtype)
+                self.__data_subtype_cache[data_subtype] = rowid
+                return rowid
+
+
+    #--------------------------------------------------------------------------
+    def __create_type(self, data_subtype):
+        self.__cursor.execute(
+            "INSERT INTO types VALUES (NULL, ?)", (data_subtype,))
+        return self.__cursor.lastrowid
+
+
+    #--------------------------------------------------------------------------
     def __get_data_table_and_type(self, data):
         data_type = data.data_type
+        data_subtype = self.__get_or_create_type(data.data_subtype)
         if   data_type == Data.TYPE_INFORMATION:
             table = "information"
-            dtype = data.information_type
         elif data_type == Data.TYPE_RESOURCE:
             table = "resource"
-            dtype = data.resource_type
         elif data_type == Data.TYPE_VULNERABILITY:
             table = "vulnerability"
-            dtype = data.vulnerability_type
-        elif data_type == Data.TYPE_UNKNOWN:
-            warnings.warn(
-                "Received %s object of type TYPE_UNKNOWN" % type(data),
-                RuntimeWarning, stacklevel=3)
-            if   isinstance(data, Information):
-                data.data_type = Data.TYPE_INFORMATION
-                table = "information"
-                dtype = data.information_type
-                if dtype == Information.INFORMATION_UNKNOWN:
-                    warnings.warn(
-                        "Received %s object of subtype INFORMATION_UNKNOWN" % type(data),
-                        RuntimeWarning, stacklevel=3)
-            elif isinstance(data, Resource):
-                data.data_type = Data.TYPE_RESOURCE
-                table = "resource"
-                dtype = data.resource_type
-                if dtype == Resource.RESOURCE_UNKNOWN:
-                    warnings.warn(
-                        "Received %s object of subtype RESOURCE_UNKNOWN" % type(data),
-                        RuntimeWarning, stacklevel=3)
-            elif isinstance(data, Vulnerability):
-                data.data_type = Data.TYPE_VULNERABILITY
-                table = "vulnerability"
-                dtype = data.vulnerability_type
-            else:
-                raise NotImplementedError(
-                    "Unknown data type %r!" % type(data))
         else:
             raise NotImplementedError(
-                "Unknown data type %r!" % data_type)
-        return table, dtype
+                "Class definition for type %r is broken, data was lost!"
+                % type(data))
+        return table, data_subtype
 
 
     #--------------------------------------------------------------------------
@@ -1673,7 +1690,13 @@ class AuditSQLiteDB (BaseAuditDB):
             ("resource",      Data.TYPE_RESOURCE,      int),
             ("vulnerability", Data.TYPE_VULNERABILITY, str),
         ):
-            query  = "SELECT type FROM %s WHERE identity = ? LIMIT 1;" % table
+            # FIXME
+            # not sure if it's not faster to do an inverse lookup
+            # on the cache dictionary instead, to avoid the JOIN.
+            query  = "SELECT types.name FROM %s as data, types " \
+                     "WHERE data.identity = ? " \
+                     "AND data.type = types.rowid " \
+                     "LIMIT 1;" % table
             values = (identity,)
             self.__cursor.execute(query, values)
             row = self.__cursor.fetchone()
@@ -1684,6 +1707,9 @@ class AuditSQLiteDB (BaseAuditDB):
     #--------------------------------------------------------------------------
     @transactional
     def get_data_count(self, data_type = None, data_subtype = None):
+
+        # Get the data subtype ID.
+        data_subtype = self.__get_or_create_type(data_subtype)
 
         # Count all the keys.
         if data_type is None:
