@@ -41,7 +41,7 @@ exit
 
 Strictly speaking, GoLismero doesn't require installation - only its dependencies do. So if you want to use it on a system where you don't have root privileges, you can ask the system administrator to install them for you, and just run the "git checkout" command on your home folder.
 
-If you have an API key for Shodan, or an OpenVAS server you want to integrate with GoLismero, run the following commands:
+If you have an API key for Shodan, or an OpenVAS server or SpiderFoot server you want to integrate with GoLismero, run the following commands:
 
 ```
 mkdir ~/.golismero
@@ -60,6 +60,9 @@ apikey = <INSERT YOUR SHODAN API KEY HERE>
 host = <INSERT THE OPENVAS HOST HERE>
 user = <INSERT THE OPENVAS USERNAME HERE>
 *password = <INSERT THE OPENVAS PASSWORD HERE>
+
+[spiderfoot]
+url = <INSERT THE SPIDERFOOT URL HERE>
 ```
 
 Windows
@@ -85,7 +88,7 @@ pip install -r requirements.txt
 
 Finally, you may have to add the tools to the PATH environment variable so GoLismero can find them. You can also add GoLismero itself to the PATH.
 
-If you have an API key for Shodan, or an OpenVAS server you want to integrate with GoLismero, create a new file called "user.conf" where you installed GoLismero and add the following sections to the file, as appropriate:
+If you have an API key for Shodan, or an OpenVAS server or SpiderFoot server you want to integrate with GoLismero, create a new file called "user.conf" where you installed GoLismero and add the following sections to the file, as appropriate:
 
 ```
 [shodan:Configuration]
@@ -95,6 +98,9 @@ apikey = <INSERT YOUR SHODAN API KEY HERE>
 host = <INSERT THE OPENVAS HOST HERE>
 user = <INSERT THE OPENVAS USERNAME HERE>
 *password = <INSERT THE OPENVAS PASSWORD HERE>
+
+[spiderfoot]
+url = <INSERT THE SPIDERFOOT URL HERE>
 ```
 
 Quick help
