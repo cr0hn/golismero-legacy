@@ -416,18 +416,12 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
-    def remove_data(self, identity, data_type = None):
+    def remove_data(self, identity):
         """
         Remove data given its identity hash.
 
-        Optionally restrict the result by data type. Depending on the
-        underlying database, this may result in a performance gain.
-
         :param identity: Identity hash.
         :type identity: str
-
-        :param data_type: Optional data type. One of the Data.TYPE_* values.
-        :type data_type: int
 
         :returns: True if the object was removed, False if it didn't exist.
         :rtype: bool
@@ -436,30 +430,21 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
-    def remove_many_data(self, identities, data_type = None):
+    def remove_many_data(self, identities):
         """
         Remove multiple data objects given their identity hashes.
 
-        Optionally restrict the result by data type. Depending on the
-        underlying database, this may result in a performance gain.
-
         :param identities: Identity hashes.
         :type identities: str
-
-        :param data_type: Optional data type. One of the Data.TYPE_* values.
-        :type data_type: int
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
 
     #--------------------------------------------------------------------------
-    def has_data_key(self, identity, data_type = None):
+    def has_data_key(self, identity):
         """
         Check if a data object with the given
         identity hash is present in the database.
-
-        Optionally restrict the result by data type. Depending on the
-        underlying database, this may result in a performance gain.
 
         :param identity: Identity hash.
         :type identity: str
@@ -471,18 +456,12 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
-    def get_data(self, identity, data_type = None):
+    def get_data(self, identity):
         """
         Get an object given its identity hash.
 
-        Optionally restrict the result by data type. Depending on the
-        underlying database, this may result in a performance gain.
-
         :param identity: Identity hash.
         :type identity: str
-
-        :param data_type: Optional data type. One of the Data.TYPE_* values.
-        :type data_type: int
 
         :returns: Data object.
         :rtype: Data | None
@@ -491,18 +470,12 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
-    def get_many_data(self, identities, data_type = None):
+    def get_many_data(self, identities):
         """
         Get multiple objects given their identity hashes.
 
-        Optionally restrict the results by data type. Depending on the
-        underlying database, this may result in a performance gain.
-
         :param identities: Identity hashes.
         :type identities: set(str)
-
-        :param data_type: Optional data type. One of the Data.TYPE_* values.
-        :type data_type: int
 
         :returns: Data objects.
         :rtype: list(Data)
@@ -529,21 +502,6 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
-    def get_data_types(self, identities):
-        """
-        Get a set of data types and subtypes for all objects
-        of the requested identities.
-
-        :param identities: Identity hashes.
-        :type identities: set(str)
-
-        :returns: Set of data types and subtypes found.
-        :rtype: set( (int, int | str) )
-        """
-        raise NotImplementedError("Subclasses MUST implement this method!")
-
-
-    #--------------------------------------------------------------------------
     def get_data_count(self, data_type = None, data_subtype = None):
         """
         Count all objects of the requested type,
@@ -557,6 +515,21 @@ class BaseAuditDB (BaseDB):
 
         :returns: Identity hashes.
         :rtype: set(str)
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def get_data_types(self, identities):
+        """
+        Get a set of data types and subtypes for all objects
+        of the requested identities.
+
+        :param identities: Identity hashes.
+        :type identities: set(str)
+
+        :returns: Set of data types and subtypes found.
+        :rtype: set( (int, str) )
         """
         raise NotImplementedError("Subclasses MUST implement this method!")
 
@@ -1256,25 +1229,10 @@ class AuditSQLiteDB (BaseAuditDB):
                 name STRING UNIQUE NOT NULL
             );
 
-            CREATE TABLE information (
+            CREATE TABLE data (
                 rowid INTEGER PRIMARY KEY,
                 identity STRING UNIQUE NOT NULL,
-                type INTEGER NOT NULL,
-                data BLOB NOT NULL,
-                FOREIGN KEY(type) REFERENCES types(rowid)
-            );
-
-            CREATE TABLE resource (
-                rowid INTEGER PRIMARY KEY,
-                identity STRING UNIQUE NOT NULL,
-                type INTEGER NOT NULL,
-                data BLOB NOT NULL,
-                FOREIGN KEY(type) REFERENCES types(rowid)
-            );
-
-            CREATE TABLE vulnerability (
-                rowid INTEGER PRIMARY KEY,
-                identity STRING UNIQUE NOT NULL,
+                family INTEGER NOT NULL,
                 type INTEGER NOT NULL,
                 data BLOB NOT NULL,
                 FOREIGN KEY(type) REFERENCES types(rowid)
@@ -1386,23 +1344,6 @@ class AuditSQLiteDB (BaseAuditDB):
 
 
     #--------------------------------------------------------------------------
-    def __get_data_table_and_type(self, data):
-        data_type = data.data_type
-        data_subtype = self.__get_or_create_type(data.data_subtype)
-        if   data_type == Data.TYPE_INFORMATION:
-            table = "information"
-        elif data_type == Data.TYPE_RESOURCE:
-            table = "resource"
-        elif data_type == Data.TYPE_VULNERABILITY:
-            table = "vulnerability"
-        else:
-            raise NotImplementedError(
-                "Class definition for type %r is broken, data was lost!"
-                % type(data))
-        return table, data_subtype
-
-
-    #--------------------------------------------------------------------------
     @transactional
     def get_audit_times(self):
         self.__cursor.execute(
@@ -1488,16 +1429,26 @@ class AuditSQLiteDB (BaseAuditDB):
     def __add_data(self, data):
         if not isinstance(data, Data):
             raise TypeError("Expected Data, got %d instead" % type(data))
-        table, dtype = self.__get_data_table_and_type(data)
+
+        # Merge with old data if it exists.
         identity = data.identity
-        old_data = self.__get_data(identity, data.data_type)
+        old_data = self.__get_data(identity)
         is_new = old_data is None
         if not is_new:
             old_data.merge(data)
             data = old_data
-        query  = "INSERT OR REPLACE INTO %s VALUES (NULL, ?, ?, ?);" % table
-        values = (identity, dtype, self.encode(data))
+
+        # Store the data.
+        query  = "INSERT OR REPLACE INTO data VALUES (NULL, ?, ?, ?);"
+        values = (
+            identity,
+            data.data_type,
+            self.__get_or_create_type(data.data_subtype),
+            self.encode(data)
+        )
         self.__cursor.execute(query, values)
+
+        # If it's new data, add an entry in the stages history.
         if is_new:
             self.__cursor.execute(
                 "INSERT INTO stages (identity) VALUES (?);",
@@ -1514,21 +1465,30 @@ class AuditSQLiteDB (BaseAuditDB):
 
     #--------------------------------------------------------------------------
     @transactional
-    def remove_data(self, identity, data_type = None):
-        if data_type is None:
-            tables = ("information", "resource", "vulnerability")
-        elif data_type == Data.TYPE_INFORMATION:
-            tables = ("information",)
-        elif data_type == Data.TYPE_RESOURCE:
-            tables = ("resource",)
-        elif data_type == Data.TYPE_VULNERABILITY:
-            tables = ("vulnerability",)
-        else:
-            raise NotImplementedError(
-                "Unknown data type %r!" % data_type)
-        for table in tables:
+    def remove_data(self, identity):
+        self.__cursor.execute(
+            "DELETE FROM data WHERE identity = ?;",
+            (identity,)
+        )
+        if self.__cursor.rowcount:
             self.__cursor.execute(
-                "DELETE FROM %s WHERE identity = ?;" % table,
+                "DELETE FROM history WHERE identity = ?;",
+                (identity,)
+            )
+            self.__cursor.execute(
+                "DELETE FROM stages WHERE identity = ?;",
+                (identity,)
+            )
+            return True
+        return False
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def remove_many_data(self, identities, data_type = None):
+        for identity in identities:
+            self.__cursor.execute(
+                "DELETE FROM data WHERE identity = ?;",
                 (identity,)
             )
             if self.__cursor.rowcount:
@@ -1540,97 +1500,40 @@ class AuditSQLiteDB (BaseAuditDB):
                     "DELETE FROM stages WHERE identity = ?;",
                     (identity,)
                 )
-                return True
-        return False
-
-
-    #--------------------------------------------------------------------------
-    @transactional
-    def remove_many_data(self, identities, data_type = None):
-        if data_type is None:
-            tables = ("information", "resource", "vulnerability")
-        elif data_type == Data.TYPE_INFORMATION:
-            tables = ("information",)
-        elif data_type == Data.TYPE_RESOURCE:
-            tables = ("resource",)
-        elif data_type == Data.TYPE_VULNERABILITY:
-            tables = ("vulnerability",)
-        else:
-            raise NotImplementedError(
-                "Unknown data type %r!" % data_type)
-        for table in tables:
-            for identity in identities:
-                self.__cursor.execute(
-                    "DELETE FROM %s WHERE identity = ?;" % table,
-                    (identity,)
-                )
-                if self.__cursor.rowcount:
-                    self.__cursor.execute(
-                        "DELETE FROM history WHERE identity = ?;",
-                        (identity,)
-                    )
-                    self.__cursor.execute(
-                        "DELETE FROM stages WHERE identity = ?;",
-                        (identity,)
-                    )
 
 
     #--------------------------------------------------------------------------
     @transactional
     def has_data_key(self, identity, data_type = None):
-        if data_type is None:
-            tables = ("information", "resource", "vulnerability")
-        elif data_type == Data.TYPE_INFORMATION:
-            tables = ("information",)
-        elif data_type == Data.TYPE_RESOURCE:
-            tables = ("resource",)
-        elif data_type == Data.TYPE_VULNERABILITY:
-            tables = ("vulnerability",)
-        else:
-            raise NotImplementedError(
-                "Unknown data type %r!" % data_type)
-        for table in tables:
-            query = "SELECT COUNT(rowid) FROM %s WHERE identity = ? LIMIT 1;" % table
-            self.__cursor.execute(query, (identity,))
-            row = self.__cursor.fetchone()
-            if row[0]:
-                return True
-        return False
+        query = "SELECT COUNT(rowid) FROM data WHERE identity = ? LIMIT 1;"
+        self.__cursor.execute(query, (identity,))
+        return bool(self.__cursor.fetchone()[0])
 
 
     #--------------------------------------------------------------------------
     @transactional
-    def get_data(self, identity, data_type = None):
-        return self.__get_data(identity, data_type)
+    def get_data(self, identity):
+        return self.__get_data(identity)
 
     @transactional
-    def get_many_data(self, identities, data_type = None):
+    def get_many_data(self, identities):
         # TODO: optimize by checking multiple identities in the same query,
         #       but beware of the maximum SQL query length limit.
         #       See: http://www.sqlite.org/limits.html
-        result = ( self.__get_data(identity, data_type) for identity in identities )
+        result = (
+            self.__get_data(identity)
+            for identity in identities
+        )
         return [ data for data in result if data ]
 
-    def __get_data(self, identity, data_type = None):
+    def __get_data(self, identity):
         if type(identity) is not str:
             raise TypeError("Expected string, got %s" % type(identity))
-        if data_type is None:
-            tables = ("information", "resource", "vulnerability")
-        elif data_type == Data.TYPE_INFORMATION:
-            tables = ("information",)
-        elif data_type == Data.TYPE_RESOURCE:
-            tables = ("resource",)
-        elif data_type == Data.TYPE_VULNERABILITY:
-            tables = ("vulnerability",)
-        else:
-            raise NotImplementedError(
-                "Unknown data type %r!" % data_type)
-        for table in tables:
-            query = "SELECT data FROM %s WHERE identity = ? LIMIT 1;" % table
-            self.__cursor.execute(query, (identity,))
-            row = self.__cursor.fetchone()
-            if row and row[0]:
-                return self.decode(row[0])
+        query = "SELECT data FROM data WHERE identity = ? LIMIT 1;"
+        self.__cursor.execute(query, (identity,))
+        row = self.__cursor.fetchone()
+        if row and row[0]:
+            return self.decode(row[0])
 
 
     #--------------------------------------------------------------------------
@@ -1640,14 +1543,9 @@ class AuditSQLiteDB (BaseAuditDB):
         # Trivial case, get all the keys.
         if data_type is None:
             if data_subtype is None or data_subtype == "data/abstract":
-                hashes = set()
-                for table in ("information", "resource", "vulnerability"):
-                    query  = "SELECT identity FROM %s;" % table
-                    self.__cursor.execute(query)
-                    hashes.update(
-                        str(row[0]) for row in self.__cursor.fetchall()
-                    )
-                return hashes
+                query  = "SELECT identity FROM data;"
+                self.__cursor.execute(query)
+                return { str(row[0]) for row in self.__cursor.fetchall() }
 
             # We have data_subtype but no data_type.
             # Derive the second from the first.
@@ -1683,20 +1581,11 @@ class AuditSQLiteDB (BaseAuditDB):
                     "Unknown data type %r!" % data_type)
 
         # Get keys filtered by type and subtype.
-        if   data_type == Data.TYPE_INFORMATION:
-            table = "information"
-        elif data_type == Data.TYPE_RESOURCE:
-            table = "resource"
-        elif data_type == Data.TYPE_VULNERABILITY:
-            table = "vulnerability"
-        else:
-            raise NotImplementedError(
-                "Unknown data type %r!" % data_type)
         if data_subtype is None:
-            query  = "SELECT identity FROM %s;" % table
-            values = ()
+            query  = "SELECT identity FROM data WHERE family = ?;"
+            values = (data_type,)
         else:
-            query  = "SELECT identity FROM %s WHERE type = ?;" % table
+            query  = "SELECT identity FROM data WHERE type = ?;"
             values = (self.__get_or_create_type(data_subtype),)
         self.__cursor.execute(query, values)
         return { str(row[0]) for row in self.__cursor.fetchall() }
@@ -1718,23 +1607,18 @@ class AuditSQLiteDB (BaseAuditDB):
     def __get_data_type(self, identity):
         if type(identity) is not str:
             raise TypeError("Expected string, got %s" % type(identity))
-        for table, data_type, subtype_filter in (
-            ("information",   Data.TYPE_INFORMATION),
-            ("resource",      Data.TYPE_RESOURCE),
-            ("vulnerability", Data.TYPE_VULNERABILITY),
-        ):
-            # FIXME
-            # not sure if it's not faster to do an inverse lookup
-            # on the cache dictionary instead, to avoid the JOIN.
-            query  = "SELECT types.name FROM %s as data, types " \
-                     "WHERE data.identity = ? " \
-                     "AND data.type = types.rowid " \
-                     "LIMIT 1;" % table
-            values = (identity,)
-            self.__cursor.execute(query, values)
-            row = self.__cursor.fetchone()
-            if row:
-                return data_type, str(row[0])
+        # FIXME
+        # not sure if it's not faster to do an inverse lookup
+        # on the cache dictionary instead, to avoid the JOIN.
+        query = "SELECT data.family, types.name FROM data, types" \
+                " WHERE data.identity = ?" \
+                "   AND data.type = types.rowid" \
+                " LIMIT 1;"
+        values = (identity,)
+        self.__cursor.execute(query, values)
+        row = self.__cursor.fetchone()
+        if row:
+            return int(row[0]), str(row[1])
 
 
     #--------------------------------------------------------------------------
@@ -1744,12 +1628,8 @@ class AuditSQLiteDB (BaseAuditDB):
         # Trivial case, count all the keys.
         if data_type is None:
             if data_subtype is None or data_subtype == "data/abstract":
-                count = 0
-                for table in ("information", "resource", "vulnerability"):
-                    self.__cursor.execute("SELECT COUNT(rowid) FROM %s;"
-                                          % table)
-                    count += int(self.__cursor.fetchone()[0])
-                return count
+                self.__cursor.execute("SELECT COUNT(rowid) FROM data;")
+                return int(self.__cursor.fetchone()[0])
 
             # We have data_subtype but no data_type.
             # Derive the second from the first.
@@ -1785,20 +1665,11 @@ class AuditSQLiteDB (BaseAuditDB):
                     "Unknown data type %r!" % data_type)
 
         # Count keys filtered by type and subtype.
-        if   data_type == Data.TYPE_INFORMATION:
-            table = "information"
-        elif data_type == Data.TYPE_RESOURCE:
-            table = "resource"
-        elif data_type == Data.TYPE_VULNERABILITY:
-            table = "vulnerability"
-        else:
-            raise NotImplementedError(
-                "Unknown data type %r!" % data_type)
         if data_subtype is None:
-            query  = "SELECT COUNT(rowid) FROM %s;" % table
-            values = ()
+            query  = "SELECT COUNT(rowid) FROM data WHERE family = ?;"
+            values = (data_type,)
         else:
-            query  = "SELECT COUNT(rowid) FROM %s WHERE type = ?;" % table
+            query  = "SELECT COUNT(rowid) FROM data WHERE type = ?;"
             values = (self.__get_or_create_type(data_subtype),)
         self.__cursor.execute(query, values)
         return int(self.__cursor.fetchone()[0])
@@ -2272,759 +2143,6 @@ class AuditSQLiteDB (BaseAuditDB):
                 self.__db.close()
         except Exception:
             pass
-
-
-#------------------------------------------------------------------------------
-class AuditMongoDB(BaseAuditDB):
-    """
-    Store data in MongoDB
-    """
-
-    # The current schema version.
-    SCHEMA_VERSION = AuditSQLiteDB.SCHEMA_VERSION
-
-
-    #--------------------------------------------------------------------------
-    def __init__(self, audit_config):
-        super(AuditMongoDB,self).__init__(audit_config)
-
-        global pymongo
-        if pymongo is None:
-            global binary
-            global objectid
-            global Error
-            from bson import binary
-            from bson import objectid
-            from xdg.Exceptions import Error
-            import pymongo
-
-        # format mongo://ip:port@rereplicaset/databasename
-        self.setMongoInfo(audit_config)
-        #self.__mongoadress = "localhost"
-        #self.__mongoport = 27017
-        #self.__mongodatabasename = self.__parse_connection_string(
-        #    audit_config.audit_db, audit_config.audit_name)
-        # connect to mongdb
-        self._connectdb(audit_config)
-
-        # Update the database connection string.
-        audit_config.audit_db = self.connection_url
-
-        # --- test start  -
-        #self.set_audit_start_time(1000)
-        #self.set_audit_stop_time(2000)
-        #print self.get_audit_times()
-        #self.set_audit_times(3000,4000)
-        #print self.get_audit_times()
-        #self.save_audit_config(audit_config)
-        #t = self.get_audit_config()
-        #print t
-        #self.save_audit_scope(list(['1','2','3']))
-        #t = self.get_audit_scope()
-        #print t
-        # ---- test end ---
-
-    def setMongoInfo(self,audit):
-        parsed = urlparse.urlparse(audit.audit_db)
-        #self.__mongoadress = parsed.hostname()
-        #if not self.__mongoadress:
-        #    raise ValueError("please specify the mongodb hostname name")
-        #self.__mongoport = parsed.port()
-        #if not self.__mongoport:
-        #    self.__mongoport = 27017
-        #netloc.split(':')[0].lower()
-
-        datalist=parsed.netloc.split(':')
-        self.__mongoadress = datalist[0]
-        datalist = datalist[1].split('@')
-        self.__mongoport = int(datalist[0])
-        if len(datalist) == 2:
-            self.__replicasetname = str(datalist[1])
-        else:
-            self.__replicasetname = None
-
-        if not self.__mongoport:
-            self.__mongoport = 27017
-
-        self.__mongodatabasename = parsed.path.strip("/")
-
-        if not self.__mongodatabasename:
-            raise ValueError("please specify the mongodb database name")
-
-    def _connectdb(self,audit_config):
-        if self.__replicasetname:
-            self.__connection = pymongo.MongoReplicaSetClient(hosts_or_uri=self.__mongoadress+":"+str(self.__mongoport),
-                                                              replicaSet=self.__replicasetname)
-        else:
-            self.__connection = pymongo.Connection(self.__mongoadress,int(self.__mongoport))
-        if self.__connection is None:
-            raise ValueError("Can not connect to MongoDB, please check args value")
-        self.__privatedb = self.__connection[self.__mongodatabasename]
-
-
-        # define the collection(table)
-        self._c_golismero = self.__privatedb.golismero
-        self._c_information = self.__privatedb.information
-        self._c_resource = self.__privatedb.resource
-        self._c_vulnerability = self.__privatedb.vulnerability
-        self._c_plugin = self.__privatedb.plugin
-        self._c_history = self.__privatedb.history
-        self._c_stages = self.__privatedb.stages
-        self._c_shared_map = self.__privatedb.shared_map
-        self._c_shared_heap = self.__privatedb.shared_heap
-        # this collection is placed in ui-plugin
-        #self._c_loginfo = self.__privatedb.loginfo
-
-        # TODO: Fix me later
-        # ---- {{{{ test
-        self._c_golismero.remove()
-        self._c_information.remove()
-        self._c_resource.remove()
-        self._c_vulnerability.remove()
-
-        self._c_plugin.remove()
-        self._c_history.remove()
-        self._c_stages.remove()
-
-        self._c_shared_map.remove()
-        self._c_shared_heap.remove()
-        # ---- }}}} test
-        # save first row
-        self._c_golismero.insert({
-                                  "schema_version":self.SCHEMA_VERSION,
-                                  "audit_name":self.audit_name,
-                                  "start_time":0,
-                                  "stop_time":0,
-                                  "audit_config":self.encode(audit_config),
-                                  "audit_scope":0
-                                  })
-
-
-    #--------------------------------------------------------------------------
-    def close(self):
-        self.__privatedb.close()
-        self.__privatedb = None
-        self.__connection.close()
-        self.__connection = None
-
-
-    #--------------------------------------------------------------------------
-    @classmethod
-    def get_config_from_closed_database(cls, audit_db, audit_name = None):
-        """
-        Retrieve the audit configuration from a closed database.
-
-        To get the configuration from an open database object, use the
-        get_config() method instead.
-
-        :param audit_db: Audit database connection string.
-        :type audit_db: str
-
-        :param audit_name: Optional, audit name.
-        :type audit_name: str | None
-
-        :returns: Audit configuration and scope.
-        :rtype: AuditConfig, AuditScope
-
-        :raises IOError: The database could not be opened.
-        """
-        raise NotImplementedError()
-
-
-    #--------------------------------------------------------------------------
-    @property
-    def connection_url(self):
-        url= "mongo://"+self.__mongoadress
-        if self.__mongoport is not None:
-            url = url + ":" + str(self.__mongoport)
-        return url + "/" + self.__mongodatabasename
-
-
-    #--------------------------------------------------------------------------
-    def get_hash(self, data):
-        """
-        Calculate a hash of the given data.
-        """
-
-        # Encode the data as raw bytes.
-        data = super(AuditMongoDB, self).encode(data)
-
-        # Return the MD5 hexadecimal digest of the data.
-        h = md5.new()
-        h.update(data)
-        return h.hexdigest()
-
-
-    #--------------------------------------------------------------------------
-    def encode(self, data):
-
-        # Encode the data.
-        data = super(AuditMongoDB, self).encode(data)
-
-        # Tell SQLite the encoded data is a BLOB and not a TEXT.
-        #return sqlite3.Binary(data)
-        return binary.Binary(data,0)
-
-
-    #--------------------------------------------------------------------------
-    def get_audit_times(self):
-        #testdb.go.update({},{"$set":{'starttime':14}})
-        res = self._c_golismero.find_one({},{"start_time":1,"stop_time":1})
-        if res is not None:
-            return res['start_time'],res['stop_time']
-        return None,None
-
-
-    #--------------------------------------------------------------------------
-    def set_audit_times(self, start_time, stop_time):
-        #testdb.go.update({},{"$set":{'starttime':14}})
-        self._c_golismero.update({},{"$set":{"start_time":start_time,"stop_time":stop_time}})
-
-
-    #--------------------------------------------------------------------------
-    def set_audit_start_time(self, start_time):
-        self._c_golismero.update({},{"$set":{"start_time":start_time}})
-
-
-    #--------------------------------------------------------------------------
-    def set_audit_stop_time(self, stop_time):
-        self._c_golismero.update({},{"$set":{"stop_time":stop_time}})
-
-
-    #--------------------------------------------------------------------------
-    def get_audit_config(self):
-        res = self._c_golismero.find_one({},{"audit_config":1})
-        if res and res["audit_config"]:
-            return self.decode(res['audit_config'])
-        return None
-
-
-    #--------------------------------------------------------------------------
-    def save_audit_config(self, audit_config):
-        data = ""
-        if audit_config:
-            data = self.encode(audit_config)
-        self._c_golismero.update({},{"$set":{"audit_config":data}})
-
-
-    #--------------------------------------------------------------------------
-    def get_audit_scope(self):
-        res = self._c_golismero.find_one({},{"audit_scope":1})
-        if res and res["audit_scope"]:
-            return self.decode(res['audit_scope'])
-        return None
-
-
-    #--------------------------------------------------------------------------
-    def save_audit_scope(self, audit_scope):
-        data = ""
-        if audit_scope:
-            data = self.encode(audit_scope)
-        self._c_golismero.update({},{"$set":{"audit_scope":data}})
-
-
-    #--------------------------------------------------------------------------
-    def __get_data_table_and_type(self, data):
-        data_type = data.data_type
-        if   data_type == Data.TYPE_INFORMATION:
-            table = self._c_information
-            dtype = data.information_type
-        elif data_type == Data.TYPE_RESOURCE:
-            table = self._c_resource
-            dtype = data.resource_type
-        elif data_type == Data.TYPE_VULNERABILITY:
-            table = self._c_vulnerability
-            dtype = data.vulnerability_type
-        elif data_type == Data.TYPE_UNKNOWN:
-            raise RuntimeError(
-                "Received %s object of type TYPE_UNKNOWN" % type(data))
-        else:
-            raise NotImplementedError(
-                "Unknown data type %r!" % data_type)
-        return table, dtype
-
-    def add_data(self, data):
-        if not isinstance(data, Data):
-            raise TypeError("Expected Data, got %d instead" % type(data))
-        table, dtype = self.__get_data_table_and_type(data)
-        identity = data.identity
-        old_data = self.get_data(identity, data.data_type)
-        is_new = old_data is None
-        if not is_new:
-            old_data.merge(data)
-            data = old_data
-        # db.test.update({'a':2},{"$set":{'c':2,'b':4444444444}},True)
-        table.update({'identity':identity},
-                     {"$set":{
-                              'data':self.encode(data),
-                              'type':dtype,
-                              }
-                     },
-                     True
-                    )
-
-        if is_new:
-            #self._c_stages.update({'identity':identity},
-            #                      {'$set':{"identity":identity},"stage":0},
-            #                      True
-            #                      )
-            self._c_stages.insert({'identity':identity,"stage":0})
-        return is_new
-
-
-    #--------------------------------------------------------------------------
-    def add_many_data(self, dataset):
-        for data in dataset:
-            self.add_data(data)
-
-
-    #--------------------------------------------------------------------------
-    def remove_data(self, identity, data_type = None):
-        if type(identity) is not str:
-            raise TypeError("Expected string, got %s" % type(identity))
-        if data_type is None:
-            tables = (self._c_information, self._c_resource, self._c_vulnerability)
-        elif data_type == Data.TYPE_INFORMATION:
-            tables = (self._c_information,)
-        elif data_type == Data.TYPE_RESOURCE:
-            tables = (self._c_resource,)
-        elif data_type == Data.TYPE_VULNERABILITY:
-            tables = (self._c_vulnerability,)
-        else:
-            raise NotImplementedError(
-                "Unknown data type %r!" % data_type)
-        for table in tables:
-            table.remove({'identity':identity})
-        self._c_history.remove({'identity':identity})
-        self._c_stages.remove({'identity':identity})
-
-        return True
-
-
-    #--------------------------------------------------------------------------
-    def remove_many_data(self, identities, data_type = None):
-        for identitie in identities:
-            self.remove_data(identitie,data_type)
-        return True
-
-
-    #--------------------------------------------------------------------------
-    def has_data_key(self, identity, data_type = None):
-        d = self.get_data(identity, data_type)
-        if d :
-            return True
-        return False
-
-
-    #--------------------------------------------------------------------------
-    def get_data(self, identity, data_type = None):
-        if type(identity) is not str:
-            raise TypeError("Expected string, got %s" % type(identity))
-        if data_type is None:
-            tables = (self._c_information, self._c_resource, self._c_vulnerability)
-        elif data_type == Data.TYPE_INFORMATION:
-            tables = (self._c_information,)
-        elif data_type == Data.TYPE_RESOURCE:
-            tables = (self._c_resource,)
-        elif data_type == Data.TYPE_VULNERABILITY:
-            tables = (self._c_vulnerability,)
-        else:
-            raise NotImplementedError(
-                "Unknown data type %r!" % data_type)
-        for table in tables:
-            row = table.find_one({'identity':identity},{"_id":0,"data":1})
-            if row and row['data']:
-                return self.decode(row['data'])
-        return None
-
-
-    #--------------------------------------------------------------------------
-    def get_many_data(self, identities, data_type = None):
-        result = ( self.get_data(identity, data_type) for identity in identities )
-        return [ data for data in result if data ]
-
-
-    #--------------------------------------------------------------------------
-    def get_data_keys(self, data_type = None, data_subtype = None):
-        # Get all the keys.
-        if data_type is None:
-            if data_subtype is not None:
-                raise NotImplementedError(
-                    "Can't filter by subtype for all types")
-            hashes = set()
-            for table in (self._c_information,self._c_resource,self._c_vulnerability):
-                hashes.update( str(item['identity']) for item in table.find({},{"identity":1}) )
-            return hashes
-
-        # Get keys filtered by type and subtype.
-        if   data_type == Data.TYPE_INFORMATION:
-            table = self._c_information
-        elif data_type == Data.TYPE_RESOURCE:
-            table = self._c_resource
-        elif data_type == Data.TYPE_VULNERABILITY:
-            table = self._c_vulnerability
-        else:
-            raise NotImplementedError(
-                "Unknown data type %r!" % data_type)
-
-        query = {}
-        if data_subtype is not None:
-            query  = {'type':data_subtype}
-
-        return { str(item['identity']) for item in table.find(query,{"_id":0,"identity":1}) }
-
-
-    #--------------------------------------------------------------------------
-    def get_data_types(self, identities):
-        # TODO: optimize by checking multiple identities in the same query,
-        #       but beware of the maximum SQL query length limit.
-        #       See: http://www.sqlite.org/limits.html
-        result = { self.get_data_type(identity) for identity in identities }
-        try:
-            result.remove(None)
-        except KeyError:
-            pass
-        return result
-
-    def get_data_type(self, identity):
-        if type(identity) is not str:
-            raise TypeError("Expected string, got %s" % type(identity))
-        for table, data_type, subtype_filter in (
-            (self._c_information,   Data.TYPE_INFORMATION,   int),
-            (self._c_resource,      Data.TYPE_RESOURCE,      int),
-            (self._c_vulnerability, Data.TYPE_VULNERABILITY, str),
-        ):
-            query  = {"identity":identity}
-            row = table.find_one(query,{"type":1,"_id":0})
-            if row:
-                return data_type, subtype_filter(row['type'])
-
-
-    #--------------------------------------------------------------------------
-    def get_data_count(self, data_type = None, data_subtype = None):
-        # Count all the keys.
-        if data_type is None:
-            if data_subtype is not None:
-                raise NotImplementedError(
-                    "Can't filter by subtype for all types")
-            count = 0
-            for table in (self._c_information,self._c_resource,self._c_vulnerability):
-                count += int(table.find().count())
-            return count
-
-        # Count keys filtered by type and subtype.
-        if   data_type == Data.TYPE_INFORMATION:
-            table = self._c_information
-        elif data_type == Data.TYPE_RESOURCE:
-            table = self._c_resource
-        elif data_type == Data.TYPE_VULNERABILITY:
-            table = self._c_vulnerability
-        else:
-            raise NotImplementedError(
-                "Unknown data type %r!" % data_type)
-        query = {}
-        if data_subtype:
-            query={'type':data_subtype}
-
-        return int(table.find(query).count())
-
-
-    #--------------------------------------------------------------------------
-    def mark_plugin_finished(self, identity, plugin_id):
-        if type(identity) is not str:
-            raise TypeError("Expected string, got %s" % type(identity))
-        if type(plugin_id) is not str:
-            raise TypeError("Expected string, got %s" % type(plugin_id))
-
-        plugin_id = self.__get_pluginid(plugin_id)
-        if not plugin_id:
-            raise Error("Fatal Error, can not save data to mongodb in collection 'history'")
-
-        self._c_history.update({"plugin_id":plugin_id,
-                                "identity":identity
-                                },
-                               {"$set":{
-                                        "plugin_id":plugin_id,
-                                        "identity":identity
-                                        }
-                                },
-                               True
-                               )
-
-    def __get_pluginid(self,plugin_name):
-        # Fetch the plugin rowid, add it if missing.
-        rows = self._c_plugin.find_one({'name':plugin_name})
-        if rows:
-            return str(rows['_id'])
-
-        self._c_plugin.insert({'name':plugin_name})
-        rows = self._c_plugin.find_one({'name':plugin_name},{'_id':1})
-        if rows:
-            return str(rows['_id'])
-
-
-    #--------------------------------------------------------------------------
-    def mark_stage_finished(self, identity, stage):
-        if type(identity) is not str:
-            raise TypeError("Expected string, got %s" % type(identity))
-        if type(stage) is not int:
-            raise TypeError("Expected integer, got %s" % type(stage))
-
-        # Get the previous value of the last completed stage for this data.
-        row = self._c_stages.find_one({"identity":identity})
-        if row:
-            prev_stage = int(row['stage'])
-        if prev_stage is None:
-            prev_stage = 0
-        # If the new stage is greater than the old one...
-        if stage > prev_stage:
-            self._c_stages.update({"identity":identity},
-                                  {"$set":{"stage":stage}},
-                                  True
-                                  )
-
-
-    #--------------------------------------------------------------------------
-    def clear_stage_mark(self, identity):
-        if type(identity) is not str:
-            raise TypeError("Expected string, got %s" % type(identity))
-
-        self._c_stages.update({"identity":identity},
-                              {"$set":{"stage":0}},
-                              True
-                              )
-
-
-    #--------------------------------------------------------------------------
-    def clear_all_stage_marks(self):
-        self._c_stages.update({},
-                              {"$set":{"stage":0}})
-
-
-    #--------------------------------------------------------------------------
-    def get_past_plugins(self, identity):
-        if type(identity) is not str:
-            raise TypeError("Expected string, got %s" % type(identity))
-
-        # query plugin_id set
-        plugin_id_set= {str(row['plugin_id']) for row in self._c_history.find({'identity':identity},{'_id':0,'plugin_id':1})}
-        plugin_name_set = set()
-        for plugin_id in plugin_id_set:
-            plugin_name_set.update({str(row['name']) for row in self._c_plugin.find({'_id':objectid.ObjectId(plugin_id)},{'_id':0,'name':1})})
-        return plugin_name_set
-
-
-    #--------------------------------------------------------------------------
-    def get_pending_data(self, stage):
-        if type(stage) is not int:
-            raise TypeError("Expected integer, got %s" % type(stage))
-
-        return {str(row["identity"]) for row in self._c_stages.find({"stage":{"$lt":stage}},{"_id":0,"identity":1})}
-
-
-    #--------------------------------------------------------------------------
-    def get_mapped_values(self, shared_id, keys):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-        values = []
-        for key in keys:
-            rows = self._c_shared_map.find_one({"shared_id":shared_id,"key_hash":self.get_hash(key)},{"_id":0,"value":1})
-            if rows:
-                values.append( self.decode( rows["value"] ) )
-            else:
-                values.append(None) # fix bug 'key error'
-        return tuple(values)
-
-
-    #--------------------------------------------------------------------------
-    def has_all_mapped_keys(self, shared_id, keys):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-
-        result = True
-        for key in keys:
-            if not self._c_shared_map.find_one({"shared_id":shared_id,"key_hash":self.get_hash(key)}).count():
-                result = False
-                break
-        return result
-
-
-    #--------------------------------------------------------------------------
-    def has_any_mapped_key(self, shared_id, keys):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-
-        for key in keys:
-            if self._c_shared_map.find_one({"shared_id":shared_id,"key_hash":self.get_hash(key)}).count():
-                return True
-
-        return False
-
-
-    #--------------------------------------------------------------------------
-    def has_each_mapped_key(self, shared_id, keys):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-        result = []
-        for key in keys:
-            if self._c_shared_map.find_one({"shared_id":shared_id,"key_hash":self.get_hash(key)}).count():
-                result.append(True)
-            else:
-                result.append(False)
-        return tuple(result)
-
-
-    #--------------------------------------------------------------------------
-    def pop_mapped_values(self, shared_id, keys):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-        keys = tuple(keys)
-
-        values = self.get_mapped_values(shared_id, keys)
-        self.delete_mapped_values(shared_id, keys)
-        return values
-
-
-    #--------------------------------------------------------------------------
-    def put_mapped_values(self, shared_id, items):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-        for key, value in items:
-            self._c_shared_map.update({"shared_id":shared_id,"key_hash":self.get_hash(key)},
-                                      {"shared_id":shared_id,"key_hash":self.get_hash(key),"key":self.encode(key),"value":self.encode(value)},
-                                      True)
-
-
-    #--------------------------------------------------------------------------
-    def swap_mapped_values(self, shared_id, items):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-
-
-        keys = [str(key) for key, _ in items]
-        old_values = self.get_mapped_values(shared_id, keys)
-        self.put_mapped_values(shared_id, items)
-
-
-
-        #for key, value in items:
-        #    rows = self._c_shared_map.find_one({"shared_id":shared_id, "key_hash":self.get_hash(key)}, {"_id":0, "value":1})
-        #    if rows:
-        #        old = self.decode( rows['value'] )
-        #    else:
-        #        old = None
-        #    old_values.append(old)
-        #    if old != value:
-        #        self._c_shared_map.update({"shared_id":shared_id, "key_hash":self.get_hash(key)},
-        #                                  {"shared_id":shared_id, "key_hash":self.get_hash(key), "key":self.encode(key), "value":self.encode(value)},
-        #                                  True)
-        return tuple(old_values)
-
-
-    #--------------------------------------------------------------------------
-    def delete_mapped_values(self, shared_id, keys):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-
-        for key in keys:
-            self._c_shared_map.remove({"shared_id":shared_id, "key_hash":self.get_hash(key)})
-
-
-    #--------------------------------------------------------------------------
-    def get_mapped_keys(self, shared_id):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-        self._c_shared_map.find({"shared_id":shared_id},{"_id":0,"key":1})
-
-        return { self.decode(row["key"]) for row in self._c_shared_map.find({"shared_id":shared_id},{"_id":0,"key":1}) }
-
-
-    #--------------------------------------------------------------------------
-    def has_all_shared_values(self, shared_id, values):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-
-        for value in values:
-            if not self._c_shared_heap.find({"shared_id":shared_id,"value_hash":self.get_hash(value)}).count():
-                return False
-        return True
-
-
-    #--------------------------------------------------------------------------
-    def has_any_shared_value(self, shared_id, values):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-
-        for value in values:
-            if self._c_shared_heap.find({"shared_id":shared_id,"value_hash":self.get_hash(value)}).count():
-                return True
-        return False
-
-
-    #--------------------------------------------------------------------------
-    def has_each_shared_value(self, shared_id, values):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-
-        result=[]
-        for value in values:
-            if self._c_shared_heap.find({"shared_id":shared_id,"value_hash":self.get_hash(value)}).count():
-                result.append(True)
-            else:
-                result.append(False)
-        return tuple(result)
-
-
-    #--------------------------------------------------------------------------
-    def pop_shared_values(self, shared_id, maximum):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-
-        if maximum:
-            items = [(str(row["_id"]),row["value"]) for row in self._c_shared_heap.find({"shared_id":shared_id},{"_id":1,"value":1}).limit(maximum)]
-        else:
-            items = [(str(row["_id"]),row["value"]) for row in self._c_shared_heap.find({"shared_id":shared_id},{"_id":1,"value":1})]
-        result = tuple(self.decode(value) for _, value in items)
-        for rowid, _ in items:
-            self._c_shared_heap.remove({"_id":rowid})
-
-        return result
-
-
-    #--------------------------------------------------------------------------
-    def add_shared_values(self, shared_id, values):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-
-        for value in values:
-            value_hash = self.get_hash(value)
-            self._c_shared_heap.update({"shared_id":shared_id,"value_hash":value_hash},
-                                       {"shared_id":shared_id,"value_hash":value_hash,"value":self.encode(value)},
-                                       True)
-
-
-    #--------------------------------------------------------------------------
-    def remove_shared_values(self, shared_id, values):
-        if type(shared_id) is not str:
-            raise TypeError("Expected str, got %s" % type(shared_id))
-
-        for value in values:
-            self._c_shared_heap.remove({"shared_id":shared_id,"value_hash":self.get_hash(value)})
-
-
-    #--------------------------------------------------------------------------
-    def append_log_line(self, text, level, is_error, plugin_id, ack_id,
-                        timestamp = None):
-        # TODO
-        pass
-
-
-    #--------------------------------------------------------------------------
-    def get_log_lines(self, from_timestamp = None, to_timestamp = None,
-                      filter_by_plugin = None, filter_by_data = None,
-                      page_num = None, per_page = None):
-        # TODO
-        pass
 
 
 #------------------------------------------------------------------------------
