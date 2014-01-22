@@ -47,7 +47,6 @@ class Banner(Fingerprint):
     Service banner.
     """
 
-    information_type = Fingerprint.INFORMATION_BANNER
     min_resources = 1
 
 

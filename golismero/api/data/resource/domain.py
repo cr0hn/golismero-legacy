@@ -51,8 +51,6 @@ class Domain(Resource):
     This data type maps the domain names to the IP addresses they resolve to.
     """
 
-    resource_type = Resource.RESOURCE_DOMAIN
-
     _re_is_domain = re.compile(r"^[A-Za-z0-9][A-Za-z0-9\_\-\.]*[A-Za-z0-9]$")
 
 

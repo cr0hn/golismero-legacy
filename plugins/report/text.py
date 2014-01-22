@@ -35,6 +35,16 @@ from collections import defaultdict
 from golismero.api.audit import get_audit_times, parse_audit_times
 from golismero.api.config import Config
 from golismero.api.data.db import Database
+from golismero.api.data.information.fingerprint import OSFingerprint, WebServerFingerprint, ServiceFingerprint
+from golismero.api.data.information.geolocation import Geolocation
+from golismero.api.data.information.portscan import Portscan
+from golismero.api.data.information.traceroute import Traceroute
+from golismero.api.data.resource.bssid import BSSID
+from golismero.api.data.resource.domain import Domain
+from golismero.api.data.resource.email import Email
+from golismero.api.data.resource.ip import IP
+from golismero.api.data.resource.mac import MAC
+from golismero.api.data.resource.url import Url, BaseUrl
 from golismero.api.logger import Logger
 from golismero.api.plugin import ReportPlugin, get_plugin_name
 
@@ -150,8 +160,8 @@ class TextReport(ReportPlugin):
 
         # Summary
         start_time, stop_time, run_time = parse_audit_times( *get_audit_times() )
-        host_count  = Database.count(Data.TYPE_RESOURCE, Resource.RESOURCE_DOMAIN)
-        host_count += Database.count(Data.TYPE_RESOURCE, Resource.RESOURCE_IP)
+        host_count  = Database.count(Data.TYPE_RESOURCE, Domain.data_subtype)
+        host_count += Database.count(Data.TYPE_RESOURCE, IP.data_subtype)
         vuln_count  = Database.count(Data.TYPE_VULNERABILITY)
         print >>self.__fd, "-# %s #- " % self.__colorize("Summary", "yellow")
         print >>self.__fd, ""
@@ -184,12 +194,12 @@ class TextReport(ReportPlugin):
         # Discovered hosts
         if self.__show_data:
             need_header = True
-            for domain in self.__iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_DOMAIN):
+            for domain in self.__iterate(Data.TYPE_RESOURCE, Domain.data_subtype):
                 table = Texttable()
-                self.__add_related(table, domain, Data.TYPE_RESOURCE, Resource.RESOURCE_IP, "IP Address")
-                self.__add_related(table, domain, Data.TYPE_INFORMATION, Information.INFORMATION_GEOLOCATION, "Location")
-                self.__add_related(table, domain, Data.TYPE_INFORMATION, Information.INFORMATION_WEB_SERVER_FINGERPRINT, "Web Server")
-                self.__add_related(table, domain, Data.TYPE_INFORMATION, Information.INFORMATION_OS_FINGERPRINT, "OS Fingerprint")
+                self.__add_related(table, domain, Data.TYPE_RESOURCE, IP.data_subtype, "IP Address")
+                self.__add_related(table, domain, Data.TYPE_INFORMATION, Geolocation.data_subtype, "Location")
+                self.__add_related(table, domain, Data.TYPE_INFORMATION, WebServerFingerprint.data_subtype, "Web Server")
+                self.__add_related(table, domain, Data.TYPE_INFORMATION, OSFingerprint.data_subtype, "OS Fingerprint")
                 if table._rows:
                     if need_header:
                         need_header = False
@@ -202,17 +212,17 @@ class TextReport(ReportPlugin):
                         text = colorize_substring(text, domain.hostname, "red" if domain.get_links(Data.TYPE_VULNERABILITY) else "green")
                     print >>self.__fd, text
                     print >>self.__fd, ""
-            for ip in self.__iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_IP):
+            for ip in self.__iterate(Data.TYPE_RESOURCE, IP.data_subtype):
                 table = Texttable()
-                self.__add_related(table, ip, Data.TYPE_RESOURCE, Resource.RESOURCE_DOMAIN, "Domain Name")
-                self.__add_related(table, ip, Data.TYPE_RESOURCE, Resource.RESOURCE_MAC, "MAC Address")
-                self.__add_related(table, ip, Data.TYPE_RESOURCE, Resource.RESOURCE_BSSID, "WiFi 802.11 BSSID")
-                self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_GEOLOCATION, "Location")
-                self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_WEB_SERVER_FINGERPRINT, "Web Server")
-                self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_OS_FINGERPRINT, "OS Fingerprint")
-                self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_SERVICE_FINGERPRINT, "Service")
-                self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_PORTSCAN, "Port Scan")
-                self.__add_related(table, ip, Data.TYPE_INFORMATION, Information.INFORMATION_TRACEROUTE, "Network Route")
+                self.__add_related(table, ip, Data.TYPE_RESOURCE, Domain.data_subtype, "Domain Name")
+                self.__add_related(table, ip, Data.TYPE_RESOURCE, MAC.data_subtype, "MAC Address")
+                self.__add_related(table, ip, Data.TYPE_RESOURCE, BSSID.data_subtype, "WiFi 802.11 BSSID")
+                self.__add_related(table, ip, Data.TYPE_INFORMATION, Geolocation.data_subtype, "Location")
+                self.__add_related(table, ip, Data.TYPE_INFORMATION, WebServerFingerprint.data_subtype, "Web Server")
+                self.__add_related(table, ip, Data.TYPE_INFORMATION, OSFingerprint.data_subtype, "OS Fingerprint")
+                self.__add_related(table, ip, Data.TYPE_INFORMATION, ServiceFingerprint.data_subtype, "Service")
+                self.__add_related(table, ip, Data.TYPE_INFORMATION, Portscan.data_subtype, "Port Scan")
+                self.__add_related(table, ip, Data.TYPE_INFORMATION, Traceroute.data_subtype, "Network Route")
                 if table._rows:
                     if need_header:
                         need_header = False
@@ -227,20 +237,20 @@ class TextReport(ReportPlugin):
                     print >>self.__fd, ""
 
         # Web servers
-        if self.__show_data and Database.count(Data.TYPE_RESOURCE, Resource.RESOURCE_BASE_URL):
+        if self.__show_data and Database.count(Data.TYPE_RESOURCE, BaseUrl.data_subtype):
             print >>self.__fd, "-# %s #- " % self.__colorize("Web Servers", "yellow")
             print >>self.__fd, ""
             crawled = defaultdict(list)
             vulnerable = []
-            for url in self.__iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_URL):
+            for url in self.__iterate(Data.TYPE_RESOURCE, Url.data_subtype):
                 crawled[url.hostname].append(url.url)
                 if self.__color and url.get_links(Data.TYPE_VULNERABILITY):
                     vulnerable.append(url)
-            for url in self.__iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_BASE_URL):
+            for url in self.__iterate(Data.TYPE_RESOURCE, BaseUrl.data_subtype):
                 table = Texttable()
                 table.header(("Base URL", url.url))
-                self.__add_related(table, url, Data.TYPE_INFORMATION, Information.INFORMATION_WEB_SERVER_FINGERPRINT, "Server")
-                self.__add_related(table, url, Data.TYPE_INFORMATION, Information.INFORMATION_OS_FINGERPRINT, "Platform")
+                self.__add_related(table, url, Data.TYPE_INFORMATION, WebServerFingerprint.data_subtype, "Server")
+                self.__add_related(table, url, Data.TYPE_INFORMATION, OSFingerprint.data_subtype, "Platform")
                 urls = crawled[url.hostname]
                 if urls:
                     urls.sort()
@@ -264,7 +274,7 @@ class TextReport(ReportPlugin):
         if self.__show_data:
             emails = {
                 e.address: "red" if e.get_links(Data.TYPE_VULNERABILITY) else "green"
-                for e in self.__iterate(Data.TYPE_RESOURCE, Resource.RESOURCE_EMAIL)
+                for e in self.__iterate(Data.TYPE_RESOURCE, Email.data_subtype)
             }
             if emails:
                 print >>self.__fd, "-# %s #- " % self.__colorize("Email Addresses", "yellow")

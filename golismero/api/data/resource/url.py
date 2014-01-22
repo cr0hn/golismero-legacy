@@ -50,7 +50,7 @@ class _AbstractUrl(Resource):
     """
 
     # Not true, but this bypasses an integrity check in the metaclass.
-    resource_type = Resource.RESOURCE_URL
+    data_subtype = "resource/abstract"
 
 
     #--------------------------------------------------------------------------
@@ -174,7 +174,7 @@ class Url(_AbstractUrl):
     - referer
     """
 
-    resource_type = Resource.RESOURCE_URL
+    data_subtype = "url"
 
 
     #--------------------------------------------------------------------------
@@ -354,7 +354,7 @@ class BaseUrl(_AbstractUrl):
     once as BaseUrl and again the more generic Url.
     """
 
-    resource_type = Resource.RESOURCE_BASE_URL
+    data_subtype = "base_url"
 
 
     #--------------------------------------------------------------------------
@@ -436,7 +436,7 @@ class FolderUrl(_AbstractUrl):
     For that, see the BaseUrl data type.
     """
 
-    resource_type = Resource.RESOURCE_FOLDER_URL
+    data_subtype = "folder_url"
 
 
     #--------------------------------------------------------------------------

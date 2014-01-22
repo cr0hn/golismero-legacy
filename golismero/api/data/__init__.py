@@ -530,6 +530,8 @@ class _data_metaclass(type):
     .. warning: Used internally by GoLismero. Do not use!
     """
 
+
+    #--------------------------------------------------------------------------
     def __init__(cls, name, bases, namespace):
         super(_data_metaclass, cls).__init__(name, bases, namespace)
 
@@ -537,11 +539,6 @@ class _data_metaclass(type):
         for propname, prop in cls.__dict__.iteritems():
             if merge.is_mergeable_property(prop):
                 prop.validate(cls, propname)
-
-        # The Data class itself has to be processed differently.
-        if cls.__module__ == "golismero.api.data" and name == "Data":
-            cls.data_subtype = None
-            return
 
         # Skip some checks for the base classes.
         is_child_class = cls.__module__ not in (
@@ -553,36 +550,56 @@ class _data_metaclass(type):
 
         # Check the data_type is not TYPE_UNKNOWN.
         if is_child_class and not cls.data_type:
-            msg = "Error in %s.%s: Subclasses of Data MUST define their data_type!"
+            msg = "Error in %s.%s: Missing data_type!"
             raise TypeError(msg % (cls.__module__, cls.__name__))
 
-        # Check the information_type is not INFORMATION_UNKNOWN.
-        if cls.data_type == Data.TYPE_INFORMATION:
-            if is_child_class and not cls.information_type:
-                msg = "Error in %s.%s: Subclasses of Information MUST define their information_type!"
-                raise TypeError(msg % (cls.__module__, cls.__name__))
-            cls.data_subtype = cls.information_type
+        # Automatically calculate the data subtype from the module name.
+        modulename = cls.__module__[19:]
+        modulename = modulename.replace(".", "/")
+        if not modulename:
+            modulename = "data"
+        while 1:  # just to use "break", not a real loop
+            if "data_subtype" in cls.__dict__:
+                if "/" in cls.data_subtype:
+                    data_subtype = cls.data_subtype
+                    break
+                classname = cls.data_subtype
+            elif cls.data_subtype.endswith("/abstract") and \
+                            cls.data_subtype.count("/") > 1:
+                classname = uncamelcase(cls.__name__)
+                classname = classname.lower().replace(" ", "_")
+            else:
+                classname = ""
+            if classname:
+                data_subtype = "%s/%s" % (modulename, classname)
+            else:
+                data_subtype = modulename
+            break
+        if cls.data_subtype is None:
+            print ("*" * 20) + data_subtype
+        cls.data_subtype = data_subtype
 
-        # Check the resource_type is not RESOURCE_UNKNOWN.
-        elif cls.data_type == Data.TYPE_RESOURCE:
-            if is_child_class and not cls.resource_type:
-                msg = "Error in %s.%s: Subclasses of Resource MUST define their resource_type!"
-                raise TypeError(msg % (cls.__module__, cls.__name__))
-            cls.data_subtype = cls.resource_type
+        # Maintain the aliases for now. Maybe we should deprecate them.
+        if data_subtype.startswith("resource/"):
+            cls.resource_type = data_subtype
+        elif data_subtype.startswith("information/"):
+            cls.information_type = data_subtype
+        elif data_subtype.startswith("vulnerability/"):
+            cls.vulnerability_type = data_subtype
+        elif data_subtype != "data/abstract":
+            assert False, "Internal error! data_subtype: %s" % data_subtype
 
-        # Automatically calculate the vulnerability type from the module name.
-        # If we can't, at least make sure it's defined manually.
-        elif cls.data_type == Data.TYPE_VULNERABILITY:
-            is_vuln_type_missing = "vulnerability_type" not in cls.__dict__
-            if cls.__module__.startswith("golismero.api.data.vulnerability."):
-                if is_vuln_type_missing:
-                    vuln_type = cls.__module__[33:]
-                    vuln_type = vuln_type.replace(".", "/")
-                    cls.vulnerability_type = vuln_type
-            elif is_child_class and is_vuln_type_missing:
-                msg = "Error in %s.%s: Missing vulnerability_type!"
-                raise TypeError(msg % (cls.__module__, cls.__name__))
-            cls.data_subtype = cls.vulnerability_type
+
+    #--------------------------------------------------------------------------
+    def __call__(cls, *args, **kwargs):
+
+        # Reuse old instances when possible.
+        new_obj = super(_data_metaclass, cls).__call__(*args, **kwargs)
+        old_obj = LocalDataCache.get(new_obj.identity)
+        if old_obj is not None:
+            old_obj.merge(new_obj)
+            new_obj = old_obj
+        return new_obj
 
 
 #------------------------------------------------------------------------------
@@ -594,20 +611,18 @@ class Data(object):
 
     __metaclass__ = _data_metaclass
 
-    # TODO: Add user-defined tags to Data objects.
-    # TODO: Add user-defined properties to Data objects.
-
 
     #--------------------------------------------------------------------------
     # Data types
 
     TYPE_UNKNOWN = 0      # not a real type! only used in get_accepted_info()
 
-    TYPE_INFORMATION           = 1
-    TYPE_VULNERABILITY         = 2
-    TYPE_RESOURCE              = 3
+    TYPE_INFORMATION   = 1
+    TYPE_VULNERABILITY = 2
+    TYPE_RESOURCE      = 3
 
     data_type = TYPE_UNKNOWN
+    data_subtype = "data/abstract"
 
 
     #--------------------------------------------------------------------------
@@ -628,18 +643,6 @@ class Data(object):
     max_resources = None         # Maximum linked resources.
     max_informations = None      # Maximum linked informations.
     max_vulnerabilities = None   # Maximum linked vulnerabilities.
-
-
-    #--------------------------------------------------------------------------
-    ##def __new__(cls, *args, **kwargs):
-    ##
-    ##    # Reuse old instances when possible.
-    ##    new_obj = super(Data, cls).__new__(*args, **kwargs)
-    ##    old_obj = LocalDataCache.get(new_obj.identity)
-    ##    if old_obj is not None:
-    ##        old_obj.merge(new_obj)
-    ##        new_obj = old_obj
-    ##    return old_obj
 
 
     #--------------------------------------------------------------------------
@@ -1221,20 +1224,37 @@ class Data(object):
         Get the linked Data identities of the given data type.
 
         :param data_type: Optional data type. One of the Data.TYPE_* values.
-        :type data_type: int
+        :type data_type: int | None
 
         :param data_subtype: Optional data subtype.
-        :type data_subtype: int | str
+        :type data_subtype: str | None
 
         :returns: Identities.
         :rtype: set(str)
 
         :raises ValueError: Invalid data_type argument.
         """
-        if data_type is None:
-            if data_subtype is not None:
+        if data_type is not None and type(data_type) is not int:
+            raise TypeError(
+                "Expected integer, got %r instead" % type(data_type))
+        if data_subtype is not None:
+            if type(data_subtype) is not str:
+                raise TypeError(
+                    "Expected string, got %r instead" % type(data_subtype))
+            if data_type is None:
                 raise NotImplementedError(
                     "Can't filter by subtype for all types")
+            if data_type == self.TYPE_RESOURCE:
+                if not data_subtype.startswith("resource/"):
+                    raise ValueError("Invalid data_subtype: %r" % data_subtype)
+            elif data_type == self.TYPE_INFORMATION:
+                if not data_subtype.startswith("information/"):
+                    raise ValueError("Invalid data_subtype: %r" % data_subtype)
+            elif data_type == self.TYPE_VULNERABILITY:
+                if not data_subtype.startswith("vulnerability/"):
+                    raise ValueError("Invalid data_subtype: %r" % data_subtype)
+            else:
+                raise ValueError("Invalid data_type: %r" % data_type)
         return self.__linked[data_type][data_subtype]
 
 
@@ -1244,10 +1264,10 @@ class Data(object):
         Get the linked Data elements of the given data type.
 
         :param data_type: Optional data type. One of the Data.TYPE_* values.
-        :type data_type: int
+        :type data_type: int | None
 
         :param data_subtype: Optional data subtype.
-        :type data_subtype: int | str
+        :type data_subtype: str | None
 
         :returns: Data elements.
         :rtype: set(Data)
@@ -1440,57 +1460,54 @@ class Data(object):
 
 
     #--------------------------------------------------------------------------
-    def get_associated_vulnerabilities_by_category(self, cat_name = None):
+    def get_associated_vulnerabilities_by_category(self, data_subtype = None):
         """
         Get associated vulnerabilites by category.
 
-        :param cat_name: category name
-        :type cat_name: str
+        :param data_subtype: Value of the data_subtype property of the
+            class you're looking for.
+        :type data_subtype: str
 
-        :return: Associated vulnerabilites. Returns an empty set if the category doesn't exist.
+        :return: Associated vulnerabilites.
         :rtype: set(Vulnerability)
+
+        :raises ValueError: The specified information type is invalid.
         """
-        return self.find_linked_data(self.TYPE_VULNERABILITY, cat_name)
+        return self.find_linked_data(self.TYPE_VULNERABILITY, data_subtype)
 
 
     #--------------------------------------------------------------------------
-    def get_associated_informations_by_category(self, information_type = None):
+    def get_associated_informations_by_category(self, data_subtype = None):
         """
         Get associated informations by type.
 
-        :param information_type: One of the Information.INFORMATION_* constants.
-        :type information_type: int
+        :param data_subtype: Value of the data_subtype property of the
+            class you're looking for.
+        :type data_subtype: str
 
         :return: Associated informations.
         :rtype: set(Information)
 
         :raises ValueError: The specified information type is invalid.
         """
-        if type(information_type) is not int:
-            raise TypeError("Expected int, got %r instead" % type(information_type))
-##        if not Information.INFORMATION_FIRST >= information_type >= Information.INFORMATION_LAST:
-##            raise ValueError("Invalid information_type: %r" % information_type)
-        return self.find_linked_data(self.TYPE_INFORMATION, information_type)
+        return self.find_linked_data(self.TYPE_INFORMATION, data_subtype)
 
 
     #--------------------------------------------------------------------------
-    def get_associated_resources_by_category(self, resource_type = None):
+    def get_associated_resources_by_category(self, data_subtype = None):
         """
         Get associated informations by type.
 
-        :param resource_type: One of the Resource.RESOURCE_* constants.
-        :type resource_type: int
+        :param data_subtype: Value of the data_subtype property of the
+            class you're looking for.
+        :type data_subtype: str
 
         :return: Associated resources.
         :rtype: set(Resource)
 
         :raises ValueError: The specified resource type is invalid.
         """
-        if type(resource_type) is not int:
-            raise TypeError("Expected int, got %r instead" % type(resource_type))
-##        if not Resource.RESOURCE_FIRST >= resource_type >= Resource.RESOURCE_LAST:
-##            raise ValueError("Invalid resource_type: %r" % resource_type)
-        return self.find_linked_data(self.TYPE_RESOURCE, resource_type)
+        return self.find_linked_data(self.TYPE_RESOURCE, data_subtype)
 
 
     #--------------------------------------------------------------------------
@@ -1501,8 +1518,10 @@ class Data(object):
         :param res: Resource element.
         :type res: Resource
         """
-        if not hasattr(res, "data_type") or res.data_type != self.TYPE_RESOURCE:
-            raise TypeError("Expected Resource, got %r instead" % type(res))
+        if not hasattr(res, "data_type") or \
+                        res.data_type != self.TYPE_RESOURCE:
+            raise TypeError(
+                "Expected Resource, got %r instead" % type(res))
         self.add_link(res)
 
 
@@ -1514,8 +1533,10 @@ class Data(object):
         :param info: Information element.
         :type info: Information
         """
-        if not hasattr(info, "data_type") or info.data_type != self.TYPE_INFORMATION:
-            raise TypeError("Expected Information, got %r instead" % type(info))
+        if not hasattr(info, "data_type") or \
+                        info.data_type != self.TYPE_INFORMATION:
+            raise TypeError(
+                "Expected Information, got %r instead" % type(info))
         self.add_link(info)
 
 
@@ -1527,8 +1548,10 @@ class Data(object):
         :param info: Vulnerability element.
         :type info: Vulnerability
         """
-        if not hasattr(vuln, "data_type") or vuln.data_type != self.TYPE_VULNERABILITY:
-            raise TypeError("Expected Vulnerability, got %r instead" % type(vuln))
+        if not hasattr(vuln, "data_type") or \
+                        vuln.data_type != self.TYPE_VULNERABILITY:
+            raise TypeError(
+                "Expected Vulnerability, got %r instead" % type(vuln))
         self.add_link(vuln)
 
 

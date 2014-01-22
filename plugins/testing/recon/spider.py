@@ -27,7 +27,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.config import Config
-from golismero.api.data.information import Information
+from golismero.api.data.information.html import HTML
+from golismero.api.data.information.text import Text
 from golismero.api.data.resource.email import Email
 from golismero.api.data.resource.url import Url
 from golismero.api.logger import Logger
@@ -83,11 +84,11 @@ class Spider(TestingPlugin):
 
         # Get links
         m_forms = None
-        if p.information_type == Information.INFORMATION_HTML:
+        if p.information_type == HTML.data_subtype:
             m_links = extract_from_html(p.raw_data, m_url)
             m_forms = extract_forms_from_html(p.raw_data, m_url)
             #m_links.update( extract_from_text(p.raw_data, m_url) )
-        elif p.information_type == Information.INFORMATION_PLAIN_TEXT:
+        elif p.information_type == Text.data_subtype:
             m_links = extract_from_text(p.raw_data, m_url)
         else:
             return m_return

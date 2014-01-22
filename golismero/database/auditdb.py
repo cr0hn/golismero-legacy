@@ -1686,9 +1686,9 @@ class AuditSQLiteDB (BaseAuditDB):
         if type(identity) is not str:
             raise TypeError("Expected string, got %s" % type(identity))
         for table, data_type, subtype_filter in (
-            ("information",   Data.TYPE_INFORMATION,   int),
-            ("resource",      Data.TYPE_RESOURCE,      int),
-            ("vulnerability", Data.TYPE_VULNERABILITY, str),
+            ("information",   Data.TYPE_INFORMATION),
+            ("resource",      Data.TYPE_RESOURCE),
+            ("vulnerability", Data.TYPE_VULNERABILITY),
         ):
             # FIXME
             # not sure if it's not faster to do an inverse lookup
@@ -1701,7 +1701,7 @@ class AuditSQLiteDB (BaseAuditDB):
             self.__cursor.execute(query, values)
             row = self.__cursor.fetchone()
             if row:
-                return data_type, subtype_filter(row[0])
+                return data_type, str(row[0])
 
 
     #--------------------------------------------------------------------------
@@ -2474,32 +2474,8 @@ class AuditMongoDB(BaseAuditDB):
             table = self._c_vulnerability
             dtype = data.vulnerability_type
         elif data_type == Data.TYPE_UNKNOWN:
-            warnings.warn(
-                "Received %s object of type TYPE_UNKNOWN" % type(data),
-                RuntimeWarning, stacklevel=3)
-            if   isinstance(data, Information):
-                data.data_type = Data.TYPE_INFORMATION
-                table = self._c_information
-                dtype = data.information_type
-                if dtype == Information.INFORMATION_UNKNOWN:
-                    warnings.warn(
-                        "Received %s object of subtype INFORMATION_UNKNOWN" % type(data),
-                        RuntimeWarning, stacklevel=3)
-            elif isinstance(data, Resource):
-                data.data_type = Data.TYPE_RESOURCE
-                table = self._c_resource
-                dtype = data.resource_type
-                if dtype == Resource.RESOURCE_UNKNOWN:
-                    warnings.warn(
-                        "Received %s object of subtype RESOURCE_UNKNOWN" % type(data),
-                        RuntimeWarning, stacklevel=3)
-            elif isinstance(data, Vulnerability):
-                data.data_type = Data.TYPE_VULNERABILITY
-                table = self._c_vulnerability
-                dtype = data.vulnerability_type
-            else:
-                raise NotImplementedError(
-                    "Unknown data type %r!" % type(data))
+            raise RuntimeError(
+                "Received %s object of type TYPE_UNKNOWN" % type(data))
         else:
             raise NotImplementedError(
                 "Unknown data type %r!" % data_type)

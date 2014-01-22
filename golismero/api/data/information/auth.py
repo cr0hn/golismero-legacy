@@ -43,7 +43,7 @@ class Username(Asset):
     Username.
     """
 
-    information_type = Asset.INFORMATION_USERNAME
+    data_subtype = "username"
 
 
     #--------------------------------------------------------------------------
@@ -74,7 +74,7 @@ class Password(Asset):
     Password.
     """
 
-    information_type = Asset.INFORMATION_PASSWORD
+    data_subtype = "password"
 
 
     #--------------------------------------------------------------------------
