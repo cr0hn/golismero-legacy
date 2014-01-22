@@ -1242,19 +1242,33 @@ class Data(object):
                 raise TypeError(
                     "Expected string, got %r instead" % type(data_subtype))
             if data_type is None:
-                raise NotImplementedError(
-                    "Can't filter by subtype for all types")
-            if data_type == self.TYPE_RESOURCE:
-                if not data_subtype.startswith("resource/"):
-                    raise ValueError("Invalid data_subtype: %r" % data_subtype)
-            elif data_type == self.TYPE_INFORMATION:
-                if not data_subtype.startswith("information/"):
-                    raise ValueError("Invalid data_subtype: %r" % data_subtype)
-            elif data_type == self.TYPE_VULNERABILITY:
-                if not data_subtype.startswith("vulnerability/"):
-                    raise ValueError("Invalid data_subtype: %r" % data_subtype)
+                if data_subtype.startswith("resource/"):
+                    data_type = self.TYPE_RESOURCE
+                elif data_subtype.startswith("information/"):
+                    data_type = self.TYPE_INFORMATION
+                elif data_subtype.startswith("vulnerability/"):
+                    data_type = self.TYPE_VULNERABILITY
+                elif data_subtype == "data/abstract":
+                    data_type = self.TYPE_UNKNOWN
+                    data_subtype = None
+                else:
+                    raise ValueError(
+                        "Invalid data_subtype: %r" % data_subtype)
             else:
-                raise ValueError("Invalid data_type: %r" % data_type)
+                if data_type == self.TYPE_RESOURCE:
+                    if not data_subtype.startswith("resource/"):
+                        raise ValueError(
+                            "Invalid data_subtype: %r" % data_subtype)
+                elif data_type == self.TYPE_INFORMATION:
+                    if not data_subtype.startswith("information/"):
+                        raise ValueError(
+                            "Invalid data_subtype: %r" % data_subtype)
+                elif data_type == self.TYPE_VULNERABILITY:
+                    if not data_subtype.startswith("vulnerability/"):
+                        raise ValueError(
+                            "Invalid data_subtype: %r" % data_subtype)
+                else:
+                    raise ValueError("Invalid data_type: %r" % data_type)
         return self.__linked[data_type][data_subtype]
 
 

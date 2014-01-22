@@ -517,10 +517,10 @@ class BaseAuditDB (BaseDB):
         type, optionally filtering by subtype.
 
         :param data_type: Optional data type. One of the Data.TYPE_* values.
-        :type data_type: int
+        :type data_type: int | None
 
         :param data_subtype: Optional data subtype.
-        :type data_subtype: int | str
+        :type data_subtype: str | None
 
         :returns: Identity hashes.
         :rtype: set(str)
@@ -550,10 +550,10 @@ class BaseAuditDB (BaseDB):
         optionally filtering by subtype.
 
         :param data_type: Optional data type. One of the Data.TYPE_* values.
-        :type data_type: int
+        :type data_type: int | None
 
         :param data_subtype: Optional data subtype.
-        :type data_subtype: int | str
+        :type data_subtype: str | None
 
         :returns: Identity hashes.
         :rtype: set(str)
@@ -1637,17 +1637,50 @@ class AuditSQLiteDB (BaseAuditDB):
     @transactional
     def get_data_keys(self, data_type = None, data_subtype = None):
 
-        # Get all the keys.
+        # Trivial case, get all the keys.
         if data_type is None:
-            if data_subtype is not None:
+            if data_subtype is None or data_subtype == "data/abstract":
+                hashes = set()
+                for table in ("information", "resource", "vulnerability"):
+                    query  = "SELECT identity FROM %s;" % table
+                    self.__cursor.execute(query)
+                    hashes.update(
+                        str(row[0]) for row in self.__cursor.fetchall()
+                    )
+                return hashes
+
+            # We have data_subtype but no data_type.
+            # Derive the second from the first.
+            if data_subtype.startswith("resource/"):
+                data_type = Data.TYPE_RESOURCE
+            elif data_subtype.startswith("information/"):
+                data_type = Data.TYPE_INFORMATION
+            elif data_subtype.startswith("vulnerability/"):
+                data_type = Data.TYPE_VULNERABILITY
+            else:
                 raise NotImplementedError(
-                    "Can't filter by subtype for all types")
-            hashes = set()
-            for table in ("information", "resource", "vulnerability"):
-                query  = "SELECT identity FROM %s;" % table
-                self.__cursor.execute(query)
-                hashes.update( str(row[0]) for row in self.__cursor.fetchall() )
-            return hashes
+                    "Unknown data subtype: %r" % data_subtype)
+
+        # If we have data_subtype, validate it.
+        if data_subtype is not None:
+            if data_type == Data.TYPE_RESOURCE:
+                if not data_subtype.startswith("resource/"):
+                    raise ValueError(
+                        "Invalid data subtype %r for TYPE_RESOURCE"
+                        % data_subtype)
+            elif data_type == Data.TYPE_INFORMATION:
+                if not data_subtype.startswith("information/"):
+                    raise ValueError(
+                        "Invalid data subtype %r for TYPE_INFORMATION"
+                        % data_subtype)
+            elif data_type == Data.TYPE_VULNERABILITY:
+                if not data_subtype.startswith("vulnerability/"):
+                    raise ValueError(
+                        "Invalid data subtype %r for TYPE_VULNERABILITY"
+                        % data_subtype)
+            else:
+                raise NotImplementedError(
+                    "Unknown data type %r!" % data_type)
 
         # Get keys filtered by type and subtype.
         if   data_type == Data.TYPE_INFORMATION:
@@ -1664,7 +1697,7 @@ class AuditSQLiteDB (BaseAuditDB):
             values = ()
         else:
             query  = "SELECT identity FROM %s WHERE type = ?;" % table
-            values = (data_subtype,)
+            values = (self.__get_or_create_type(data_subtype),)
         self.__cursor.execute(query, values)
         return { str(row[0]) for row in self.__cursor.fetchall() }
 
@@ -1708,19 +1741,48 @@ class AuditSQLiteDB (BaseAuditDB):
     @transactional
     def get_data_count(self, data_type = None, data_subtype = None):
 
-        # Get the data subtype ID.
-        data_subtype = self.__get_or_create_type(data_subtype)
-
-        # Count all the keys.
+        # Trivial case, count all the keys.
         if data_type is None:
-            if data_subtype is not None:
+            if data_subtype is None or data_subtype == "data/abstract":
+                count = 0
+                for table in ("information", "resource", "vulnerability"):
+                    self.__cursor.execute("SELECT COUNT(rowid) FROM %s;"
+                                          % table)
+                    count += int(self.__cursor.fetchone()[0])
+                return count
+
+            # We have data_subtype but no data_type.
+            # Derive the second from the first.
+            if data_subtype.startswith("resource/"):
+                data_type = Data.TYPE_RESOURCE
+            elif data_subtype.startswith("information/"):
+                data_type = Data.TYPE_INFORMATION
+            elif data_subtype.startswith("vulnerability/"):
+                data_type = Data.TYPE_VULNERABILITY
+            else:
                 raise NotImplementedError(
-                    "Can't filter by subtype for all types")
-            count = 0
-            for table in ("information", "resource", "vulnerability"):
-                self.__cursor.execute("SELECT COUNT(rowid) FROM %s;" % table)
-                count += int(self.__cursor.fetchone()[0])
-            return count
+                    "Unknown data subtype: %r" % data_subtype)
+
+        # If we have data_subtype, validate it.
+        if data_subtype is not None:
+            if data_type == Data.TYPE_RESOURCE:
+                if not data_subtype.startswith("resource/"):
+                    raise ValueError(
+                        "Invalid data subtype %r for TYPE_RESOURCE"
+                        % data_subtype)
+            elif data_type == Data.TYPE_INFORMATION:
+                if not data_subtype.startswith("information/"):
+                    raise ValueError(
+                        "Invalid data subtype %r for TYPE_INFORMATION"
+                        % data_subtype)
+            elif data_type == Data.TYPE_VULNERABILITY:
+                if not data_subtype.startswith("vulnerability/"):
+                    raise ValueError(
+                        "Invalid data subtype %r for TYPE_VULNERABILITY"
+                        % data_subtype)
+            else:
+                raise NotImplementedError(
+                    "Unknown data type %r!" % data_type)
 
         # Count keys filtered by type and subtype.
         if   data_type == Data.TYPE_INFORMATION:
@@ -1737,7 +1799,7 @@ class AuditSQLiteDB (BaseAuditDB):
             values = ()
         else:
             query  = "SELECT COUNT(rowid) FROM %s WHERE type = ?;" % table
-            values = (data_subtype,)
+            values = (self.__get_or_create_type(data_subtype),)
         self.__cursor.execute(query, values)
         return int(self.__cursor.fetchone()[0])
 
