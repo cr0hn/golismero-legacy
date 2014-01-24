@@ -652,7 +652,7 @@ class Data(object):
         # + all links:                  None -> None -> set(identity)
         # + links by type:              type -> None -> set(identity)
         # + links by type and subtype:  type -> subtype -> set(identity)
-        self.__linked = defaultdict(partial(defaultdict, set))
+        self._linked = defaultdict(partial(defaultdict, set))
 
         # Identity hash cache.
         self.__identity = None
@@ -669,6 +669,58 @@ class Data(object):
     #--------------------------------------------------------------------------
     def __repr__(self):
         return "<%s identity=%s>" % (self.__class__.__name__, self.identity)
+
+
+    #--------------------------------------------------------------------------
+    def _load_links(self, links):
+        """
+        Internally used method. It loads the links from this Data object to
+        other objects, used in auditdb.py.
+
+        :param links: Links to other Data objects as tuples with the
+                      data type, subtype and identity.
+        :type links: set(tuple(int, str, str))
+        """
+
+        # Linked Data objects.
+        # + all links:                  None -> None -> set(identity)
+        # + links by type:              type -> None -> set(identity)
+        # + links by type and subtype:  type -> subtype -> set(identity)
+        self._linked = defaultdict(partial(defaultdict, set))
+
+        # Populate the links dictionary.
+        for data_type, data_subtype, identity in links:
+            assert type(data_type) is int, type(data_type)
+            assert type(data_subtype) is str, type(data_subtype)
+            assert type(identity) is str, type(identity)
+            self._linked[None][None].add(identity)
+            self._linked[data_type][None].add(identity)
+            self._linked[data_type][data_subtype].add(identity)
+
+
+    #--------------------------------------------------------------------------
+    def _save_links(self):
+        """
+        Internally used method. It saves the links from this Data object to
+        other objects, used in auditdb.py.
+
+        :returns: Links to other Data objects as tuples with the
+                  data type, subtype and identity.
+        :rtype: set(tuple(int, str, str))
+        """
+        links = set()
+        for data_type, tmp in self._linked.iteritems():
+            if data_type is None:
+                continue
+            for data_subtype, tmp2 in tmp.iteritems():
+                if data_subtype is None:
+                    continue
+                for identity in tmp2:
+                    # assert type(data_type) is int, type(data_type)
+                    # assert type(data_subtype) is str, type(data_subtype)
+                    # assert type(identity) is str, type(identity)
+                    links.add( (data_type, data_subtype, identity) )
+        return links
 
 
     #--------------------------------------------------------------------------
@@ -1163,14 +1215,14 @@ class Data(object):
         :type reverse: bool
         """
         if reverse:
-            for data_type, new_subdict in new_data.__linked.items():
-                target_subdict = old_data.__linked[data_type].copy()
+            for data_type, new_subdict in new_data._linked.items():
+                target_subdict = old_data._linked[data_type].copy()
                 for data_subtype, identity_set in new_subdict.iteritems():
                     target_subdict[data_subtype] = target_subdict[data_subtype].union(identity_set)
-                new_data.__linked[data_type] = target_subdict
+                new_data._linked[data_type] = target_subdict
         else:
-            for data_type, new_subdict in new_data.__linked.iteritems():
-                my_subdict = old_data.__linked[data_type]
+            for data_type, new_subdict in new_data._linked.iteritems():
+                my_subdict = old_data._linked[data_type]
                 for data_subtype, identity_set in new_subdict.iteritems():
                     my_subdict[data_subtype].update(identity_set)
 
@@ -1205,7 +1257,7 @@ class Data(object):
         :returns: Set of linked Data identities.
         :rtype: set(str)
         """
-        return self.__linked[None][None]
+        return self._linked[None][None]
 
 
     #--------------------------------------------------------------------------
@@ -1215,7 +1267,7 @@ class Data(object):
         :returns: Set of linked Data elements.
         :rtype: set(Data)
         """
-        return self.resolve_links( self.__linked[None][None] )
+        return self.resolve_links( self._linked[None][None] )
 
 
     #--------------------------------------------------------------------------
@@ -1269,7 +1321,7 @@ class Data(object):
                             "Invalid data_subtype: %r" % data_subtype)
                 else:
                     raise ValueError("Invalid data_type: %r" % data_type)
-        return self.__linked[data_type][data_subtype]
+        return self._linked[data_type][data_subtype]
 
 
     #--------------------------------------------------------------------------
@@ -1398,9 +1450,9 @@ class Data(object):
         """
         data_id = other.identity
         data_type = other.data_type
-        self.__linked[None][None].add(data_id)
-        self.__linked[data_type][None].add(data_id)
-        self.__linked[data_type][other.data_subtype].add(data_id)
+        self._linked[None][None].add(data_id)
+        self._linked[data_type][None].add(data_id)
+        self._linked[data_type][other.data_subtype].add(data_id)
 
 
     #--------------------------------------------------------------------------

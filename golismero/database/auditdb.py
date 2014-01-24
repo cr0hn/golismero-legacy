@@ -36,9 +36,6 @@ __all__ = ["AuditDB"]
 
 from .common import BaseDB, atomic, transactional
 from ..api.data import Data
-from ..api.data.information import Information
-from ..api.data.resource import Resource
-from ..api.data.vulnerability import Vulnerability
 ##from ..api.shared import check_value   # FIXME do server-side checks too!
 from ..api.text.text_utils import generate_random_string
 from ..messaging.codes import MessageCode
@@ -50,7 +47,6 @@ import md5
 import sqlite3
 import threading
 import time
-import urlparse
 import warnings
 
 # Lazy imports
@@ -885,7 +881,7 @@ class AuditSQLiteDB (BaseAuditDB):
     """
 
     # The current schema version.
-    SCHEMA_VERSION = 2
+    SCHEMA_VERSION = 3
 
 
     #--------------------------------------------------------------------------
@@ -899,7 +895,8 @@ class AuditSQLiteDB (BaseAuditDB):
         self.__lock = threading.RLock()
 
         # Create the data subtypes cache.
-        self.__data_subtype_cache = {}
+        self.__data_subtype_cache = {} # name -> id
+        self.__data_subtype_reverse_cache = {} # id -> name
 
         # Get the filename from the connection string.
         filename = self.__parse_connection_string(
@@ -1229,6 +1226,20 @@ class AuditSQLiteDB (BaseAuditDB):
                 name STRING UNIQUE NOT NULL
             );
 
+            CREATE TABLE links (
+                rowid INTEGER PRIMARY KEY,
+                src_id STRING NOT NULL,
+                dst_id STRING NOT NULL,
+                src_family INTEGER NOT NULL,
+                dst_family INTEGER NOT NULL,
+                src_type INTEGER NOT NULL,
+                dst_type INTEGER NOT NULL,
+                FOREIGN KEY(src_type) REFERENCES types(rowid),
+                FOREIGN KEY(dst_type) REFERENCES types(rowid),
+                UNIQUE (src_id, dst_id) ON CONFLICT IGNORE,
+                CHECK (src_id <= dst_id)
+            );
+
             CREATE TABLE data (
                 rowid INTEGER PRIMARY KEY,
                 identity STRING UNIQUE NOT NULL,
@@ -1309,9 +1320,10 @@ class AuditSQLiteDB (BaseAuditDB):
     @transactional
     def __load_data_subtype_cache(self):
         self.__cursor.execute("SELECT name, rowid FROM types;")
-        self.__data_subtype_cache.update(
-            self.__cursor.fetchall()
-        )
+        self.__data_subtype_cache = dict( self.__cursor.fetchall() )
+        self.__data_subtype_reverse_cache = {
+            v: k for k, v in self.__data_subtype_cache.iteritems()
+        }
 
 
     #--------------------------------------------------------------------------
@@ -1332,7 +1344,8 @@ class AuditSQLiteDB (BaseAuditDB):
                 return self.__data_subtype_cache[data_subtype]
             except KeyError:
                 rowid = self.__create_type(data_subtype)
-                self.__data_subtype_cache[data_subtype] = rowid
+                self.__data_subtype_cache[data_subtype]  = rowid
+                self.__data_subtype_reverse_cache[rowid] = data_subtype
                 return rowid
 
 
@@ -1426,51 +1439,96 @@ class AuditSQLiteDB (BaseAuditDB):
     def add_data(self, data):
         return self.__add_data(data)
 
-    def __add_data(self, data):
-        if not isinstance(data, Data):
-            raise TypeError("Expected Data, got %d instead" % type(data))
-
-        # Merge with old data if it exists.
-        identity = data.identity
-        old_data = self.__get_data(identity)
-        is_new = old_data is None
-        if not is_new:
-            old_data.merge(data)
-            data = old_data
-
-        # Store the data.
-        query  = "INSERT OR REPLACE INTO data VALUES (NULL, ?, ?, ?);"
-        values = (
-            identity,
-            data.data_type,
-            self.__get_or_create_type(data.data_subtype),
-            self.encode(data)
-        )
-        self.__cursor.execute(query, values)
-
-        # If it's new data, add an entry in the stages history.
-        if is_new:
-            self.__cursor.execute(
-                "INSERT INTO stages (identity) VALUES (?);",
-                (identity,))
-        return is_new
-
-
-    #--------------------------------------------------------------------------
     @transactional
     def add_many_data(self, dataset):
         for data in dataset:
             self.__add_data(data)
 
+    def __add_data(self, data):
+        if not isinstance(data, Data):
+            raise TypeError("Expected Data, got %d instead" % type(data))
+
+        # Merge with old data if it exists.
+        old_data = self.__get_data(data.identity)
+        is_new = old_data is None
+        if not is_new:
+            old_data.merge(data)
+            data = old_data
+
+        # Serialize the Data object, minus the links dictionary.
+        old_linked = data._linked
+        try:
+            data._linked = None
+            encoded_data = self.encode(data)
+        finally:
+            data._linked = old_linked
+
+        # Store the data.
+        data_subtype_id = self.__get_or_create_type(data.data_subtype)
+        query  = "INSERT OR REPLACE INTO data VALUES (NULL, ?, ?, ?, ?);"
+        values = (
+            data.identity,
+            data.data_type,
+            data_subtype_id,
+            encoded_data,
+        )
+        self.__cursor.execute(query, values)
+        del encoded_data
+
+        # Store the links.
+        links = data._save_links()
+        if not is_new:
+            links.difference_update(self.__get_links(data.identity))
+        query = "INSERT INTO links VALUES (NULL, ?, ?, ?, ?, ?, ?);"
+        for data_type, data_subtype, identity in links:
+            if data.identity <= identity:
+                values = (data.identity, identity,
+                          data.data_type, data_type,
+                          data_subtype_id,
+                          self.__get_or_create_type(data_subtype),
+                )
+            else:
+                values = (identity, data.identity,
+                          data_type, data.data_type,
+                          self.__get_or_create_type(data_subtype),
+                          data_subtype_id,
+                )
+            self.__cursor.execute(query, values)
+
+        # If it's new data, add an entry in the stages history.
+        if is_new:
+            self.__cursor.execute(
+                "INSERT INTO stages (identity) VALUES (?);",
+                (data.identity,))
+
+        # Return True if the data is new, False otherwise.
+        return is_new
+
 
     #--------------------------------------------------------------------------
     @transactional
     def remove_data(self, identity):
+        self.__remove_data(identity)
+
+    @transactional
+    def remove_many_data(self, identities):
+        for identity in identities:
+            self.__remove_data(identity)
+
+    def __remove_data(self, identity):
         self.__cursor.execute(
             "DELETE FROM data WHERE identity = ?;",
             (identity,)
         )
         if self.__cursor.rowcount:
+            self.__cursor.execute(
+                "DELETE FROM links WHERE src_id = ?;",
+                (identity,)
+            )
+            self.__cursor.execute(
+                "DELETE FROM links WHERE dst_id = ?;",
+                (identity,)
+            )
             self.__cursor.execute(
                 "DELETE FROM history WHERE identity = ?;",
                 (identity,)
@@ -1485,26 +1543,7 @@ class AuditSQLiteDB (BaseAuditDB):
 
     #--------------------------------------------------------------------------
     @transactional
-    def remove_many_data(self, identities, data_type = None):
-        for identity in identities:
-            self.__cursor.execute(
-                "DELETE FROM data WHERE identity = ?;",
-                (identity,)
-            )
-            if self.__cursor.rowcount:
-                self.__cursor.execute(
-                    "DELETE FROM history WHERE identity = ?;",
-                    (identity,)
-                )
-                self.__cursor.execute(
-                    "DELETE FROM stages WHERE identity = ?;",
-                    (identity,)
-                )
-
-
-    #--------------------------------------------------------------------------
-    @transactional
-    def has_data_key(self, identity, data_type = None):
+    def has_data_key(self, identity):
         query = "SELECT COUNT(rowid) FROM data WHERE identity = ? LIMIT 1;"
         self.__cursor.execute(query, (identity,))
         return bool(self.__cursor.fetchone()[0])
@@ -1517,23 +1556,74 @@ class AuditSQLiteDB (BaseAuditDB):
 
     @transactional
     def get_many_data(self, identities):
-        # TODO: optimize by checking multiple identities in the same query,
-        #       but beware of the maximum SQL query length limit.
-        #       See: http://www.sqlite.org/limits.html
         result = (
             self.__get_data(identity)
             for identity in identities
         )
         return [ data for data in result if data ]
 
-    def __get_data(self, identity):
+    def __get_data(self, identity, get_links = True):
+
+        # Check the arguments.
         if type(identity) is not str:
             raise TypeError("Expected string, got %s" % type(identity))
+
+        # Get the Data object, without the links.
+        data = None
         query = "SELECT data FROM data WHERE identity = ? LIMIT 1;"
         self.__cursor.execute(query, (identity,))
         row = self.__cursor.fetchone()
         if row and row[0]:
-            return self.decode(row[0])
+            data = self.decode(row[0])
+
+            # Get the links if requested.
+            links = set()
+            if get_links:
+                links = self.__get_links(data.identity)
+
+            # Load the links into the Data object.
+            data._load_links(links)
+
+        # Return the Data object if found, None otherwise.
+        return data
+
+    def __get_links(self, identity):
+
+        # Fetch the forward links.
+        values = (identity,)
+        query = (
+            "SELECT dst_family, dst_type, dst_id FROM links"
+            " WHERE src_id = ?;"
+        )
+        self.__cursor.execute(query, values)
+        links = {
+            (
+                int(data_type),
+                self.__data_subtype_reverse_cache[int(data_subtype)],
+                str(identity),
+            )
+            for data_type, data_subtype, identity
+            in self.__cursor.fetchall()
+        }
+
+        # Fetch the backward links.
+        query = (
+            "SELECT src_family, src_type, src_id FROM links"
+            " WHERE dst_id = ?;"
+        )
+        self.__cursor.execute(query, values)
+        links.update(
+            (
+                int(data_type),
+                self.__data_subtype_reverse_cache[int(data_subtype)],
+                str(identity),
+            )
+            for data_type, data_subtype, identity
+            in self.__cursor.fetchall()
+        )
+
+        # Return all the links.
+        return links
 
 
     #--------------------------------------------------------------------------
@@ -1607,18 +1697,14 @@ class AuditSQLiteDB (BaseAuditDB):
     def __get_data_type(self, identity):
         if type(identity) is not str:
             raise TypeError("Expected string, got %s" % type(identity))
-        # FIXME
-        # not sure if it's not faster to do an inverse lookup
-        # on the cache dictionary instead, to avoid the JOIN.
-        query = "SELECT data.family, types.name FROM data, types" \
+        query = "SELECT family, type FROM data" \
                 " WHERE data.identity = ?" \
-                "   AND data.type = types.rowid" \
                 " LIMIT 1;"
         values = (identity,)
         self.__cursor.execute(query, values)
         row = self.__cursor.fetchone()
         if row:
-            return int(row[0]), str(row[1])
+            return int(row[0]), self.__data_subtype_reverse_cache[int(row[1])]
 
 
     #--------------------------------------------------------------------------
