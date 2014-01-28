@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.data.resource.domain import Domain
-from golismero.api.data.resource.url import Url
+from golismero.api.data.resource.url import URL
 from golismero.api.data.vulnerability.injection.sql import SQLInjection
 from golismero.api.data.vulnerability.injection.xss import XSS
 from golismero.api.logger import Logger
@@ -94,8 +94,8 @@ class PunkSPIDER(TestingPlugin):
                 # Get the level.
                 level = to_utf8(v["level"])
 
-                # Create the Url object.
-                url_o = Url(url)
+                # Create the URL object.
+                url_o = URL(url)
                 results.append(url_o)
 
                 # Get the vulnerability class.

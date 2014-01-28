@@ -44,7 +44,7 @@ if path.exists(thirdparty_libs):
 # Imports.
 from golismero.api.data import Data
 from golismero.api.data.information.text import Text
-from golismero.api.data.resource.url import Url
+from golismero.api.data.resource.url import URL
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.text.text_utils import generate_random_string
 from golismero.database.auditdb import AuditDB, BaseAuditDB, AuditSQLiteDB
@@ -348,7 +348,7 @@ def helper_test_auditdb_data_consistency(db, key, data):
     assert db.get_audit_times() == (None, None)
 
     # Create some fake data and add it to the database.
-    d1 = Url("http://www.example.com/" + key)
+    d1 = URL("http://www.example.com/" + key)
     d2 = Text(data)
     d3 = UrlDisclosure(d1)
     d1.add_information(d2)
@@ -451,7 +451,7 @@ def helper_auditdb_stress(n, dbname = ":auto:"):
 
         print "  -> Writing..."
         for x in xrange(n):
-            d1 = Url("http://www.example.com/" + generate_random_string())
+            d1 = URL("http://www.example.com/" + generate_random_string())
             d2 = Text(generate_random_string())
             d3 = UrlDisclosure(d1)
             d1.add_information(d2)
@@ -482,7 +482,7 @@ def helper_auditdb_stress(n, dbname = ":auto:"):
             data = disk.get_data(key)
             assert data is not None
             assert data.data_type == Data.TYPE_RESOURCE
-            assert isinstance(data, Url)
+            assert isinstance(data, URL)
         keys = disk.get_data_keys(Data.TYPE_VULNERABILITY)
         assert len(keys) == n
         for key in keys:
@@ -519,7 +519,7 @@ def test_auditdb_dump():
         print "Testing the audit database dump..."
         print "  -> Writing..."
         for x in xrange(30):
-            d1 = Url("http://www.example.com/" + generate_random_string())
+            d1 = URL("http://www.example.com/" + generate_random_string())
             d2 = Text(generate_random_string())
             d3 = UrlDisclosure(d1)
             d1.add_information(d2)

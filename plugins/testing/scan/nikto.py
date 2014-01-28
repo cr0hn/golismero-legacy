@@ -30,7 +30,7 @@ from golismero.api.config import Config
 from golismero.api.data.db import Database
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
-from golismero.api.data.resource.url import BaseUrl, Url
+from golismero.api.data.resource.url import BaseURL, URL
 from golismero.api.data.vulnerability import UncategorizedVulnerability
 from golismero.api.data.vulnerability.infrastructure.vulnerable_webapp \
      import VulnerableWebApp
@@ -59,7 +59,7 @@ class NiktoPlugin(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [BaseUrl]
+        return [BaseURL]
 
 
     #--------------------------------------------------------------------------
@@ -208,7 +208,7 @@ class NiktoPlugin(TestingPlugin):
         Run Nikto and convert the output to the GoLismero data model.
 
         :param info: Base URL to scan.
-        :type info: BaseUrl
+        :type info: BaseURL
 
         :param output_filename: Path to the output filename.
             The format should always be CSV.
@@ -274,7 +274,7 @@ class NiktoPlugin(TestingPlugin):
         Convert the output of a Nikto scan to the GoLismero data model.
 
         :param info: Data object to link all results to (optional).
-        :type info: BaseUrl
+        :type info: BaseURL
 
         :param output_filename: Path to the output filename.
             The format should always be CSV.
@@ -334,7 +334,7 @@ class NiktoPlugin(TestingPlugin):
 
                         # Report the URLs.
                         if (target, method) not in urls_seen:
-                            url = Url(target, method)
+                            url = URL(target, method)
                             urls_seen[ (target, method) ] = url
                             results.append(url)
                         else:

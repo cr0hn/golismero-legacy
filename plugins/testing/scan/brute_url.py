@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from golismero.api.config import Config
 from golismero.api.data import discard_data
 from golismero.api.data.information.fingerprint import WebServerFingerprint
-from golismero.api.data.resource.url import FolderUrl, Url
+from golismero.api.data.resource.url import FolderURL, URL
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.logger import Logger
 from golismero.api.net.http import HTTP
@@ -74,7 +74,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [FolderUrl]
+        return [FolderURL]
 
 
     #--------------------------------------------------------------------------
@@ -181,7 +181,7 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url]
+        return [URL]
 
 
     #--------------------------------------------------------------------------
@@ -239,7 +239,7 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url]
+        return [URL]
 
 
     #--------------------------------------------------------------------------
@@ -297,7 +297,7 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url]
+        return [URL]
 
 
     #--------------------------------------------------------------------------
@@ -355,7 +355,7 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url]
+        return [URL]
 
 
     #--------------------------------------------------------------------------
@@ -412,7 +412,7 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url]
+        return [URL]
 
 
     #--------------------------------------------------------------------------
@@ -616,10 +616,10 @@ def generate_results(unique_texts):
     Generates a list of results from a list of URLs as string format.
 
     :param unique_texts: list with a list of URL as string.
-    :type unique_texts: list(Url)
+    :type unique_texts: list(URL)
 
-    :return: a list of Url/UrlDiclosure.
-    :type: list(Url|UrlDiclosure)
+    :return: a list of URL/UrlDiclosure.
+    :type: list(URL|UrlDiclosure)
     """
     # Analyze resutls
     m_results        = []
@@ -628,7 +628,7 @@ def generate_results(unique_texts):
     for l_match in unique_texts:
         #
         # Set disclosure vulnerability
-        l_url                      = Url(l_match.url)
+        l_url                      = URL(l_match.url)
         l_vuln                     = UrlDisclosure(l_url)
 
         # Set impact

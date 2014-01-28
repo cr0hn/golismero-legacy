@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 from golismero.api.data import Data
-from golismero.api.data.resource.url import FolderUrl
+from golismero.api.data.resource.url import FolderURL
 from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
 from golismero.api.logger import Logger
 from golismero.api.plugin import TestingPlugin
@@ -42,8 +42,8 @@ class TestPlugin(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
-        if not isinstance(info, FolderUrl):
-            raise TypeError("Expected FolderUrl, got %r instead" % type(info))
+        if not isinstance(info, FolderURL):
+            raise TypeError("Expected FolderURL, got %r instead" % type(info))
 
         # Intentionally cause a warning to be shown.
         Logger.log("This is a log message.")
@@ -52,4 +52,4 @@ class TestPlugin(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [FolderUrl]
+        return [FolderURL]

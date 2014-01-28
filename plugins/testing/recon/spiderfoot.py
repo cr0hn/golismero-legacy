@@ -45,7 +45,7 @@ from golismero.api.data.information.portscan import Portscan
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.email import Email
 from golismero.api.data.resource.ip import IP
-from golismero.api.data.resource.url import Url
+from golismero.api.data.resource.url import URL
 from golismero.api.data.vulnerability import Vulnerability
 from golismero.api.data.vulnerability.malware.defaced import DefacedUrl, \
     DefacedDomain, DefacedIP
@@ -437,7 +437,7 @@ class SpiderFootParser(object):
 
     #--------------------------------------------------------------------------
     def __reconstruct_http(self, raw_url):
-        url = Url(raw_url)
+        url = URL(raw_url)
         req = HTTP_Request(
             method = "GET",
             url    = raw_url,
@@ -463,22 +463,22 @@ class SpiderFootParser(object):
 
     #--------------------------------------------------------------------------
     def sf_URL_STATIC(self, sf_module, source, raw_data):
-        return Url(raw_data)
+        return URL(raw_data)
 
 
     #--------------------------------------------------------------------------
     def sf_URL_FORM(self, sf_module, source, raw_data):
-        return Url(raw_data, referer=source, method="POST")
+        return URL(raw_data, referer=source, method="POST")
 
 
     #--------------------------------------------------------------------------
     def sf_URL_UPLOAD(self, sf_module, source, raw_data):
-        return Url(raw_data, referer=source, method="POST")
+        return URL(raw_data, referer=source, method="POST")
 
 
     #--------------------------------------------------------------------------
     def sf_URL_PASSWORD(self, sf_module, source, raw_data):
-        url = Url(source)
+        url = URL(source)
         password = Password(raw_data)
         url.add_information(password)
         return url, password
@@ -486,33 +486,33 @@ class SpiderFootParser(object):
 
     #--------------------------------------------------------------------------
     def sf_URL_JAVASCRIPT(self, sf_module, source, raw_data):
-        return Url(raw_data, referer=source)
+        return URL(raw_data, referer=source)
 
 
     #--------------------------------------------------------------------------
     def sf_URL_JAVA_APPLET(self, sf_module, source, raw_data):
-        return Url(raw_data, referer=source)
+        return URL(raw_data, referer=source)
 
 
     #--------------------------------------------------------------------------
     def sf_URL_FLASH(self, sf_module, source, raw_data):
-        return Url(raw_data, referer=source)
+        return URL(raw_data, referer=source)
 
 
     #--------------------------------------------------------------------------
     def sf_LINKED_URL_INTERNAL(self, sf_module, source, raw_data):
-        return Url(raw_data, referer=source)
+        return URL(raw_data, referer=source)
 
 
     #--------------------------------------------------------------------------
     def sf_LINKED_URL_EXTERNAL(self, sf_module, source, raw_data):
         if self.allow_external:
-            return Url(raw_data, referer=source)
+            return URL(raw_data, referer=source)
 
 
     #--------------------------------------------------------------------------
     def sf_PROVIDER_JAVASCRIPT(self, sf_module, source, raw_data):
-        return Url(raw_data, referer=source)
+        return URL(raw_data, referer=source)
 
 
     #--------------------------------------------------------------------------
@@ -623,7 +623,7 @@ class SpiderFootParser(object):
 
     #--------------------------------------------------------------------------
     def sf_TARGET_WEB_CONTENT(self, sf_module, source, raw_data):
-        url = Url(source)
+        url = URL(source)
         html = HTML(raw_data)
         url.add_information(html)
         self.reconstruct_http_data[source] = raw_data
@@ -789,7 +789,7 @@ class SpiderFootParser(object):
 
     #--------------------------------------------------------------------------
     def sf_DEFACED(self, sf_module, source, raw_data):
-        url = Url(source)
+        url = URL(source)
         vulnerability = DefacedUrl(
             url = url,
             tool_id = sf_module,
@@ -800,7 +800,7 @@ class SpiderFootParser(object):
     #--------------------------------------------------------------------------
     def sf_DEFACED_COHOST(self, sf_module, source, raw_data):
         if self.allow_external:
-            url = Url(source)
+            url = URL(source)
             vulnerability = DefacedUrl(
                 url = url,
                 tool_id = sf_module,
@@ -854,7 +854,7 @@ class SpiderFootParser(object):
     #--------------------------------------------------------------------------
     def sf_MALICIOUS_COHOST(self, sf_module, source, raw_data):
         if self.allow_external:
-            url = Url(source)
+            url = URL(source)
             vulnerability = MaliciousUrl(
                 url = url,
                 tool_id = sf_module,

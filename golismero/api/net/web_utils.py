@@ -60,7 +60,7 @@ import re
 
 
 #------------------------------------------------------------------------------
-# Url class from urllib3 renamed as Urllib3_Url to avoid confusion.
+# URL class from urllib3 renamed as Urllib3_Url to avoid confusion.
 
 try:
     from requests.packages.urllib3.util import Url as Urllib3_Url
@@ -192,7 +192,7 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True,
 
     Example:
 
-        >>> from golismero.api.data.resource.url import Url
+        >>> from golismero.api.data.resource.url import URL
         >>> from golismero.api.net.web_utils import download
         >>> def decide(url, name, size, type):
         ...     # 'url' is the URL for the download
@@ -216,18 +216,18 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True,
         ...     # Continue downloading
         ...     return True
         ...
-        >>> download(Url("http://www.example.com/index.html"), callback=decide)
+        >>> download(URL("http://www.example.com/index.html"), callback=decide)
         URL: http://www.example.com/index.html
         Name: index.html
         Size: 1234
         Type: text/html
         <HTML identity=606489619590839a1c0ad662bcdc0189>
-        >>> download(Url("http://www.example.com/"), callback=decide)
+        >>> download(URL("http://www.example.com/"), callback=decide)
         URL: http://www.example.com/
         Size: 1234
         Type: text/html
         <HTML identity=606489619590839a1c0ad662bcdc0189>
-        >>> print download(Url("http://www.example.com/big_file.iso"), callback=decide)
+        >>> print download(URL("http://www.example.com/big_file.iso"), callback=decide)
         URL: http://www.example.com/big_file.iso
         Name: big_file.iso
         Size: 1234567890
@@ -268,10 +268,10 @@ def download(url, callback = None, timeout = 10.0, allow_redirects = True,
             " got %r instead" % type(callback)
         )
 
-    # Autogenerate an Url object if a string is given (common mistake).
-    from ..data.resource.url import Url
-    if not isinstance(url, Url):
-        url = Url(url)
+    # Autogenerate an URL object if a string is given (common mistake).
+    from ..data.resource.url import URL
+    if not isinstance(url, URL):
+        url = URL(url)
         LocalDataCache.on_autogeneration(url)
         parsed = url.parsed_url
         if not parsed.hostname or not parsed.scheme:

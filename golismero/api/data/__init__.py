@@ -658,8 +658,8 @@ class Data(object):
         self.__identity = None
 
         # Analysis depth is preserved as-is for all objects, except for a few.
-        # For example the Url type increments the depth by one, and the
-        # BaseUrl, IP and Domain types force the depth to zero.
+        # For example the URL type increments the depth by one, and the
+        # BaseURL, IP and Domain types force the depth to zero.
         self.__depth = Config.depth
 
         # Tell the temporary storage about this instance.

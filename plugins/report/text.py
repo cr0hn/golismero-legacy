@@ -44,7 +44,7 @@ from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.email import Email
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.resource.mac import MAC
-from golismero.api.data.resource.url import Url, BaseUrl
+from golismero.api.data.resource.url import URL, BaseURL
 from golismero.api.logger import Logger
 from golismero.api.plugin import ReportPlugin, get_plugin_name
 
@@ -237,16 +237,16 @@ class TextReport(ReportPlugin):
                     print >>self.__fd, ""
 
         # Web servers
-        if self.__show_data and Database.count(Data.TYPE_RESOURCE, BaseUrl.data_subtype):
+        if self.__show_data and Database.count(Data.TYPE_RESOURCE, BaseURL.data_subtype):
             print >>self.__fd, "-# %s #- " % self.__colorize("Web Servers", "yellow")
             print >>self.__fd, ""
             crawled = defaultdict(list)
             vulnerable = []
-            for url in self.__iterate(Data.TYPE_RESOURCE, Url.data_subtype):
+            for url in self.__iterate(Data.TYPE_RESOURCE, URL.data_subtype):
                 crawled[url.hostname].append(url.url)
                 if self.__color and url.get_links(Data.TYPE_VULNERABILITY):
                     vulnerable.append(url)
-            for url in self.__iterate(Data.TYPE_RESOURCE, BaseUrl.data_subtype):
+            for url in self.__iterate(Data.TYPE_RESOURCE, BaseURL.data_subtype):
                 table = Texttable()
                 table.header(("Base URL", url.url))
                 self.__add_related(table, url, Data.TYPE_INFORMATION, WebServerFingerprint.data_subtype, "Server")

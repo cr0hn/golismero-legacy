@@ -44,7 +44,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # from golismero.api.data.information.binary import Binary
 #
 # - Resource types:
-# from golismero.api.data.resource.url import Url, BaseUrl, FolderUrl
+# from golismero.api.data.resource.url import URL, BaseURL, FolderURL
 # from golismero.api.data.resource.domain import Domain
 #
 # - Vulnerability types:
@@ -91,7 +91,7 @@ class TemplatePlugin(TestingPlugin):
         #
         # Example:
         #
-        # return [Url, BaseUrl]
+        # return [URL, BaseURL]
         #
         return None  # Returning None causes all data to be received.
 

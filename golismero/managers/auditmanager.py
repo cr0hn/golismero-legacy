@@ -6,7 +6,7 @@ Manager for audits.
 """
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
-from golismero.api.data.resource.url import Url, FolderUrl, BaseUrl
+from golismero.api.data.resource.url import URL, FolderURL, BaseURL
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -659,9 +659,9 @@ class Audit (object):
                 # If we had no scope, build one based on the imported data.
                 if not target_data:
                     target_types = (
-                        BaseUrl.data_subtype,
-                        FolderUrl.data_subtype,
-                        Url.data_subtype,
+                        BaseURL.data_subtype,
+                        FolderURL.data_subtype,
+                        URL.data_subtype,
                         IP.data_subtype,
                         Domain.data_subtype,
                     )
@@ -1050,7 +1050,7 @@ class Audit (object):
                     if not database.has_data_key(data.identity):
 
                         # Increase the number of links followed.
-                        if data.is_instance(Url):
+                        if data.is_instance(URL):
                             self.__followed_links += 1
 
                             # Maximum number of links reached?

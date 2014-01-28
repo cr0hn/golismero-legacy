@@ -30,7 +30,7 @@ from golismero.api.config import Config
 from golismero.api.data.information.html import HTML
 from golismero.api.data.information.text import Text
 from golismero.api.data.resource.email import Email
-from golismero.api.data.resource.url import Url
+from golismero.api.data.resource.url import URL
 from golismero.api.logger import Logger
 from golismero.api.net import NetworkException
 from golismero.api.net.scraper import extract_from_html, extract_from_text, extract_forms_from_html
@@ -51,7 +51,7 @@ class Spider(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [Url]
+        return [URL]
 
 
     #--------------------------------------------------------------------------
@@ -130,14 +130,14 @@ class Spider(TestingPlugin):
         else:
             Logger.log_verbose("No links found in URL: %s" % m_url)
 
-        # Convert to Url data type
+        # Convert to URL data type
         for u in m_urls_in_scope:
             try:
                 p = parse_url(u)
                 if p.scheme == "mailto":
                     m_resource = Email(p.netloc)
                 elif p.scheme in ("http", "https"):
-                    m_resource = Url(url = u, referer = m_url)
+                    m_resource = URL(url = u, referer = m_url)
             except Exception:
                 warn(format_exc(), RuntimeWarning)
             m_resource.add_resource(info)
@@ -183,14 +183,14 @@ class Spider(TestingPlugin):
         else:
             Logger.log_verbose("No forms found in URL: %s" % m_url)
 
-        # Convert to Url data type
+        # Convert to URL data type
         for u in m_forms_in_scope:
             try:
                 url = u[0]
                 method = u[1]
                 params = {x["name"]: x["value"] for x in u[2]}
 
-                m_resource = Url(url = url, referer = m_url, method=method, post_params=params)
+                m_resource = URL(url = url, referer = m_url, method=method, post_params=params)
             except Exception:
                 warn(format_exc(), RuntimeWarning)
             m_resource.add_resource(info)

@@ -31,7 +31,7 @@ from golismero.api.data.db import Database
 from golismero.api.data.information.fingerprint import ServiceFingerprint
 from golismero.api.data.resource.domain import Domain
 from golismero.api.data.resource.ip import IP
-from golismero.api.data.resource.url import BaseUrl
+from golismero.api.data.resource.url import BaseURL
 from golismero.api.data.vulnerability.ssl.insecure_algorithm import InsecureAlgorithm
 from golismero.api.data.vulnerability.ssl.invalid_certificate import InvalidCertificate
 from golismero.api.data.vulnerability.ssl.obsolete_protocol import ObsoleteProtocol
@@ -188,14 +188,14 @@ class SSLScanPlugin(TestingPlugin):
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
-        return [BaseUrl, ServiceFingerprint]
+        return [BaseURL, ServiceFingerprint]
 
 
     #--------------------------------------------------------------------------
     def recv_info(self, info):
 
         # If it's an URL...
-        if info.is_instance(BaseUrl):
+        if info.is_instance(BaseURL):
 
             # Get the hostname to test.
             hostname = info.hostname

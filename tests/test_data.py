@@ -143,10 +143,10 @@ def test_data_links():
 def helper_data_links():
 
     # Create some dummy data.
-    from golismero.api.data.resource.url import Url
+    from golismero.api.data.resource.url import URL
     from golismero.api.data.information.text import Text
     from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
-    d1 = Url("http://www.example.com/")
+    d1 = URL("http://www.example.com/")
     d2 = Text("some text")
     d3 = UrlDisclosure(d1)
     d1.add_information(d2)
@@ -154,7 +154,7 @@ def helper_data_links():
     # Test data_type, data_subtype, etc.
     print "Testing Data type checks..."
     assert d1.data_type == Data.TYPE_RESOURCE
-    assert d1.data_subtype == Url.data_subtype
+    assert d1.data_subtype == URL.data_subtype
     assert d1.resource_type == d1.data_subtype
     assert d2.data_type == Data.TYPE_INFORMATION
     assert d2.data_subtype == Text.data_subtype

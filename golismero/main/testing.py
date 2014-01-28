@@ -56,7 +56,7 @@ class PluginTester(object):
     Setup a mock environment to test plugins.
 
     Example:
-        >>> from golismero.api.data.resource.url import BaseUrl
+        >>> from golismero.api.data.resource.url import BaseURL
         >>> from golismero.main.testing import PluginTester
         >>> with PluginTester() as t:
         ...    u = BaseUrl("http://www.example.com/")
@@ -65,7 +65,7 @@ class PluginTester(object):
         [<BaseUrl url='http://www.example.com/'>]
 
     Another example (with a scope):
-        >>> from golismero.api.data.resource.url import BaseUrl
+        >>> from golismero.api.data.resource.url import BaseURL
         >>> from golismero.main.testing import PluginTester
         >>> with PluginTester(autoinit=False) as t:
         ...    t.audit_config.targets = ["http://www.example.com/"]
@@ -76,7 +76,7 @@ class PluginTester(object):
         [<BaseUrl url='http://www.example.com/'>]
 
     Yet another way of doing it:
-        >>> from golismero.api.data.resource.url import BaseUrl
+        >>> from golismero.api.data.resource.url import BaseURL
         >>> from golismero.common import AuditConfig
         >>> from golismero.main.testing import PluginTester
         >>> cfg = AuditConfig()
