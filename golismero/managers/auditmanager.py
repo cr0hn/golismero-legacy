@@ -626,8 +626,7 @@ class Audit (object):
             target_data = self.scope.get_targets()
             targets_added_count = 0
             for data in target_data:
-                if not self.database.has_data_key(data.identity,
-                                                  data.data_type):
+                if not self.database.has_data_key(data.identity):
                     self.database.add_data(data)
                     targets_added_count += 1
             if targets_added_count:
