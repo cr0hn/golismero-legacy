@@ -369,6 +369,7 @@ class Orchestrator (object):
             try:
                 self.__queue.put_nowait(message)
             except Exception:
+                print_exc()
                 exit(1)
 
 

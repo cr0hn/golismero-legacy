@@ -46,6 +46,7 @@ from ..managers.auditmanager import Audit
 from ..managers.processmanager import PluginContext
 from ..messaging.message import Message
 
+from inspect import isclass
 from os import getpid, unlink
 from thread import get_ident
 
@@ -322,11 +323,15 @@ class PluginTester(object):
 
                 # Make sure the plugin can actually process this type of data.
                 # Raise an exception if it doesn't.
-                found = False
-                for clazz in plugin.get_accepted_info():
-                    if isinstance(data, clazz):
-                        found = True
-                        break
+                accepted_info = plugin.get_accepted_info()
+                if isclass(accepted_info):
+                    found = data.is_instance(accepted_info)
+                else:
+                    found = False
+                    for clazz in accepted_info:
+                        if data.is_instance(clazz):
+                            found = True
+                            break
                 if not found:
                     msg = "Plugin %s cannot process data of type %s"
                     raise TypeError(msg % (plugin_id, type(data)))

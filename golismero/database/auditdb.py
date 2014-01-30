@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 __all__ = ["AuditDB"]
 
 from .common import BaseDB, atomic, transactional
-from ..api.data import Data
+from ..api.data import Data, Relationship
 ##from ..api.shared import check_value   # FIXME do server-side checks too!
 from ..api.text.text_utils import generate_random_string
 from ..messaging.codes import MessageCode
@@ -1320,7 +1320,9 @@ class AuditSQLiteDB (BaseAuditDB):
     @transactional
     def __load_data_subtype_cache(self):
         self.__cursor.execute("SELECT name, rowid FROM types;")
-        self.__data_subtype_cache = dict( self.__cursor.fetchall() )
+        self.__data_subtype_cache = {
+            str(k): int(v) for k, v in self.__cursor.fetchall()
+        }
         self.__data_subtype_reverse_cache = {
             v: k for k, v in self.__data_subtype_cache.iteritems()
         }
@@ -1479,21 +1481,27 @@ class AuditSQLiteDB (BaseAuditDB):
         links = data._save_links()
         if not is_new:
             links.difference_update(self.__get_links(data.identity))
-        query = "INSERT INTO links VALUES (NULL, ?, ?, ?, ?, ?, ?);"
         for data_type, data_subtype, identity in links:
             if data.identity <= identity:
+                link_id = data.identity + "-" + identity
                 values = (data.identity, identity,
                           data.data_type, data_type,
                           data_subtype_id,
                           self.__get_or_create_type(data_subtype),
                 )
             else:
+                link_id = identity + "-" + data.identity
                 values = (identity, data.identity,
                           data_type, data.data_type,
                           self.__get_or_create_type(data_subtype),
                           data_subtype_id,
                 )
-            self.__cursor.execute(query, values)
+            self.__cursor.execute(
+                "INSERT INTO links VALUES (NULL, ?, ?, ?, ?, ?, ?);",
+                values)
+            self.__cursor.execute(
+                "INSERT INTO stages (identity) VALUES (?);",
+                (link_id,))
 
         # If it's new data, add an entry in the stages history.
         if is_new:
@@ -1516,11 +1524,21 @@ class AuditSQLiteDB (BaseAuditDB):
             self.__remove_data(identity)
 
     def __remove_data(self, identity):
-        self.__cursor.execute(
-            "DELETE FROM data WHERE identity = ?;",
-            (identity,)
-        )
-        if self.__cursor.rowcount:
+        if "-" in identity:
+            left_id, right_id = self.__split_rel_id(identity)
+            self.__cursor.execute(
+                "DELETE FROM links WHERE src_id = ? AND dst_id = ?;",
+                (left_id, right_id)
+            )
+            self.__cursor.execute(
+                "DELETE FROM links WHERE src_id = ? AND dst_id = ?;",
+                (right_id, left_id)
+            )
+        else:
+            self.__cursor.execute(
+                "DELETE FROM data WHERE identity = ?;",
+                (identity,)
+            )
             self.__cursor.execute(
                 "DELETE FROM links WHERE src_id = ?;",
                 (identity,)
@@ -1529,22 +1547,33 @@ class AuditSQLiteDB (BaseAuditDB):
                 "DELETE FROM links WHERE dst_id = ?;",
                 (identity,)
             )
-            self.__cursor.execute(
-                "DELETE FROM history WHERE identity = ?;",
-                (identity,)
-            )
-            self.__cursor.execute(
-                "DELETE FROM stages WHERE identity = ?;",
-                (identity,)
-            )
-            return True
-        return False
+        self.__cursor.execute(
+            "DELETE FROM history WHERE identity = ?;",
+            (identity,)
+        )
+        self.__cursor.execute(
+            "DELETE FROM stages WHERE identity = ?;",
+            (identity,)
+        )
 
 
     #--------------------------------------------------------------------------
     @transactional
     def has_data_key(self, identity):
-        query = "SELECT COUNT(rowid) FROM data WHERE identity = ? LIMIT 1;"
+        if "-" in identity:
+            left_id, right_id = self.__split_rel_id(identity)
+            query = "SELECT COUNT(rowid)" \
+                    "  FROM links" \
+                    " WHERE (src_id = ? AND dst_id = ?)" \
+                    "    OR (src_id = ? AND dst_id = ?)" \
+                    " LIMIT 1;"
+            values = (left_id, right_id, right_id, left_id)
+        else:
+            query = "SELECT COUNT(rowid)" \
+                    "  FROM data" \
+                    " WHERE identity = ?" \
+                    " LIMIT 1;"
+            values = (identity,)
         self.__cursor.execute(query, (identity,))
         return bool(self.__cursor.fetchone()[0])
 
@@ -1562,11 +1591,39 @@ class AuditSQLiteDB (BaseAuditDB):
         )
         return [ data for data in result if data ]
 
+    def __split_rel_id(self, link_id):
+        try:
+            left_id, right_id = link_id.split("-")
+            assert "-" not in left_id
+            assert "-" not in right_id
+        except Exception:
+            raise ValueError("Invalid identity hash: %r" % link_id)
+        return left_id, right_id
+
     def __get_data(self, identity, get_links = True):
 
         # Check the arguments.
         if type(identity) is not str:
             raise TypeError("Expected string, got %s" % type(identity))
+
+        # If it's a Relationship, get the two linked Data objects.
+        if "-" in identity:
+            left_id, right_id = self.__split_rel_id(identity)
+            query = (
+                "SELECT COUNT(rowid) FROM links"
+                " WHERE (src_id = ? AND dst_id = ?)"
+                "    OR (src_id = ? AND dst_id = ?)"
+                " LIMIT 1;"
+            )
+            values = (left_id, right_id, right_id, left_id)
+            self.__cursor.execute(query, values)
+            row = self.__cursor.fetchone()
+            if row and bool(row[0]):
+                instance_l = self.__get_data(left_id, get_links)
+                instance_r = self.__get_data(right_id, get_links)
+                Rel = Relationship(instance_l.__class__, instance_r.__class__)
+                return Rel(instance_l, instance_r)
+            return
 
         # Get the Data object, without the links.
         data = None

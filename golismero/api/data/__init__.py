@@ -4,6 +4,7 @@
 """
 GoLismero data model.
 """
+from golismero.api.logger import Logger
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -34,6 +35,9 @@ __all__ = [
 
     # Base class for all data objects.
     "Data",
+
+    # Class factory for data object relationships.
+    "Relationship",
 
     # Identity properties.
     # This is used by the Data subclasses.
@@ -603,9 +607,124 @@ class _data_metaclass(type):
 
 
 #------------------------------------------------------------------------------
-class Data(object):
+class Entity(object):
     """
-    Base class for all data elements.
+    Any entity that can be stored into the GoLismero graph database belongs to
+    this class.
+    """
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def identity(self):
+        """
+        :returns: Identity hash of this object.
+        :rtype: str
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def is_in_scope(self, scope = None):
+        """
+        Determines if this Entity object is within the scope
+        of the current audit. It can also check against any
+        custom AuditScope object.
+
+        .. warning: This method is used by GoLismero itself.
+                    Plugins do not need to call it.
+
+        :param scope: (Optional) Scope to test against.
+            Defaults to the current audit scope.
+        :type scope: Scope
+
+        :return: True if within scope, False otherwise.
+        :rtype: bool
+        """
+        return True
+
+
+    #--------------------------------------------------------------------------
+    @property
+    def depth(self):
+        """
+        Exact meaning of this depends on whether this is a node or a vertex
+        of the graph.
+
+        :rtype: int
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def merge(self, other):
+        """
+        Merge a newer version of this entity with this one.
+
+        This is the old entity, and the other object is the new entity.
+        After the merge, this entity contains the most up to date information.
+
+        :param other: Entity to merge with this one.
+        :type other: Entity
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def reverse_merge(self, other):
+        """
+        Reverse merge this version of the entity into another one.
+
+        This is the new entity, and the other object is the old entity.
+        After the merge, the other entity contains the most up to date
+        information.
+
+        :param other: Entity to be merged with this one.
+        :type other: Entity
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def __eq__(self, obj):
+        """
+        Determines equality of entities by comparing its identity property.
+
+        :param obj: Entity.
+        :type obj: Entity
+
+        :return: True if the two Data objects have the same identity, False otherwise.
+        :rtype: bool
+        """
+        # TODO: maybe we should compare all properties, not just identity.
+        return self.identity == obj.identity
+
+
+    #--------------------------------------------------------------------------
+    def is_instance(self, clazz):
+        """
+        Checks if this instance belongs to the given class.
+
+        :param clazz: Subclass of Entity to check.
+        :type clazz: type
+
+        :returns: True if the instance belongs to the class,
+            False otherwise.
+        :rtype: bool
+        """
+        try:
+            data_type    = clazz.data_type
+            data_subtype = clazz.data_subtype
+        except AttributeError:
+            return False
+        return self.data_type    == data_type    and \
+               self.data_subtype == data_subtype
+
+
+#------------------------------------------------------------------------------
+class Data(Entity):
+    """
+    Base class for all data entities.
     This is the common interface for Information, Resource and Vulnerability.
     """
 
@@ -1013,12 +1132,19 @@ class Data(object):
 
 
     #--------------------------------------------------------------------------
+    def is_instance(self, clazz):
+        try:
+            data_type    = clazz.data_type
+            data_subtype = clazz.data_subtype
+        except AttributeError:
+            return False
+        return self.data_type    == data_type    and \
+               self.data_subtype == data_subtype
+
+
+    #--------------------------------------------------------------------------
     @property
     def identity(self):
-        """
-        :returns: Identity hash of this object.
-        :rtype: str
-        """
 
         # If the hash is already in the cache, return it.
         if self.__identity is not None:
@@ -1093,26 +1219,10 @@ class Data(object):
 
     #--------------------------------------------------------------------------
     def merge(self, other):
-        """
-        Merge another data object with this one.
-
-        This is the old data, and the other object is the new data.
-
-        :param other: Data object to merge with this one.
-        :type other: Data
-        """
         self._merge_objects(self, other, reverse = False)
 
 
     def reverse_merge(self, other):
-        """
-        Reverse merge another data object with this one.
-
-        This is the new data, and the other object is the old data.
-
-        :param other: Data object to be merged with this one.
-        :type other: Data
-        """
         self._merge_objects(other, self, reverse = True)
 
 
@@ -1636,58 +1746,188 @@ class Data(object):
         return []
 
 
-    #--------------------------------------------------------------------------
-    def is_in_scope(self, scope = None):
-        """
-        Determines if this Data object is within the scope of the current audit.
+#------------------------------------------------------------------------------
+class Relationship(object):
+    """
+    Represents a relationship between two Data objects.
 
-        .. warning: This method is used by GoLismero itself.
-                    Plugins do not need to call it.
+    This metaclass is used by plugins that want to receive the vertices of the
+    graph rather than the nodes (Data objects). For example:
 
-        :param scope: (Optional) Scope to test again. Defaults to the current
-            audit scope.
-        :type scope: Scope
+        def get_accepted_info(self):
+            return Relationship(Vulnerability, URL)
 
-        :return: True if within scope, False otherwise.
-        :rtype: bool
-        """
-        return True
+    The above would cause a plugin to receive all vulnerabilities associated to
+    URLs, but neither vulnerabilities associated to other object types, nor URLs
+    with no vulnerability associated to them.
+
+    Relationship objects contain two instances of the requested Data types, both
+    of them connected to each other, as the property "instances", belonging to
+    the classes "class1" and "class2" respectively (mapped as the property
+    "classes").
+
+    Aside from this, the order of the classes is not important, since all
+    vertices in the graph are bidirectional.
+
+        >>> from golismero.api.data.resource.url import URL
+        >>> from golismero.api.data.vulnerability.suspicious.url import SuspiciousURL
+        >>> url = URL("http://www.example.com/")
+        >>> vuln = SuspiciousURL(url)
+        >>> rel = Relationship(Vulnerability, URL)(vuln, url)
+        >>> rel.classes[0]
+        <class 'golismero.api.data.vulnerability.suspicious.url.SuspiciousURL'>
+        >>> rel.classes[1]
+        <class 'golismero.api.data.resource.url.URL'>
+        >>> rel.instance1
+        <SuspiciousURL plugin_id='GoLismero' level='informational' title='Suspicious URL'>
+        >>> rel.instance2
+        <URL url='http://www.example.com/', method='GET', params=None, referer=None, depth=0>
+        >>> rel[0]
+        <SuspiciousURL plugin_id='GoLismero' level='informational' title='Suspicious URL'>
+        >>> rel[1]
+        <URL url='http://www.example.com/', method='GET', params=None, referer=None, depth=0>
+    """
+
+    # wow
+    # such object oriented
+    # very class factory
+    # so template
+    # wow
+    def __new__(cls, class1, class2):
+
+        if not issubclass(class1, Data):
+            raise TypeError(
+                "Expected subclass of Data, got %r instead" % (class1,))
+        if not issubclass(class2, Data):
+            raise TypeError(
+                "Expected subclass of Data, got %r instead" % (class2,))
+
+        class _Relationship(Relationship):
+            __doc__ = Relationship.__doc__
+
+            classes = (class1, class2)
+
+            def __new__(cls, *args, **kwargs):
+                return object.__new__(cls, *args, **kwargs)
+
+            def __init__(self, instance1, instance2):
+                if not instance1.is_instance(self.classes[0]):
+                    raise TypeError(
+                        "Expected %s, got %r instead" %
+                        (self.classes[0].__name__, type(instance1)))
+                if not instance2.is_instance(self.classes[1]):
+                    raise TypeError(
+                        "Expected %s, got %r instead" %
+                        (self.classes[1].__name__, type(instance2)))
+                self.instances = (instance1, instance2)
+                self.classes = (instance1.__class__, instance2.__class__)
+
+            def __reduce__(self):
+                return RelationshipDeserializer, self.instances
+
+            @property
+            def types(self):
+                """
+                :returns: The data type constants
+                          of the two related objects.
+                :rtype: tuple(int, int)
+                """
+                return self.instances[0].data_type,\
+                       self.instances[1].data_type
+
+            @property
+            def subtypes(self):
+                """
+                :returns: The data subtype constants
+                          of the two related objects.
+                :rtype: tuple(str, str)
+                """
+                return self.instances[0].data_subtype,\
+                       self.instances[1].data_subtype
+
+            @property
+            def identities(self):
+                """
+                :returns: The identity hashes of the two related objects.
+                :rtype: tuple(str, str)
+                """
+                return self.instances[0].identity,\
+                       self.instances[1].identity
+
+            @property
+            def identity(self):
+
+                # We sort the two identity hashes so we always get the
+                # same result, regardless of the direction of the vertex.
+                return "-".join(sorted(self.identities))
+
+            def is_instance(self, clazz):
+                try:
+                    data_type_l    = clazz.classes[0].data_type
+                    data_subtype_l = clazz.classes[0].data_subtype
+                    data_type_r    = clazz.classes[1].data_type
+                    data_subtype_r = clazz.classes[1].data_subtype
+                except AttributeError, e:
+                    return False
+                except IndexError:
+                    return False
+                return self.classes[0].data_type    == data_type_l    and \
+                       self.classes[0].data_subtype == data_subtype_l and \
+                       self.classes[1].data_type    == data_type_r    and \
+                       self.classes[1].data_subtype == data_subtype_r
+
+            def is_in_scope(self, scope = None):
+                return True
+
+            @property
+            def depth(self):
+                """
+                :returns: Shortest path in the data graph from either node to
+                          one of the root nodes (audit targets).
+                :rtype: int
+                """
+                return min(self.instances[0].depth, self.instances[1].depth)
+
+            def merge(self, other):
+                if self.identity != other.identity:
+                    raise ValueError("Cannot merge different objects!")
+                self.classes   = other.classes
+                self.instances = other.instances
+
+            def reverse_merge(self, other):
+                if self.identity != other.identity:
+                    raise ValueError("Cannot merge different objects!")
+                other.classes   = self.classes
+                other.instances = self.instances
+
+            def __getitem__(self, item):
+                return self.instances[item]
+
+            def __iter__(self):
+                return self.instances.__iter__()
+
+            def invert(self):
+                """
+                Produces an inverted relationship.
+
+                :returns: A new Relationship instance
+                          where the order of the nodes is inverted.
+                :rtype: Relationship
+                """
+                return RelationshipDeserializer(
+                    self.instances[1], self.instances[0])
+
+        _Relationship.__name__ = "Relationship_%s_%s" % \
+                                 (class1.__name__, class2.__name__)
+
+        return _Relationship
 
 
-    #--------------------------------------------------------------------------
-    def __eq__(self, obj):
-        """
-        Determines equality of Data objects by comparing its identity property.
-
-        :param obj: Data object.
-        :type obj: Data
-
-        :return: True if the two Data objects have the same identity, False otherwise.
-        :rtype: bool
-        """
-        # TODO: maybe we should compare all properties, not just identity.
-        return self.identity == obj.identity
-
-
-    #--------------------------------------------------------------------------
-    def is_instance(self, clazz):
-        """
-        Checks if this Data object belongs to the given Data class.
-
-        :param clazz: Subclass to check.
-        :type clazz: type
-
-        :returns: True if the data object belongs to the class,
-            False otherwise.
-        :rtype: bool
-        """
-        try:
-            data_type    = clazz.data_type
-            data_subtype = clazz.data_subtype
-        except AttributeError:
-            return False
-        return self.data_type    == data_type    and \
-               self.data_subtype == data_subtype
+#------------------------------------------------------------------------------
+class RelationshipDeserializer(object):
+    def __new__(cls, instance1, instance2):
+        Rel = Relationship(instance1.__class__, instance2.__class__)
+        return Rel(instance1, instance2)
 
 
 #------------------------------------------------------------------------------
@@ -1750,7 +1990,10 @@ class _LocalDataCache(Singleton):
         if self._enabled:
 
             # The list is ordered so newer instances appear last.
-            self.__fresh.append(data)
+            if isinstance(data, Relationship):
+                self.__fresh.extend(data.instances)
+            else:
+                self.__fresh.append(data)
 
 
     #--------------------------------------------------------------------------
@@ -1774,6 +2017,10 @@ class _LocalDataCache(Singleton):
 
             # Get the identity.
             data_id = data.identity
+
+            # Ignore Relationship objects.
+            if "-" in data_id:
+                continue
 
             # Keep (and overwrite) the data. Order is important!
             # XXX FIXME review, some data may be lost... (merge instead?)
@@ -1878,20 +2125,46 @@ class _LocalDataCache(Singleton):
                 result = []
 
             # Single result.
-            if isinstance(result, Data):
+            elif isinstance(result, Data):
                 result = [result]
+            elif isinstance(result, Relationship):
+                result = list(result.instances)
 
             # Multiple results.
             else:
-                result = list(result)
-                for data in result:
-                    if not isinstance(data, Data):
-                        msg = "recv_info() returned an invalid data type: %r"
-                        raise TypeError(msg % type(data))
+                try:
+                    sanitized_result = []
+                    for entity in result:
+                        if isinstance(entity, Data):
+                            sanitized_result.append(entity)
+                        elif isinstance(entity, Relationship):
+                            sanitized_result.extend(entity.instances)
+                        else:
+                            raise TypeError(
+                                "recv_info() returned an invalid data type:"
+                                " %r" % type(entity))
+                except TypeError:
+                    raise
+                except Exception:
+                    raise TypeError(
+                        "recv_info() returned an invalid data type:"
+                        " %r" % type(result))
+                result = sanitized_result
 
             # Always send back the input data as a result,
             # unless discarded by the plugin.
-            if (
+            if isinstance(input_data, Relationship):
+                if (
+                    input_data.instances[1] not in result and
+                    input_data.instances[1].identity not in self.__discarded
+                ):
+                    result.insert(0, input_data.instances[1])
+                if (
+                    input_data.instances[0] not in result and
+                    input_data.instances[0].identity not in self.__discarded
+                ):
+                    result.insert(0, input_data.instances[0])
+            elif (
                 input_data not in result and
                 input_data.identity not in self.__discarded
             ):

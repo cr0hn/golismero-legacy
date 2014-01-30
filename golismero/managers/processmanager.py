@@ -293,8 +293,8 @@ def _bootstrap_inner(context, func, args, kwargs):
 
     # Set the default socket timeout.
     # Note: due to a known bug in Python versions prior to 2.7.5 we can't set
-    # a default timeline because it makes the multiprocessing module
-    # misbehave. See: http://hg.python.org/cpython/rev/4e85e4743757
+    # a default timeout because it makes the multiprocessing module misbehave.
+    # See: http://hg.python.org/cpython/rev/4e85e4743757
     if sys.version_info[:3] >= (2,7,5):
         socket.setdefaulttimeout(5.0)
 
