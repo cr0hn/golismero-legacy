@@ -893,6 +893,7 @@ class Audit (object):
                         continue
 
                     # Filter out data that won't be processed in this stage.
+                    # FIXME: this should sieve the data, not return a bool
                     if not self.__notifier.is_runnable_stage(batch, stage):
                         database.mark_stage_finished_many(batch_ids, stage)
                         continue

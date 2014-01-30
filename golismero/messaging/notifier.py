@@ -536,6 +536,8 @@ class AuditNotifier(AbstractNotifier):
             # If we have plugins in this stage that can handle this data,
             # then we can run this stage.
             candidates = self.get_candidate_plugins(data)
+            if isinstance(data, Relationship):
+                candidates.update(self.get_candidate_plugins(data.invert()))
             if candidates.intersection(available):
                 return True
 
