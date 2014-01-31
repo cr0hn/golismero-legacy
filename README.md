@@ -27,7 +27,8 @@ Debian/Ubuntu
 
 The following commands will download and install GoLismero on your system. This requires root privileges, so you will be prompted for your password when you run the first command.
 
-```sudo bash
+```
+sudo bash
 apt-get install python2.7 python2.7-dev python-pip python-docutils git perl nmap sslscan
 cd /opt
 git clone https://github.com/golismero/golismero.git
@@ -35,16 +36,19 @@ cd golismero
 pip install -r requirements.txt
 pip install -r requirements_unix.txt
 ln -s /opt/golismero/golismero.py /usr/bin/golismero
-exit```
+exit
+```
 
 Strictly speaking, GoLismero doesn't require installation - only its dependencies do. So if you want to use it on a system where you don't have root privileges, you can ask the system administrator to install them for you, and just run the "git checkout" command on your home folder.
 
-If you have an API key for Shodan, or an OpenVAS server you want to integrate with GoLismero, run the following commands:
+If you have an API key for Shodan, or an OpenVAS server or SpiderFoot server you want to integrate with GoLismero, run the following commands:
 
-```mkdir ~/.golismero
+```
+mkdir ~/.golismero
 touch ~/.golismero/user.conf
 chmod 600 ~/.golismero/user.conf
-nano ~/.golismero/user.conf```
+nano ~/.golismero/user.conf
+```
 
 At the editor, add the following sections to the file, as appropriate:
 
@@ -56,6 +60,9 @@ apikey = <INSERT YOUR SHODAN API KEY HERE>
 host = <INSERT THE OPENVAS HOST HERE>
 user = <INSERT THE OPENVAS USERNAME HERE>
 *password = <INSERT THE OPENVAS PASSWORD HERE>
+
+[spiderfoot]
+url = <INSERT THE SPIDERFOOT URL HERE>
 ```
 
 Windows
@@ -68,18 +75,22 @@ On Windows, you'll have to install each tool separately. You can download them f
 - [Nmap](http://nmap.org/download.html#windows)
 - [SSLScan](https://code.google.com/p/sslscan-win/)
 
-It's usually a good idea to install Visual Studio 2008 SP1 as well. This enables the compilation of C extensions, which can speed up Python.
+SSLScan for Windows has a bug that causes crashes when writing XML output, which is the one required by GoLismero. The issue has been [unfixed since 2010](https://code.google.com/p/sslscan-win/issues/detail?id=2), so it's not likely to change soon, but there's a workaround: simply upgrade OpenSSL to a newer version. You can get an OpenSSL build from here: [Win32OpenSSL](https://slproweb.com/products/Win32OpenSSL.html).
+
+It's usually a good idea to install Visual Studio 2008 SP1 as well. This enables the compilation of C extensions, which can speed up some Python modules.
 
 After installing the tools, open a console and run the following commands:
 
-```cd %HOME%
+```
+cd %HOME%
 git clone https://github.com/golismero/golismero.git
 cd golismero
-pip install -r requirements.txt```
+pip install -r requirements.txt
+```
 
 Finally, you may have to add the tools to the PATH environment variable so GoLismero can find them. You can also add GoLismero itself to the PATH.
 
-If you have an API key for Shodan, or an OpenVAS server you want to integrate with GoLismero, create a new file called "user.conf" where you installed GoLismero and add the following sections to the file, as appropriate:
+If you have an API key for Shodan, or an OpenVAS server or SpiderFoot server you want to integrate with GoLismero, create a new file called "user.conf" where you installed GoLismero and add the following sections to the file, as appropriate:
 
 ```
 [shodan:Configuration]
@@ -89,6 +100,9 @@ apikey = <INSERT YOUR SHODAN API KEY HERE>
 host = <INSERT THE OPENVAS HOST HERE>
 user = <INSERT THE OPENVAS USERNAME HERE>
 *password = <INSERT THE OPENVAS PASSWORD HERE>
+
+[spiderfoot]
+url = <INSERT THE SPIDERFOOT URL HERE>
 ```
 
 Quick help

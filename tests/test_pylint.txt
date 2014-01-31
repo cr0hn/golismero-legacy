@@ -52,6 +52,10 @@ golismero/api/data/db.py:206: Warning (W, Database.get_many): Access to a protec
 golismero/api/data/db.py:230: Warning (W, Database.keys): Access to a protected member _context of a client class
 golismero/api/data/db.py:254: Warning (W, Database.count): Access to a protected member _context of a client class
 golismero/api/data/db.py:290: Warning (W, Database.get_plugin_history): Access to a protected member _context of a client class
+golismero/api/data/information/asn.py:85: Warning (W, ASN.__init__): Used builtin function 'map'
+golismero/api/data/information/asn.py:184: Warning (W, ASN.asplain): Used builtin function 'map'
+golismero/api/data/information/asn.py:195: Warning (W, ASN.is_private): Used builtin function 'map'
+golismero/api/data/information/banner.py:75: Warning (W, Banner.__init__): Catching too general exception Exception
 golismero/api/data/information/dns.py:333: Warning (W, DnsRegister.name2id): Redefining built-in 'id'
 golismero/api/data/information/dns.py:1417: Warning (W, DnsRegisterNSEC.__init__): Redefining built-in 'next'
 golismero/api/data/information/dns.py:1689: Warning (W, DnsRegisterRP.discovered): Catching too general exception Exception
@@ -96,8 +100,8 @@ golismero/api/data/vulnerability/__init__.py:428: Warning (W, Vulnerability.tool
 golismero/api/data/vulnerability/__init__.py:448: Warning (W, Vulnerability.ca): Attribute '__ca' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:468: Warning (W, Vulnerability.capec): Attribute '__capec' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:488: Warning (W, Vulnerability.cve): Attribute '__cve' defined outside __init__
-golismero/api/data/vulnerability/__init__.py:506: Error (E, Vulnerability.plugin_id): An attribute affected in golismero.api.data.vulnerability line 270 hide this method
 golismero/api/data/vulnerability/__init__.py:508: Warning (W, Vulnerability.cwe): Attribute '__cwe' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:511: Error (E, Vulnerability.plugin_id): An attribute affected in golismero.api.data.vulnerability line 275 hide this method
 golismero/api/data/vulnerability/__init__.py:528: Warning (W, Vulnerability.osvdb): Attribute '__osvdb' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:548: Warning (W, Vulnerability.sa): Attribute '__sa' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:568: Warning (W, Vulnerability.sectrack): Attribute '__sectrack' defined outside __init__
@@ -111,7 +115,7 @@ golismero/api/data/vulnerability/__init__.py:656: Warning (W, Vulnerability.risk
 golismero/api/data/vulnerability/__init__.py:664: Error (E, Vulnerability.title): Instance of 'Vulnerability' has no '__title' member
 golismero/api/data/vulnerability/__init__.py:685: Error (E, Vulnerability.description): Instance of 'Vulnerability' has no '__description' member
 golismero/api/data/vulnerability/__init__.py:707: Error (E, Vulnerability.solution): Instance of 'Vulnerability' has no '__solution' member
-golismero/api/data/vulnerability/__init__.py:726: Error (E, Vulnerability.references): An attribute affected in golismero.api.data.vulnerability line 323 hide this method
+golismero/api/data/vulnerability/__init__.py:731: Error (E, Vulnerability.references): An attribute affected in golismero.api.data.vulnerability line 328 hide this method
 golismero/api/data/vulnerability/__init__.py:794: Warning (W, Vulnerability.references): Attribute '__references' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:849: Warning (W, Vulnerability.cvss_vector): Attribute '__cvss_base' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:850: Warning (W, Vulnerability.cvss_vector): Attribute '__cvss_score' defined outside __init__
@@ -128,6 +132,8 @@ golismero/api/data/vulnerability/__init__.py:1069: Warning (W, Vulnerability.mdv
 golismero/api/data/vulnerability/__init__.py:1169: Warning (W, Vulnerability.rhsa): Attribute '__rhsa' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:1229: Warning (W, Vulnerability.usn): Attribute '__usn' defined outside __init__
 golismero/api/data/vulnerability/__init__.py:1249: Warning (W, Vulnerability.vmsa): Attribute '__vmsa' defined outside __init__
+golismero/api/data/vulnerability/__init__.py:1464: Error (E, DomainVulnerability): Method '__init__' has no '__doc__' member
+golismero/api/data/vulnerability/__init__.py:1519: Error (E, IPVulnerability): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/authentication/weak_credentials.py:93: Error (E, WeakCredentials): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/cookie/__init__.py:79: Error (E, CookieVulnerability): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/information_disclosure/default_error_page.py:65: Error (E, DefaultErrorPage): Method '__init__' has no '__doc__' member
@@ -143,12 +149,13 @@ golismero/api/data/vulnerability/injection/__init__.py:95: Error (E, Injection):
 golismero/api/data/vulnerability/injection/__init__.py:200: Warning (W, HTTPInjection.__init__): Access to a protected member _sanitize_url of a client class
 golismero/api/data/vulnerability/malware/__init__.py:144: Error (E, Malware): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/malware/backdoor.py:74: Error (E, Backdoor): Method '__init__' has no '__doc__' member
-golismero/api/data/vulnerability/ssl/__init__.py:66: Error (E, SSLVulnerability): Method '__init__' has no '__doc__' member
+golismero/api/data/vulnerability/malware/malicious.py:116: Error (E, MaliciousASN): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/ssl/insecure_algorithm.py:64: Error (E, InsecureAlgorithm): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/ssl/invalid_common_name.py:63: Error (E, InvalidCommonName): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/ssl/obsolete_protocol.py:64: Error (E, ObsoleteProtocol): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/ssl/weak_key.py:72: Error (E, WeakKey): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/suspicious/cookie.py:80: Error (E, SuspiciousCookie): Method '__init__' has no '__doc__' member
+golismero/api/data/vulnerability/suspicious/header.py:82: Error (E, SuspiciousHeader): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/suspicious/html.py:76: Error (E, SuspiciousHTML): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/suspicious/url.py:68: Error (E, SuspiciousURL): Method '__init__' has no '__doc__' member
 golismero/api/data/vulnerability/suspicious/url.py:99: Error (E, SuspiciousURLPath): Method '__init__' has no '__doc__' member
@@ -323,8 +330,8 @@ golismero/api/text/wordlist.py:317: Warning (W, AdvancedListWordlist): Method 's
 golismero/api/text/wordlist.py:427: Warning (W, AdvancedListWordlist.clone): Access to a protected member __wordlist of a client class
 golismero/api/text/wordlist.py:695: Warning (W, AdvancedDicWordlist.clone): Access to a protected member __wordlist of a client class
 golismero/common.py:104: Warning (W): Catching too general exception Exception
-golismero/common.py:106: Error (E, json_encode): function already defined line 80
-golismero/common.py:112: Error (E, json_decode): function already defined line 79
+golismero/common.py:107: Error (E, json_encode): function already defined line 81
+golismero/common.py:113: Error (E, json_decode): function already defined line 80
 golismero/common.py:117: Warning (W, get_user_settings_folder): Using the global statement
 golismero/common.py:140: Warning (W, get_user_settings_folder): Catching too general exception Exception
 golismero/common.py:179: Warning (W, get_install_folder): Using the global statement
@@ -442,7 +449,6 @@ golismero/database/cachedb.py:261: Warning (W, PersistentNetworkCache._transacti
 golismero/database/cachedb.py:390: Warning (W, PersistentNetworkCache.close): Catching too general exception Exception
 golismero/database/common.py:46: Warning (W, transactional): Access to a protected member _transaction of a client class
 golismero/database/common.py:55: Warning (W, atomic): Access to a protected member _atom of a client class
-golismero/main/console.py:41: Warning (W): Unused import os
 golismero/main/console.py:231: Warning (W, _get_terminal_size_windows): No exception type(s) specified
 golismero/main/console.py:235: Warning (W, _get_terminal_size_windows): Unused variable 'bufx'
 golismero/main/console.py:235: Warning (W, _get_terminal_size_windows): Unused variable 'bufy'
@@ -451,14 +457,15 @@ golismero/main/console.py:235: Warning (W, _get_terminal_size_windows): Unused v
 golismero/main/console.py:235: Warning (W, _get_terminal_size_windows): Unused variable 'wattr'
 golismero/main/console.py:236: Warning (W, _get_terminal_size_windows): Unused variable 'maxx'
 golismero/main/console.py:236: Warning (W, _get_terminal_size_windows): Unused variable 'maxy'
+golismero/main/console.py:249: Warning (W, colorize_traceback): Catching too general exception Exception
 golismero/main/console.py:255: Warning (W, _get_terminal_size_tput): No exception type(s) specified
 golismero/main/console.py:263: Warning (W, _get_terminal_size_linux.ioctl_GWINSZ): No exception type(s) specified
 golismero/main/console.py:264: [F, _get_terminal_size_linux.ioctl_GWINSZ] Unable to import 'fcntl'
 golismero/main/console.py:264: [F, _get_terminal_size_linux.ioctl_GWINSZ] Unable to import 'termios'
-golismero/main/console.py:269: Warning (W, _get_terminal_size_linux): Redefining name 'os' from outer scope (line 41)
 golismero/main/console.py:273: Error (E, _get_terminal_size_linux): Module 'os' has no 'ctermid' member
 golismero/main/console.py:273: Warning (W, _get_terminal_size_linux): No exception type(s) specified
 golismero/main/console.py:320: Warning (W, Console._display): Catching too general exception Exception
+golismero/main/console.py:322: Warning (W, _get_terminal_size_linux): Redefining name 'os' from outer scope (line 43)
 golismero/main/console.py:376: Warning (W, Console._display_error): Catching too general exception Exception
 golismero/main/console.py:432: Warning (W): Access to a protected member _atexit_restore_console of a client class
 golismero/main/launcher.py:70: Error (E, run): Instance of 'OrchestratorConfig' has no 'verbose' member (but some types could not be inferred)

@@ -46,7 +46,7 @@ from nltk import wordpunct_tokenize
 from nltk.corpus import stopwords
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def get_words(text, min_length = None, max_length = None):
     """
     Parse the given text as natural language and extract words from it.
@@ -79,7 +79,7 @@ def get_words(text, min_length = None, max_length = None):
     }
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def calculate_language_scores(text):
     """
     Calculate probability of given text to be written in several languages and
@@ -102,7 +102,7 @@ def calculate_language_scores(text):
     }
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def detect_language(text):
     """
     Calculate the probability of given text to be written in different
@@ -126,7 +126,7 @@ def detect_language(text):
     return max(scores, key=scores.get)
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def number_to_words(n, locale = "EN", num_type = "cardinal"):
     """
     Convert an integer numeric value into natural language text.

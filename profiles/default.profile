@@ -59,9 +59,9 @@ follow_first_redirect = yes
 enable_plugins = all
 
 # Plugin blacklist, comma separated. Use "all" to disable all plugins.
-# By default it's best to disable plugins that require special configuration,
-# like a dedicated server or an API key.
-disable_plugins = openvas, nikto
+# For example you could disable plugins that require special configuration,
+# like a dedicated server or an API key, if you don't have them.
+#disable_plugins = shodan, openvas, spiderfoot
 
 # Plugin settings overrides follow.
 # The format is the same as in the main config file.

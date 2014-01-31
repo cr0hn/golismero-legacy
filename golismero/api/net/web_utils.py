@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#-----------------------------------------------------------------------
-# Web utilities API
-#-----------------------------------------------------------------------
+"""
+Web utilities API.
+"""
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -566,7 +566,7 @@ def generate_error_page_url(url):
     return m_parsed_url.url
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def get_error_page(url):
     """
     Takes an URL to an existing document and generates a random URL
@@ -708,6 +708,7 @@ class ParsedURL (object):
     .. warning::
        Unicode is currently *NOT* supported.
     """
+
 
     #--------------------------------------------------------------------------
     # TODO: for the time being we're using the buggy quote and unquote
@@ -895,22 +896,35 @@ class ParsedURL (object):
 
     #--------------------------------------------------------------------------
     def to_urlsplit(self):
-        # Do not document the return type below!
         "Convert to a tuple that can be passed to urlparse.urlunstrip()."
-        return (self.__scheme, self.netloc, self.__path, self.query, self.__fragment)
+        # Do not document the return type!
+        return (
+            self.__scheme,
+            self.netloc,
+            self.__path,
+            self.query,
+            self.__fragment
+        )
 
 
     #--------------------------------------------------------------------------
     def to_urlparse(self):
-        # Do not document the return type below!
         "Convert to a tuple that can be passed to urlparse.urlunparse()."
-        return (self.__scheme, self.netloc, self.__path, None, self.query, self.__fragment)
+        # Do not document the return type!
+        return (
+            self.__scheme,
+            self.netloc,
+            self.__path,
+            None,
+            self.query,
+            self.__fragment
+        )
 
 
     #--------------------------------------------------------------------------
     def to_urllib3(self):
-        # Do not document the return type below!
         "Convert to a named tuple as returned by urllib3.parse_url()."
+        # Do not document the return type!
         return Urllib3_Url(self.__scheme, self.auth, self.__host, self.port,
                            self.__path, self.query, self.__fragment)
 

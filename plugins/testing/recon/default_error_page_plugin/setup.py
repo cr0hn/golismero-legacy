@@ -1,15 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-__license__ = """
+"""
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
 
 Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
   Mario Vilas | mvilas<@>gmail.com
 
-Golismero project site: https://github.com/golismero
+Golismero project site: http://golismero-project.com
 Golismero project mail: golismero.project<@>gmail.com
+
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -26,89 +27,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+import os
 
-from golismero.api.data import discard_data
-from golismero.api.data.resource.url import Url
-from golismero.api.data.vulnerability.information_disclosure.default_error_page import DefaultErrorPage
-from golismero.api.text.matching_analyzer import get_diff_ratio
-from golismero.api.net.http import HTTP
-from golismero.api.plugin import TestingPlugin
-
-
-#------------------------------------------------------------------------------
-class DefaultErrorPagePlugin(TestingPlugin):
-    """
-    Find default error pages for the most common web servers.
-    """
-
-
-    #--------------------------------------------------------------------------
-    def get_accepted_info(self):
-        return [Url]
-
-
-    #--------------------------------------------------------------------------
-    def recv_info(self, info):
-
-        # Get the response page.
-        response = HTTP.get_url(info.url, callback = self.check_response)
-        if response:
-
-            try:
-
-                # Look for a match.
-                page_text = response.data
-
-                total = float(len(signatures))
-                for step, (server_name, server_page) in enumerate(signatures.iteritems()):
-
-                    # Update status
-                    progress = float(step) / total
-                    self.update_status(progress=progress)
-
-                    level = get_diff_ratio(page_text, server_page)
-
-                    if level > 0.95:  # magic number :)
-
-                        # Match found.
-                        vulnerability = DefaultErrorPage(info, server_name)
-                        vulnerability.add_information(response)
-                        return [vulnerability, response]
-
-                # Discard the response if no match was found.
-                discard_data(response)
-
-            except Exception:
-
-                # Discard the response on error.
-                discard_data(response)
-
-                raise
-
-
-    #--------------------------------------------------------------------------
-    def check_response(self, request, url, status_code, content_length, content_type):
-
-        # Returns True to continue, False to cancel.
-        return (
-
-            # Check the content length is not too large.
-            content_length is not None and content_length < 200000 and
-
-            # Check the content type is text.
-            content_type and content_type.strip().lower().startswith("text/") and
-
-            # Check the status code.
-            status_code and (status_code[0] == "5" or status_code in ("200", "403"))
-
-        )
+try:
+    import cPickle as Pickle
+except ImportError:
+    import pickle as Pickle
 
 
 #------------------------------------------------------------------------------
-signatures = {                       # TODO: move the signatures to a data file
+signatures = {
 
-
-#------------------------------------------------------------------------------
 "Internet Information Server (IIS)":
 
 """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -142,6 +71,7 @@ background-color:#555555;}
 </html>
 """,
 
+
 #------------------------------------------------------------------------------
 "Nginx":
 
@@ -166,6 +96,7 @@ the <a href="http://nginx.org/r/error_log">error log</a> for details.</p>
 <p><em>Faithfully yours, nginx.</em></p>
 </body>
 </html>""",
+
 
 #------------------------------------------------------------------------------
 "Apache Tomcat":
@@ -297,3 +228,14 @@ the <a href="mailto:admin@localhost">webmaster</a>.
 </html>"""
 
 }
+
+
+#-------------------------------------------------------------------------------
+def main():
+    signatures_file = os.path.join(os.path.split(__file__)[0], "signatures.dat")
+
+    # Dump the info
+    Pickle.dump(signatures, open(signatures_file, "wb"))
+
+if __name__ == '__main__':
+    main()

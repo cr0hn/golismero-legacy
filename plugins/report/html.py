@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from collections import Counter
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -50,18 +51,17 @@ class HTMLReport(json.JSONOutput):
     Writes reports as offline web pages.
     """
 
-    EXTENSION = ".zip"
-
 
     #--------------------------------------------------------------------------
-    # def is_supported(self, output_file):
-    #     if not output_file:
-    #         return False
-    #     output_file = output_file.lower()
-    #     return (
-    #         output_file.endswith(".html") or
-    #         output_file.endswith(".htm")
-    #     )
+    def is_supported(self, output_file):
+        if not output_file:
+            return False
+        output_file = output_file.lower()
+        return (
+            output_file.endswith(".html") or
+            output_file.endswith(".htm") or
+            output_file.endswith(".zip")
+        )
 
 
     #--------------------------------------------------------------------------
@@ -144,30 +144,70 @@ class HTMLReport(json.JSONOutput):
         # change the HTML code every time we add a new taxonomy property.
         report_data["supported_taxonomies"] = TAXONOMY_NAMES
 
+        # Calculate some statistics, so the JavaScript code doesn't have to.
+        report_data["stats"] = {
+            "resources":       len(report_data["resources"]),
+            "informations":    len(report_data["informations"]),
+            "vulnerabilities": len(report_data["vulnerabilities"]),
+            "vulns_by_level":  {
+                k.title(): v for k, v in Counter(
+                    v["level"] for v in report_data["vulnerabilities"]
+                ).iteritems()
+            },
+            "vulns_by_type":   dict(Counter(
+                v["display_name"] for v in report_data["vulnerabilities"]
+            )),
+        }
+
+        # Generate the ZIP file comment.
+        comment = "Report generated with GoLismero %s at %s UTC\n"\
+                  % (VERSION, report_data["summary"]["report_time"])
+
+        # Serialize the data and cleanup the unserialized version.
+        serialized_data = json.dumps(report_data)
+        del report_data
+
+        # Get the directory where we can find our template.
+        html_report = os.path.dirname(__file__)
+        html_report = os.path.join(html_report, "html_report")
+        html_report = os.path.abspath(html_report)
+        if not html_report.endswith(os.path.sep):
+            html_report += os.path.sep
+
         # Save the report data to disk.
         Logger.log_more_verbose("Writing report to disk...")
-        inner_dir = os.path.splitext(os.path.basename(output_file))[0]
-        with tempfile(suffix=".json") as output_json:
-            self.serialize_report(output_json, report_data)
+
+        # Save it as a zip file.
+        if output_file.endswith(".zip"):
             with ZipFile(output_file, mode="w", compression=ZIP_DEFLATED,
                          allowZip64=True) as zip:
-                zip.comment = "Report generated with GoLismero %s at %s UTC\n"\
-                            % (VERSION, report_data["summary"]["report_time"])
-                html_report = os.path.dirname(__file__)
-                html_report = os.path.join(html_report, "html_report")
-                html_report = os.path.abspath(html_report)
-                found = False
+
+                # Save the zip file comment.
+                zip.comment = comment
+
+                # Save the JSON data.
+                arcname = os.path.join("js", "database.js")
+                serialized_data = "data = " + serialized_data
+                zip.writestr(arcname, serialized_data)
+                del serialized_data
+
+                # Copy the template dependencies into the zip file.
                 for root, directories, files in os.walk(html_report):
                     for basename in files:
-                        if basename == "index-orig.html":
+                        if basename in ("index.html", "database.js"):
                             continue
                         filename = os.path.join(root, basename)
                         arcname = filename[len(html_report):]
-                        arcname = os.path.join(inner_dir, arcname)
-                        if basename == "database.js":
-                            filename = output_json
-                            found = True
+                        if arcname == "index-orig.html":
+                            arcname = "index.html"
                         zip.write(filename, arcname)
-                if not found:
-                    arcname = os.path.join(inner_dir, "js", "database.js")
-                    zip.write(output_json, arcname)
+
+        # Save it as an HTML file with no dependencies.
+        else:
+            with open(os.path.join(html_report, "index.html"), "rb") as fd:
+                template = fd.read()
+            assert "%DATA%" in template
+            serialized_data = template.replace("%DATA%", serialized_data)
+            del template
+            with open(output_file, "wb") as fd:
+                fd.write(serialized_data)

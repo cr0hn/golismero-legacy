@@ -41,6 +41,8 @@ class Information(Data):
     Base class for informational results.
     """
 
+
+    #--------------------------------------------------------------------------
     # Categories of informational data.
     CATEGORY_UNKNOWN     = 0    # Not a real value!
     CATEGORY_FILE        = 1
@@ -50,10 +52,7 @@ class Information(Data):
 
 
     #--------------------------------------------------------------------------
-    #
-    # Types of Infomation results
-    #
-    #--------------------------------------------------------------------------
+    # Types of informational data.
 
     INFORMATION_UNKNOWN = 0  # Not a real value!
 
@@ -89,9 +88,10 @@ class Information(Data):
     INFORMATION_TRACEROUTE             = 1306  # Traceroute results
     INFORMATION_GEOLOCATION            = 1307  # Geographic location
     INFORMATION_BANNER                 = 1308  # Service banner
+    INFORMATION_ASN                    = 1309  # ASN (ISP)
 
 
-    #----------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     data_type = Data.TYPE_INFORMATION
     information_type = INFORMATION_UNKNOWN

@@ -414,7 +414,7 @@ def cmdline_parser():
     return parser
 
 
-#--------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def parse_plugin_args(manager, plugin_args):
     """
     Parse a list of tuples with plugin arguments as a dictionary of

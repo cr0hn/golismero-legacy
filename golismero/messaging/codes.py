@@ -38,6 +38,7 @@ __all__ = ["MessageType", "MessageCode", "MessagePriority",
 
 from ..common import Singleton
 
+
 #------------------------------------------------------------------------------
 #
 # The message protocol per type is the following:
