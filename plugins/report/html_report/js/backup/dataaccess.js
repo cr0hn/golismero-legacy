@@ -81,31 +81,6 @@ function DataAccess(){
 	this.auditScope = data.audit_scope;
 }
 
-DataAccess.prototype.getDataChartByTarget = function(){
-	var dataChar = new Array();
-	var _self = this;
-	$(dataAccess.getAuditScope()).each(function(index,v){
-		var o = new Array();
-		o[0] = v;
-		o[1] = _self.getVulnerabilitiesCountByTarget(v,null,null);
-		if(o[1] >0){
-			dataChar.push(o);
-			}
-	});
-	return dataChar;
-}
-
-DataAccess.prototype.getDataChartByType = function(){
-	var dataChar = new Array();
-	$.each(data.stats.vulns_by_type, function(key, val){		
-		var o = new Array();
-		o[0] = key;
-		o[1] = val;
-		dataChar.push(o);
-	});
-	return dataChar;
-}
-
 DataAccess.prototype.getTargetTechnical = function(){
 	return data.vulnerabilities;
 }
@@ -154,7 +129,7 @@ DataAccess.prototype.getTargetById = function(id){
 DataAccess.prototype.getVulnerabilities = function(target, vulnerability, level, orderColumn, orderDirection) {
 	var bd = this.bbddVulnerabilitiesSimple();
 	if(target){
-		bd = bd.filter({'resource':{'like':target}});
+		bd = bd.filter({'resource':{'left':target}});
 	}
 	if(vulnerability){
 		bd = bd.filter({'display_name':vulnerability});
@@ -177,7 +152,7 @@ DataAccess.prototype.getVulnerabilities = function(target, vulnerability, level,
 DataAccess.prototype.getVulnerabilitiesCount = function(target, vulnerability, level) {
 	var bd = this.bbddVulnerabilitiesSimple();
 	if(target){
-		bd = bd.filter({'resource':{"like":target}});
+		bd = bd.filter({'links':{"has":target}});
 	}
 	if(vulnerability){
 		bd = bd.filter({'display_name':vulnerability});
@@ -185,16 +160,6 @@ DataAccess.prototype.getVulnerabilitiesCount = function(target, vulnerability, l
 	if(level){
 		bd = bd.filter({'level':level});
 	}
-	return bd.count();
-	
-};
-
-DataAccess.prototype.getVulnerabilitiesCountByTarget = function(target) {
-	var bd = this.bbddVulnerabilitiesSimple();
-	if(target){
-		bd = bd.filter({'resource':{"left":target}});
-	}
-	
 	return bd.count();
 	
 };
