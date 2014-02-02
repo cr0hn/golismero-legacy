@@ -23,13 +23,8 @@
 	        </div>
 	        <div class="collapse navbar-collapse">
 	          <ul class="nav navbar-nav">
-				<li class="dropdown">
-	              <a href="overview" class="dropdown-toggle anchor" data-toggle="dropdown">Overview<b class="caret"></b></a>
-	              <ul class="dropdown-menu">
-	                <li><a href="overview" class="anchor">Overview</a></li>
-	                <li><a href="vulnerabilitiesTable" class="anchor">Vulnerabilities</a></li>
-	              </ul>
-	            </li>
+				
+				<li><a href="vulnerabilitiesTable" class="anchor">Vulnerabilities</a></li>
 	            <li><a href="technicalReportTable" class="anchor">Technical report</a></li>
 	          </ul>
 	        </div><!-- /.nav-collapse -->	        
@@ -42,8 +37,7 @@
 			<div class="lateralNavbar" id="lateralNavbar">
 				<span class="text bold">Menu</span>
 				<ul>
-					<li><a href="overview" class="anchor" ><span class="glyphicon glyphicon-home"></span></a></li>
-					<li><a href="vulnerabilitiesTable" class="anchor" ><span class="glyphicon glyphicon-briefcase"></span></a></li>
+					<li><a href="vulnerabilitiesTable" class="anchor" ><span class="glyphicon glyphicon-th-list"></span></a></li>
 					<li><a href="technicalReportTable" class="anchor" ><span class="glyphicon glyphicon-exclamation-sign" ></span></a></li>
 				</ul>
 			</div>
@@ -89,17 +83,25 @@
 				</div>
 			</div>
 			<div class="row">
-				<div class="col-sm-12" >
+				<div class="col-sm-4">
 					<div class="well">
-						<h3 data-anchor="overview">Overview</h3>
-						<div id="chartVulnerabilities"></div>
-						Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed id fringilla mauris, eget vehicula justo. Quisque vitae risus sed lorem accumsan mollis sit amet quis diam. Quisque sagittis purus ac orci malesuada venenatis at nec magna. Duis posuere lorem risus, id molestie mauris fringilla ac. Donec blandit, nulla non tristique pretium, sapien arcu elementum purus, sed hendrerit risus velit a lacus. Duis ut gravida massa, vitae adipiscing erat. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Integer ligula lectus, pretium a pretium a, convallis non libero. In mattis suscipit est ut tempus. Phasellus eget nisl malesuada, tincidunt neque in, pretium nunc. Vestibulum quis sodales nunc, lacinia tristique ipsum. Praesent interdum eget erat eget varius. In erat lacus, ultrices ut nulla id, rhoncus fringilla lacus.
-
-						Curabitur nec ultrices arcu. Aliquam iaculis tellus enim, vel aliquam enim aliquam nec. Donec vitae commodo nisi, ut aliquet leo. Donec vitae sodales tortor. Vivamus porta tortor eu felis fermentum, at dapibus tortor volutpat. Ut aliquam turpis in odio laoreet, in sollicitudin tortor suscipit. Maecenas cursus, ante in hendrerit tincidunt, sem nulla ornare metus, id pretium eros magna eget leo.
-
-						Quisque leo dui, viverra et velit non, faucibus vestibulum eros. Nunc dictum nunc eu lorem fringilla tristique vitae in tortor. Suspendisse potenti. Etiam rhoncus felis eros, vel luctus mauris iaculis eu. Nam suscipit euismod bibendum. Donec a justo dignissim, porttitor leo eu, sodales urna. Integer placerat risus sit amet ornare ornare. Cras vulputate ligula at dolor accumsan, non convallis elit gravida. Maecenas mollis dui lacus, at malesuada diam gravida scelerisque. Sed arcu eros, mattis non est eu, luctus aliquet nisi. Nunc dapibus, orci a feugiat pulvinar, dolor urna hendrerit leo, et ultrices libero ipsum non ligula.
-
-						Quisque pretium mattis consequat. Etiam mi diam, aliquam id enim in, mollis rutrum lorem. Etiam sollicitudin eros vitae diam vehicula congue. Suspendisse convallis risus adipiscing felis volutpat hendrerit. Donec faucibus tellus ut nisi vulputate tempor. Pellentesque erat tellus, dapibus ac laoreet vitae, condimentum ut quam. Praesent velit tellus, pulvinar quis velit et, adipiscing sollicitudin sem. In interdum urna ac rhoncus ullamcorper. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed cursus cursus metus imperdiet lobortis. Nulla nulla lectus, elementum non turpis vel, elementum fermentum elit. Nullam rhoncus eros at euismod mollis. Sed commodo fermentum lorem, a ornare ligula mollis non. Nam mollis dui sit amet semper pretium.
+						<h3>Vulnerabilities by criticality</h3>
+						<div id="chartVulnerabilitiesByLevel"></div>
+						
+					</div>
+				</div>
+				<div class="col-sm-4">
+					<div class="well">
+						<h3>Vulnerabilities by type</h3>
+						<div id="chartVulnerabilitiesByType"></div>
+						
+					</div>
+				</div>
+				<div class="col-sm-4">
+					<div class="well">
+						<h3>Vulnerabilities by target</h3>
+						<div id="chartVulnerabilitiesByTarget"></div>
+						
 					</div>
 				</div>
 			</div>
@@ -278,7 +280,7 @@
 
 	    <script type="text/javascript">
 
-	    	function initChart(){
+	    	function initChartByLevel(){
 	    		var criticalCount = dataAccess.getVulnerabilitiesCount(null,null,"critical");
 	    		var highCount = dataAccess.getVulnerabilitiesCount(null,null,"high");
 	    		var middleCount = dataAccess.getVulnerabilitiesCount(null,null,"middle");
@@ -297,7 +299,7 @@
 				    ['Low', lowCount],
 				    ['Informational', informationalCount]
 				  ];
-				  var plot1 = jQuery.jqplot ('chartVulnerabilities', [data],
+				  var plot1 = jQuery.jqplot ('chartVulnerabilitiesByLevel', [data],
 				    {
 			            seriesDefaults: {
 			              // Make this a pie chart.
@@ -315,6 +317,49 @@
 			          }
 				  );
 	    	}
+			
+			function initChartByType(){
+	    		   		
+				var data = dataAccess.getDataChartByType();
+				  var plot1 = jQuery.jqplot ('chartVulnerabilitiesByType', [data],
+				    {
+			            seriesDefaults: {
+			              // Make this a pie chart.
+			              renderer: jQuery.jqplot.PieRenderer,
+			              rendererOptions: {
+			                // Put data labels on the pie slices.
+			                // By default, labels show the percentage of the slice.
+			                showDataLabels: true,
+			                dataLabelPositionFactor: 1.15,
+			              }
+			            },
+			            legend: { show:true, location: 's' },
+			            grid: {drawBorder:false, shadow: false}
+			          }
+				  );
+	    	}
+			
+			function initChartByTarget(){
+	    		   		
+				var data = dataAccess.getDataChartByTarget();
+				  var plot1 = jQuery.jqplot ('chartVulnerabilitiesByTarget', [data],
+				    {
+			            seriesDefaults: {
+			              // Make this a pie chart.
+			              renderer: jQuery.jqplot.PieRenderer,
+			              rendererOptions: {
+			                // Put data labels on the pie slices.
+			                // By default, labels show the percentage of the slice.
+			                showDataLabels: true,
+			                dataLabelPositionFactor: 1.15,
+			              }
+			            },
+			            legend: { show:true, location: 's' },
+			            grid: {drawBorder:false, shadow: false}
+			          }
+				  );
+	    	}
+			
 	    	function initAnchor(){
 				//clic en un enlace de la lista
 				$('.anchor').on('click touchstart',function(e){
@@ -549,7 +594,9 @@
 	    		dataAccess = new DataAccess();
 	    		initResume();
 	    		initToTop();
-				initChart();
+				initChartByLevel();
+				initChartByType();
+				initChartByTarget();
 				initAnchor();
 				initTemplates();
 				initVulnerabilitiesTable();
