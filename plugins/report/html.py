@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from collections import Counter
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -37,6 +36,7 @@ from golismero.api.external import tempfile
 from golismero.api.logger import Logger
 from golismero.api.plugin import import_plugin, get_plugin_name
 
+from collections import Counter
 from zipfile import ZipFile, ZIP_DEFLATED
 
 import os
@@ -193,7 +193,11 @@ class HTMLReport(json.JSONOutput):
 
                 # Copy the template dependencies into the zip file.
                 for root, directories, files in os.walk(html_report):
+                    if root.endswith(os.path.sep + "backup"):
+                        continue
                     for basename in files:
+                        if basename.endswith(".less"):
+                            continue
                         if basename in ("index.html", "database.js"):
                             continue
                         filename = os.path.join(root, basename)
