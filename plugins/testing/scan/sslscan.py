@@ -300,8 +300,12 @@ class SSLScanPlugin(TestingPlugin):
                                          callback=Logger.log_verbose)
                 t2 = time()
             if code:
+                if code < 0 and sep == "\\":
+                    asc_code = "0x%.8X" % code
+                else:
+                    asc_code = str(code)
                 Logger.log_error(
-                    "SSLScan execution failed, status code: %d" % code)
+                    "SSLScan execution failed, status code: %s" % asc_code)
             else:
                 Logger.log("SSLScan scan finished in %s seconds for target: %s"
                            % (t2 - t1, hostname))
