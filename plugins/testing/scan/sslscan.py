@@ -26,6 +26,21 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+import re
+
+from collections import namedtuple
+from datetime import datetime
+from os.path import join, split, sep
+from socket import socket, AF_INET, SOCK_STREAM
+from ssl import wrap_socket
+from traceback import format_exc
+from time import time
+
+try:
+    from xml.etree import cElementTree as ET
+except ImportError:
+    from xml.etree import ElementTree as ET
+
 from golismero.api.config import Config
 from golismero.api.data.db import Database
 from golismero.api.data.information.fingerprint import ServiceFingerprint
@@ -42,21 +57,6 @@ from golismero.api.external import run_external_tool, tempfile, find_binary_in_p
 from golismero.api.logger import Logger
 from golismero.api.net import ConnectionSlot
 from golismero.api.plugin import ImportPlugin, TestingPlugin
-
-from collections import namedtuple
-from datetime import datetime
-from os.path import join, split, sep
-from socket import socket, AF_INET, SOCK_STREAM
-from ssl import wrap_socket
-from traceback import format_exc
-from time import time
-
-try:
-    from xml.etree import cElementTree as ET
-except ImportError:
-    from xml.etree import ElementTree as ET
-
-import re
 
 
 #------------------------------------------------------------------------------
@@ -349,11 +349,26 @@ class SSLScanPlugin(TestingPlugin):
                 m_text = m_info.decode("latin-1").encode("utf-8")
 
             # Parse the XML file.
-            try:
-                tree = ET.fromstring(m_text)
-            except ET.ParseError, e:
-                Logger.log_error("Error parsing XML file: %s" % str(e))
-                return results, count
+
+            #
+            # If we found an unrecoverable error in an XML document (like a embeded binary data) we will
+            # delete de lines with the errors
+            while True:
+                try:
+                    tree = ET.fromstring(m_text)
+
+                    # If execution reach this sentece, XML is correct
+                    break
+                except ET.ParseError, e:
+                    Logger.log("Error parsing XML file with results. Tryning to fix the file.")
+
+                    line, col = e.position
+                    splited_info = m_text.split("\n")
+                    if len(splited_info) < 3:  # 3 -> XML header +open and close root tag.
+                        Logger.log_error("Error parsing XML file: %s" % str(e))
+                        return results, count
+
+                    m_text = "\n".join(x for i, x in enumerate(splited_info, 1) if i != line)
 
             # For each scan result...
             try:
