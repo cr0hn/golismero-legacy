@@ -36,7 +36,7 @@ from traceback import format_exc
 from golismero.api.config import Config
 from golismero.api.data.resource.url import Url
 from golismero.api.data.vulnerability.injection.sql import SQLInjection
-from golismero.api.external import run_external_tool, find_binary_in_path, tempdir
+from golismero.api.external import run_external_tool, find_binary_in_path, tempdir, get_tools_folder
 from golismero.api.logger import Logger
 from golismero.api.net import ConnectionSlot
 from golismero.api.net.web_utils import WEB_SERVERS_VARS
@@ -64,8 +64,6 @@ class SQLMapTestingPlugin(TestingPlugin):
     def recv_info(self, info):
 
         if not info.has_url_params and not info.has_post_params:
-            Logger.log_more_verbose(
-                "URL %r has no parameters, skipping" % info.url)
             return
 
         # Result info
@@ -106,7 +104,6 @@ class SQLMapTestingPlugin(TestingPlugin):
             # POST Parameters injection
             #
             if info.has_post_params:
-                Logger.log(args)
                 args.extend([
                     "--data",
                     "&".join(["%s=%s" % (k, v) for k, v in info.post_params.iteritems() if k not in WEB_SERVERS_VARS])
@@ -142,9 +139,12 @@ class SQLMapTestingPlugin(TestingPlugin):
         Logger.log("Launching SQLMap against: %s" % target)
         Logger.log_more_verbose("SQLMap arguments: %s" % " ".join(args))
 
+        sqlmap_dir = join(get_tools_folder(), "sqlmap")
+        sqlmap_script = join(sqlmap_dir, "sqlmap.py")
+
         with ConnectionSlot(target):
             t1 = time()
-            code = run_external_tool("sqlmap.py", args,
+            code = run_external_tool(sqlmap_script, args,
                                      callback=Logger.log_verbose)
             t2 = time()
 
