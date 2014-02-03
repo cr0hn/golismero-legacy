@@ -261,5 +261,10 @@ class Spider(TestingPlugin):
             # Approved!
             return True
 
+        # If URL path in blacklist?
+        black_list = ["logout", "logoff", "exit", "sigout", "signout", "delete", "remove"]
+        if any(True for x in black_list if x in parsed_url.path.lower()):
+            return False
+
         # Failed!
         return False
