@@ -212,7 +212,7 @@ class XSSerPlugin(TestingPlugin):
     #--------------------------------------------------------------------------
     def parse_xsser_result(self, target, filename):
         """
-        Convert the result to golismero data model.
+        Convert the result to GoLismero data model.
 
         :param target: Dectected URL.
         :type target: Url
