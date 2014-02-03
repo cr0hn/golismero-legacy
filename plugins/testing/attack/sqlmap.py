@@ -144,7 +144,7 @@ class SQLMapTestingPlugin(TestingPlugin):
 
         with ConnectionSlot(target):
             t1 = time()
-            code = run_external_tool("sqlmap.py", args,
+            code = run_external_tool(find_binary_in_path("sqlmap.py"), args,
                                      callback=Logger.log_verbose)
             t2 = time()
 

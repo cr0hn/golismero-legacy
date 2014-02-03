@@ -171,7 +171,7 @@ class XSSerPlugin(TestingPlugin):
 
         with ConnectionSlot(hostname):
             t1 = time()
-            code = run_external_tool("xsser.py", args, callback=Logger.log_verbose)
+            code = run_external_tool(find_binary_in_path("xsser.py"), args, callback=Logger.log_verbose)
             t2 = time()
 
         if code:
@@ -209,7 +209,7 @@ class XSSerPlugin(TestingPlugin):
     #--------------------------------------------------------------------------
     def parse_xsser_result(self, target, filename):
         """
-        Convert the result to golismero data model.
+        Convert the result to GoLismero data model.
 
         :param target: Dectected URL.
         :type target: Url
