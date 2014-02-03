@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import re
 
+from BeautifulSoup import BeautifulStoneSoup
 from collections import namedtuple
 from datetime import datetime
 from os.path import join, split, sep
@@ -35,11 +36,6 @@ from socket import socket, AF_INET, SOCK_STREAM
 from ssl import wrap_socket
 from traceback import format_exc
 from time import time
-
-try:
-    from xml.etree import cElementTree as ET
-except ImportError:
-    from xml.etree import ElementTree as ET
 
 from golismero.api.config import Config
 from golismero.api.data.db import Database
@@ -349,30 +345,11 @@ class SSLScanPlugin(TestingPlugin):
                 m_text = m_info.decode("latin-1").encode("utf-8")
 
             # Parse the XML file.
-
-            #
-            # If we found an unrecoverable error in an XML document (like a embeded binary data) we will
-            # delete de lines with the errors
-            while True:
-                try:
-                    tree = ET.fromstring(m_text)
-
-                    # If execution reach this sentece, XML is correct
-                    break
-                except ET.ParseError, e:
-                    Logger.log("Error parsing XML file with results. Tryning to fix the file.")
-
-                    line, col = e.position
-                    splited_info = m_text.split("\n")
-                    if len(splited_info) < 3:  # 3 -> XML header +open and close root tag.
-                        Logger.log_error("Error parsing XML file: %s" % str(e))
-                        return results, count
-
-                    m_text = "\n".join(x for i, x in enumerate(splited_info, 1) if i != line)
+            tree = BeautifulStoneSoup(m_text)
 
             # For each scan result...
             try:
-                tags = tree.findall(".//ssltest")
+                tags = tree.findAll("ssltest")
             except Exception, e:
                 tb = format_exc()
                 Logger.log_error("Error parsing XML file: %s" % str(e))
@@ -386,7 +363,7 @@ class SSLScanPlugin(TestingPlugin):
                     results.append(info)
 
                     # Self-signed?
-                    m_t_pk = t.find(".//pk")
+                    m_t_pk = t.find("pk")
                     if m_t_pk is not None:
                         m_self_signed = m_t_pk.get("error")
                         if m_self_signed:
@@ -394,7 +371,7 @@ class SSLScanPlugin(TestingPlugin):
                             count += 1
 
                     # Valid CN?
-                    m_t_cn = t.find(".//subject")
+                    m_t_cn = t.find("subject")
                     if m_t_cn is not None:
                         m_cn = re.search(
                             "(CN=)([0-9a-zA-Z\.\*]+)", m_t_cn.text).group(2)
@@ -403,8 +380,8 @@ class SSLScanPlugin(TestingPlugin):
                             count += 1
 
                     # Outdated?
-                    m_t_before = t.find(".//not-valid-before")
-                    m_t_after  = t.find(".//not-valid-after")
+                    m_t_before = t.find("not-valid-before")
+                    m_t_after  = t.find("not-valid-after")
                     if m_t_before is not None and m_t_after is not None:
                         m_valid_before = re.search(
                             "([a-zA-Z:0-9\s]+)( GMT)",
@@ -425,7 +402,7 @@ class SSLScanPlugin(TestingPlugin):
                         Ciphers(version = c.get("sslversion"),
                                 bits    = c.get("bits"),
                                 cipher  = c.get("cipher"))
-                        for c in t.findall(".//cipher")
+                        for c in t.findAll("cipher")
                         if c.get("status") == "accepted"
                     ]
 
