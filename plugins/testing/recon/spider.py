@@ -265,5 +265,5 @@ class Spider(TestingPlugin):
         if any(x in url for x in m_forbidden):
             return False
 
-        # Failed!
-        return False
+        # Success!
+        return True
