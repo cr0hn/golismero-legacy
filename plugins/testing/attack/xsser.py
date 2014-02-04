@@ -169,8 +169,7 @@ class XSSerPlugin(TestingPlugin):
         Logger.log("Launching XSSer against: %s" % url)
         Logger.log_more_verbose("XSSer arguments: %s" % " ".join(args))
 
-        xsser_dir = join(get_tools_folder(), "xsser")
-        xsser_script = join(xsser_dir, "xsser.py")
+        xsser_script = join(get_tools_folder(), "xsser", "xsser.py")
 
         with ConnectionSlot(hostname):
             t1 = time()
