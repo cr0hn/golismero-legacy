@@ -123,7 +123,7 @@ class Banner(Fingerprint):
         return {
             ip.address
             for ip in self.get_associated_resources_by_category(
-                          IP.resource_type)
+                          IP.data_subtype)
         }
 
 
@@ -136,7 +136,7 @@ class Banner(Fingerprint):
         return {
             domain.name
             for domain in self.get_associated_resources_by_category(
-                          Domain.resource_type)
+                          Domain.data_subtype)
         }
 
 

@@ -4,7 +4,6 @@
 """
 GoLismero data model.
 """
-from golismero.api.logger import Logger
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -61,6 +60,7 @@ __all__ = [
 
 from .db import Database
 from ..config import Config
+from ..logger import Logger
 from ..text.text_utils import uncamelcase
 from ...common import pickle, Singleton, EmptyNewStyleClass
 

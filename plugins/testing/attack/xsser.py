@@ -248,7 +248,7 @@ class XSSerPlugin(TestingPlugin):
                           method = _method,
                           post_params = target.post_params if _method == "POST" else None,
                           referer = target.referer)
-                vul = XSS(url = url,
+                vul = XSS(url,
                           vulnerable_params = {"injection":_injection},
                           injection_point = XSS.INJECTION_POINT_URL,
                           injection_type = "XSS",

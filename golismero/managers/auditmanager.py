@@ -4,9 +4,6 @@
 """
 Manager for audits.
 """
-from golismero.api.data.resource.domain import Domain
-from golismero.api.data.resource.ip import IP
-from golismero.api.data.resource.url import URL, FolderURL, BaseURL
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -40,7 +37,9 @@ from .processmanager import PluginContext
 from .reportmanager import ReportManager
 from .rpcmanager import implementor
 from ..api.data import Data
-from ..api.data.resource import Resource
+from ..api.data.resource.domain import Domain
+from ..api.data.resource.ip import IP
+from ..api.data.resource.url import URL, FolderURL, BaseURL
 from ..api.config import Config
 from ..api.logger import Logger
 from ..api.plugin import STAGES

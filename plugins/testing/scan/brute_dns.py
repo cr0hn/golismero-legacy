@@ -152,13 +152,12 @@ class DNSBruteforcer(TestingPlugin):
             # Check for Domain disclosure
             #
             if prefix not in whitelist:
-                d = DomainDisclosure(name,
+                d = DomainDisclosure(domain,
                                      risk        = 0,
                                      level       = "low",
                                      title       = "Possible subdomain leak",
                                      description = "A subdomain was discovered which may be an unwanted information disclosure."
                                      )
-                d.add_resource(domain)
                 results.append(d)
 
 
