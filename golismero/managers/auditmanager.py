@@ -691,6 +691,16 @@ class Audit (object):
                                   audit_scope = self.scope,
                              orchestrator_pid = old_context._orchestrator_pid,
                              orchestrator_tid = old_context._orchestrator_tid)
+                    target_data = self.scope.get_targets()
+                    targets_added_count = 0
+                    for data in target_data:
+                        if not self.database.has_data_key(data.identity):
+                            self.database.add_data(data)
+                            targets_added_count += 1
+                    if targets_added_count:
+                        Logger.log_verbose(
+                            "Added %d new targets to the database." %
+                            targets_added_count)
 
             # Show the scope. Abort if the scope is wrong.
             Logger.log_more_verbose(str(self.scope))
