@@ -31,12 +31,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import shlex
 from time import time
 from traceback import format_exc
+from os.path import join
 
 from golismero.api.config import Config
 from golismero.api.data.resource.url import URL
 from golismero.api.data.vulnerability.injection.xss import XSS
 from golismero.api.external import run_external_tool, tempfile, \
-    find_binary_in_path
+    find_binary_in_path, get_tools_folder
 from golismero.api.logger import Logger
 from golismero.api.net import ConnectionSlot
 from golismero.api.net.web_utils import WEB_SERVERS_VARS
@@ -72,7 +73,6 @@ class XSSerPlugin(TestingPlugin):
             return
 
         if not info.has_url_params and not info.has_post_params:
-            Logger.log_more_verbose("URL '%s' has no parameters" % info.url)
             return
 
         # Get user args
@@ -169,9 +169,11 @@ class XSSerPlugin(TestingPlugin):
         Logger.log("Launching XSSer against: %s" % url)
         Logger.log_more_verbose("XSSer arguments: %s" % " ".join(args))
 
+        xsser_script = join(get_tools_folder(), "xsser", "xsser.py")
+
         with ConnectionSlot(hostname):
             t1 = time()
-            code = run_external_tool("xsser.py", args, callback=Logger.log_verbose)
+            code = run_external_tool(xsser_script, args, callback=Logger.log_verbose)
             t2 = time()
 
         if code:
@@ -209,7 +211,7 @@ class XSSerPlugin(TestingPlugin):
     #--------------------------------------------------------------------------
     def parse_xsser_result(self, target, filename):
         """
-        Convert the result to golismero data model.
+        Convert the result to GoLismero data model.
 
         :param target: Dectected URL.
         :type target: URL
