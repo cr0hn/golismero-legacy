@@ -139,8 +139,7 @@ class SQLMapTestingPlugin(TestingPlugin):
         Logger.log("Launching SQLMap against: %s" % target)
         Logger.log_more_verbose("SQLMap arguments: %s" % " ".join(args))
 
-        sqlmap_dir = join(get_tools_folder(), "sqlmap")
-        sqlmap_script = join(sqlmap_dir, "sqlmap.py")
+        sqlmap_script = join(get_tools_folder(), "sqlmap", "sqlmap.py")
 
         with ConnectionSlot(target):
             t1 = time()
