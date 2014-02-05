@@ -57,7 +57,10 @@ def test_pylint():
         print "Running PyLint..."
         with open("_tmp_pylint.log", "w") as log:
             from pylint import epylint as lint
+            pwd = os.getcwd()
+            os.chdir("..")
             lint.py_run('golismero', False, log, log)
+            os.chdir(pwd)
 
         # Clean up the log, filter out the false positives, and write the log to disk.
         print "Cleaning up the PyLint log..."
