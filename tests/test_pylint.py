@@ -57,7 +57,10 @@ def test_pylint():
         print "Running PyLint..."
         with open("_tmp_pylint.log", "w") as log:
             from pylint import epylint as lint
-            lint.py_run('golismero', False, log, log)
+            pwd = os.getcwd()
+            os.chdir("..")
+            lint.py_run('-E -f parseable golismero', False, log, None, script="pylint")
+            os.chdir(pwd)
 
         # Clean up the log, filter out the false positives, and write the log to disk.
         print "Cleaning up the PyLint log..."
@@ -69,6 +72,8 @@ def test_pylint():
                 for line in log:
                     line = line.strip()
                     if not line:
+                        continue
+                    if line.startswith("*************"):
                         continue
                     if ": Warning (W): FIXME" in line or \
                        ": Warning (W): TODO" in line or \
