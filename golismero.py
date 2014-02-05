@@ -92,6 +92,7 @@ import os
 
 from ConfigParser import RawConfigParser
 from getpass import getpass
+from glob import glob
 from os import getenv, getpid
 from thread import get_ident
 
@@ -873,6 +874,13 @@ def command_run(parser, P, cmdParams, auditParams):
         else:
             raise RuntimeError("Unsupported command: %s" % P.command)
 
+    # Expand wildcards for filenames on Windows.
+    # On other platforms this is not needed,
+    # as the shell already does it for us.
+    if os.path.sep == "\\":
+        auditParams._imports = expand_wildcards(auditParams._imports)
+        auditParams._reports = expand_wildcards(auditParams._reports)
+
     try:
 
         # Load the plugins.
@@ -943,6 +951,17 @@ def command_run(parser, P, cmdParams, auditParams):
     # Launch GoLismero.
     launcher.run(cmdParams, auditParams)
     exit(0)
+
+
+#------------------------------------------------------------------------------
+def expand_wildcards(filenames):
+    expanded = []
+    for filename in filenames:
+        if "*" in filename or "?" in filename:
+            expanded.extend(glob(filename))
+        else:
+            expanded.append(filename)
+    return expanded
 
 
 #------------------------------------------------------------------------------
