@@ -45,7 +45,8 @@ if path.exists(thirdparty_libs):
 from golismero.api.data import Data
 from golismero.api.data.information.text import Text
 from golismero.api.data.resource.url import URL
-from golismero.api.data.vulnerability.information_disclosure.url_disclosure import UrlDisclosure
+from golismero.api.data.vulnerability.information_disclosure.url_disclosure \
+    import UrlDisclosure
 from golismero.api.text.text_utils import generate_random_string
 from golismero.database.auditdb import AuditDB, BaseAuditDB, AuditSQLiteDB
 from golismero.common import AuditConfig, OrchestratorConfig

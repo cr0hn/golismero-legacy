@@ -461,11 +461,7 @@ class OpenVASPlugin(TestingPlugin):
                             Logger.log_error_more_verbose(tb)
 
                 # Create the vulnerability instance.
-                vuln = clazz(**kwargs)
-
-                # Link the vulnerability to the resource.
-                if target is not None:
-                    target.add_vulnerability(vuln)
+                vuln = clazz(target, **kwargs)
 
                 # Add the vulnerability.
                 results.append(vuln)

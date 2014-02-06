@@ -106,7 +106,7 @@ class PunkSPIDER(TestingPlugin):
 
                 # Create the Vulnerability object.
                 vuln = clazz(
-                    url = url_o,
+                    url_o,
                     vulnerable_params = { param: payload },
                     injection_point = clazz.INJECTION_POINT_URL,
                     injection_type = to_utf8(v["bugType"]), # FIXME

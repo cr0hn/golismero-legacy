@@ -37,7 +37,7 @@ from golismero.api.data.information.text import Text
 from golismero.api.data.resource import Resource
 from golismero.api.data.resource.url import URL
 from golismero.api.data.vulnerability.suspicious.url import SuspiciousURLPath
-from golismero.api.data.vulnerability.malware.malicious_url import MaliciousUrl
+from golismero.api.data.vulnerability.malware.malicious import MaliciousUrl
 from golismero.api.plugin import TestingPlugin
 from golismero.api.net.scraper import extract_from_html, extract_from_text
 

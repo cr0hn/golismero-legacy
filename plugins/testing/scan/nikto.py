@@ -360,8 +360,7 @@ class NiktoPlugin(TestingPlugin):
                             else:
                                 del kwargs["osvdb"]
                         if vuln_tag == "OSVDB-0":
-                            vuln = UncategorizedVulnerability(**kwargs)
-                            vuln.add_resource(url)
+                            vuln = UncategorizedVulnerability(url, **kwargs)
                         else:
                             vuln = VulnerableWebApp(url, **kwargs)
                         results.append(vuln)
