@@ -359,9 +359,14 @@ class RSTReport(ReportPlugin):
                         for key, value in properties.iteritems()
                         if value
                     }
+                    if "Target ID" in properties:
+                        properties["Target ID"] = self.__format_rst(
+                            [properties["Target ID"]], True).split("\n")
 
                     # Remove ID properties.
                     for key, value in properties.items():
+                        if key == "Plugin ID" or key == "Target ID":
+                            continue
                         if key.endswith(" ID") and len(value) == 1 and \
                                 len(value[0]) == 32 and value[0].isalnum():
                             del properties[key]

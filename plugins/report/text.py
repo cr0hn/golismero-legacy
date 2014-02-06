@@ -117,7 +117,7 @@ class TextReport(ReportPlugin):
 
     #--------------------------------------------------------------------------
     def __iterate(self, data_type = None, data_subtype = None):
-        if Database.count(data_type, data_type) < 100:
+        if Database.count(data_type=data_type, data_subtype=data_subtype) <100:
             return Database.get_many(
                 Database.keys(data_type=data_type, data_subtype=data_subtype)
             )
@@ -306,7 +306,8 @@ class TextReport(ReportPlugin):
                     table.header(("Occurrence ID", vuln.identity))
                     w = len(table.draw())
                     table.add_row(("Title", vuln.title))
-                    targets = self.__gather_vulnerable_resources(vuln)
+                    ##targets = self.__gather_vulnerable_resources(vuln)
+                    targets = [vuln.target]
                     table.add_row(("Found By", get_plugin_name(vuln.plugin_id)))
                     p = len(table.draw())
                     table.add_row(("Level", vuln.level))
