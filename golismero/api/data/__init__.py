@@ -1035,7 +1035,7 @@ class Data(Entity):
             if name not in (
                 "identity", "plugin_id", "depth", "links",
                 "data_type", "data_subtype", "display_name",
-                "information_category",
+                "information_category", "target_id",
             ):
 
                 # Ignore most of the properties defined in Data.
@@ -1518,6 +1518,9 @@ class Data(Entity):
         if self._can_link(other) and other._can_link(self):
             other._add_link(self)
             self._add_link(other)
+        else:
+            raise TypeError("Unlinkable types: %s and %s" %
+                 (self.data_subtype, other.data_subtype))
 
 
     def _can_link(self, other):
