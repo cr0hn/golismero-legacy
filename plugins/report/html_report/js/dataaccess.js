@@ -138,7 +138,7 @@ DataAccess.prototype.getTargetById = function(id){
 	if(id){
 		var d = this.targetMap[id];
 		if(d){
-    		return d.target_id;
+		    return d.display_content;
 		}
 	}
 	return "";

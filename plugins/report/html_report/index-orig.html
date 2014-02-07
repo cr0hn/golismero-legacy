@@ -203,7 +203,7 @@
 		<script type="text/template" id="expandedInfoTechnical">
 			<div class="row">
 				<div class="col-sm-12">
-					<div class="item-form"><span class="bold">Target:</span>${obtainTarget(target_id)}</div>
+					<div class="item-form"><span class="bold">Target:</span>${obtainTarget(links[0])}</div>
 				</div>
 			</div>
 			<div class="row">				
@@ -244,7 +244,7 @@
 			<tr data-anchor="technical-${identity}" class="headData expanded" >
 				<td><span class="glyphicon glyphicon-plus contracted"></span> <span class="glyphicon glyphicon-minus expanded"></td>
 				<td>${identity}</td>
-				<td><p class="large">${obtainTarget(target_id)}</p></td>
+				<td><p class="large">${obtainTarget(links[0])}</p></td>
 				<td>${display_name}</td>
 				<td><span class="bold ${level}Vulnerability">${level}</span></td>
 			</tr>

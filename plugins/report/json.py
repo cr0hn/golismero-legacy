@@ -318,10 +318,12 @@ class JSONOutput(ReportPlugin):
             i = data.identity
             d = i
             try:
+                c = str(data)
                 if self.__dumpmode:
                     d = data.to_dict()
                 else:
                     d = data.display_properties
+                d["display_content"] = c
                 self.test_data_serialization(d)
             except Exception:
                 ##raise  # XXX DEBUG
