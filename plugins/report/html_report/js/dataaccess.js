@@ -152,17 +152,30 @@ DataAccess.prototype.getVulnerabilities = function(target, vulnerability, level,
 	if(vulnerability){
 		bd = bd.filter({'display_name':vulnerability});
 	}
-	if(level){
-		bd = bd.filter({'level':level});
+	
+	if(!isNaN(level)){
+		if(level == "0"){
+			bd = bd.filter({'level':{'==':"0"}});
+		}else{
+			bd = bd.filter({'level':level});
+		}		
 	}
 	if(orderColumn){
-		if(orderDirection=="asc")
-		{
+		if(orderDirection=="asc"){
 			orderDirection = ""
+		}
+		//cambiado con respecto a lo que pongo en la columna porque quiero que se ordene en criticidad de la mas critica a la menos (0 -> 4)
+		if(orderColumn == "level"){
+			if(orderDirection=="logicaldesc"){
+				orderDirection = "";
+			}else{
+				orderDirection = "logicaldesc";
+			}
 		}
 		return bd.order(orderColumn +" " + orderDirection).get();
 	}else{
-		return bd.order("level logicaldesc").get();
+		//cambiado con respecto a lo que pongo en la columna porque quiero que se ordene en criticidad de la mas critica a la menos (0 -> 4)
+		return bd.order("level ").get();
 	}
 	
 	
@@ -175,8 +188,12 @@ DataAccess.prototype.getVulnerabilitiesCount = function(target, vulnerability, l
 	if(vulnerability){
 		bd = bd.filter({'display_name':vulnerability});
 	}
-	if(level){
-		bd = bd.filter({'level':level});
+	if(!isNaN(level)){
+		if(level == "0"){
+			bd = bd.filter({'level':{'==':"0"}});
+		}else{
+			bd = bd.filter({'level':level});
+		}		
 	}
 	return bd.count();
 	
