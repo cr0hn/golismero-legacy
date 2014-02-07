@@ -214,30 +214,31 @@ class JSONOutput(ReportPlugin):
         root[key_info] = dict()
         root[key_fp]   = dict()
 
-        # Collect the vulnerabilities that are not false positives.
-        datas = self.__collect_vulns(False)
+        # This dictionary tracks which data to show
+        # and which not to in brief report mode.
+        self.__vulnerable = set()
 
-        # If we have vulnerabilities and/or it's a full report...
-        if datas or self.__full_report:
+        try:
 
-            # Collect the false positives.
-            # In brief mode, this is used to eliminate the references to them.
-            fp = self.__collect_vulns(True)
-            self.__fp = set(fp)
+            # Collect the vulnerabilities that are not false positives.
+            datas = self.__collect_vulns(False)
 
-            try:
+            # If we have vulnerabilities and/or it's a full report...
+            if datas or self.__full_report:
 
-                # Report the vulnerabilities.
-                if datas:
-                    self.__add_data(
-                        root[key_vuln], datas,
-                        Data.TYPE_VULNERABILITY)
-
-                # This dictionary tracks which data to show
-                # and which not to in brief report mode.
-                self.__vulnerable = set()
+                # Collect the false positives.
+                # In brief mode, this is used to eliminate
+                # the references to them.
+                fp = self.__collect_vulns(True)
+                self.__fp = set(fp)
 
                 try:
+
+                    # Report the vulnerabilities.
+                    if datas:
+                        self.__add_data(
+                            root[key_vuln], datas,
+                            Data.TYPE_VULNERABILITY)
 
                     # Show the resources in the report.
                     datas = self.__collect_data(Data.TYPE_RESOURCE)
@@ -254,16 +255,16 @@ class JSONOutput(ReportPlugin):
                             Data.TYPE_INFORMATION)
 
                 finally:
-                    self.__vulnerable.clear()
+                    self.__fp.clear()
 
-            finally:
-                self.__fp.clear()
+                # Show the false positives in the full report.
+                if self.__full_report and fp:
+                    self.__add_data(
+                        root[key_fp], fp,
+                        Data.TYPE_VULNERABILITY)
 
-            # Show the false positives in the full report.
-            if self.__full_report and fp:
-                self.__add_data(
-                    root[key_fp], fp,
-                    Data.TYPE_VULNERABILITY)
+        finally:
+            self.__vulnerable.clear()
 
         # Return the data.
         return root
@@ -299,11 +300,14 @@ class JSONOutput(ReportPlugin):
 
     #--------------------------------------------------------------------------
     def __collect_vulns(self, fp_filter):
-        vulns = [
-            vuln.identity
-            for vuln in self.__iterate_data(data_type=Data.TYPE_VULNERABILITY)
-            if bool(vuln.false_positive) == fp_filter
-        ]
+        vulns = []
+        for vuln in self.__iterate_data(data_type=Data.TYPE_VULNERABILITY):
+            if bool(vuln.false_positive) == fp_filter:
+                vulns.append(vuln.identity)
+                if fp_filter:
+                    self.__vulnerable.difference_update(vuln.links)
+                else:
+                    self.__vulnerable.update(vuln.links)
         vulns.sort()
         return vulns
 
