@@ -41,6 +41,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 import os
 import os.path
+import warnings
 
 json = import_plugin("json.py")
 
@@ -69,6 +70,13 @@ class HTMLReport(json.JSONOutput):
 
         Logger.log_more_verbose("Generating JSON database...")
 
+        # Warn about --full not being supported by this plugin.
+        if not Config.audit_config.only_vulns:
+            Config.audit_config.only_vulns = True
+            warnings.warn(
+                "Full report mode not supported, switching to brief mode.",
+                RuntimeWarning)
+
         # Hardcode the arguments for the JSON plugin.
         Config.plugin_args["mode"] = "dump"
         Config.plugin_args["command"] = ""
@@ -83,17 +91,43 @@ class HTMLReport(json.JSONOutput):
 
         # It's easier for the JavaScript code in the report to access the
         # vulnerabilities as an array instead of a map, so let's fix that.
+        # Also, delete all properties we know aren't being used in the report.
         vulnerabilities = report_data["vulnerabilities"]
         sort_keys = [
-            (data["display_name"], data["plugin_id"], data["identity"])
+            (data["display_name"],
+             data["plugin_id"],
+             data["target_id"],
+             data["identity"])
             for data in vulnerabilities.itervalues()
         ]
         sort_keys.sort()
         report_data["vulnerabilities"] = [
-            vulnerabilities[identity]
-            for _, _, identity in sort_keys
+            {
+                propname: propvalue
+                for propname, propvalue
+                in vulnerabilities[identity].iteritems()
+                if propname in (
+                    "display_name",
+                    "plugin_id",
+                    "target_id",
+                    "identity",
+                    "links",
+                    "data_type",
+                    "data_subtype",
+                    "title",
+                    "description",
+                    "solution",
+                    "references",
+                    "level",
+                    "impact",
+                    "severity",
+                    "risk",
+                )
+            }
+            for _, _, _, identity in sort_keys
         ]
         vulnerabilities.clear()
+        sort_keys = []
 
         # Remove a bunch of data that won't be shown in the report anyway.
         for identity, data in report_data["informations"].items():
