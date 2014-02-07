@@ -31,6 +31,7 @@ __all__ = ["HTMLReport"]
 from golismero import __version__ as VERSION
 from golismero.api.config import Config
 from golismero.api.data.information import Information
+from golismero.api.data.vulnerability import Vulnerability
 from golismero.api.data.vulnerability.vuln_utils import TAXONOMY_NAMES
 from golismero.api.external import tempfile
 from golismero.api.logger import Logger
@@ -150,7 +151,7 @@ class HTMLReport(json.JSONOutput):
             "informations":    len(report_data["informations"]),
             "vulnerabilities": len(report_data["vulnerabilities"]),
             "vulns_by_level":  {
-                k.title(): v for k, v in Counter(
+                Vulnerability.VULN_LEVELS.index(k): v for k, v in Counter(
                     v["level"] for v in report_data["vulnerabilities"]
                 ).iteritems()
             },
