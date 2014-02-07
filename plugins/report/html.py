@@ -199,7 +199,11 @@ class HTMLReport(json.JSONOutput):
                   % (VERSION, report_data["summary"]["report_time"])
 
         # Serialize the data and cleanup the unserialized version.
-        serialized_data = json.dumps(report_data)
+        if output_file.endswith(".zip"):
+            serialized_data = json.dumps(report_data,
+                                         sort_keys=True, indent=4)
+        else:
+            serialized_data = json.dumps(report_data)
         del report_data
 
         # Get the directory where we can find our template.
