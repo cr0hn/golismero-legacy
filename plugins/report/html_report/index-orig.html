@@ -134,11 +134,11 @@
 									<th>
 										<select id="criticalityFilterTable" name="vulnerabilityFilterTable">
 											<option value="">All</option>
-											<option value="informational">Informational</option>
-											<option value="low">Low</option>
-											<option value="middle">Medium</option>
-											<option value="high">High</option>
-											<option value="critical">Critical</option>
+											<option value="4">Informational</option>
+											<option value="3">Low</option>
+											<option value="2">Medium</option>
+											<option value="1">High</option>
+											<option value="0">Critical</option>
 										</select>
 									</th>
 									<th></th>
@@ -196,7 +196,7 @@
 				<td>${identity}</td>
 				<td><p class="large" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="${resource}">${resource}</p></td>				
 				<td>${display_name}</td>
-				<td><span class="bold ${level}Vulnerability">${level}</span></td>
+				<td><span class="bold ${obtainLevel(level)}Vulnerability">${obtainLevel(level)}</span></td>
 				<td class="anchor moreInfo" data-href="technical-${identity}">Details</td>
 			</tr>
 		</script>
@@ -211,7 +211,7 @@
 					<div class="item-form"><span class="bold">Vulnerability:</span>${display_name}&nbsp;(${data_subtype}) </div>
 				</div>
 				<div class="col-sm-4">
-					<div class="item-form"><span class="bold">Criticality:</span>${level} </div>
+					<div class="item-form"><span class="bold ">Criticality:</span><span class="${obtainLevel(level)}Vulnerability bold">${obtainLevel(level)}</span> </div>
 				</div>
 			</div>
 			<div class="row">
@@ -246,7 +246,7 @@
 				<td>${identity}</td>
 				<td><p class="large">${obtainTarget(links[0])}</p></td>
 				<td>${display_name}</td>
-				<td><span class="bold ${level}Vulnerability">${level}</span></td>
+				<td><span class="bold ${obtainLevel(level)}Vulnerability">${obtainLevel(level)}</span></td>
 			</tr>
 			<tr class="openVulnerabilitiesRow"><td colspan="5">
 			<div class="row ">
@@ -276,12 +276,22 @@
 			 </td></tr>
 		</script>
 	    <script type="text/javascript">
+		
+			function obtainLevel(level){
+				switch(level){
+					case 0: return "critical";
+					case 1: return "high";
+					case 2: return "middle";
+					case 3: return "low";
+					case 4: return "informational";
+				}
+			}
 	    	function initChartByLevel(){
-	    		var criticalCount = dataAccess.getVulnerabilitiesCount(null,null,"critical");
-	    		var highCount = dataAccess.getVulnerabilitiesCount(null,null,"high");
-	    		var middleCount = dataAccess.getVulnerabilitiesCount(null,null,"middle");
-	    		var lowCount = dataAccess.getVulnerabilitiesCount(null,null,"low");
-	    		var informationalCount = dataAccess.getVulnerabilitiesCount(null,null,"informational");
+	    		var criticalCount = dataAccess.getVulnerabilitiesCount(null,null,0)
+	    		var highCount = dataAccess.getVulnerabilitiesCount(null,null,1);
+	    		var middleCount = dataAccess.getVulnerabilitiesCount(null,null,2);
+	    		var lowCount = dataAccess.getVulnerabilitiesCount(null,null,3);
+	    		var informationalCount = dataAccess.getVulnerabilitiesCount(null,null,4);
 	    		$("#criticalCount").html(criticalCount);
 	    		$("#highCount").html(highCount);
 	    		$("#middleCount").html(middleCount);
@@ -396,7 +406,7 @@
 	    		indexVulnerabilities=0;
 	    		var vulnerabilityFilter = $('#vulnerabilityFilterTable').val();
     			var targetFilter = $('#targetFilterTable').val();
-    			var criticalityFilter = $('#criticalityFilterTable').val();
+    			var criticalityFilter = parseInt($('#criticalityFilterTable').val());
     			var orderColumn = $("#headVulnerability").data("ordercolumn");
     			
 	    		var orderDirection = $("#headVulnerability").data("orderdirection");
