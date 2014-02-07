@@ -92,8 +92,13 @@ class JSONOutput(ReportPlugin):
         :param report_data: Report data returned by :ref:`get_report_data`().
         :type report_data: dict(str -> *)
         """
+        beautify = Config.audit_config.boolean(
+            Config.plugin_args.get("beautify", "no"))
         with open(output_file, "wb") as fp:
-            dump(report_data, fp)
+            if beautify:
+                dump(report_data, fp, sort_keys=True, indent=4)
+            else:
+                dump(report_data, fp)
 
 
     #--------------------------------------------------------------------------

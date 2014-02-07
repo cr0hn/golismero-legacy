@@ -30,6 +30,10 @@ License     = GNU Public License
 #
 mode = dump
 
+# Use this option to control whether to generate a compact JSON (saves disk
+# space) or a beautified JSON (suitable to be read by a human).
+beautify = no
+
 # Command to launch after generating the output file.
 # The string "$1" will be replaced by the output filename.
 command =
