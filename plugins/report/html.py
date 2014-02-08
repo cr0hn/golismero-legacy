@@ -74,9 +74,8 @@ class HTMLReport(json.JSONOutput):
         # Warn about --full not being supported by this plugin.
         if not Config.audit_config.only_vulns:
             Config.audit_config.only_vulns = True
-            warnings.warn(
-                "Full report mode not supported, switching to brief mode.",
-                RuntimeWarning)
+            Logger.log_more_verbose(
+                "Full report mode not supported, switching to brief mode.")
 
         # Hardcode the arguments for the JSON plugin.
         Config.plugin_args["mode"] = "dump"
@@ -158,6 +157,13 @@ class HTMLReport(json.JSONOutput):
                 tmp.clear()
         links.clear()
 
+        # It's better to show vulnerability levels as integers instead
+        # of strings, so they can be sorted in the proper order. The
+        # actual report shows them to the user as strings, but sorts
+        # using the integer values.
+        for vuln in report_data["vulnerabilities"]:
+            vuln["level"] = Vulnerability.VULN_LEVELS.index(vuln["level"])
+
         # Now, let's go through all Data objects and try to resolve the
         # plugin IDs to user-friendly plugin names.
         plugin_map = dict()
@@ -177,18 +183,16 @@ class HTMLReport(json.JSONOutput):
         # We also want to tell the HTML report which of the vulnerability
         # properties are part of the taxonomy. This saves us from having to
         # change the HTML code every time we add a new taxonomy property.
-        report_data["supported_taxonomies"] = TAXONOMY_NAMES
+        ##report_data["supported_taxonomies"] = TAXONOMY_NAMES
 
         # Calculate some statistics, so the JavaScript code doesn't have to.
         report_data["stats"] = {
             "resources":       len(report_data["resources"]),
             "informations":    len(report_data["informations"]),
             "vulnerabilities": len(report_data["vulnerabilities"]),
-            "vulns_by_level":  {
-                Vulnerability.VULN_LEVELS.index(k): v for k, v in Counter(
-                    v["level"] for v in report_data["vulnerabilities"]
-                ).iteritems()
-            },
+            "vulns_by_level":  dict(Counter(
+                       v["level"] for v in report_data["vulnerabilities"]
+                )),
             "vulns_by_type":   dict(Counter(
                 v["display_name"] for v in report_data["vulnerabilities"]
             )),
