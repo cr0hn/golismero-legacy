@@ -213,9 +213,8 @@ class HTTP_Headers (object):
         :rtype: dict(str -> str)
         """
 
-        # Mutable object, we need to make a copy.
-        # It can be a shallow copy because it only contains strings.
-        return self.__cache.copy()
+        # Mutable object, we need to make a new one.
+        return dict(self.to_tuple())
 
 
     #--------------------------------------------------------------------------
