@@ -74,9 +74,8 @@ class HTMLReport(json.JSONOutput):
         # Warn about --full not being supported by this plugin.
         if not Config.audit_config.only_vulns:
             Config.audit_config.only_vulns = True
-            warnings.warn(
-                "Full report mode not supported, switching to brief mode.",
-                RuntimeWarning)
+            Logger.log_more_verbose(
+                "Full report mode not supported, switching to brief mode.")
 
         # Hardcode the arguments for the JSON plugin.
         Config.plugin_args["mode"] = "dump"
@@ -97,7 +96,6 @@ class HTMLReport(json.JSONOutput):
         sort_keys = [
             (data["display_name"],
              data["plugin_id"],
-             data["target_id"],
              data["identity"])
             for data in vulnerabilities.itervalues()
         ]
@@ -110,7 +108,6 @@ class HTMLReport(json.JSONOutput):
                 if propname in (
                     "display_name",
                     "plugin_id",
-                    "target_id",
                     "identity",
                     "links",
                     "data_type",
@@ -125,7 +122,7 @@ class HTMLReport(json.JSONOutput):
                     "risk",
                 )
             }
-            for _, _, _, identity in sort_keys
+            for _, _, identity in sort_keys
         ]
         vulnerabilities.clear()
         sort_keys = []
@@ -184,7 +181,7 @@ class HTMLReport(json.JSONOutput):
         # We also want to tell the HTML report which of the vulnerability
         # properties are part of the taxonomy. This saves us from having to
         # change the HTML code every time we add a new taxonomy property.
-        report_data["supported_taxonomies"] = TAXONOMY_NAMES
+        ##report_data["supported_taxonomies"] = TAXONOMY_NAMES
 
         # Calculate some statistics, so the JavaScript code doesn't have to.
         report_data["stats"] = {
