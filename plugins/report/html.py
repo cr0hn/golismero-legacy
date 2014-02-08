@@ -184,13 +184,16 @@ class HTMLReport(json.JSONOutput):
         ##report_data["supported_taxonomies"] = TAXONOMY_NAMES
 
         # Calculate some statistics, so the JavaScript code doesn't have to.
+        vulns_by_level = Counter()
+        for i in xrange(len(Vulnerability.VULN_LEVELS)):
+            vulns_by_level[i] = 0
+        vulns_by_level.update(
+            v["level"] for v in report_data["vulnerabilities"])
         report_data["stats"] = {
             "resources":       len(report_data["resources"]),
             "informations":    len(report_data["informations"]),
             "vulnerabilities": len(report_data["vulnerabilities"]),
-            "vulns_by_level":  dict(Counter(
-                       v["level"] for v in report_data["vulnerabilities"]
-                )),
+            "vulns_by_level":  dict(vulns_by_level),
             "vulns_by_type":   dict(Counter(
                 v["display_name"] for v in report_data["vulnerabilities"]
             )),
