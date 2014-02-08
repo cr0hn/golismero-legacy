@@ -639,6 +639,11 @@ class Audit (object):
             # cause the same data to be processed again by the same plugin.
             self.database.clear_all_stage_marks()
 
+            # However, if the user requested a rescan, we do need to
+            # reset the plugin history as well.
+            if self.config.redo:
+                self.database.clear_all_plugin_history()
+
             # Do we have any active importers?
             imported_count = 0
             if self.importManager.is_enabled:

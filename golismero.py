@@ -203,6 +203,7 @@ COMMANDS = (
 
     # Scanning.
     "SCAN",
+    "RESCAN",
     "REPORT",
     "IMPORT",
 
@@ -353,6 +354,10 @@ def cmdline_parser():
         "    results from other tools and write a report. The arguments that follow may\n"
         "    be domain names, IP addresses or web pages.\n"
         "\n"
+        "  RESCAN:\n"
+        "    Same as SCAN, but previously run tests are repeated. If the database is\n"
+        "    new, this command is identical to SCAN.\n"
+        "\n"
         "  PROFILES:\n"
         "    Show a list of available config profiles. This command takes no arguments.\n"
         "\n"
@@ -471,6 +476,11 @@ def build_config_from_cmdline():
         command = P.command.upper()
         if command in COMMANDS:
             P.command = command
+            if command == "RESCAN":
+                P.command = "SCAN"
+                P.redo = True
+            else:
+                P.redo = False
         else:
             P.targets.insert(0, P.command)
             P.command = "SCAN"

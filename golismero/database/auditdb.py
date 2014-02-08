@@ -607,6 +607,25 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
+    def clear_plugin_history(self, identity):
+        """
+        Clear the past plugins history for the given data.
+
+        :param identity: Identity hash.
+        :type identity: str
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
+    def clear_all_plugin_history(self):
+        """
+        Clear the past plugins history for all the data.
+        """
+        raise NotImplementedError("Subclasses MUST implement this method!")
+
+
+    #--------------------------------------------------------------------------
     def get_pending_data(self, stage):
         """
         Get the identities of the data objects that haven't yet completed
@@ -1931,6 +1950,19 @@ class AuditSQLiteDB (BaseAuditDB):
         if rows:
             return { str(x[0]) for x in rows }
         return set()
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def clear_plugin_history(self, identity):
+        self.__cursor.execute(
+            "DELETE FROM history WHERE identity = ?;", (identity,))
+
+
+    #--------------------------------------------------------------------------
+    @transactional
+    def clear_all_plugin_history(self):
+        self.__cursor.execute("DELETE FROM history;")
 
 
     #--------------------------------------------------------------------------

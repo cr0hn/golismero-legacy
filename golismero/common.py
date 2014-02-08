@@ -877,6 +877,9 @@ class AuditConfig (Configuration):
         # Input files
         "imports": (Configuration.comma_separated_list, []),
 
+        # Redo the audit?
+        "redo": (Configuration.boolean, False),
+
         #
         # Plugin options
         #
