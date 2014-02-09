@@ -1,1 +1,584 @@
-data = {"informations": {"ea6e1619b0498e809775e91c29eb9e9a": {"display_name": "Service Fingerprint", "links": ["2ba02aa1b49bfdd4c7ad2515220c4246"], "data_type": 1, "protocol": "TCP", "port": 5431, "depth": -1, "data_subtype": 1302, "information_category": 4, "class": "ServiceFingerprint", "identity": "ea6e1619b0498e809775e91c29eb9e9a", "name": "upnp"}, "8cf017b6a073fbe1c3863c70a354ef6f": {"links": ["be375163029d9f54c39a83174786c9f6"], "display_name": "O.S. Fingerprint", "family": "Linux", "data_type": 1, "generation": "3.X", "cpe": "cpe:2.3:o:linux:linux_kernel:3:*:*:*:*:*:*:*", "name": "Linux 3.1", "vendor": "Linux", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "general purpose", "class": "OSFingerprint", "identity": "8cf017b6a073fbe1c3863c70a354ef6f", "accuracy": 93.0}, "54c10ce4eef4dccf971fabb6d83ea1bb": {"links": ["be375163029d9f54c39a83174786c9f6"], "display_name": "O.S. Fingerprint", "family": "2-Series", "data_type": 1, "generation": null, "cpe": "cpe:2.3:o:crestron:2_series:*:*:*:*:*:*:*:*", "name": "Crestron XPanel control system", "vendor": "Crestron", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "specialized", "class": "OSFingerprint", "identity": "54c10ce4eef4dccf971fabb6d83ea1bb", "accuracy": 91.0}, "4ce1a04163497af0e94018c8602ab3c3": {"links": ["be375163029d9f54c39a83174786c9f6"], "display_name": "O.S. Fingerprint", "family": "Linux", "data_type": 1, "generation": "2.6.X", "cpe": "cpe:2.3:o:linux:linux_kernel:2.6:*:*:*:*:*:*:*", "name": "Linux 2.6.32 - 3.3", "vendor": "Linux", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "general purpose", "class": "OSFingerprint", "identity": "4ce1a04163497af0e94018c8602ab3c3", "accuracy": 89.0}, "b3a49e4f213defbcbc055854848eaddb": {"links": ["be375163029d9f54c39a83174786c9f6"], "display_name": "O.S. Fingerprint", "family": "Linux", "data_type": 1, "generation": "2.6.X", "cpe": "cpe:2.3:o:linux:linux_kernel:2.6.22:*:*:*:*:*:*:*", "name": "OpenWrt Kamikaze 7.09 (Linux 2.6.22)", "vendor": "Linux", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "WAP", "class": "OSFingerprint", "identity": "b3a49e4f213defbcbc055854848eaddb", "accuracy": 89.0}, "bec997910881861e05f066bcbdbe6840": {"display_name": "Port Scan Results", "links": ["2ba02aa1b49bfdd4c7ad2515220c4246"], "data_type": 1, "timestamp": 1388772928.0, "ports": [["OPEN", "TCP", 1864], ["OPEN", "TCP", 22], ["OPEN", "TCP", 23], ["OPEN", "TCP", 1863], ["OPEN", "TCP", 5190], ["OPEN", "TCP", 4443], ["OPEN", "TCP", 80], ["OPEN", "TCP", 5566], ["OPEN", "TCP", 5431]], "depth": -1, "data_subtype": 1304, "address": "192.168.1.1", "information_category": 4, "class": "Portscan", "identity": "bec997910881861e05f066bcbdbe6840"}, "fe1af521920fb831a30b27defd832653": {"links": ["be375163029d9f54c39a83174786c9f6"], "display_name": "O.S. Fingerprint", "family": "Linux", "data_type": 1, "generation": "2.6.X", "cpe": "cpe:2.3:o:linux:linux_kernel:2.6:*:*:*:*:*:*:*", "name": "Linux 2.6.32", "vendor": "Linux", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "general purpose", "class": "OSFingerprint", "identity": "fe1af521920fb831a30b27defd832653", "accuracy": 95.0}, "96df492fb35003484790c40c012c27eb": {"display_name": "Traceroute", "links": ["d1d5bb3b5f1b88314b1c1f3139dba639"], "data_type": 1, "hops": [{"rtt": 21.0, "hostname": null, "address": "192.168.1.1"}, {"rtt": 24.0, "hostname": "62.81.125.111.static.user.ono.com", "address": "62.81.125.111"}, {"rtt": 11.0, "hostname": null, "address": "10.115.51.81"}, {"rtt": 11.0, "hostname": null, "address": "10.127.160.29"}, {"rtt": 13.0, "hostname": null, "address": "10.254.8.177"}, {"rtt": 12.0, "hostname": null, "address": "10.254.3.226"}, {"rtt": 10.0, "hostname": null, "address": "72.14.223.121"}, {"rtt": 18.0, "hostname": null, "address": "209.85.251.242"}, {"rtt": 25.0, "hostname": null, "address": "209.85.240.97"}, {"rtt": 31.0, "hostname": "mad01s15-in-f9.1e100.net", "address": "173.194.41.233"}], "timestamp": 1391676360.086, "protocol": "TCP", "port": 443, "depth": -1, "data_subtype": 1306, "address": "173.194.41.233", "information_category": 4, "class": "Traceroute", "identity": "96df492fb35003484790c40c012c27eb"}, "72168c061dd23b376994b3bacfc19273": {"links": ["d1d5bb3b5f1b88314b1c1f3139dba639"], "display_name": "O.S. Fingerprint", "family": "embedded", "data_type": 1, "generation": null, "cpe": "cpe:2.3:o:westerndigital:wd_tv:*:*:*:*:*:*:*:*", "name": "Netgear DG834G WAP or Western Digital WD TV media player", "vendor": "Western Digital", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "media device", "class": "OSFingerprint", "identity": "72168c061dd23b376994b3bacfc19273", "accuracy": 86.0}, "2ff4282a16e3b829abd5ec2731c0d550": {"links": ["be375163029d9f54c39a83174786c9f6"], "display_name": "O.S. Fingerprint", "family": "embedded", "data_type": 1, "generation": null, "cpe": "cpe:2.3:o:westerndigital:wd_tv:*:*:*:*:*:*:*:*", "name": "Netgear DG834G WAP or Western Digital WD TV media player", "vendor": "Western Digital", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "media device", "class": "OSFingerprint", "identity": "2ff4282a16e3b829abd5ec2731c0d550", "accuracy": 94.0}, "fe5081e9b014d2b1ac31aa38f5724ed9": {"display_name": "Service Fingerprint", "links": ["2ba02aa1b49bfdd4c7ad2515220c4246"], "data_type": 1, "protocol": "TCP", "port": 5566, "depth": -1, "data_subtype": 1302, "information_category": 4, "class": "ServiceFingerprint", "identity": "fe5081e9b014d2b1ac31aa38f5724ed9", "name": "tcpwrapped"}, "913d32b56e783eef744b3a4754739fda": {"display_name": "Port Scan Results", "links": ["be375163029d9f54c39a83174786c9f6"], "data_type": 1, "timestamp": 1378893040.0, "ports": [["CLOSED", "TCP", 554], ["CLOSED", "TCP", 1119], ["CLOSED", "TCP", 1755], ["OPEN", "TCP", 1863], ["OPEN", "TCP", 5190], ["CLOSED", "TCP", 1935], ["OPEN", "TCP", 443], ["OPEN", "TCP", 80], ["CLOSED", "TCP", 53]], "depth": -1, "data_subtype": 1304, "address": "93.184.216.119", "information_category": 4, "class": "Portscan", "identity": "913d32b56e783eef744b3a4754739fda"}, "acfc5f9bca67086bcac06b6f8a54db54": {"display_name": "Service Fingerprint", "links": ["2ba02aa1b49bfdd4c7ad2515220c4246"], "data_type": 1, "protocol": "TCP", "port": 23, "depth": -1, "data_subtype": 1302, "information_category": 4, "class": "ServiceFingerprint", "identity": "acfc5f9bca67086bcac06b6f8a54db54", "name": "tcpwrapped"}, "fbd7ef8736ba85ee2d430cd22e2690cd": {"display_name": "Service Fingerprint", "links": ["2ba02aa1b49bfdd4c7ad2515220c4246", "be375163029d9f54c39a83174786c9f6", "d1d5bb3b5f1b88314b1c1f3139dba639"], "data_type": 1, "protocol": "TCP", "port": 5190, "depth": -1, "data_subtype": 1302, "information_category": 4, "class": "ServiceFingerprint", "identity": "fbd7ef8736ba85ee2d430cd22e2690cd", "name": "aol"}, "78ae6e4efbc15875d091b11f148d3067": {"links": ["d1d5bb3b5f1b88314b1c1f3139dba639"], "display_name": "O.S. Fingerprint", "family": "embedded", "data_type": 1, "generation": null, "cpe": "cpe:2.3:h:netgear:dg834g:*:*:*:*:*:*:*:*", "name": "Netgear DG834G WAP or Western Digital WD TV media player", "vendor": "Netgear", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "WAP", "class": "OSFingerprint", "identity": "78ae6e4efbc15875d091b11f148d3067", "accuracy": 86.0}, "9c887bbb46088ac82658cf4f1305f68b": {"display_name": "Service Fingerprint", "links": ["2ba02aa1b49bfdd4c7ad2515220c4246"], "data_type": 1, "protocol": "TCP", "port": 4443, "depth": -1, "data_subtype": 1302, "information_category": 4, "class": "ServiceFingerprint", "identity": "9c887bbb46088ac82658cf4f1305f68b", "name": "tcpwrapped"}, "e7f602350e59208f5937284eb21a1889": {"display_name": "Service Fingerprint", "links": ["2ba02aa1b49bfdd4c7ad2515220c4246"], "data_type": 1, "protocol": "TCP", "port": 1864, "depth": -1, "data_subtype": 1302, "information_category": 4, "class": "ServiceFingerprint", "identity": "e7f602350e59208f5937284eb21a1889", "name": "tcpwrapped"}, "ce0d77b27f9fb253dc45dc4b5108ff3c": {"links": ["be375163029d9f54c39a83174786c9f6"], "display_name": "O.S. Fingerprint", "family": "Linux", "data_type": 1, "generation": "3.X", "cpe": "cpe:2.3:o:linux:linux_kernel:3:*:*:*:*:*:*:*", "name": "Linux 3.2", "vendor": "Linux", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "general purpose", "class": "OSFingerprint", "identity": "ce0d77b27f9fb253dc45dc4b5108ff3c", "accuracy": 94.0}, "80e0d9207ffd867864f270adc0fbd6fb": {"display_name": "Port Scan Results", "links": ["d1d5bb3b5f1b88314b1c1f3139dba639"], "data_type": 1, "timestamp": 1378893022.0, "ports": [["OPEN", "TCP", 443], ["OPEN", "TCP", 80], ["OPEN", "TCP", 5190], ["OPEN", "TCP", 1863]], "depth": -1, "data_subtype": 1304, "address": "173.194.41.233", "information_category": 4, "class": "Portscan", "identity": "80e0d9207ffd867864f270adc0fbd6fb"}, "36698d5c0d5e994c5e1b23de6a38bab1": {"display_name": "Service Fingerprint", "links": ["be375163029d9f54c39a83174786c9f6", "d1d5bb3b5f1b88314b1c1f3139dba639"], "data_type": 1, "protocol": "SSL", "port": 443, "depth": -1, "data_subtype": 1302, "information_category": 4, "class": "ServiceFingerprint", "identity": "36698d5c0d5e994c5e1b23de6a38bab1", "name": "http"}, "069667874354f636c82113390b955e82": {"links": ["d1d5bb3b5f1b88314b1c1f3139dba639"], "display_name": "O.S. Fingerprint", "family": "2-Series", "data_type": 1, "generation": null, "cpe": "cpe:2.3:o:crestron:2_series:*:*:*:*:*:*:*:*", "name": "Crestron XPanel control system", "vendor": "Crestron", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "specialized", "class": "OSFingerprint", "identity": "069667874354f636c82113390b955e82", "accuracy": 86.0}, "a9eb10f3a8dbde5cb2f758e67b205d98": {"display_name": "Service Fingerprint", "links": ["2ba02aa1b49bfdd4c7ad2515220c4246", "be375163029d9f54c39a83174786c9f6", "d1d5bb3b5f1b88314b1c1f3139dba639"], "data_type": 1, "protocol": "TCP", "port": 1863, "depth": -1, "data_subtype": 1302, "information_category": 4, "class": "ServiceFingerprint", "identity": "a9eb10f3a8dbde5cb2f758e67b205d98", "name": "msnp"}, "1e219c37484f8cdf21cf78088e568f3b": {"links": ["be375163029d9f54c39a83174786c9f6"], "display_name": "O.S. Fingerprint", "family": "embedded", "data_type": 1, "generation": null, "cpe": "cpe:2.3:h:thecus:n8800pro:*:*:*:*:*:*:*:*", "name": "Thecus N8800PRO NAS device", "vendor": "Thecus", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "storage-misc", "class": "OSFingerprint", "identity": "1e219c37484f8cdf21cf78088e568f3b", "accuracy": 89.0}, "be5d32613ef24ffbb7650aa64cb26bcb": {"display_name": "Service Fingerprint", "links": ["2ba02aa1b49bfdd4c7ad2515220c4246", "be375163029d9f54c39a83174786c9f6", "d1d5bb3b5f1b88314b1c1f3139dba639"], "data_type": 1, "protocol": "TCP", "port": 80, "depth": -1, "data_subtype": 1302, "information_category": 4, "class": "ServiceFingerprint", "identity": "be5d32613ef24ffbb7650aa64cb26bcb", "name": "http"}, "8e9ed8a909c8ab75d9ba70e8c65329e9": {"links": ["be375163029d9f54c39a83174786c9f6"], "display_name": "O.S. Fingerprint", "family": "Linux", "data_type": 1, "generation": "3.X", "cpe": "cpe:2.3:o:linux:linux_kernel:3:*:*:*:*:*:*:*", "name": "OpenWrt (Linux 3.3)", "vendor": "Linux", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "broadband router", "class": "OSFingerprint", "identity": "8e9ed8a909c8ab75d9ba70e8c65329e9", "accuracy": 91.0}, "3e4c6fd1b387cd71f9aae2c5d7806751": {"links": ["be375163029d9f54c39a83174786c9f6"], "display_name": "O.S. Fingerprint", "family": "embedded", "data_type": 1, "generation": null, "cpe": "cpe:2.3:h:netgear:dg834g:*:*:*:*:*:*:*:*", "name": "Netgear DG834G WAP or Western Digital WD TV media player", "vendor": "Netgear", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "WAP", "class": "OSFingerprint", "identity": "3e4c6fd1b387cd71f9aae2c5d7806751", "accuracy": 94.0}, "8012f777c2580ee879dd32fc206a469e": {"display_name": "Traceroute", "links": ["be375163029d9f54c39a83174786c9f6"], "data_type": 1, "hops": [{"rtt": 21.0, "hostname": null, "address": "192.168.1.1"}, {"rtt": 24.0, "hostname": "62.81.125.111.static.user.ono.com", "address": "62.81.125.111"}, {"rtt": 11.0, "hostname": null, "address": "10.115.51.81"}, {"rtt": 13.0, "hostname": null, "address": "10.127.160.25"}, {"rtt": 16.0, "hostname": null, "address": "10.127.10.141"}, {"rtt": 10.0, "hostname": null, "address": "10.254.5.242"}, {"rtt": 47.0, "hostname": "mad-b1-link.telia.net", "address": "213.248.93.21"}, {"rtt": 47.0, "hostname": "prs-bb2-link.telia.net", "address": "213.155.134.30"}, {"rtt": 119.0, "hostname": "ash-bb3-link.telia.net", "address": "80.91.252.36"}, {"rtt": 118.0, "hostname": "ash-b1-link.telia.net", "address": "80.91.248.157"}, {"rtt": 122.0, "hostname": "edgecast-ic-300286-ash-bb1.c.telia.net", "address": "62.115.12.62"}, {"rtt": 132.0, "hostname": null, "address": "93.184.216.119"}], "timestamp": 1391676360.071, "protocol": "TCP", "port": 53, "depth": -1, "data_subtype": 1306, "address": "93.184.216.119", "information_category": 4, "class": "Traceroute", "identity": "8012f777c2580ee879dd32fc206a469e"}, "632f8d727d887aef2ec53c49d05c3465": {"display_name": "Service Fingerprint", "links": ["2ba02aa1b49bfdd4c7ad2515220c4246"], "data_type": 1, "protocol": "TCP", "port": 22, "depth": -1, "data_subtype": 1302, "information_category": 4, "class": "ServiceFingerprint", "identity": "632f8d727d887aef2ec53c49d05c3465", "name": "tcpwrapped"}, "95ae12c6a880737f3c88749b81d682f7": {"links": ["be375163029d9f54c39a83174786c9f6"], "display_name": "O.S. Fingerprint", "family": "Linux", "data_type": 1, "generation": "2.6.X", "cpe": "cpe:2.3:h:axis:210a_network_camera:*:*:*:*:*:*:*:*", "name": "AXIS 210A or 211 Network Camera (Linux 2.6)", "vendor": "AXIS", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "webcam", "class": "OSFingerprint", "identity": "95ae12c6a880737f3c88749b81d682f7", "accuracy": 92.0}, "830ae3693a2984a9bfc08b7eaa580c8b": {"links": ["2ba02aa1b49bfdd4c7ad2515220c4246"], "display_name": "O.S. Fingerprint", "family": "Linux", "data_type": 1, "generation": "2.6.X", "cpe": "cpe:2.3:o:linux:linux_kernel:2.6:*:*:*:*:*:*:*", "name": "Linux 2.6.13 - 2.6.32", "vendor": "Linux", "depth": -1, "data_subtype": 1303, "information_category": 4, "type": "general purpose", "class": "OSFingerprint", "identity": "830ae3693a2984a9bfc08b7eaa580c8b", "accuracy": 100.0}}, "stats": {"informations": 30, "vulns_by_level": {"High": 1, "Middle": 7, "Informational": 7, "Low": 4}, "vulns_by_type": {"Uncategorized Vulnerability": 7, "Invalid CN Field": 3, "Weak SSL/TLS Key": 1, "Insecure SSL/TLS Algorithm": 4, "Invalid SSL/TLS Certificate": 4}, "resources": 40, "vulnerabilities": 19}, "audit_scope": {"domains": ["1e100.net", "example.com", "google.com", "ifema.es", "live.vodafone.es", "mad01s15-in-f9.1e100.net", "vodafone.es", "www.example.com", "www.vodafone.es"], "web_pages": ["http://example.com/", "http://example.com/crossdomain.xml"], "addresses": ["173.194.41.233", "192.168.1.1", "192.168.56.101", "212.166.190.52", "212.89.15.102", "213.189.45.20", "213.189.45.24", "213.189.45.25", "213.189.45.29", "213.189.45.30", "213.189.45.34", "213.189.45.35", "213.189.45.39", "213.189.45.40", "213.189.45.44", "213.189.45.45", "213.189.45.49", "213.189.45.50", "213.189.45.54", "213.189.45.55", "213.189.45.59", "2606:2800:220:6d:26bf:1447:1097:aa7", "2a00:1450:400d:802::1006", "62.87.94.122", "93.184.216.119"], "roots": ["*.1e100.net", "*.example.com", "*.google.com", "*.ifema.es", "*.vodafone.es"]}, "vulnerabilities": [{"edb": [], "mskb": [], "cisco": [], "links": ["0261c7a6131655ee88fc69e9e7b8532e"], "ca": [], "sectrack": [], "glsa": [], "references": ["https://cwe.mitre.org/data/definitions/327.html"], "vu": [], "domain_id": "0261c7a6131655ee88fc69e9e7b8532e", "risk": 0, "impact": 0, "display_name": "Insecure SSL/TLS Algorithm", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "ssl/insecure_algorithm", "cvss_score": null, "plugin_id": "import/xml_sslscan", "cwe": ["CWE-327"], "cvss_base": "4.0", "dsa": [], "tool_id": null, "description": "An SSL/TLS certificate was found to be using an insecure algorithm. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "SSLScan XML Importer", "false_positive": 0, "class": "InsecureAlgorithm", "identity": "2a0dd1f1fd7642848072d17111f09d15", "custom_id": null, "level": 2, "title": "Insecure SSL/TLS Algorithm", "solution": "Create a new certificate using only secure algorithms.", "nessus": [], "depth": -1, "algorithms": ["DES-CBC3-SHA", "DES-CBC3-SHA"], "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["c74e5bb0445f0ece3b198b9d229691c2"], "ca": [], "sectrack": [], "glsa": [], "references": ["https://cwe.mitre.org/data/definitions/327.html"], "vu": [], "domain_id": "c74e5bb0445f0ece3b198b9d229691c2", "risk": 0, "impact": 0, "display_name": "Insecure SSL/TLS Algorithm", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "ssl/insecure_algorithm", "cvss_score": null, "plugin_id": "import/xml_sslscan", "cwe": ["CWE-327"], "cvss_base": "4.0", "dsa": [], "tool_id": null, "description": "An SSL/TLS certificate was found to be using an insecure algorithm. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "SSLScan XML Importer", "false_positive": 0, "class": "InsecureAlgorithm", "identity": "3f230e44ef2cb238f1e6fd9333bca8db", "custom_id": null, "level": 2, "title": "Insecure SSL/TLS Algorithm", "solution": "Create a new certificate using only secure algorithms.", "nessus": [], "depth": -1, "algorithms": ["EDH-RSA-DES-CBC3-SHA", "DES-CBC3-SHA", "EDH-RSA-DES-CBC-SHA", "DES-CBC-SHA", "EDH-RSA-DES-CBC3-SHA", "DES-CBC3-SHA", "EDH-RSA-DES-CBC-SHA", "DES-CBC-SHA"], "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["da8b1e24b228b3e35c57ed25320f9cab"], "ca": [], "sectrack": [], "glsa": [], "references": ["https://cwe.mitre.org/data/definitions/327.html"], "vu": [], "domain_id": "da8b1e24b228b3e35c57ed25320f9cab", "risk": 0, "impact": 0, "display_name": "Insecure SSL/TLS Algorithm", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "ssl/insecure_algorithm", "cvss_score": null, "plugin_id": "import/xml_sslscan", "cwe": ["CWE-327"], "cvss_base": "4.0", "dsa": [], "tool_id": null, "description": "An SSL/TLS certificate was found to be using an insecure algorithm. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "SSLScan XML Importer", "false_positive": null, "class": "InsecureAlgorithm", "identity": "dba36cbc9b7f358a7cc4e59aa490924c", "custom_id": null, "level": 2, "title": "Insecure SSL/TLS Algorithm", "solution": "Create a new certificate using only secure algorithms.", "nessus": [], "depth": -1, "algorithms": ["DES-CBC3-SHA", "DES-CBC3-SHA"], "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["0c5a4c51b78c18fc2b000e44252a0489"], "ca": [], "sectrack": [], "glsa": [], "references": ["https://cwe.mitre.org/data/definitions/327.html"], "vu": [], "domain_id": "0c5a4c51b78c18fc2b000e44252a0489", "risk": 0, "impact": 0, "display_name": "Insecure SSL/TLS Algorithm", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "ssl/insecure_algorithm", "cvss_score": null, "plugin_id": "import/xml_sslscan", "cwe": ["CWE-327"], "cvss_base": "4.0", "dsa": [], "tool_id": null, "description": "An SSL/TLS certificate was found to be using an insecure algorithm. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "SSLScan XML Importer", "false_positive": null, "class": "InsecureAlgorithm", "identity": "e319f6e3f58c75b8708498d5f6db2491", "custom_id": null, "level": 2, "title": "Insecure SSL/TLS Algorithm", "solution": "Create a new certificate using only secure algorithms.", "nessus": [], "depth": -1, "algorithms": ["DES-CBC3-SHA", "DES-CBC3-SHA"], "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["0261c7a6131655ee88fc69e9e7b8532e"], "ca": [], "sectrack": [], "glsa": [], "references": ["https://cwe.mitre.org/data/definitions/327.html"], "vu": [], "common_name": "www.vodafone.es", "domain_id": "0261c7a6131655ee88fc69e9e7b8532e", "risk": 0, "impact": 0, "display_name": "Invalid CN Field", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "ssl/invalid_common_name", "cvss_score": null, "plugin_id": "import/xml_sslscan", "cwe": ["CWE-327"], "cvss_base": "4.0", "dsa": [], "tool_id": null, "description": "An invalid CN field was found in a SSL/TLS certificate. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "SSLScan XML Importer", "false_positive": 0, "class": "InvalidCommonName", "identity": "100d2f4fb4428d805317b8dbbcc35fb2", "custom_id": null, "level": 2, "title": "Invalid CN Field", "solution": "Create a new certificate with the correct CN field.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["c74e5bb0445f0ece3b198b9d229691c2"], "ca": [], "sectrack": [], "glsa": [], "references": ["https://cwe.mitre.org/data/definitions/327.html"], "vu": [], "common_name": "seguro.ifema.es", "domain_id": "c74e5bb0445f0ece3b198b9d229691c2", "risk": 0, "impact": 0, "display_name": "Invalid CN Field", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "ssl/invalid_common_name", "cvss_score": null, "plugin_id": "import/xml_sslscan", "cwe": ["CWE-327"], "cvss_base": "4.0", "dsa": [], "tool_id": null, "description": "An invalid CN field was found in a SSL/TLS certificate. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "SSLScan XML Importer", "false_positive": 0, "class": "InvalidCommonName", "identity": "771547b72085a42a0cb28ea3f5452319", "custom_id": null, "level": 2, "title": "Invalid CN Field", "solution": "Create a new certificate with the correct CN field.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["da8b1e24b228b3e35c57ed25320f9cab"], "ca": [], "sectrack": [], "glsa": [], "references": ["https://cwe.mitre.org/data/definitions/327.html"], "vu": [], "common_name": "360.vodafone.es", "domain_id": "da8b1e24b228b3e35c57ed25320f9cab", "risk": 0, "impact": 0, "display_name": "Invalid CN Field", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "ssl/invalid_common_name", "cvss_score": null, "plugin_id": "import/xml_sslscan", "cwe": ["CWE-327"], "cvss_base": "4.0", "dsa": [], "tool_id": null, "description": "An invalid CN field was found in a SSL/TLS certificate. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "SSLScan XML Importer", "false_positive": null, "class": "InvalidCommonName", "identity": "a7216d20239d7225fc3b8b05e0ba5457", "custom_id": null, "level": 2, "title": "Invalid CN Field", "solution": "Create a new certificate with the correct CN field.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["0261c7a6131655ee88fc69e9e7b8532e"], "ca": [], "sectrack": [], "glsa": [], "references": ["https://cwe.mitre.org/data/definitions/327.html"], "vu": [], "domain_id": "0261c7a6131655ee88fc69e9e7b8532e", "risk": 0, "impact": 0, "display_name": "Invalid SSL/TLS Certificate", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "ssl/invalid_certificate", "cvss_score": null, "plugin_id": "import/xml_sslscan", "cwe": ["CWE-327"], "cvss_base": "5.8", "dsa": [], "tool_id": null, "description": "An invalid SSL/TLS certificate was found. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "SSLScan XML Importer", "false_positive": 0, "class": "InvalidCertificate", "identity": "0ae02e79fd36a98365613c114bbe3ba2", "custom_id": null, "level": 3, "title": "Invalid SSL/TLS Certificate", "solution": "Create a new certificate.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["0c5a4c51b78c18fc2b000e44252a0489"], "ca": [], "sectrack": [], "glsa": [], "references": ["https://cwe.mitre.org/data/definitions/327.html"], "vu": [], "domain_id": "0c5a4c51b78c18fc2b000e44252a0489", "risk": 0, "impact": 0, "display_name": "Invalid SSL/TLS Certificate", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "ssl/invalid_certificate", "cvss_score": null, "plugin_id": "import/xml_sslscan", "cwe": ["CWE-327"], "cvss_base": "5.8", "dsa": [], "tool_id": null, "description": "An invalid SSL/TLS certificate was found. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "SSLScan XML Importer", "false_positive": null, "class": "InvalidCertificate", "identity": "8e4cf3e620d775d5ac1fba1f8ffa8a1b", "custom_id": null, "level": 3, "title": "Invalid SSL/TLS Certificate", "solution": "Create a new certificate.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["c74e5bb0445f0ece3b198b9d229691c2"], "ca": [], "sectrack": [], "glsa": [], "references": ["https://cwe.mitre.org/data/definitions/327.html"], "vu": [], "domain_id": "c74e5bb0445f0ece3b198b9d229691c2", "risk": 0, "impact": 0, "display_name": "Invalid SSL/TLS Certificate", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "ssl/invalid_certificate", "cvss_score": null, "plugin_id": "import/xml_sslscan", "cwe": ["CWE-327"], "cvss_base": "5.8", "dsa": [], "tool_id": null, "description": "An invalid SSL/TLS certificate was found. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "SSLScan XML Importer", "false_positive": 0, "class": "InvalidCertificate", "identity": "e59ebed018d307d9c4b1a995015f9f0b", "custom_id": null, "level": 3, "title": "Invalid SSL/TLS Certificate", "solution": "Create a new certificate.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["da8b1e24b228b3e35c57ed25320f9cab"], "ca": [], "sectrack": [], "glsa": [], "references": ["https://cwe.mitre.org/data/definitions/327.html"], "vu": [], "domain_id": "da8b1e24b228b3e35c57ed25320f9cab", "risk": 0, "impact": 0, "display_name": "Invalid SSL/TLS Certificate", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "ssl/invalid_certificate", "cvss_score": null, "plugin_id": "import/xml_sslscan", "cwe": ["CWE-327"], "cvss_base": "5.8", "dsa": [], "tool_id": null, "description": "An invalid SSL/TLS certificate was found. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "SSLScan XML Importer", "false_positive": null, "class": "InvalidCertificate", "identity": "f745676ecafb093e8afd05f490df0483", "custom_id": null, "level": 3, "title": "Invalid SSL/TLS Certificate", "solution": "Create a new certificate.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["2cd15469f886990686be4ed32dabdf89"], "ca": [], "sectrack": [], "glsa": [], "references": [], "vu": [], "risk": 0, "impact": 0, "display_name": "Uncategorized Vulnerability", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "generic", "cvss_score": null, "plugin_id": "import/csv_nikto", "cwe": [], "cvss_base": "0.0", "dsa": [], "tool_id": null, "description": "Uncommon header 'x-cache' found, with contents: HIT", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "Nikto CSV Importer", "false_positive": null, "class": "UncategorizedVulnerability", "identity": "44cf401f24f1dca0f5402898138c38ae", "custom_id": null, "level": 4, "title": "User attention required by: Nikto CSV Importer", "solution": "No additional details are available.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["1c276e44f4ff4ceae540e34459004825"], "ca": [], "sectrack": [], "glsa": [], "references": [], "vu": [], "risk": 0, "impact": 0, "display_name": "Uncategorized Vulnerability", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "generic", "cvss_score": null, "plugin_id": "import/csv_nikto", "cwe": [], "cvss_base": "0.0", "dsa": [], "tool_id": null, "description": "Allowed HTTP Methods: OPTIONS, GET, HEAD, POST ", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "Nikto CSV Importer", "false_positive": null, "class": "UncategorizedVulnerability", "identity": "69e82d28652981f61046ed727b0d553f", "custom_id": null, "level": 4, "title": "User attention required by: Nikto CSV Importer", "solution": "No additional details are available.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["2cd15469f886990686be4ed32dabdf89"], "ca": [], "sectrack": [], "glsa": [], "references": [], "vu": [], "risk": 0, "impact": 0, "display_name": "Uncategorized Vulnerability", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "generic", "cvss_score": null, "plugin_id": "import/csv_nikto", "cwe": [], "cvss_base": "0.0", "dsa": [], "tool_id": null, "description": "Server leaks inodes via ETags, header found with file /, fields: 0x3012602696 ", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "Nikto CSV Importer", "false_positive": null, "class": "UncategorizedVulnerability", "identity": "7f993c10b44586b92304419745fecd51", "custom_id": null, "level": 4, "title": "User attention required by: Nikto CSV Importer", "solution": "No additional details are available.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["2cd15469f886990686be4ed32dabdf89"], "ca": [], "sectrack": [], "glsa": [], "references": [], "vu": [], "risk": 0, "impact": 0, "display_name": "Uncategorized Vulnerability", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "generic", "cvss_score": null, "plugin_id": "import/csv_nikto", "cwe": [], "cvss_base": "0.0", "dsa": [], "tool_id": null, "description": "The anti-clickjacking X-Frame-Options header is not present.", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "Nikto CSV Importer", "false_positive": null, "class": "UncategorizedVulnerability", "identity": "9ba40209b102c8e60ffbbea3e7bf7e64", "custom_id": null, "level": 4, "title": "User attention required by: Nikto CSV Importer", "solution": "No additional details are available.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["2cd15469f886990686be4ed32dabdf89"], "ca": [], "sectrack": [], "glsa": [], "references": [], "vu": [], "risk": 0, "impact": 0, "display_name": "Uncategorized Vulnerability", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "generic", "cvss_score": null, "plugin_id": "import/csv_nikto", "cwe": [], "cvss_base": "0.0", "dsa": [], "tool_id": null, "description": "Uncommon header 'x-ec-custom-error' found, with contents: 1", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "Nikto CSV Importer", "false_positive": null, "class": "UncategorizedVulnerability", "identity": "c78faa51320a930355517f5770ca887d", "custom_id": null, "level": 4, "title": "User attention required by: Nikto CSV Importer", "solution": "No additional details are available.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["3e30e6d8455774acc9c085c0daf5d51d"], "ca": [], "sectrack": [], "glsa": [], "references": [], "vu": [], "risk": 0, "impact": 0, "display_name": "Uncategorized Vulnerability", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "generic", "cvss_score": null, "plugin_id": "import/csv_nikto", "cwe": [], "cvss_base": "0.0", "dsa": [], "tool_id": null, "description": "/crossdomain.xml contains 0 line which should be manually viewed for improper domains or wildcards.", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "Nikto CSV Importer", "false_positive": null, "class": "UncategorizedVulnerability", "identity": "cd74156c7b7e0945f1dbf334cd994936", "custom_id": null, "level": 4, "title": "User attention required by: Nikto CSV Importer", "solution": "No additional details are available.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["cc932a5979e8bd6af1f51d1e85e5cd8b"], "ca": [], "sectrack": [], "glsa": [], "references": [], "vu": [], "risk": 0, "impact": 0, "display_name": "Uncategorized Vulnerability", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "generic", "cvss_score": null, "plugin_id": "import/xml_openvas", "cwe": [], "cvss_base": "0.0", "dsa": [], "tool_id": "10386", "description": "Synopsis :\n\nRemote web server does not reply with 404 error code.\n\nDescription :\n\nThis web server is [mis]configured in that it does not return\n'404 Not Found' error codes when a non-existent file is requested,\nperhaps returning a site map, search page or authentication page\ninstead.\n\nOpenVAS enabled some counter measures for that, however they might\nbe insufficient. If a great number of security holes are produced\nfor this port, they might not all be accurate\n", "data_type": 2, "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "OpenVAS XML Importer", "false_positive": null, "class": "UncategorizedVulnerability", "identity": "d52985a7189f1cba349e7fcfa07c537e", "custom_id": null, "level": 4, "title": "No 404 check", "solution": "No additional details are available.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}, {"edb": [], "mskb": [], "cisco": [], "links": ["c74e5bb0445f0ece3b198b9d229691c2"], "ca": [], "sectrack": [], "glsa": [], "references": ["https://cwe.mitre.org/data/definitions/327.html"], "vu": [], "domain_id": "c74e5bb0445f0ece3b198b9d229691c2", "risk": 0, "impact": 0, "display_name": "Weak SSL/TLS Key", "severity": 0, "osvdb": [], "usn": [], "mdvsa": [], "capec": [], "data_subtype": "ssl/weak_key", "cvss_score": null, "plugin_id": "import/xml_sslscan", "cwe": ["CWE-327"], "cvss_base": "4.0", "dsa": [], "tool_id": null, "description": "An SSL/TLS certificate with a weak cryptographic key was found. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.", "data_type": 2, "keys": [56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56, 56], "xf": [], "bid": [], "cvss_vector": null, "plugin_name": "SSLScan XML Importer", "false_positive": 0, "class": "WeakKey", "identity": "3222cb331d909347dfc0e1dc355d710d", "custom_id": null, "level": 0, "title": "Weak SSL/TLS Key", "solution": "Create a new certificate with stronger cryptographic keys.", "nessus": [], "depth": -1, "vmsa": [], "ms": [], "sa": [], "cve": [], "rhsa": []}], "summary": {"report_time": "2014-02-06 08:47:13.075000", "start_time": "2014-02-06 09:45:57.182000 UTC", "audit_name": "i", "stop_time": "2014-02-06 09:46:19.024000 UTC", "run_time": "0 days, 0 hours, 0 minutes and 21 seconds"}, "supported_taxonomies": {"edb": "ExploitDB", "mskb": "Microsoft Knowledge Base", "cisco": "Cisco Security Advisory", "xf": "ISS X-Force", "osvdb": "OSVDB", "nessus": "Nessus Plugin", "usn": "Ubuntu Security Notice", "bid": "Bugtraq", "sectrack": "Security Tracker", "glsa": "Gentoo Linux Security Advisory", "mdvsa": "Mandriva Security Advisory", "vu": "CERT Vulnerability Note", "capec": "CAPEC", "vmsa": "VMWare Security Advisory", "ms": "Microsoft Advisory", "sa": "Secunia Advisory", "cve": "CVE", "cwe": "CWE", "ca": "CERT Advisory", "rhsa": "RedHat Security Advisory", "dsa": "Debian Security Advisory"}, "version": "GoLismero 2.0.0b3", "report_type": "full", "resources": {"2ba02aa1b49bfdd4c7ad2515220c4246": {"display_name": "IP Address", "links": ["345f820f80eb869ce51a6b2ba945b797", "632f8d727d887aef2ec53c49d05c3465", "830ae3693a2984a9bfc08b7eaa580c8b", "9c887bbb46088ac82658cf4f1305f68b", "a9eb10f3a8dbde5cb2f758e67b205d98", "acfc5f9bca67086bcac06b6f8a54db54", "be5d32613ef24ffbb7650aa64cb26bcb", "bec997910881861e05f066bcbdbe6840", "e7f602350e59208f5937284eb21a1889", "ea6e1619b0498e809775e91c29eb9e9a", "fbd7ef8736ba85ee2d430cd22e2690cd", "fe5081e9b014d2b1ac31aa38f5724ed9"], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "192.168.1.1", "class": "IP", "identity": "2ba02aa1b49bfdd4c7ad2515220c4246"}, "33dd63947850a80d8f913240290f4618": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.35", "class": "IP", "identity": "33dd63947850a80d8f913240290f4618"}, "d1d5bb3b5f1b88314b1c1f3139dba639": {"display_name": "IP Address", "links": ["069667874354f636c82113390b955e82", "36698d5c0d5e994c5e1b23de6a38bab1", "5616dc82bed0260ab1d1842c743766df", "72168c061dd23b376994b3bacfc19273", "78ae6e4efbc15875d091b11f148d3067", "80e0d9207ffd867864f270adc0fbd6fb", "94ffb9ba9654ff45f52c94dbd28f85b7", "96df492fb35003484790c40c012c27eb", "a9eb10f3a8dbde5cb2f758e67b205d98", "be5d32613ef24ffbb7650aa64cb26bcb", "fbd7ef8736ba85ee2d430cd22e2690cd"], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "173.194.41.233", "class": "IP", "identity": "d1d5bb3b5f1b88314b1c1f3139dba639"}, "b7b10e36b0745e98365b00be4840d8b0": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.45", "class": "IP", "identity": "b7b10e36b0745e98365b00be4840d8b0"}, "94ffb9ba9654ff45f52c94dbd28f85b7": {"display_name": "Domain Name", "links": ["d1d5bb3b5f1b88314b1c1f3139dba639"], "data_type": 3, "hostname": "mad01s15-in-f9.1e100.net", "depth": 0, "data_subtype": 4, "class": "Domain", "identity": "94ffb9ba9654ff45f52c94dbd28f85b7"}, "c74e5bb0445f0ece3b198b9d229691c2": {"display_name": "Domain Name", "links": ["3222cb331d909347dfc0e1dc355d710d", "3f230e44ef2cb238f1e6fd9333bca8db", "771547b72085a42a0cb28ea3f5452319", "e59ebed018d307d9c4b1a995015f9f0b"], "data_type": 3, "hostname": "ifema.es", "depth": 0, "data_subtype": 4, "class": "Domain", "identity": "c74e5bb0445f0ece3b198b9d229691c2"}, "958b4d708fb64c364137a85baa43d027": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.39", "class": "IP", "identity": "958b4d708fb64c364137a85baa43d027"}, "8613797dee8b689a9535f30bd4099f9d": {"display_name": "Base URL", "links": [], "data_type": 3, "url": "http://example.com/", "depth": 0, "data_subtype": 2, "class": "BaseUrl", "identity": "8613797dee8b689a9535f30bd4099f9d"}, "c23035d5e52448961651ea7120862ff0": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.24", "class": "IP", "identity": "c23035d5e52448961651ea7120862ff0"}, "37e51e201987b008d91e1b7bbcc72f7a": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.20", "class": "IP", "identity": "37e51e201987b008d91e1b7bbcc72f7a"}, "0c5a4c51b78c18fc2b000e44252a0489": {"display_name": "Domain Name", "links": ["8e4cf3e620d775d5ac1fba1f8ffa8a1b", "e319f6e3f58c75b8708498d5f6db2491"], "data_type": 3, "hostname": "www.vodafone.es", "depth": 0, "data_subtype": 4, "class": "Domain", "identity": "0c5a4c51b78c18fc2b000e44252a0489"}, "d0431edaf1951f269d4370f16ae0dbad": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.29", "class": "IP", "identity": "d0431edaf1951f269d4370f16ae0dbad"}, "e28b3ef5261571ed4a2396b976528636": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "212.89.15.102", "class": "IP", "identity": "e28b3ef5261571ed4a2396b976528636"}, "4ef8781d067ec3a08bc7889e4d876563": {"display_name": "Domain Name", "links": ["be375163029d9f54c39a83174786c9f6"], "data_type": 3, "hostname": "example.com", "depth": 0, "data_subtype": 4, "class": "Domain", "identity": "4ef8781d067ec3a08bc7889e4d876563"}, "bf609a63ec6b1d6267e5b5644eb5df63": {"display_name": "Domain Name", "links": [], "data_type": 3, "hostname": "www.example.com", "depth": 0, "data_subtype": 4, "class": "Domain", "identity": "bf609a63ec6b1d6267e5b5644eb5df63"}, "35ce14c34b6798ebd2535846cca4b202": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.25", "class": "IP", "identity": "35ce14c34b6798ebd2535846cca4b202"}, "1131f1ab4d85d9cd5dbe1f1e08cfc214": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.40", "class": "IP", "identity": "1131f1ab4d85d9cd5dbe1f1e08cfc214"}, "2cd15469f886990686be4ed32dabdf89": {"display_name": "URL", "links": ["44cf401f24f1dca0f5402898138c38ae", "7f993c10b44586b92304419745fecd51", "9ba40209b102c8e60ffbbea3e7bf7e64", "c78faa51320a930355517f5770ca887d"], "data_type": 3, "url": "http://example.com/", "method": "GET", "depth": 0, "data_subtype": 1, "post_data": null, "class": "Url", "identity": "2cd15469f886990686be4ed32dabdf89"}, "3e30e6d8455774acc9c085c0daf5d51d": {"display_name": "URL", "links": ["cd74156c7b7e0945f1dbf334cd994936"], "data_type": 3, "url": "http://example.com/crossdomain.xml", "method": "GET", "depth": 0, "data_subtype": 1, "post_data": null, "class": "Url", "identity": "3e30e6d8455774acc9c085c0daf5d51d"}, "706e4e3a6e066d6e2df43588cd82b008": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.34", "class": "IP", "identity": "706e4e3a6e066d6e2df43588cd82b008"}, "bef2dc44ac364dc168f0a497da96637e": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.55", "class": "IP", "identity": "bef2dc44ac364dc168f0a497da96637e"}, "05c3e34eec24c0e305a42825ecb225f1": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.44", "class": "IP", "identity": "05c3e34eec24c0e305a42825ecb225f1"}, "3ac31326c32338a10b91ee522ec45a03": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "212.166.190.52", "class": "IP", "identity": "3ac31326c32338a10b91ee522ec45a03"}, "501f2369ecb6645fe97b0f66cfa3f865": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.30", "class": "IP", "identity": "501f2369ecb6645fe97b0f66cfa3f865"}, "c2a54c7128318728b74cdda512be7015": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "2606:2800:220:6d:26bf:1447:1097:aa7", "class": "IP", "identity": "c2a54c7128318728b74cdda512be7015"}, "fb362d88b517d17326ec00834999c4b3": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.49", "class": "IP", "identity": "fb362d88b517d17326ec00834999c4b3"}, "b08057685eed44287267dc54dca75046": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "2a00:1450:400d:802::1006", "class": "IP", "identity": "b08057685eed44287267dc54dca75046"}, "5deb3beb3fccefeab3475bbb8677653c": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.54", "class": "IP", "identity": "5deb3beb3fccefeab3475bbb8677653c"}, "5616dc82bed0260ab1d1842c743766df": {"display_name": "Domain Name", "links": ["d1d5bb3b5f1b88314b1c1f3139dba639"], "data_type": 3, "hostname": "google.com", "depth": 0, "data_subtype": 4, "class": "Domain", "identity": "5616dc82bed0260ab1d1842c743766df"}, "1c276e44f4ff4ceae540e34459004825": {"display_name": "URL", "links": ["69e82d28652981f61046ed727b0d553f"], "data_type": 3, "url": "http://example.com/", "method": "OPTIONS", "depth": 0, "data_subtype": 1, "post_data": null, "class": "Url", "identity": "1c276e44f4ff4ceae540e34459004825"}, "be375163029d9f54c39a83174786c9f6": {"display_name": "IP Address", "links": ["1e219c37484f8cdf21cf78088e568f3b", "2ff4282a16e3b829abd5ec2731c0d550", "36698d5c0d5e994c5e1b23de6a38bab1", "3e4c6fd1b387cd71f9aae2c5d7806751", "4ce1a04163497af0e94018c8602ab3c3", "4ef8781d067ec3a08bc7889e4d876563", "54c10ce4eef4dccf971fabb6d83ea1bb", "8012f777c2580ee879dd32fc206a469e", "8cf017b6a073fbe1c3863c70a354ef6f", "8e9ed8a909c8ab75d9ba70e8c65329e9", "913d32b56e783eef744b3a4754739fda", "95ae12c6a880737f3c88749b81d682f7", "a9eb10f3a8dbde5cb2f758e67b205d98", "b3a49e4f213defbcbc055854848eaddb", "be5d32613ef24ffbb7650aa64cb26bcb", "ce0d77b27f9fb253dc45dc4b5108ff3c", "fbd7ef8736ba85ee2d430cd22e2690cd", "fe1af521920fb831a30b27defd832653"], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "93.184.216.119", "class": "IP", "identity": "be375163029d9f54c39a83174786c9f6"}, "10cf0b6b7829ae921c46743f3c03223f": {"display_name": "Folder URL", "links": [], "data_type": 3, "url": "http://example.com/", "depth": -1, "data_subtype": 3, "class": "FolderUrl", "identity": "10cf0b6b7829ae921c46743f3c03223f"}, "eb20f67bbbc4760930a32210c9b5a6f9": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "62.87.94.122", "class": "IP", "identity": "eb20f67bbbc4760930a32210c9b5a6f9"}, "cc932a5979e8bd6af1f51d1e85e5cd8b": {"display_name": "IP Address", "links": ["d52985a7189f1cba349e7fcfa07c537e"], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "192.168.56.101", "class": "IP", "identity": "cc932a5979e8bd6af1f51d1e85e5cd8b"}, "f5663d96f092b5b34e1132288e971959": {"display_name": "Domain Name", "links": [], "data_type": 3, "hostname": "1e100.net", "depth": 0, "data_subtype": 4, "class": "Domain", "identity": "f5663d96f092b5b34e1132288e971959"}, "0261c7a6131655ee88fc69e9e7b8532e": {"display_name": "Domain Name", "links": ["0ae02e79fd36a98365613c114bbe3ba2", "100d2f4fb4428d805317b8dbbcc35fb2", "2a0dd1f1fd7642848072d17111f09d15"], "data_type": 3, "hostname": "vodafone.es", "depth": 0, "data_subtype": 4, "class": "Domain", "identity": "0261c7a6131655ee88fc69e9e7b8532e"}, "0cb97a6b264fe4b6386802b5948db6c2": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.50", "class": "IP", "identity": "0cb97a6b264fe4b6386802b5948db6c2"}, "da8b1e24b228b3e35c57ed25320f9cab": {"display_name": "Domain Name", "links": ["a7216d20239d7225fc3b8b05e0ba5457", "dba36cbc9b7f358a7cc4e59aa490924c", "f745676ecafb093e8afd05f490df0483"], "data_type": 3, "hostname": "live.vodafone.es", "depth": 0, "data_subtype": 4, "class": "Domain", "identity": "da8b1e24b228b3e35c57ed25320f9cab"}, "6ffab131989443f7784626a7864053a1": {"display_name": "IP Address", "links": [], "data_type": 3, "depth": 0, "data_subtype": 5, "address": "213.189.45.59", "class": "IP", "identity": "6ffab131989443f7784626a7864053a1"}, "345f820f80eb869ce51a6b2ba945b797": {"display_name": "MAC Address", "links": ["2ba02aa1b49bfdd4c7ad2515220c4246"], "data_type": 3, "depth": 0, "data_subtype": 7, "address": "00:1A:2B:61:6E", "class": "MAC", "identity": "345f820f80eb869ce51a6b2ba945b797"}}}
+data = {
+    "audit_scope": {
+        "addresses": [
+            "173.194.41.233",
+            "192.168.1.1",
+            "192.168.56.101",
+            "212.166.190.52",
+            "212.89.15.102",
+            "213.189.45.103",
+            "213.189.45.104",
+            "213.189.45.108",
+            "213.189.45.109",
+            "213.189.45.113",
+            "213.189.45.114",
+            "213.189.45.118",
+            "213.189.45.119",
+            "213.189.45.123",
+            "213.189.45.84",
+            "213.189.45.88",
+            "213.189.45.89",
+            "213.189.45.93",
+            "213.189.45.94",
+            "213.189.45.98",
+            "213.189.45.99",
+            "2606:2800:220:6d:26bf:1447:1097:aa7",
+            "2a00:1450:400d:803::1005",
+            "62.87.94.122",
+            "93.184.216.119"
+        ],
+        "domains": [
+            "1e100.net",
+            "example.com",
+            "google.com",
+            "ifema.es",
+            "live.vodafone.es",
+            "mad01s15-in-f9.1e100.net",
+            "vodafone.es",
+            "www.example.com",
+            "www.vodafone.es"
+        ],
+        "roots": [
+            "*.1e100.net",
+            "*.example.com",
+            "*.google.com",
+            "*.ifema.es",
+            "*.vodafone.es"
+        ],
+        "web_pages": [
+            "http://example.com/",
+            "http://example.com/crossdomain.xml"
+        ]
+    },
+    "informations": {},
+    "report_type": "brief",
+    "resources": {
+        "0261c7a6131655ee88fc69e9e7b8532e": {
+            "class": "Domain",
+            "data_subtype": 4,
+            "data_type": 3,
+            "depth": 0,
+            "display_name": "Domain Name",
+            "hostname": "vodafone.es",
+            "identity": "0261c7a6131655ee88fc69e9e7b8532e",
+            "links": [
+                "0ae02e79fd36a98365613c114bbe3ba2",
+                "100d2f4fb4428d805317b8dbbcc35fb2",
+                "2a0dd1f1fd7642848072d17111f09d15"
+            ]
+        },
+        "0c5a4c51b78c18fc2b000e44252a0489": {
+            "class": "Domain",
+            "data_subtype": 4,
+            "data_type": 3,
+            "depth": 0,
+            "display_name": "Domain Name",
+            "hostname": "www.vodafone.es",
+            "identity": "0c5a4c51b78c18fc2b000e44252a0489",
+            "links": [
+                "8e4cf3e620d775d5ac1fba1f8ffa8a1b",
+                "e319f6e3f58c75b8708498d5f6db2491"
+            ]
+        },
+        "1c276e44f4ff4ceae540e34459004825": {
+            "class": "Url",
+            "data_subtype": 1,
+            "data_type": 3,
+            "depth": 0,
+            "display_name": "URL",
+            "identity": "1c276e44f4ff4ceae540e34459004825",
+            "links": [
+                "2e71c8477c676af27bf0a6707f90bc24"
+            ],
+            "method": "OPTIONS",
+            "post_data": null,
+            "url": "http://example.com/"
+        },
+        "2cd15469f886990686be4ed32dabdf89": {
+            "class": "Url",
+            "data_subtype": 1,
+            "data_type": 3,
+            "depth": 0,
+            "display_name": "URL",
+            "identity": "2cd15469f886990686be4ed32dabdf89",
+            "links": [
+                "2f32694e64595720a2d63541943c9184",
+                "411195a3f88433ad78625299a6ef2ebd",
+                "64048a1fd826e718da08ea0277faac10",
+                "a2cd2c3a7b1f15b4b54b422985baee28"
+            ],
+            "method": "GET",
+            "post_data": null,
+            "url": "http://example.com/"
+        },
+        "3e30e6d8455774acc9c085c0daf5d51d": {
+            "class": "Url",
+            "data_subtype": 1,
+            "data_type": 3,
+            "depth": 0,
+            "display_name": "URL",
+            "identity": "3e30e6d8455774acc9c085c0daf5d51d",
+            "links": [
+                "d5b8166dcfb32aa56d093ddfec012e1e"
+            ],
+            "method": "GET",
+            "post_data": null,
+            "url": "http://example.com/crossdomain.xml"
+        },
+        "c74e5bb0445f0ece3b198b9d229691c2": {
+            "class": "Domain",
+            "data_subtype": 4,
+            "data_type": 3,
+            "depth": 0,
+            "display_name": "Domain Name",
+            "hostname": "ifema.es",
+            "identity": "c74e5bb0445f0ece3b198b9d229691c2",
+            "links": [
+                "3222cb331d909347dfc0e1dc355d710d",
+                "3f230e44ef2cb238f1e6fd9333bca8db",
+                "771547b72085a42a0cb28ea3f5452319",
+                "e59ebed018d307d9c4b1a995015f9f0b"
+            ]
+        },
+        "cc932a5979e8bd6af1f51d1e85e5cd8b": {
+            "address": "192.168.56.101",
+            "class": "IP",
+            "data_subtype": 5,
+            "data_type": 3,
+            "depth": 0,
+            "display_name": "IP Address",
+            "identity": "cc932a5979e8bd6af1f51d1e85e5cd8b",
+            "links": [
+                "930f1a4117ca00c5d1e82ce7526afd23"
+            ]
+        },
+        "da8b1e24b228b3e35c57ed25320f9cab": {
+            "class": "Domain",
+            "data_subtype": 4,
+            "data_type": 3,
+            "depth": 0,
+            "display_name": "Domain Name",
+            "hostname": "live.vodafone.es",
+            "identity": "da8b1e24b228b3e35c57ed25320f9cab",
+            "links": [
+                "a7216d20239d7225fc3b8b05e0ba5457",
+                "dba36cbc9b7f358a7cc4e59aa490924c",
+                "f745676ecafb093e8afd05f490df0483"
+            ]
+        }
+    },
+    "stats": {
+        "informations": 0,
+        "resources": 8,
+        "vulnerabilities": 19,
+        "vulns_by_level": {
+            "Critical": 0,
+            "High": 1,
+            "Informational": 7,
+            "Low": 4,
+            "Middle": 7
+        },
+        "vulns_by_type": {
+            "Insecure SSL/TLS Algorithm": 4,
+            "Invalid CN Field": 3,
+            "Invalid SSL/TLS Certificate": 4,
+            "Uncategorized Vulnerability": 7,
+            "Weak SSL/TLS Key": 1
+        }
+    },
+    "summary": {
+        "audit_name": "i",
+        "report_time": "2014-02-09 10:16:11.987000",
+        "run_time": "0 days, 0 hours, 0 minutes and 23 seconds",
+        "start_time": "2014-02-07 18:42:39.465000 UTC",
+        "stop_time": "2014-02-07 18:43:03.337000 UTC"
+    },
+    "version": "GoLismero 2.0.0b3",
+    "vulnerabilities": [
+        {
+            "data_subtype": "ssl/insecure_algorithm",
+            "data_type": 2,
+            "description": "An SSL/TLS certificate was found to be using an insecure algorithm. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.",
+            "display_name": "Insecure SSL/TLS Algorithm",
+            "identity": "2a0dd1f1fd7642848072d17111f09d15",
+            "impact": 0,
+            "level": 2,
+            "links": [
+                "0261c7a6131655ee88fc69e9e7b8532e"
+            ],
+            "plugin_id": "import/xml_sslscan",
+            "plugin_name": "SSLScan XML Importer",
+            "references": [
+                "https://cwe.mitre.org/data/definitions/327.html"
+            ],
+            "risk": 0,
+            "severity": 0,
+            "solution": "Create a new certificate using only secure algorithms.",
+            "title": "Insecure SSL/TLS Algorithm"
+        },
+        {
+            "data_subtype": "ssl/insecure_algorithm",
+            "data_type": 2,
+            "description": "An SSL/TLS certificate was found to be using an insecure algorithm. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.",
+            "display_name": "Insecure SSL/TLS Algorithm",
+            "identity": "3f230e44ef2cb238f1e6fd9333bca8db",
+            "impact": 0,
+            "level": 2,
+            "links": [
+                "c74e5bb0445f0ece3b198b9d229691c2"
+            ],
+            "plugin_id": "import/xml_sslscan",
+            "plugin_name": "SSLScan XML Importer",
+            "references": [
+                "https://cwe.mitre.org/data/definitions/327.html"
+            ],
+            "risk": 0,
+            "severity": 0,
+            "solution": "Create a new certificate using only secure algorithms.",
+            "title": "Insecure SSL/TLS Algorithm"
+        },
+        {
+            "data_subtype": "ssl/insecure_algorithm",
+            "data_type": 2,
+            "description": "An SSL/TLS certificate was found to be using an insecure algorithm. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.",
+            "display_name": "Insecure SSL/TLS Algorithm",
+            "identity": "dba36cbc9b7f358a7cc4e59aa490924c",
+            "impact": 0,
+            "level": 2,
+            "links": [
+                "da8b1e24b228b3e35c57ed25320f9cab"
+            ],
+            "plugin_id": "import/xml_sslscan",
+            "plugin_name": "SSLScan XML Importer",
+            "references": [
+                "https://cwe.mitre.org/data/definitions/327.html"
+            ],
+            "risk": 0,
+            "severity": 0,
+            "solution": "Create a new certificate using only secure algorithms.",
+            "title": "Insecure SSL/TLS Algorithm"
+        },
+        {
+            "data_subtype": "ssl/insecure_algorithm",
+            "data_type": 2,
+            "description": "An SSL/TLS certificate was found to be using an insecure algorithm. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.",
+            "display_name": "Insecure SSL/TLS Algorithm",
+            "identity": "e319f6e3f58c75b8708498d5f6db2491",
+            "impact": 0,
+            "level": 2,
+            "links": [
+                "0c5a4c51b78c18fc2b000e44252a0489"
+            ],
+            "plugin_id": "import/xml_sslscan",
+            "plugin_name": "SSLScan XML Importer",
+            "references": [
+                "https://cwe.mitre.org/data/definitions/327.html"
+            ],
+            "risk": 0,
+            "severity": 0,
+            "solution": "Create a new certificate using only secure algorithms.",
+            "title": "Insecure SSL/TLS Algorithm"
+        },
+        {
+            "data_subtype": "ssl/invalid_common_name",
+            "data_type": 2,
+            "description": "An invalid CN field was found in a SSL/TLS certificate. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.",
+            "display_name": "Invalid CN Field",
+            "identity": "100d2f4fb4428d805317b8dbbcc35fb2",
+            "impact": 0,
+            "level": 2,
+            "links": [
+                "0261c7a6131655ee88fc69e9e7b8532e"
+            ],
+            "plugin_id": "import/xml_sslscan",
+            "plugin_name": "SSLScan XML Importer",
+            "references": [
+                "https://cwe.mitre.org/data/definitions/327.html"
+            ],
+            "risk": 0,
+            "severity": 0,
+            "solution": "Create a new certificate with the correct CN field.",
+            "title": "Invalid CN Field"
+        },
+        {
+            "data_subtype": "ssl/invalid_common_name",
+            "data_type": 2,
+            "description": "An invalid CN field was found in a SSL/TLS certificate. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.",
+            "display_name": "Invalid CN Field",
+            "identity": "771547b72085a42a0cb28ea3f5452319",
+            "impact": 0,
+            "level": 2,
+            "links": [
+                "c74e5bb0445f0ece3b198b9d229691c2"
+            ],
+            "plugin_id": "import/xml_sslscan",
+            "plugin_name": "SSLScan XML Importer",
+            "references": [
+                "https://cwe.mitre.org/data/definitions/327.html"
+            ],
+            "risk": 0,
+            "severity": 0,
+            "solution": "Create a new certificate with the correct CN field.",
+            "title": "Invalid CN Field"
+        },
+        {
+            "data_subtype": "ssl/invalid_common_name",
+            "data_type": 2,
+            "description": "An invalid CN field was found in a SSL/TLS certificate. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.",
+            "display_name": "Invalid CN Field",
+            "identity": "a7216d20239d7225fc3b8b05e0ba5457",
+            "impact": 0,
+            "level": 2,
+            "links": [
+                "da8b1e24b228b3e35c57ed25320f9cab"
+            ],
+            "plugin_id": "import/xml_sslscan",
+            "plugin_name": "SSLScan XML Importer",
+            "references": [
+                "https://cwe.mitre.org/data/definitions/327.html"
+            ],
+            "risk": 0,
+            "severity": 0,
+            "solution": "Create a new certificate with the correct CN field.",
+            "title": "Invalid CN Field"
+        },
+        {
+            "data_subtype": "ssl/invalid_certificate",
+            "data_type": 2,
+            "description": "An invalid SSL/TLS certificate was found. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.",
+            "display_name": "Invalid SSL/TLS Certificate",
+            "identity": "0ae02e79fd36a98365613c114bbe3ba2",
+            "impact": 0,
+            "level": 1,
+            "links": [
+                "0261c7a6131655ee88fc69e9e7b8532e"
+            ],
+            "plugin_id": "import/xml_sslscan",
+            "plugin_name": "SSLScan XML Importer",
+            "references": [
+                "https://cwe.mitre.org/data/definitions/327.html"
+            ],
+            "risk": 0,
+            "severity": 0,
+            "solution": "Create a new certificate.",
+            "title": "Invalid SSL/TLS Certificate"
+        },
+        {
+            "data_subtype": "ssl/invalid_certificate",
+            "data_type": 2,
+            "description": "An invalid SSL/TLS certificate was found. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.",
+            "display_name": "Invalid SSL/TLS Certificate",
+            "identity": "8e4cf3e620d775d5ac1fba1f8ffa8a1b",
+            "impact": 0,
+            "level": 1,
+            "links": [
+                "0c5a4c51b78c18fc2b000e44252a0489"
+            ],
+            "plugin_id": "import/xml_sslscan",
+            "plugin_name": "SSLScan XML Importer",
+            "references": [
+                "https://cwe.mitre.org/data/definitions/327.html"
+            ],
+            "risk": 0,
+            "severity": 0,
+            "solution": "Create a new certificate.",
+            "title": "Invalid SSL/TLS Certificate"
+        },
+        {
+            "data_subtype": "ssl/invalid_certificate",
+            "data_type": 2,
+            "description": "An invalid SSL/TLS certificate was found. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.",
+            "display_name": "Invalid SSL/TLS Certificate",
+            "identity": "e59ebed018d307d9c4b1a995015f9f0b",
+            "impact": 0,
+            "level": 1,
+            "links": [
+                "c74e5bb0445f0ece3b198b9d229691c2"
+            ],
+            "plugin_id": "import/xml_sslscan",
+            "plugin_name": "SSLScan XML Importer",
+            "references": [
+                "https://cwe.mitre.org/data/definitions/327.html"
+            ],
+            "risk": 0,
+            "severity": 0,
+            "solution": "Create a new certificate.",
+            "title": "Invalid SSL/TLS Certificate"
+        },
+        {
+            "data_subtype": "ssl/invalid_certificate",
+            "data_type": 2,
+            "description": "An invalid SSL/TLS certificate was found. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.",
+            "display_name": "Invalid SSL/TLS Certificate",
+            "identity": "f745676ecafb093e8afd05f490df0483",
+            "impact": 0,
+            "level": 1,
+            "links": [
+                "da8b1e24b228b3e35c57ed25320f9cab"
+            ],
+            "plugin_id": "import/xml_sslscan",
+            "plugin_name": "SSLScan XML Importer",
+            "references": [
+                "https://cwe.mitre.org/data/definitions/327.html"
+            ],
+            "risk": 0,
+            "severity": 0,
+            "solution": "Create a new certificate.",
+            "title": "Invalid SSL/TLS Certificate"
+        },
+        {
+            "data_subtype": "generic",
+            "data_type": 2,
+            "description": "Allowed HTTP Methods: OPTIONS, GET, HEAD, POST ",
+            "display_name": "Uncategorized Vulnerability",
+            "identity": "2e71c8477c676af27bf0a6707f90bc24",
+            "impact": 0,
+            "level": 0,
+            "links": [
+                "1c276e44f4ff4ceae540e34459004825"
+            ],
+            "plugin_id": "import/csv_nikto",
+            "plugin_name": "Nikto CSV Importer",
+            "references": [],
+            "risk": 0,
+            "severity": 0,
+            "solution": "No additional details are available.",
+            "title": "User attention required by: Nikto CSV Importer"
+        },
+        {
+            "data_subtype": "generic",
+            "data_type": 2,
+            "description": "Uncommon header 'x-cache' found, with contents: HIT",
+            "display_name": "Uncategorized Vulnerability",
+            "identity": "2f32694e64595720a2d63541943c9184",
+            "impact": 0,
+            "level": 0,
+            "links": [
+                "2cd15469f886990686be4ed32dabdf89"
+            ],
+            "plugin_id": "import/csv_nikto",
+            "plugin_name": "Nikto CSV Importer",
+            "references": [],
+            "risk": 0,
+            "severity": 0,
+            "solution": "No additional details are available.",
+            "title": "User attention required by: Nikto CSV Importer"
+        },
+        {
+            "data_subtype": "generic",
+            "data_type": 2,
+            "description": "Server leaks inodes via ETags, header found with file /, fields: 0x3012602696 ",
+            "display_name": "Uncategorized Vulnerability",
+            "identity": "411195a3f88433ad78625299a6ef2ebd",
+            "impact": 0,
+            "level": 0,
+            "links": [
+                "2cd15469f886990686be4ed32dabdf89"
+            ],
+            "plugin_id": "import/csv_nikto",
+            "plugin_name": "Nikto CSV Importer",
+            "references": [],
+            "risk": 0,
+            "severity": 0,
+            "solution": "No additional details are available.",
+            "title": "User attention required by: Nikto CSV Importer"
+        },
+        {
+            "data_subtype": "generic",
+            "data_type": 2,
+            "description": "The anti-clickjacking X-Frame-Options header is not present.",
+            "display_name": "Uncategorized Vulnerability",
+            "identity": "64048a1fd826e718da08ea0277faac10",
+            "impact": 0,
+            "level": 0,
+            "links": [
+                "2cd15469f886990686be4ed32dabdf89"
+            ],
+            "plugin_id": "import/csv_nikto",
+            "plugin_name": "Nikto CSV Importer",
+            "references": [],
+            "risk": 0,
+            "severity": 0,
+            "solution": "No additional details are available.",
+            "title": "User attention required by: Nikto CSV Importer"
+        },
+        {
+            "data_subtype": "generic",
+            "data_type": 2,
+            "description": "Uncommon header 'x-ec-custom-error' found, with contents: 1",
+            "display_name": "Uncategorized Vulnerability",
+            "identity": "a2cd2c3a7b1f15b4b54b422985baee28",
+            "impact": 0,
+            "level": 0,
+            "links": [
+                "2cd15469f886990686be4ed32dabdf89"
+            ],
+            "plugin_id": "import/csv_nikto",
+            "plugin_name": "Nikto CSV Importer",
+            "references": [],
+            "risk": 0,
+            "severity": 0,
+            "solution": "No additional details are available.",
+            "title": "User attention required by: Nikto CSV Importer"
+        },
+        {
+            "data_subtype": "generic",
+            "data_type": 2,
+            "description": "/crossdomain.xml contains 0 line which should be manually viewed for improper domains or wildcards.",
+            "display_name": "Uncategorized Vulnerability",
+            "identity": "d5b8166dcfb32aa56d093ddfec012e1e",
+            "impact": 0,
+            "level": 0,
+            "links": [
+                "3e30e6d8455774acc9c085c0daf5d51d"
+            ],
+            "plugin_id": "import/csv_nikto",
+            "plugin_name": "Nikto CSV Importer",
+            "references": [],
+            "risk": 0,
+            "severity": 0,
+            "solution": "No additional details are available.",
+            "title": "User attention required by: Nikto CSV Importer"
+        },
+        {
+            "data_subtype": "generic",
+            "data_type": 2,
+            "description": "Synopsis :\n\nRemote web server does not reply with 404 error code.\n\nDescription :\n\nThis web server is [mis]configured in that it does not return\n'404 Not Found' error codes when a non-existent file is requested,\nperhaps returning a site map, search page or authentication page\ninstead.\n\nOpenVAS enabled some counter measures for that, however they might\nbe insufficient. If a great number of security holes are produced\nfor this port, they might not all be accurate\n",
+            "display_name": "Uncategorized Vulnerability",
+            "identity": "930f1a4117ca00c5d1e82ce7526afd23",
+            "impact": 0,
+            "level": 0,
+            "links": [
+                "cc932a5979e8bd6af1f51d1e85e5cd8b"
+            ],
+            "plugin_id": "import/xml_openvas",
+            "plugin_name": "OpenVAS XML Importer",
+            "references": [],
+            "risk": 0,
+            "severity": 0,
+            "solution": "No additional details are available.",
+            "title": "No 404 check"
+        },
+        {
+            "data_subtype": "ssl/weak_key",
+            "data_type": 2,
+            "description": "An SSL/TLS certificate with a weak cryptographic key was found. This may allow a strategically located attacker to snoop on network traffic, or perform a Man-In-The-Middle attack against unsuspecting users connecting to this host.",
+            "display_name": "Weak SSL/TLS Key",
+            "identity": "3222cb331d909347dfc0e1dc355d710d",
+            "impact": 0,
+            "level": 3,
+            "links": [
+                "c74e5bb0445f0ece3b198b9d229691c2"
+            ],
+            "plugin_id": "import/xml_sslscan",
+            "plugin_name": "SSLScan XML Importer",
+            "references": [
+                "https://cwe.mitre.org/data/definitions/327.html"
+            ],
+            "risk": 0,
+            "severity": 0,
+            "solution": "Create a new certificate with stronger cryptographic keys.",
+            "title": "Weak SSL/TLS Key"
+        }
+    ]
+}

@@ -287,25 +287,18 @@
 				}
 			}
 	    	function initChartByLevel(){
-	    		var criticalCount = dataAccess.getVulnerabilitiesCount(null,null,0)
-	    		var highCount = dataAccess.getVulnerabilitiesCount(null,null,1);
-	    		var middleCount = dataAccess.getVulnerabilitiesCount(null,null,2);
-	    		var lowCount = dataAccess.getVulnerabilitiesCount(null,null,3);
-	    		var informationalCount = dataAccess.getVulnerabilitiesCount(null,null,4);
-	    		$("#criticalCount").html(criticalCount);
-	    		$("#highCount").html(highCount);
-	    		$("#middleCount").html(middleCount);
-	    		$("#lowCount").html(lowCount);
-	    		$("#informationalCount").html(informationalCount);
-	    		$("#totalCount").html(informationalCount+lowCount+middleCount+highCount+criticalCount);
-				var data = [
-				    ['Critical', criticalCount],
-				    ['High', highCount],
-				    ['Middle', middleCount ], 
-				    ['Low', lowCount],
-				    ['Informational', informationalCount]
-				  ];
-				  var plot1 = jQuery.jqplot ('chartVulnerabilitiesByLevel', [data],
+	    		var datachart = dataAccess.getDataChartByLevel();
+				var vulnByType = dataAccess.getDataVulnsByLevel();
+				
+				
+	    		$("#criticalCount").html(vulnByType.Critical ? vulnByType.Critical :0);
+	    		$("#highCount").html(vulnByType.High ? vulnByType.High :0);
+	    		$("#middleCount").html(vulnByType.Middle ? vulnByType.Middle :0);
+	    		$("#lowCount").html(vulnByType.Low ? vulnByType.Low :0);
+	    		$("#informationalCount").html(vulnByType.Informational ? vulnByType.Informational :0);
+	    		$("#totalCount").html((vulnByType.Critical ? vulnByType.Critical :0)+(vulnByType.High ? vulnByType.High :0)+(vulnByType.Middle ? vulnByType.Middle :0)
+				+(vulnByType.Low ? vulnByType.Low :0)+(vulnByType.Informational ? vulnByType.Informational :0));
+				  var plot1 = jQuery.jqplot ('chartVulnerabilitiesByLevel', [datachart],
 				    {
 			            seriesDefaults: {
 			              // Make this a pie chart.
