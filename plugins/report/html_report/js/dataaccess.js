@@ -81,6 +81,10 @@ function DataAccess(){
 	this.auditScope = data.audit_scope;
 }
 
+DataAccess.prototype.getDataVulnsByLevel= function(){
+	return data.stats.vulns_by_level;
+}
+
 DataAccess.prototype.getDataChartByTarget = function(){
 	var dataChar = new Array();
 	var _self = this;
@@ -98,6 +102,17 @@ DataAccess.prototype.getDataChartByTarget = function(){
 DataAccess.prototype.getDataChartByType = function(){
 	var dataChar = new Array();
 	$.each(data.stats.vulns_by_type, function(key, val){		
+		var o = new Array();
+		o[0] = key;
+		o[1] = val;
+		dataChar.push(o);
+	});
+	return dataChar;
+}
+
+DataAccess.prototype.getDataChartByLevel = function(){
+	var dataChar = new Array();
+	$.each(data.stats.vulns_by_level, function(key, val){		
 		var o = new Array();
 		o[0] = key;
 		o[1] = val;
