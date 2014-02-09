@@ -1212,6 +1212,8 @@ class AuditSQLiteDB (BaseAuditDB):
                     "Database belongs to another audit:\n\t\"%s\" vs. \"%s\"" % \
                     (row[1], self.audit_name))
 
+            # TODO: add a sanity check on the data
+
         # If not present...
         else:
 
