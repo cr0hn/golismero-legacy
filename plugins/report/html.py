@@ -42,6 +42,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 import os
 import os.path
+import warnings
 
 json = import_plugin("json.py")
 
@@ -70,6 +71,12 @@ class HTMLReport(json.JSONOutput):
 
         Logger.log_more_verbose("Generating JSON database...")
 
+        # Warn about --full not being supported by this plugin.
+        if not Config.audit_config.only_vulns:
+            Config.audit_config.only_vulns = True
+            Logger.log_more_verbose(
+                "Full report mode not supported, switching to brief mode.")
+
         # Hardcode the arguments for the JSON plugin.
         Config.plugin_args["mode"] = "dump"
         Config.plugin_args["command"] = ""
@@ -84,17 +91,41 @@ class HTMLReport(json.JSONOutput):
 
         # It's easier for the JavaScript code in the report to access the
         # vulnerabilities as an array instead of a map, so let's fix that.
+        # Also, delete all properties we know aren't being used in the report.
         vulnerabilities = report_data["vulnerabilities"]
         sort_keys = [
-            (data["display_name"], data["plugin_id"], data["identity"])
+            (data["display_name"],
+             data["plugin_id"],
+             data["identity"])
             for data in vulnerabilities.itervalues()
         ]
         sort_keys.sort()
         report_data["vulnerabilities"] = [
-            vulnerabilities[identity]
+            {
+                propname: propvalue
+                for propname, propvalue
+                in vulnerabilities[identity].iteritems()
+                if propname in (
+                    "display_name",
+                    "plugin_id",
+                    "identity",
+                    "links",
+                    "data_type",
+                    "data_subtype",
+                    "title",
+                    "description",
+                    "solution",
+                    "references",
+                    "level",
+                    "impact",
+                    "severity",
+                    "risk",
+                )
+            }
             for _, _, identity in sort_keys
         ]
         vulnerabilities.clear()
+        sort_keys = []
 
         # Remove a bunch of data that won't be shown in the report anyway.
         for identity, data in report_data["informations"].items():
@@ -143,29 +174,43 @@ class HTMLReport(json.JSONOutput):
         # We also want to tell the HTML report which of the vulnerability
         # properties are part of the taxonomy. This saves us from having to
         # change the HTML code every time we add a new taxonomy property.
-        report_data["supported_taxonomies"] = TAXONOMY_NAMES
+        ##report_data["supported_taxonomies"] = TAXONOMY_NAMES
 
         # Calculate some statistics, so the JavaScript code doesn't have to.
+        vulns_by_level = Counter()
+        for level in Vulnerability.VULN_LEVELS:
+            vulns_by_level[level] = 0
+        vulns_by_level.update(
+            v["level"] for v in report_data["vulnerabilities"])
+        vulns_by_level = {k.title(): v for k, v in vulns_by_level.iteritems()}
+        vulns_by_type = dict(Counter(
+                v["display_name"] for v in report_data["vulnerabilities"]
+            ))
         report_data["stats"] = {
             "resources":       len(report_data["resources"]),
             "informations":    len(report_data["informations"]),
             "vulnerabilities": len(report_data["vulnerabilities"]),
-            "vulns_by_level":  {
-                Vulnerability.VULN_LEVELS.index(k): v for k, v in Counter(
-                    v["level"] for v in report_data["vulnerabilities"]
-                ).iteritems()
-            },
-            "vulns_by_type":   dict(Counter(
-                v["display_name"] for v in report_data["vulnerabilities"]
-            )),
+            "vulns_by_level":  vulns_by_level,
+            "vulns_by_type":   vulns_by_type,
         }
+
+        # It's better to show vulnerability levels as integers instead
+        # of strings, so they can be sorted in the proper order. The
+        # actual report shows them to the user as strings, but sorts
+        # using the integer values.
+        for vuln in report_data["vulnerabilities"]:
+            vuln["level"] = Vulnerability.VULN_LEVELS.index(vuln["level"])
 
         # Generate the ZIP file comment.
         comment = "Report generated with GoLismero %s at %s UTC\n"\
                   % (VERSION, report_data["summary"]["report_time"])
 
         # Serialize the data and cleanup the unserialized version.
-        serialized_data = json.dumps(report_data)
+        if output_file.endswith(".zip"):
+            serialized_data = json.dumps(report_data,
+                                         sort_keys=True, indent=4)
+        else:
+            serialized_data = json.dumps(report_data)
         del report_data
 
         # Get the directory where we can find our template.
