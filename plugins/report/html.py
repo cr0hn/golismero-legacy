@@ -155,13 +155,6 @@ class HTMLReport(json.JSONOutput):
                 tmp.clear()
         links.clear()
 
-        # It's better to show vulnerability levels as integers instead
-        # of strings, so they can be sorted in the proper order. The
-        # actual report shows them to the user as strings, but sorts
-        # using the integer values.
-        for vuln in report_data["vulnerabilities"]:
-            vuln["level"] = Vulnerability.VULN_LEVELS.index(vuln["level"])
-
         # Now, let's go through all Data objects and try to resolve the
         # plugin IDs to user-friendly plugin names.
         plugin_map = dict()
@@ -185,19 +178,28 @@ class HTMLReport(json.JSONOutput):
 
         # Calculate some statistics, so the JavaScript code doesn't have to.
         vulns_by_level = Counter()
-        for i in xrange(len(Vulnerability.VULN_LEVELS)):
-            vulns_by_level[i] = 0
+        for level in Vulnerability.VULN_LEVELS:
+            vulns_by_level[level] = 0
         vulns_by_level.update(
             v["level"] for v in report_data["vulnerabilities"])
+        vulns_by_level = {k.title(): v for k, v in vulns_by_level.iteritems()}
+        vulns_by_type = dict(Counter(
+                v["display_name"] for v in report_data["vulnerabilities"]
+            ))
         report_data["stats"] = {
             "resources":       len(report_data["resources"]),
             "informations":    len(report_data["informations"]),
             "vulnerabilities": len(report_data["vulnerabilities"]),
-            "vulns_by_level":  dict(vulns_by_level),
-            "vulns_by_type":   dict(Counter(
-                v["display_name"] for v in report_data["vulnerabilities"]
-            )),
+            "vulns_by_level":  vulns_by_level,
+            "vulns_by_type":   vulns_by_type,
         }
+
+        # It's better to show vulnerability levels as integers instead
+        # of strings, so they can be sorted in the proper order. The
+        # actual report shows them to the user as strings, but sorts
+        # using the integer values.
+        for vuln in report_data["vulnerabilities"]:
+            vuln["level"] = Vulnerability.VULN_LEVELS.index(vuln["level"])
 
         # Generate the ZIP file comment.
         comment = "Report generated with GoLismero %s at %s UTC\n"\
