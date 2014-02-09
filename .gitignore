@@ -62,3 +62,6 @@ thirdparty_libs/tldextract/.tld_set
 
 # User configuration file.
 user.conf
+
+# Test data for the HTML report.
+plugins/report/html_report/js/database.js
