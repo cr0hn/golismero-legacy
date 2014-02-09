@@ -89,6 +89,7 @@ if __name__ == "__main__":
 
 import argparse
 import os
+import sys
 
 from ConfigParser import RawConfigParser
 from getpass import getpass
@@ -213,6 +214,7 @@ COMMANDS = (
     "INFO",
 
     # Management.
+    "LOAD",
     "DUMP",
     "UPDATE",
 )
@@ -380,6 +382,10 @@ def cmdline_parser():
         "  DUMP:\n"
         "    Dump the database from an earlier scan in SQL format. This command takes no\n"
         "    arguments. To specify output files use the -o switch.\n"
+        "\n"
+        "  LOAD:\n"
+        "    Load a database dump from an earlier scan in SQL format. This command takes\n"
+        "    no arguments. To specify input files use the -i switch.\n"
         "\n"
         "  UPDATE:\n"
         "    Update GoLismero to the latest version. Requires Git to be installed and\n"
@@ -587,6 +593,7 @@ def main():
         "INFO":     command_info,     # Display plugin info and quit.
         "PROFILES": command_profiles, # List profiles and quit.
         "DUMP":     command_dump,     # Dump the database and quit.
+        "LOAD":     command_load,     # Load a database dump and quit.
         "UPDATE":   command_update,   # Update GoLismero and quit.
     }
 
@@ -810,16 +817,51 @@ def command_dump(parser, P, cmdParams, auditParams):
     if P.verbose != 0:
         print "Loading database: %s" % \
               colorize(auditParams.audit_db, "yellow")
-    with PluginTester(autoinit=False, autodelete=False) as t:
-        t.orchestrator_config.verbose = 0
-        t.audit_config.audit_name = auditParams.audit_name
-        t.audit_config.audit_db   = auditParams.audit_db
-        t.init_environment()
-        Console.use_colors = cmdParams.color
-        for filename in P.reports:
-            if P.verbose != 0:
-                print "Dumping to file: %s" % colorize(filename, "cyan")
-            t.audit.database.dump(filename)
+    import sqlite3
+    for filename in P.reports:
+        if P.verbose != 0:
+            print "Dumping to file: %s" % colorize(filename, "cyan")
+        db = sqlite3.connect(auditParams.audit_db)
+        try:
+            with open(filename, 'w') as f:
+                for line in db.iterdump():
+                    f.write(line + "\n")
+        finally:
+            db.close()
+    exit(0)
+
+
+#------------------------------------------------------------------------------
+def command_load(parser, P, cmdParams, auditParams):
+    if not auditParams.is_new_audit():
+        parser.error("audit database already exists")
+    if not P.imports:
+        parser.error("missing input filename")
+    if len(P.imports) > 1:
+        parser.error("only one input filename allowed")
+    import sqlite3
+    filename = P.imports[0]
+    if P.verbose != 0:
+        print "Loading from file: %s" % colorize(filename, "cyan")
+    with open(filename, 'rU') as f:
+        data = f.read()
+    if P.verbose != 0:
+        print "Creating database: %s" % \
+              colorize(auditParams.audit_db, "yellow")
+    db = sqlite3.connect(auditParams.audit_db)
+    try:
+        try:
+            cursor = db.cursor()
+            try:
+                cursor.executescript(data)
+                del data
+                db.commit()
+            finally:
+                cursor.close()
+        finally:
+            db.close()
+    except:
+        parser.error("error loading database dump: " + str(sys.exc_value))
     exit(0)
 
 
