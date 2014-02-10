@@ -606,7 +606,8 @@ class Configuration (object):
         args = { k:v for k,v in args.iteritems() if v is not None }
 
         # Extract the settings from the dictionary.
-        self.from_dictionary(args)
+        if args:
+            self.from_dictionary(args)
 
 
     #--------------------------------------------------------------------------
@@ -624,7 +625,8 @@ class Configuration (object):
             raise TypeError("Invalid JSON data")
 
         # Extract the settings from the dictionary.
-        self.from_dictionary(args)
+        if args:
+            self.from_dictionary(args)
 
 
     #--------------------------------------------------------------------------
@@ -642,17 +644,19 @@ class Configuration (object):
         """
         parser = RawConfigParser()
         parser.read(config_file)
-        options = { k:v for k,v in parser.items("golismero") if v }
-        if "profile" in options:
-            if allow_profile:
-                self.profile = options["profile"]
-                self.profile_file = get_profile(self.profile)
-            else:
-                del options["profile"]
-        for k in self._forbidden_:
-            if k in options:
-                del options[k]
-        self.from_dictionary(options)
+        if parser.has_section("golismero"):
+            options = { k:v for k,v in parser.items("golismero") if v }
+            if "profile" in options:
+                if allow_profile:
+                    self.profile = options["profile"]
+                    self.profile_file = get_profile(self.profile)
+                else:
+                    del options["profile"]
+            for k in self._forbidden_:
+                if k in options:
+                    del options[k]
+            if options:
+                self.from_dictionary(options)
 
 
     #--------------------------------------------------------------------------
