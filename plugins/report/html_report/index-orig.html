@@ -286,6 +286,12 @@
 					case 4: return "informational";
 				}
 			}
+			
+			$( window ).resize(function() {
+			 initChartByLevel();
+			 initChartByType();
+			 initChartByTarget();
+			});
 	    	function initChartByLevel(){
 	    		var datachart = dataAccess.getDataChartByLevel();
 				var vulnByType = dataAccess.getDataVulnsByLevel();
@@ -298,6 +304,8 @@
 	    		$("#informationalCount").html(vulnByType.Informational ? vulnByType.Informational :0);
 	    		$("#totalCount").html((vulnByType.Critical ? vulnByType.Critical :0)+(vulnByType.High ? vulnByType.High :0)+(vulnByType.Middle ? vulnByType.Middle :0)
 				+(vulnByType.Low ? vulnByType.Low :0)+(vulnByType.Informational ? vulnByType.Informational :0));
+				$("#chartVulnerabilitiesByLevel").empty();
+				$("#chartVulnerabilitiesByLevel").css("height", 400+"px");
 				  var plot1 = jQuery.jqplot ('chartVulnerabilitiesByLevel', [datachart],
 				    {
 			            seriesDefaults: {
@@ -311,7 +319,7 @@
 							diameter:150
 			              }
 			            },
-			            legend: { show:true, location: 'e' },
+			            legend: { show:true, location: 's' },
 			            seriesColors : ['#B40A9D','#b00700','#d7ac00', '#019127', '#0080FF'],
 			            grid: {drawBorder:false, shadow: false}
 			          }
@@ -319,7 +327,7 @@
 	    	}
 			
 			function initChartByType(){
-	    		   		
+	    		$("#chartVulnerabilitiesByType").empty();
 				var data = dataAccess.getDataChartByType();
 				$("#chartVulnerabilitiesByType").css("height", (320+(data.length*25))+"px");
 				  var plot1 = jQuery.jqplot ('chartVulnerabilitiesByType', [data],
@@ -342,7 +350,7 @@
 	    	}
 			
 			function initChartByTarget(){
-	    		   		
+	    		$("#chartVulnerabilitiesByTarget").empty();
 				var data = dataAccess.getDataChartByTarget();
 				$("#chartVulnerabilitiesByTarget").css("height", (320+(data.length*25))+"px");
 				  var plot1 = jQuery.jqplot ('chartVulnerabilitiesByTarget', [data],
