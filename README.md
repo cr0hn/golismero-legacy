@@ -22,6 +22,10 @@ The most interesting features of the framework are:
 Installing
 ==========
 
+Strictly speaking, GoLismero doesn't require installation - only its dependencies do. So if you want to use it on a system where you don't have root privileges, you can ask the system administrator to install them for you, and just run the "git checkout" command on your home folder.
+
+The following are step-by-step instructions to install GoLismero on different operating systems:
+
 Debian/Ubuntu
 -------------
 
@@ -39,7 +43,99 @@ ln -s /opt/golismero/golismero.py /usr/bin/golismero
 exit
 ```
 
-Strictly speaking, GoLismero doesn't require installation - only its dependencies do. So if you want to use it on a system where you don't have root privileges, you can ask the system administrator to install them for you, and just run the "git checkout" command on your home folder.
+If you have an API key for Shodan, or an OpenVAS server or SpiderFoot server you want to integrate with GoLismero, run the following commands:
+
+```
+mkdir ~/.golismero
+touch ~/.golismero/user.conf
+chmod 600 ~/.golismero/user.conf
+nano ~/.golismero/user.conf
+```
+
+At the editor, add the following sections to the file, as appropriate:
+
+```
+[shodan:Configuration]
+apikey = <INSERT YOUR SHODAN API KEY HERE>
+
+[openvas]
+host = <INSERT THE OPENVAS HOST HERE>
+user = <INSERT THE OPENVAS USERNAME HERE>
+*password = <INSERT THE OPENVAS PASSWORD HERE>
+
+[spiderfoot]
+url = <INSERT THE SPIDERFOOT URL HERE>
+```
+
+Mac OS X
+--------
+
+First of all, on Mac we'll need to install the [Mac Ports](http://www.macports.org/install.php).
+
+After doing that, run the following commands to download and install GoLismero on your system. This requires root privileges, so you will be prompted for your password when you run the first command.
+
+```
+sudo -s
+easy_install-2.7 -U distribute
+easy_install install pip
+port install nmap sslscan
+cd /opt
+git clone https://github.com/golismero/golismero.git
+cd golismero
+pip install -r requirements.txt
+pip install -r requirements_unix.txt
+ln -s /opt/golismero/golismero.py /usr/bin/golismero
+exit
+```
+
+If you have an API key for Shodan, or an OpenVAS server or SpiderFoot server you want to integrate with GoLismero, run the following commands:
+
+```
+mkdir ~/.golismero
+touch ~/.golismero/user.conf
+chmod 600 ~/.golismero/user.conf
+nano ~/.golismero/user.conf
+```
+
+At the editor, add the following sections to the file, as appropriate:
+
+```
+[shodan:Configuration]
+apikey = <INSERT YOUR SHODAN API KEY HERE>
+
+[openvas]
+host = <INSERT THE OPENVAS HOST HERE>
+user = <INSERT THE OPENVAS USERNAME HERE>
+*password = <INSERT THE OPENVAS PASSWORD HERE>
+
+[spiderfoot]
+url = <INSERT THE SPIDERFOOT URL HERE>
+```
+
+FreeBSD 10-Release
+------------------
+
+The following commands will download and install GoLismero on your system. This requires root privileges, so you will be prompted for your password when you run the first command.
+
+```
+su -
+cd /root
+pkg update
+pkg install git
+pkg install python27
+ln -s /usr/local/bin/python2.7 /usr/local/bin/python
+pkg install databases/py-sqlite3
+pkg install nmap
+pkg install sslscan
+pkg install devel/py-pip
+cd /opt
+git clone https://github.com/cr0hn/golismero.git
+cd golismero
+pip install -r requirements.txt
+pip install -r requirements_unix.txt
+ln -s /opt/golismero/golismero.py /usr/bin/golismero
+exit
+```
 
 If you have an API key for Shodan, or an OpenVAS server or SpiderFoot server you want to integrate with GoLismero, run the following commands:
 
