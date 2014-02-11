@@ -258,7 +258,7 @@ To display the list of available plugins:
 
 ```golismero plugins```
 
-![Plugin list example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/plugin_list_mac_2.png "Plugin list example")
+![Plugin list example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/plugin_list_mac.png "Plugin list example")
 
 You can also query more information about specific plugins:
 
@@ -290,13 +290,17 @@ If no output files are specified, GoLismero reports on the console by default. B
 
 ```golismero scan <target> -o - -o report.html```
 
-Here's what the HTML report summary looks like:
+Here's what the HTML report summary looks like on a PC:
 
-![Report summary](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report1.png "Report summary")
+![Report summary](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_chrome.png "Report summary")
 
 And the HTML report details:
 
-![Report details](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report2.png "Report details")
+![Report details](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_safari2.png "Report details")
+
+It's also compatible with mobile devices, like for example an iPad:
+
+![Report summary on iPad](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_ipad.png "Report summary on iPad")
 
 Putting it all together
 -----------------------
