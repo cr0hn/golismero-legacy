@@ -56,7 +56,11 @@ class ShodanPlugin(TestingPlugin):
     def check_params(self):
 
         # Make sure we have an API key.
-        if not Config.plugin_config.get("apikey", None):
+        key = Config.plugin_args.get("apikey", None)
+        if not key:
+            key = Config.plugin_config.get("apikey", None)
+
+        if not key or key == "":
             raise ValueError(
                 "Missing API key! Get one at:"
                 " http://www.shodanhq.com/api_doc")
@@ -82,10 +86,14 @@ class ShodanPlugin(TestingPlugin):
            parsed.is_private()  or \
            parsed.is_link_local():
             return
+        # First command line key
+        key = Config.plugin_args.get("apikey", None)
+        if not key:
+            key = Config.plugin_config["apikey"]
 
         # Query Shodan for this host.
         try:
-            api = WebAPI(Config.plugin_config["apikey"])
+            api = WebAPI(key)
             shodan = api.host(ip)
         except Exception, e:
             tb = traceback.format_exc()

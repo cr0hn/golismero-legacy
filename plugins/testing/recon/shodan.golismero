@@ -9,4 +9,7 @@ Copyright   = Copyright (C) 2011-2014 GoLismero Project
 License     = GNU Public License
 
 [Configuration]
-#apikey = Uncomment this line and insert your API key here.
+apikey =
+
+[Arguments]
+apikey   =
