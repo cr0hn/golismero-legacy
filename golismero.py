@@ -78,10 +78,9 @@ if __name__ == "__main__":
     ):
         show_banner()
         print (
-            "[!] In OS X you must use Python version greater than 2.7.6:"
+            "[!] OS X can experiment some problems with Python versions lower than 2.7.6. It's recommended to upgrade"
             " http://www.python.org/download/releases/2.7.6/"
         )
-        exit(1)
 
 
 #------------------------------------------------------------------------------
