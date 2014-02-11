@@ -22,6 +22,10 @@ The most interesting features of the framework are:
 Installing
 ==========
 
+Strictly speaking, GoLismero doesn't require installation - only its dependencies do. So if you want to use it on a system where you don't have root privileges, you can ask the system administrator to install them for you, and just run the "git checkout" command on your home folder.
+
+The following are step-by-step instructions to install GoLismero on different operating systems:
+
 Debian/Ubuntu
 -------------
 
@@ -39,7 +43,99 @@ ln -s /opt/golismero/golismero.py /usr/bin/golismero
 exit
 ```
 
-Strictly speaking, GoLismero doesn't require installation - only its dependencies do. So if you want to use it on a system where you don't have root privileges, you can ask the system administrator to install them for you, and just run the "git checkout" command on your home folder.
+If you have an API key for Shodan, or an OpenVAS server or SpiderFoot server you want to integrate with GoLismero, run the following commands:
+
+```
+mkdir ~/.golismero
+touch ~/.golismero/user.conf
+chmod 600 ~/.golismero/user.conf
+nano ~/.golismero/user.conf
+```
+
+At the editor, add the following sections to the file, as appropriate:
+
+```
+[shodan:Configuration]
+apikey = <INSERT YOUR SHODAN API KEY HERE>
+
+[openvas]
+host = <INSERT THE OPENVAS HOST HERE>
+user = <INSERT THE OPENVAS USERNAME HERE>
+*password = <INSERT THE OPENVAS PASSWORD HERE>
+
+[spiderfoot]
+url = <INSERT THE SPIDERFOOT URL HERE>
+```
+
+Mac OS X
+--------
+
+First of all, on Mac we'll need to install the [Mac Ports](http://www.macports.org/install.php).
+
+After doing that, run the following commands to download and install GoLismero on your system. This requires root privileges, so you will be prompted for your password when you run the first command.
+
+```
+sudo -s
+easy_install-2.7 -U distribute
+easy_install install pip
+port install nmap sslscan
+cd /opt
+git clone https://github.com/golismero/golismero.git
+cd golismero
+pip install -r requirements.txt
+pip install -r requirements_unix.txt
+ln -s /opt/golismero/golismero.py /usr/bin/golismero
+exit
+```
+
+If you have an API key for Shodan, or an OpenVAS server or SpiderFoot server you want to integrate with GoLismero, run the following commands:
+
+```
+mkdir ~/.golismero
+touch ~/.golismero/user.conf
+chmod 600 ~/.golismero/user.conf
+nano ~/.golismero/user.conf
+```
+
+At the editor, add the following sections to the file, as appropriate:
+
+```
+[shodan:Configuration]
+apikey = <INSERT YOUR SHODAN API KEY HERE>
+
+[openvas]
+host = <INSERT THE OPENVAS HOST HERE>
+user = <INSERT THE OPENVAS USERNAME HERE>
+*password = <INSERT THE OPENVAS PASSWORD HERE>
+
+[spiderfoot]
+url = <INSERT THE SPIDERFOOT URL HERE>
+```
+
+FreeBSD 10-Release
+------------------
+
+The following commands will download and install GoLismero on your system. This requires root privileges, so you will be prompted for your password when you run the first command.
+
+```
+su -
+cd /root
+pkg update
+pkg install git
+pkg install python27
+ln -s /usr/local/bin/python2.7 /usr/local/bin/python
+pkg install databases/py-sqlite3
+pkg install nmap
+pkg install sslscan
+pkg install devel/py-pip
+cd /opt
+git clone https://github.com/cr0hn/golismero.git
+cd golismero
+pip install -r requirements.txt
+pip install -r requirements_unix.txt
+ln -s /opt/golismero/golismero.py /usr/bin/golismero
+exit
+```
 
 If you have an API key for Shodan, or an OpenVAS server or SpiderFoot server you want to integrate with GoLismero, run the following commands:
 
@@ -133,7 +229,7 @@ And you can produce reports in different file formats. The format is guessed fro
 
 Additionally, you can import results from other tools with the -i option. You can use -i several times to import multiple files.
 
-```golismero import -i nikto_output.csv -i nmap_output.xml -db database.db```
+```golismero import nikto_output.csv nmap_output.xml -db database.db```
 
 All results are automatically stored in a database file. You can prevent this with the -nd option:
 
@@ -147,11 +243,11 @@ This allows you to scan the target in one step, and generating the report later.
 
 And then generate the report from the database at a later time (or from a different machine!):
 
-```golismero report -db database.db -o report.html```
+```golismero report report.html -db database.db```
 
-You can also specify multiple output files by repeating the -o option:
+You can also specify multiple output files:
 
-```golismero report -db database.db -o report.html -o report.rst -o report.txt```
+```golismero report report.html report.txt report.rst -db example.db```
 
 ![Report example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_win.png "Report example")
 
@@ -177,11 +273,11 @@ Select a specific plugin
 
 Use the -e option to enable only some specific plugins, and -d to disable plugins (you can use -e and -d many times):
 
-```golismero <target> -e <plugin>```
+```golismero scan <target> -e <plugin>```
 
 You can also select multiple plugins using wildcards. For example, you can select all bruteforce plugins like this:
 
-```golismero <target> -e brute*```
+```golismero scan <target> -e brute*```
 
 ![Run plugin example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/run_plugin_mac_2.png "Run plugin example")
 
@@ -209,15 +305,14 @@ In this example we'll put everything we've seen above into practice in a single 
 
 ```golismero -i nmap_output.xml -e dns* -db database.db -o report.rst -o report.html```
 
-Notice how the default "scan" command was ommitted but GoLismero figured it out on its own.
+Notice how the default "scan" command was omitted but GoLismero figured it out on its own.
 
 This is how you'd do it if you want to break it into multiple commands instead:
 
 ```
-golismero scan 127.0.0.1/24 -e dns* -no
-golismero import -db database.db -i nmap_output.xml
+golismero import -db database.db nmap_output.xml
 golismero scan -db database.db -e dns* -no
-golismero report -db database.db -o report.rst -o report.html
+golismero report -db database.db report.rst report.html
 ```
 
 Notice how the second command uses the "-no" switch to prevent the default console report from kicking in.
