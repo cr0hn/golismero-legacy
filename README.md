@@ -290,13 +290,19 @@ If no output files are specified, GoLismero reports on the console by default. B
 
 ```golismero scan <target> -o - -o report.html```
 
-Here's what the HTML report summary looks like:
+Here's what the HTML report summary looks like on a PC:
 
-![Report summary](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report1.png "Report summary")
+![Report summary](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_chrome.png "Report summary")
 
 And the HTML report details:
 
-![Report details](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report2.png "Report details")
+![Report details](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_safari2.png "Report details")
+
+It's also compatible with mobile devices, like iPads or Android phones:
+
+![Report summary on iPad](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_ipad.png "Report summary on iPad")
+
+![Report summary on Android](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_android.png "Report summary on Android")
 
 Putting it all together
 -----------------------
