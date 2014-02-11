@@ -229,7 +229,7 @@ And you can produce reports in different file formats. The format is guessed fro
 
 Additionally, you can import results from other tools with the -i option. You can use -i several times to import multiple files.
 
-```golismero import -i nikto_output.csv -i nmap_output.xml -db database.db```
+```golismero import nikto_output.csv nmap_output.xml -db database.db```
 
 All results are automatically stored in a database file. You can prevent this with the -nd option:
 
@@ -243,11 +243,11 @@ This allows you to scan the target in one step, and generating the report later.
 
 And then generate the report from the database at a later time (or from a different machine!):
 
-```golismero report -db database.db -o report.html```
+```golismero report report.html -db database.db```
 
-You can also specify multiple output files by repeating the -o option:
+You can also specify multiple output files:
 
-```golismero report -db database.db -o report.html -o report.rst -o report.txt```
+```golismero report report.html report.txt report.rst -db example.db```
 
 ![Report example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_win.png "Report example")
 
@@ -273,11 +273,11 @@ Select a specific plugin
 
 Use the -e option to enable only some specific plugins, and -d to disable plugins (you can use -e and -d many times):
 
-```golismero <target> -e <plugin>```
+```golismero scan <target> -e <plugin>```
 
 You can also select multiple plugins using wildcards. For example, you can select all bruteforce plugins like this:
 
-```golismero <target> -e brute*```
+```golismero scan <target> -e brute*```
 
 ![Run plugin example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/run_plugin_mac_2.png "Run plugin example")
 
@@ -305,15 +305,14 @@ In this example we'll put everything we've seen above into practice in a single 
 
 ```golismero -i nmap_output.xml -e dns* -db database.db -o report.rst -o report.html```
 
-Notice how the default "scan" command was ommitted but GoLismero figured it out on its own.
+Notice how the default "scan" command was omitted but GoLismero figured it out on its own.
 
 This is how you'd do it if you want to break it into multiple commands instead:
 
 ```
-golismero scan 127.0.0.1/24 -e dns* -no
-golismero import -db database.db -i nmap_output.xml
+golismero import -db database.db nmap_output.xml
 golismero scan -db database.db -e dns* -no
-golismero report -db database.db -o report.rst -o report.html
+golismero report -db database.db report.rst report.html
 ```
 
 Notice how the second command uses the "-no" switch to prevent the default console report from kicking in.
