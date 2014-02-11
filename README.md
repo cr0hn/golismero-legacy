@@ -258,7 +258,7 @@ To display the list of available plugins:
 
 ```golismero plugins```
 
-![Plugin list example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/plugin_list_mac_2.png "Plugin list example")
+![Plugin list example](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/plugin_list_mac.png "Plugin list example")
 
 You can also query more information about specific plugins:
 
@@ -298,11 +298,9 @@ And the HTML report details:
 
 ![Report details](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_safari2.png "Report details")
 
-It's also compatible with mobile devices, like iPads or Android phones:
+It's also compatible with mobile devices, like for example an iPad:
 
 ![Report summary on iPad](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_ipad.png "Report summary on iPad")
-
-![Report summary on Android](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_android.png "Report summary on Android")
 
 Putting it all together
 -----------------------
