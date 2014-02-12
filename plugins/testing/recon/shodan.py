@@ -56,15 +56,24 @@ class ShodanPlugin(TestingPlugin):
     def check_params(self):
 
         # Make sure we have an API key.
-        if not Config.plugin_config.get("apikey", None):
-            raise ValueError(
-                "Missing API key! Get one at:"
-                " http://www.shodanhq.com/api_doc")
+        self.get_api_key()
 
 
     #--------------------------------------------------------------------------
     def get_accepted_info(self):
         return [IP]
+
+
+    #--------------------------------------------------------------------------
+    def get_api_key(self):
+        key = Config.plugin_args.get("apikey", None)
+        if not key:
+            key = Config.plugin_config.get("apikey", None)
+        if not key:
+            raise ValueError(
+                "Missing API key! Get one at:"
+                " http://www.shodanhq.com/api_doc")
+        return key
 
 
     #--------------------------------------------------------------------------
@@ -85,7 +94,8 @@ class ShodanPlugin(TestingPlugin):
 
         # Query Shodan for this host.
         try:
-            api = WebAPI(Config.plugin_config["apikey"])
+            key = self.get_api_key()
+            api = WebAPI(key)
             shodan = api.host(ip)
         except Exception, e:
             tb = traceback.format_exc()

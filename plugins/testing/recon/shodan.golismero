@@ -8,5 +8,9 @@ Website     = https://github.com/golismero
 Copyright   = Copyright (C) 2011-2014 GoLismero Project
 License     = GNU Public License
 
-[Configuration]
-#apikey = Uncomment this line and insert your API key here.
+[Arguments]
+
+# This plugin can take the API key from configuration (either golismero.conf
+# or user.conf), or from command line. If specified over the command line,
+# it overrides the one in the configuration files.
+apikey =
