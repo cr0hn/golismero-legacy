@@ -128,6 +128,7 @@ pkg install databases/py-sqlite3
 pkg install nmap
 pkg install sslscan
 pkg install devel/py-pip
+mkdir /opt 2> /dev/null
 cd /opt
 git clone https://github.com/cr0hn/golismero.git
 cd golismero
