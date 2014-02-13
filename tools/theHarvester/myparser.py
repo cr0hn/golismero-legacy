@@ -31,8 +31,8 @@ class parser:
 
     def emails(self):
         self.genericClean()
-        reg_emails = re.compile('[a-zA-Z0-9.-_]*' + '@' + '[a-zA-Z0-9.-]*' + self.word)
-        self.temp = reg_emails.findall(self.results)
+        reg_emails = re.compile('[a-zA-Z0-9.-_]*' + '@' + '[a-zA-Z0-9.-]*' + self.word, re.I)
+        self.temp = reg_emails.findall(self.results.lower())
         emails=self.unique()
         return emails
 
