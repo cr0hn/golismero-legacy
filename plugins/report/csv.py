@@ -28,12 +28,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 __all__ = ["CSVReport"]
 
+from golismero.api import VERSION
+from golismero.api.audit import get_audit_times, parse_audit_times
 from golismero.api.config import Config
 from golismero.api.data import Data
 from golismero.api.data.db import Database
 from golismero.api.logger import Logger
 from golismero.api.plugin import ReportPlugin
 from golismero.api.text.text_utils import to_utf8
+
+from datetime import datetime
 
 import csv
 
@@ -59,9 +63,49 @@ class CSVReport(ReportPlugin):
         Logger.log_verbose(
             "Writing CSV report to file: %s" % output_file)
 
+        # All rows have the same format but the first.
+        # There's always 26 columns in every row.
+        # Most columns are for Vulnerability objects, empty for other types.
+        # Read the source code for more details, it's really simple. :)
+
         # Open the output file.
         with open(output_file, "w") as f:
             writer = csv.writer(f)
+
+            # Write the first row, describing the report itself.
+            report_time = datetime.utcnow()
+            start_time, stop_time, run_time = parse_audit_times(
+                                                        *get_audit_times())
+            row = [
+                "GoLismero " + VERSION,
+                1,  # format version
+                Config.audit_name,
+                start_time,
+                stop_time,
+                run_time,
+                report_time,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                pickle.dumps(Config.audit_config, protocol=0).encode("hex"),
+                pickle.dumps(Config.audit_scope, protocol=0).encode("hex"),
+            ]
+            row = [to_utf8(x) if x is not None else "" for x in row]
+            writer.writerow(row)
 
             # Used to convert the false_positive flag to a string value.
             fp = {
@@ -73,7 +117,7 @@ class CSVReport(ReportPlugin):
             # Just the vulnerabilities?
             if Config.audit_config.only_vulns:
 
-                # Dump only Vulnerability objects.
+                # Dump only Vulnerability objects that are not false positives.
                 for vuln in self.__iterate_data(
                         data_type=Data.TYPE_VULNERABILITY):
                     if vuln.false_positive:
@@ -83,6 +127,7 @@ class CSVReport(ReportPlugin):
                         vuln.identity,
                         vuln.data_type,
                         vuln.data_subtype,
+                        None,
                         vuln.display_name,
                         vuln.plugin_id,
                         vuln.tool_id,
@@ -94,6 +139,7 @@ class CSVReport(ReportPlugin):
                         vuln.cvss_base,
                         vuln.cvss_score,
                         vuln.cvss_vector,
+                        fp[vuln.false_positive],
                         target.identity,
                         target.display_name,
                         vuln.title,
