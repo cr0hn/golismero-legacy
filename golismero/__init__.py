@@ -49,7 +49,7 @@ __copyright__  = "Copyright 2011-2013 - GoLismero Project"
 __credits__    = ["Daniel Garcia Garcia a.k.a cr0hn (@ggdaniel)",
                   "Mario Vilas (@Mario_Vilas)"]
 __email__      = "golismero.project<@>gmail.com"
-__version__    = "2.0.0b3"
+__version__    = "2.0.0b4"
 
 
 #------------------------------------------------------------------------------
