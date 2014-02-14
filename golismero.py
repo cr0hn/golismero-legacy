@@ -95,6 +95,7 @@ from getpass import getpass
 from glob import glob
 from os import getenv, getpid
 from thread import get_ident
+from traceback import format_exc
 
 
 #------------------------------------------------------------------------------
@@ -878,11 +879,20 @@ def command_update(parser, P, cmdParams, auditParams):
         t.orchestrator_config.color   = cmdParams.color
         t.init_environment(mock_audit=False)
 
+        # Flag to tell if we fetched new code.
+        did_update = False
+
         # Run Git here to download the latest version.
         if cmdParams.verbose:
             Logger.log("Updating GoLismero...")
-        run_external_tool("git", ["pull"], cwd = here,
-            callback = Logger.log if cmdParams.verbose else lambda x: x)
+        if os.path.exists(os.path.join(here, ".git")):
+            helper = _GitHelper(cmdParams.verbose)
+            run_external_tool("git", ["pull"], cwd = here, callback = helper)
+            did_update = helper.did_update
+        elif cmdParams.verbose:
+            Logger.log_error(
+                "Cannot update GoLismero if installed from a zip file! You"
+                " must install it from the Git repository to get updates.")
 
         # Update the TLD names.
         if cmdParams.verbose:
@@ -890,10 +900,75 @@ def command_update(parser, P, cmdParams, auditParams):
         import tldextract
         tldextract.TLDExtract().update(True)
 
+        # If no code was updated, just quit here.
+        if not did_update:
+            if cmdParams.verbose:
+                Logger.log("Update complete.")
+            exit(0)
+
+        # Tell the user we're about to restart.
+        if cmdParams.verbose:
+            Logger.log("Reloading GoLismero...")
+
+    # Unload GoLismero.
+    import golismero.patches.mp
+    golismero.patches.mp.undo()
+    x = here
+    if not x.endswith(os.path.sep):
+        x += os.path.sep
+    our_modules = {
+        n: m for n, m in sys.modules.iteritems()
+        if n.startswith("golismero.") or (
+            hasattr(m, "__file__") and m.__file__.startswith(x)
+        )
+    }
+    for n in our_modules.iterkeys():
+        if n.startswith("golismero.") or n.startswith("plugin_"):
+            del sys.modules[n]
+
+    # Restart GoLismero.
+    # Note that after this point we need to explicitly import the classes we
+    # use, and make sure they're the newer versions of them. That means:
+    # ALWAYS USE FULLY QUALIFIED NAMES FROM HERE ON.
+    import golismero.api.logger
+    import golismero.main.testing
+    with golismero.main.testing.PluginTester(autoinit=False) as t:
+        t.orchestrator_config.ui_mode = "console"
+        t.orchestrator_config.verbose = cmdParams.verbose
+        t.orchestrator_config.color   = cmdParams.color
+        t.init_environment(mock_audit=False)
+
+        # Call the plugin hooks.
+        all_plugins = sorted(
+            t.orchestrator.pluginManager.load_plugins().iteritems())
+        for plugin_id, plugin in all_plugins:
+            if hasattr(plugin, "update"):
+                if cmdParams.verbose:
+                    golismero.api.logger.Logger.log(
+                        "Updating plugin %r..." % plugin_id)
+                try:
+                    t.run_plugin_method(plugin_id, "update")
+                except Exception:
+                    golismero.api.logger.Logger.log_error(format_exc())
+
         # Done!
         if cmdParams.verbose:
-            Logger.log("Update complete.")
+            golismero.api.logger.Logger.log("Update complete.")
         exit(0)
+
+# Crappy way of telling if we actually did fetch new code.
+class _GitHelper(object):
+    def __init__(self, verbose):
+        self.log = []
+        self.verbose = verbose
+    def __call__(self, msg):
+        self.log.append(msg)
+        if self.verbose:
+            Logger.log(msg)
+    @property
+    def did_update(self):
+        ##return True   # for testing
+        return all("Already up-to-date." not in x for x in self.log)
 
 
 #------------------------------------------------------------------------------

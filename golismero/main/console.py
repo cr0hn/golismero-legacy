@@ -483,8 +483,11 @@ class Console (object):
         This method is called automatically by an exit hook to restore the
         console colors before quitting.
         """
-        if cls.use_colors:
-            sys.stdout.write( colored("") )
+        try:
+            if cls.use_colors:
+                sys.stdout.write( colored("") )
+        except:
+            pass
 
 
 #------------------------------------------------------------------------------
