@@ -64,6 +64,7 @@ class GeoIP(TestingPlugin):
     # https://github.com/ioerror/blockfinder
     # http://geoip2.readthedocs.org/en/latest/
     # http://www.geonames.org/export/
+    # https://github.com/danielmiessler/geoip/blob/master/geoip.rb
 
 
     #--------------------------------------------------------------------------
