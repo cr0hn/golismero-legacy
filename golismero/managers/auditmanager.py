@@ -395,8 +395,10 @@ class Audit (object):
         self.__report_manager = None
 
         # Create or open the database.
-        self.__is_new = not audit_config.audit_name or audit_config.audit_db == ":auto:"
+        self.__is_new = not audit_config.audit_name or \
+                        audit_config.audit_db == ":auto:"
         self.__database = AuditDB(audit_config)
+        self.__database.append_log_line("Audit started.", Logger.MORE_VERBOSE)
 
         # Set the audit name.
         self.__name = self.__database.audit_name
@@ -1221,9 +1223,13 @@ class Audit (object):
                         try:
                             if self.database is not None:
                                 try:
-                                    self.database.compact()
+                                    self.database.append_log_line(
+                                        "Audit started.", Logger.MORE_VERBOSE)
                                 finally:
-                                    self.database.close()
+                                    try:
+                                        self.database.compact()
+                                    finally:
+                                        self.database.close()
                         finally:
                             if self.__notifier is not None:
                                 self.__notifier.close()

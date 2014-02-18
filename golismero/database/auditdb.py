@@ -319,7 +319,10 @@ class BaseAuditDB (BaseDB):
 
 
     #--------------------------------------------------------------------------
-    def append_log_line(self, text, level, is_error, plugin_id, ack_id,
+    def append_log_line(self, text, level,
+                         is_error = False,
+                        plugin_id = None,
+                           ack_id = None,
                         timestamp = None):
         """
         Append a log line.
@@ -1983,7 +1986,10 @@ class AuditSQLiteDB (BaseAuditDB):
 
     #--------------------------------------------------------------------------
     @transactional
-    def append_log_line(self, text, level, is_error, plugin_id, ack_id,
+    def append_log_line(self, text, level,
+                         is_error = False,
+                        plugin_id = None,
+                           ack_id = None,
                         timestamp = None):
 
         # Sanitize the parameters.
