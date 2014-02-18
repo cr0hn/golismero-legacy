@@ -84,7 +84,7 @@ class TemplatePlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def get_accepted_info(self):
+    def get_accepted_types(self):
         #
         # Here you must specify which data types
         # does your plugin want to receive.

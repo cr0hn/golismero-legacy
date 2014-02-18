@@ -126,8 +126,8 @@ class AbstractNotifier (object):
             self._notification_msg_list.append(plugin)
 
         # Get the data types accepted by this plugin.
-        if hasattr(plugin, "get_accepted_info"):
-            accepted_info = plugin.get_accepted_info()
+        if hasattr(plugin, "get_accepted_types"):
+            accepted_info = plugin.get_accepted_types()
         else:
             accepted_info = []
 
@@ -240,7 +240,7 @@ class AbstractNotifier (object):
         count = 0
         for plugin_id in m_plugins_to_notify:
             plugin = self._map_id_to_plugin[plugin_id]
-            self.dispatch_info(plugin, audit_name, data)
+            self.dispatch_data(plugin, audit_name, data)
             count += 1
 
         # Return the count of successfully dispatched entities.
@@ -296,9 +296,9 @@ class AbstractNotifier (object):
 
 
     #--------------------------------------------------------------------------
-    def dispatch_info(self, plugin, audit_name, message_info):
+    def dispatch_data(self, plugin, audit_name, message_info):
         """
-        Send information to the plugins.
+        Send data to the plugins.
 
         :param plugin: Target plugin.
         :type plugin: Plugin
@@ -668,7 +668,7 @@ class AuditNotifier(AbstractNotifier):
 
 
     #--------------------------------------------------------------------------
-    def dispatch_info(self, plugin, audit_name, message_info):
+    def dispatch_data(self, plugin, audit_name, message_info):
         """
         Send information to the plugins.
 
@@ -757,7 +757,7 @@ class OrchestratorNotifier(AbstractNotifier):
 
 
     #--------------------------------------------------------------------------
-    def dispatch_info(self, plugin, audit_name, message_info):
+    def dispatch_data(self, plugin, audit_name, message_info):
         """
         Send information to the plugins.
 

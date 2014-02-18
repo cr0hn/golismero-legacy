@@ -327,7 +327,7 @@ class PluginTester(object):
 
                 # Make sure the plugin can actually process this type of data.
                 # Raise an exception if it doesn't.
-                accepted_info = plugin.get_accepted_info()
+                accepted_info = plugin.get_accepted_types()
                 if isclass(accepted_info):
                     found = data.is_instance(accepted_info)
                 else:

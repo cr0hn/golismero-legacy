@@ -39,7 +39,7 @@ class DNSPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def get_accepted_info(self):
+    def get_accepted_types(self):
         return [Domain]
 
 

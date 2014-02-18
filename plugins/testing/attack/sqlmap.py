@@ -56,7 +56,7 @@ class SQLMapTestingPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def get_accepted_info(self):
+    def get_accepted_types(self):
         return [URL]
 
 

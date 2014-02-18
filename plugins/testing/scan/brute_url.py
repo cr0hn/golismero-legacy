@@ -73,7 +73,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def get_accepted_info(self):
+    def get_accepted_types(self):
         return [FolderURL]
 
 
@@ -180,7 +180,7 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def get_accepted_info(self):
+    def get_accepted_types(self):
         return [URL]
 
 
@@ -238,7 +238,7 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def get_accepted_info(self):
+    def get_accepted_types(self):
         return [URL]
 
 
@@ -296,7 +296,7 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def get_accepted_info(self):
+    def get_accepted_types(self):
         return [URL]
 
 
@@ -354,7 +354,7 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def get_accepted_info(self):
+    def get_accepted_types(self):
         return [URL]
 
 
@@ -411,7 +411,7 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def get_accepted_info(self):
+    def get_accepted_types(self):
         return [URL]
 
 

@@ -734,7 +734,7 @@ class Data(Entity):
     #--------------------------------------------------------------------------
     # Data types
 
-    TYPE_UNKNOWN = 0      # not a real type! only used in get_accepted_info()
+    TYPE_UNKNOWN = 0      # not a real type! only used in get_accepted_types()
 
     TYPE_INFORMATION   = 1
     TYPE_VULNERABILITY = 2
@@ -1757,7 +1757,7 @@ class Relationship(object):
     This metaclass is used by plugins that want to receive the vertices of the
     graph rather than the nodes (Data objects). For example:
 
-        def get_accepted_info(self):
+        def get_accepted_types(self):
             return Relationship(Vulnerability, URL)
 
     The above would cause a plugin to receive all vulnerabilities associated to

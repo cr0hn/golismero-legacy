@@ -400,7 +400,7 @@ class _InformationPlugin (Plugin):
 
 
     #--------------------------------------------------------------------------
-    def get_accepted_info(self):
+    def get_accepted_types(self):
         """
         Returns one or more classes describing which data types are accepted by
         the run() method.
@@ -413,26 +413,26 @@ class _InformationPlugin (Plugin):
         vertices in the graph).
 
         If there is no return value, or the return value is None, the plugin
-        receives every possible event. If the return value is an empty iterable,
+        receives every possible event. If the return value is an empty iterable
         the plugin receives no events.
 
         Example:
 
             # A plugin that is run every time a new URL object is created.
-            def get_accepted_info(self):
+            def get_accepted_types(self):
                 return URL
 
             # Run the plugin when new URL or Domain objects are created.
-            def get_accepted_info(self):
+            def get_accepted_types(self):
                 return URL, Domain
 
             # Run when a vulnerability is associated to a domain.
-            def get_accepted_info(self):
+            def get_accepted_types(self):
                 return Relationship(Vulnerability, Domain)
 
             # Run when a vulnerability is associated to an URL,
             # a base URL, or a folder URL.
-            def get_accepted_info(self):
+            def get_accepted_types(self):
                 return Relationship(Vulnerability, URL), \
                        Relationship(Vulnerability, BaseURL), \
                        Relationship(Vulnerability, FolderURL)
@@ -460,7 +460,8 @@ class _InformationPlugin (Plugin):
 #------------------------------------------------------------------------------
 class UIPlugin (_InformationPlugin):
     """
-    User Interface plugins control the way in which the user interacts with GoLismero.
+    User Interface plugins control the way in which
+    the user interacts with GoLismero.
 
     This is the base class for all UI plugins.
     """
@@ -494,7 +495,7 @@ class UIPlugin (_InformationPlugin):
 
 
     #--------------------------------------------------------------------------
-    def get_accepted_info(self):
+    def get_accepted_types(self):
         return []                  # UI plugins get no data objects by default.
 
 

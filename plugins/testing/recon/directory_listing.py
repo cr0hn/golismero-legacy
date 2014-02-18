@@ -57,7 +57,7 @@ class DirectoryListingPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def get_accepted_info(self):
+    def get_accepted_types(self):
         return [HTTP_Response]
 
 
