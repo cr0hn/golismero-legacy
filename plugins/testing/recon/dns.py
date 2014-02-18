@@ -44,7 +44,7 @@ class DNSPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # Skip localhost.
         if info.root == "localhost":

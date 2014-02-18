@@ -78,7 +78,7 @@ class HarvesterPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # Get the search parameters.
         word  = info.hostname

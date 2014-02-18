@@ -108,7 +108,7 @@ class SpiderFootPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # Get the base URL to the SpiderFoot API.
         base_url = Config.plugin_args["url"]

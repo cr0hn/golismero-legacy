@@ -188,7 +188,7 @@ class AbstractNotifier (object):
 
         try:
 
-            # Data request messages are sent to the recv_info() plugin method.
+            # Data request messages are sent to the run() plugin method.
             if (
                 message.message_type == MessageType.MSG_TYPE_DATA and
                 message.message_code == MessageCode.MSG_DATA_REQUEST
@@ -600,7 +600,7 @@ class AuditNotifier(AbstractNotifier):
         orchestrator = audit.orchestrator
 
         # If it's a data message...
-        if method == "recv_info":
+        if method == "run":
 
             # Get the payload identity hash.
             ack_identity = payload.identity
@@ -687,7 +687,7 @@ class AuditNotifier(AbstractNotifier):
             raise ValueError("Wrong audit! %r != %r" % (audit_name, self.__audit.name))
 
         # Run the plugin.
-        self.__run_plugin(plugin, "recv_info", message_info)
+        self.__run_plugin(plugin, "run", message_info)
 
 
     #--------------------------------------------------------------------------
@@ -770,7 +770,7 @@ class OrchestratorNotifier(AbstractNotifier):
         :param message_info: Data to send to plugins.
         :type message_info: Data
         """
-        self.__run_plugin(plugin, audit_name, "recv_info", message_info)
+        self.__run_plugin(plugin, audit_name, "run", message_info)
 
 
     #--------------------------------------------------------------------------
@@ -839,7 +839,7 @@ class OrchestratorNotifier(AbstractNotifier):
         # Prepare the plugin execution context.
         context = self.orchestrator.build_plugin_context(
             audit_name, plugin,
-            payload.identity if method == "recv_info" else None
+            payload.identity if method == "run" else None
         )
 
         # Run the callback directly in our process.

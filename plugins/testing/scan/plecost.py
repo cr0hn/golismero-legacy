@@ -102,7 +102,7 @@ class PlecostPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         if not isinstance(info, FolderURL):
             return

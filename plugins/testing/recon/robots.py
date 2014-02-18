@@ -75,7 +75,7 @@ class Robots(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
         m_return = []
 
         m_url = info.url

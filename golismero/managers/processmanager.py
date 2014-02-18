@@ -264,7 +264,7 @@ def _bootstrap_inner(context, func, args, kwargs):
     global _do_notify_end
 
     # If the plugin receives a Data object...
-    if func == "recv_info":
+    if func == "run":
 
         # Get the data sent to the plugin.
         try:
@@ -309,7 +309,7 @@ def _bootstrap_inner(context, func, args, kwargs):
 
     # Initialize the local data cache for this run.
     LocalDataCache.on_run()
-    if func == "recv_info":
+    if func == "run":
         LocalDataCache.on_create(input_data)
 
     # Try to get the plugin from the cache.
@@ -347,8 +347,8 @@ def _bootstrap_inner(context, func, args, kwargs):
         result = getattr(instance, func)(*args, **kwargs)
     finally:
 
-        # Return value is a list of data for recv_info().
-        if func == "recv_info":
+        # Return value is a list of data for run().
+        if func == "run":
 
             # Validate and sanitize the result data.
             result = LocalDataCache.on_finish(result, input_data)

@@ -134,7 +134,7 @@ class OpenVASPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # Checks if connection was not set as down
         if not self.state.check("connection_down"):

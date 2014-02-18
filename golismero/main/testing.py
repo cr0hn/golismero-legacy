@@ -344,7 +344,7 @@ class PluginTester(object):
                 Config._context._PluginContext__ack_identity = data.identity
 
                 # Call the plugin.
-                result = plugin.recv_info(data)
+                result = plugin.run(data)
 
                 # Reset the ACK identity.
                 Config._context._PluginContext__ack_identity = None

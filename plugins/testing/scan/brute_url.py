@@ -78,7 +78,7 @@ class PredictablesDisclosureBruteforcer(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         m_url = info.url
 
@@ -185,7 +185,7 @@ class SuffixesDisclosureBruteforcer(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # Parse original URL
         m_url = info.url
@@ -243,7 +243,7 @@ class PrefixesDisclosureBruteforcer(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # Parse original URL
         m_url = info.url
@@ -301,7 +301,7 @@ class FileExtensionsDisclosureBruteforcer(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # Parse original URL
         m_url = info.url
@@ -359,7 +359,7 @@ class PermutationsDisclosureBruteforcer(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # Parse original URL
         m_url = info.url
@@ -416,7 +416,7 @@ class DirectoriesDisclosureBruteforcer(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # Parse original URL
         m_url = info.url

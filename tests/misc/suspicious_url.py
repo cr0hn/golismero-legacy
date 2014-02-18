@@ -57,7 +57,7 @@ class SuspiciousURLPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         if info.is_instance(URL):
             return self.analyze_url(info)

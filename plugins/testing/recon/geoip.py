@@ -73,7 +73,7 @@ class GeoIP(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # This is where we'll collect the data we'll return.
         results = []
@@ -102,7 +102,7 @@ class GeoIP(TestingPlugin):
             results.extend( addr_to_ip.itervalues() )
             coords_to_geoip = {}
             for res in addr_to_ip.itervalues():
-                r = self.recv_info(res)
+                r = self.run(res)
                 if r:
                     for x in r:
                         if not x.is_instance(Geolocation):

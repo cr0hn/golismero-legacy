@@ -97,7 +97,7 @@ class TemplatePlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
         #
         #
         # PUT YOUR CODE HERE

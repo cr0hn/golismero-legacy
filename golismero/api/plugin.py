@@ -403,7 +403,7 @@ class _InformationPlugin (Plugin):
     def get_accepted_info(self):
         """
         Returns one or more classes describing which data types are accepted by
-        the recv_info() method.
+        the run() method.
 
         By returning Data subclasses, your plugin indicates it wants to be
         notified of the creation of new objects (that is, the addition of new
@@ -444,7 +444,7 @@ class _InformationPlugin (Plugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
         """
         Callback method to receive data to be processed.
 

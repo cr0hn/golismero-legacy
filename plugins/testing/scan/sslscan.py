@@ -189,7 +189,7 @@ class SSLScanPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # If it's an URL...
         if info.is_instance(BaseURL):

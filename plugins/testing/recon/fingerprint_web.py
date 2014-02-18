@@ -208,7 +208,7 @@ class ServerFingerprinting(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
         """
         Main function for server fingerprint. Get an URL and return the fingerprint results.
 

@@ -55,7 +55,7 @@ class Spider(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         m_return = []
 

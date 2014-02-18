@@ -92,7 +92,7 @@ class NmapScanPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # Build the command line arguments for Nmap.
         args = shlex.split( Config.plugin_args["args"] )

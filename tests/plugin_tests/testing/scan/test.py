@@ -42,7 +42,7 @@ class TestPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
         if not isinstance(info, FolderURL):
             raise TypeError("Expected FolderURL, got %r instead" % type(info))
 

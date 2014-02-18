@@ -61,7 +61,7 @@ class SQLMapTestingPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         if not info.has_url_params and not info.has_post_params:
             return

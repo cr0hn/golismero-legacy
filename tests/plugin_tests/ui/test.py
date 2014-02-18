@@ -47,7 +47,7 @@ class TestUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
         if not isinstance(info, Data):
             raise TypeError("Expected Data, got %r instead" % type(info))
         print "-" * 79

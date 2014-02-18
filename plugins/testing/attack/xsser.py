@@ -67,7 +67,7 @@ class XSSerPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         if not isinstance(info, URL):
             return

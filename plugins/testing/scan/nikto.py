@@ -63,7 +63,7 @@ class NiktoPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # Get the path to the Nikto scanner and the configuration file.
         nikto_script, config = self.get_nikto()

@@ -52,7 +52,7 @@ class DisabledUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
         pass
 
 

@@ -47,7 +47,7 @@ class DNSZoneTransferPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # Get the root domain only.
         root = info.root

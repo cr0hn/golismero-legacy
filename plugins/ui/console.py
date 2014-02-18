@@ -83,7 +83,7 @@ class ConsoleUIPlugin(UIPlugin):
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
         # Don't print anything if console output is disabled.
         if Console.level < Console.STANDARD:
