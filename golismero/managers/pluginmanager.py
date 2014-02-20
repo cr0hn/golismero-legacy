@@ -1688,7 +1688,7 @@ class SwitchToPlugin(object):
         >>> with SwitchToPlugin("testing/recon/spider"):
         ...     print get_plugin_name()
         ...
-        Spider
+        Web Spider
         >>> print get_plugin_name()
         GoLismero
     """
