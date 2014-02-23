@@ -714,7 +714,7 @@ class OrchestratorConfig (Configuration):
         "ui_mode": (str, "console"),
 
         # Verbosity level.
-        "verbose": (Configuration.integer, 3),
+        "verbose": (Configuration.integer, 2),
 
         # Colorize console?
         "color": (Configuration.boolean, False),

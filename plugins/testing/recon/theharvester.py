@@ -52,6 +52,7 @@ cwd = os.path.abspath(get_tools_folder())
 cwd = os.path.join(cwd, "theHarvester")
 sys.path.insert(0, cwd)
 try:
+
     import discovery
     from discovery import * #noqa
 finally:
@@ -62,13 +63,14 @@ del cwd
 #------------------------------------------------------------------------------
 class HarvesterPlugin(TestingPlugin):
     """
-    Integration with `theHarvester <https://code.google.com/p/theharvester/>`_.
+    Integration with
+    `theHarvester <https://github.com/MarioVilas/theHarvester/>`_.
     """
 
 
     # Supported theHarvester modules.
     SUPPORTED = (
-        "google", "bing", "pgp", #"exalead", # "yandex",
+        "google", "bing", "pgp", "linkedin", "dogpile",
     )
 
 
@@ -229,38 +231,38 @@ class HarvesterPlugin(TestingPlugin):
         Logger.log_more_verbose("Searching on: %s" % engine)
 
         # Get the search class.
-        if engine == "pgp":
-            def search_fn(word, limit, start):
-                return discovery.pgpsearch.search_pgp(word)
-        else:
-            search_mod = getattr(discovery,  "%ssearch"  % engine)
-            search_fn  = getattr(search_mod, "search_%s" % engine)
+        search_mod = getattr(discovery,  "%ssearch"  % engine)
+        search_fn  = getattr(search_mod, "search_%s" % engine)
 
         # Run the search, hiding all the prints.
         fd = StringIO.StringIO()
         old_out, old_err = sys.stdout, sys.stderr
         try:
             sys.stdout, sys.stderr = fd, fd
-            search = search_fn(word, limit, 0)
-            if engine == "bing":
-                search.process("no")
-            else:
-                search.process()
+            class Options:
+                pass
+            options = Options()
+            options.word  = word
+            options.limit = limit
+            options.start = 0
+            search = search_fn(word, options)
+            search.process()
         finally:
             sys.stdout, sys.stderr = old_out, old_err
 
         # Extract the results.
         emails, hosts = [], []
-        if hasattr(search, "get_emails"):
+        results = search.get_results()
+        if hasattr(results, "emails"):
             try:
-                emails = search.get_emails()
+                emails = results.emails
             except Exception, e:
                 t = traceback.format_exc()
                 Logger.log_error(str(e))
                 Logger.log_error_more_verbose(t)
-        if hasattr(search, "get_hostnames"):
+        if hasattr(results, "hostnames"):
             try:
-                hosts = search.get_hostnames()
+                hosts = results.hostnames
             except Exception, e:
                 t = traceback.format_exc()
                 Logger.log_error(str(e))

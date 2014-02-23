@@ -86,7 +86,7 @@ class ConsoleUIPlugin(UIPlugin):
     def run(self, info):
 
         # Don't print anything if console output is disabled.
-        if Console.level < Console.STANDARD:
+        if Console.level < Console.MINIMAL:
             return
 
         # Ignore everything but vulnerabilities.
