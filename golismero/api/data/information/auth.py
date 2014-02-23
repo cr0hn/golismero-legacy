@@ -34,6 +34,8 @@ __all__ = ["Username", "Password"]
 
 from . import Asset
 from .. import identity
+from ..information import Information
+from ..resource import Resource
 from ...text.text_utils import to_utf8
 
 
