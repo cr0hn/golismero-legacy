@@ -43,6 +43,9 @@ from ...text.text_utils import to_utf8
 class Username(Asset):
     """
     Username.
+
+    May be linked to one or more Password objects
+    to indicate a valid set of credentials.
     """
 
     data_subtype = "username"
@@ -74,6 +77,9 @@ class Username(Asset):
 class Password(Asset):
     """
     Password.
+
+    May be linked to one or more Username objects
+    to indicate a valid set of credentials.
     """
 
     data_subtype = "password"
