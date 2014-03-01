@@ -561,6 +561,7 @@ class Audit (object):
             # Update the execution context for this audit.
             Config._context = PluginContext(
                        msg_queue = old_context.msg_queue,
+                   msg_transport = old_context.msg_transport,
                       audit_name = self.name,
                     audit_config = self.config,
                      audit_scope = self.scope,
@@ -607,6 +608,7 @@ class Audit (object):
                 self.database.save_audit_scope(self.scope)
                 Config._context = PluginContext(
                                     msg_queue = old_context.msg_queue,
+                                msg_transport = old_context.msg_transport,
                                    audit_name = self.name,
                                  audit_config = self.config,
                                   audit_scope = self.scope,
@@ -693,6 +695,7 @@ class Audit (object):
                     self.database.save_audit_scope(self.scope)
                     Config._context = PluginContext(
                                     msg_queue = old_context.msg_queue,
+                                msg_transport = old_context.msg_transport,
                                    audit_name = self.name,
                                  audit_config = self.config,
                                   audit_scope = self.scope,
@@ -977,6 +980,7 @@ class Audit (object):
             # Update the execution context for this audit.
             Config._context = PluginContext(
                        msg_queue = old_context.msg_queue,
+                   msg_transport = old_context.msg_transport,
                       audit_name = self.name,
                     audit_config = self.config,
                      audit_scope = self.scope,

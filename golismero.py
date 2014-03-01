@@ -710,7 +710,8 @@ def command_info(parser, P, cmdParams, auditParams):
             Config._context = PluginContext( orchestrator_pid = getpid(),
                                              orchestrator_tid = get_ident(),
                                                   plugin_info = info,
-                                                    msg_queue = None )
+                                                    msg_queue = None,
+                                                msg_transport = None)
             try:
                 manager.load_plugin_by_id(info.plugin_id)
             except Exception:

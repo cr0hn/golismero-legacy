@@ -39,6 +39,7 @@ from .console import Console
 from .scope import DummyScope
 from ..api.config import Config
 from ..api.logger import Logger
+from ..common import get_user_settings_folder
 from ..database.cachedb import PersistentNetworkCache, VolatileNetworkCache
 from ..managers.auditmanager import AuditManager
 from ..managers.pluginmanager import PluginManager
@@ -48,12 +49,13 @@ from ..managers.processmanager import ProcessManager, PluginContext
 from ..managers.networkmanager import NetworkManager
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
+from ..messaging.queue import MessageTransport
 
-from os import getpid
+from os import getpid, path
 from thread import get_ident
 from traceback import format_exc, print_exc
 from signal import signal, SIGINT, SIG_DFL
-from multiprocessing import Manager
+from warnings import warn
 
 
 #------------------------------------------------------------------------------
@@ -79,18 +81,30 @@ class Orchestrator (object):
         # Save the configuration.
         self.__config = config
 
+        # Get the message queue configuration.
+        # If ZeroMQ is installed, defaults to using ZeroMQ.
+        # Otherwise defaults to a SQLite file in the user settings folder.
+        self.__broker_host = getattr(
+            config, "broker_host", "").strip()
+        if not self.__broker_host:
+            warn("No AMQP broker configured, GoLismero may run very slowly!")
+            self.__broker_host = path.join(
+                get_user_settings_folder(), "broker.db")
+            if path.sep != "/":
+                self.__broker_host = self.__broker_host.replace(
+                    path.sep, "/")
+            self.__broker_host = "sqlalchemy+sqlite:///" + \
+                                 self.__broker_host
+
         # Create the incoming message queue.
-        if getattr(config, "max_concurrent", 0) <= 0:
-            from Queue import Queue
-            self.__queue = Queue(maxsize = 0)
-        else:
-            self.__queue_manager = Manager()
-            self.__queue = self.__queue_manager.Queue()
+        self.__transport = MessageTransport(self.__broker_host)
+        self.__queue = self.__transport.start_queue()
 
         # Set the Orchestrator context.
         self.__context = PluginContext( orchestrator_pid = getpid(),
                                         orchestrator_tid = get_ident(),
                                                msg_queue = self.__queue,
+                                           msg_transport = self.__transport,
                                             audit_config = self.__config )
         Config._context = self.__context
 
@@ -177,6 +191,22 @@ class Orchestrator (object):
         return self.__config
 
     @property
+    def transport(self):
+        """
+        :returns: Message transport.
+        :rtype: MessageTransport
+        """
+        return self.__transport
+
+    @property
+    def queue(self):
+        """
+        :returns: Message queue.
+        :rtype: MessageQueue
+        """
+        return self.__queue
+
+    @property
     def pluginManager(self):
         """
         :returns: Plugin manager.
@@ -250,8 +280,9 @@ class Orchestrator (object):
                               message_info = False,
                                   priority = MessagePriority.MSG_PRIORITY_HIGH)
             try:
-                self.__queue.put_nowait(message)
+                self.__queue.put(message)
             except:
+                Console.display("Failed to signal plugins, exiting...")
                 exit(1)
 
         finally:
@@ -271,6 +302,7 @@ class Orchestrator (object):
             try:
                 self.processManager.stop()
             except Exception:
+                Console.display("Failed to kill subprocesses, exiting...")
                 exit(1)
 
         finally:
@@ -367,7 +399,7 @@ class Orchestrator (object):
             self.dispatch_msg(message)
         else:
             try:
-                self.__queue.put_nowait(message)
+                self.__queue.put(message)
             except Exception:
                 print_exc()
                 exit(1)
@@ -410,6 +442,7 @@ class Orchestrator (object):
             orchestrator_pid = self.__context._orchestrator_pid,
             orchestrator_tid = self.__context._orchestrator_tid,
                    msg_queue = self.__queue,
+               msg_transport = self.__transport,
                 ack_identity = ack_identity,
                  plugin_info = info,
                   audit_name = audit_name,
@@ -450,11 +483,16 @@ class Orchestrator (object):
                 try:
 
                     # Wait for a message to arrive.
+                    # If this fails, kill the Orchestrator.
+                    # But let KeyboardInterrupt and SystemExit through.
                     try:
                         message = self.__queue.get()
-                    except Exception:
-                        # If this fails, kill the Orchestrator.
-                        # But let KeyboardInterrupt and SystemExit through.
+                    except Exception, e:
+                        if "Interrupted system call" in str(e):
+                            self.__control_c_handler(None, None)
+                            continue
+                        import traceback
+                        traceback.print_exc()
                         exit(1)
 
                     # Dispatch the message.
@@ -481,6 +519,7 @@ class Orchestrator (object):
         """
         Release all resources held by the Orchestrator.
         """
+
         # This looks horrible, I know :(
         try:
             try:
@@ -494,29 +533,28 @@ class Orchestrator (object):
 
                             finally:
 
-                                # TODO: dump any pending messages and store the current state.
-                                # See: http://stackoverflow.com/questions/1540822/dumping-a-multiprocessing-queue-into-a-list
-                                pass
+                                # Stop the audit manager.
+                                self.auditManager.close()
 
                         finally:
 
-                            # Stop the audit manager.
-                            self.auditManager.close()
+                            # Compact the cache database.
+                            self.cacheManager.compact()
 
                     finally:
 
-                        # Compact the cache database.
-                        self.cacheManager.compact()
+                        # Close the cache database.
+                        self.cacheManager.close()
 
                 finally:
 
-                    # Close the cache database.
-                    self.cacheManager.close()
+                    # Close the plugin manager.
+                    self.pluginManager.close()
 
             finally:
 
-                # Close the plugin manager.
-                self.pluginManager.close()
+                # Release the broker connection.
+                self.__transport.release()
 
         finally:
 
@@ -531,6 +569,6 @@ class Orchestrator (object):
             self.__pluginManager  = None
             self.__processManager = None
             self.__rpcManager     = None
+            self.__transport      = None
             self.__queue          = None
-            self.__queue_manager  = None
             self.__ui             = None
