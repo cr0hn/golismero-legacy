@@ -1,0 +1,28 @@
+[Documentation]
+Name        = VirusTotal
+Description = Integration with VirusTotal: https://www.virustotal.com/
+ This plugin requires a working Internet connection to run.
+Author      = GoLismero project team
+Version     = 0.1
+Website     = https://github.com/golismero
+Copyright   = Copyright (C) 2011-2014 GoLismero Project
+License     = GNU Public License v2
+
+[Arguments]
+
+# This plugin can take the API key from configuration (either golismero.conf
+# or user.conf), or from command line. If specified over the command line,
+# it overrides the one in the configuration files.
+apikey =
+
+# Set to "yes" if the API key corresponds to a paid account (no rate limits),
+# or to "no" for a public account (4 requests per minute).
+private = no
+
+# Set to "all" to send all URLs seen by GoLismero, "base" to send only base
+# urls, "suspicious" to send only suspicious URLs, or "none" to send no URLs.
+urls = suspicious
+
+# Set to "yes" to send file hashes of all binaries downloaded by GoLismero,
+# or "no" to disable binary analysis.
+hashes = yes
