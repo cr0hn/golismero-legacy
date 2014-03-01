@@ -148,7 +148,8 @@ class RPCManager (object):
 
 
     #--------------------------------------------------------------------------
-    def execute_rpc(self, audit_name, rpc_code, response_queue, args, kwargs):
+    def execute_rpc(self, audit_name, rpc_code, response_queue_name,
+                    args, kwargs):
         """
         Honor a remote procedure call request from a plugin.
 
@@ -158,8 +159,8 @@ class RPCManager (object):
         :param rpc_code: RPC code.
         :type rpc_code: int
 
-        :param response_queue: Response queue.
-        :type response_queue: Queue
+        :param response_queue_name: Response queue name.
+        :type response_queue_name: str
 
         :param args: Positional arguments to the call.
         :type args: tuple
@@ -167,44 +168,65 @@ class RPCManager (object):
         :param kwargs: Keyword arguments to the call.
         :type kwargs: dict
         """
+
+        # Open the response queue on our side too.
+        # Does nothing if the caller doesn't want a response.
+        response_queue = None
+        if response_queue_name:
+            response_queue = self.orchestrator.transport.start_queue(
+                response_queue_name, persistent = False)
         try:
 
-            # Get the implementor for the RPC code.
-            # Raise NotImplementedError if it's not defined.
             try:
-                target, blocking = self.__rpcMap[rpc_code]
-            except KeyError:
-                raise NotImplementedError(
-                    "RPC code not implemented: %r" % rpc_code)
 
-            # If it's a blocking call...
-            if blocking:
-
-                # Run the implementor in a new thread.
-                thread = Thread(
-                    target = self.execute_rpc_implementor,
-                    args = (audit_name, target, response_queue, args, kwargs),
-                )
-                thread.daemon = True
-                thread.start()
-
-            # If it's a non-blocking call...
-            else:
-
-                # Call the implementor directly.
-                self.execute_rpc_implementor(
-                    audit_name, target, response_queue, args, kwargs)
-
-        # Catch exceptions and send them back.
-        except Exception:
-            if response_queue:
-                error = self.prepare_exception(*sys.exc_info())
+                # Get the implementor for the RPC code.
+                # Raise NotImplementedError if it's not defined.
                 try:
-                    response_queue.put_nowait( (False, error) )
-                except IOError:
-                    ##import warnings
-                    ##warnings.warn("RPC caller died!")
-                    pass
+                    target, blocking = self.__rpcMap[rpc_code]
+                except KeyError:
+                    raise NotImplementedError(
+                        "RPC code not implemented: %r" % rpc_code)
+
+                # If it's a blocking call...
+                if blocking:
+
+                    # Run the implementor in a new thread.
+                    thread = Thread(
+                        target = self.execute_rpc_implementor,
+                        args   = (
+                            audit_name,
+                            target,
+                            response_queue,
+                            args,
+                            kwargs
+                        ),
+                    )
+                    thread.daemon = True
+                    thread.start()
+
+                # If it's a non-blocking call...
+                else:
+
+                    # Call the implementor directly.
+                    self.execute_rpc_implementor(
+                        audit_name, target, response_queue, args, kwargs)
+
+            # Catch exceptions and send them back.
+            except Exception:
+                if response_queue is not None:
+                    error = self.prepare_exception(*sys.exc_info())
+                    try:
+                        message = (False, error)
+                        response_queue.put(message)
+                    except IOError:
+                        import warnings
+                        warnings.warn("RPC caller died!")
+
+        finally:
+
+            # Close the response queue on our side too.
+            if response_queue is not None:
+                response_queue.close()
 
 
     #--------------------------------------------------------------------------
@@ -220,7 +242,7 @@ class RPCManager (object):
         :type target: callable
 
         :param response_queue: Response queue.
-        :type response_queue: Queue
+        :type response_queue: MessageQueue
 
         :param args: Positional arguments to the call.
         :type args: tuple
@@ -228,22 +250,24 @@ class RPCManager (object):
         :param kwargs: Keyword arguments to the call.
         :type kwargs: dict
         """
-        success = True
         try:
 
             # Call the implementor and get the response.
-            response = target(self.orchestrator, audit_name, *args, **kwargs)
+            response = target(
+                self.orchestrator, audit_name, *args, **kwargs)
+            success  = True
 
         # Catch exceptions and prepare them for sending.
         except Exception:
-            if response_queue:
-                success  = False
+            if response_queue is not None:
                 response = self.prepare_exception(*sys.exc_info())
+                success  = False
 
         # If the call was synchronous,
         # send the response/error back to the plugin.
-        if response_queue:
-            response_queue.put_nowait( (success, response) )
+        if response_queue is not None:
+            message = (success, response)
+            response_queue.put(message)
 
 
     #--------------------------------------------------------------------------

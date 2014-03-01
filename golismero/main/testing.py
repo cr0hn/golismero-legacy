@@ -238,7 +238,8 @@ class PluginTester(object):
         Config._context  = PluginContext(
             orchestrator_pid = getpid(),
             orchestrator_tid = get_ident(),
-                   msg_queue = orchestrator._Orchestrator__queue,
+                   msg_queue = orchestrator.queue,
+               msg_transport = orchestrator.transport,
                   audit_name = self.audit_name,
                 audit_config = self.audit_config,
                  audit_scope = self.audit_scope,
