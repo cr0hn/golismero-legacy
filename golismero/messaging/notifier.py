@@ -35,6 +35,7 @@ __all__ = ["AuditNotifier", "OrchestratorNotifier"]
 from ..api.config import Config
 from ..api.data import Data, Relationship
 from ..api.plugin import Plugin
+from ..managers.pluginmanager import SwitchToPlugin
 from .message import Message
 from .codes import MessageType, MessageCode, MessagePriority
 
@@ -127,7 +128,8 @@ class AbstractNotifier (object):
 
         # Get the data types accepted by this plugin.
         if hasattr(plugin, "get_accepted_types"):
-            accepted_info = plugin.get_accepted_types()
+            with SwitchToPlugin(plugin_id):
+                accepted_info = plugin.get_accepted_types()
         else:
             accepted_info = []
 
