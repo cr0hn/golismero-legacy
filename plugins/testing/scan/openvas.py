@@ -124,9 +124,11 @@ class OpenVASPlugin(TestingPlugin):
         if not os.path.exists(openvas_db):
             warn("OpenVAS plugin not initialized, please run setup.py")
 
+
     #--------------------------------------------------------------------------
     def get_accepted_types(self):
         return [IP]
+
 
     #--------------------------------------------------------------------------
     def run(self, info):
