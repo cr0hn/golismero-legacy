@@ -733,8 +733,7 @@ class OrchestratorConfig (Configuration):
         "plugins_folder": Configuration.string,
 
         # Maximum number plugins to execute concurrently.
-        "max_concurrent": (Configuration.integer,
-                           4 if path.sep == "\\" else 20),
+        "max_concurrent": (Configuration.integer, 4),
 
         #
         # Network options.
