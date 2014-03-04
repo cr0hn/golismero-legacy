@@ -66,10 +66,10 @@ def get_nasl_files(path):
     """
     Get all .nasl files from a path
 
-    :param path: Folder where contains .nasl files.
+    :param path: Folder containing .nasl files.
     :type path: str
 
-    :return: an iterator with the file name
+    :return: Iterator of file names.
     :rtype: iterator(str)
     """
     results = []
@@ -85,10 +85,12 @@ def get_nasl_files(path):
     return results
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def rules_matcher(text, rules_group, rules_index, verbosity=0):
     """
-    Rules matcher. Apply the rules group to the text and return True if any rule match.
+    Rules matcher.
+
+    Applies the rules group to the text and returns True if any rule matches.
 
     :param text: text where match the rules
     :param text: str
@@ -143,7 +145,7 @@ def rules_matcher(text, rules_group, rules_index, verbosity=0):
                             # Normal response is True
                             return True if rule_negate else False
             else:
-                # Not matching found.
+                # No match found.
                 #
                 # If operator is "or", wait for next rule to
                 # determinate if rule is valid
@@ -158,10 +160,10 @@ def rules_matcher(text, rules_group, rules_index, verbosity=0):
     return False
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def load_single_rule(rule):
     """
-    This function loads a single rule from a dict and return a Rule type.
+    This function loads a single rule from a dict and returns a Rule type.
 
     :param rule: dict with json information.
     :type rule: dict
@@ -189,7 +191,7 @@ def load_single_rule(rule):
     return r
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def load_rules(rules_path):
     """
     Load the rules from json and convert into our custom format.
@@ -279,10 +281,10 @@ def load_rules(rules_path):
     return pack
 
 
-#----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def get_script_id(text):
     """
-    Get script ID from their text.
+    Get script ID from the text.
 
     :param text: text where looking for.
     :type text: str
@@ -480,6 +482,7 @@ def main(args):
     Pickler.dump(info, open(path_out, 'wb'), 2)
 
 
+#------------------------------------------------------------------------------
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Generates OpenVAS database.')

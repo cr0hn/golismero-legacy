@@ -1,6 +1,6 @@
 # How to use OpenVAS correlation
 
-To use OpenVAS correlation you must setup plugins first. Follow these steps:
+To use OpenVAS correlation you must setup the plugin first. Follow these steps:
 
 ## 1 - Download OpenVAS plugins
 
@@ -14,17 +14,17 @@ Now we need to generate the database. To do that, you must run:
 
 ## 3 - Done
 
-Now we a pickled database called: **openvas.db**
+Now we have a pickled database called: **openvas.db**
 
-# How to it works?
+# How does it work?
 
-OpenVAS generator has a rules files. This files contains the expressions to find and correlate OpenVAS plugins with GoLismero data model.
+OpenVAS generator produces a rules file. This file contains the expressions to find and correlate OpenVAS plugins with the GoLismero data model.
 
-The setup.py will find in their directory and load all files called "rules_*json", that contains rules.
+The setup.py script will search in the specified directory and load all files called "rules_*json", containing the rules.
 
-# Available types of vulns
+# Available types of vulnerabilities
 
-Each vulnerability has their type, to be easily to classified by te OpenVAS plugin. Available types are:
+Each vulnerability has its type, in order to be classified by the OpenVAS plugin. Available types are:
 
  * platform
  * software
@@ -36,34 +36,33 @@ Each vulnerability has their type, to be easily to classified by te OpenVAS plug
 
 ## Rules file format
 
-Rules has he following format, as json:
+Rule files have the following JSON format:
 
  * comment: A comment about the rule.
- * rule_id: Unique identification of rule.
- * rule_type: Category of rule (list of rules listed above).
+ * rule_id: Unique identification of the rule.
+ * rule_type: Category of the rule (one of the types listed above).
  * matching_types: Classes types, in GoLismero data model, that matches with this rule.
- * filename_rules: rules applied to the file name only.
- * content_rules: rules applied to the file content only.
+ * filename_rules: Rules applied to the file name only.
+ * content_rules: Rules applied to the file content only.
 
-## Rules detailed
+## Rule details
 
 Each rule (in section filename_rules and content_rules) has this format:
 
-### Basic format:
+### Structure:
 
- * Each section is formed by rules group and can has more than one rule group.
- * Each group can has more han one rule.
+ * Each section is formed by a group of rules and can have more than one group.
+ * Each group can have more han one rule.
 
 ### Rule specification:
 
 Each rule has 3 parameters: 
 
- * regex: String. This is the main information in rule. Can be referred to:
-   * Regular expression: Rule will math if the this regex match.
-   * Reference: If reference specified, rule matches if matches with all "rules_types" or concrete "rule_id". References starts with string: "REF://".
- * group: Integer or "\*". A regex can has more than one group. Rule matches if regex has this number of groups. If "\*" specified, all number of group matches.
- * operator: Boolean operator. Specify relation with the next rule (in rule group). Allowed operators are:
-   * or: If this rule match, rule accepted. If not, it try to match with next rule. Default value if not specified.
-   * and: Although it match, It try to match with next rule. If not match, rule is not accepted.
- * negate: boolean type. Rule is accepted the negation of rule matches.
-
+ * regex: String. Defines how the rule is matched. The value can be:
+   * Regular expression: Rule will match if this regex matches.
+   * Reference: If a reference is specified instead, the rule matches if the reference matches with all "rules_types" or a concrete "rule_id". References start with the prefix: "REF://".
+ * group: Integer or "\*". A regex can have more than one group. The rule matches if the regex has this number of groups. If "\*" is specified, any number of groups will match.
+ * operator: Boolean operator. Specify the relation to the next rule (in rule group). Allowed operators are:
+   * or: If this rule matches, the rule group is accepted. If not, it try to match the next rule. Default value if not specified.
+   * and: If this rule matches, try to match the next rule. If not, the rule group is not accepted.
+ * negate: Boolean. If set to "true", the above logic for accepting the rule is inverted.
