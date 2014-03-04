@@ -402,9 +402,6 @@ class OpenVASPlugin(TestingPlugin):
                 # Make vulnerabilities
                 for c in candidate_classes:
                     clazz = globals()[c]
-                    #
-                    # PROCESAR TODOS LOS DETECT: _detect_*nasl
-                    #
 
                     # Create the vuln
                     vuln = clazz(target, **kwargs)
