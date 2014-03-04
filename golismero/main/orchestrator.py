@@ -98,6 +98,9 @@ class Orchestrator (object):
         # static reference to the Orchestrator.
         PluginContext._orchestrator = self
 
+        # Create the RPC manager.
+        self.__rpcManager = RPCManager(self)
+
         # Load the plugin manager.
         self.__pluginManager = PluginManager(self)
 
@@ -136,9 +139,6 @@ class Orchestrator (object):
             self.__cache = PersistentNetworkCache()
         else:
             self.__cache = VolatileNetworkCache()
-
-        # Create the RPC manager.
-        self.__rpcManager = RPCManager(self)
 
         # Create the process manager.
         self.__processManager = ProcessManager(self)
@@ -369,6 +369,7 @@ class Orchestrator (object):
             try:
                 self.__queue.put_nowait(message)
             except Exception:
+                print_exc()
                 exit(1)
 
 

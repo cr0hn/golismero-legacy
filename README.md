@@ -128,6 +128,7 @@ pkg install databases/py-sqlite3
 pkg install nmap
 pkg install sslscan
 pkg install devel/py-pip
+mkdir /opt 2> /dev/null
 cd /opt
 git clone https://github.com/cr0hn/golismero.git
 cd golismero
@@ -290,17 +291,23 @@ If no output files are specified, GoLismero reports on the console by default. B
 
 ```golismero scan <target> -o - -o report.html```
 
-Here's what the HTML report summary looks like on a PC:
+Here's what the HTML report summary looks like on Chrome:
 
-![Report summary](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_chrome.png "Report summary")
+![Report header](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_chrome_header.png "Report header")
 
-And the HTML report details:
+The table of contents, on Firefox:
 
-![Report details](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_safari2.png "Report details")
+![Report table](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_firefox_header.png "Report table")
+
+And the details for each vulnerability, on Internet Explorer:
+
+![Report details](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_ie_detail.png "Report details")
 
 It's also compatible with mobile devices, like for example an iPad:
 
 ![Report summary on iPad](https://raw.github.com/cr0hn/golismero/master/doc/screenshots/report_ipad.png "Report summary on iPad")
+
+As you surely noticed, the layout remains consistent across all platforms. The HTML report is completely self contained in a single .html file, making it very easy to share.
 
 Putting it all together
 -----------------------

@@ -36,7 +36,7 @@ except ImportError:
     import pickle as pickle
 
 from golismero.api.config import Config
-from golismero.api.data.resource.url import FolderUrl
+from golismero.api.data.resource.url import FolderURL
 from golismero.api.data.information.html import HTML
 from golismero.api.data import discard_data
 from golismero.api.data.vulnerability.infrastructure.outdated_software import OutdatedSoftware
@@ -97,14 +97,14 @@ class PlecostPlugin(TestingPlugin):
 
 
     #--------------------------------------------------------------------------
-    def get_accepted_info(self):
-        return [FolderUrl]
+    def get_accepted_types(self):
+        return [FolderURL]
 
 
     #--------------------------------------------------------------------------
-    def recv_info(self, info):
+    def run(self, info):
 
-        if not isinstance(info, FolderUrl):
+        if not isinstance(info, FolderURL):
             return
 
         plugin_list = Config.plugin_args.get("plugin_list", "")

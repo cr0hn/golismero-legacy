@@ -264,7 +264,7 @@ def _bootstrap_inner(context, func, args, kwargs):
     global _do_notify_end
 
     # If the plugin receives a Data object...
-    if func == "recv_info":
+    if func == "run":
 
         # Get the data sent to the plugin.
         try:
@@ -293,8 +293,8 @@ def _bootstrap_inner(context, func, args, kwargs):
 
     # Set the default socket timeout.
     # Note: due to a known bug in Python versions prior to 2.7.5 we can't set
-    # a default timeline because it makes the multiprocessing module
-    # misbehave. See: http://hg.python.org/cpython/rev/4e85e4743757
+    # a default timeout because it makes the multiprocessing module misbehave.
+    # See: http://hg.python.org/cpython/rev/4e85e4743757
     if sys.version_info[:3] >= (2,7,5):
         socket.setdefaulttimeout(5.0)
 
@@ -309,7 +309,7 @@ def _bootstrap_inner(context, func, args, kwargs):
 
     # Initialize the local data cache for this run.
     LocalDataCache.on_run()
-    if func == "recv_info":
+    if func == "run":
         LocalDataCache.on_create(input_data)
 
     # Try to get the plugin from the cache.
@@ -347,8 +347,8 @@ def _bootstrap_inner(context, func, args, kwargs):
         result = getattr(instance, func)(*args, **kwargs)
     finally:
 
-        # Return value is a list of data for recv_info().
-        if func == "recv_info":
+        # Return value is a list of data for run().
+        if func == "run":
 
             # Validate and sanitize the result data.
             result = LocalDataCache.on_finish(result, input_data)

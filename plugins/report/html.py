@@ -96,6 +96,7 @@ class HTMLReport(json.JSONOutput):
         sort_keys = [
             (data["display_name"],
              data["plugin_id"],
+             data["target_id"],
              data["identity"])
             for data in vulnerabilities.itervalues()
         ]
@@ -108,6 +109,7 @@ class HTMLReport(json.JSONOutput):
                 if propname in (
                     "display_name",
                     "plugin_id",
+                    "target_id",
                     "identity",
                     "links",
                     "data_type",
@@ -122,7 +124,7 @@ class HTMLReport(json.JSONOutput):
                     "risk",
                 )
             }
-            for _, _, identity in sort_keys
+            for _, _, _, identity in sort_keys
         ]
         vulnerabilities.clear()
         sort_keys = []
