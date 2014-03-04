@@ -11,4 +11,4 @@ License     = GNU Public License v2
 
 # Set the width in characters for all tables.
 # Use 0 to disable this feature (each table's width may be different).
-width = 160
+width = 120

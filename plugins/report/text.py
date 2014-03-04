@@ -311,9 +311,9 @@ class TextReport(ReportPlugin):
                     table.add_row(("Found By", get_plugin_name(vuln.plugin_id)))
                     p = len(table.draw())
                     table.add_row(("Level", vuln.level))
-                    table.add_row(("Impact", vuln.impact))
-                    table.add_row(("Severity", vuln.severity))
-                    table.add_row(("Risk", vuln.risk))
+                    #table.add_row(("Impact", vuln.impact))
+                    #table.add_row(("Severity", vuln.severity))
+                    #table.add_row(("Risk", vuln.risk))
                     q = len(table.draw())
                     if vuln.cvss_base:
                         table.add_row(("CVSS Base", vuln.cvss_base))
