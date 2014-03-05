@@ -1525,6 +1525,7 @@ class AuditPluginManager (PluginManager):
                 orchestrator_pid = new_ctx._orchestrator_pid,
                 orchestrator_tid = new_ctx._orchestrator_tid,
                        msg_queue = new_ctx.msg_queue,
+                         address = new_ctx.address,
                     ack_identity = None,
                      plugin_info = self.get_plugin_by_id(plugin_id),
                       audit_name = audit_config.audit_name,
@@ -1663,6 +1664,7 @@ class SwitchToAudit(object):
         # Update the execution context for this audit.
         Config._context = PluginContext(
                    msg_queue = old_context.msg_queue,
+                     address = old_context.address,
                 ack_identity = old_context.ack_identity,
                  plugin_info = old_context.plugin_info,
                   audit_name = audit_name,
@@ -1718,6 +1720,7 @@ class SwitchToPlugin(object):
         # Update the execution context.
         Config._context = PluginContext(
                    msg_queue = old_context.msg_queue,
+                     address = old_context.address,
                 ack_identity = old_context.ack_identity,
                  plugin_info = plugin_info,
                   audit_name = audit_name,

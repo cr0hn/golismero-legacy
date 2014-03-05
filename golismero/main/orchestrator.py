@@ -48,12 +48,12 @@ from ..managers.processmanager import ProcessManager, PluginContext
 from ..managers.networkmanager import NetworkManager
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
+from ..messaging.manager import MessageManager
 
 from os import getpid
 from thread import get_ident
 from traceback import format_exc, print_exc
 from signal import signal, SIGINT, SIG_DFL
-from multiprocessing import Manager
 
 
 #------------------------------------------------------------------------------
@@ -79,19 +79,18 @@ class Orchestrator (object):
         # Save the configuration.
         self.__config = config
 
-        # Create the incoming message queue.
-        if getattr(config, "max_concurrent", 0) <= 0:
-            from Queue import Queue
-            self.__queue = Queue(maxsize = 0)
-        else:
-            self.__queue_manager = Manager()
-            self.__queue = self.__queue_manager.Queue()
+        # Instance the message manager.
+        self.__messageManager = MessageManager(is_rpc = False)
+        self.__messageManager.listen()
+        self.__messageManager.start()
 
         # Set the Orchestrator context.
-        self.__context = PluginContext( orchestrator_pid = getpid(),
-                                        orchestrator_tid = get_ident(),
-                                               msg_queue = self.__queue,
-                                            audit_config = self.__config )
+        self.__context = PluginContext(
+            orchestrator_pid = getpid(),
+            orchestrator_tid = get_ident(),
+                   msg_queue = self.messageManager.name,
+                     address = self.messageManager.address,
+                audit_config = self.config )
         Config._context = self.__context
 
         # Withing the main process, keep a
@@ -177,6 +176,15 @@ class Orchestrator (object):
         return self.__config
 
     @property
+    def messageManager(self):
+        """
+        :returns: Message manager.
+        :rtype: MessageManager
+        """
+        return self.__messageManager
+
+
+    @property
     def pluginManager(self):
         """
         :returns: Plugin manager.
@@ -250,8 +258,9 @@ class Orchestrator (object):
                               message_info = False,
                                   priority = MessagePriority.MSG_PRIORITY_HIGH)
             try:
-                self.__queue.put_nowait(message)
+                self.messageManager.put(message)
             except:
+                print_exc()
                 exit(1)
 
         finally:
@@ -271,6 +280,7 @@ class Orchestrator (object):
             try:
                 self.processManager.stop()
             except Exception:
+                print_exc()
                 exit(1)
 
         finally:
@@ -367,7 +377,7 @@ class Orchestrator (object):
             self.dispatch_msg(message)
         else:
             try:
-                self.__queue.put_nowait(message)
+                self.messageManager.put(message)
             except Exception:
                 print_exc()
                 exit(1)
@@ -409,7 +419,8 @@ class Orchestrator (object):
         return PluginContext(
             orchestrator_pid = self.__context._orchestrator_pid,
             orchestrator_tid = self.__context._orchestrator_tid,
-                   msg_queue = self.__queue,
+                   msg_queue = self.messageManager.name,
+                     address = self.messageManager.address,
                 ack_identity = ack_identity,
                  plugin_info = info,
                   audit_name = audit_name,
@@ -451,10 +462,11 @@ class Orchestrator (object):
 
                     # Wait for a message to arrive.
                     try:
-                        message = self.__queue.get()
+                        message = self.messageManager.get()
                     except Exception:
                         # If this fails, kill the Orchestrator.
                         # But let KeyboardInterrupt and SystemExit through.
+                        print_exc()
                         exit(1)
 
                     # Dispatch the message.
@@ -494,29 +506,33 @@ class Orchestrator (object):
 
                             finally:
 
-                                # TODO: dump any pending messages and store the current state.
-                                # See: http://stackoverflow.com/questions/1540822/dumping-a-multiprocessing-queue-into-a-list
-                                pass
+                                # Stop the audit manager.
+                                self.auditManager.close()
 
                         finally:
 
-                            # Stop the audit manager.
-                            self.auditManager.close()
+                            # Compact the cache database.
+                            self.cacheManager.compact()
 
                     finally:
 
-                        # Compact the cache database.
-                        self.cacheManager.compact()
+                        # Close the cache database.
+                        self.cacheManager.close()
 
                 finally:
 
-                    # Close the cache database.
-                    self.cacheManager.close()
+                    # Close the plugin manager.
+                    self.pluginManager.close()
 
             finally:
 
-                # Close the plugin manager.
-                self.pluginManager.close()
+                # Close the message manager.
+                try:
+                    self.messageManager.close()
+                finally:
+                    if Config._has_context and \
+                                    Config._context._msg_manager is not None:
+                        Config._context._msg_manager.close()
 
         finally:
 
@@ -531,6 +547,4 @@ class Orchestrator (object):
             self.__pluginManager  = None
             self.__processManager = None
             self.__rpcManager     = None
-            self.__queue          = None
-            self.__queue_manager  = None
             self.__ui             = None
