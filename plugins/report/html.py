@@ -89,6 +89,15 @@ class HTMLReport(json.JSONOutput):
         # Remove the false positives, if any.
         del report_data["false_positives"]
 
+        # Gather all taxonomies into a single property.
+        for vuln in report_data["vulnerabilities"].itervalues():
+            taxonomy = []
+            for prop in TAXONOMY_NAMES:
+                taxonomy.extend(vuln.get(prop, []))
+            if taxonomy:
+                taxonomy.sort()
+                vuln["taxonomy"] = taxonomy
+
         # It's easier for the JavaScript code in the report to access the
         # vulnerabilities as an array instead of a map, so let's fix that.
         # Also, delete all properties we know aren't being used in the report.
@@ -117,6 +126,7 @@ class HTMLReport(json.JSONOutput):
                     "title",
                     "description",
                     "solution",
+                    "taxonomy",
                     "references",
                     "level",
                     "impact",
@@ -172,11 +182,6 @@ class HTMLReport(json.JSONOutput):
                         plugin_map[plugin_id] = get_plugin_name(plugin_id)
                     data["plugin_name"] = plugin_map[plugin_id]
         plugin_map.clear()
-
-        # We also want to tell the HTML report which of the vulnerability
-        # properties are part of the taxonomy. This saves us from having to
-        # change the HTML code every time we add a new taxonomy property.
-        ##report_data["supported_taxonomies"] = TAXONOMY_NAMES
 
         # Calculate some statistics, so the JavaScript code doesn't have to.
         vulns_by_level = Counter()
