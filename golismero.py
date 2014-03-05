@@ -707,10 +707,13 @@ def command_info(parser, P, cmdParams, auditParams):
         if not plugin_infos:
             raise KeyError()
         for info in plugin_infos:
-            Config._context = PluginContext( orchestrator_pid = getpid(),
-                                             orchestrator_tid = get_ident(),
-                                                  plugin_info = info,
-                                                    msg_queue = None )
+            Config._context = PluginContext(
+                         address = None,
+                       msg_queue = None,
+                orchestrator_pid = getpid(),
+                orchestrator_tid = get_ident(),
+                     plugin_info = info
+            )
             try:
                 manager.load_plugin_by_id(info.plugin_id)
             except Exception:

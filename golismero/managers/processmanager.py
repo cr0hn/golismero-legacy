@@ -45,9 +45,9 @@ from ..api.net.cache import NetworkCache
 from ..api.net.http import HTTP
 from ..messaging.codes import MessageType, MessageCode, MessagePriority
 from ..messaging.message import Message
+from ..messaging.manager import MessageManager
 
 from imp import load_source
-from multiprocessing import Manager
 from os import getpid
 from thread import get_ident
 from threading import Timer
@@ -62,39 +62,7 @@ import sys
 from ..patches import mp  # noqa
 
 # Imports needed to override the multiprocessing Process and Pool classes.
-from multiprocessing import Process as _Original_Process
-from multiprocessing.pool import Pool as _Original_Pool
-
-
-#------------------------------------------------------------------------------
-class Process(_Original_Process):
-    """
-    A customized process that forces the 'daemon' property to False.
-
-    This means we have to take care of killing our own subprocesses.
-    """
-
-    @property
-    def daemon(self):
-        return False
-
-    @daemon.setter
-    def daemon(self, value):
-        pass
-
-    @daemon.deleter
-    def daemon(self, value):
-        pass
-
-
-#------------------------------------------------------------------------------
-class Pool(_Original_Pool):
-    """
-    A customized process pool that forces the 'daemon' property to False.
-
-    This means we have to take care of killing our own subprocesses.
-    """
-    Process = Process
+from multiprocessing.pool import Pool
 
 
 #------------------------------------------------------------------------------
@@ -102,59 +70,13 @@ class Pool(_Original_Pool):
 # Plugin class per-process cache. Used by the bootstrap() function.
 plugin_class_cache = dict()   # tuple(class, module) -> class object
 
+# Message manager for the plugin workers.
+msgManager = None
+
 # Do-nothing function for "warming up" the process pool.
 # This increases startup time, but results in a speedup later on.
 def do_nothing(*args, **kwargs):
     return
-
-# Serializable function to run plugins in subprocesses.
-# This is required for Windows support, since we don't have os.fork() there.
-# See: http://docs.python.org/2/library/multiprocessing.html#windows
-def launcher(queue, max_concurrent, refresh_after_tasks):
-    return _launcher(queue, max_concurrent, refresh_after_tasks)
-
-def _launcher(queue, max_concurrent, refresh_after_tasks):
-
-    # Initialize this worker process.
-    _init_worker()
-
-    # Instance the pool manager.
-    pool = PluginPoolManager(max_concurrent, refresh_after_tasks)
-
-    # Start the pool manager.
-    wait = True
-    pool.start()
-    try:
-
-        # Consumer loop.
-        while True:
-
-            # Get the next plugin call to issue.
-            try:
-                item = queue.get()
-            except:
-                # If we reached this point we can assume
-                # the parent process is dead.
-                wait = False
-                exit(1)
-
-            # Handle the message to quit.
-            if item is True or item is False:
-                wait = item
-                return
-
-            # Handle the message to call a plugin.
-            pool.run_plugin(*item)
-
-    finally:
-
-        # Stop the pool manager.
-        try:
-            pool.stop(wait)
-        except:
-            # If we reached this point we can assume
-            # the parent process is dead.
-            exit(1)
 
 # Serializable bootstrap function to run plugins in subprocesses.
 # This is required for Windows support, since we don't have os.fork() there.
@@ -177,6 +99,12 @@ def _bootstrap(context, func, args, kwargs):
                     # TODO: hook stdout and stderr to catch prints.
                     with catch_warnings(record=True) as plugin_warnings:
                         simplefilter("always")
+
+                        # Connect to the Orchestrator.
+                        global msgManager
+                        msgManager = MessageManager(is_rpc = True)
+                        msgManager.connect(context._orchestrator_address)
+                        msgManager.start()
 
                         # Configure the plugin.
                         Config._context = context
@@ -241,6 +169,7 @@ def _bootstrap(context, func, args, kwargs):
     # On keyboard interrupt or fatal error,
     # tell the Orchestrator we need to stop.
     except:
+        print_exc()
 
         # Send a message to the Orchestrator to stop.
         try:
@@ -252,10 +181,7 @@ def _bootstrap(context, func, args, kwargs):
         except SystemExit:
             raise
         except:
-            try:
-                print_exc()
-            except:
-                pass
+            print_exc()
 
         # If we reached this point we can assume the parent process is dead.
         exit(1)
@@ -429,15 +355,20 @@ class PluginContext (object):
     # Current crawling depth, set automatically by the plugin bootstrap.
     _depth = -1
 
-    def __init__(self, msg_queue, ack_identity = None, plugin_info = None,
+    def __init__(self, address, msg_queue,
+                 ack_identity = None, plugin_info = None,
                  audit_name = None, audit_config = None, audit_scope = None,
-                 orchestrator_pid = None, orchestrator_tid = None):
+                 orchestrator_pid = None, orchestrator_tid = None,
+                 orchestrator_address = None):
         """
         Serializable execution context for the plugins.
 
-        :param msg_queue: Message queue where to send the responses.
-            This argument is mandatory.
-        :type msg_queue: Queue
+        :param address: Host and port to send messages to the Orchestrator.
+        :type address: tuple(str, int)
+
+        :param msg_queue: Identity of the message queue to send messages
+            to the Orchestrator.
+        :type msg_queue: str
 
         :param ack_identity: Identity hash of the current input data,
             or None if not running a plugin.
@@ -464,7 +395,9 @@ class PluginContext (object):
 
         :param orchestrator_tid: Main thread ID of the Orchestrator.
         :type orchestrator_tid: int | None
+
         """
+        self.__address          = address
         self.__msg_queue        = msg_queue
         self.__ack_identity     = ack_identity
         self.__plugin_info      = plugin_info
@@ -473,6 +406,15 @@ class PluginContext (object):
         self.__audit_scope      = audit_scope
         self.__orchestrator_pid = orchestrator_pid
         self.__orchestrator_tid = orchestrator_tid
+        self.__orchestrator_address = orchestrator_address
+
+    @property
+    def address(self):
+        """"
+        :returns: Host and port to send messages to the Orchestrator.
+        :rtype: tuple(str, int)
+        """
+        return self.__address
 
     @property
     def msg_queue(self):
@@ -589,6 +531,27 @@ class PluginContext (object):
         :rtype: int | None
         """
         return self.__orchestrator_tid
+
+    @property
+    def _msg_manager(self):
+        """"
+        .. warning: This property is internally used by GoLismero.
+
+        :returns: Message manager.
+        :rtype: MessageManager
+        """
+
+        # If we're not yet connected...
+        global msgManager
+        if msgManager is None:
+
+            # Connect to the Orchestrator.
+            msgManager = MessageManager(is_rpc = True)
+            msgManager.connect(self.address)
+            msgManager.start()
+
+        # Return the message manager.
+        return msgManager
 
 
     #--------------------------------------------------------------------------
@@ -720,10 +683,11 @@ class PluginContext (object):
 
         # Put the message in the queue.
         try:
-            self.msg_queue.put_nowait(message)
+            self._msg_manager.send(self.msg_queue, message)
 
         # If we reached this point we can assume the parent process is dead.
         except:
+            print_exc()
             exit(1)
 
 
@@ -739,26 +703,19 @@ class PluginContext (object):
         :rtype: \\*
         """
 
-        # Create the response queue.
-        try:
-            response_queue = Manager().Queue()
-
-        # If the above fails we can assume the parent process is dead.
-        except:
-            exit(1)
-
         # Send the RPC message.
         self.send_msg(message_type = MessageType.MSG_TYPE_RPC,
                       message_code = rpc_code,
-                      message_info = (response_queue, args, kwargs),
+                      message_info = (self._msg_manager.name, args, kwargs),
                           priority = MessagePriority.MSG_PRIORITY_HIGH)
 
         # Get the response.
         try:
-            raw_response = response_queue.get()  # blocking call
+            raw_response = self._msg_manager.get()  # blocking call
 
         # If the above fails we can assume the parent process is dead.
         except:
+            print_exc()
             exit(1)
 
         # Return the response, or raise an exception on error.
@@ -848,7 +805,7 @@ class PluginPoolManager (object):
 
 
     #--------------------------------------------------------------------------
-    def __init__(self, max_process, refresh_after_tasks):
+    def __init__(self, max_process, refresh_after_tasks, orchestrator_address):
         """
         :param max_process: Maximum number of processes to create.
         :type max_process: int
@@ -857,9 +814,14 @@ class PluginPoolManager (object):
             Maximum number of function calls to make
             before refreshing a subprocess.
         :type refresh_after_tasks: int
+
+        :param orchestrator_address:
+            Host and port for the Orchestrator message queue.
+        :type orchestrator_address: tuple(str, int)
         """
-        self.__max_processes       = max_process
-        self.__refresh_after_tasks = refresh_after_tasks
+        self.__max_processes        = max_process
+        self.__refresh_after_tasks  = refresh_after_tasks
+        self.__orchestrator_address = orchestrator_address
 
         self.__pool = None
 
@@ -881,6 +843,9 @@ class PluginPoolManager (object):
         :param kwargs: Keyword arguments to the function call.
         :type kwargs: dict
         """
+
+        # Make sure to pass the Orchestrator host and port.
+        context._orchestrator_address = self.__orchestrator_address
 
         # If we have a process pool, run the plugin asynchronously.
         if self.__pool is not None:
@@ -952,130 +917,6 @@ class PluginPoolManager (object):
 
 
 #------------------------------------------------------------------------------
-class PluginLauncher (object):
-    """
-    Manages a pool of subprocesses to run plugins in them.
-    """
-
-
-    #--------------------------------------------------------------------------
-    def __init__(self, max_process, refresh_after_tasks):
-        """
-        :param max_process: Maximum number of processes to create.
-        :type max_process: int
-
-        :param refresh_after_tasks:
-                Maximum number of function calls to make
-                before refreshing a subprocess.
-        :type refresh_after_tasks: int
-        """
-
-        # Initialize the launcher process, but do not start it yet.
-        try:
-            self.__manager = Manager()
-            self.__queue = self.__manager.Queue()
-
-        # If the above fails we can assume the parent process is dead.
-        except:
-            exit(1)
-
-        self.__process = Process(
-            target = launcher,
-            args   = (self.__queue, max_process, refresh_after_tasks),
-        )
-        self.__alive = True
-
-
-    #--------------------------------------------------------------------------
-    def run_plugin(self, context, func, args, kwargs):
-        """
-        Run a plugin in a pooled process.
-
-        :param context: Context for the OOP plugin execution.
-        :type context: PluginContext
-
-        :param func: Name of the method to execute.
-        :type func: str
-
-        :param args: Positional arguments to the function call.
-        :type args: tuple
-
-        :param kwargs: Keyword arguments to the function call.
-        :type kwargs: dict
-        """
-
-        # Raise an exception if the launcher had been stopped.
-        if not self.__alive:
-            raise RuntimeError("Plugin launcher was stopped")
-
-        # Send the plugin run request to the launcher process.
-        try:
-            self.__queue.put_nowait( (context, func, args, kwargs) )
-
-        # If the above fails we can assume the parent process is dead.
-        except:
-            try:
-                self.stop(wait = False)
-            except:
-                pass
-            exit(1)
-
-
-    #--------------------------------------------------------------------------
-    def start(self):
-        """
-        Start the plugin launcher.
-        """
-
-        # Raise an exception if the launcher had been stopped.
-        if not self.__alive:
-            raise RuntimeError("Plugin launcher was stopped")
-
-        # Start the launcher process.
-        self.__process.start()
-
-
-    #--------------------------------------------------------------------------
-    def stop(self, wait = True):
-        """
-        Stop the plugin launcher.
-
-        :param wait: True to wait for the subprocesses to finish,
-            False to kill them.
-        :type wait: bool
-        """
-
-        # Ignore the request if the launcher was already stopped.
-        if not self.__alive:
-            return
-
-        try:
-
-            # Signal the launcher process to stop.
-            self.__queue.put_nowait(wait)
-
-            # Wait for the launcher process to stop.
-            if wait:
-                self.__process.join()
-            else:
-                self.__process.join(3)
-                try:
-                    self.__process.terminate()
-                except Exception:
-                    pass
-
-        # If the pipe is closed, terminate the process.
-        except:
-            self.__process.terminate()
-
-        # Clean up.
-        self.__alive   = False
-        self.__process = None
-        self.__queue   = None
-        self.__manager = None
-
-
-#------------------------------------------------------------------------------
 class ProcessManager (object):
     """
     Manages a pool of subprocesses to run plugins in them.
@@ -1100,6 +941,9 @@ class ProcessManager (object):
         # before refreshing a subprocess.
         self.__refresh_after_tasks = getattr(
             config, "refresh_after_tasks", None)
+
+        # Host and port to connect to in order to talk to the Orchestrator.
+        self.__orchestrator_address = orchestrator.messageManager.address
 
 
     #--------------------------------------------------------------------------
@@ -1145,10 +989,11 @@ class ProcessManager (object):
             if self.__max_processes is not None and self.__max_processes > 0:
 
                 # Create the process pool.
-                #launcher_class = PluginPoolManager
-                launcher_class = PluginLauncher
-                self.__launcher = launcher_class(
-                    self.__max_processes, self.__refresh_after_tasks)
+                self.__launcher = PluginPoolManager(
+                    self.__max_processes,
+                    self.__refresh_after_tasks,
+                    self.__orchestrator_address,
+                )
 
                 # Start it
                 self.__launcher.start()
