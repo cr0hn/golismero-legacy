@@ -40,6 +40,7 @@ from golismero.api.plugin import import_plugin, get_plugin_name
 from collections import Counter
 from zipfile import ZipFile, ZIP_DEFLATED
 
+import cgi
 import os
 import os.path
 import warnings
@@ -219,6 +220,10 @@ class HTMLReport(json.JSONOutput):
         else:
             serialized_data = json.dumps(report_data)
         del report_data
+
+        # Escape all HTML entities from the serialized data,
+        # since the JSON library doesn't seem to do it.
+        serialized_data = cgi.escape(serialized_data)
 
         # Get the directory where we can find our template.
         html_report = os.path.dirname(__file__)
