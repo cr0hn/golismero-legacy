@@ -259,7 +259,8 @@
 					</div>
 					{{if taxonomy}}
 						<div class="well">
-							{{tmpl(taxonomy) "#taxonomyTechnical"}}	
+							<span class="bold">Taxonomy:</span>
+							{{tmpl(taxonomy) "#taxonomyTechnical"}}
 							
 						</div>
 					{{/if}}	
@@ -275,7 +276,8 @@
 					{{/if}}	
 					{{if references.length >0}}
 						<div class="well">	
-							{{tmpl(references) "#referencesTechnical"}}	
+							<span class="bold">References:</span>
+							{{tmpl(references) "#referencesTechnical"}}
 				   		</div>
 				   	{{/if}}	
 			   	</div>
