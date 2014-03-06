@@ -79,10 +79,15 @@ class Orchestrator (object):
         # Save the configuration.
         self.__config = config
 
-        # Instance the message manager.
+        # Instance the Queue message manager.
         self.__messageManager = MessageManager(is_rpc = False)
         self.__messageManager.listen()
         self.__messageManager.start()
+
+        # Instance the RPC message manager.
+        self.__rpcMessageManager = MessageManager(is_rpc = True)
+        self.__rpcMessageManager.listen()
+        self.__rpcMessageManager.start()
 
         # Set the Orchestrator context.
         self.__context = PluginContext(
@@ -183,6 +188,13 @@ class Orchestrator (object):
         """
         return self.__messageManager
 
+    @property
+    def rpcMessageManager(self):
+        """
+        :returns: RPC message manager.
+        :rtype: MessageManager
+        """
+        return self.__rpcMessageManager
 
     @property
     def pluginManager(self):

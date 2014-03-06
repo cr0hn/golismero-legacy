@@ -62,7 +62,39 @@ import sys
 from ..patches import mp  # noqa
 
 # Imports needed to override the multiprocessing Process and Pool classes.
-from multiprocessing.pool import Pool
+from multiprocessing import Process as _Original_Process
+from multiprocessing.pool import Pool as _Original_Pool
+
+
+#------------------------------------------------------------------------------
+class Process(_Original_Process):
+    """
+    A customized process that forces the 'daemon' property to False.
+
+    This means we have to take care of killing our own subprocesses.
+    """
+
+    @property
+    def daemon(self):
+        return False
+
+    @daemon.setter
+    def daemon(self, value):
+        pass
+
+    @daemon.deleter
+    def daemon(self, value):
+        pass
+
+
+#------------------------------------------------------------------------------
+class Pool(_Original_Pool):
+    """
+    A customized process pool that forces the 'daemon' property to False.
+
+    This means we have to take care of killing our own subprocesses.
+    """
+    Process = Process
 
 
 #------------------------------------------------------------------------------
@@ -80,6 +112,58 @@ msgManager = None
 # This increases startup time, but results in a speedup later on.
 def do_nothing(*args, **kwargs):
     return
+# Serializable function to run plugins in subprocesses.
+# This is required for Windows support, since we don't have os.fork() there.
+# See: http://docs.python.org/2/library/multiprocessing.html#windows
+def launcher(
+        queue, max_concurrent, refresh_after_tasks, orchestrator_address):
+    return _launcher(
+        queue, max_concurrent, refresh_after_tasks, orchestrator_address)
+
+def _launcher(
+        queue, max_concurrent, refresh_after_tasks, orchestrator_address):
+
+    # Initialize this worker process.
+    _init_worker()
+
+    # Instance the pool manager.
+    pool = PluginPoolManager(
+        max_concurrent, refresh_after_tasks, orchestrator_address)
+
+    # Start the pool manager.
+    wait = True
+    pool.start()
+    try:
+
+        # Consumer loop.
+        while True:
+
+            # Get the next plugin call to issue.
+            try:
+                item = queue.get()
+            except:
+                # If we reached this point we can assume
+                # the parent process is dead.
+                wait = False
+                exit(1)
+
+            # Handle the message to quit.
+            if item is True or item is False:
+                wait = item
+                return
+
+            # Handle the message to call a plugin.
+            pool.run_plugin(*item)
+
+    finally:
+
+        # Stop the pool manager.
+        try:
+            pool.stop(wait)
+        except:
+            # If we reached this point we can assume
+            # the parent process is dead.
+            exit(1)
 
 # Serializable bootstrap function to run plugins in subprocesses.
 # This is required for Windows support, since we don't have os.fork() there.
@@ -171,7 +255,10 @@ def _bootstrap(context, func, args, kwargs):
 
             # Close the message manager.
             if context._orchestrator_pid != getpid():
-                msgManager.close()
+                try:
+                    msgManager.close()
+                finally:
+                    msgManager = None
 
     # On keyboard interrupt or fatal error,
     # tell the Orchestrator we need to stop.
@@ -180,11 +267,12 @@ def _bootstrap(context, func, args, kwargs):
 
         # Send a message to the Orchestrator to stop.
         try:
-            context.send_msg(
-                message_type = MessageType.MSG_TYPE_CONTROL,
-                message_code = MessageCode.MSG_CONTROL_STOP,
-                message_info = False,
-            )
+            if msgManager is not None:
+                context.send_msg(
+                    message_type = MessageType.MSG_TYPE_CONTROL,
+                    message_code = MessageCode.MSG_CONTROL_STOP,
+                    message_info = False,
+                )
         except SystemExit:
             raise
         except:
@@ -548,14 +636,17 @@ class PluginContext (object):
         :rtype: MessageManager
         """
 
-        # If we're not yet connected...
-        global msgManager
-        if msgManager is None:
+        if hasattr(self, "_orchestrator"):
+            return self._orchestrator.rpcMessageManager
 
-            # Connect to the Orchestrator.
-            msgManager = MessageManager(is_rpc = True)
-            msgManager.connect(self.address)
-            msgManager.start()
+        # # If we're not yet connected...
+        # global msgManager
+        # if msgManager is None:
+        #
+        #     # Connect to the Orchestrator.
+        #     msgManager = MessageManager(is_rpc = True)
+        #     msgManager.connect(self.address)
+        #     msgManager.start()
 
         # Return the message manager.
         return msgManager
@@ -805,6 +896,140 @@ class PluginContext (object):
 
 
 #------------------------------------------------------------------------------
+class PluginLauncher (object):
+    """
+    Manages a pool of subprocesses to run plugins in them.
+    """
+
+
+    #--------------------------------------------------------------------------
+    def __init__(self, max_process, refresh_after_tasks, orchestrator_address):
+        """
+        :param max_process: Maximum number of processes to create.
+        :type max_process: int
+
+        :param refresh_after_tasks:
+                Maximum number of function calls to make
+                before refreshing a subprocess.
+        :type refresh_after_tasks: int
+
+        :param orchestrator_address:
+            Host and port for the Orchestrator message queue.
+        :type orchestrator_address: tuple(str, int)
+        """
+
+        # Initialize the launcher process, but do not start it yet.
+        try:
+            from multiprocessing import Manager
+            self.__manager = Manager()
+            self.__queue = self.__manager.Queue()
+
+        # If the above fails we can assume the parent process is dead.
+        except:
+            exit(1)
+
+        self.__process = Process(
+            target = launcher,
+            args   = (
+                self.__queue,
+                max_process,
+                refresh_after_tasks,
+                orchestrator_address
+            ),
+        )
+        self.__alive = True
+
+
+    #--------------------------------------------------------------------------
+    def run_plugin(self, context, func, args, kwargs):
+        """
+        Run a plugin in a pooled process.
+
+        :param context: Context for the OOP plugin execution.
+        :type context: PluginContext
+
+        :param func: Name of the method to execute.
+        :type func: str
+
+        :param args: Positional arguments to the function call.
+        :type args: tuple
+
+        :param kwargs: Keyword arguments to the function call.
+        :type kwargs: dict
+        """
+
+        # Raise an exception if the launcher had been stopped.
+        if not self.__alive:
+            raise RuntimeError("Plugin launcher was stopped")
+
+        # Send the plugin run request to the launcher process.
+        try:
+            self.__queue.put_nowait( (context, func, args, kwargs) )
+
+        # If the above fails we can assume the parent process is dead.
+        except:
+            try:
+                self.stop(wait = False)
+            except:
+                pass
+            exit(1)
+
+
+    #--------------------------------------------------------------------------
+    def start(self):
+        """
+        Start the plugin launcher.
+        """
+
+        # Raise an exception if the launcher had been stopped.
+        if not self.__alive:
+            raise RuntimeError("Plugin launcher was stopped")
+
+        # Start the launcher process.
+        self.__process.start()
+
+
+    #--------------------------------------------------------------------------
+    def stop(self, wait = True):
+        """
+        Stop the plugin launcher.
+
+        :param wait: True to wait for the subprocesses to finish,
+            False to kill them.
+        :type wait: bool
+        """
+
+        # Ignore the request if the launcher was already stopped.
+        if not self.__alive:
+            return
+
+        try:
+
+            # Signal the launcher process to stop.
+            self.__queue.put_nowait(wait)
+
+            # Wait for the launcher process to stop.
+            if wait:
+                self.__process.join()
+            else:
+                self.__process.join(3)
+                try:
+                    self.__process.terminate()
+                except Exception:
+                    pass
+
+        # If the pipe is closed, terminate the process.
+        except:
+            self.__process.terminate()
+
+        # Clean up.
+        self.__alive   = False
+        self.__process = None
+        self.__queue   = None
+        self.__manager = None
+
+
+#------------------------------------------------------------------------------
 class PluginPoolManager (object):
     """
     Manages a pool of subprocesses to run plugins in them.
@@ -996,7 +1221,8 @@ class ProcessManager (object):
             if self.__max_processes is not None and self.__max_processes > 0:
 
                 # Create the process pool.
-                self.__launcher = PluginPoolManager(
+                ##self.__launcher = PluginPoolManager(
+                self.__launcher = PluginLauncher(
                     self.__max_processes,
                     self.__refresh_after_tasks,
                     self.__orchestrator_address,

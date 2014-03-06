@@ -615,7 +615,8 @@ class AuditNotifier(AbstractNotifier):
                 skip_run = True
                 plugin_id = audit.pluginManager.\
                                 get_plugin_info_from_instance(plugin)[0]
-                if payload.depth == depth and plugin_id != "testing/recon/spider":
+                if payload.depth == depth and \
+                                plugin_id != "testing/recon/spider":
                     skip_run = False
                 if skip_run:
 
@@ -635,7 +636,7 @@ class AuditNotifier(AbstractNotifier):
                     # Skip execution of this plugin.
                     return
 
-            # Prepare the context for the OOP observer.
+            # Prepare the context for the plugin execution.
             context = orchestrator.build_plugin_context(
                 audit.name, plugin, ack_identity
             )
@@ -646,7 +647,7 @@ class AuditNotifier(AbstractNotifier):
         # If it's any other message type...
         else:
 
-            # Prepare the context for the OOP observer.
+            # Prepare the context for the plugin execution.
             context = orchestrator.build_plugin_context(
                 audit.name, plugin, None
             )

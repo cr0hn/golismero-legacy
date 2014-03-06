@@ -104,6 +104,7 @@ class MessageManager(Thread):
             self.__link.loop()
             self.debug("run() => finished")
         except:
+            self.debug("run() => ERROR")
             if self.DEBUG:
                 print_exc()
 
