@@ -508,6 +508,38 @@ class Audit (object):
 
 
     #--------------------------------------------------------------------------
+    def inc_expected_ack(self, count = 1):
+        """
+        Increase the number of expected ACK messages.
+
+        :param count: How many new messages to expect.
+        :type count: int
+        """
+        self.__expecting_ack += count
+
+        # XXX DEBUG
+        if self.orchestrator.messageManager.DEBUG:
+            print "EXPECTING ACK %d => %s" % (
+                self.__expecting_ack - count, self.__expecting_ack)
+
+
+    #--------------------------------------------------------------------------
+    def dec_expected_ack(self, count = 1):
+        """
+        Decrease the number of expected ACK messages.
+
+        :param count: How many ACK messages have arrived.
+        :type count: int
+        """
+        self.__expecting_ack -= count
+
+        # XXX DEBUG
+        if self.orchestrator.messageManager.DEBUG:
+            print "EXPECTING ACK %d => %s" % (
+                self.__expecting_ack + count, self.__expecting_ack)
+
+
+    #--------------------------------------------------------------------------
     def get_runtime_stats(self):
         """
         Returns a dictionary with runtime statistics with at least the
@@ -807,7 +839,7 @@ class Audit (object):
 
             # Decrease the expected ACK count.
             # The audit manager will check when this reaches zero.
-            self.__expecting_ack -= 1
+            self.dec_expected_ack()
 
             # Tell the notifier about this ACK.
             self.__notifier.acknowledge(message)
@@ -1036,9 +1068,9 @@ class Audit (object):
                 # Send the message to the plugins, and track the expected ACKs.
                 launched = self.__notifier.notify(message)
                 if launched:
-                    self.__expecting_ack += launched
+                    self.inc_expected_ack(launched)
                 else:
-                    self.__expecting_ack += 1
+                    self.inc_expected_ack()
                     self.send_msg(
                         message_type = MessageType.MSG_TYPE_CONTROL,
                         message_code = MessageCode.MSG_CONTROL_ACK,
@@ -1172,7 +1204,7 @@ class Audit (object):
             raise RuntimeError("Why are you asking for the report twice?")
 
         # An ACK is expected after launching the report plugins.
-        self.__expecting_ack += 1
+        self.inc_expected_ack()
         try:
 
             # Mark the report generation as started for this audit.
@@ -1200,9 +1232,9 @@ class Audit (object):
 
             # Handle the ACK messages.
             if launched:
-                self.__expecting_ack += launched
+                self.inc_expected_ack(launched)
             else:
-                self.__expecting_ack += 1
+                self.inc_expected_ack()
                 self.send_msg(message_type = MessageType.MSG_TYPE_CONTROL,
                               message_code = MessageCode.MSG_CONTROL_ACK,
                                   priority = MessagePriority.MSG_PRIORITY_LOW)
