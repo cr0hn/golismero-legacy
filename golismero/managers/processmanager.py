@@ -67,6 +67,9 @@ from multiprocessing.pool import Pool
 
 #------------------------------------------------------------------------------
 
+# Timeout for RPC calls, in seconds. Use None for no timeout.
+RPC_TIMEOUT = 10.0
+
 # Plugin class per-process cache. Used by the bootstrap() function.
 plugin_class_cache = dict()   # tuple(class, module) -> class object
 
@@ -165,6 +168,10 @@ def _bootstrap(context, func, args, kwargs):
 
             # Reset the current crawling depth.
             context._depth = -1
+
+            # Close the message manager.
+            if context._orchestrator_pid != getpid():
+                msgManager.close()
 
     # On keyboard interrupt or fatal error,
     # tell the Orchestrator we need to stop.
@@ -711,7 +718,7 @@ class PluginContext (object):
 
         # Get the response.
         try:
-            raw_response = self._msg_manager.get()  # blocking call
+            raw_response = self._msg_manager.get(RPC_TIMEOUT)  # blocking call
 
         # If the above fails we can assume the parent process is dead.
         except:

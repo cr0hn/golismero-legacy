@@ -174,9 +174,9 @@ class MessageManager(Thread):
 
 
     #--------------------------------------------------------------------------
-    def get(self):
+    def get(self, timeout = None):
         self.debug("get()")
-        raw = self.__queue.get()
+        raw = self.__queue.get(timeout = timeout)
         data = pickle.loads(raw)
         self.debug("get() => %r", data)
         return data
