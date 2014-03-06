@@ -70,7 +70,7 @@ class HarvesterPlugin(TestingPlugin):
 
     # Supported theHarvester modules.
     SUPPORTED = (
-        "google", "bing", "pgp", "linkedin", "dogpile",
+        "google", "bing", "linkedin", "dogpile", #"pgp"
     )
 
 
@@ -113,6 +113,7 @@ class HarvesterPlugin(TestingPlugin):
 
         # Email addresses.
         emails_found = set()
+        emails_count = 0
         for address in all_emails:
             if "..." in address:                    # known bug in theHarvester
                 continue
@@ -139,6 +140,7 @@ class HarvesterPlugin(TestingPlugin):
                 data.add_resource(info)
                 results.append(data)
                 all_hosts.add(data.hostname)
+                emails_count += 1
             else:
                 Logger.log_more_verbose(
                     "Email address out of scope: %s" % address)
@@ -147,6 +149,8 @@ class HarvesterPlugin(TestingPlugin):
         # Hostnames.
         visited = set()
         total = float(len(all_hosts))
+        hosts_count = 0
+        ips_count = 0
         for step, name in enumerate(all_hosts):
             while name and not name[0].isalnum():   # known bug in theHarvester
                 name = name[1:]
@@ -185,6 +189,7 @@ class HarvesterPlugin(TestingPlugin):
                     data = Domain(name)
                     data.add_resource(info)
                     results.append(data)
+                    hosts_count += 1
                     for ip in addresslist:
                         with warnings.catch_warnings():
                             warnings.filterwarnings("ignore")
@@ -196,14 +201,15 @@ class HarvesterPlugin(TestingPlugin):
                         d = IP(ip)
                         data.add_resource(d)
                         results.append(d)
+                        ips_count += 1
 
         self.update_status(progress=100.0)
-        text = "Found %d emails and %d hostnames for keyword %r"
-        text = text % (len(all_emails), len(all_hosts), word)
-        if len(all_emails) + len(all_hosts) > 0:
+        text = "Found %d emails, %d hostnames and %d IP addresses " \
+               "for keyword %r" % (emails_count, hosts_count, ips_count, word)
+        if len(results) > 0:
             Logger.log(text)
         else:
-            Logger.log_verbose(text)
+            Logger.log_more_verbose(text)
 
         # Return the data.
         return results
