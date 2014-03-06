@@ -747,7 +747,7 @@ class PluginContext (object):
                         self.audit_name, message_code, *message_info)
             return
 
-        # Send the raw message.
+        # Build the raw message.
         message = Message(message_type = message_type,
                           message_code = message_code,
                           message_info = message_info,
@@ -755,6 +755,15 @@ class PluginContext (object):
                              plugin_id = self.plugin_id,
                           ack_identity = self.ack_identity,
                               priority = priority)
+
+        # Special case for ACKs, we want to ensure they're processed
+        # before returning.
+        if message_type == MessageType.MSG_TYPE_CONTROL and \
+                        message_code == MessageCode.MSG_CONTROL_ACK:
+            self.remote_call(MessageCode.MSG_RPC_SEND_MESSAGE, message)
+            return
+
+        # Build the message normally.
         self.send_raw_msg(message)
 
 

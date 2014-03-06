@@ -112,6 +112,16 @@ def rpc_bulk(orchestrator, audit_name, rpc_code, *arguments):
 
 
 #------------------------------------------------------------------------------
+# Ensures the message is received by the Orchestrator.
+
+@implementor(MessageCode.MSG_RPC_SEND_MESSAGE)
+def rpc_send_message(orchestrator, audit_name, message):
+
+    # Enqueue the ACK message.
+    orchestrator.enqueue_msg(message)
+
+
+#------------------------------------------------------------------------------
 class RPCManager (object):
     """
     Executes remote procedure calls from plugins.

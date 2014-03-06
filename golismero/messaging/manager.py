@@ -137,8 +137,8 @@ class MessageManager(Thread):
             self.debug("close( pid=%s, tid=%s ) <= from pid %s, tid %s" %
                        (self.__pid, self.ident, getpid(), get_ident()))
         try:
-            import time
-            time.sleep(1.5)
+            ##import time
+            ##time.sleep(1.5)
             self.__link.stop()
         except:
             if self.DEBUG:
