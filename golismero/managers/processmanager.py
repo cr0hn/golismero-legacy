@@ -1052,7 +1052,7 @@ class PluginPoolManager (object):
         :type orchestrator_address: tuple(str, int)
         """
         self.__max_processes        = max_process
-        self.__refresh_after_tasks  = refresh_after_tasks
+        self.__refresh_after_tasks  = 1 #refresh_after_tasks
         self.__orchestrator_address = orchestrator_address
 
         self.__pool = None
