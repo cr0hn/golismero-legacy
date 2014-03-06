@@ -57,11 +57,11 @@ class MessageManager(Thread):
     #--------------------------------------------------------------------------
     def __init__(self, is_rpc = True):
 
-        if self.DEBUG:
-            import logging
-            snakemq.init_logging()
-            logger = logging.getLogger("snakemq")
-            logger.setLevel(logging.DEBUG)
+        ##if self.DEBUG:
+        ##    import logging
+        ##    snakemq.init_logging()
+        ##    logger = logging.getLogger("snakemq")
+        ##    logger.setLevel(logging.DEBUG)
 
         self.__pid = getpid()
         self.__rpc_name = "golismero-rpc-%d" % self.__pid
@@ -107,6 +107,8 @@ class MessageManager(Thread):
             self.debug("run() => ERROR")
             if self.DEBUG:
                 print_exc()
+        self.__link.cleanup()
+        self.debug("run() => cleanup")
 
 
     #--------------------------------------------------------------------------
@@ -135,16 +137,9 @@ class MessageManager(Thread):
             self.debug("close( pid=%s, tid=%s ) <= from pid %s, tid %s" %
                        (self.__pid, self.ident, getpid(), get_ident()))
         try:
-            try:
-                try:
-                    self.__link.stop()
-                finally:
-                    self.__link.cleanup()
-            finally:
-                if self.ident == get_ident():
-                    exit_thread()
-        except SystemExit:
-            raise
+            import time
+            time.sleep(1.5)
+            self.__link.stop()
         except:
             if self.DEBUG:
                 import traceback
