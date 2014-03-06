@@ -122,8 +122,8 @@ class ConsoleUIPlugin(UIPlugin):
                 simple_id = len(id_dict)
                 id_dict[message.ack_identity] = simple_id
 
-                # Show this event in verbose mode.
-                if Console.level >= Console.VERBOSE:
+                # Show this event in extra verbose mode.
+                if Console.level >= Console.MORE_VERBOSE:
 
                     # Show a message to the user.
                     m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)
@@ -134,8 +134,8 @@ class ConsoleUIPlugin(UIPlugin):
             # A plugin has ended.
             elif message.message_code == MessageCode.MSG_STATUS_PLUGIN_END:
 
-                # Show this event in verbose mode.
-                if Console.level >= Console.VERBOSE:
+                # Show this event in extra verbose mode.
+                if Console.level >= Console.MORE_VERBOSE:
 
                     # Show a message to the user.
                     m_plugin_name = self.get_plugin_name(message.plugin_id, message.ack_identity)

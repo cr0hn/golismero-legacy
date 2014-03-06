@@ -97,6 +97,13 @@ from os import getenv, getpid
 from thread import get_ident
 from traceback import format_exc
 
+# Hack to disable logging in SnakeMQ.
+import snakemq
+if path.sep == "\\":
+    snakemq.init_logging(open("nul", "w"))
+else:
+    snakemq.init_logging(open("/dev/null", "w"))
+
 
 #------------------------------------------------------------------------------
 # GoLismero modules

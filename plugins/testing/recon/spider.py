@@ -127,7 +127,7 @@ class Spider(TestingPlugin):
         if m_urls_in_scope:
             Logger.log_verbose("Found %d links in URL: %s" % (len(m_urls_allowed), m_url))
         else:
-            Logger.log_verbose("No links found in URL: %s" % m_url)
+            Logger.log_more_verbose("No links found in URL: %s" % m_url)
 
         # Convert to URL data type
         for u in m_urls_in_scope:
@@ -180,7 +180,7 @@ class Spider(TestingPlugin):
         if m_forms_in_scope:
             Logger.log_verbose("Found %d forms in URL: %s" % (len(m_forms_in_scope), m_url))
         else:
-            Logger.log_verbose("No forms found in URL: %s" % m_url)
+            Logger.log_more_verbose("No forms found in URL: %s" % m_url)
 
         # Convert to URL data type
         for u in m_forms_in_scope:

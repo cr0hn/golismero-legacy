@@ -197,6 +197,7 @@ class HarvesterPlugin(TestingPlugin):
                         data.add_resource(d)
                         results.append(d)
 
+        self.update_status(progress=100.0)
         text = "Found %d emails and %d hostnames for keyword %r"
         text = text % (len(all_emails), len(all_hosts), word)
         if len(all_emails) + len(all_hosts) > 0:
