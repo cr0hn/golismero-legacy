@@ -71,7 +71,9 @@ class SpiderFootPlugin(TestingPlugin):
         # Check the parameters.
         try:
             raw_url = Config.plugin_args["url"]
-            assert raw_url, "Missing URL"
+            assert raw_url, "SpiderFoot plugin not configured!" \
+                            " Please specify the URL to connect to" \
+                            " the SpiderFoot server."
             url = parse_url(raw_url)
             assert url.scheme, "Invalid URL"
             assert url.host, "Invalid URL"
