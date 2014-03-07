@@ -126,7 +126,7 @@ class PlecostPlugin(TestingPlugin):
         # Try to detect if there is installed a WordPress
         #
         wordpress_found = self.__detect_wordpress_installation(url, wordpress_urls)
-        Logger.log_verbose("%s WordPress instalation found." % "No" if wordpress_found is False else "")
+        Logger.log_verbose("%s WordPress instalation found in '%s'." % ("No" if wordpress_found is False else "", url))
 
         if wordpress_found is False:
             return
@@ -300,7 +300,6 @@ class PlecostPlugin(TestingPlugin):
 
         return results
 
-
     #--------------------------------------------------------------------------
     def __detect_wordpress_installation(self, url, wordpress_urls):
         """
@@ -315,16 +314,23 @@ class PlecostPlugin(TestingPlugin):
         :return: True if wordpress installation found. False otherwise.
         :rtype: bool
         """
-        Logger.log("Detecting Wordpress instalation in URI: '%s'." % url)
+        Logger.log_more_verbose("Detecting Wordpress instalation in URI: '%s'." % url)
         total_urls = 0
         urls_found = 0
+
+        error_page = get_error_page(url).raw_data
+
         for u in WordListLoader.get_wordlist(wordpress_urls):
             total_urls += 1
             tmp_url = urljoin(url, u)
 
             r = HTTP.get_url(tmp_url, use_cache=False)
             if r.status == "200":
-                urls_found += 1
+
+                # Try to detect non-default error pages
+                ratio = get_diff_ratio(r.raw_response, error_page)
+                if ratio < 0.35:
+                    urls_found += 1
 
             discard_data(r)
 
