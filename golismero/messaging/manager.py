@@ -37,8 +37,8 @@ from ..api.config import Config
 
 from os import getpid
 from Queue import Queue
-from thread import get_ident, exit_thread
-from threading import Thread
+from thread import get_ident
+from threading import Thread, RLock, Condition
 from traceback import print_exc
 
 import snakemq
@@ -56,12 +56,14 @@ class MessageManager(Thread):
 
     #--------------------------------------------------------------------------
     def __init__(self, is_rpc = True):
+        super(MessageManager, self).__init__()
+        self.setDaemon(True)
 
-        ##if self.DEBUG:
-        ##    import logging
-        ##    snakemq.init_logging()
-        ##    logger = logging.getLogger("snakemq")
-        ##    logger.setLevel(logging.DEBUG)
+        if self.DEBUG:
+            import logging
+            snakemq.init_logging(open("snakemq-%s.log" % getpid(), "w"))
+            logger = logging.getLogger("snakemq")
+            logger.setLevel(logging.DEBUG)
 
         self.__pid = getpid()
         self.__rpc_name = "golismero-rpc-%d" % self.__pid
@@ -79,9 +81,13 @@ class MessageManager(Thread):
         self.__messaging.on_message_recv.add(self.__callback)
 
         self.__address = None
-        self.__queue   = Queue()
 
-        super(MessageManager, self).__init__()
+        self.__queue = Queue()
+        ##self.__queue.mutex = RLock()
+        ##self.__queue.not_empty = Condition(self.__queue.mutex)
+        ##self.__queue.not_full = Condition(self.__queue.mutex)
+        ##self.__queue.all_tasks_done = Condition(self.__queue.mutex)
+
         self.debug("__init__(%r) => completed" % self.name)
 
 

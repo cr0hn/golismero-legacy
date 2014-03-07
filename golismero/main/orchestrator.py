@@ -382,6 +382,7 @@ class Orchestrator (object):
         if not isinstance(message, Message):
             raise TypeError(
                 "Expected Message, got %r instead" % type(message))
+
         if (
             message.priority == MessagePriority.MSG_PRIORITY_HIGH and
             Config._has_context and getpid() == Config._context._orchestrator_pid
@@ -429,15 +430,15 @@ class Orchestrator (object):
 
         # Return the context instance.
         return PluginContext(
-            orchestrator_pid = self.__context._orchestrator_pid,
-            orchestrator_tid = self.__context._orchestrator_tid,
-                   msg_queue = self.messageManager.name,
                      address = self.messageManager.address,
+                   msg_queue = self.messageManager.name,
                 ack_identity = ack_identity,
                  plugin_info = info,
                   audit_name = audit_name,
                 audit_config = audit_config,
                  audit_scope = audit_scope,
+            orchestrator_pid = self.__context._orchestrator_pid,
+            orchestrator_tid = self.__context._orchestrator_tid,
         )
 
 

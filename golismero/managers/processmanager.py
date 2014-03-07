@@ -9,6 +9,7 @@ The bootstrapping code for plugins is also here.
 
 Lots of black magic going on, beware of dragons! :)
 """
+import os
 
 __license__ = """
 GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
@@ -72,11 +73,13 @@ class Process(_Original_Process):
     A customized process that forces the 'daemon' property to False.
 
     This means we have to take care of killing our own subprocesses.
+
+    This only affects Windows platforms.
     """
 
     @property
     def daemon(self):
-        return False
+        return os.path.sep == "/"
 
     @daemon.setter
     def daemon(self, value):
@@ -93,6 +96,8 @@ class Pool(_Original_Pool):
     A customized process pool that forces the 'daemon' property to False.
 
     This means we have to take care of killing our own subprocesses.
+
+    This only affects Windows platforms.
     """
     Process = Process
 
@@ -100,7 +105,7 @@ class Pool(_Original_Pool):
 #------------------------------------------------------------------------------
 
 # Timeout for RPC calls, in seconds. Use None for no timeout.
-RPC_TIMEOUT = 10.0
+RPC_TIMEOUT = None #10.0
 
 # Plugin class per-process cache. Used by the bootstrap() function.
 plugin_class_cache = dict()   # tuple(class, module) -> class object
@@ -453,8 +458,7 @@ class PluginContext (object):
     def __init__(self, address, msg_queue,
                  ack_identity = None, plugin_info = None,
                  audit_name = None, audit_config = None, audit_scope = None,
-                 orchestrator_pid = None, orchestrator_tid = None,
-                 orchestrator_address = None):
+                 orchestrator_pid = None, orchestrator_tid = None):
         """
         Serializable execution context for the plugins.
 
@@ -501,7 +505,6 @@ class PluginContext (object):
         self.__audit_scope      = audit_scope
         self.__orchestrator_pid = orchestrator_pid
         self.__orchestrator_tid = orchestrator_tid
-        self.__orchestrator_address = orchestrator_address
 
     @property
     def address(self):
@@ -635,18 +638,26 @@ class PluginContext (object):
         :returns: Message manager.
         :rtype: MessageManager
         """
+        global msgManager
 
-        if hasattr(self, "_orchestrator"):
-            return self._orchestrator.rpcMessageManager
+        # For some reason tonight I have no time for figuring out,
+        # this only works well on Windows (and fails without it),
+        # but on Linux it's exactly the other way around. My guess
+        # is the difference is related to Windows starting new
+        # processes from scratch and Linux forking them instead.
+        if os.path.sep == "\\":
+            if hasattr(self, "_orchestrator"):
+                msgManager = self._orchestrator.rpcMessageManager
 
-        # # If we're not yet connected...
-        # global msgManager
-        # if msgManager is None:
-        #
-        #     # Connect to the Orchestrator.
-        #     msgManager = MessageManager(is_rpc = True)
-        #     msgManager.connect(self.address)
-        #     msgManager.start()
+        # I think this code may actually leak file descriptors, so
+        # the sooner I can figure this out and fix it, the better. :(
+        if msgManager is None:
+            msgManager = MessageManager(is_rpc = True)
+            msgManager.connect(self.address)
+            msgManager.start()
+            if hasattr(self, "_orchestrator"):
+                self._orchestrator._Orchestrator__rpcMessageManager = \
+                    msgManager
 
         # Return the message manager.
         return msgManager
@@ -1230,8 +1241,9 @@ class ProcessManager (object):
             if self.__max_processes is not None and self.__max_processes > 0:
 
                 # Create the process pool.
-                ##self.__launcher = PluginPoolManager(
-                self.__launcher = PluginLauncher(
+                ##launcherClass = PluginPoolManager
+                launcherClass = PluginLauncher
+                self.__launcher = launcherClass(
                     self.__max_processes,
                     self.__refresh_after_tasks,
                     self.__orchestrator_address,
