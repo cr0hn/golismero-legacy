@@ -57,6 +57,8 @@ from golismero.api.plugin import TestingPlugin, ImportPlugin
 from golismero.api.data.vulnerability import UncategorizedVulnerability, Vulnerability
 from golismero.api.data.vulnerability.infrastructure.outdated_platform import *  # noqa
 from golismero.api.data.vulnerability.infrastructure.outdated_software import *  # noqa
+from golismero.api.data.vulnerability.information_disclosure.insecure_method import *  # noqa
+from golismero.api.data.vulnerability.malware import *  # noqa
 
 
 #------------------------------------------------------------------------------
