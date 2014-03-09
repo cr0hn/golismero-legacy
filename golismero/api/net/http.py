@@ -71,10 +71,6 @@ class _HTTP(Singleton):
         .. warning: Called automatically by GoLismero. Do not call!
         """
 
-        # Initialize the CA bundle.
-        if not environ.get("CURL_CA_BUNDLE"):
-            environ["CURL_CA_BUNDLE"] = join(get_data_folder(), "cacert.pem")
-
         # Start a new session.
         self.__session = Session()
 
