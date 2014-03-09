@@ -377,18 +377,22 @@ class OpenVASPlugin(TestingPlugin):
                 vid       = opv.id
                 oid       = int(nvt.oid.split(".")[-1])
                 name      = getattr(nvt, "name", None)
-                cve       = nvt.cve.split(", ") if nvt.cve else []
                 cvss_base = getattr(nvt, "cvss_base", None)
                 level     = LEVELS.get(threat, "informational")
                 risk      = RISKS.get(
                     getattr(opv.nvt, "risk_factor", "none").lower(), 0)
 
-                # Extract the Bugtraq IDs.
+                # Extract the CVEs and Bugtraq IDs.
+                cve = nvt.cve.split(", ") if nvt.cve else []
+                if "NOCVE" in cve:
+                    cve.remove("NOCVE")
                 bid = []
                 if nvt.bid:
                     bid.extend("BID-" + x for x in nvt.bid.split(", "))
                 if nvt.bugtraq:
                     bid.extend("BID-" + x for x in nvt.bugtraq.split(", "))
+                if "NOBID" in bid:
+                    cve.remove("NOBID")
 
                 # Extract the notes and add them to the description text.
                 if opv.notes:
