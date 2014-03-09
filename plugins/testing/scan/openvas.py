@@ -55,7 +55,7 @@ from golismero.api.data.resource.domain import Domain
 from golismero.api.net.scraper import extract_from_text
 from golismero.api.plugin import TestingPlugin, ImportPlugin
 
-from golismero.api.data.vulnerability import UncategorizedVulnerability #noqa
+from golismero.api.data.vulnerability import UncategorizedVulnerability, Vulnerability  #noqa
 from golismero.api.data.vulnerability.infrastructure.outdated_platform import * # noqa
 from golismero.api.data.vulnerability.infrastructure.outdated_software import * # noqa
 from golismero.api.data.vulnerability.information_disclosure.insecure_method import * # noqa
