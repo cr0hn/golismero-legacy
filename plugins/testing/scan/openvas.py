@@ -404,13 +404,16 @@ class OpenVASPlugin(TestingPlugin):
                         q = q2
                     if q < p:
                         q = len(description)
-                    url = description[p:q]
+                    url = description[p:q].strip()
                     try:
                         if url not in Config.audit_scope:
                             references.append(url)
                     except Exception:
                         pass
-                    p = description.find("URL:", q)
+                    if description[q] == "\n":
+                        p = description.find("URL:", q)
+                    else:
+                        p = q + 2
 
                 # Prepare the vulnerability properties.
                 kwargs = {
