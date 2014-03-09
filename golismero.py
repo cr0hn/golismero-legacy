@@ -1082,6 +1082,9 @@ def command_run(parser, P, cmdParams, auditParams):
         msg = str(e)
         if not msg:
             msg = "configuration error!"
+        elif msg == "No targets selected for audit.":
+            msg = "no targets selected for audit " \
+                  "(did you misspell the database filename?)"
         parser.error(msg)
 
     # Launch GoLismero.
