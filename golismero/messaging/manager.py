@@ -113,7 +113,10 @@ class MessageManager(Thread):
             self.debug("run() => ERROR")
             if self.DEBUG:
                 print_exc()
-        self.__link.cleanup()
+        try:
+            self.__link.cleanup()
+        except:
+            pass
         self.debug("run() => cleanup")
 
 
