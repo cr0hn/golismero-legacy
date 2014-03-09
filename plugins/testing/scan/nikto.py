@@ -344,12 +344,14 @@ class NiktoPlugin(TestingPlugin):
                         refs = extract_from_text(text)
                         refs.difference_update(urls_seen.itervalues())
 
-                        # Report the vulnerabilities.
+                        # Convert the information to the GoLismero model.
                         if vuln_tag == "OSVDB-0":
                             kwargs = {"level": "informational"}
                         else:
                             kwargs = extract_vuln_ids(
                                 "%s: %s" % (vuln_tag, text))
+                        kwargs["custom_id"] = ";".join(
+                            (host, ip, port, vuln_tag, method, path, text))
                         kwargs["description"] = text if text else None
                         kwargs["references"]  = refs
                         if "osvdb" in kwargs and "OSVDB-0" in kwargs["osvdb"]:
@@ -359,10 +361,14 @@ class NiktoPlugin(TestingPlugin):
                                 kwargs["osvdb"] = tuple(tmp)
                             else:
                                 del kwargs["osvdb"]
+
+                        # Instance the Vulnerability object.
                         if vuln_tag == "OSVDB-0":
                             vuln = UncategorizedVulnerability(url, **kwargs)
                         else:
                             vuln = VulnerableWebApp(url, **kwargs)
+
+                        # Add the vulnerability to the results.
                         results.append(vuln)
                         vuln_count += 1
 
