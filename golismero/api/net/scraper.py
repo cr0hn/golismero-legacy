@@ -137,7 +137,6 @@ def extract_from_text(text, base_url = None, only_links = True):
 
     # Set where the URLs will be collected.
     result = set()
-    add_result = result.add
 
     # Remove the fragment from the base URL.
     if base_url:
@@ -147,6 +146,10 @@ def extract_from_text(text, base_url = None, only_links = True):
     for regex in (_re_url_rfc, _re_url_readable):
         for url in regex.findall(text):
             url = url[0]
+
+            # Skip if we've already seen it.
+            if url in result:
+                continue
 
             # XXX FIXME
             # Make sure the text is really ASCII text.
@@ -167,24 +170,31 @@ def extract_from_text(text, base_url = None, only_links = True):
                 except Exception:
                     continue
 
-                # Discard URLs that are not links to other pages or resources.
-                if only_links and not is_link(url, base_url = base_url):
+                # Skip if we've already seen it.
+                if url in result:
+                    continue
+
+                # Discard URLs that are not links to other pages or resources,
+                # and URLs we've already seen.
+                if only_links and (url in result or
+                                       not is_link(url, base_url = base_url)):
                     continue
 
             # If a base URL was NOT given...
             else:
 
                 # Discard relative URLs.
-                # Also discard it on parse error.
+                # Also discard them on parse error.
                 try:
                     parsed = parse_url(url)
                     if not parsed.scheme or not parsed.netloc:
                         continue
                 except Exception:
+                    raise
                     continue
 
             # Add the URL to the set.
-            add_result(url)
+            result.add(url)
 
     # Return the set of collected URLs.
     return result
