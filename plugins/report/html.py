@@ -70,6 +70,9 @@ class HTMLReport(json.JSONOutput):
     #--------------------------------------------------------------------------
     def generate_report(self, output_file):
 
+        Logger.log_verbose(
+            "Writing HTML report to file: %s" % output_file)
+
         Logger.log_more_verbose("Generating JSON database...")
 
         # Warn about --full not being supported by this plugin.
