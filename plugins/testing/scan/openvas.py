@@ -325,6 +325,12 @@ class OpenVASPlugin(TestingPlugin):
         with open(openvas_db, "rb") as f:
             use_openvas_db = Pickler.load(f)
 
+        # Get the configuration.
+        import_log = Config.audit_config.boolean(
+            Config.plugin_args.get("import_log", "no"))
+        import_debug = Config.audit_config.boolean(
+            Config.plugin_args.get("import_debug", "no"))
+
         # For each OpenVAS result...
         for opv in openvas_results:
             try:
@@ -334,6 +340,15 @@ class OpenVASPlugin(TestingPlugin):
 
                 # Skip if we don't have a target host.
                 if host is None:
+                    continue
+
+                # Get the threat level.
+                threat = getattr(opv, "threat", "log").lower()
+
+                # Discard log and debug entries, keep only the vulnerabilities.
+                if threat == "log" and not import_log:
+                    continue
+                if threat == "debug" and not import_debug:
                     continue
 
                 # Get or create the vulnerable resource.
@@ -358,15 +373,15 @@ class OpenVASPlugin(TestingPlugin):
                             description = None
 
                 # Extract the relevant information from the results.
-                vid       = opv.id
-                oid       = int(opv.nvt.oid.split(".")[-1])
                 nvt       = opv.nvt
-                cve       = nvt.cve.split(", ") if nvt.cve else []
-                risk      = RISKS.get(nvt.risk_factor.lower(), 0)
+                vid       = opv.id
+                oid       = int(nvt.oid.split(".")[-1])
                 name      = getattr(nvt, "name", None)
-                cvss_base = getattr(nvt, "cvss_base", 0.0)
-                level     = LEVELS.get(
-                    getattr(opv, "threat", "log").lower(), "informational")
+                cve       = nvt.cve.split(", ") if nvt.cve else []
+                cvss_base = getattr(nvt, "cvss_base", None)
+                level     = LEVELS.get(threat, "informational")
+                risk      = RISKS.get(
+                    getattr(opv.nvt, "risk_factor", "none").lower(), 0)
 
                 # Extract the notes and add them to the description text.
                 if opv.notes:
@@ -378,24 +393,27 @@ class OpenVASPlugin(TestingPlugin):
                 # Extract the reference URLs from the description text.
                 # We'll consider any URL outside of scope as a reference.
                 # It's not perfect, but a good enough heuristic.
-                references = [
-                    url for url in extract_from_text(description)
-                    if url not in Config.audit_scope
-                ]
+                references = []
+                for url in extract_from_text(description):
+                    try:
+                        if url not in Config.audit_scope:
+                            references.append(url)
+                    except Exception:
+                        pass
 
                 # Prepare the vulnerability properties.
                 kwargs = {
-                    "level": level,
-                    "description": description,
-                    "references": references,
-                    "cve": cve,
-                    "risk": risk,
-                    "severity": risk,
-                    "impact": risk,
-                    "cvss_base": cvss_base,
-                    "title": name,
-                    "tool_id": "openvas_plugin_%s" % oid,
-                    "custom_id": vid,
+                    "title":        name,
+                    "description":  description,
+                    "references":   references,
+                    "level":        level,
+                    "risk":         risk,
+                    "severity":     risk,
+                    "impact":       risk,
+                    "cvss_base":    cvss_base,
+                    "cve":          cve,
+                    "tool_id":      "openvas_plugin_%s" % oid,
+                    "custom_id":    vid,
                 }
 
                 # If we have the OpenVAS plugin database, look up the plugin ID
