@@ -52,7 +52,6 @@ from golismero.api.config import Config
 from golismero.api.data.db import Database
 from golismero.api.data.resource.ip import IP
 from golismero.api.data.resource.domain import Domain
-from golismero.api.net.scraper import extract_from_text
 from golismero.api.plugin import TestingPlugin, ImportPlugin
 
 from golismero.api.data.vulnerability import UncategorizedVulnerability, Vulnerability  #noqa
@@ -394,12 +393,24 @@ class OpenVASPlugin(TestingPlugin):
                 # We'll consider any URL outside of scope as a reference.
                 # It's not perfect, but a good enough heuristic.
                 references = []
-                for url in extract_from_text(description):
+                p = description.find("URL:")
+                while p >= 0:
+                    p += 4
+                    q2 = description.find("\n", p)
+                    q1 = description.find(", ", p, q2)
+                    if q1 > p:
+                        q = q1
+                    else:
+                        q = q2
+                    if q < p:
+                        q = len(description)
+                    url = description[p:q]
                     try:
                         if url not in Config.audit_scope:
                             references.append(url)
                     except Exception:
                         pass
+                    p = description.find("URL:", q)
 
                 # Prepare the vulnerability properties.
                 kwargs = {
