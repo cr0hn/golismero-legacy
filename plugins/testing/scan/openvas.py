@@ -383,6 +383,13 @@ class OpenVASPlugin(TestingPlugin):
                 risk      = RISKS.get(
                     getattr(opv.nvt, "risk_factor", "none").lower(), 0)
 
+                # Extract the Bugtraq IDs.
+                bid = []
+                if nvt.bid:
+                    bid.extend("BID-" + x for x in nvt.bid.split(", "))
+                if nvt.bugtraq:
+                    bid.extend("BID-" + x for x in nvt.bugtraq.split(", "))
+
                 # Extract the notes and add them to the description text.
                 if opv.notes:
                     description += "\n" + "\n".join(
@@ -423,6 +430,7 @@ class OpenVASPlugin(TestingPlugin):
                     "impact":       risk,
                     "cvss_base":    cvss_base,
                     "cve":          cve,
+                    "bid":          bid,
                     "tool_id":      "openvas_plugin_%s" % oid,
                     "custom_id":    vid,
                 }
