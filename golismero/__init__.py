@@ -41,7 +41,7 @@ __all__ = [
 # Metadata
 
 __author__     = "GoLismero project team"
-__copyright__  = "Copyright 2011-2014 - GoLismero Project"
+__copyright__  = "Copyright (C) 2011-2014 GoLismero Project"
 __credits__    = ["GoLismero Project Team"]
 __email__      = "contact@golismero-project.com"
 __version__    = "2.0.0b5"
@@ -55,12 +55,10 @@ def get_banner():
     """
     banner_lines = [
         "GoLismero %s, The Web Knife - RootedCON Edition" % __version__,
-        ##__copyright__,
-        "Contact: " + __email__,
+        __copyright__,
         "",
+        "Contact: " + __email__,
     ]
-    for ppl in __credits__:
-        banner_lines.append(ppl)
     width = max(len(line) for line in banner_lines)
     banner = "\n/-" + ("-" * width) + "-\\\n"
     for line in banner_lines:
