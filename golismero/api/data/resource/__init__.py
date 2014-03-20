@@ -6,7 +6,7 @@ Resource types.
 """
 
 __license__ = """
-GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
+GoLismero 2.0 - The web knife - Copyright (C) 2011-2014
 
 Authors:
   Daniel Garcia Garcia a.k.a cr0hn | cr0hn@cr0hn.com

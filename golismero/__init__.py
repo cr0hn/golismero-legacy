@@ -2,11 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __license__ = """
-GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
-
-Authors:
-  Daniel Garcia Garcia a.k.a cr0hn | cr0hn<@>cr0hn.com
-  Mario Vilas | mvilas<@>gmail.com
+GoLismero 2.0 - The web knife - Copyright (C) 2011-2014
 
 Golismero project site: https://github.com/golismero
 Golismero project mail: golismero.project<@>gmail.com
@@ -45,7 +41,7 @@ __all__ = [
 # Metadata
 
 __author__     = "GoLismero project team"
-__copyright__  = "Copyright 2011-2013 - GoLismero Project"
+__copyright__  = "Copyright 2011-2014 - GoLismero Project"
 __credits__    = ["GoLismero Project Team"]
 __email__      = "contact@golismero-project.com"
 __version__    = "2.0.0b5"

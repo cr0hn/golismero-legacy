@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __license__ = """
-GoLismero 2.0 - The web knife - Copyright (C) 2011-2013
+GoLismero 2.0 - The web knife - Copyright (C) 2011-2014
 
 Authors:
   Jekkay Hu | jekkay<@>gmail.com
