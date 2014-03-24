@@ -1,1 +1,0 @@
-These plugins clean up after a GoLismero scan.

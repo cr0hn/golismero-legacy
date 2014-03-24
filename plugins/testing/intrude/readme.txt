@@ -1,1 +1,0 @@
-These plugins implement the post-exploitation phase of GoLismero.

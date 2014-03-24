@@ -1,1 +1,0 @@
-These plugins implement the vulnerability scanning (non-intrusive) phase of GoLismero.

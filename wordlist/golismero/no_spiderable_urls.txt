@@ -1,7 +1,0 @@
-logout
-logoff
-exit
-sigout
-signout
-delete
-remove

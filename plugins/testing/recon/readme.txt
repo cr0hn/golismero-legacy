@@ -1,1 +1,0 @@
-These plugins implement the reconaissance phase of GoLismero.
